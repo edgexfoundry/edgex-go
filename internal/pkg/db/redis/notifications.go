@@ -569,7 +569,7 @@ func (c Client) GetTransmissionsByStatus(limit int, status contract.Transmission
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, db.Transmission+":status:"+string(status), 0, limit)
+	objects, err := getObjectsByRange(conn, db.Transmission+":status:"+string(status), 0, limit-1)
 	if err != nil {
 		return transmissions, err
 	}

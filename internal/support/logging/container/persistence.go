@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Dell Inc.
+ * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -11,17 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
-package metadata
+
+package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 )
 
-func checkMaxLimit(limit int, configuration *config.ConfigurationStruct) error {
-	if limit > configuration.Service.MaxResultCount {
-		return errors.NewErrLimitExceeded(limit)
-	}
+// PersistenceInterfaceName contains the name of the interfaces.Persistence implementation in the DIC.
+var PersistenceInterfaceName = di.TypeInstanceToName((*interfaces.Persistence)(nil))
 
-	return nil
+// PersistenceInterfaceFrom helper function queries the DIC and returns the interfaces.Persistence implementation.
+func PersistenceInterfaceFrom(get di.Get) interfaces.Persistence {
+	return get(PersistenceInterfaceName).(interfaces.Persistence)
 }

@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
@@ -110,14 +111,17 @@ func TestGetAllProfiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: len(TestDeviceProfiles)}}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Service: config.ServiceInfo{MaxResultCount: len(TestDeviceProfiles)},
+			}
 			restGetAllDeviceProfiles(
 				rr,
 				loggerMock,
 				tt.dbMock,
-				errorconcept.NewErrorHandler(loggerMock))
+				errorconcept.NewErrorHandler(loggerMock),
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -215,18 +219,20 @@ func TestAddDeviceProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{
-				Writable: WritableInfo{EnableValueDescriptorManagement: true},
-				Service:  config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: true},
+				Service:  config.ServiceInfo{MaxResultCount: 1},
+			}
 			restAddDeviceProfile(
 				rr,
 				tt.request,
 				loggerMock,
 				tt.dbMock,
 				errorconcept.NewErrorHandler(loggerMock),
-				tt.vdcMock)
+				tt.vdcMock,
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -734,18 +740,21 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{
-				Writable: WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
-				Service:  config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{
+					EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
+				Service: config.ServiceInfo{MaxResultCount: 1},
+			}
 			restUpdateDeviceProfile(
 				rr,
 				tt.request,
 				loggerMock,
 				tt.dbMock,
 				errorconcept.NewErrorHandler(loggerMock),
-				MockValueDescriptorClient{})
+				MockValueDescriptorClient{},
+				&configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -808,7 +817,6 @@ func TestDeleteDeviceProfileById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteProfileByProfileId(
 				rr,
@@ -883,7 +891,6 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restDeleteProfileByName(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
@@ -980,7 +987,6 @@ func TestAddProfileByYaml(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restAddProfileByYaml(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
@@ -1047,7 +1053,6 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}}
 			rr := httptest.NewRecorder()
 			restAddProfileByYamlRaw(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()

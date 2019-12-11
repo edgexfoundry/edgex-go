@@ -13,42 +13,50 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/file"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
 )
 
-var Configuration = &ConfigurationStruct{}
-var dbClient persistence
+const (
+	PersistenceDB   = "database"
+	PersistenceFile = "file"
+)
 
 type server interface {
 	IsRunning() bool
 }
 
 type ServiceInit struct {
-	server server
+	server     server
+	serviceKey string
 }
 
-func NewServiceInit(server server) ServiceInit {
+func NewServiceInit(server server, serviceKey string) ServiceInit {
 	return ServiceInit{
-		server: server,
+		server:     server,
+		serviceKey: serviceKey,
 	}
 }
 
-func getPersistence(credentials config.Credentials) (persistence, error) {
-	switch Configuration.Writable.Persistence {
+func getPersistence(
+	credentials *types.Credentials,
+	configuration *config.ConfigurationStruct) (interfaces.Persistence, error) {
+
+	switch configuration.Writable.Persistence {
 	case PersistenceFile:
-		return &fileLog{filename: Configuration.Logging.File}, nil
+		return file.NewLogger(configuration.Logging.File), nil
 	case PersistenceDB:
-		// TODO: Integrate db layer with internal/pkg/db/ types so we can support other databases
-		ms, err := connectToMongo(credentials)
-		if err != nil {
-			return nil, err
-		}
-		return &mongoLog{session: ms}, nil
+		return mongo.NewLogger(credentials, configuration)
 	default:
-		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", Configuration.Writable.Persistence)
+		return nil, fmt.Errorf("unrecognized value Configuration.Persistence: %s", configuration.Writable.Persistence)
 	}
 }
 
@@ -58,19 +66,15 @@ func (s ServiceInit) BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	dic.Update(di.ServiceConstructorMap{
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
-			return newPrivateLogger()
-		},
-	})
-
-	loggingClient := container.LoggingClientFrom(dic.Get)
+	loggingClient := logging.FactoryToStdout(s.serviceKey)
+	configuration := container.ConfigurationFrom(dic.Get)
 
 	// get database credentials.
-	var credentials config.Credentials
+	credentialsProvider := bootstrapContainer.CredentialsProviderFrom(dic.Get)
+	var credentials types.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(Configuration.Databases["Primary"])
+		credentials, err = credentialsProvider.GetDatabaseCredentials(configuration.Databases["Primary"])
 		if err == nil {
 			break
 		}
@@ -79,9 +83,10 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	// initialize database.
+	var persistenceClient interfaces.Persistence
+	var err error
 	for startupTimer.HasNotElapsed() {
-		var err error
-		dbClient, err = getPersistence(credentials)
+		persistenceClient, err = getPersistence(&credentials, configuration)
 		if err == nil {
 			break
 		}
@@ -89,9 +94,18 @@ func (s ServiceInit) BootstrapHandler(
 		startupTimer.SleepForInterval()
 	}
 
-	if dbClient == nil {
+	if err != nil {
 		return false
 	}
+
+	dic.Update(di.ServiceConstructorMap{
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return loggingClient
+		},
+		container.PersistenceInterfaceName: func(get di.Get) interface{} {
+			return persistenceClient
+		},
+	})
 
 	loggingClient.Info("Database connected")
 	wg.Add(1)
@@ -103,7 +117,7 @@ func (s ServiceInit) BootstrapHandler(
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
 			if s.server.IsRunning() == false {
 				loggingClient.Info("Database disconnecting")
-				dbClient.closeSession()
+				persistenceClient.CloseSession()
 				break
 			}
 			time.Sleep(time.Second)

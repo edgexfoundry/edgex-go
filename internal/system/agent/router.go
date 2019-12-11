@@ -42,26 +42,41 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 
 	b := r.PathPrefix("/api/v1").Subrouter()
 
-	b.HandleFunc("/operation", func(w http.ResponseWriter, r *http.Request) {
-		operationHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.OperationsFrom(dic.Get))
-	}).Methods(http.MethodPost)
+	b.HandleFunc(
+		"/operation",
+		func(w http.ResponseWriter, r *http.Request) {
+			operationHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.OperationsFrom(dic.Get))
+		}).Methods(http.MethodPost)
 
-	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) {
-		getConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.GetConfigFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	b.HandleFunc(
+		"/config/{services}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.GetConfigFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	b.HandleFunc("/config/{services}", func(w http.ResponseWriter, r *http.Request) {
-		setConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.SetConfigFrom(dic.Get))
-	}).Methods(http.MethodPut)
+	b.HandleFunc(
+		"/config/{services}",
+		func(w http.ResponseWriter, r *http.Request) {
+			setConfigHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.SetConfigFrom(dic.Get))
+		}).Methods(http.MethodPut)
 
-	b.HandleFunc("/metrics/{services}", func(w http.ResponseWriter, r *http.Request) {
-		metricsHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.MetricsFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	b.HandleFunc(
+		"/metrics/{services}",
+		func(w http.ResponseWriter, r *http.Request) {
+			metricsHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.MetricsFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	b.HandleFunc("/health/{services}", func(w http.ResponseWriter, r *http.Request) {
-		healthHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), bootstrapContainer.RegistryFrom(dic.Get))
-	}).Methods(http.MethodGet)
-	b.HandleFunc("/ping", pingHandler).Methods(http.MethodGet)
+	b.HandleFunc(
+		"/health/{services}",
+		func(w http.ResponseWriter, r *http.Request) {
+			healthHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), bootstrapContainer.RegistryFrom(dic.Get))
+		}).Methods(http.MethodGet)
+	b.HandleFunc(
+		"/ping",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set(clients.ContentType, clients.ContentTypeText)
+			_, _ = w.Write([]byte("pong"))
+		}).Methods(http.MethodGet)
 
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
@@ -70,12 +85,6 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.OnRequestBegin)
 
 	return r
-}
-
-// pingHandler implements a controller to execute a ping request.
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
 }
 
 // metricsHandler implements a controller to execute a metrics request.
@@ -98,7 +107,7 @@ func operationHandler(
 	loggingClient logger.LoggingClient,
 	operationsImpl interfaces.Operations) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -144,7 +153,7 @@ func setConfigHandler(
 	loggingClient logger.LoggingClient,
 	setConfigImpl interfaces.SetConfig) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	loggingClient.Debug("retrieved service names")

@@ -17,11 +17,18 @@
 package secretstoreclient
 
 const (
-	VaultToken       = "X-Vault-Token"
-	VaultHealthAPI   = "/v1/sys/health"
-	VaultInitAPI     = "/v1/sys/init"
-	VaultUnsealAPI   = "/v1/sys/unseal"
-	JSONContentType  = "application/json"
-	CreatePolicyPath = "/v1/sys/policies/acl/%s"
-	CreateTokenAPI   = "/v1/auth/token/create"
+	VaultToken            = "X-Vault-Token"
+	VaultHealthAPI        = "/v1/sys/health"
+	VaultInitAPI          = "/v1/sys/init"
+	VaultUnsealAPI        = "/v1/sys/unseal"
+	JSONContentType       = "application/json"
+	CreatePolicyPath      = "/v1/sys/policies/acl/%s"
+	CreateTokenAPI        = "/v1/auth/token/create"
+	ListAccessorsAPI      = "/v1/auth/token/accessors"
+	RevokeAccessorAPI     = "/v1/auth/token/revoke-accessor"
+	LookupAccessorAPI     = "/v1/auth/token/lookup-accessor"
+	LookupSelfAPI         = "/v1/auth/token/lookup-self"
+	RevokeSelfAPI         = "/v1/auth/token/revoke-self"
+	RootTokenControlAPI   = "/v1/sys/generate-root/attempt"
+	RootTokenRetrievalAPI = "/v1/sys/generate-root/update"
 )

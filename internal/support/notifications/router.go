@@ -23,11 +23,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
 	"github.com/gorilla/mux"
 )
@@ -36,22 +34,25 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiPingRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set(clients.ContentType, clients.ContentTypeText)
+			w.Write([]byte("pong"))
+		}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute,
-		func(writer http.ResponseWriter, request *http.Request) {
-			configHandler(
-				writer,
-				request,
-				bootstrapContainer.LoggingClientFrom(dic.Get),
-				*container.ConfigurationFrom(dic.Get))
+	r.HandleFunc(
+		clients.ApiConfigRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(*container.ConfigurationFrom(dic.Get), w, bootstrapContainer.LoggingClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute,
-		func(writer http.ResponseWriter, request *http.Request) {
-			metricsHandler(writer, request, bootstrapContainer.LoggingClientFrom(dic.Get))
+	r.HandleFunc(
+		clients.ApiMetricsRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(telemetry.NewSystemUsage(), w, bootstrapContainer.LoggingClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Version
@@ -60,312 +61,349 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	b := r.PathPrefix(clients.ApiBase).Subrouter()
 
 	// Notifications
-	b.HandleFunc("/"+NOTIFICATION,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION,
+		func(w http.ResponseWriter, r *http.Request) {
 			notificationHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)
-	b.HandleFunc("/"+NOTIFICATION+"/{"+ID+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetNotificationByID(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/{"+ID+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restDeleteNotificationByID(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetNotificationBySlug(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restDeleteNotificationBySlug(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+NOTIFICATION+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restDeleteNotificationsByAge(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+NOTIFICATION+"/"+SENDER+"/{"+SENDER+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+SENDER+"/{"+SENDER+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetNotificationsBySender(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restNotificationByStartEnd(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restNotificationByStart(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restNotificationByEnd(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+LABELS+"/{"+LABELS+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+LABELS+"/{"+LABELS+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restNotificationsByLabels(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+NOTIFICATION+"/"+NEW+"/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+NOTIFICATION+"/"+NEW+"/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restNotificationsNew(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get),
 				*container.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// GetSubscriptions
-	b.HandleFunc("/"+SUBSCRIPTION,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION,
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetSubscriptions(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION,
+		func(w http.ResponseWriter, r *http.Request) {
 			restAddSubscription(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPost)
-	b.HandleFunc("/"+SUBSCRIPTION,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION,
+		func(w http.ResponseWriter, r *http.Request) {
 			restUpdateSubscription(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
-	b.HandleFunc("/"+SUBSCRIPTION+"/{"+ID+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetSubscriptionByID(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/{"+ID+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restDeleteSubscriptionByID(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetSubscriptionBySlug(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restDeleteSubscriptionBySlug(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}/"+LABELS+"/{"+LABELS+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}/"+LABELS+"/{"+LABELS+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			subscriptionsByCategoriesLabelsHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			restGetSubscriptionsByCategories(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+LABELS+"/{"+LABELS+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+LABELS+"/{"+LABELS+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			subscriptionsByLabelsHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+SUBSCRIPTION+"/"+RECEIVER+"/{"+RECEIVER+"}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+SUBSCRIPTION+"/"+RECEIVER+"/{"+RECEIVER+"}",
+		func(w http.ResponseWriter, r *http.Request) {
 			subscriptionsByReceiverHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Transmissions
-	b.HandleFunc("/"+TRANSMISSION,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION,
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPost)
-	b.HandleFunc("/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionBySlugHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionBySlugAndStartEndHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByStartEndHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByStartHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByEndHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+ESCALATED+"/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+ESCALATED+"/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByEscalatedHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+FAILED+"/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+FAILED+"/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByFailedHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	b.HandleFunc("/"+TRANSMISSION+"/"+SENT+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+SENT+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByAgeSentHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+TRANSMISSION+"/"+ESCALATED+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+ESCALATED+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByAgeEscalatedHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+TRANSMISSION+"/"+ACKNOWLEDGED+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+ACKNOWLEDGED+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByAgeAcknowledgedHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+TRANSMISSION+"/"+FAILED+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+TRANSMISSION+"/"+FAILED+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			transmissionByAgeFailedHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	// Cleanup
-	b.HandleFunc("/"+CLEANUP,
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+CLEANUP,
+		func(w http.ResponseWriter, r *http.Request) {
 			cleanupHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
-	b.HandleFunc("/"+CLEANUP+"/"+AGE+"/{"+AGE+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
+	b.HandleFunc(
+		"/"+CLEANUP+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
 			cleanupAgeHandler(
-				writer,
-				request,
+				w,
+				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				bootstrapContainer.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
@@ -375,21 +413,4 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.OnRequestBegin)
 
 	return r
-}
-
-func configHandler(
-	w http.ResponseWriter,
-	_ *http.Request,
-	loggingClient logger.LoggingClient,
-	config notificationsConfig.ConfigurationStruct) {
-
-	pkg.Encode(config, w, loggingClient)
-}
-
-func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, loggingClient)
-
-	return
 }

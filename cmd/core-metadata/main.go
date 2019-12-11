@@ -19,6 +19,8 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
@@ -48,7 +50,12 @@ func main() {
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
-	dic := di.NewContainer(di.ServiceConstructorMap{})
+	configuration := &config.ConfigurationStruct{}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
 	httpServer := httpserver.NewBootstrap(metadata.LoadRestRoutes(dic))
 	bootstrap.Run(
 		configDir,
@@ -56,12 +63,12 @@ func main() {
 		internal.ConfigFileName,
 		useRegistry,
 		clients.CoreMetaDataServiceKey,
-		metadata.Configuration,
+		configuration,
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
-			database.NewDatabase(&httpServer, metadata.Configuration).BootstrapHandler,
+			database.NewDatabase(&httpServer, configuration).BootstrapHandler,
 			metadata.BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

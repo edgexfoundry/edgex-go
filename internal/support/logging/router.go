@@ -9,16 +9,10 @@ package logging
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
@@ -26,23 +20,23 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/gorilla/mux"
 )
 
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
-}
-
-func configHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
-	pkg.Encode(Configuration, w, loggingClient)
-}
-
-func addLog(w http.ResponseWriter, r *http.Request) {
+func addLog(w http.ResponseWriter, r *http.Request, persistenceClient interfaces.Persistence) {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -50,14 +44,14 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &l); err != nil {
 		fmt.Println("Failed to parse LogEntry: ", err)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
 	if !logger.IsValidLogLevel(l.Level) {
 		s := fmt.Sprintf("Invalid level in LogEntry: %s", l.Level)
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, s)
+		_, _ = w.Write([]byte(s))
 		return
 	}
 
@@ -65,11 +59,22 @@ func addLog(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
-	dbClient.add(l)
+	persistenceClient.Add(l)
 }
 
-func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
-	var criteria matchCriteria
+func checkMaxLimitCount(limit int, configuration *config.ConfigurationStruct) int {
+	if limit > configuration.Service.MaxResultCount || limit == 0 {
+		return configuration.Service.MaxResultCount
+	}
+	return limit
+}
+
+func getCriteria(
+	w http.ResponseWriter,
+	vars map[string]string,
+	configuration *config.ConfigurationStruct) *filter.Criteria {
+
+	var criteria filter.Criteria
 
 	limit := vars["limit"]
 	if len(limit) > 0 {
@@ -83,12 +88,12 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = w.Write([]byte(s))
 			return nil
 		}
 	}
 	//In all cases, cap the # of entries returned at MaxResultCount
-	criteria.Limit = checkMaxLimitCount(criteria.Limit)
+	criteria.Limit = checkMaxLimitCount(criteria.Limit, configuration)
 
 	start := vars["start"]
 	if len(start) > 0 {
@@ -102,7 +107,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			_, _ = w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -119,7 +124,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 	}
@@ -140,7 +145,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 		}
 		if len(s) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, s)
+			w.Write([]byte(s))
 			return nil
 		}
 		criteria.End = now - criteria.End
@@ -166,7 +171,7 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 			if !logger.IsValidLogLevel(l) {
 				s := fmt.Sprintf("Invalid log level '%s'", l)
 				w.WriteHeader(http.StatusBadRequest)
-				io.WriteString(w, s)
+				_, _ = w.Write([]byte(s))
 				return nil
 			}
 		}
@@ -174,17 +179,18 @@ func getCriteria(w http.ResponseWriter, vars map[string]string) *matchCriteria {
 	return &criteria
 }
 
-func getLogs(w http.ResponseWriter, r *http.Request) {
-	getLogsWithVars(w, mux.Vars(r))
-}
+func getLogs(
+	w http.ResponseWriter,
+	vars map[string]string,
+	persistenceClient interfaces.Persistence,
+	configuration *config.ConfigurationStruct) {
 
-func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
-	criteria := getCriteria(w, vars)
+	criteria := getCriteria(w, vars, configuration)
 	if criteria == nil {
 		return
 	}
 
-	logs, err := dbClient.find(*criteria)
+	logs, err := persistenceClient.Find(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -197,74 +203,170 @@ func getLogsWithVars(w http.ResponseWriter, vars map[string]string) {
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(res))
+	_, _ = w.Write(res)
 }
 
-func delLogs(w http.ResponseWriter, r *http.Request) {
-	delLogsWithVars(w, mux.Vars(r))
-}
+func delLogs(
+	w http.ResponseWriter,
+	vars map[string]string,
+	persistenceClient interfaces.Persistence,
+	configuration *config.ConfigurationStruct) {
 
-func delLogsWithVars(w http.ResponseWriter, vars map[string]string) {
-	criteria := getCriteria(w, vars)
+	criteria := getCriteria(w, vars, configuration)
 	if criteria == nil {
 		return
 	}
 
-	removed, err := dbClient.remove(*criteria)
+	removed, err := persistenceClient.Remove(*criteria)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, strconv.Itoa(removed))
-}
-
-func metricsHandler(w http.ResponseWriter, loggingClient logger.LoggingClient) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, loggingClient)
-
-	return
+	_, _ = w.Write([]byte(strconv.Itoa(removed)))
 }
 
 func LoadRestRoutes(dic *di.Container) *mux.Router {
+	const (
+		start          = "start"
+		end            = "end"
+		limit          = "limit"
+		age            = "age"
+		keywords       = "keywords"
+		removeOld      = "removeold"
+		logLevels      = "logLevels"
+		originServices = "originServices"
+		levels         = "levels"
+		services       = "services"
+	)
+
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiPingRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set(clients.ContentType, clients.ContentTypeText)
+			_, _ = w.Write([]byte("pong"))
+		}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, func(w http.ResponseWriter, r *http.Request) {
-		configHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiConfigRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(container.ConfigurationFrom(dic.Get), w, bootstrapContainer.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, func(w http.ResponseWriter, r *http.Request) {
-		metricsHandler(w, bootstrapContainer.LoggingClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiMetricsRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(telemetry.NewSystemUsage(), w, bootstrapContainer.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Logs
-	r.HandleFunc(clients.ApiLoggingRoute, addLog).Methods(http.MethodPost)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		addLog(w, r, container.PersistenceInterfaceFrom(dic.Get))
+	}).Methods(http.MethodPost)
 
-	r.HandleFunc(clients.ApiLoggingRoute, getLogs).Methods(http.MethodGet)
+	r.HandleFunc(clients.ApiLoggingRoute, func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+
 	l := r.PathPrefix(clients.ApiLoggingRoute).Subrouter()
-	l.HandleFunc("/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}/{"+LIMIT+"}", getLogs).Methods(http.MethodGet)
+	l.HandleFunc("/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
+	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}/{"+limit+"}", func(w http.ResponseWriter, r *http.Request) {
+		getLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodGet)
 
-	l.HandleFunc("/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+KEYWORDS+"/{"+KEYWORDS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+LOGLEVELS+"/{"+LEVELS+"}/"+ORIGINSERVICES+"/{"+SERVICES+"}/{"+START+"}/{"+END+"}", delLogs).Methods(http.MethodDelete)
-	l.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+"}", delLogs).Methods(http.MethodDelete)
+	l.HandleFunc("/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+keywords+"/{"+keywords+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+logLevels+"/{"+levels+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+logLevels+"/{"+levels+"}/"+originServices+"/{"+services+"}/{"+start+"}/{"+end+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
+	l.HandleFunc("/"+removeOld+"/"+age+"/{"+age+"}", func(w http.ResponseWriter, r *http.Request) {
+		delLogs(
+			w,
+			mux.Vars(r),
+			container.PersistenceInterfaceFrom(dic.Get),
+			container.ConfigurationFrom(dic.Get))
+	}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

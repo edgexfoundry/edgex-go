@@ -36,6 +36,6 @@ until /consul/scripts/consul-svc-healthy.sh security-secrets-setup; do
     sleep 1; 
 done;
 
-/security-secretstore-setup --init=true --vaultInterval=10
+/security-secretstore-setup --vaultInterval=10
 
 exec "$@"

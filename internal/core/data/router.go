@@ -20,15 +20,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading"
+	readingOperator "github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/value_descriptor"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
@@ -37,6 +32,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
+
+	"github.com/gorilla/mux"
 )
 
 // ValueDescriptorUsageReadLimit limit of readings obtained for a given value descriptor to determine if the value
@@ -47,178 +50,235 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r := mux.NewRouter()
 
 	// Ping Resource
-	r.HandleFunc(clients.ApiPingRoute, pingHandler).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiPingRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set(clients.ContentType, clients.ContentTypeText)
+			_, _ = w.Write([]byte("pong"))
+		}).Methods(http.MethodGet)
 
 	// Configuration
-	r.HandleFunc(clients.ApiConfigRoute, func(writer http.ResponseWriter, request *http.Request) {
-		configHandler(writer, request, container.LoggingClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiConfigRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(Configuration, w, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Metrics
-	r.HandleFunc(clients.ApiMetricsRoute, func(writer http.ResponseWriter, request *http.Request) {
-		metricsHandler(writer, request, container.LoggingClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	r.HandleFunc(
+		clients.ApiMetricsRoute,
+		func(w http.ResponseWriter, _ *http.Request) {
+			pkg.Encode(telemetry.NewSystemUsage(), w, container.LoggingClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	// Version
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	// Events
-	r.HandleFunc(clients.ApiEventRoute, func(writer http.ResponseWriter, request *http.Request) {
-		eventHandler(
-			writer,
-			request,
-			container.LoggingClientFrom(dic.Get),
-			container.DBClientFrom(dic.Get),
-			dataContainer.PublisherEventsChannelFrom(dic.Get))
-
-	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(
+		clients.ApiEventRoute,
+		func(w http.ResponseWriter, r *http.Request) {
+			eventHandler(
+				w,
+				r,
+				container.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.PublisherEventsChannelFrom(dic.Get),
+				dataContainer.MessagingClientFrom(dic.Get))
+		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
 
-	e.HandleFunc("/"+SCRUB, func(writer http.ResponseWriter, request *http.Request) {
-		scrubHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	e.HandleFunc(
+		"/"+SCRUB,
+		func(w http.ResponseWriter, r *http.Request) {
+			scrubHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
-	e.HandleFunc("/"+SCRUBALL, func(writer http.ResponseWriter, request *http.Request) {
-		scrubAllHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	e.HandleFunc(
+		"/"+SCRUBALL,
+		func(w http.ResponseWriter, r *http.Request) {
+			scrubAllHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
-	e.HandleFunc("/"+COUNT, func(writer http.ResponseWriter, request *http.Request) {
-		eventCountHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	e.HandleFunc(
+		"/"+COUNT,
+		func(w http.ResponseWriter, r *http.Request) {
+			eventCountHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	e.HandleFunc("/"+COUNT+"/{"+DEVICEID_PARAM+"}", func(writer http.ResponseWriter, request *http.Request) {
-		eventCountByDeviceIdHandler(writer, request, container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	e.HandleFunc(
+		"/"+COUNT+"/{"+DEVICEID_PARAM+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			eventCountByDeviceIdHandler(w, r, container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	e.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		getEventByIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	e.HandleFunc(
+		"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getEventByIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	e.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		eventIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete, http.MethodPut)
+	e.HandleFunc(
+		"/"+ID+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			eventIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete, http.MethodPut)
 
-	e.HandleFunc("/"+CHECKSUM+"/{"+CHECKSUM+"}", func(writer http.ResponseWriter, request *http.Request) {
-		putEventChecksumHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodPut)
+	e.HandleFunc(
+		"/"+CHECKSUM+"/{"+CHECKSUM+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			putEventChecksumHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodPut)
 
 	e.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			getEventByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			getEventByDeviceHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	e.HandleFunc("/"+DEVICE+"/{"+DEVICEID_PARAM+"}", func(writer http.ResponseWriter, request *http.Request) {
-		deleteByDeviceIdHandler(writer, request, container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	e.HandleFunc(
+		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			deleteByDeviceIdHandler(w, r, container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
-	e.HandleFunc("/"+REMOVEOLD+"/"+AGE+"/{"+AGE+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
-		eventByAgeHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	e.HandleFunc(
+		"/"+REMOVEOLD+"/"+AGE+"/{"+AGE+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
+			eventByAgeHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
 	e.HandleFunc(
 		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			eventByCreationTimeHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			eventByCreationTimeHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Readings
-	r.HandleFunc(clients.ApiReadingRoute, func(writer http.ResponseWriter, request *http.Request) {
-		readingHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(
+		clients.ApiReadingRoute,
+		func(w http.ResponseWriter, r *http.Request) {
+			readingHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	rd := r.PathPrefix(clients.ApiReadingRoute).Subrouter()
 
-	rd.HandleFunc("/"+COUNT, func(writer http.ResponseWriter, request *http.Request) {
-		readingCountHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+COUNT,
+		func(w http.ResponseWriter, r *http.Request) {
+			readingCountHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	rd.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		deleteReadingByIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	rd.HandleFunc(
+		"/"+ID+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			deleteReadingByIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
-	rd.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		getReadingByIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			getReadingByIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			readingByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByDeviceHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			readingbyValueDescriptorHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			readingbyValueDescriptorHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
 		"/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			readingByUomLabelHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByUomLabelHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
-	rd.HandleFunc("/"+LABEL+"/{"+LABEL+"}/{"+LIMIT+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
-		readingByLabelHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+LABEL+"/{"+LABEL+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByLabelHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	rd.HandleFunc("/"+TYPE+"/{"+TYPE+"}/{"+LIMIT+":[0-9]+}", func(writer http.ResponseWriter, request *http.Request) {
-		readingByTypeHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	rd.HandleFunc(
+		"/"+TYPE+"/{"+TYPE+"}/{"+LIMIT+":[0-9]+}",
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByTypeHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
 		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			readingByCreationTimeHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByCreationTimeHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}/"+DEVICE+"/{"+DEVICE+"}/{"+LIMIT+":[0-9]+}",
-		func(writer http.ResponseWriter, request *http.Request) {
-			readingByValueDescriptorAndDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			readingByValueDescriptorAndDeviceHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Value descriptors
 	r.HandleFunc(
 		clients.ApiValueDescriptorRoute,
-		func(writer http.ResponseWriter, request *http.Request) {
-			valueDescriptorHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
 
-	vd.HandleFunc("/"+USAGE, func(writer http.ResponseWriter, request *http.Request) {
-		restValueDescriptorsUsageHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/"+USAGE,
+		func(w http.ResponseWriter, r *http.Request) {
+			restValueDescriptorsUsageHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	vd.HandleFunc("/"+ID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		deleteValueDescriptorByIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodDelete)
+	vd.HandleFunc(
+		"/"+ID+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			deleteValueDescriptorByIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodDelete)
 
-	vd.HandleFunc("/"+NAME+"/{"+NAME+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByNameHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet, http.MethodDelete)
+	vd.HandleFunc(
+		"/"+NAME+"/{"+NAME+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByNameHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet, http.MethodDelete)
 
-	vd.HandleFunc("/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	vd.HandleFunc("/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByUomLabelHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/"+UOMLABEL+"/{"+UOMLABEL_PARAM+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByUomLabelHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	vd.HandleFunc("/"+LABEL+"/{"+LABEL+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByLabelHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/"+LABEL+"/{"+LABEL+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByLabelHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	vd.HandleFunc("/"+DEVICENAME+"/{"+DEVICE+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByDeviceHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/"+DEVICENAME+"/{"+DEVICE+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByDeviceHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
-	vd.HandleFunc("/"+DEVICEID+"/{"+ID+"}", func(writer http.ResponseWriter, request *http.Request) {
-		valueDescriptorByDeviceIdHandler(writer, request, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
-	}).Methods(http.MethodGet)
+	vd.HandleFunc(
+		"/"+DEVICEID+"/{"+ID+"}",
+		func(w http.ResponseWriter, r *http.Request) {
+			valueDescriptorByDeviceIdHandler(w, r, container.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+		}).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
@@ -237,7 +297,7 @@ func eventCountHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	count, err := countEvents(dbClient)
 	if err != nil {
@@ -259,7 +319,7 @@ deviceID - ID of the device to get count for
 /api/v1/event/count/{deviceId}
 */
 func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id, err := url.QueryUnescape(vars["deviceId"])
@@ -280,7 +340,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClien
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.Itoa(count)))
+	_, _ = w.Write([]byte(strconv.Itoa(count)))
 }
 
 // Remove all the old events and associated readings (by age)
@@ -291,7 +351,7 @@ func eventByAgeHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	age, err := strconv.ParseInt(vars["age"], 10, 64)
@@ -311,7 +371,7 @@ func eventByAgeHandler(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.Itoa(count)))
+	_, _ = w.Write([]byte(strconv.Itoa(count)))
 }
 
 /*
@@ -327,10 +387,11 @@ func eventHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	chEvents chan<- interface{}) {
+	chEvents chan<- interface{},
+	msgClient messaging.MessageClient) {
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 	}
 
 	ctx := r.Context()
@@ -356,7 +417,7 @@ func eventHandler(
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents)
+		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -371,7 +432,7 @@ func eventHandler(
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(newId))
+		_, _ = w.Write([]byte(newId))
 		break
 		// Update an existing event, but do not update the readings
 	case http.MethodPut:
@@ -404,7 +465,7 @@ func eventHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
@@ -416,7 +477,7 @@ func scrubAllHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	loggingClient.Info("Deleting all events from database")
 
@@ -440,7 +501,7 @@ func getEventByIdHandler(
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 	}
 
 	// URL parameters
@@ -472,7 +533,7 @@ func getEventByDeviceHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	limit := vars["limit"]
@@ -532,7 +593,7 @@ func eventIdHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -560,7 +621,7 @@ func eventIdHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 		break
 		// Delete the event and all of it's readings
 	case http.MethodDelete:
@@ -576,7 +637,7 @@ func eventIdHandler(
 		}
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
@@ -592,7 +653,7 @@ func putEventChecksumHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	checksum := vars["checksum"]
@@ -623,7 +684,7 @@ func putEventChecksumHandler(
 // 404 - device ID not found in metadata
 // 503 - service unavailable
 func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	deviceId, err := url.QueryUnescape(vars["deviceId"])
@@ -654,7 +715,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient in
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
+		_, _ = w.Write([]byte(strconv.Itoa(count)))
 	}
 }
 
@@ -670,7 +731,7 @@ func eventByCreationTimeHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
@@ -722,7 +783,7 @@ func scrubHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	switch r.Method {
 	case http.MethodDelete:
@@ -734,18 +795,8 @@ func scrubHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(strconv.Itoa(count)))
+		_, _ = w.Write([]byte(strconv.Itoa(count)))
 	}
-}
-
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
-}
-
-func configHandler(w http.ResponseWriter, r *http.Request, loggingClient logger.LoggingClient) {
-	pkg.Encode(Configuration, w, loggingClient)
 }
 
 // Reading handler
@@ -756,7 +807,7 @@ func readingHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	ctx := r.Context()
 
@@ -808,9 +859,9 @@ func readingHandler(
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(id))
+			_, _ = w.Write([]byte(id))
 		} else {
-			// Didn't save the reading in the database
+			// Didn't save the readingOperator in the database
 			pkg.Encode("unsaved", w, loggingClient)
 		}
 	case http.MethodPut:
@@ -844,20 +895,20 @@ func readingHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
-// Get a reading by id
-// HTTP 404 not found if the reading can't be found by the ID
-// api/v1/reading/{id}
+// Get a readingOperator by id
+// HTTP 404 not found if the readingOperator can't be found by the ID
+// api/v1/readingOperator/{id}
 func getReadingByIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -878,14 +929,14 @@ func getReadingByIdHandler(
 }
 
 // Return a count for the number of readings in core data
-// api/v1/reading/count
+// api/v1/readingOperator/count
 func readingCountHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	switch r.Method {
 	case http.MethodGet:
@@ -903,15 +954,15 @@ func readingCountHandler(
 	}
 }
 
-// Delete a reading by its id
-// api/v1/reading/id/{id}
+// Delete a readingOperator by its id
+// api/v1/readingOperator/id/{id}
 func deleteReadingByIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -930,21 +981,21 @@ func deleteReadingByIdHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
 // Get all the readings for the device - sort by creation date
 // 404 - device ID or name doesn't match
 // 413 - max count exceeded
-// api/v1/reading/device/{deviceId}/{limit}
+// api/v1/readingOperator/device/{deviceId}/{limit}
 func readingByDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	limit, err := strconv.Atoi(vars["limit"])
@@ -986,14 +1037,14 @@ func readingByDeviceHandler(
 
 // Return a list of readings associated with a value descriptor, limited by limit
 // HTTP 413 (limit exceeded) if the limit is greater than max limit
-// api/v1/reading/name/{name}/{limit}
+// api/v1/readingOperator/name/{name}/{limit}
 func readingbyValueDescriptorHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars["name"])
@@ -1019,14 +1070,14 @@ func readingbyValueDescriptorHandler(
 }
 
 // Return a list of readings based on the UOM label for the value decriptor
-// api/v1/reading/uomlabel/{uomLabel}/{limit}
+// api/v1/readingOperator/uomlabel/{uomLabel}/{limit}
 func readingByUomLabelHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 
@@ -1074,14 +1125,14 @@ func readingByUomLabelHandler(
 
 // Get readings by the value descriptor (specified by the label)
 // 413 - limit exceeded
-// api/v1/reading/label/{label}/{limit}
+// api/v1/readingOperator/label/{label}/{limit}
 func readingByLabelHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	label, err := url.QueryUnescape(vars["label"])
@@ -1126,14 +1177,14 @@ func readingByLabelHandler(
 
 // Return a list of readings who's value descriptor has the type
 // 413 - number exceeds the current limit
-// /reading/type/{type}/{limit}
+// /readingOperator/type/{type}/{limit}
 func readingByTypeHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 
@@ -1177,14 +1228,14 @@ func readingByTypeHandler(
 }
 
 // Return a list of readings between the start and end (creation time)
-// /reading/{start}/{end}/{limit}
+// /readingOperator/{start}/{end}/{limit}
 func readingByCreationTimeHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
@@ -1223,14 +1274,14 @@ func readingByCreationTimeHandler(
 
 // Return a list of redings associated with the device and value descriptor
 // Limit exceeded exception 413 if the limit exceeds the max limit
-// api/v1/reading/name/{name}/device/{device}/{limit}
+// api/v1/readingOperator/name/{name}/device/{device}/{limit}
 func readingByValueDescriptorAndDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	ctx := r.Context()
@@ -1302,7 +1353,7 @@ func valueDescriptorHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	switch r.Method {
 	case http.MethodGet:
@@ -1349,7 +1400,7 @@ func valueDescriptorHandler(
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(id))
+		_, _ = w.Write([]byte(id))
 	case http.MethodPut:
 		vd, err := decodeValueDescriptor(r.Body, loggingClient)
 		if err != nil {
@@ -1381,7 +1432,7 @@ func valueDescriptorHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
@@ -1394,7 +1445,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -1417,7 +1468,7 @@ func deleteValueDescriptorByIdHandler(w http.ResponseWriter,
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 // Value descriptors based on name
@@ -1428,7 +1479,7 @@ func valueDescriptorByNameHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars["name"])
@@ -1468,7 +1519,7 @@ func valueDescriptorByNameHandler(
 
 		w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	}
 }
 
@@ -1481,7 +1532,7 @@ func valueDescriptorByIdHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -1510,7 +1561,7 @@ func valueDescriptorByUomLabelHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	uomLabel, err := url.QueryUnescape(vars["uomLabel"])
@@ -1545,7 +1596,7 @@ func valueDescriptorByLabelHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 	label, err := url.QueryUnescape(vars["label"])
@@ -1581,7 +1632,7 @@ func valueDescriptorByDeviceHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 
@@ -1618,7 +1669,7 @@ func valueDescriptorByDeviceIdHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
 
@@ -1692,9 +1743,9 @@ func restValueDescriptorsUsageHandler(
 	// Use this data structure so that we can obtain the desired JSON format. Please see RAML for response format
 	// information.
 	resp := make([]map[string]bool, 0)
-	var ops reading.GetReadingsExecutor
+	var ops readingOperator.GetReadingsExecutor
 	for _, vd := range vds {
-		ops = reading.NewGetReadingsNameExecutor(
+		ops = readingOperator.NewGetReadingsNameExecutor(
 			vd.Name,
 			ValueDescriptorUsageReadLimit,
 			dbClient,
@@ -1715,12 +1766,4 @@ func restValueDescriptorsUsageHandler(
 	}
 
 	pkg.Encode(resp, w, loggingClient)
-}
-
-func metricsHandler(w http.ResponseWriter, _ *http.Request, loggingClient logger.LoggingClient) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, loggingClient)
-
-	return
 }

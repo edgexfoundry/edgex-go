@@ -9,7 +9,6 @@ package distro
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -25,7 +24,7 @@ import (
 // Test if the service is working
 func pingHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
+	_, _ = w.Write([]byte("pong"))
 }
 
 func configHandler(w http.ResponseWriter, _ *http.Request) {
@@ -37,7 +36,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed read body. Error: %s", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -45,7 +44,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(data, &update); err != nil {
 		LoggingClient.Error(fmt.Sprintf("Failed to parse %X", data))
 		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 	if update.Name == "" || update.Operation == "" {
@@ -66,11 +65,7 @@ func replyNotifyRegistrations(w http.ResponseWriter, r *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, _ *http.Request) {
-	s := telemetry.NewSystemUsage()
-
-	pkg.Encode(s, w, LoggingClient)
-
-	return
+	pkg.Encode(telemetry.NewSystemUsage(), w, LoggingClient)
 }
 
 func LoadRestRoutes() *mux.Router {

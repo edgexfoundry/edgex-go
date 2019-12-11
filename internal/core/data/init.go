@@ -38,7 +38,6 @@ import (
 var Configuration = &ConfigurationStruct{}
 
 // TODO: Refactor names in separate PR: See comments on PR #1133
-var msgClient messaging.MessageClient
 var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
@@ -51,11 +50,6 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
 
 	chEvents := make(chan interface{}, 100)
-	dic.Update(di.ServiceConstructorMap{
-		dataContainer.EventsChannelName: func(get di.Get) interface{} {
-			return chEvents
-		}})
-
 	// initialize event handlers
 	initEventHandlers(loggingClient, chEvents)
 
@@ -81,8 +75,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 		endpoint.Endpoint{RegistryClient: &registryClient})
 
 	// Create the messaging client
-	var err error
-	msgClient, err = messaging.NewMessageClient(
+	msgClient, err := messaging.NewMessageClient(
 		msgTypes.MessageBusConfig{
 			PublishHost: msgTypes.HostInfo{
 				Host:     Configuration.MessageQueue.Host,
@@ -94,7 +87,16 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+		return false
 	}
+
+	dic.Update(di.ServiceConstructorMap{
+		dataContainer.MessagingClientName: func(get di.Get) interface{} {
+			return msgClient
+		},
+		dataContainer.EventsChannelName: func(get di.Get) interface{} {
+			return chEvents
+		}})
 
 	return true
 }

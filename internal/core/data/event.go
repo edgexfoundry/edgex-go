@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -93,7 +94,8 @@ func addNewEvent(
 	e models.Event, ctx context.Context,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	chEvents chan<- interface{}) (string, error) {
+	chEvents chan<- interface{},
+	msgClient messaging.MessageClient) (string, error) {
 
 	err := checkDevice(e.Device, ctx)
 	if err != nil {
@@ -129,9 +131,9 @@ func addNewEvent(
 		e.ID = id
 	}
 
-	putEventOnQueue(e, ctx, loggingClient)          // Push the aux struct to export service (It has the actual readings)
-	chEvents <- DeviceLastReported{e.Device}        // update last reported connected (device)
-	chEvents <- DeviceServiceLastReported{e.Device} // update last reported connected (device service)
+	putEventOnQueue(e, ctx, loggingClient, msgClient) // Push the aux struct to export service (It has the actual readings)
+	chEvents <- DeviceLastReported{e.Device}          // update last reported connected (device)
+	chEvents <- DeviceServiceLastReported{e.Device}   // update last reported connected (device service)
 
 	return e.ID, nil
 }
@@ -243,7 +245,12 @@ func updateEventPushDate(id string, ctx context.Context, dbClient interfaces.DBC
 }
 
 // Put event on the message queue to be processed by the rules engine
-func putEventOnQueue(evt models.Event, ctx context.Context, loggingClient logger.LoggingClient) {
+func putEventOnQueue(
+	evt models.Event,
+	ctx context.Context,
+	loggingClient logger.LoggingClient,
+	msgClient messaging.MessageClient) {
+
 	loggingClient.Info("Putting event on message queue")
 
 	evt.CorrelationId = correlation.FromContext(ctx)

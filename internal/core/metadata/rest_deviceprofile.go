@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device"
@@ -40,12 +41,17 @@ func restGetAllDeviceProfiles(
 	w http.ResponseWriter,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
-	op := device_profile.NewGetAllExecutor(Configuration.Service, dbClient, loggingClient)
+	op := device_profile.NewGetAllExecutor(configuration.Service, dbClient, loggingClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -59,7 +65,8 @@ func restAddDeviceProfile(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	vdc coredata.ValueDescriptorClient) {
+	vdc coredata.ValueDescriptorClient,
+	configuration *config.ConfigurationStruct) {
 
 	var dp models.DeviceProfile
 
@@ -68,7 +75,7 @@ func restAddDeviceProfile(
 		return
 	}
 
-	if Configuration.Writable.EnableValueDescriptorManagement {
+	if configuration.Writable.EnableValueDescriptorManagement {
 		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
 		// will fail during the creation process later on.
 		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
@@ -82,7 +89,11 @@ func restAddDeviceProfile(
 		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, loggingClient, dp.DeviceResources...)
 		err = op.Execute()
 		if err != nil {
-			errorHandler.HandleOneVariant(w, err, errorconcept.NewServiceClientHttpError(err), errorconcept.Default.InternalServerError)
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Default.InternalServerError)
 			return
 		}
 	}
@@ -96,7 +107,8 @@ func restUpdateDeviceProfile(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
-	vdc coredata.ValueDescriptorClient) {
+	vdc coredata.ValueDescriptorClient,
+	configuration *config.ConfigurationStruct) {
 
 	defer r.Body.Close()
 
@@ -106,7 +118,7 @@ func restUpdateDeviceProfile(
 		return
 	}
 
-	if Configuration.Writable.EnableValueDescriptorManagement {
+	if configuration.Writable.EnableValueDescriptorManagement {
 		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, loggingClient, r.Context())
 		err := vdOp.Execute()
 		if err != nil {
@@ -139,7 +151,7 @@ func restUpdateDeviceProfile(
 	}
 
 	// Notify Associates
-	err = notifyProfileAssociates(dp, dbClient, http.MethodPut, loggingClient, errorHandler)
+	err = notifyProfileAssociates(dp, dbClient, http.MethodPut, loggingClient, errorHandler, configuration)
 	if err != nil {
 		// Log the error but do not change the response to the client. We do not want this to affect the overall status
 		// of the operation
@@ -239,7 +251,11 @@ func restAddProfileByYaml(
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.DeviceProfile.MissingFile, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.DeviceProfile.MissingFile,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -357,7 +373,11 @@ func restGetProfileByModel(
 	op := device_profile.NewGetModelExecutor(an, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -382,7 +402,11 @@ func restGetProfileWithLabel(
 	op := device_profile.NewGetLabelExecutor(label, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -412,7 +436,11 @@ func restGetProfileByManufacturerModel(
 	op := device_profile.NewGetManufacturerModelExecutor(man, mod, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -436,7 +464,11 @@ func restGetProfileByManufacturer(
 	op := device_profile.NewGetManufacturerExecutor(man, dbClient)
 	res, err := op.Execute()
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.Common.LimitExceeded, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.Common.LimitExceeded,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -550,10 +582,12 @@ func notifyProfileAssociates(
 	dp models.DeviceProfile,
 	dl device.DeviceLoader,
 	action string,
-	loggingClient logger.LoggingClient, errorHandler errorconcept.ErrorHandler) error {
+	loggingClient logger.LoggingClient,
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) error {
 
 	// Get the devices
-	op := device.NewProfileIdExecutor(Configuration.Service, dl, loggingClient, dp.Id)
+	op := device.NewProfileIdExecutor(configuration.Service, dl, loggingClient, dp.Id)
 	d, err := op.Execute()
 	if err != nil {
 		loggingClient.Error(err.Error())

@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
@@ -33,7 +34,8 @@ import (
 func restGetProvisionWatchers(
 	w http.ResponseWriter,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	res, err := dbClient.GetAllProvisionWatchers()
 	if err != nil {
@@ -42,7 +44,7 @@ func restGetProvisionWatchers(
 	}
 
 	// Check the length
-	if err = checkMaxLimit(len(res)); err != nil {
+	if err = checkMaxLimit(len(res), configuration); err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
@@ -94,7 +96,11 @@ func restDeleteProvisionWatcherByName(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotFoundByName,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -142,7 +148,11 @@ func restGetProvisionWatcherById(
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundById, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotFoundById,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -165,7 +175,11 @@ func restGetProvisionWatcherByName(
 
 	res, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.NotFoundByName, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotFoundByName,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
@@ -388,7 +402,8 @@ func restAddProvisionWatcher(
 
 	// Notify Associates
 	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, loggingClient, dbClient); err != nil {
-		loggingClient.Error("Problem with notifying associating device services for the provision watcher: " + err.Error())
+		loggingClient.Error(
+			"Problem with notifying associating device services for the provision watcher: " + err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)

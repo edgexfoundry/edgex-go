@@ -20,12 +20,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -44,12 +42,6 @@ func printBody(r io.ReadCloser) {
 	}
 
 	fmt.Println(bodyString)
-}
-
-// Test if the service is working
-func pingHandler(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set(clients.ContentType, clients.ContentTypeText)
-	w.Write([]byte("pong"))
 }
 
 func checkMaxLimit(limit int, loggingClient logger.LoggingClient, config notificationsConfig.ConfigurationStruct) error {
