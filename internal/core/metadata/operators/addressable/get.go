@@ -1,9 +1,24 @@
+/*******************************************************************************
+ * Copyright 2019 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
+
 // addressable contains functionality for obtaining Addressable data.
 package addressable
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -14,12 +29,12 @@ type AddressableAllExecutor interface {
 }
 
 type addressableLoadAll struct {
-	config   config.ServiceInfo
+	config   bootstrapConfig.ServiceInfo
 	database AddressLoader
 	logger   logger.LoggingClient
 }
 
-func NewAddressableLoadAll(cfg config.ServiceInfo, db AddressLoader, log logger.LoggingClient) AddressableAllExecutor {
+func NewAddressableLoadAll(cfg bootstrapConfig.ServiceInfo, db AddressLoader, log logger.LoggingClient) AddressableAllExecutor {
 	return addressableLoadAll{config: cfg, database: db, logger: log}
 }
 

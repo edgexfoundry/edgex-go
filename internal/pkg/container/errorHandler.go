@@ -15,8 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // ErrorHandler contains the name of the errorconcept.Handler implementation in the DIC.

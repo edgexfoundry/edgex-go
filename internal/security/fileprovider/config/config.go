@@ -17,14 +17,16 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 type ConfigurationStruct struct {
 	Writable          WritableInfo
-	Logging           config.LoggingInfo
+	Logging           bootstrapConfig.LoggingInfo
 	SecretService     secretstoreclient.SecretServiceInfo
 	TokenFileProvider TokenFileProviderInfo
 }
@@ -37,7 +39,7 @@ type WritableInfo struct {
 type TokenFileProviderInfo struct {
 	// Path to Vault authorization token to be used by the service
 	PrivilegedTokenPath string
-	// Configuration file used to control token creation (default: res/token-config.json)
+	// Configuration file used to control token creation (default: res/token-bootstrapConfig.json)
 	ConfigFile string
 	// Base directory for token file output
 	OutputDir string
@@ -92,7 +94,7 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 }
 
 // SetLogLevel updates the log level in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {}
+func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {}
 
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {

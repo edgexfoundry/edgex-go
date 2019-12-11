@@ -4,14 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/pkg/errors"
-
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/addressable/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/pkg/errors"
 )
 
 var Id = "83cb038b-5a94-4707-985d-13effec62de2"
@@ -95,7 +96,7 @@ func TestAllAddressablesExecutor(t *testing.T) {
 	tests := []struct {
 		name             string
 		mockDb           AddressLoader
-		cfg              config.ServiceInfo
+		cfg              bootstrapConfig.ServiceInfo
 		expectedResult   []contract.Addressable
 		expectedError    bool
 		expectedErrorVal error
@@ -103,21 +104,21 @@ func TestAllAddressablesExecutor(t *testing.T) {
 		{
 			name:           "Successful database call",
 			mockDb:         createMockAddressLoader(nil, SuccessfulDatabaseResult),
-			cfg:            config.ServiceInfo{MaxResultCount: 5},
+			cfg:            bootstrapConfig.ServiceInfo{MaxResultCount: 5},
 			expectedResult: SuccessfulDatabaseResult,
 			expectedError:  false,
 		},
 		{
 			name:           "Unsuccessful database call",
 			mockDb:         createMockAddressLoader(Error, nil),
-			cfg:            config.ServiceInfo{MaxResultCount: 5},
+			cfg:            bootstrapConfig.ServiceInfo{MaxResultCount: 5},
 			expectedResult: nil,
 			expectedError:  true,
 		},
 		{
 			name:             "MaxResultCount exceeded",
 			mockDb:           createMockAddressLoader(nil, SuccessfulDatabaseResult),
-			cfg:              config.ServiceInfo{MaxResultCount: 1},
+			cfg:              bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			expectedResult:   nil,
 			expectedError:    true,
 			expectedErrorVal: metadataErrors.NewErrLimitExceeded(1),

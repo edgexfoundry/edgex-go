@@ -17,11 +17,12 @@
 package reading
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 // GetReadingsExecutor retrieves one or more readings.
@@ -35,7 +36,7 @@ type getReadingsByValueDescriptorName struct {
 	limit  int
 	loader Loader
 	logger logger.LoggingClient
-	config config.ServiceInfo
+	config bootstrapConfig.ServiceInfo
 }
 
 // Execute retrieves readings by value descriptor name.
@@ -54,7 +55,7 @@ func (g getReadingsByValueDescriptorName) Execute() ([]contract.Reading, error) 
 }
 
 // NewGetReadingsNameExecutor creates a GetReadingsExecutor which will retrieve readings by a value descriptor name.
-func NewGetReadingsNameExecutor(name string, limit int, loader Loader, logger logger.LoggingClient, config config.ServiceInfo) GetReadingsExecutor {
+func NewGetReadingsNameExecutor(name string, limit int, loader Loader, logger logger.LoggingClient, config bootstrapConfig.ServiceInfo) GetReadingsExecutor {
 	return getReadingsByValueDescriptorName{
 		name:   name,
 		limit:  limit,

@@ -16,8 +16,9 @@ package device_service
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -29,13 +30,13 @@ type DeviceServiceGetListExecutor interface {
 }
 
 type deviceServiceLoadAll struct {
-	config   config.ServiceInfo
+	config   bootstrapConfig.ServiceInfo
 	database DeviceServiceLoader
 	logger   logger.LoggingClient
 }
 
 // NewDeviceServiceLoadAll creates a new Executor that retrieves all DeviceService registered.
-func NewDeviceServiceLoadAll(cfg config.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetListExecutor {
+func NewDeviceServiceLoadAll(cfg bootstrapConfig.ServiceInfo, db DeviceServiceLoader, log logger.LoggingClient) DeviceServiceGetListExecutor {
 	return deviceServiceLoadAll{config: cfg, database: db, logger: log}
 }
 

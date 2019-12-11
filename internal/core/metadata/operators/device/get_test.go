@@ -19,7 +19,9 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -29,13 +31,13 @@ var TestDeviceProfileID = "TestDeviceProfileID"
 func TestGetAllDevices(t *testing.T) {
 	tests := []struct {
 		name        string
-		cfg         config.ServiceInfo
+		cfg         bootstrapConfig.ServiceInfo
 		dbMock      DeviceLoader
 		expectError bool
 	}{
-		{"GetAllPass", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockNoArg("GetAllDevices"), false},
-		{"GetAllFailCount", config.ServiceInfo{}, createDeviceLoaderMockNoArg("GetAllDevices"), true},
-		{"GetAllFailUnexpected", config.ServiceInfo{MaxResultCount: 1}, createGetDeviceLoaderMockFail("GetAllDevices"), true},
+		{"GetAllPass", bootstrapConfig.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockNoArg("GetAllDevices"), false},
+		{"GetAllFailCount", bootstrapConfig.ServiceInfo{}, createDeviceLoaderMockNoArg("GetAllDevices"), true},
+		{"GetAllFailUnexpected", bootstrapConfig.ServiceInfo{MaxResultCount: 1}, createGetDeviceLoaderMockFail("GetAllDevices"), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -58,13 +60,13 @@ func TestGetAllDevices(t *testing.T) {
 func TestGetDeviceByProfileId(t *testing.T) {
 	tests := []struct {
 		name        string
-		cfg         config.ServiceInfo
+		cfg         bootstrapConfig.ServiceInfo
 		dbMock      DeviceLoader
 		expectError bool
 	}{
-		{"Get devices by Profile ID", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), false},
-		{"Get devices more than maximum", config.ServiceInfo{}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), true},
-		{"Get devices fail", config.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArgFail("GetDevicesByProfileId"), true},
+		{"Get devices by Profile ID", bootstrapConfig.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), false},
+		{"Get devices more than maximum", bootstrapConfig.ServiceInfo{}, createDeviceLoaderMockStringArg("GetDevicesByProfileId"), true},
+		{"Get devices fail", bootstrapConfig.ServiceInfo{MaxResultCount: 1}, createDeviceLoaderMockStringArgFail("GetDevicesByProfileId"), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

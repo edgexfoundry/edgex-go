@@ -13,9 +13,11 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/export"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/export/distro"
@@ -33,11 +35,11 @@ var dc distro.DistroClient
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 
 	// update global variables.
-	LoggingClient = container.LoggingClientFrom(dic.Get)
+	LoggingClient = bootstrapContainer.LoggingClientFrom(dic.Get)
 	dbClient = container.DBClientFrom(dic.Get)
 
 	// initialize clients required by service.
-	registryClient := container.RegistryFrom(dic.Get)
+	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	dc = distro.NewDistroClient(
 		types.EndpointParams{
 			ServiceKey:  clients.ExportDistroServiceKey,

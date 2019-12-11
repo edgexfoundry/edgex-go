@@ -15,8 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // QueueName contains the name of scheduler's SchedulerQueueClient implementation in the DIC.

@@ -18,6 +18,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 const (
@@ -25,7 +27,7 @@ const (
 )
 
 // deprecated
-func OverrideFromEnvironment(registry RegistryInfo) RegistryInfo {
+func OverrideFromEnvironment(registry bootstrapConfig.RegistryInfo) bootstrapConfig.RegistryInfo {
 	if env := os.Getenv(envKeyUrl); env != "" {
 		if u, err := url.Parse(env); err == nil {
 			if p, err := strconv.ParseInt(u.Port(), 10, 0); err == nil {

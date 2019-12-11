@@ -21,18 +21,19 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
+
+	"github.com/edgexfoundry/go-mod-registry/registry"
 
 	"github.com/gorilla/mux"
 )

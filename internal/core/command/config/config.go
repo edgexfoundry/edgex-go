@@ -15,20 +15,22 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
 	Writable    WritableInfo
-	Clients     map[string]config.ClientInfo
+	Clients     map[string]bootstrapConfig.ClientInfo
 	Databases   config.DatabaseInfo
-	Logging     config.LoggingInfo
-	Registry    config.RegistryInfo
-	Service     config.ServiceInfo
-	SecretStore config.SecretStoreInfo
-	Startup     config.StartupInfo
+	Logging     bootstrapConfig.LoggingInfo
+	Registry    bootstrapConfig.RegistryInfo
+	Service     bootstrapConfig.ServiceInfo
+	SecretStore bootstrapConfig.SecretStoreInfo
+	Startup     bootstrapConfig.StartupInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -87,7 +89,7 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 }
 
 // SetRegistryInfo updates the registry info in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
+func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {
 	c.Registry = registryInfo
 }
 

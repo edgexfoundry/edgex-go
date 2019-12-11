@@ -20,11 +20,12 @@ import (
 	"sync"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"

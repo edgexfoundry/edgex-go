@@ -25,9 +25,10 @@ import (
 	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -62,7 +63,7 @@ func TestGetAllDeviceServices(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
 			configuration := metadataConfig.ConfigurationStruct{
-				Service: config.ServiceInfo{MaxResultCount: 1},
+				Service: bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			}
 			restGetAllDeviceServices(
 				rr,

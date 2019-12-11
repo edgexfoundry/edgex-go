@@ -16,7 +16,9 @@ package device
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -26,12 +28,12 @@ type DeviceAllExecutor interface {
 }
 
 type deviceLoadAll struct {
-	config   config.ServiceInfo
+	config   bootstrapConfig.ServiceInfo
 	database DeviceLoader
 	logger   logger.LoggingClient
 }
 
-func NewDeviceLoadAll(cfg config.ServiceInfo, db DeviceLoader, log logger.LoggingClient) DeviceAllExecutor {
+func NewDeviceLoadAll(cfg bootstrapConfig.ServiceInfo, db DeviceLoader, log logger.LoggingClient) DeviceAllExecutor {
 	return deviceLoadAll{config: cfg, database: db, logger: log}
 }
 
@@ -55,14 +57,14 @@ type ProfileIdExecutor interface {
 }
 
 type deviceLoadByProfileId struct {
-	config   config.ServiceInfo
+	config   bootstrapConfig.ServiceInfo
 	database DeviceLoader
 	profile  string
 	logger   logger.LoggingClient
 }
 
 // NewProfileIdExecutor creates a new ProfileIdExecutor
-func NewProfileIdExecutor(cfg config.ServiceInfo, db DeviceLoader, log logger.LoggingClient, profile string) ProfileIdExecutor {
+func NewProfileIdExecutor(cfg bootstrapConfig.ServiceInfo, db DeviceLoader, log logger.LoggingClient, profile string) ProfileIdExecutor {
 	return deviceLoadByProfileId{config: cfg, database: db, logger: log, profile: profile}
 }
 

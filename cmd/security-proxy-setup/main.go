@@ -20,14 +20,16 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 

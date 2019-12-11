@@ -15,8 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // PersistenceInterfaceName contains the name of the interfaces.Persistence implementation in the DIC.

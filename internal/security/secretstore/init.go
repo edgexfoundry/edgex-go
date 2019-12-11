@@ -24,11 +24,12 @@ import (
 	"sync"
 	"time"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 type Bootstrap struct {

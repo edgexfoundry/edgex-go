@@ -14,19 +14,21 @@
 package client
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 type ConfigurationStruct struct {
 	Writable    WritableInfo
-	Clients     map[string]config.ClientInfo
+	Clients     map[string]bootstrapConfig.ClientInfo
 	Databases   config.DatabaseInfo
-	Logging     config.LoggingInfo
-	Registry    config.RegistryInfo
-	Service     config.ServiceInfo
-	SecretStore config.SecretStoreInfo
-	Startup     config.StartupInfo
+	Logging     bootstrapConfig.LoggingInfo
+	Registry    bootstrapConfig.RegistryInfo
+	Service     bootstrapConfig.ServiceInfo
+	SecretStore bootstrapConfig.SecretStoreInfo
+	Startup     bootstrapConfig.StartupInfo
 }
 
 type WritableInfo struct {
@@ -85,7 +87,7 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 }
 
 // SetLogLevel updates the log level in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {
+func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {
 	c.Registry = registryInfo
 }
 
