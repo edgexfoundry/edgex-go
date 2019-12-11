@@ -97,7 +97,7 @@ func metricsHandler(
 	loggingClient.Debug("retrieved service names")
 
 	vars := mux.Vars(r)
-	pkg.Encode(metricsImpl.Get(strings.Split(vars["services"], ","), r.Context()), w, loggingClient)
+	pkg.Encode(metricsImpl.Get(r.Context(), strings.Split(vars["services"], ",")), w, loggingClient)
 }
 
 // operationHandler implements a controller to execute a start/stop/restart operation request.
@@ -143,7 +143,7 @@ func getConfigHandler(
 	vars := mux.Vars(r)
 	loggingClient.Debug("retrieved service names")
 
-	pkg.Encode(getConfigImpl.Do(strings.Split(vars["services"], ","), r.Context()), w, loggingClient)
+	pkg.Encode(getConfigImpl.Do(r.Context(), strings.Split(vars["services"], ",")), w, loggingClient)
 }
 
 // setConfigHandler implements a controller to execute a set configuration request.

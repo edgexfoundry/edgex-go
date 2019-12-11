@@ -21,7 +21,7 @@ import (
 )
 
 type GetConfig interface {
-	Do(services []string, ctx context.Context) interface{}
+	Do(ctx context.Context, services []string) interface{}
 }
 
 type SetConfig interface {
