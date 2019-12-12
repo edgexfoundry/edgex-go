@@ -1,5 +1,6 @@
 name: edgexfoundry
 base: core18
+type: app
 adopt-info: version
 summary: Open-source framework for IoT edge computing
 description: |
@@ -90,7 +91,10 @@ apps:
   mongod:
     adapter: full
     after: [core-config-seed]
-    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log
+    command: >-
+      bin/mongod
+      --dbpath $SNAP_DATA/mongo/db
+      --logpath $SNAP_COMMON/mongodb.log
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
@@ -315,9 +319,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   device-virtual:
     adapter: none
@@ -329,9 +333,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
@@ -802,7 +806,8 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
-      # for sys-mgmt-agent we also need to specify the operations type as "snap"
+      # for sys-mgmt-agent we also need to specify ExecutorPath as our snap
+      # executor
       cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
         sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
             -e s:"ExecutorPath = '/path/to/the/file'":"ExecutorPath = '\$SNAP/bin/sys-mgmt-agent-snap-executor.sh'": \
@@ -1085,6 +1090,8 @@ parts:
       - libyaml-dev
       - luarocks
       - lua5.1
+      - build-essential
+      - autoconf
     stage-packages:
       - perl
       - luarocks
