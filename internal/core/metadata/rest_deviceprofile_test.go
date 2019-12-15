@@ -14,9 +14,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -114,7 +115,7 @@ func TestGetAllProfiles(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
 			configuration := metadataConfig.ConfigurationStruct{
-				Service: config.ServiceInfo{MaxResultCount: len(TestDeviceProfiles)},
+				Service: bootstrapConfig.ServiceInfo{MaxResultCount: len(TestDeviceProfiles)},
 			}
 			restGetAllDeviceProfiles(
 				rr,
@@ -223,7 +224,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			var loggerMock = logger.NewMockClient()
 			configuration := metadataConfig.ConfigurationStruct{
 				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: true},
-				Service:  config.ServiceInfo{MaxResultCount: 1},
+				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			}
 			restAddDeviceProfile(
 				rr,
@@ -745,7 +746,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			configuration := metadataConfig.ConfigurationStruct{
 				Writable: metadataConfig.WritableInfo{
 					EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
-				Service: config.ServiceInfo{MaxResultCount: 1},
+				Service: bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			}
 			restUpdateDeviceProfile(
 				rr,

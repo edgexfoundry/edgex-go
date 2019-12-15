@@ -19,17 +19,18 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.

@@ -22,12 +22,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
@@ -106,7 +107,7 @@ func getConfiguration() *config.ConfigurationStruct {
 		Writable: config.WritableInfo{
 			LogLevel: "DEBUG",
 		},
-		Logging: types.LoggingInfo{
+		Logging: bootstrapConfig.LoggingInfo{
 			EnableRemote: false,
 			File:         "./logs/security-secrets-setup.log",
 		},

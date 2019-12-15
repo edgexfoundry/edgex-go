@@ -21,13 +21,14 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/executor"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -92,7 +93,7 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 					err.Error()))
 		}
 
-		configClient := config.ClientInfo{
+		configClient := bootstrapConfig.ClientInfo{
 			Protocol: m.serviceProtocol,
 			Host:     e.Host,
 			Port:     e.Port,

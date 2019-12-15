@@ -25,7 +25,9 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/fileioperformer"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 

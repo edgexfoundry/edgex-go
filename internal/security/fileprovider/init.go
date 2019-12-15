@@ -23,13 +23,14 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/security/authtokenloader"
-	"github.com/edgexfoundry/edgex-go/internal/security/fileioperformer"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader"
+	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.

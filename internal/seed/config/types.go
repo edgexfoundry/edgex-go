@@ -14,7 +14,7 @@
  *******************************************************************************/
 package config
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 type ConfigurationStruct struct {
 	ConfigPath                   string

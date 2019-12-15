@@ -19,10 +19,12 @@ package fileprovider
 import (
 	"errors"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/authtokenloader"
-	"github.com/edgexfoundry/edgex-go/internal/security/fileioperformer"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader"
+	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 

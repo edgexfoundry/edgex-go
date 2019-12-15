@@ -26,9 +26,10 @@ import (
 	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -90,7 +91,7 @@ func TestGetAllAddressables(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			configuration := metadataConfig.ConfigurationStruct{
-				Service: config.ServiceInfo{MaxResultCount: 10},
+				Service: bootstrapConfig.ServiceInfo{MaxResultCount: 10},
 			}
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()

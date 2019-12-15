@@ -19,19 +19,20 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/httpserver"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/message"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/secret"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )

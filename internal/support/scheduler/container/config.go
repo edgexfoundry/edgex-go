@@ -15,8 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // ConfigurationName contains the name of scheduler's config.ConfigurationStruct implementation in the DIC.

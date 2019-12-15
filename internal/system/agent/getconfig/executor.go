@@ -19,9 +19,10 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -76,7 +77,7 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 			return "", fmt.Errorf("on attempting to get ServiceEndpoint for %s, got error: %v", serviceName, err.Error())
 		}
 
-		configClient := config.ClientInfo{
+		configClient := bootstrapConfig.ClientInfo{
 			Protocol: e.serviceProtocol,
 			Host:     ep.Host,
 			Port:     ep.Port,

@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	mock "github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/command/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/pkg/errors"
 )
 
@@ -61,28 +64,28 @@ func TestLoadCommandsByDeviceId(t *testing.T) {
 func TestLoadAllCommands(t *testing.T) {
 	tests := []struct {
 		name           string
-		cfg            config.ServiceInfo
+		cfg            bootstrapConfig.ServiceInfo
 		commandDBMock  CommandLoader
 		expectedResult []models.Command
 		expectError    bool
 	}{
 		{
 			"GetAllOK",
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			createCommandLoaderMock("GetAllCommands", []models.Command{testCommand}, nil, ""),
 			[]models.Command{testCommand},
 			false,
 		},
 		{
 			"GetAllFailMaxExceeded",
-			config.ServiceInfo{},
+			bootstrapConfig.ServiceInfo{},
 			createCommandLoaderMock("GetAllCommands", []models.Command{testCommand}, nil, ""),
 			[]models.Command{},
 			true,
 		},
 		{
 			"GetAllFailUnexpected",
-			config.ServiceInfo{},
+			bootstrapConfig.ServiceInfo{},
 			createCommandLoaderMock("GetAllCommands", nil, errors.New("unexpected error"), ""),
 			nil,
 			true,
