@@ -39,12 +39,12 @@ import (
 
 func restGetAllDeviceProfiles(
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	configuration *config.ConfigurationStruct) {
 
-	op := device_profile.NewGetAllExecutor(configuration.Service, dbClient, loggingClient)
+	op := device_profile.NewGetAllExecutor(configuration.Service, dbClient, lc)
 	res, err := op.Execute()
 	if err != nil {
 		errorHandler.HandleOneVariant(
@@ -62,7 +62,7 @@ func restGetAllDeviceProfiles(
 func restAddDeviceProfile(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	vdc coredata.ValueDescriptorClient,
@@ -86,7 +86,7 @@ func restAddDeviceProfile(
 			return
 		}
 
-		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, loggingClient, dp.DeviceResources...)
+		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, lc, dp.DeviceResources...)
 		err = op.Execute()
 		if err != nil {
 			errorHandler.HandleOneVariant(
@@ -104,7 +104,7 @@ func restAddDeviceProfile(
 func restUpdateDeviceProfile(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	vdc coredata.ValueDescriptorClient,
@@ -119,7 +119,7 @@ func restUpdateDeviceProfile(
 	}
 
 	if configuration.Writable.EnableValueDescriptorManagement {
-		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, loggingClient, r.Context())
+		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, lc, r.Context())
 		err := vdOp.Execute()
 		if err != nil {
 			errorHandler.HandleManyVariants(
@@ -151,11 +151,11 @@ func restUpdateDeviceProfile(
 	}
 
 	// Notify Associates
-	err = notifyProfileAssociates(dp, dbClient, http.MethodPut, loggingClient, errorHandler, configuration)
+	err = notifyProfileAssociates(dp, dbClient, http.MethodPut, lc, errorHandler, configuration)
 	if err != nil {
 		// Log the error but do not change the response to the client. We do not want this to affect the overall status
 		// of the operation
-		loggingClient.Warn("Error while notifying profile associates of update: ", err.Error())
+		lc.Warn("Error while notifying profile associates of update: ", err.Error())
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -544,7 +544,7 @@ func restGetYamlProfileByName(
 func restGetYamlProfileById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -562,7 +562,7 @@ func restGetYamlProfileById(
 		} else {
 			errorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -582,15 +582,15 @@ func notifyProfileAssociates(
 	dp models.DeviceProfile,
 	dl device.DeviceLoader,
 	action string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	errorHandler errorconcept.ErrorHandler,
 	configuration *config.ConfigurationStruct) error {
 
 	// Get the devices
-	op := device.NewProfileIdExecutor(configuration.Service, dl, loggingClient, dp.Id)
+	op := device.NewProfileIdExecutor(configuration.Service, dl, lc, dp.Id)
 	d, err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 
@@ -606,8 +606,8 @@ func notifyProfileAssociates(
 		}
 	}
 
-	if err := notifyAssociates(ds, dp.Id, action, models.PROFILE, loggingClient); err != nil {
-		loggingClient.Error(err.Error())
+	if err := notifyAssociates(ds, dp.Id, action, models.PROFILE, lc); err != nil {
+		lc.Error(err.Error())
 		return err
 	}
 

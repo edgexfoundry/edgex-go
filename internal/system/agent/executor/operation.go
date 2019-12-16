@@ -33,12 +33,12 @@ type operations struct {
 // NewOperations is a factory function that returns an initialized operations receiver struct.
 func NewOperations(
 	executor interfaces.CommandExecutor,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	executorPath string) *operations {
 
 	return &operations{
 		executor:      executor,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		executorPath:  executorPath,
 	}
 }

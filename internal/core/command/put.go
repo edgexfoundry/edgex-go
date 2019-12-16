@@ -32,7 +32,7 @@ func NewPutCommand(
 	body string,
 	context context.Context,
 	httpCaller internal.HttpCaller,
-	loggingClient logger.LoggingClient) (Executor, error) {
+	lc logger.LoggingClient) (Executor, error) {
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Put.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
 	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
@@ -44,5 +44,5 @@ func NewPutCommand(
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return newServiceCommand(device, httpCaller, request, loggingClient), nil
+	return newServiceCommand(device, httpCaller, request, lc), nil
 }

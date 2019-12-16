@@ -58,7 +58,7 @@ func restGetAllDeviceReports(
 func restAddDeviceReport(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -92,8 +92,8 @@ func restAddDeviceReport(
 	}
 
 	// Notify associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodPost, loggingClient, dbClient); err != nil {
-		loggingClient.Error(err.Error())
+	if err := notifyDeviceReportAssociates(dr, http.MethodPost, lc, dbClient); err != nil {
+		lc.Error(err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -103,7 +103,7 @@ func restAddDeviceReport(
 func restUpdateDeviceReport(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -131,7 +131,7 @@ func restUpdateDeviceReport(
 	}
 
 	if err := updateDeviceReportFields(from, &to, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -141,8 +141,8 @@ func restUpdateDeviceReport(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(to, http.MethodPut, loggingClient, dbClient); err != nil {
-		loggingClient.Error(err.Error())
+	if err := notifyDeviceReportAssociates(to, http.MethodPut, lc, dbClient); err != nil {
+		lc.Error(err.Error())
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -298,7 +298,7 @@ func restGetDeviceReportByDeviceName(
 func restDeleteReportById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -312,8 +312,8 @@ func restDeleteReportById(
 		return
 	}
 
-	if err := deleteDeviceReport(dr, w, loggingClient, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+	if err := deleteDeviceReport(dr, w, lc, dbClient, errorHandler); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -324,7 +324,7 @@ func restDeleteReportById(
 func restDeleteReportByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -342,8 +342,8 @@ func restDeleteReportByName(
 		return
 	}
 
-	if err = deleteDeviceReport(dr, w, loggingClient, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+	if err = deleteDeviceReport(dr, w, lc, dbClient, errorHandler); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -354,7 +354,7 @@ func restDeleteReportByName(
 func deleteDeviceReport(
 	dr models.DeviceReport,
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) error {
 
@@ -364,7 +364,7 @@ func deleteDeviceReport(
 	}
 
 	// Notify Associates
-	if err := notifyDeviceReportAssociates(dr, http.MethodDelete, loggingClient, dbClient); err != nil {
+	if err := notifyDeviceReportAssociates(dr, http.MethodDelete, lc, dbClient); err != nil {
 		return err
 	}
 
@@ -375,7 +375,7 @@ func deleteDeviceReport(
 func notifyDeviceReportAssociates(
 	dr models.DeviceReport,
 	action string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) error {
 
 	// Get the device of the report
@@ -391,7 +391,7 @@ func notifyDeviceReportAssociates(
 	}
 
 	// Notify the associating device services
-	if err = notifyAssociates([]models.DeviceService{ds}, dr.Id, action, models.REPORT, loggingClient); err != nil {
+	if err = notifyAssociates([]models.DeviceService{ds}, dr.Id, action, models.REPORT, lc); err != nil {
 		return err
 	}
 

@@ -66,7 +66,7 @@ func countEventsByDevice(
 	return count, err
 }
 
-func deleteEventsByAge(age int64, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
+func deleteEventsByAge(age int64, lc logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
 	events, err := dbClient.EventsOlderThanAge(age)
 	if err != nil {
 		return -1, err
@@ -75,7 +75,7 @@ func deleteEventsByAge(age int64, loggingClient logger.LoggingClient, dbClient i
 	// Delete all the events
 	count := len(events)
 	for _, event := range events {
-		if err = deleteEvent(event, loggingClient, dbClient); err != nil {
+		if err = deleteEvent(event, lc, dbClient); err != nil {
 			return -1, err
 		}
 	}
@@ -100,7 +100,7 @@ func getEvents(limit int, dbClient interfaces.DBClient) ([]contract.Event, error
 
 func addNewEvent(
 	e models.Event, ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	chEvents chan<- interface{},
 	msgClient messaging.MessageClient,
@@ -113,7 +113,7 @@ func addNewEvent(
 	}
 
 	if configuration.Writable.ValidateCheck {
-		loggingClient.Debug("Validation enabled, parsing events")
+		lc.Debug("Validation enabled, parsing events")
 		for reading := range e.Readings {
 			// Check value descriptor
 			name := e.Readings[reading].Name
@@ -141,9 +141,9 @@ func addNewEvent(
 		e.ID = id
 	}
 
-	putEventOnQueue(e, ctx, loggingClient, msgClient, configuration) // Push event to message bus for App Services to consume
-	chEvents <- DeviceLastReported{e.Device}                         // update last reported connected (device)
-	chEvents <- DeviceServiceLastReported{e.Device}                  // update last reported connected (device service)
+	putEventOnQueue(e, ctx, lc, msgClient, configuration) // Push event to message bus for App Services to consume
+	chEvents <- DeviceLastReported{e.Device}              // update last reported connected (device)
+	chEvents <- DeviceServiceLastReported{e.Device}       // update last reported connected (device service)
 
 	return e.ID, nil
 }
@@ -182,13 +182,13 @@ func updateEvent(
 	return dbClient.UpdateEvent(mapped)
 }
 
-func deleteEventById(id string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func deleteEventById(id string, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	e, err := getEventById(id, dbClient)
 	if err != nil {
 		return err
 	}
 
-	err = deleteEvent(e, loggingClient, dbClient)
+	err = deleteEvent(e, lc, dbClient)
 	if err != nil {
 		return err
 	}
@@ -196,9 +196,9 @@ func deleteEventById(id string, loggingClient logger.LoggingClient, dbClient int
 }
 
 // Delete the event and readings
-func deleteEvent(e contract.Event, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func deleteEvent(e contract.Event, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	for _, reading := range e.Readings {
-		if err := deleteReadingById(reading.Id, loggingClient, dbClient); err != nil {
+		if err := deleteReadingById(reading.Id, lc, dbClient); err != nil {
 			return err
 		}
 	}
@@ -276,18 +276,18 @@ func updateEventPushDate(
 func putEventOnQueue(
 	evt models.Event,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	msgClient messaging.MessageClient,
 	configuration *config.ConfigurationStruct) {
 
-	loggingClient.Info("Putting event on message queue")
+	lc.Info("Putting event on message queue")
 
 	evt.CorrelationId = correlation.FromContext(ctx)
 	// Re-marshal JSON content into bytes.
 	if clients.FromContext(clients.ContentType, ctx) == clients.ContentTypeJSON {
 		data, err := json.Marshal(evt)
 		if err != nil {
-			loggingClient.Error(fmt.Sprintf("error marshaling event: %s", evt.String()))
+			lc.Error(fmt.Sprintf("error marshaling event: %s", evt.String()))
 			return
 		}
 		evt.Bytes = data
@@ -296,21 +296,21 @@ func putEventOnQueue(
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
 	err := msgClient.Publish(msgEnvelope, configuration.MessageQueue.Topic)
 	if err != nil {
-		loggingClient.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
+		lc.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
 	} else {
-		loggingClient.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
+		lc.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
 	}
 }
 
 func getEventsByDeviceIdLimit(
 	limit int,
 	deviceId string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) ([]contract.Event, error) {
 
 	eventList, err := dbClient.EventsForDeviceLimit(deviceId, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
@@ -321,12 +321,12 @@ func getEventsByCreationTime(
 	limit int,
 	start int64,
 	end int64,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) ([]contract.Event, error) {
 
 	eventList, err := dbClient.EventsByCreationTime(start, end, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
@@ -337,21 +337,21 @@ func deleteEvents(deviceId string, dbClient interfaces.DBClient) (int, error) {
 	return dbClient.DeleteEventsByDevice(deviceId)
 }
 
-func scrubPushedEvents(loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
-	loggingClient.Info("Scrubbing events.  Deleting all events that have been pushed")
+func scrubPushedEvents(lc logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
+	lc.Info("Scrubbing events.  Deleting all events that have been pushed")
 
 	// Get the events
 	events, err := dbClient.EventsPushed()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return 0, err
 	}
 
 	// Delete all the events
 	count := len(events)
 	for _, event := range events {
-		if err = deleteEvent(event, loggingClient, dbClient); err != nil {
-			loggingClient.Error(err.Error())
+		if err = deleteEvent(event, lc, dbClient); err != nil {
+			lc.Error(err.Error())
 			return 0, err
 		}
 	}

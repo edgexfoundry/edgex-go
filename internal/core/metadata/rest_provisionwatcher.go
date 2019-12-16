@@ -56,7 +56,7 @@ func restGetProvisionWatchers(
 func restDeleteProvisionWatcherById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -70,7 +70,7 @@ func restDeleteProvisionWatcherById(
 		return
 	}
 
-	err = deleteProvisionWatcher(pw, w, loggingClient, dbClient, errorHandler)
+	err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
@@ -82,7 +82,7 @@ func restDeleteProvisionWatcherById(
 func restDeleteProvisionWatcherByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -104,8 +104,8 @@ func restDeleteProvisionWatcherByName(
 		return
 	}
 
-	if err = deleteProvisionWatcher(pw, w, loggingClient, dbClient, errorHandler); err != nil {
-		loggingClient.Error("Problem deleting provision watcher: " + err.Error())
+	if err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler); err != nil {
+		lc.Error("Problem deleting provision watcher: " + err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -117,7 +117,7 @@ func restDeleteProvisionWatcherByName(
 func deleteProvisionWatcher(
 	pw models.ProvisionWatcher,
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) error {
 
@@ -129,9 +129,9 @@ func deleteProvisionWatcher(
 	if err := notifyProvisionWatcherAssociates(
 		pw,
 		http.MethodDelete,
-		loggingClient,
+		lc,
 		dbClient); err != nil {
-		loggingClient.Error("Problem notifying associated device services to provision watcher: " + err.Error())
+		lc.Error("Problem notifying associated device services to provision watcher: " + err.Error())
 	}
 
 	return nil
@@ -329,7 +329,7 @@ func restGetProvisionWatchersByIdentifier(
 func restAddProvisionWatcher(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -401,8 +401,8 @@ func restAddProvisionWatcher(
 	}
 
 	// Notify Associates
-	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, loggingClient, dbClient); err != nil {
-		loggingClient.Error(
+	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, lc, dbClient); err != nil {
+		lc.Error(
 			"Problem with notifying associating device services for the provision watcher: " + err.Error())
 	}
 
@@ -416,7 +416,7 @@ func restAddProvisionWatcher(
 func restUpdateProvisionWatcher(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -443,7 +443,7 @@ func restUpdateProvisionWatcher(
 	}
 
 	if err := updateProvisionWatcherFields(from, &to, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error("Problem updating provision watcher: " + err.Error())
+		lc.Error("Problem updating provision watcher: " + err.Error())
 		return
 	}
 
@@ -453,8 +453,8 @@ func restUpdateProvisionWatcher(
 	}
 
 	// Notify Associates
-	if err := notifyProvisionWatcherAssociates(to, http.MethodPut, loggingClient, dbClient); err != nil {
-		loggingClient.Error("Problem notifying associated device services for provision watcher: " + err.Error())
+	if err := notifyProvisionWatcherAssociates(to, http.MethodPut, lc, dbClient); err != nil {
+		lc.Error("Problem notifying associated device services for provision watcher: " + err.Error())
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
@@ -496,7 +496,7 @@ func updateProvisionWatcherFields(
 func notifyProvisionWatcherAssociates(
 	pw models.ProvisionWatcher,
 	action string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) error {
 
 	// Get the device service for the provision watcher
@@ -506,7 +506,7 @@ func notifyProvisionWatcherAssociates(
 	}
 
 	// Notify the service
-	err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER, loggingClient)
+	err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER, lc)
 	if err != nil {
 		return err
 	}

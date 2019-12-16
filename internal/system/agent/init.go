@@ -45,8 +45,8 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	case direct.MetricsMechanism:
 	case executor.MetricsMechanism:
 	default:
-		loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
-		loggingClient.Error("the requested metrics mechanism is not supported")
+		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+		lc.Error("the requested metrics mechanism is not supported")
 		return false
 	}
 

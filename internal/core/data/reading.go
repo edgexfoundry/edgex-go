@@ -29,19 +29,17 @@ import (
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-func getAllReadings(
-	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient,
+func getAllReadings(lc logger.LoggingClient, dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) (readings []contract.Reading, err error) {
 
 	readings, err = dbClient.Readings()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
 	// Check max limit
-	err = checkMaxLimit(len(readings), loggingClient, configuration)
+	err = checkMaxLimit(len(readings), lc, configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +49,7 @@ func getAllReadings(
 
 func decodeReading(
 	reader io.Reader,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) (reading contract.Reading, err error) {
 
@@ -60,13 +58,13 @@ func decodeReading(
 
 	// Problem decoding
 	if err != nil {
-		loggingClient.Error("Error decoding the reading: " + err.Error())
+		lc.Error("Error decoding the reading: " + err.Error())
 
 		return contract.Reading{}, errors.NewErrJsonDecoding(reading.Name)
 	}
 
 	if configuration.Writable.ValidateCheck {
-		err = validateReading(reading, loggingClient, dbClient)
+		err = validateReading(reading, lc, dbClient)
 
 		if err != nil {
 			return contract.Reading{}, err
@@ -76,11 +74,11 @@ func decodeReading(
 	return reading, nil
 }
 
-func validateReading(reading contract.Reading, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func validateReading(reading contract.Reading, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	// Check the value descriptor
 	vd, err := dbClient.ValueDescriptorByName(reading.Name)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return errors.NewErrDbNotFound()
 		} else {
@@ -90,7 +88,7 @@ func validateReading(reading contract.Reading, loggingClient logger.LoggingClien
 
 	err = isValidValueDescriptor(vd, reading)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 
@@ -99,13 +97,13 @@ func validateReading(reading contract.Reading, loggingClient logger.LoggingClien
 
 func addReading(
 	reading contract.Reading,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (id string, err error) {
 
 	id, err = dbClient.AddReading(reading)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 
 		return "", err
 	}
@@ -115,13 +113,13 @@ func addReading(
 
 func getReadingById(
 	id string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (reading contract.Reading, err error) {
 
 	reading, err = dbClient.ReadingById(id)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return contract.Reading{}, errors.NewErrDbNotFound()
 		} else {
@@ -132,13 +130,13 @@ func getReadingById(
 	return reading, nil
 }
 
-func deleteReadingById(id string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func deleteReadingById(id string, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	err := dbClient.DeleteReadingById(id)
 	if err != nil {
 		if err == db.ErrNotFound {
 			return errors.NewErrDbNotFound()
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 
@@ -147,10 +145,10 @@ func deleteReadingById(id string, loggingClient logger.LoggingClient, dbClient i
 
 func updateReading(
 	reading contract.Reading,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) error {
-	to, err := getReadingById(reading.Id, loggingClient, dbClient)
+	to, err := getReadingById(reading.Id, lc, dbClient)
 	if err != nil {
 		return err
 	}
@@ -170,9 +168,9 @@ func updateReading(
 		if configuration.Writable.ValidateCheck {
 			fmt.Println(to)
 
-			err = validateReading(to, loggingClient, dbClient)
+			err = validateReading(to, lc, dbClient)
 			if err != nil {
-				loggingClient.Error("Error validating updated reading")
+				lc.Error("Error validating updated reading")
 				return err
 			}
 		}
@@ -180,17 +178,17 @@ func updateReading(
 
 	err = dbClient.UpdateReading(reading)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func countReadings(loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (count int, err error) {
+func countReadings(lc logger.LoggingClient, dbClient interfaces.DBClient) (count int, err error) {
 	count, err = dbClient.ReadingCount()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return 0, err
 	}
 
@@ -201,20 +199,20 @@ func getReadingsByDevice(
 	deviceId string,
 	limit int,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
 	configuration *config.ConfigurationStruct) (readings []contract.Reading, err error) {
 
 	if checkDevice(deviceId, ctx, mdc, configuration) != nil {
-		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
+		lc.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 
 		return []contract.Reading{}, err
 	}
 
 	readings, err = dbClient.ReadingsByDevice(deviceId, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return []contract.Reading{}, err
 	}
 
@@ -224,19 +222,19 @@ func getReadingsByDevice(
 func getReadingsByValueDescriptor(
 	name string,
 	limit int,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) (readings []contract.Reading, err error) {
 
 	// Limit is too large
-	err = checkMaxLimit(limit, loggingClient, configuration)
+	err = checkMaxLimit(limit, lc, configuration)
 	if err != nil {
 		return []contract.Reading{}, err
 	}
 
 	// Check for value descriptor
 	if configuration.Writable.ValidateCheck {
-		_, err = getValueDescriptorByName(name, loggingClient, dbClient)
+		_, err = getValueDescriptorByName(name, lc, dbClient)
 		if err != nil {
 			return []contract.Reading{}, err
 		}
@@ -244,7 +242,7 @@ func getReadingsByValueDescriptor(
 
 	readings, err = dbClient.ReadingsByValueDescriptor(name, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return []contract.Reading{}, err
 	}
 
@@ -254,12 +252,12 @@ func getReadingsByValueDescriptor(
 func getReadingsByValueDescriptorNames(
 	listOfNames []string,
 	limit int,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (readings []contract.Reading, err error) {
 
 	readings, err = dbClient.ReadingsByValueDescriptorNames(listOfNames, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
@@ -270,12 +268,12 @@ func getReadingsByCreationTime(
 	start int64,
 	end int64,
 	limit int,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (readings []contract.Reading, err error) {
 
 	readings, err = dbClient.ReadingsByCreationTime(start, end, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
@@ -286,12 +284,12 @@ func getReadingsByDeviceAndValueDescriptor(
 	device string,
 	name string,
 	limit int,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (readings []contract.Reading, err error) {
 
 	readings, err = dbClient.ReadingsByDeviceAndValueDescriptor(device, name, limit)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 

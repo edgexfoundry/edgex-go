@@ -84,14 +84,14 @@ func NewCred(
 	tpath string,
 	generator CredentialGenerator,
 	secretServiceBaseURL string,
-	loggingClient logger.LoggingClient) Cred {
+	lc logger.LoggingClient) Cred {
 
 	return Cred{
 		client:               caller,
 		tokenPath:            tpath,
 		generator:            generator,
 		secretServiceBaseURL: secretServiceBaseURL,
-		loggingClient:        loggingClient,
+		loggingClient:        lc,
 	}
 }
 

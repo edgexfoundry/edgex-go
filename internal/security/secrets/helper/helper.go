@@ -109,7 +109,7 @@ func IsDirEmpty(dir string) (empty bool, err error) {
 	return empty, err
 }
 
-func CopyDir(srcDir, destDir string, loggingClient logger.LoggingClient) error {
+func CopyDir(srcDir, destDir string, lc logger.LoggingClient) error {
 	srcFileInfo, statErr := os.Stat(srcDir)
 	if statErr != nil {
 		return statErr
@@ -128,11 +128,11 @@ func CopyDir(srcDir, destDir string, loggingClient logger.LoggingClient) error {
 		destFilePath := filepath.Join(destDir, fileDesc.Name())
 
 		if fileDesc.IsDir() {
-			if err := CopyDir(srcFilePath, destFilePath, loggingClient); err != nil {
+			if err := CopyDir(srcFilePath, destFilePath, lc); err != nil {
 				return err
 			}
 		} else {
-			loggingClient.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
+			lc.Debug(fmt.Sprintf("copying srcFilePath: %s to destFilePath: %s", srcFilePath, destFilePath))
 			if _, copyErr := CopyFile(srcFilePath, destFilePath); copyErr != nil {
 				return copyErr
 			}
@@ -143,8 +143,8 @@ func CopyDir(srcDir, destDir string, loggingClient logger.LoggingClient) error {
 	return nil
 }
 
-func Deploy(srcDir, destDir string, loggingClient logger.LoggingClient) error {
-	if err := CopyDir(srcDir, destDir, loggingClient); err != nil {
+func Deploy(srcDir, destDir string, lc logger.LoggingClient) error {
+	if err := CopyDir(srcDir, destDir, lc); err != nil {
 		return err
 	}
 	return markComplete(destDir)
@@ -318,14 +318,14 @@ func GetDeployDir(configuration *config.ConfigurationStruct) (string, error) {
 }
 
 // GenTLSAssets generates the TLS assets based on the JSON configuration file
-func GenTLSAssets(jsonConfig string, loggingClient logger.LoggingClient) error {
+func GenTLSAssets(jsonConfig string, lc logger.LoggingClient) error {
 	// Read the Json x509 file and unmarshall content into struct type X509Config
 	x509Config, err := x509.NewX509Config(jsonConfig)
 	if err != nil {
 		return err
 	}
 
-	directoryHandler := directory.NewHandler(loggingClient)
+	directoryHandler := directory.NewHandler(lc)
 	if directoryHandler == nil {
 		return errors.New("h.loggingClient is nil")
 	}
@@ -335,7 +335,7 @@ func GenTLSAssets(jsonConfig string, loggingClient logger.LoggingClient) error {
 		return err
 	}
 
-	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), loggingClient)
+	rootCA, err := certificates.NewCertificateGenerator(certificates.RootCertificate, seed, certificates.NewFileWriter(), lc)
 	if err != nil {
 		return err
 	}
@@ -345,7 +345,7 @@ func GenTLSAssets(jsonConfig string, loggingClient logger.LoggingClient) error {
 		return err
 	}
 
-	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), loggingClient)
+	tlsCert, err := certificates.NewCertificateGenerator(certificates.TLSCertificate, seed, certificates.NewFileWriter(), lc)
 	if err != nil {
 		return err
 	}

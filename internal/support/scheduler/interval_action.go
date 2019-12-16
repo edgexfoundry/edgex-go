@@ -310,8 +310,8 @@ func deleteIntervalAction(intervalAction contract.IntervalAction, dbClient inter
 	return nil
 }
 
-func scrubAllInteralActions(loggingClient logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
-	loggingClient.Info("Scrubbing All IntervalAction(s).")
+func scrubAllInteralActions(lc logger.LoggingClient, dbClient interfaces.DBClient) (int, error) {
+	lc.Info("Scrubbing All IntervalAction(s).")
 
 	count, err := dbClient.ScrubAllIntervalActions()
 	if err != nil {

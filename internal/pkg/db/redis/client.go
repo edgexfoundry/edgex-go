@@ -59,7 +59,7 @@ func NewCoreDataClient(config db.Configuration, logger logger.LoggingClient) (*C
 }
 
 // Return a pointer to the Redis client
-func NewClient(config db.Configuration, loggingClient logger.LoggingClient) (*Client, error) {
+func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error) {
 	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
 		opts := []redis.DialOption{
@@ -95,7 +95,7 @@ func NewClient(config db.Configuration, loggingClient logger.LoggingClient) (*Cl
 				Dial:    dialFunc,
 			},
 			BatchSize:     batchSize,
-			loggingClient: loggingClient,
+			loggingClient: lc,
 		}
 	})
 	return currClient, nil

@@ -31,7 +31,7 @@ import (
 
 func restGetAllCommands(
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	configuration *config.ConfigurationStruct) {
@@ -46,13 +46,13 @@ func restGetAllCommands(
 			errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(&cmds, w, loggingClient)
+	pkg.Encode(&cmds, w, lc)
 }
 
 func restGetCommandById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -73,13 +73,13 @@ func restGetCommandById(
 			errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(cmd, w, loggingClient)
+	pkg.Encode(cmd, w, lc)
 }
 
 func restGetCommandsByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -95,13 +95,13 @@ func restGetCommandsByName(
 		errorHandler.Handle(w, err, errorconcept.Common.RetrieveError_StatusInternalServer)
 		return
 	}
-	pkg.Encode(&cmds, w, loggingClient)
+	pkg.Encode(&cmds, w, lc)
 }
 
 func restGetCommandsByDeviceId(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -122,5 +122,5 @@ func restGetCommandsByDeviceId(
 			errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(&commands, w, loggingClient)
+	pkg.Encode(&commands, w, lc)
 }

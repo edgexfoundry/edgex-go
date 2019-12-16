@@ -56,12 +56,12 @@ type Service struct {
 
 func NewService(
 	r internal.HttpCaller,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	configuration *config.ConfigurationStruct) Service {
 
 	return Service{
 		client:        r,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		configuration: configuration,
 	}
 }
