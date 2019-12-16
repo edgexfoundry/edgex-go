@@ -21,6 +21,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
@@ -45,8 +46,13 @@ func countEvents(dbClient interfaces.DBClient) (int, error) {
 	return count, nil
 }
 
-func countEventsByDevice(device string, ctx context.Context, dbClient interfaces.DBClient) (int, error) {
-	err := checkDevice(device, ctx)
+func countEventsByDevice(
+	device string,
+	ctx context.Context,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) (int, error) {
+
+	err := checkDevice(device, ctx, mdc)
 	if err != nil {
 		return -1, err
 	}
@@ -95,9 +101,10 @@ func addNewEvent(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	chEvents chan<- interface{},
-	msgClient messaging.MessageClient) (string, error) {
+	msgClient messaging.MessageClient,
+	mdc metadata.DeviceClient) (string, error) {
 
-	err := checkDevice(e.Device, ctx)
+	err := checkDevice(e.Device, ctx, mdc)
 	if err != nil {
 		return "", err
 	}
@@ -138,7 +145,12 @@ func addNewEvent(
 	return e.ID, nil
 }
 
-func updateEvent(from models.Event, ctx context.Context, dbClient interfaces.DBClient) error {
+func updateEvent(
+	from models.Event,
+	ctx context.Context,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) error {
+
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
 		return errors.NewErrEventNotFound(from.ID)
@@ -147,7 +159,7 @@ func updateEvent(from models.Event, ctx context.Context, dbClient interfaces.DBC
 	// Update the fields
 	if len(from.Device) > 0 {
 		// Check device
-		err = checkDevice(from.Device, ctx)
+		err = checkDevice(from.Device, ctx, mdc)
 		if err != nil {
 			return err
 		}
@@ -210,7 +222,12 @@ func getEventById(id string, dbClient interfaces.DBClient) (contract.Event, erro
 }
 
 // updateEventPushDateByChecksum updates the pushed dated for all events with a matching checksum which have not already been marked pushed
-func updateEventPushDateByChecksum(checksum string, ctx context.Context, dbClient interfaces.DBClient) error {
+func updateEventPushDateByChecksum(
+	checksum string,
+	ctx context.Context,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) error {
+
 	evts, err := dbClient.EventsByChecksum(checksum)
 	if err != nil {
 		return err
@@ -222,7 +239,7 @@ func updateEventPushDateByChecksum(checksum string, ctx context.Context, dbClien
 		// We only want the checksum for "marked pushed" functionality and once the event
 		// has been marked pushed there is no reason to keep the checksum around.
 		// The expectation is that above query will only return one result, but this is not guaranteed
-		err = updateEvent(models.Event{Event: e}, ctx, dbClient)
+		err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc)
 		if err != nil {
 			return err
 		}
@@ -230,14 +247,19 @@ func updateEventPushDateByChecksum(checksum string, ctx context.Context, dbClien
 	return nil
 }
 
-func updateEventPushDate(id string, ctx context.Context, dbClient interfaces.DBClient) error {
+func updateEventPushDate(
+	id string,
+	ctx context.Context,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) error {
+
 	e, err := getEventById(id, dbClient)
 	if err != nil {
 		return err
 	}
 
 	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(models.Event{Event: e}, ctx, dbClient)
+	err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc)
 	if err != nil {
 		return err
 	}

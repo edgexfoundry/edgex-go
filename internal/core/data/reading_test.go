@@ -172,7 +172,7 @@ func TestGetReadingsByDevice(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return(buildReadings(), nil)
-	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock)
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock, newMockDeviceClient())
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
 	}
@@ -186,7 +186,7 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock)
+	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock, newMockDeviceClient())
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
 	}
