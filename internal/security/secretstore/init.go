@@ -142,7 +142,7 @@ func (b *Bootstrap) Handler(
 	<-healthOkCh
 
 	//Step 4: Launch token handler
-	tokenProvider := NewTokenProvider(ctx, loggingClient)
+	tokenProvider := NewTokenProvider(ctx, loggingClient, ExecWrapper{})
 	if configuration.SecretService.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(configuration.SecretService); err != nil {
 			loggingClient.Error(fmt.Sprintf("failed to configure token provider: %s", err.Error()))

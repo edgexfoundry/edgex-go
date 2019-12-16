@@ -18,12 +18,16 @@ package secretstore
 
 import (
 	"context"
+	"errors"
+	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestInvalidProvider(t *testing.T) {
@@ -31,65 +35,114 @@ func TestInvalidProvider(t *testing.T) {
 		TokenProvider:     "does-not-exist",
 		TokenProviderType: OneShotProvider,
 	}
-	cancel, err := testCommon(config)
+	mockExecRunner := mockExecRunner{}
+	mockExecRunner.On("LookPath", config.TokenProvider).
+		Return("", errors.New("fake file does not exist"))
+	cancel, err := testCommon(config, &mockExecRunner)
 	defer cancel()
 	assert.NotNil(t, err)
+	mockExecRunner.AssertExpectations(t)
 }
 
 func TestInvalidProviderType(t *testing.T) {
 	config := secretstoreclient.SecretServiceInfo{
-		TokenProvider:     "/bin/true",
+		TokenProvider:     "success-executable",
 		TokenProviderType: "simple",
 	}
-	cancel, err := testCommon(config)
+	mockExecRunner := mockExecRunner{}
+	cancel, err := testCommon(config, &mockExecRunner)
 	defer cancel()
 	assert.Error(t, err)
+	mockExecRunner.AssertExpectations(t)
 }
 
 func TestNoConfig(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	p := NewTokenProvider(ctx, logger.MockLogger{})
+	p := NewTokenProvider(ctx, logger.MockLogger{}, ExecWrapper{})
+	// don't call SetConfiguration()
 	err := p.Launch()
 	defer cancel()
 	assert.Error(t, err)
 }
 
-func TestTrue(t *testing.T) {
+func TestSuccess(t *testing.T) {
 	config := secretstoreclient.SecretServiceInfo{
-		TokenProvider:     "/bin/true",
+		TokenProvider:     "success-executable",
 		TokenProviderType: OneShotProvider,
+		TokenProviderArgs: []string{"arg1", "arg2"},
 	}
-	cancel, err := testCommon(config)
+	mockExecRunner := mockExecRunner{}
+	mockCmd := mockCmd{}
+	mockExecRunner.On("LookPath", config.TokenProvider).
+		Return(config.TokenProvider, nil)
+	mockExecRunner.On("CommandContext", mock.Anything,
+		config.TokenProvider, config.TokenProviderArgs).
+		Return(&mockCmd)
+	mockCmd.On("Start").Return(nil)
+	mockCmd.On("Wait").Return(nil)
+	cancel, err := testCommon(config, &mockExecRunner)
 	defer cancel()
 	assert.Nil(t, err)
+	mockExecRunner.AssertExpectations(t)
+	mockCmd.AssertExpectations(t)
 }
 
-func TestFalse(t *testing.T) {
+func TestFailure(t *testing.T) {
 	config := secretstoreclient.SecretServiceInfo{
-		TokenProvider:     "/bin/false",
+		TokenProvider:     "failure-executable",
 		TokenProviderType: OneShotProvider,
+		TokenProviderArgs: []string{"arg1", "arg2"},
 	}
-	cancel, err := testCommon(config)
+	mockExecRunner := mockExecRunner{}
+	mockCmd := mockCmd{}
+	mockExecRunner.On("LookPath", config.TokenProvider).
+		Return(config.TokenProvider, nil)
+	mockExecRunner.On("CommandContext", mock.Anything,
+		config.TokenProvider, config.TokenProviderArgs).
+		Return(&mockCmd)
+	mockCmd.On("Start").Return(nil)
+	mockCmd.On("Wait").Return(&exec.ExitError{ProcessState: &os.ProcessState{}})
+	cancel, err := testCommon(config, &mockExecRunner)
 	defer cancel()
 	assert.Error(t, err)
+	mockExecRunner.AssertExpectations(t)
+	mockCmd.AssertExpectations(t)
 }
 
-func TestEcho(t *testing.T) {
-	config := secretstoreclient.SecretServiceInfo{
-		TokenProvider:     "/bin/echo",
-		TokenProviderArgs: []string{"one", "two"},
-		TokenProviderType: OneShotProvider,
-	}
-	cancel, err := testCommon(config)
-	defer cancel()
-	assert.Nil(t, err)
-}
-
-func testCommon(config secretstoreclient.SecretServiceInfo) (context.CancelFunc, error) {
+func testCommon(config secretstoreclient.SecretServiceInfo, mockExecRunner ExecRunner) (context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	p := NewTokenProvider(ctx, logger.MockLogger{})
+	p := NewTokenProvider(ctx, logger.MockLogger{}, mockExecRunner)
 	if err := p.SetConfiguration(config); err != nil {
 		return cancel, err
 	}
 	return cancel, p.Launch()
+}
+
+type mockExecRunner struct {
+	mock.Mock
+}
+
+func (m *mockExecRunner) LookPath(file string) (string, error) {
+	arguments := m.Called(file)
+	return arguments.String(0), arguments.Error(1)
+}
+
+func (m *mockExecRunner) CommandContext(ctx context.Context,
+	name string, arg ...string) CmdRunner {
+	arguments := m.Called(ctx, name, arg)
+	return arguments.Get(0).(CmdRunner)
+}
+
+type mockCmd struct {
+	mock.Mock
+}
+
+func (m *mockCmd) Start() error {
+	arguments := m.Called()
+	return arguments.Error(0)
+}
+
+func (m *mockCmd) Wait() error {
+	arguments := m.Called()
+	return arguments.Error(0)
 }
