@@ -159,8 +159,8 @@ func ImportSecurityConfiguration() error {
 }
 
 // As services are converted to utilize V2 types, add them to this list and remove from the one above.
-func listDirectories() [9]string {
-	var names = [9]string{
+func listDirectories() []string {
+	var names = []string{
 		clients.CoreMetaDataServiceKey,
 		clients.CoreCommandServiceKey,
 		clients.CoreDataServiceKey,
