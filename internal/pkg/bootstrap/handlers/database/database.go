@@ -22,13 +22,15 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
@@ -64,7 +66,7 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database)
 }
 
 // Return the dbClient interface
-func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials config.Credentials) (dbInterfaces.DBClient, error) {
+func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
 	case db.MongoDB:
@@ -99,13 +101,13 @@ func (d Database) BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := container.LoggingClientFrom(dic.Get)
+	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
-	var credentials config.Credentials
+	var credentials bootstrapConfig.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
+		credentials, err = bootstrapContainer.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
 		if err == nil {
 			break
 		}

@@ -22,15 +22,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/gorilla/mux"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	schedConfig "github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/interfaces/mocks"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
+	"github.com/gorilla/mux"
 )
 
 var intervalActionForAdd = contract.IntervalAction{
@@ -91,7 +93,7 @@ func TestGetIntervalAction(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				&schedConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 1}})
+				&schedConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 1}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

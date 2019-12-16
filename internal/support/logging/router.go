@@ -15,15 +15,16 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"

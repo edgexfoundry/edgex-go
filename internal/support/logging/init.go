@@ -13,16 +13,17 @@ import (
 	"sync"
 	"time"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/logging"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/file"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/logger/mongo"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/logging"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 const (
@@ -47,7 +48,7 @@ func NewServiceInit(server server, serviceKey string) ServiceInit {
 }
 
 func getPersistence(
-	credentials *types.Credentials,
+	credentials *bootstrapConfig.Credentials,
 	configuration *config.ConfigurationStruct) (interfaces.Persistence, error) {
 
 	switch configuration.Writable.Persistence {
@@ -71,7 +72,7 @@ func (s ServiceInit) BootstrapHandler(
 
 	// get database credentials.
 	credentialsProvider := bootstrapContainer.CredentialsProviderFrom(dic.Get)
-	var credentials types.Credentials
+	var credentials bootstrapConfig.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
 		credentials, err = credentialsProvider.GetDatabaseCredentials(configuration.Databases["Primary"])

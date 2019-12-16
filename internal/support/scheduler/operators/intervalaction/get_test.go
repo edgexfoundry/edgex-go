@@ -19,9 +19,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/intervalaction/mocks"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -31,7 +33,7 @@ var OtherName = "other"
 var Error = errors.New("test error")
 var ErrorNotFound = db.ErrNotFound
 var TestLimit = 20
-var TestServiceConfig = config.ServiceInfo{
+var TestServiceConfig = bootstrapConfig.ServiceInfo{
 	MaxResultCount: TestLimit,
 }
 var Intervals = []contract.Interval{

@@ -21,10 +21,12 @@ import (
 	"sync"
 	"time"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
@@ -35,17 +37,17 @@ func BootstrapHandler(
 	dic *di.Container) bool {
 
 	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
-	configuration := container.ConfigurationFrom(dic.Get)
+	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 
 	// add dependencies to bootstrapContainer
 	scClient := NewSchedulerQueueClient(loggingClient)
 	dic.Update(di.ServiceConstructorMap{
-		container.QueueName: func(get di.Get) interface{} {
+		schedulerContainer.QueueName: func(get di.Get) interface{} {
 			return scClient
 		},
 	})
 
-	err := LoadScheduler(loggingClient, bootstrapContainer.DBClientFrom(dic.Get), scClient, configuration)
+	err := LoadScheduler(loggingClient, container.DBClientFrom(dic.Get), scClient, configuration)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false

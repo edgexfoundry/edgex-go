@@ -27,18 +27,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 // TestSuccessfulConfig configuration used to avoid MaxResultCount errors.
-var TestSuccessfulConfig = config.ServiceInfo{MaxResultCount: 5}
+var TestSuccessfulConfig = bootstrapConfig.ServiceInfo{MaxResultCount: 5}
 
 // ErrorQueryParam query parameter value which will trigger the ' url.ParseQuery' function to throw an error due to the '%' not being followed by a valid hexadecimal number.
 var ErrorQueryParam = "%zz"
@@ -72,7 +72,7 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 		name           string
 		request        *http.Request
 		dbMock         interfaces.DBClient
-		config         config.ServiceInfo
+		config         bootstrapConfig.ServiceInfo
 		expectedResult map[string]bool
 		expectedStatus int
 	}{
@@ -169,14 +169,14 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 			"Error Limit Exceeded",
 			createRequestWithQueryParameter(map[string][]string{NAMES: {TestValueDescriptor1.Name, TestValueDescriptor2.Name, TestValueDescriptor3.Name}}),
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			nil,
 			http.StatusRequestEntityTooLarge,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 10}}
+			Configuration = &ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 10}}
 			defer func() { Configuration = &ConfigurationStruct{} }()
 
 			httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())

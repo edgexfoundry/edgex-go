@@ -20,15 +20,16 @@ import (
 	"fmt"
 	"sync"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 type Bootstrap struct {

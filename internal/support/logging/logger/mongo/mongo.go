@@ -11,10 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -28,7 +29,7 @@ type Logger struct {
 }
 
 func connectToMongo(
-	credentials *types.Credentials,
+	credentials *bootstrapConfig.Credentials,
 	host string,
 	port int,
 	timeout int,
@@ -53,7 +54,7 @@ func connectToMongo(
 	return ms, nil
 }
 
-func NewLogger(credentials *types.Credentials, configuration *config.ConfigurationStruct) (*Logger, error) {
+func NewLogger(credentials *bootstrapConfig.Credentials, configuration *config.ConfigurationStruct) (*Logger, error) {
 	databaseName := configuration.Databases["Primary"].Name
 	session, err := connectToMongo(
 		credentials,

@@ -20,12 +20,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	secretsConfig "github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
@@ -126,7 +127,7 @@ func TestCacheOff(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupExist bool) (func(), *config.ConfigurationStruct) {
+func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupExist bool) (func(), *secretsConfig.ConfigurationStruct) {
 	curDir, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("cannot get the working dir %s: %v", curDir, err)
@@ -157,15 +158,15 @@ func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupE
 		t.Fatalf("cannot copy %s for the test: %v", test.ConfigTomlFile, err)
 	}
 
-	configuration := &config.ConfigurationStruct{
-		Writable: config.WritableInfo{
+	configuration := &secretsConfig.ConfigurationStruct{
+		Writable: secretsConfig.WritableInfo{
 			LogLevel: "DEBUG",
 		},
-		Logging: types.LoggingInfo{
+		Logging: bootstrapConfig.LoggingInfo{
 			EnableRemote: false,
 			File:         "./logs/security-secrets-setup.log",
 		},
-		SecretsSetup: config.SecretsSetupInfo{
+		SecretsSetup: secretsConfig.SecretsSetupInfo{
 			WorkDir:       "./workingtest",
 			DeployDir:     "./deploytest",
 			CacheDir:      "./cachetest",
@@ -173,7 +174,7 @@ func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupE
 		},
 	}
 
-	os.Unsetenv(helper.EnvXdgRuntimeDir) // unset env var, so it uses the config toml
+	os.Unsetenv(helper.EnvXdgRuntimeDir) // unset env var, so it uses the secretsConfig toml
 
 	testWorkDir, err := helper.GetWorkDir(configuration)
 	if err != nil {
