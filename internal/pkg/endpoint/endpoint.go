@@ -31,12 +31,14 @@ func (e Endpoint) Monitor(params types.EndpointParams) chan string {
 	ch := make(chan string, 1)
 	ch <- e.fetch(params)
 	go func() {
-		url, err := e.buildURL(params)
-		if err != nil {
-			fmt.Fprintln(os.Stdout, err.Error())
+		for {
+			url, err := e.buildURL(params)
+			if err != nil {
+				_, _ = fmt.Fprintln(os.Stdout, err.Error())
+			}
+			ch <- url
+			time.Sleep(time.Millisecond * time.Duration(params.Interval))
 		}
-		ch <- url
-		time.Sleep(time.Millisecond * time.Duration(params.Interval))
 	}()
 	return ch
 }
@@ -44,7 +46,7 @@ func (e Endpoint) Monitor(params types.EndpointParams) chan string {
 func (e Endpoint) fetch(params types.EndpointParams) string {
 	url, err := e.buildURL(params)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		_, _ = fmt.Fprintln(os.Stdout, err.Error())
 	}
 	return url
 }
