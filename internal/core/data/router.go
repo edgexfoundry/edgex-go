@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
@@ -86,8 +88,21 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.PublisherEventsChannelFrom(dic.Get),
-				dataContainer.MessagingClientFrom(dic.Get))
+				dataContainer.MessagingClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
+	r.HandleFunc(clients.ApiEventRoute, func(writer http.ResponseWriter, request *http.Request) {
+		eventHandler(
+			writer,
+			request,
+			bootstrapContainer.LoggingClientFrom(dic.Get),
+			container.DBClientFrom(dic.Get),
+			dataContainer.PublisherEventsChannelFrom(dic.Get),
+			dataContainer.MessagingClientFrom(dic.Get),
+			dataContainer.MetadataDeviceClientFrom(dic.Get))
+
+	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
 
@@ -112,7 +127,12 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	e.HandleFunc(
 		"/"+COUNT+"/{"+DEVICEID_PARAM+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			eventCountByDeviceIdHandler(w, r, container.DBClientFrom(dic.Get))
+			eventCountByDeviceIdHandler(
+				w,
+				r,
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet)
 
 	e.HandleFunc(
@@ -124,24 +144,36 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	e.HandleFunc(
 		"/"+ID+"/{"+ID+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			eventIdHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			eventIdHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
 		}).Methods(http.MethodDelete, http.MethodPut)
 
 	e.HandleFunc(
 		"/"+CHECKSUM+"/{"+CHECKSUM+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			putEventChecksumHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			putEventChecksumHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodPut)
 
 	e.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
 		func(w http.ResponseWriter, r *http.Request) {
-			getEventByDeviceHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			getEventByDeviceHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	e.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			deleteByDeviceIdHandler(w, r, container.DBClientFrom(dic.Get))
+			deleteByDeviceIdHandler(
+				w,
+				r,
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodDelete)
 
 	e.HandleFunc(
@@ -153,14 +185,25 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	e.HandleFunc(
 		"/{"+START+":[0-9]+}/{"+END+":[0-9]+}/{"+LIMIT+":[0-9]+}",
 		func(w http.ResponseWriter, r *http.Request) {
-			eventByCreationTimeHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			eventByCreationTimeHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet)
 
 	// Readings
 	r.HandleFunc(
 		clients.ApiReadingRoute,
 		func(w http.ResponseWriter, r *http.Request) {
-			readingHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			readingHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	rd := r.PathPrefix(clients.ApiReadingRoute).Subrouter()
@@ -186,7 +229,12 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	rd.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}/{"+LIMIT+":[0-9]+}",
 		func(w http.ResponseWriter, r *http.Request) {
-			readingByDeviceHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			readingByDeviceHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -222,7 +270,12 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	rd.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}/"+DEVICE+"/{"+DEVICE+"}/{"+LIMIT+":[0-9]+}",
 		func(w http.ResponseWriter, r *http.Request) {
-			readingByValueDescriptorAndDeviceHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			readingByValueDescriptorAndDeviceHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Value descriptors
@@ -273,13 +326,25 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	vd.HandleFunc(
 		"/"+DEVICENAME+"/{"+DEVICE+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			valueDescriptorByDeviceHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			valueDescriptorByDeviceHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet)
 
 	vd.HandleFunc(
 		"/"+DEVICEID+"/{"+ID+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			valueDescriptorByDeviceIdHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), container.DBClientFrom(dic.Get))
+			valueDescriptorByDeviceIdHandler(
+				w,
+				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
+				container.DBClientFrom(dic.Get),
+				dataContainer.MetadataDeviceClientFrom(dic.Get))
+
 		}).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
@@ -320,7 +385,11 @@ Return number of events for a given device in Core Data
 deviceID - ID of the device to get count for
 /api/v1/event/count/{deviceId}
 */
-func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func eventCountByDeviceIdHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
@@ -333,7 +402,7 @@ func eventCountByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClien
 	}
 
 	// Check device
-	count, err := countEventsByDevice(id, ctx, dbClient)
+	count, err := countEventsByDevice(id, ctx, dbClient, mdc)
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w,
 			err,
@@ -390,7 +459,8 @@ func eventHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	chEvents chan<- interface{},
-	msgClient messaging.MessageClient) {
+	msgClient messaging.MessageClient,
+	mdc metadata.DeviceClient) {
 
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
@@ -419,7 +489,7 @@ func eventHandler(
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient)
+		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient, mdc)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -455,7 +525,7 @@ func eventHandler(
 		}
 
 		loggingClient.Info("Updating event: " + from.ID)
-		err = updateEvent(from, ctx, dbClient)
+		err = updateEvent(from, ctx, dbClient, mdc)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -533,7 +603,8 @@ func getEventByDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -556,7 +627,7 @@ func getEventByDeviceHandler(
 	}
 
 	// Check device
-	if err := checkDevice(deviceId, ctx); err != nil {
+	if err := checkDevice(deviceId, ctx, mdc); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -593,7 +664,8 @@ func eventIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -612,7 +684,7 @@ func eventIdHandler(
 
 		loggingClient.Info("Updating event: " + id)
 
-		err := updateEventPushDate(id, ctx, dbClient)
+		err := updateEventPushDate(id, ctx, dbClient, mdc)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(w,
 				err,
@@ -653,7 +725,8 @@ func putEventChecksumHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -666,7 +739,7 @@ func putEventChecksumHandler(
 	case http.MethodPut:
 		loggingClient.Debug("Updating event with checksum: " + checksum)
 
-		err := updateEventPushDateByChecksum(checksum, ctx, dbClient)
+		err := updateEventPushDateByChecksum(checksum, ctx, dbClient, mdc)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -685,7 +758,12 @@ func putEventChecksumHandler(
 // api/v1/event/device/{deviceId}
 // 404 - device ID not found in metadata
 // 503 - service unavailable
-func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient interfaces.DBClient) {
+func deleteByDeviceIdHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
+
 	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
@@ -699,7 +777,7 @@ func deleteByDeviceIdHandler(w http.ResponseWriter, r *http.Request, dbClient in
 	}
 
 	// Check device
-	if err := checkDevice(deviceId, ctx); err != nil {
+	if err := checkDevice(deviceId, ctx, mdc); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -807,7 +885,8 @@ func readingHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -844,7 +923,7 @@ func readingHandler(
 
 		// Check device
 		if reading.Device != "" {
-			if err := checkDevice(reading.Device, ctx); err != nil {
+			if err := checkDevice(reading.Device, ctx, mdc); err != nil {
 				httpErrorHandler.HandleOneVariant(
 					w,
 					err,
@@ -995,7 +1074,8 @@ func readingByDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1023,7 +1103,7 @@ func readingByDeviceHandler(
 			return
 		}
 
-		readings, err := getReadingsByDevice(deviceId, limit, ctx, loggingClient, dbClient)
+		readings, err := getReadingsByDevice(deviceId, limit, ctx, loggingClient, dbClient, mdc)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1281,7 +1361,8 @@ func readingByValueDescriptorAndDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1314,7 +1395,7 @@ func readingByValueDescriptorAndDeviceHandler(
 	}
 
 	// Check device
-	if err := checkDevice(device, ctx); err != nil {
+	if err := checkDevice(device, ctx, mdc); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -1632,7 +1713,8 @@ func valueDescriptorByDeviceHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1646,7 +1728,7 @@ func valueDescriptorByDeviceHandler(
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceName(device, ctx, loggingClient, dbClient)
+	vdList, err := getValueDescriptorsByDeviceName(device, ctx, loggingClient, dbClient, mdc)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -1669,7 +1751,8 @@ func valueDescriptorByDeviceIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1683,7 +1766,7 @@ func valueDescriptorByDeviceIdHandler(
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx, loggingClient, dbClient)
+	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx, loggingClient, dbClient, mdc)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,

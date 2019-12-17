@@ -39,7 +39,6 @@ import (
 var Configuration = &ConfigurationStruct{}
 
 // TODO: Refactor names in separate PR: See comments on PR #1133
-var mdc metadata.DeviceClient
 var msc metadata.DeviceServiceClient
 
 var httpErrorHandler errorconcept.ErrorHandler
@@ -50,13 +49,9 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	loggingClient := container.LoggingClientFrom(dic.Get)
 	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
 
-	chEvents := make(chan interface{}, 100)
-	// initialize event handlers
-	initEventHandlers(loggingClient, chEvents)
-
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
-	mdc = metadata.NewDeviceClient(
+	mdc := metadata.NewDeviceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceRoute,
@@ -91,7 +86,14 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 		return false
 	}
 
+	chEvents := make(chan interface{}, 100)
+	// initialize event handlers
+	initEventHandlers(loggingClient, chEvents, mdc)
+
 	dic.Update(di.ServiceConstructorMap{
+		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
+			return mdc
+		},
 		dataContainer.MessagingClientName: func(get di.Get) interface{} {
 			return msgClient
 		},
