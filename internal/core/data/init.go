@@ -20,29 +20,25 @@ import (
 	"sync"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 )
-
-// Global variables
-var Configuration = &ConfigurationStruct{}
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	loggingClient := container.LoggingClientFrom(dic.Get)
+	configuration := dataContainer.ConfigurationFrom(dic.Get)
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
@@ -51,8 +47,8 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceRoute,
 			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    Configuration.Service.ClientMonitor,
+			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+			Interval:    configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
 	msc := metadata.NewDeviceServiceClient(
@@ -60,8 +56,8 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceServiceRoute,
 			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    Configuration.Service.ClientMonitor,
+			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+			Interval:    configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
 
@@ -69,11 +65,11 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	msgClient, err := messaging.NewMessageClient(
 		msgTypes.MessageBusConfig{
 			PublishHost: msgTypes.HostInfo{
-				Host:     Configuration.MessageQueue.Host,
-				Port:     Configuration.MessageQueue.Port,
-				Protocol: Configuration.MessageQueue.Protocol,
+				Host:     configuration.MessageQueue.Host,
+				Port:     configuration.MessageQueue.Port,
+				Protocol: configuration.MessageQueue.Protocol,
 			},
-			Type: Configuration.MessageQueue.Type,
+			Type: configuration.MessageQueue.Type,
 		})
 
 	if err != nil {
@@ -83,7 +79,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 
 	chEvents := make(chan interface{}, 100)
 	// initialize event handlers
-	initEventHandlers(loggingClient, chEvents, mdc, msc)
+	initEventHandlers(loggingClient, chEvents, mdc, msc, configuration)
 
 	dic.Update(di.ServiceConstructorMap{
 		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {

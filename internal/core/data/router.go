@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
@@ -63,7 +64,7 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.HandleFunc(
 		clients.ApiConfigRoute,
 		func(w http.ResponseWriter, _ *http.Request) {
-			pkg.Encode(Configuration, w, bootstrapContainer.LoggingClientFrom(dic.Get))
+			pkg.Encode(dataContainer.ConfigurationFrom(dic.Get), w, bootstrapContainer.LoggingClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Metrics
@@ -88,7 +89,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				dataContainer.PublisherEventsChannelFrom(dic.Get),
 				dataContainer.MessagingClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 	r.HandleFunc(clients.ApiEventRoute, func(writer http.ResponseWriter, request *http.Request) {
 		eventHandler(
@@ -99,7 +101,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 			dataContainer.PublisherEventsChannelFrom(dic.Get),
 			dataContainer.MessagingClientFrom(dic.Get),
 			dataContainer.MetadataDeviceClientFrom(dic.Get),
-			errorContainer.ErrorHandlerFrom(dic.Get))
+			errorContainer.ErrorHandlerFrom(dic.Get),
+			dataContainer.ConfigurationFrom(dic.Get))
 	}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	e := r.PathPrefix(clients.ApiEventRoute).Subrouter()
@@ -145,7 +148,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	e.HandleFunc(
@@ -168,7 +172,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodDelete, http.MethodPut)
 
 	e.HandleFunc(
@@ -180,7 +185,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPut)
 
 	e.HandleFunc(
@@ -192,7 +198,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	e.HandleFunc(
 		"/"+DEVICE+"/{"+DEVICEID_PARAM+"}",
@@ -202,7 +209,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	e.HandleFunc(
@@ -224,7 +232,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Readings
@@ -237,7 +246,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	rd := r.PathPrefix(clients.ApiReadingRoute).Subrouter()
@@ -284,7 +294,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -295,7 +306,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -306,7 +318,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -317,7 +330,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -328,7 +342,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -339,7 +354,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	rd.HandleFunc(
@@ -351,7 +367,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				dataContainer.MetadataDeviceClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Value descriptors
@@ -363,7 +380,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodPut, http.MethodPost)
 
 	vd := r.PathPrefix(clients.ApiValueDescriptorRoute).Subrouter()
@@ -376,7 +394,8 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				dataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	vd.HandleFunc(
@@ -502,7 +521,9 @@ func eventCountByDeviceIdHandler(
 	r *http.Request,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
+
 	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
@@ -515,7 +536,7 @@ func eventCountByDeviceIdHandler(
 	}
 
 	// Check device
-	count, err := countEventsByDevice(id, ctx, dbClient, mdc)
+	count, err := countEventsByDevice(id, ctx, dbClient, mdc, configuration)
 	if err != nil {
 		httpErrorHandler.HandleOneVariant(w,
 			err,
@@ -575,7 +596,8 @@ func eventHandler(
 	chEvents chan<- interface{},
 	msgClient messaging.MessageClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
@@ -586,7 +608,7 @@ func eventHandler(
 	switch r.Method {
 	// Get all events
 	case http.MethodGet:
-		events, err := getEvents(Configuration.Service.MaxResultCount, dbClient)
+		events, err := getEvents(configuration.Service.MaxResultCount, dbClient)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
@@ -596,7 +618,7 @@ func eventHandler(
 		break
 		// Post a new event
 	case http.MethodPost:
-		reader := NewRequestReader(r)
+		reader := NewRequestReader(r, configuration)
 
 		evt := models.Event{}
 		evt, err := reader.Read(r.Body, &ctx)
@@ -604,7 +626,7 @@ func eventHandler(
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 			return
 		}
-		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient, mdc)
+		newId, err := addNewEvent(evt, ctx, loggingClient, dbClient, chEvents, msgClient, mdc, configuration)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -640,7 +662,7 @@ func eventHandler(
 		}
 
 		loggingClient.Info("Updating event: " + from.ID)
-		err = updateEvent(from, ctx, dbClient, mdc)
+		err = updateEvent(from, ctx, dbClient, mdc, configuration)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -722,7 +744,8 @@ func getEventByDeviceHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -745,7 +768,7 @@ func getEventByDeviceHandler(
 	}
 
 	// Check device
-	if err := checkDevice(deviceId, ctx, mdc); err != nil {
+	if err := checkDevice(deviceId, ctx, mdc, configuration); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -755,7 +778,7 @@ func getEventByDeviceHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limitNum, loggingClient)
+		err := checkMaxLimit(limitNum, loggingClient, configuration)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
@@ -784,7 +807,8 @@ func eventIdHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -803,7 +827,7 @@ func eventIdHandler(
 
 		loggingClient.Info("Updating event: " + id)
 
-		err := updateEventPushDate(id, ctx, dbClient, mdc)
+		err := updateEventPushDate(id, ctx, dbClient, mdc, configuration)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(w,
 				err,
@@ -846,7 +870,8 @@ func putEventChecksumHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -859,7 +884,7 @@ func putEventChecksumHandler(
 	case http.MethodPut:
 		loggingClient.Debug("Updating event with checksum: " + checksum)
 
-		err := updateEventPushDateByChecksum(checksum, ctx, dbClient, mdc)
+		err := updateEventPushDateByChecksum(checksum, ctx, dbClient, mdc, configuration)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -883,7 +908,8 @@ func deleteByDeviceIdHandler(
 	r *http.Request,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -898,7 +924,7 @@ func deleteByDeviceIdHandler(
 	}
 
 	// Check device
-	if err := checkDevice(deviceId, ctx, mdc); err != nil {
+	if err := checkDevice(deviceId, ctx, mdc, configuration); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -931,7 +957,8 @@ func eventByCreationTimeHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -959,7 +986,7 @@ func eventByCreationTimeHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limit, loggingClient)
+		err := checkMaxLimit(limit, loggingClient, configuration)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
@@ -1010,7 +1037,8 @@ func readingHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1018,7 +1046,7 @@ func readingHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		r, err := getAllReadings(loggingClient, dbClient)
+		r, err := getAllReadings(loggingClient, dbClient, configuration)
 
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
@@ -1030,7 +1058,7 @@ func readingHandler(
 
 		pkg.Encode(r, w, loggingClient)
 	case http.MethodPost:
-		reading, err := decodeReading(r.Body, loggingClient, dbClient)
+		reading, err := decodeReading(r.Body, loggingClient, dbClient, configuration)
 
 		// Problem decoding
 		if err != nil {
@@ -1047,7 +1075,7 @@ func readingHandler(
 
 		// Check device
 		if reading.Device != "" {
-			if err := checkDevice(reading.Device, ctx, mdc); err != nil {
+			if err := checkDevice(reading.Device, ctx, mdc, configuration); err != nil {
 				httpErrorHandler.HandleOneVariant(
 					w,
 					err,
@@ -1056,7 +1084,7 @@ func readingHandler(
 			}
 		}
 
-		if Configuration.Writable.PersistData {
+		if configuration.Writable.PersistData {
 			id, err := addReading(reading, loggingClient, dbClient)
 			if err != nil {
 				httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
@@ -1070,7 +1098,7 @@ func readingHandler(
 			pkg.Encode("unsaved", w, loggingClient)
 		}
 	case http.MethodPut:
-		from, err := decodeReading(r.Body, loggingClient, dbClient)
+		from, err := decodeReading(r.Body, loggingClient, dbClient, configuration)
 		// Problem decoding
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
@@ -1085,7 +1113,7 @@ func readingHandler(
 			return
 		}
 
-		err = updateReading(from, loggingClient, dbClient)
+		err = updateReading(from, loggingClient, dbClient, configuration)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1203,7 +1231,8 @@ func readingByDeviceHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1225,13 +1254,13 @@ func readingByDeviceHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		err := checkMaxLimit(limit, loggingClient)
+		err := checkMaxLimit(limit, loggingClient, configuration)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
 		}
 
-		readings, err := getReadingsByDevice(deviceId, limit, ctx, loggingClient, dbClient, mdc)
+		readings, err := getReadingsByDevice(deviceId, limit, ctx, loggingClient, dbClient, mdc, configuration)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
 				w,
@@ -1253,7 +1282,8 @@ func readingbyValueDescriptorHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1271,7 +1301,7 @@ func readingbyValueDescriptorHandler(
 		return
 	}
 
-	read, err := getReadingsByValueDescriptor(name, limit, loggingClient, dbClient)
+	read, err := getReadingsByValueDescriptor(name, limit, loggingClient, dbClient, configuration)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
@@ -1287,7 +1317,8 @@ func readingByUomLabelHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1308,7 +1339,7 @@ func readingByUomLabelHandler(
 	}
 
 	// Limit was exceeded
-	err = checkMaxLimit(limit, loggingClient)
+	err = checkMaxLimit(limit, loggingClient, configuration)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
@@ -1343,7 +1374,8 @@ func readingByLabelHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1362,7 +1394,7 @@ func readingByLabelHandler(
 	}
 
 	// Limit is too large
-	err = checkMaxLimit(limit, loggingClient)
+	err = checkMaxLimit(limit, loggingClient, configuration)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
@@ -1396,7 +1428,8 @@ func readingByTypeHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1415,7 +1448,7 @@ func readingByTypeHandler(
 		return
 	}
 
-	err = checkMaxLimit(limit, loggingClient)
+	err = checkMaxLimit(limit, loggingClient, configuration)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
@@ -1448,7 +1481,8 @@ func readingByCreationTimeHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1471,7 +1505,7 @@ func readingByCreationTimeHandler(
 
 	switch r.Method {
 	case http.MethodGet:
-		err = checkMaxLimit(limit, loggingClient)
+		err = checkMaxLimit(limit, loggingClient, configuration)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
@@ -1496,7 +1530,8 @@ func readingByValueDescriptorAndDeviceHandler(
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1522,14 +1557,14 @@ func readingByValueDescriptorAndDeviceHandler(
 		return
 	}
 
-	err = checkMaxLimit(limit, loggingClient)
+	err = checkMaxLimit(limit, loggingClient, configuration)
 	if err != nil {
 		httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 		return
 	}
 
 	// Check device
-	if err := checkDevice(device, ctx, mdc); err != nil {
+	if err := checkDevice(device, ctx, mdc, configuration); err != nil {
 		httpErrorHandler.HandleOneVariant(
 			w,
 			err,
@@ -1539,7 +1574,7 @@ func readingByValueDescriptorAndDeviceHandler(
 	}
 
 	// Check for value descriptor
-	if Configuration.Writable.ValidateCheck {
+	if configuration.Writable.ValidateCheck {
 		_, err = getValueDescriptorByName(name, loggingClient, dbClient)
 		if err != nil {
 			httpErrorHandler.HandleOneVariant(
@@ -1569,7 +1604,8 @@ func valueDescriptorHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	defer func() { _ = r.Body.Close() }()
 
@@ -1582,7 +1618,7 @@ func valueDescriptorHandler(
 		}
 
 		// Check the limit
-		err = checkMaxLimit(len(vList), loggingClient)
+		err = checkMaxLimit(len(vList), loggingClient, configuration)
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Common.LimitExceeded)
 			return
@@ -1633,7 +1669,7 @@ func valueDescriptorHandler(
 			return
 		}
 
-		err = updateValueDescriptor(vd, loggingClient, dbClient)
+		err = updateValueDescriptor(vd, loggingClient, dbClient, configuration)
 		if err != nil {
 			httpErrorHandler.HandleManyVariants(
 				w,
@@ -1936,7 +1972,8 @@ func restValueDescriptorsUsageHandler(
 	r *http.Request,
 	loggingClient logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	httpErrorHandler errorconcept.ErrorHandler) {
+	httpErrorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
 
 	qparams, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
@@ -1949,13 +1986,13 @@ func restValueDescriptorsUsageHandler(
 	var op value_descriptor.GetValueDescriptorsExecutor
 	if len(namesFilter) <= 0 {
 		// We are not filtering so get all the value descriptors
-		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, loggingClient, Configuration.Service)
+		op = value_descriptor.NewGetValueDescriptorsExecutor(dbClient, loggingClient, configuration.Service)
 	} else {
 		op = value_descriptor.NewGetValueDescriptorsNameExecutor(
 			strings.Split(namesFilter[0], ","),
 			dbClient,
 			loggingClient,
-			Configuration.Service)
+			configuration.Service)
 	}
 
 	vds, err = op.Execute()
@@ -1978,7 +2015,7 @@ func restValueDescriptorsUsageHandler(
 			ValueDescriptorUsageReadLimit,
 			dbClient,
 			loggingClient,
-			Configuration.Service)
+			configuration.Service)
 		r, err := ops.Execute()
 		if err != nil {
 			httpErrorHandler.Handle(w, err, errorconcept.Default.InternalServerError)

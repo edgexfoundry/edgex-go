@@ -10,10 +10,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 )
 
 var TestEvent = contract.Event{
@@ -61,9 +62,12 @@ func TestNewReader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := newRequestWithContentType(tt.args.contentType)
-			got := NewRequestReader(request)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewReader() = %v, want %v", got, tt.want)
+			got := NewRequestReader(request, &config.ConfigurationStruct{})
+
+			eet := reflect.TypeOf(tt.want)
+			aet := reflect.TypeOf(got)
+			if !aet.AssignableTo(eet) {
+				t.Errorf("Expected reader of type %v, but got an reader of type %v", eet, aet)
 			}
 		})
 	}
@@ -77,7 +81,7 @@ func TestJsonSerialization(t *testing.T) {
 	r := ioutil.NopCloser(bytes.NewBuffer(data))
 
 	ctx := context.Background()
-	jsonReader := jsonReader{}
+	jsonReader := NewJsonReader()
 	_, err := jsonReader.Read(r, &ctx)
 
 	if err != nil {
@@ -92,7 +96,8 @@ func TestCborSerialization(t *testing.T) {
 	data := event.CBOR()
 	r := ioutil.NopCloser(bytes.NewBuffer(data))
 
-	cborReader := cborReader{}
+	cborReader := NewCborReader(&config.ConfigurationStruct{})
+
 	ctx := context.Background()
 	result, err := cborReader.Read(r, &ctx)
 

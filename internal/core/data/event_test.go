@@ -21,6 +21,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
@@ -57,7 +58,13 @@ func TestCountByDevice(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventCountByDeviceId", mock.Anything).Return(2, nil)
 
-	count, err := countEventsByDevice(testEvent.Device, context.Background(), dbClientMock, dataMocks.NewMockDeviceClient())
+	count, err := countEventsByDevice(
+		testEvent.Device,
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -213,7 +220,6 @@ func TestAddEventWithPersistence(t *testing.T) {
 
 	dbClientMock := newAddEventMockDB(true)
 	chEvents := make(chan interface{}, 10)
-	Configuration.Writable.PersistData = true
 	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -228,9 +234,13 @@ func TestAddEventWithPersistence(t *testing.T) {
 		dbClientMock,
 		chEvents,
 		msgClient,
-		dataMocks.NewMockDeviceClient())
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{
+			Writable: config.WritableInfo{
+				PersistData: true,
+			},
+		})
 
-	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -257,7 +267,6 @@ func TestAddEventNoPersistence(t *testing.T) {
 	})
 
 	dbClientMock := newAddEventMockDB(false)
-	Configuration.Writable.PersistData = false
 	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
@@ -273,7 +282,12 @@ func TestAddEventNoPersistence(t *testing.T) {
 		dbClientMock,
 		chEvents,
 		msgClient,
-		dataMocks.NewMockDeviceClient())
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{
+			Writable: config.WritableInfo{
+				PersistData: false,
+			},
+		})
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -298,7 +312,13 @@ func TestUpdateEventNotFound(t *testing.T) {
 	dbClientMock.On("EventById", mock.Anything).Return(contract.Event{}, fmt.Errorf("Event not found"))
 
 	evt := contract.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock, dataMocks.NewMockDeviceClient())
+	err := updateEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
@@ -328,7 +348,13 @@ func TestUpdateEvent(t *testing.T) {
 	dbClientMock := newUpdateEventMockDB(expectedDevice)
 
 	evt := contract.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock, dataMocks.NewMockDeviceClient())
+	err := updateEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -388,7 +414,13 @@ func TestUpdateEventPushDate(t *testing.T) {
 		return event.ID == testEvent.ID
 	})).Return(nil)
 
-	err := updateEventPushDate(testEvent.ID, context.Background(), dbClientMock, dataMocks.NewMockDeviceClient())
+	err := updateEventPushDate(
+		testEvent.ID,
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}

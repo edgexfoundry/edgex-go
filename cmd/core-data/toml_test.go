@@ -10,12 +10,12 @@ package main
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data"
+	dataConfig "github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 func TestToml(t *testing.T) {
-	configuration := &data.ConfigurationStruct{}
+	configuration := &dataConfig.ConfigurationStruct{}
 	if err := config.VerifyTomlFiles(configuration); err != nil {
 		t.Fatalf("%v", err)
 	}
