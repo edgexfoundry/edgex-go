@@ -17,12 +17,13 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // Update when the device was last reported connected
-func updateDeviceLastReportedConnected(device string, loggingClient logger.LoggingClient) {
+func updateDeviceLastReportedConnected(device string, loggingClient logger.LoggingClient, mdc metadata.DeviceClient) {
 	// Config set to skip update last reported
 	if !Configuration.Writable.DeviceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
@@ -43,7 +44,7 @@ func updateDeviceLastReportedConnected(device string, loggingClient logger.Loggi
 
 	t := db.MakeTimestamp()
 	// Found device, now update lastReported
-	//Use of context.Background because this function is invoked asynchronously from a channel
+	// Use of context.Background because this function is invoked asynchronously from a channel
 	err = mdc.UpdateLastConnectedByName(d.Name, t, context.Background())
 	if err != nil {
 		loggingClient.Error("Problems updating last connected value for device: " + d.Name)
@@ -57,7 +58,11 @@ func updateDeviceLastReportedConnected(device string, loggingClient logger.Loggi
 }
 
 // Update when the device service was last reported connected
-func updateDeviceServiceLastReportedConnected(device string, loggingClient logger.LoggingClient) {
+func updateDeviceServiceLastReportedConnected(
+	device string,
+	loggingClient logger.LoggingClient,
+	mdc metadata.DeviceClient) {
+
 	if !Configuration.Writable.ServiceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
@@ -85,12 +90,12 @@ func updateDeviceServiceLastReportedConnected(device string, loggingClient logge
 		return
 	}
 
-	//Use of context.Background because this function is invoked asynchronously from a channel
+	// Use of context.Background because this function is invoked asynchronously from a channel
 	msc.UpdateLastConnected(s.Id, t, context.Background())
 	msc.UpdateLastReported(s.Id, t, context.Background())
 }
 
-func checkDevice(device string, ctx context.Context) error {
+func checkDevice(device string, ctx context.Context, mdc metadata.DeviceClient) error {
 	if Configuration.Writable.MetaDataCheck {
 		_, err := mdc.CheckForDevice(device, ctx)
 		if err != nil {

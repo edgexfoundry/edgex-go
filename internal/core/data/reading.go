@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -194,9 +195,10 @@ func getReadingsByDevice(
 	limit int,
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) (readings []contract.Reading, err error) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) (readings []contract.Reading, err error) {
 
-	if checkDevice(deviceId, ctx) != nil {
+	if checkDevice(deviceId, ctx, mdc) != nil {
 		loggingClient.Error(fmt.Sprintf("error checking device %s %v", deviceId, err))
 
 		return []contract.Reading{}, err

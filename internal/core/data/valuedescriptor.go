@@ -21,6 +21,7 @@ import (
 	"regexp"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
@@ -186,7 +187,8 @@ func getValueDescriptorsByDeviceName(
 	name string,
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
 	device, err := mdc.DeviceForName(name, ctx)
@@ -202,7 +204,8 @@ func getValueDescriptorsByDeviceId(
 	id string,
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
+	dbClient interfaces.DBClient,
+	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
 	device, err := mdc.Device(id, ctx)
