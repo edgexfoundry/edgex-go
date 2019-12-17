@@ -179,10 +179,10 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 			Configuration = &ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 10}}
 			defer func() { Configuration = &ConfigurationStruct{} }()
 
-			httpErrorHandler = errorconcept.NewErrorHandler(logger.NewMockClient())
 			Configuration.Service = tt.config
 			rr := httptest.NewRecorder()
-			restValueDescriptorsUsageHandler(rr, tt.request, logger.NewMockClient(), tt.dbMock)
+			lc := logger.NewMockClient()
+			restValueDescriptorsUsageHandler(rr, tt.request, lc, tt.dbMock, errorconcept.NewErrorHandler(lc))
 			response := rr.Result()
 			b, _ := ioutil.ReadAll(response.Body)
 			var r []map[string]bool
