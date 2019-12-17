@@ -28,7 +28,12 @@ type DeviceServiceLastReported struct {
 	DeviceName string
 }
 
-func initEventHandlers(loggingClient logger.LoggingClient, chEvents <-chan interface{}, mdc metadata.DeviceClient) {
+func initEventHandlers(
+	loggingClient logger.LoggingClient,
+	chEvents <-chan interface{},
+	mdc metadata.DeviceClient,
+	msc metadata.DeviceServiceClient) {
+
 	go func() {
 		for {
 			select {
@@ -41,7 +46,7 @@ func initEventHandlers(loggingClient logger.LoggingClient, chEvents <-chan inter
 						break
 					case DeviceServiceLastReported:
 						dslr := e.(DeviceServiceLastReported)
-						updateDeviceServiceLastReportedConnected(dslr.DeviceName, loggingClient, mdc)
+						updateDeviceServiceLastReportedConnected(dslr.DeviceName, loggingClient, mdc, msc)
 						break
 					}
 				} else {

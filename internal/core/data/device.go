@@ -61,7 +61,8 @@ func updateDeviceLastReportedConnected(device string, loggingClient logger.Loggi
 func updateDeviceServiceLastReportedConnected(
 	device string,
 	loggingClient logger.LoggingClient,
-	mdc metadata.DeviceClient) {
+	mdc metadata.DeviceClient,
+	msc metadata.DeviceServiceClient) {
 
 	if !Configuration.Writable.ServiceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)

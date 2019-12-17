@@ -37,10 +37,6 @@ import (
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-
-// TODO: Refactor names in separate PR: See comments on PR #1133
-var msc metadata.DeviceServiceClient
-
 var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
@@ -60,7 +56,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			Interval:    Configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
-	msc = metadata.NewDeviceServiceClient(
+	msc := metadata.NewDeviceServiceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceServiceRoute,
@@ -88,7 +84,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 
 	chEvents := make(chan interface{}, 100)
 	// initialize event handlers
-	initEventHandlers(loggingClient, chEvents, mdc)
+	initEventHandlers(loggingClient, chEvents, mdc, msc)
 
 	dic.Update(di.ServiceConstructorMap{
 		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
