@@ -67,16 +67,6 @@ File = '/edgex/logs/edgex-sys-mgmt-agent.log'
   Host = 'edgex-support-scheduler'
   Port = 48085
 
-  [Clients.Export]
-  Protocol = 'http'
-  Host = 'edgex-export-client'
-  Port = 48071
-
-  [Clients.Distro]
-  Protocol = 'http'
-  Host = 'edgex-export-distro'
-  Port = 48070
-
 [Startup]
 Duration = 30
 Interval = 1

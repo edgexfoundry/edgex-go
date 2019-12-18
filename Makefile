@@ -13,7 +13,7 @@ GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 DOCKERS=docker_config_seed docker_export_client docker_export_distro docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler docker_security_secrets_setup docker_security_proxy_setup docker_security_secretstore_setup
 .PHONY: $(DOCKERS)
 
-MICROSERVICES=cmd/config-seed/config-seed cmd/export-client/export-client cmd/export-distro/export-distro cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-secrets-setup/security-secrets-setup cmd/security-proxy-setup/security-proxy-setup cmd/security-secretstore-setup/security-secretstore-setup cmd/security-file-token-provider/security-file-token-provider
+MICROSERVICES=cmd/config-seed/config-seed cmd/core-metadata/core-metadata cmd/core-data/core-data cmd/core-command/core-command cmd/support-logging/support-logging cmd/support-notifications/support-notifications cmd/sys-mgmt-executor/sys-mgmt-executor cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler cmd/security-secrets-setup/security-secrets-setup cmd/security-proxy-setup/security-proxy-setup cmd/security-secretstore-setup/security-secretstore-setup cmd/security-file-token-provider/security-file-token-provider
 
 .PHONY: $(MICROSERVICES)
 
@@ -39,12 +39,6 @@ cmd/core-data/core-data:
 
 cmd/core-command/core-command:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
-
-cmd/export-client/export-client:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/export-client
-
-cmd/export-distro/export-distro:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/export-distro
 
 cmd/support-logging/support-logging:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-logging
@@ -122,22 +116,6 @@ docker_core_command:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-core-command-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-core-command-go:$(DOCKER_TAG) \
-		.
-
-docker_export_client:
-	docker build \
-		-f cmd/export-client/Dockerfile \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-export-client-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-export-client-go:$(DOCKER_TAG) \
-		.
-
-docker_export_distro:
-	docker build \
-		-f cmd/export-distro/Dockerfile \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-export-distro-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-export-distro-go:$(DOCKER_TAG) \
 		.
 
 docker_support_logging:
