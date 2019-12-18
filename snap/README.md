@@ -65,8 +65,6 @@ The following services are disabled by default:
 * support-notifications
 * support-logging
 * support-scheduler
-* export-client
-* export-distro
 * device-virtual
 
 Any disabled services can be enabled and started up using `snap set`:

@@ -138,7 +138,7 @@ func addNewEvent(
 		e.ID = id
 	}
 
-	putEventOnQueue(e, ctx, loggingClient, msgClient) // Push the aux struct to export service (It has the actual readings)
+	putEventOnQueue(e, ctx, loggingClient, msgClient) // Push event to message bus for App Services to consume
 	chEvents <- DeviceLastReported{e.Device}          // update last reported connected (device)
 	chEvents <- DeviceServiceLastReported{e.Device}   // update last reported connected (device service)
 

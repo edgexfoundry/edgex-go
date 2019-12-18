@@ -27,7 +27,7 @@ This will start Redis and all the microservices.
 
 ## Using native microservices
 
-The `configuration.toml` files for Core Data, Core Metadata, Export Client, Support Notifications, and Support Scheduler found in their respective `cmd/<SERVICE>/res` directory.
+The `configuration.toml` files for Core Data, Core Metadata, Support Notifications, and Support Scheduler found in their respective `cmd/<SERVICE>/res` directory.
 
 For each of the microservices update the keys in the `Databases.Primary` table
 

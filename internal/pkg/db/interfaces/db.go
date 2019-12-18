@@ -64,15 +64,6 @@ type DBClient interface {
 	ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error)
 	ScrubAllValueDescriptors() error
 
-	Registrations() ([]contract.Registration, error)
-	AddRegistration(r contract.Registration) (string, error)
-	UpdateRegistration(reg contract.Registration) error
-	RegistrationById(id string) (contract.Registration, error)
-	RegistrationByName(name string) (contract.Registration, error)
-	DeleteRegistrationById(id string) error
-	DeleteRegistrationByName(name string) error
-	ScrubAllRegistrations() error
-
 	GetAllDeviceReports() ([]contract.DeviceReport, error)
 	GetDeviceReportByName(n string) (contract.DeviceReport, error)
 	GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error)
