@@ -186,7 +186,7 @@ func TestInstallPolicy(t *testing.T) {
 		// Make sure the policy doc was base64 encoded in the json response object
 		body := make(map[string]interface{})
 		err := json.NewDecoder(r.Body).Decode(&body)
-		assert.Nil(err)
+		assert.NoError(err)
 		assert.Equal("policydoc", body["policy"].(string))
 
 		w.WriteHeader(http.StatusNoContent)
@@ -201,7 +201,7 @@ func TestInstallPolicy(t *testing.T) {
 	code, err := vc.InstallPolicy("fake-token", "policy-name", policyDoc)
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusNoContent, code)
 }
 
@@ -217,7 +217,7 @@ func TestCreateToken(t *testing.T) {
 
 		body := make(map[string]interface{})
 		err := json.NewDecoder(r.Body).Decode(&body)
-		assert.Nil(err)
+		assert.NoError(err)
 
 		assert.Equal("sample-value", body["sample_parameter"])
 
@@ -229,7 +229,7 @@ func TestCreateToken(t *testing.T) {
 			RequestID: "f00341c1-fad5-f6e6-13fd-235617f858a1",
 		}
 		err = json.NewEncoder(w).Encode(response)
-		assert.Nil(err)
+		assert.NoError(err)
 
 	}))
 	defer ts.Close()
@@ -244,7 +244,7 @@ func TestCreateToken(t *testing.T) {
 	code, err := vc.CreateToken("fake-token", parameters, &response)
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("f00341c1-fad5-f6e6-13fd-235617f858a1", response["request_id"].(string))
 }
@@ -273,7 +273,7 @@ func TestListAccessors(t *testing.T) {
 			},
 		}
 		err := json.NewEncoder(w).Encode(response)
-		assert.Nil(err)
+		assert.NoError(err)
 
 	}))
 	defer ts.Close()
@@ -286,7 +286,7 @@ func TestListAccessors(t *testing.T) {
 	code, err := vc.ListAccessors("fake-token", &response)
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("accessor1", response[0])
 	assert.Equal("accessor2", response[1])
@@ -304,7 +304,7 @@ func TestRevokeAccessor(t *testing.T) {
 
 		body := make(map[string]interface{})
 		err := json.NewDecoder(r.Body).Decode(&body)
-		assert.Nil(err)
+		assert.NoError(err)
 
 		assert.Equal("accessor1", body["accessor"])
 
@@ -321,7 +321,7 @@ func TestRevokeAccessor(t *testing.T) {
 	code, err := vc.RevokeAccessor("fake-token", "accessor1")
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusNoContent, code)
 }
 
@@ -337,7 +337,7 @@ func TestLookupAccessor(t *testing.T) {
 
 		body := make(map[string]interface{})
 		err := json.NewDecoder(r.Body).Decode(&body)
-		assert.Nil(err)
+		assert.NoError(err)
 
 		assert.Equal("8609694a-cdbc-db9b-d345-e782dbb562ed", body["accessor"])
 
@@ -353,7 +353,7 @@ func TestLookupAccessor(t *testing.T) {
 			},
 		}
 		err = json.NewEncoder(w).Encode(response)
-		assert.Nil(err)
+		assert.NoError(err)
 
 	}))
 	defer ts.Close()
@@ -366,7 +366,7 @@ func TestLookupAccessor(t *testing.T) {
 	code, err := vc.LookupAccessor("fake-token", "8609694a-cdbc-db9b-d345-e782dbb562ed", &md)
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("accessor-value", md.Accessor)
 }
@@ -395,7 +395,7 @@ func TestLookupSelf(t *testing.T) {
 			},
 		}
 		err := json.NewEncoder(w).Encode(response)
-		assert.Nil(err)
+		assert.NoError(err)
 
 	}))
 	defer ts.Close()
@@ -408,7 +408,7 @@ func TestLookupSelf(t *testing.T) {
 	code, err := vc.LookupSelf("fake-token", &md)
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
 	assert.Equal(http.StatusOK, code)
 	assert.Equal("accessor-value", md.Accessor)
 }
@@ -436,6 +436,204 @@ func TestRevokeSelf(t *testing.T) {
 	code, err := vc.RevokeSelf("fake-token")
 
 	// Assert
-	assert.Nil(err)
+	assert.NoError(err)
+	assert.Equal(http.StatusNoContent, code)
+}
+
+func TestCheckSecretEngineInstalled(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("GET", r.Method)
+		assert.Equal(VaultMountsAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"data": {
+				"cubbyhole/": {
+					"accessor": "cubbyhole_23676773",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "per-token private secret storage",
+					"local": true,
+					"options": null,
+					"seal_wrap": false,
+					"type": "cubbyhole"
+				},
+				"identity/": {
+					"accessor": "identity_11e23ad0",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "identity store",
+					"local": false,
+					"options": null,
+					"seal_wrap": false,
+					"type": "identity"
+				},
+				"secret/": {
+					"accessor": "kv_3ee7b0c0",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "key/value secret storage",
+					"local": false,
+					"options": {
+						"version": "1"
+					},
+					"seal_wrap": false,
+					"type": "kv"
+				},
+				"sys/": {
+					"accessor": "system_5e0c411d",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "system endpoints used for control, policy and debugging",
+					"local": false,
+					"options": null,
+					"seal_wrap": false,
+					"type": "system"
+				}
+			}	
+		  }`))
+
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	installed, err := vc.CheckSecretEngineInstalled("fake-token", "secret/", "kv")
+
+	// Assert
+	assert.NoError(err)
+	assert.True(installed)
+}
+
+func TestCheckSecretEngineNotInstalled(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("GET", r.Method)
+		assert.Equal(VaultMountsAPI, r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{
+			"data": {
+				"cubbyhole/": {
+					"accessor": "cubbyhole_23676773",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "per-token private secret storage",
+					"local": true,
+					"options": null,
+					"seal_wrap": false,
+					"type": "cubbyhole"
+				},
+				"identity/": {
+					"accessor": "identity_11e23ad0",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "identity store",
+					"local": false,
+					"options": null,
+					"seal_wrap": false,
+					"type": "identity"
+				},
+				"kv/": {
+					"accessor": "kv_3ee7b0c0",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "key/value secret storage",
+					"local": false,
+					"options": {
+						"version": "1"
+					},
+					"seal_wrap": false,
+					"type": "kv"
+				},
+				"sys/": {
+					"accessor": "system_5e0c411d",
+					"config": {
+						"default_lease_ttl": 0,
+						"force_no_cache": false,
+						"max_lease_ttl": 0
+					},
+					"description": "system endpoints used for control, policy and debugging",
+					"local": false,
+					"options": null,
+					"seal_wrap": false,
+					"type": "system"
+				}
+			}	
+		  }`))
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	installed, err := vc.CheckSecretEngineInstalled("fake-token", "secret/", "kv")
+
+	// Assert
+	assert.NoError(err)
+	assert.False(installed)
+}
+
+func TestEnableKVSecretEngine(t *testing.T) {
+	// Arrange
+	assert := assert.New(t)
+	mockLogger := logger.MockLogger{}
+
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal("POST", r.Method)
+		assert.Equal(VaultMountsAPI+"/secret", r.URL.EscapedPath())
+		assert.Equal("fake-token", r.Header.Get("X-Vault-Token"))
+
+		var body EnableSecretsEngineRequest
+		err := json.NewDecoder(r.Body).Decode(&body)
+		assert.NoError(err)
+		assert.Equal("kv", body.Type)
+		assert.Equal("1", body.Options.Version)
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer ts.Close()
+
+	host := strings.Replace(ts.URL, "https://", "", -1)
+	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
+
+	// Act
+	code, err := vc.EnableKVSecretEngine("fake-token", "secret/", "1")
+
+	// Assert
+	assert.NoError(err)
 	assert.Equal(http.StatusNoContent, code)
 }

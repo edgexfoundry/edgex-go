@@ -84,7 +84,7 @@ func TestRetrieve(t *testing.T) {
 
 	mockLogger := logger.MockLogger{}
 	cs := NewCerts(
-		NewRequester(true, configuration.SecretService.CaFilePath, mockLogger),
+		secretstoreclient.NewRequestor(mockLogger).Insecure(),
 		certPath,
 		"",
 		configuration.SecretService.GetSecretSvcBaseURL(),
