@@ -97,3 +97,19 @@ type RootTokenRetrievalResponse struct {
 	Complete     bool   `json:"complete"`
 	EncodedToken string `json:"encoded_token"`
 }
+
+// ListSecretEnginesResponse is the response to GET /v1/sys/mounts
+type ListSecretEnginesResponse struct {
+	Data map[string]struct {
+		Type string `json:"type"`
+	} `json:"data"`
+}
+
+// EnableSecretsEngineRequest is the POST request to /v1/sys/mounts
+type EnableSecretsEngineRequest struct {
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Options     struct {
+		Version string `json:"version"`
+	} `json:"options"`
+}

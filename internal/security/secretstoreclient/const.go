@@ -31,4 +31,5 @@ const (
 	RevokeSelfAPI         = "/v1/auth/token/revoke-self"
 	RootTokenControlAPI   = "/v1/sys/generate-root/attempt"
 	RootTokenRetrievalAPI = "/v1/sys/generate-root/update"
+	VaultMountsAPI        = "/v1/sys/mounts"
 )
