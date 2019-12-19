@@ -31,19 +31,18 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 )
 
 // Global variables
 var Configuration = &ConfigurationStruct{}
-var httpErrorHandler errorconcept.ErrorHandler
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
 	loggingClient := container.LoggingClientFrom(dic.Get)
-	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
@@ -95,7 +94,11 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 		},
 		dataContainer.EventsChannelName: func(get di.Get) interface{} {
 			return chEvents
-		}})
+		},
+		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+			return errorconcept.NewErrorHandler(loggingClient)
+		},
+	})
 
 	return true
 }

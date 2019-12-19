@@ -6,13 +6,13 @@ import (
 	"math"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
+	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/stretchr/testify/mock"
@@ -172,7 +172,7 @@ func TestGetReadingsByDevice(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return(buildReadings(), nil)
-	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock, newMockDeviceClient())
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient())
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
 	}
@@ -186,7 +186,7 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock, newMockDeviceClient())
+	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient())
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
 	}
