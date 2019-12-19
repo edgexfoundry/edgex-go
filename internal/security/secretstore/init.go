@@ -24,12 +24,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
 )
 
 type Bootstrap struct {
@@ -57,9 +59,20 @@ func (b *Bootstrap) Handler(
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
 
 	//step 2: initialize the communications
-	req := NewRequester(b.insecureSkipVerify, configuration.SecretService.CaFilePath, loggingClient)
-	if req == nil {
-		os.Exit(1)
+	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
+
+	var req internal.HttpCaller
+	if caFilePath := configuration.SecretService.CaFilePath; caFilePath != "" {
+		loggingClient.Info("using certificate verification for secret store connection")
+		caReader, err := fileOpener.OpenFileReader(caFilePath, os.O_RDONLY, 0400)
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("failed to load CA certificate: %s", err.Error()))
+			return false
+		}
+		req = secretstoreclient.NewRequestor(loggingClient).WithTLS(caReader, configuration.SecretService.ServerName)
+	} else {
+		loggingClient.Info("bypassing certificate verification for secret store connection")
+		req = secretstoreclient.NewRequestor(loggingClient).Insecure()
 	}
 
 	vaultScheme := configuration.SecretService.Scheme
@@ -160,6 +173,32 @@ func (b *Bootstrap) Handler(
 	gk := NewGokeyGenerator(absPath)
 	loggingClient.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
 	cred := NewCred(req, absPath, gk, configuration.SecretService.GetSecretSvcBaseURL(), loggingClient)
+
+	// Detour: Create secrets engine if not there already
+	vaultToken, err := GetAccessToken(absPath)
+	if err != nil {
+		loggingClient.Error(fmt.Sprintf("failed to reload root token: %s", err.Error()))
+		os.Exit(1)
+	}
+	// Note: trailing slash on secret/ is required.
+	installed, err := vc.CheckSecretEngineInstalled(vaultToken, "secret/", "kv")
+	if err != nil {
+		loggingClient.Error(fmt.Sprintf("failed call to check if kv secrets engine is installed: %s", err.Error()))
+		os.Exit(1)
+	}
+	if !installed {
+		loggingClient.Info("enabling KV secrets engine for the first time...")
+		// Enable KV version 1 at /v1/secret path (/v1 prefix supplied by Vault)
+		_, err := vc.EnableKVSecretEngine(vaultToken, "secret", "1")
+		if err != nil {
+			loggingClient.Error(fmt.Sprintf("failed call to enable KV secrets engine: %s", err.Error()))
+			os.Exit(1)
+		}
+	} else {
+		loggingClient.Info("KV secrets engine already enabled...")
+	}
+
+	// continue credential creation
 	for dbname, info := range configuration.Databases {
 		service := info.Service
 		// generate credentials

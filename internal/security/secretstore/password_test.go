@@ -93,7 +93,7 @@ func TestRetrieveCred(t *testing.T) {
 
 	mockLogger := logger.MockLogger{}
 	cr := NewCred(
-		NewRequester(true, configuration.SecretService.CaFilePath, mockLogger),
+		secretstoreclient.NewRequestor(mockLogger).Insecure(),
 		"",
 		NewGokeyGenerator(""),
 		configuration.SecretService.GetSecretSvcBaseURL(),

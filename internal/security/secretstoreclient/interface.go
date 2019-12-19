@@ -35,4 +35,6 @@ type SecretStoreClient interface {
 	LookupSelf(token string, tokenMetadata *TokenMetadata) (statusCode int, err error)
 	RevokeSelf(token string) (statusCode int, err error)
 	RegenRootToken(vmkReader io.Reader, rootToken *string) (err error)
+	CheckSecretEngineInstalled(token string, mountPoint string, engine string) (isInstalled bool, err error)
+	EnableKVSecretEngine(token string, mountPoint string, kvVersion string) (statusCode int, err error)
 }
