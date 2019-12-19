@@ -28,8 +28,6 @@ func ListDefaultServices() map[string]string {
 		clients.CoreCommandServiceKey:          "Command",
 		clients.CoreDataServiceKey:             "CoreData",
 		clients.CoreMetaDataServiceKey:         "Metadata",
-		clients.ExportClientServiceKey:         "Export",
-		clients.ExportDistroServiceKey:         "Distro",
 		clients.SupportLoggingServiceKey:       "Logging",
 		clients.SupportSchedulerServiceKey:     "Scheduler",
 	}
