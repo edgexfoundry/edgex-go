@@ -34,7 +34,7 @@ func TestProcess(t *testing.T) {
 			"bool":   true,
 		}
 	}
-	loggingClient := logger.NewMockClient()
+	lc := logger.NewMockClient()
 	tests := []struct {
 		name           string
 		response       string
@@ -53,7 +53,7 @@ func TestProcess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expectedResult, Process(test.response, loggingClient))
+			assert.Equal(t, test.expectedResult, Process(test.response, lc))
 		})
 	}
 }

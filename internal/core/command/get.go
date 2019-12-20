@@ -33,7 +33,7 @@ func NewGetCommand(
 	queryParams string,
 	context context.Context,
 	httpCaller internal.HttpCaller,
-	loggingClient logger.LoggingClient) (Executor, error) {
+	lc logger.LoggingClient) (Executor, error) {
 	urlResult := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Get.Action.Path, DEVICEIDURLPARAM, device.Id, -1) + "?" + queryParams
 	validURL, err := url.ParseRequestURI(urlResult)
 	if err != nil {
@@ -49,5 +49,5 @@ func NewGetCommand(
 		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
 	}
 
-	return newServiceCommand(device, httpCaller, request, loggingClient), nil
+	return newServiceCommand(device, httpCaller, request, lc), nil
 }

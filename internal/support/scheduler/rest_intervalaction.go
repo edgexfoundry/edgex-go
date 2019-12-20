@@ -36,7 +36,7 @@ import (
 func restGetIntervalAction(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) {
 
@@ -47,7 +47,7 @@ func restGetIntervalAction(
 	intervalActions, err := op.Execute()
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrLimitExceeded:
 			http.Error(w, "Exceeded max limit", http.StatusRequestEntityTooLarge)
@@ -56,13 +56,13 @@ func restGetIntervalAction(
 		}
 		return
 	}
-	pkg.Encode(intervalActions, w, loggingClient)
+	pkg.Encode(intervalActions, w, lc)
 }
 
 func restAddIntervalAction(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -77,7 +77,7 @@ func restAddIntervalAction(
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	loggingClient.Info("posting new intervalAction: " + intervalAction.String())
+	lc.Info("posting new intervalAction: " + intervalAction.String())
 
 	op := intervalaction.NewAddExecutor(dbClient, scClient, intervalAction)
 	newId, err := op.Execute()
@@ -90,7 +90,7 @@ func restAddIntervalAction(
 		default:
 			http.Error(w, t.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -109,7 +109,7 @@ api/v1/interval
 func intervalActionHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient,
 	configuration *config.ConfigurationStruct) {
@@ -122,11 +122,11 @@ func intervalActionHandler(
 	case http.MethodGet:
 		intervalActions, err := getIntervalActions(configuration.Service.MaxResultCount, dbClient)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, loggingClient)
+		pkg.Encode(intervalActions, w, lc)
 		break
 		// Post a new IntervalAction
 	case http.MethodPost:
@@ -136,10 +136,10 @@ func intervalActionHandler(
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			loggingClient.Error("error decoding intervalAction" + err.Error())
+			lc.Error("error decoding intervalAction" + err.Error())
 			return
 		}
-		loggingClient.Info("posting new intervalAction: " + intervalAction.String())
+		lc.Info("posting new intervalAction: " + intervalAction.String())
 
 		newId, err := addNewIntervalAction(intervalAction, dbClient, scClient)
 		if err != nil {
@@ -153,7 +153,7 @@ func intervalActionHandler(
 			default:
 				http.Error(w, t.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
 
@@ -168,11 +168,11 @@ func intervalActionHandler(
 		// Problem decoding
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			loggingClient.Error("Error decoding the intervalAction: " + err.Error())
+			lc.Error("Error decoding the intervalAction: " + err.Error())
 			return
 		}
 
-		loggingClient.Info("Updating IntervalAction: " + from.ID)
+		lc.Info("Updating IntervalAction: " + from.ID)
 		err = updateIntervalAction(from, dbClient, scClient)
 		if err != nil {
 			switch t := err.(type) {
@@ -191,7 +191,7 @@ func intervalActionHandler(
 			default:
 				http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			}
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
 
@@ -210,7 +210,7 @@ api/v1/interval
 func intervalActionByIdHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -223,7 +223,7 @@ func intervalActionByIdHandler(
 	id, err := url.QueryUnescape(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value interval id: " + err.Error())
+		lc.Error("Error un-escaping the value interval id: " + err.Error())
 		return
 	}
 
@@ -237,10 +237,10 @@ func intervalActionByIdHandler(
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
-		pkg.Encode(intervalAction, w, loggingClient)
+		pkg.Encode(intervalAction, w, lc)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionById(id, dbClient, scClient); err != nil {
@@ -268,7 +268,7 @@ api/v1/interval
 func intervalActionByNameHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -281,7 +281,7 @@ func intervalActionByNameHandler(
 	name, err := url.QueryUnescape(vars["name"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value name: " + err.Error())
+		lc.Error("Error un-escaping the value name: " + err.Error())
 		return
 	}
 
@@ -295,10 +295,10 @@ func intervalActionByNameHandler(
 			default:
 				http.Error(w, x.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
-		pkg.Encode(intervalAction, w, loggingClient)
+		pkg.Encode(intervalAction, w, lc)
 		// Post a new Interval Action
 	case http.MethodDelete:
 		if err = deleteIntervalActionByName(name, dbClient, scClient); err != nil {
@@ -326,7 +326,7 @@ api/v1/interval
 func intervalActionByTargetHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -339,7 +339,7 @@ func intervalActionByTargetHandler(
 	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value descriptor name: " + err.Error())
+		lc.Error("Error un-escaping the value descriptor name: " + err.Error())
 		return
 	}
 
@@ -347,11 +347,11 @@ func intervalActionByTargetHandler(
 	case http.MethodGet:
 		intervalActions, err := getIntervalActionsByTarget(target, dbClient)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, loggingClient)
+		pkg.Encode(intervalActions, w, lc)
 		break
 	}
 }
@@ -365,7 +365,7 @@ api/v1/interval
 func intervalActionByIntervalHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -379,7 +379,7 @@ func intervalActionByIntervalHandler(
 	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value interval name: " + err.Error())
+		lc.Error("Error un-escaping the value interval name: " + err.Error())
 		return
 	}
 
@@ -387,11 +387,11 @@ func intervalActionByIntervalHandler(
 	case http.MethodGet:
 		intervalActions, err := getIntervalActionsByInterval(interval, dbClient)
 		if err != nil {
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pkg.Encode(intervalActions, w, loggingClient)
+		pkg.Encode(intervalActions, w, lc)
 		break
 	}
 }
@@ -400,14 +400,14 @@ func intervalActionByIntervalHandler(
 func scrubIntervalActionsHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
 
 	switch r.Method {
 	case http.MethodDelete:
-		count, err := scrubAllInteralActions(loggingClient, dbClient)
+		count, err := scrubAllInteralActions(lc, dbClient)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

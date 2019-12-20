@@ -59,14 +59,14 @@ func NewCerts(
 	certPath string,
 	tokenPath string,
 	secretServiceBaseURL string,
-	loggingClient logger.LoggingClient) Certs {
+	lc logger.LoggingClient) Certs {
 
 	return Certs{
 		client:               caller,
 		certPath:             certPath,
 		tokenPath:            tokenPath,
 		secretServiceBaseURL: secretServiceBaseURL,
-		loggingClient:        loggingClient,
+		loggingClient:        lc,
 	}
 }
 

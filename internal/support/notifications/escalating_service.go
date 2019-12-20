@@ -25,26 +25,26 @@ import (
 
 func escalate(
 	t models.Transmission,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
-	loggingClient.Warn("Escalating transmission: " + t.ID + ", for: " + t.Notification.Slug)
+	lc.Warn("Escalating transmission: " + t.ID + ", for: " + t.Notification.Slug)
 
 	var err error
 	s, err := dbClient.GetSubscriptionBySlug(ESCALATIONSUBSCRIPTIONSLUG)
 	if err != nil {
-		loggingClient.Error("Unable to find Escalation subscriber to send escalation notice for " + t.ID)
+		lc.Error("Unable to find Escalation subscriber to send escalation notice for " + t.ID)
 		return
 	}
 
 	n, err := createEscalatedNotification(t, dbClient)
 	if err != nil {
-		loggingClient.Error("Unable to create new escalating notice to send escalation notice for " + t.ID)
+		lc.Error("Unable to create new escalating notice to send escalation notice for " + t.ID)
 		return
 	}
 
-	send(n, s, loggingClient, dbClient, config)
+	send(n, s, lc, dbClient, config)
 }
 
 func createEscalatedNotification(

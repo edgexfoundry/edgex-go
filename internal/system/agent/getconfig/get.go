@@ -43,10 +43,10 @@ type get struct {
 }
 
 // New is a factory function that returns an initialized get struct.
-func New(executor GetExecutor, loggingClient logger.LoggingClient) *get {
+func New(executor GetExecutor, lc logger.LoggingClient) *get {
 	return &get{
 		executor:      executor,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 	}
 }
 

@@ -26,7 +26,7 @@ type IntervalContext struct {
 	MarkedDeleted      bool
 }
 
-func (sc *IntervalContext) Reset(interval models.Interval, loggingClient logger.LoggingClient) {
+func (sc *IntervalContext) Reset(interval models.Interval, lc logger.LoggingClient) {
 	if sc.Interval != (models.Interval{}) && sc.Interval.Name != interval.Name {
 		// if interval name has changed, we should clear the old actions map(here just renew one)
 		sc.IntervalActionsMap = make(map[string]models.IntervalAction)
@@ -48,7 +48,7 @@ func (sc *IntervalContext) Reset(interval models.Interval, loggingClient logger.
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Interval.Start)
 		if err != nil {
-			loggingClient.Error("parse time error, the original time string is : " + sc.Interval.Start)
+			lc.Error("parse time error, the original time string is : " + sc.Interval.Start)
 		}
 
 		sc.StartTime = t
@@ -60,7 +60,7 @@ func (sc *IntervalContext) Reset(interval models.Interval, loggingClient logger.
 	} else {
 		t, err := time.Parse(TIMELAYOUT, sc.Interval.End)
 		if err != nil {
-			loggingClient.Error("parse time error, the original time string is : " + sc.Interval.End)
+			lc.Error("parse time error, the original time string is : " + sc.Interval.End)
 		}
 
 		sc.EndTime = t
@@ -71,7 +71,7 @@ func (sc *IntervalContext) Reset(interval models.Interval, loggingClient logger.
 	if !sc.Interval.RunOnce {
 		frequency, err := parseFrequency(sc.Interval.Frequency)
 		if err != nil {
-			loggingClient.Error("interval parse frequency error  %v", err.Error())
+			lc.Error("interval parse frequency error  %v", err.Error())
 		}
 		sc.Frequency = frequency
 	}

@@ -92,20 +92,20 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 func metricsHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	metricsImpl interfaces.Metrics) {
 
-	loggingClient.Debug("retrieved service names")
+	lc.Debug("retrieved service names")
 
 	vars := mux.Vars(r)
-	pkg.Encode(metricsImpl.Get(r.Context(), strings.Split(vars["services"], ",")), w, loggingClient)
+	pkg.Encode(metricsImpl.Get(r.Context(), strings.Split(vars["services"], ",")), w, lc)
 }
 
 // operationHandler implements a controller to execute a start/stop/restart operation request.
 func operationHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	operationsImpl interfaces.Operations) {
 
 	defer func() { _ = r.Body.Close() }()
@@ -113,78 +113,78 @@ func operationHandler(
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
 	o := models.Operation{}
 	if err = o.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("error during decoding: %s", err.Error())
+		lc.Error("error during decoding: %s", err.Error())
 		return
 	}
 
 	if len(o.Services) == 0 || len(o.Action) == 0 {
 		const errorMessage = "incorrect or malformed body was passed in with the request"
 		http.Error(w, errorMessage, http.StatusBadRequest)
-		loggingClient.Error(errorMessage)
+		lc.Error(errorMessage)
 		return
 	}
 
-	pkg.Encode(operationsImpl.Do(o.Services, o.Action), w, loggingClient)
+	pkg.Encode(operationsImpl.Do(o.Services, o.Action), w, lc)
 }
 
 // getConfigHandler implements a controller to execute a get configuration request.
 func getConfigHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 
 	getConfigImpl interfaces.GetConfig) {
 	vars := mux.Vars(r)
-	loggingClient.Debug("retrieved service names")
+	lc.Debug("retrieved service names")
 
-	pkg.Encode(getConfigImpl.Do(r.Context(), strings.Split(vars["services"], ",")), w, loggingClient)
+	pkg.Encode(getConfigImpl.Do(r.Context(), strings.Split(vars["services"], ",")), w, lc)
 }
 
 // setConfigHandler implements a controller to execute a set configuration request.
 func setConfigHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	setConfigImpl interfaces.SetConfig) {
 
 	defer func() { _ = r.Body.Close() }()
 
 	vars := mux.Vars(r)
-	loggingClient.Debug("retrieved service names")
+	lc.Debug("retrieved service names")
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
 	sc := requests.SetConfigRequest{}
 	if err = sc.UnmarshalJSON(b); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("error during decoding")
+		lc.Error("error during decoding")
 		return
 	}
 
-	pkg.Encode(setConfigImpl.Do(strings.Split(vars["services"], ","), sc), w, loggingClient)
+	pkg.Encode(setConfigImpl.Do(strings.Split(vars["services"], ","), sc), w, lc)
 }
 
 // healthHandler implements a controller to execute a get health status request.
 func healthHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	registryClient registry.Client) {
 
 	vars := mux.Vars(r)
-	loggingClient.Debug("health status data requested")
+	lc.Debug("health status data requested")
 
 	list := vars["services"]
 	var services []string
@@ -192,9 +192,9 @@ func healthHandler(
 
 	send, err := getHealth(services, registryClient)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pkg.Encode(send, w, loggingClient)
+	pkg.Encode(send, w, lc)
 }

@@ -37,7 +37,7 @@ import (
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	loggingClient := container.LoggingClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 
 	// initialize clients required by service.
@@ -73,13 +73,13 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 		})
 
 	if err != nil {
-		loggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 		return false
 	}
 
 	chEvents := make(chan interface{}, 100)
 	// initialize event handlers
-	initEventHandlers(loggingClient, chEvents, mdc, msc, configuration)
+	initEventHandlers(lc, chEvents, mdc, msc, configuration)
 
 	dic.Update(di.ServiceConstructorMap{
 		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
@@ -92,7 +92,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			return chEvents
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
-			return errorconcept.NewErrorHandler(loggingClient)
+			return errorconcept.NewErrorHandler(lc)
 		},
 	})
 

@@ -59,9 +59,9 @@ type TokenProvider struct {
 }
 
 // NewTokenProvider creates a new TokenProvider
-func NewTokenProvider(ctx context.Context, loggingClient logger.LoggingClient, execRunner ExecRunner) *TokenProvider {
+func NewTokenProvider(ctx context.Context, lc logger.LoggingClient, execRunner ExecRunner) *TokenProvider {
 	return &TokenProvider{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		ctx:           ctx,
 		execRunner:    execRunner,
 	}

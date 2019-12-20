@@ -31,9 +31,9 @@ type Command struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewCommand(loggingClient logger.LoggingClient) (*Command, *flag.FlagSet) {
+func NewCommand(lc logger.LoggingClient) (*Command, *flag.FlagSet) {
 	command := Command{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 	}
 	flags := flag.NewFlagSet(CommandName, flag.ExitOnError)
 	flags.StringVar(&command.configFile, "config", "", "specify JSON configuration file: /path/to/file.json")

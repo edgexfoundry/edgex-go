@@ -36,7 +36,7 @@ const (
 )
 
 // Check if the value descriptor matches the format string regular expression
-func validateFormatString(v contract.ValueDescriptor, loggingClient logger.LoggingClient) error {
+func validateFormatString(v contract.ValueDescriptor, lc logger.LoggingClient) error {
 	// No formatting specified
 	if v.Formatting == "" {
 		return nil
@@ -45,12 +45,12 @@ func validateFormatString(v contract.ValueDescriptor, loggingClient logger.Loggi
 	match, err := regexp.MatchString(formatSpecifier, v.Formatting)
 
 	if err != nil {
-		loggingClient.Error("Error checking for format string for value descriptor " + v.Name)
+		lc.Error("Error checking for format string for value descriptor " + v.Name)
 		return err
 	}
 	if !match {
 		err = fmt.Errorf("format is not a valid printf format")
-		loggingClient.Error(fmt.Sprintf("Error posting value descriptor. %s", err.Error()))
+		lc.Error(fmt.Sprintf("Error posting value descriptor. %s", err.Error()))
 		return errors.NewErrValueDescriptorInvalid(v.Name, err)
 	}
 
@@ -59,13 +59,13 @@ func validateFormatString(v contract.ValueDescriptor, loggingClient logger.Loggi
 
 func getValueDescriptorByName(
 	name string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vd contract.ValueDescriptor, err error) {
 
 	vd, err = dbClient.ValueDescriptorByName(name)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
@@ -78,13 +78,13 @@ func getValueDescriptorByName(
 
 func getValueDescriptorById(
 	id string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vd contract.ValueDescriptor, err error) {
 
 	vd, err = dbClient.ValueDescriptorById(id)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else if err == db.ErrInvalidObjectId {
@@ -99,13 +99,13 @@ func getValueDescriptorById(
 
 func getValueDescriptorsByUomLabel(
 	uomLabel string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
 
 	vdList, err = dbClient.ValueDescriptorsByUomLabel(uomLabel)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
@@ -118,13 +118,13 @@ func getValueDescriptorsByUomLabel(
 
 func getValueDescriptorsByLabel(
 	label string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
 
 	vdList, err = dbClient.ValueDescriptorsByLabel(label)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
@@ -137,13 +137,13 @@ func getValueDescriptorsByLabel(
 
 func getValueDescriptorsByType(
 	typ string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
 
 	vdList, err = dbClient.ValueDescriptorsByType(typ)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotFound {
 			return []contract.ValueDescriptor{}, errors.NewErrDbNotFound()
 		} else {
@@ -156,7 +156,7 @@ func getValueDescriptorsByType(
 
 func getValueDescriptorsByDevice(
 	device contract.Device,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the names of the value descriptors
@@ -166,7 +166,7 @@ func getValueDescriptorsByDevice(
 	// Get the value descriptors
 	vdList = []contract.ValueDescriptor{}
 	for _, name := range vdNames {
-		vd, err := getValueDescriptorByName(name, loggingClient, dbClient)
+		vd, err := getValueDescriptorByName(name, lc, dbClient)
 
 		// Not an error if not found
 		if err != nil {
@@ -187,44 +187,44 @@ func getValueDescriptorsByDevice(
 func getValueDescriptorsByDeviceName(
 	name string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
 	device, err := mdc.DeviceForName(name, ctx)
 	if err != nil {
-		loggingClient.Error("Problem getting device from metadata: " + err.Error())
+		lc.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
 	}
 
-	return getValueDescriptorsByDevice(device, loggingClient, dbClient)
+	return getValueDescriptorsByDevice(device, lc, dbClient)
 }
 
 func getValueDescriptorsByDeviceId(
 	id string,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
 	device, err := mdc.Device(id, ctx)
 	if err != nil {
-		loggingClient.Error("Problem getting device from metadata: " + err.Error())
+		lc.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
 	}
 
-	return getValueDescriptorsByDevice(device, loggingClient, dbClient)
+	return getValueDescriptorsByDevice(device, lc, dbClient)
 }
 
 func getAllValueDescriptors(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (vd []contract.ValueDescriptor, err error) {
 
 	vd, err = dbClient.ValueDescriptors()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return nil, err
 	}
 
@@ -233,18 +233,18 @@ func getAllValueDescriptors(
 
 func decodeValueDescriptor(
 	reader io.ReadCloser,
-	loggingClient logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
+	lc logger.LoggingClient) (vd contract.ValueDescriptor, err error) {
 
 	v := contract.ValueDescriptor{}
 	err = json.NewDecoder(reader).Decode(&v)
 	// Problems decoding
 	if err != nil {
-		loggingClient.Error("Error decoding the value descriptor: " + err.Error())
+		lc.Error("Error decoding the value descriptor: " + err.Error())
 		return contract.ValueDescriptor{}, errors.NewErrJsonDecoding(v.Name)
 	}
 
 	// Check the formatting
-	err = validateFormatString(v, loggingClient)
+	err = validateFormatString(v, lc)
 	if err != nil {
 		return contract.ValueDescriptor{}, err
 	}
@@ -254,12 +254,12 @@ func decodeValueDescriptor(
 
 func addValueDescriptor(
 	vd contract.ValueDescriptor,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (id string, err error) {
 
 	id, err = dbClient.AddValueDescriptor(vd)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		if err == db.ErrNotUnique {
 			return "", errors.NewErrDuplicateValueDescriptorName(vd.Name)
 		} else {
@@ -272,11 +272,11 @@ func addValueDescriptor(
 
 func updateValueDescriptor(
 	from contract.ValueDescriptor,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) error {
 
-	to, err := getValueDescriptorById(from.Id, loggingClient, dbClient)
+	to, err := getValueDescriptorById(from.Id, lc, dbClient)
 	if err != nil {
 		return err
 	}
@@ -291,11 +291,11 @@ func updateValueDescriptor(
 	if from.Formatting != "" {
 		match, err := regexp.MatchString(formatSpecifier, from.Formatting)
 		if err != nil {
-			loggingClient.Error("Error checking formatting for updated value descriptor")
+			lc.Error("Error checking formatting for updated value descriptor")
 			return err
 		}
 		if !match {
-			loggingClient.Error("value descriptor's format string doesn't fit the required pattern: " + formatSpecifier)
+			lc.Error("value descriptor's format string doesn't fit the required pattern: " + formatSpecifier)
 			return errors.NewErrValueDescriptorInvalid(from.Name, err)
 		}
 		to.Formatting = from.Formatting
@@ -313,14 +313,14 @@ func updateValueDescriptor(
 	if from.Name != "" {
 		// Check if value descriptor is still in use by readings if the name changes
 		if from.Name != to.Name {
-			r, err := getReadingsByValueDescriptor(to.Name, 10, loggingClient, dbClient, configuration) // Arbitrary limit, we're just checking if there are any readings
+			r, err := getReadingsByValueDescriptor(to.Name, 10, lc, dbClient, configuration) // Arbitrary limit, we're just checking if there are any readings
 			if err != nil {
-				loggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
+				lc.Error("Error checking the readings for the value descriptor: " + err.Error())
 				return err
 			}
 			// Value descriptor is still in use
 			if len(r) != 0 {
-				loggingClient.Error("Data integrity issue.  Value Descriptor with name:  " + from.Name + " is still referenced by existing readings.")
+				lc.Error("Data integrity issue.  Value Descriptor with name:  " + from.Name + " is still referenced by existing readings.")
 				return errors.NewErrValueDescriptorInUse(from.Name)
 			}
 		}
@@ -340,10 +340,10 @@ func updateValueDescriptor(
 	err = dbClient.UpdateValueDescriptor(to)
 	if err != nil {
 		if err == db.ErrNotUnique {
-			loggingClient.Error("Value descriptor name is not unique")
+			lc.Error("Value descriptor name is not unique")
 			return errors.NewErrDuplicateValueDescriptorName(to.Name)
 		} else {
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return err
 		}
 	}
@@ -353,51 +353,51 @@ func updateValueDescriptor(
 
 func deleteValueDescriptor(
 	vd contract.ValueDescriptor,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) error {
 
 	// Check if the value descriptor is still in use by readings
 	readings, err := dbClient.ReadingsByValueDescriptor(vd.Name, 10)
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 	if len(readings) > 0 {
-		loggingClient.Error("Data integrity issue.  Value Descriptor is still referenced by existing readings.")
+		lc.Error("Data integrity issue.  Value Descriptor is still referenced by existing readings.")
 		return errors.NewErrValueDescriptorInUse(vd.Name)
 	}
 
 	// Delete the value descriptor
 	if err = dbClient.DeleteValueDescriptorById(vd.Id); err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func deleteValueDescriptorByName(name string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func deleteValueDescriptorByName(name string, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	// Check if the value descriptor exists
-	vd, err := getValueDescriptorByName(name, loggingClient, dbClient)
+	vd, err := getValueDescriptorByName(name, lc, dbClient)
 	if err != nil {
 		return err
 	}
 
-	if err = deleteValueDescriptor(vd, loggingClient, dbClient); err != nil {
+	if err = deleteValueDescriptor(vd, lc, dbClient); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func deleteValueDescriptorById(id string, loggingClient logger.LoggingClient, dbClient interfaces.DBClient) error {
+func deleteValueDescriptorById(id string, lc logger.LoggingClient, dbClient interfaces.DBClient) error {
 	// Check if the value descriptor exists
-	vd, err := getValueDescriptorById(id, loggingClient, dbClient)
+	vd, err := getValueDescriptorById(id, lc, dbClient)
 	if err != nil {
 		return err
 	}
 
-	if err = deleteValueDescriptor(vd, loggingClient, dbClient); err != nil {
+	if err = deleteValueDescriptor(vd, lc, dbClient); err != nil {
 		return err
 	}
 

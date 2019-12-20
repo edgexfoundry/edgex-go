@@ -21,11 +21,11 @@ import (
 )
 
 // Process converts a response string (assumed to contain JSON) to a map.
-func Process(response string, loggingClient logger.LoggingClient) map[string]interface{} {
+func Process(response string, lc logger.LoggingClient) map[string]interface{} {
 	rsp := make(map[string]interface{})
 	err := json.Unmarshal([]byte(response), &rsp)
 	if err != nil {
-		loggingClient.Error("error unmarshalling response from JSON: %v", err.Error())
+		lc.Error("error unmarshalling response from JSON: %v", err.Error())
 	}
 	return rsp
 }

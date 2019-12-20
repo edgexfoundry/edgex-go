@@ -31,7 +31,7 @@ func NewRequestor(
 	skipVerify bool,
 	timeoutInSecond int,
 	caCertPath string,
-	loggingClient logger.LoggingClient) internal.HttpCaller {
+	lc logger.LoggingClient) internal.HttpCaller {
 
 	var tr *http.Transport
 	if skipVerify {
@@ -41,10 +41,10 @@ func NewRequestor(
 	} else {
 		caCert, err := ioutil.ReadFile(caCertPath)
 		if err != nil {
-			loggingClient.Error("failed to load rootCA certificate.")
+			lc.Error("failed to load rootCA certificate.")
 			return nil
 		}
-		loggingClient.Info("successfully loaded rootCA certificate.")
+		lc.Info("successfully loaded rootCA certificate.")
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 

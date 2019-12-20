@@ -26,25 +26,24 @@ import (
 // Update when the device was last reported connected
 func updateDeviceLastReportedConnected(
 	device string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	mdc metadata.DeviceClient,
 	configuration *config.ConfigurationStruct) {
-
 	// Config set to skip update last reported
 	if !configuration.Writable.DeviceUpdateLastConnected {
-		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
+		lc.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
 
 	d, err := mdc.CheckForDevice(device, context.Background())
 	if err != nil {
-		loggingClient.Error("Error getting device " + device + ": " + err.Error())
+		lc.Error("Error getting device " + device + ": " + err.Error())
 		return
 	}
 
 	// Couldn't find device
 	if len(d.Name) == 0 {
-		loggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
+		lc.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
 		return
 	}
 
@@ -53,12 +52,12 @@ func updateDeviceLastReportedConnected(
 	// Use of context.Background because this function is invoked asynchronously from a channel
 	err = mdc.UpdateLastConnectedByName(d.Name, t, context.Background())
 	if err != nil {
-		loggingClient.Error("Problems updating last connected value for device: " + d.Name)
+		lc.Error("Problems updating last connected value for device: " + d.Name)
 		return
 	}
 	err = mdc.UpdateLastReportedByName(d.Name, t, context.Background())
 	if err != nil {
-		loggingClient.Error("Problems updating last reported value for device: " + d.Name)
+		lc.Error("Problems updating last reported value for device: " + d.Name)
 	}
 	return
 }
@@ -66,13 +65,13 @@ func updateDeviceLastReportedConnected(
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(
 	device string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	mdc metadata.DeviceClient,
 	msc metadata.DeviceServiceClient,
 	configuration *config.ConfigurationStruct) {
 
 	if !configuration.Writable.ServiceUpdateLastConnected {
-		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
+		lc.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}
 
@@ -81,20 +80,20 @@ func updateDeviceServiceLastReportedConnected(
 	// Get the device
 	d, err := mdc.CheckForDevice(device, context.Background())
 	if err != nil {
-		loggingClient.Error("Error getting device " + device + ": " + err.Error())
+		lc.Error("Error getting device " + device + ": " + err.Error())
 		return
 	}
 
 	// Couldn't find device
 	if len(d.Name) == 0 {
-		loggingClient.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
+		lc.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
 		return
 	}
 
 	// Get the device service
 	s := d.Service
 	if &s == nil {
-		loggingClient.Error("Error updating device service connected/reported times.  Unknown device service in device:  " + d.Name)
+		lc.Error("Error updating device service connected/reported times.  Unknown device service in device:  " + d.Name)
 		return
 	}
 

@@ -47,7 +47,7 @@ func TestOperationDoWithServices(t *testing.T) {
 		service2Result = "[{\"result\":\"bar\"}]"
 	)
 
-	loggingClient := logger.NewMockClient()
+	lc := logger.NewMockClient()
 	expectedError := errors.New("expectedError")
 	tests := []struct {
 		name           string
@@ -58,7 +58,7 @@ func TestOperationDoWithServices(t *testing.T) {
 		{
 			"one service with no error",
 			[]string{service1Name},
-			[]interface{}{response.Process(service1Result, loggingClient)},
+			[]interface{}{response.Process(service1Result, lc)},
 			map[string]stubCall{
 				service1Name: {[]string{executorPath, service1Name, operation}, service1Result, nil},
 			},
@@ -75,8 +75,8 @@ func TestOperationDoWithServices(t *testing.T) {
 			"two services with no errors",
 			[]string{service1Name, service2Name},
 			[]interface{}{
-				response.Process(service1Result, loggingClient),
-				response.Process(service2Result, loggingClient),
+				response.Process(service1Result, lc),
+				response.Process(service2Result, lc),
 			},
 			map[string]stubCall{
 				service1Name: {[]string{executorPath, service1Name, operation}, service1Result, nil},
@@ -88,7 +88,7 @@ func TestOperationDoWithServices(t *testing.T) {
 			[]string{service1Name, service2Name},
 			[]interface{}{
 				system.Failure(service1Name, operation, UnknownExecutorType, expectedError.Error()),
-				response.Process(service2Result, loggingClient),
+				response.Process(service2Result, lc),
 			},
 			map[string]stubCall{
 				service1Name: {[]string{executorPath, service1Name, operation}, "", expectedError},
@@ -99,7 +99,7 @@ func TestOperationDoWithServices(t *testing.T) {
 			"two services with second returning error",
 			[]string{service1Name, service2Name},
 			[]interface{}{
-				response.Process(service1Result, loggingClient),
+				response.Process(service1Result, lc),
 				system.Failure(service2Name, operation, UnknownExecutorType, expectedError.Error()),
 			},
 			map[string]stubCall{
@@ -124,7 +124,7 @@ func TestOperationDoWithServices(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			executor := NewStub(test.executorCalls)
-			sut := NewOperations(executor.CommandExecutor, loggingClient, executorPath)
+			sut := NewOperations(executor.CommandExecutor, lc, executorPath)
 
 			result := sut.Do(test.services, operation)
 

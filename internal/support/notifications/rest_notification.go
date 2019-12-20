@@ -37,7 +37,7 @@ import (
 func notificationHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -51,33 +51,33 @@ func notificationHandler(
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error decoding notification: " + err.Error())
+		lc.Error("Error decoding notification: " + err.Error())
 		return
 	}
 
-	loggingClient.Info("Posting Notification: " + n.String())
+	lc.Info("Posting Notification: " + n.String())
 	n.Status = models.NotificationsStatus(models.New)
 	n.ID, err = dbClient.AddNotification(n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
 	if n.Severity == models.NotificationsSeverity(models.Critical) {
-		loggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
+		lc.Info("Critical severity scheduler is triggered for: " + n.Slug)
 		n, err = dbClient.GetNotificationById(n.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
 
-		err := distributeAndMark(n, loggingClient, dbClient, config)
+		err := distributeAndMark(n, lc, dbClient, config)
 		if err != nil {
 			return
 		}
-		loggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+		lc.Info("Critical severity scheduler has completed for: " + n.Slug)
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -89,7 +89,7 @@ func notificationHandler(
 func restGetNotificationBySlug(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -102,7 +102,7 @@ func restGetNotificationBySlug(
 	op := notification.NewSlugExecutor(dbClient, slug)
 	result, err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -113,13 +113,13 @@ func restGetNotificationBySlug(
 		return
 	}
 
-	pkg.Encode(result, w, loggingClient)
+	pkg.Encode(result, w, lc)
 }
 
 func restDeleteNotificationBySlug(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -129,12 +129,12 @@ func restDeleteNotificationBySlug(
 	vars := mux.Vars(r)
 	slug := vars["slug"]
 
-	loggingClient.Info("Deleting notification (and associated transmissions) by slug: " + slug)
+	lc.Info("Deleting notification (and associated transmissions) by slug: " + slug)
 
 	op := notification.NewDeleteBySlugExecutor(dbClient, slug)
 	err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -153,7 +153,7 @@ func restDeleteNotificationBySlug(
 func restGetNotificationByID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -165,7 +165,7 @@ func restGetNotificationByID(
 	op := notification.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -175,13 +175,13 @@ func restGetNotificationByID(
 		}
 		return
 	}
-	pkg.Encode(result, w, loggingClient)
+	pkg.Encode(result, w, lc)
 }
 
 func restDeleteNotificationByID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -191,13 +191,13 @@ func restDeleteNotificationByID(
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	loggingClient.Info("Deleting notification (and associated transmissions): " + id)
+	lc.Info("Deleting notification (and associated transmissions): " + id)
 
 	op := notification.NewDeleteByIDExecutor(dbClient, id)
 	err := op.Execute()
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrNotificationNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -214,7 +214,7 @@ func restDeleteNotificationByID(
 func restDeleteNotificationsByAge(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -225,15 +225,15 @@ func restDeleteNotificationsByAge(
 	age, err := strconv.Atoi(vars["age"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		lc.Error("Error converting the age to an integer")
 		return
 	}
-	loggingClient.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
+	lc.Info("Deleting old notifications (and associated transmissions): " + vars["age"])
 	op := notification.NewDeleteByAgeExecutor(dbClient, age)
 	err = op.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -244,7 +244,7 @@ func restDeleteNotificationsByAge(
 func restGetNotificationsBySender(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -256,12 +256,12 @@ func restGetNotificationsBySender(
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -274,17 +274,17 @@ func restGetNotificationsBySender(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, loggingClient)
+	pkg.Encode(results, w, lc)
 }
 
 func restNotificationByStartEnd(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -296,24 +296,24 @@ func restNotificationByStartEnd(
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		lc.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		lc.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -326,17 +326,17 @@ func restNotificationByStartEnd(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, loggingClient)
+	pkg.Encode(results, w, lc)
 }
 
 func restNotificationByStart(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -347,18 +347,18 @@ func restNotificationByStart(
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		lc.Error("Error converting the start to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -371,17 +371,17 @@ func restNotificationByStart(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, loggingClient)
+	pkg.Encode(results, w, lc)
 }
 
 func restNotificationByEnd(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -393,18 +393,18 @@ func restNotificationByEnd(
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		lc.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -417,17 +417,17 @@ func restNotificationByEnd(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, loggingClient)
+	pkg.Encode(results, w, lc)
 }
 
 func restNotificationsByLabels(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -439,12 +439,12 @@ func restNotificationsByLabels(
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -459,17 +459,17 @@ func restNotificationsByLabels(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(results, w, loggingClient)
+	pkg.Encode(results, w, lc)
 }
 
 func restNotificationsNew(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
@@ -481,12 +481,12 @@ func restNotificationsNew(
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
 	// Check the length
-	if err = checkMaxLimit(limitNum, loggingClient, config); err != nil {
+	if err = checkMaxLimit(limitNum, lc, config); err != nil {
 		http.Error(w, ExceededMaxResultCount, http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -499,9 +499,9 @@ func restNotificationsNew(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(n, w, loggingClient)
+	pkg.Encode(n, w, lc)
 }

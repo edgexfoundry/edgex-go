@@ -25,52 +25,52 @@ import (
 
 func distribute(
 	n models.Notification,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) error {
 
-	loggingClient.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
+	lc.Debug("DistributionCoordinator start distributing notification: " + n.Slug)
 	var categories []string
 	categories = append(categories, string(n.Category))
 	subs, err := dbClient.GetSubscriptionByCategoriesLabels(categories, n.Labels)
 	if err != nil {
-		loggingClient.Error("Unable to get subscriptions to distribute notification:" + n.Slug)
+		lc.Error("Unable to get subscriptions to distribute notification:" + n.Slug)
 		return err
 	}
 	for _, sub := range subs {
-		send(n, sub, loggingClient, dbClient, config)
+		send(n, sub, lc, dbClient, config)
 	}
 	return nil
 }
 
 func resend(
 	t models.Transmission,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
-	loggingClient.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
-	resendViaChannel(t, loggingClient, dbClient, config)
+	lc.Debug("Resending transmission: " + t.ID + " for: " + t.Notification.Slug)
+	resendViaChannel(t, lc, dbClient, config)
 }
 
 func send(
 	n models.Notification,
 	s models.Subscription,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
 	for _, ch := range s.Channels {
-		sendViaChannel(n, ch, s.Receiver, loggingClient, dbClient, config)
+		sendViaChannel(n, ch, s.Receiver, lc, dbClient, config)
 	}
 }
 
 func criticalSeverityResend(
 	t models.Transmission,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
-	loggingClient.Info("Critical severity resend scheduler is triggered.")
-	resend(t, loggingClient, dbClient, config)
+	lc.Info("Critical severity resend scheduler is triggered.")
+	resend(t, lc, dbClient, config)
 }

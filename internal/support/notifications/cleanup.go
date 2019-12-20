@@ -30,21 +30,21 @@ import (
 func cleanupHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
 
-	loggingClient.Info("Cleaning up of notifications and transmissions")
-	cleanupHandlerCloser(w, dbClient.Cleanup(), loggingClient)
+	lc.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.Cleanup(), lc)
 }
 
 func cleanupAgeHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -55,18 +55,18 @@ func cleanupAgeHandler(
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		lc.Error("Error converting the age to an integer")
 		return
 	}
 
-	loggingClient.Info("Cleaning up of notifications and transmissions")
-	cleanupHandlerCloser(w, dbClient.CleanupOld(age), loggingClient)
+	lc.Info("Cleaning up of notifications and transmissions")
+	cleanupHandlerCloser(w, dbClient.CleanupOld(age), lc)
 }
 
-func cleanupHandlerCloser(w http.ResponseWriter, err error, loggingClient logger.LoggingClient) {
+func cleanupHandlerCloser(w http.ResponseWriter, err error, lc logger.LoggingClient) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 

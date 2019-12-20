@@ -33,10 +33,10 @@ type metrics struct {
 }
 
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
-func NewMetrics(executor interfaces.CommandExecutor, loggingClient logger.LoggingClient, executorPath string) *metrics {
+func NewMetrics(executor interfaces.CommandExecutor, lc logger.LoggingClient, executorPath string) *metrics {
 	return &metrics{
 		executor:      executor,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		executorPath:  executorPath,
 	}
 }

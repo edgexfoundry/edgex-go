@@ -47,7 +47,7 @@ func (b *Bootstrap) Handler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	var command contract.Command
@@ -56,35 +56,35 @@ func (b *Bootstrap) Handler(
 	commandName := flag.Args()[0]
 	switch commandName {
 	case legacy.CommandName:
-		command, flagSet = legacy.NewCommand(loggingClient)
+		command, flagSet = legacy.NewCommand(lc)
 	case generate.CommandName:
-		command, flagSet = generate.NewCommand(loggingClient, configuration)
+		command, flagSet = generate.NewCommand(lc, configuration)
 	case cache.CommandName:
-		generateCommand, _ := generate.NewCommand(loggingClient, configuration)
-		command, flagSet = cache.NewCommand(loggingClient, configuration, generateCommand)
+		generateCommand, _ := generate.NewCommand(lc, configuration)
+		command, flagSet = cache.NewCommand(lc, configuration, generateCommand)
 	case _import.CommandName:
-		command, flagSet = _import.NewCommand(loggingClient, configuration)
+		command, flagSet = _import.NewCommand(lc, configuration)
 	default:
-		loggingClient.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
+		lc.Error(fmt.Sprintf("unsupported subcommand %s", commandName))
 		b.exitStatusCode = contract.StatusCodeNoOptionSelected
 		return false
 	}
 
 	if err := flagSet.Parse(flag.Args()[1:]); err != nil {
-		loggingClient.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
+		lc.Error(fmt.Sprintf("error parsing subcommand %s: %v", commandName, err))
 		b.exitStatusCode = contract.StatusCodeExitWithError
 		return false
 	}
 
 	if len(flagSet.Args()) > 0 {
-		loggingClient.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
+		lc.Error(fmt.Sprintf("subcommand %s doesn't use any args", commandName))
 		b.exitStatusCode = contract.StatusCodeExitWithError
 		return false
 	}
 
 	exitStatusCode, err := command.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 	}
 	b.exitStatusCode = exitStatusCode
 	return false

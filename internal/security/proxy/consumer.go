@@ -43,13 +43,13 @@ type Consumer struct {
 func NewConsumer(
 	name string,
 	r internal.HttpCaller,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	configuration *config.ConfigurationStruct) Consumer {
 
 	return Consumer{
 		name:          name,
 		client:        r,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		configuration: configuration,
 	}
 }

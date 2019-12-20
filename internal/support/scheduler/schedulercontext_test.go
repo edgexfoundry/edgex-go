@@ -61,11 +61,11 @@ func TestRet(t *testing.T) {
 		RunOnce:   TestIntervalRunOnce,
 	}
 
-	loggingClient := logger.NewMockClient()
+	lc := logger.NewMockClient()
 
 	// init reset
 	testIntervalContext := IntervalContext{}
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testInterval.Name != testIntervalContext.Interval.Name {
 		t.Fatalf(TestUnexpectedMsgFormatStr, testIntervalContext.Interval.Name, testInterval.Name)
@@ -77,7 +77,7 @@ func TestRet(t *testing.T) {
 
 	// run times, current and max iteration
 	testInterval.RunOnce = false
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.MaxIterations != 0 {
 		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.MaxIterations, 0)
@@ -93,7 +93,7 @@ func TestRet(t *testing.T) {
 	}
 
 	testInterval.Start = "20180101T010101"
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.StartTime.Year() != 2018 {
 		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.StartTime.Year(), 2018)
@@ -105,7 +105,7 @@ func TestRet(t *testing.T) {
 	}
 
 	testInterval.End = "20170101T010101"
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.EndTime.Year() != 2017 {
 		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testIntervalContext.EndTime.Year(), 2017)
@@ -117,7 +117,7 @@ func TestRet(t *testing.T) {
 	}
 
 	testInterval.Frequency = "60s"
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 	if testIntervalContext.Frequency.Seconds() != 60 {
 		t.Fatalf(TestUnexpectedMsgFormatStrForFloatVal, testIntervalContext.Frequency.Seconds(), 60.0)
 	}
@@ -127,7 +127,7 @@ func TestRet(t *testing.T) {
 	testInterval.End = ""
 	testInterval.RunOnce = true
 
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	// next time
 	if testIntervalContext.StartTime != testIntervalContext.NextTime {
@@ -139,7 +139,7 @@ func TestRet(t *testing.T) {
 	}
 
 	testInterval.RunOnce = false
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.StartTime.Unix() > testIntervalContext.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
@@ -147,7 +147,7 @@ func TestRet(t *testing.T) {
 
 	testInterval.Start = "20180101T010101"
 	testInterval.Frequency = "24h"
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.StartTime.Unix() > testIntervalContext.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
@@ -169,11 +169,11 @@ func TestIsComplete(t *testing.T) {
 		RunOnce:   true,
 	}
 
-	loggingClient := logger.NewMockClient()
+	lc := logger.NewMockClient()
 
 	// init reset
 	testIntervalContext := IntervalContext{}
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if !testIntervalContext.IsComplete() {
 		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, testIntervalContext.IsComplete(), true)
@@ -182,7 +182,7 @@ func TestIsComplete(t *testing.T) {
 	testInterval.Start = "20180101T010101"
 	testInterval.Frequency = "24h"
 	testInterval.RunOnce = false
-	testIntervalContext.Reset(testInterval, loggingClient)
+	testIntervalContext.Reset(testInterval, lc)
 
 	if testIntervalContext.IsComplete() {
 		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, testIntervalContext.IsComplete(), false)
