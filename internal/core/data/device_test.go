@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -28,7 +29,7 @@ func TestCheckMaxLimit(t *testing.T) {
 
 	testedLimit := math.MinInt32
 
-	expectedNil := checkMaxLimit(testedLimit, logger.NewMockClient())
+	expectedNil := checkMaxLimit(testedLimit, logger.NewMockClient(), &config.ConfigurationStruct{})
 
 	if expectedNil != nil {
 		t.Errorf("Should not exceed limit")
@@ -40,7 +41,7 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 
 	testedLimit := math.MaxInt32
 
-	expectedErr := checkMaxLimit(testedLimit, logger.NewMockClient())
+	expectedErr := checkMaxLimit(testedLimit, logger.NewMockClient(), &config.ConfigurationStruct{})
 
 	if expectedErr == nil {
 		t.Errorf("Exceeded limit and should throw error")
@@ -50,7 +51,6 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 // Supporting methods
 // Reset() re-initializes dependencies for each test
 func reset() {
-	Configuration = &ConfigurationStruct{}
 	testEvent.ID = testBsonString
 	testEvent.Device = testDeviceName
 	testEvent.Origin = testOrigin
