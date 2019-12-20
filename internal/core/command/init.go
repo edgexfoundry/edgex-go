@@ -37,7 +37,7 @@ import (
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
@@ -53,7 +53,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 				endpoint.Endpoint{RegistryClient: &registryClient})
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
-			return errorconcept.NewErrorHandler(loggingClient)
+			return errorconcept.NewErrorHandler(lc)
 		},
 	})
 

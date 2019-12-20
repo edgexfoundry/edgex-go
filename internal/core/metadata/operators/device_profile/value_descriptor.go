@@ -54,12 +54,12 @@ func (a addValueDescriptor) Execute() error {
 }
 
 // NewAddValueDescriptorExecutor creates a new ValueDescriptorAddExecutor.
-func NewAddValueDescriptorExecutor(ctx context.Context, client ValueDescriptorAdder, loggingClient logger.LoggingClient, drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
+func NewAddValueDescriptorExecutor(ctx context.Context, client ValueDescriptorAdder, lc logger.LoggingClient, drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
 	return addValueDescriptor{
 		ctx:    ctx,
 		drs:    drs,
 		client: client,
-		logger: loggingClient,
+		logger: lc,
 	}
 }
 

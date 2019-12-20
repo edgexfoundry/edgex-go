@@ -35,7 +35,7 @@ import (
 func transmissionHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -49,15 +49,15 @@ func transmissionHandler(
 	// Problem Decoding Transmission
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error decoding transmission: " + err.Error())
+		lc.Error("Error decoding transmission: " + err.Error())
 		return
 	}
 
-	loggingClient.Info("Posting Transmission: " + t.String())
+	lc.Info("Posting Transmission: " + t.String())
 	id, err := dbClient.AddTransmission(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -69,7 +69,7 @@ func transmissionHandler(
 func transmissionBySlugHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -80,7 +80,7 @@ func transmissionBySlugHandler(
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -91,18 +91,18 @@ func transmissionBySlugHandler(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(t, w, loggingClient)
+	pkg.Encode(t, w, lc)
 
 }
 
 func transmissionBySlugAndStartEndHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -114,19 +114,19 @@ func transmissionBySlugAndStartEndHandler(
 	start, err := strconv.ParseInt(vars["start"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error(fmt.Sprintf("failed to parse start %s %s", vars["start"], err.Error()))
+		lc.Error(fmt.Sprintf("failed to parse start %s %s", vars["start"], err.Error()))
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error(fmt.Sprintf("failed to parse end %s %s", vars["end"], err.Error()))
+		lc.Error(fmt.Sprintf("failed to parse end %s %s", vars["end"], err.Error()))
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error(fmt.Sprintf("failed to parse limit %s %s", vars["limit"], err.Error()))
+		lc.Error(fmt.Sprintf("failed to parse limit %s %s", vars["limit"], err.Error()))
 		return
 	}
 
@@ -137,18 +137,18 @@ func transmissionBySlugAndStartEndHandler(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(t, w, loggingClient)
+	pkg.Encode(t, w, lc)
 
 }
 
 func transmissionByStartEndHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -160,19 +160,19 @@ func transmissionByStartEndHandler(
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		lc.Error("Error converting the start to an integer")
 		return
 	}
 	end, err := strconv.ParseInt(vars["end"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		lc.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -183,18 +183,18 @@ func transmissionByStartEndHandler(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(t, w, loggingClient)
+	pkg.Encode(t, w, lc)
 
 }
 
 func transmissionByStartHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -205,13 +205,13 @@ func transmissionByStartHandler(
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the start to an integer")
+		lc.Error("Error converting the start to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -222,18 +222,18 @@ func transmissionByStartHandler(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(t, w, loggingClient)
+	pkg.Encode(t, w, lc)
 
 }
 
 func transmissionByEndHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -245,13 +245,13 @@ func transmissionByEndHandler(
 	// Problem converting start
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the end to an integer")
+		lc.Error("Error converting the end to an integer")
 		return
 	}
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -262,37 +262,37 @@ func transmissionByEndHandler(
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(t, w, loggingClient)
+	pkg.Encode(t, w, lc)
 
 }
 
 func transmissionByEscalatedHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByStatusHandler(w, r, models.Trxescalated, loggingClient, dbClient)
+	transmissionByStatusHandler(w, r, models.Trxescalated, lc, dbClient)
 }
 
 func transmissionByFailedHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByStatusHandler(w, r, models.Failed, loggingClient, dbClient)
+	transmissionByStatusHandler(w, r, models.Failed, lc, dbClient)
 }
 
 func transmissionByStatusHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	status models.TransmissionStatus,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -303,7 +303,7 @@ func transmissionByStatusHandler(
 	limitNum, err := strconv.Atoi(vars["limit"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting limit to integer: " + err.Error())
+		lc.Error("Error converting limit to integer: " + err.Error())
 		return
 	}
 
@@ -317,55 +317,55 @@ func transmissionByStatusHandler(
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			loggingClient.Error(err.Error())
+			lc.Error(err.Error())
 			return
 		}
 
-		pkg.Encode(t, w, loggingClient)
+		pkg.Encode(t, w, lc)
 	}
 }
 
 func transmissionByAgeSentHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByAgeStatusHandler(w, r, models.Sent, loggingClient, dbClient)
+	transmissionByAgeStatusHandler(w, r, models.Sent, lc, dbClient)
 }
 
 func transmissionByAgeEscalatedHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByAgeStatusHandler(w, r, models.Trxescalated, loggingClient, dbClient)
+	transmissionByAgeStatusHandler(w, r, models.Trxescalated, lc, dbClient)
 }
 
 func transmissionByAgeAcknowledgedHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByAgeStatusHandler(w, r, models.Acknowledged, loggingClient, dbClient)
+	transmissionByAgeStatusHandler(w, r, models.Acknowledged, lc, dbClient)
 }
 
 func transmissionByAgeFailedHandler(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
-	transmissionByAgeStatusHandler(w, r, models.Failed, loggingClient, dbClient)
+	transmissionByAgeStatusHandler(w, r, models.Failed, lc, dbClient)
 }
 
 func transmissionByAgeStatusHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	status models.TransmissionStatus,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -377,14 +377,14 @@ func transmissionByAgeStatusHandler(
 	// Problem converting age
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error("Error converting the age to an integer")
+		lc.Error("Error converting the age to an integer")
 		return
 	}
 
 	err = dbClient.DeleteTransmission(age, status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)

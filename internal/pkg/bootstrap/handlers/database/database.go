@@ -66,7 +66,7 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database)
 }
 
 // Return the dbClient interface
-func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
+func (d Database) newDBClient(lc logger.LoggingClient, credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
 	case db.MongoDB:
@@ -86,9 +86,9 @@ func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials bo
 					Host: databaseInfo.Host,
 					Port: databaseInfo.Port,
 				},
-				loggingClient)
+				lc)
 		}
-		return redis.NewClient(db.Configuration{Host: databaseInfo.Host, Port: databaseInfo.Port}, loggingClient)
+		return redis.NewClient(db.Configuration{Host: databaseInfo.Host, Port: databaseInfo.Port}, lc)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -101,7 +101,7 @@ func (d Database) BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
 	var credentials bootstrapConfig.Credentials
@@ -111,7 +111,7 @@ func (d Database) BootstrapHandler(
 		if err == nil {
 			break
 		}
-		loggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		lc.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -119,12 +119,12 @@ func (d Database) BootstrapHandler(
 	var dbClient dbInterfaces.DBClient
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = d.newDBClient(loggingClient, credentials)
+		dbClient, err = d.newDBClient(lc, credentials)
 		if err == nil {
 			break
 		}
 		dbClient = nil
-		loggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
+		lc.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -138,7 +138,7 @@ func (d Database) BootstrapHandler(
 		},
 	})
 
-	loggingClient.Info("Database connected")
+	lc.Info("Database connected")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -152,7 +152,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		loggingClient.Info("Database disconnected")
+		lc.Info("Database disconnected")
 	}()
 
 	return true

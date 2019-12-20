@@ -57,11 +57,11 @@ func newServiceCommand(
 	device contract.Device,
 	caller internal.HttpCaller,
 	req *http.Request,
-	loggingClient logger.LoggingClient) serviceCommand {
+	lc logger.LoggingClient) serviceCommand {
 	return serviceCommand{
 		Device:        device,
 		HttpCaller:    caller,
 		Request:       req,
-		LoggingClient: loggingClient,
+		LoggingClient: lc,
 	}
 }

@@ -36,10 +36,10 @@ var (
 	intervalActionNameToIntervalActionIdMap = make(map[string]string)
 )
 
-func StartTicker(ticker *time.Ticker, loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
+func StartTicker(ticker *time.Ticker, lc logger.LoggingClient, configuration *config.ConfigurationStruct) {
 	go func() {
 		for range ticker.C {
-			triggerInterval(loggingClient, configuration)
+			triggerInterval(lc, configuration)
 		}
 	}()
 }
@@ -96,9 +96,9 @@ type QueueClient struct {
 }
 
 // NewClient
-func NewSchedulerQueueClient(loggingClient logger.LoggingClient) *QueueClient {
+func NewSchedulerQueueClient(lc logger.LoggingClient) *QueueClient {
 	return &QueueClient{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 	}
 }
 
@@ -423,12 +423,12 @@ func (qc *QueueClient) RemoveIntervalActionQueue(intervalActionId string) error 
 	return nil
 }
 
-func triggerInterval(loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) {
+func triggerInterval(lc logger.LoggingClient, configuration *config.ConfigurationStruct) {
 	nowEpoch := time.Now().Unix()
 
 	defer func() {
 		if err := recover(); err != nil {
-			loggingClient.Error("trigger interval error : " + err.(string))
+			lc.Error("trigger interval error : " + err.(string))
 		}
 	}()
 
@@ -443,18 +443,18 @@ func triggerInterval(loggingClient logger.LoggingClient, configuration *config.C
 			intervalContext := intervalQueue.Remove().(*IntervalContext)
 			intervalId := intervalContext.Interval.ID
 			if intervalContext.MarkedDeleted {
-				loggingClient.Debug("the interval with id : " + intervalId + " be marked as deleted, removing it.")
+				lc.Debug("the interval with id : " + intervalId + " be marked as deleted, removing it.")
 				continue // really delete from the queue
 			} else {
 				if intervalContext.NextTime.Unix() <= nowEpoch {
-					loggingClient.Debug(
+					lc.Debug(
 						"executing interval, detail : {" + intervalContext.GetInfo() + "} ," +
 							" at : " + intervalContext.NextTime.String())
 
 					wg.Add(1)
 
 					// execute it in a individual go routine
-					go execute(intervalContext, &wg, loggingClient, configuration)
+					go execute(intervalContext, &wg, lc, configuration)
 				} else {
 					intervalQueue.Add(intervalContext)
 				}
@@ -468,7 +468,7 @@ func triggerInterval(loggingClient logger.LoggingClient, configuration *config.C
 func execute(
 	context *IntervalContext,
 	wg *sync.WaitGroup,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	configuration *config.ConfigurationStruct) {
 
 	intervalActionMap := context.IntervalActionsMap
@@ -477,32 +477,32 @@ func execute(
 
 	defer func() {
 		if err := recover(); err != nil {
-			loggingClient.Error("interval execution error : " + err.(string))
+			lc.Error("interval execution error : " + err.(string))
 		}
 	}()
 
-	loggingClient.Debug(fmt.Sprintf("%d interval action need to be executed.", len(intervalActionMap)))
+	lc.Debug(fmt.Sprintf("%d interval action need to be executed.", len(intervalActionMap)))
 
 	// execute interval action one by one
 	for eventId := range intervalActionMap {
-		loggingClient.Debug(
+		lc.Debug(
 			"the event with id : " + eventId +
 				" belongs to interval : " + context.Interval.ID + " will be executing!")
 		intervalAction, _ := intervalActionMap[eventId]
 
 		executingUrl := getUrlStr(intervalAction)
-		loggingClient.Debug("the event with id : " + eventId + " will request url : " + executingUrl)
+		lc.Debug("the event with id : " + eventId + " will request url : " + executingUrl)
 
 		httpMethod := intervalAction.HTTPMethod
 		if !validMethod(httpMethod) {
-			loggingClient.Error(fmt.Sprintf("net/http: invalid method %q", httpMethod))
+			lc.Error(fmt.Sprintf("net/http: invalid method %q", httpMethod))
 			return
 		}
 
-		req, err := getHttpRequest(httpMethod, executingUrl, intervalAction, loggingClient)
+		req, err := getHttpRequest(httpMethod, executingUrl, intervalAction, lc)
 
 		if err != nil {
-			loggingClient.Error("create new request occurs error : " + err.Error())
+			lc.Error("create new request occurs error : " + err.Error())
 		}
 
 		client := &http.Client{
@@ -511,17 +511,17 @@ func execute(
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)
 
-		loggingClient.Debug(fmt.Sprintf("execution returns status code : %d", statusCode))
-		loggingClient.Debug("execution returns response content : " + responseStr)
+		lc.Debug(fmt.Sprintf("execution returns status code : %d", statusCode))
+		lc.Debug("execution returns response content : " + responseStr)
 	}
 
 	context.UpdateNextTime()
 	context.UpdateIterations()
 
 	if context.IsComplete() {
-		loggingClient.Debug("completed interval, detail : " + context.GetInfo())
+		lc.Debug("completed interval, detail : " + context.GetInfo())
 	} else {
-		loggingClient.Debug("requeue interval, detail : " + context.GetInfo())
+		lc.Debug("requeue interval, detail : " + context.GetInfo())
 		intervalQueue.Add(context)
 	}
 
@@ -533,7 +533,7 @@ func getHttpRequest(
 	httpMethod string,
 	executingUrl string,
 	intervalAction contract.IntervalAction,
-	loggingClient logger.LoggingClient) (*http.Request, error) {
+	lc logger.LoggingClient) (*http.Request, error) {
 	var body []byte
 
 	params := strings.TrimSpace(intervalAction.Parameters)
@@ -546,7 +546,7 @@ func getHttpRequest(
 
 	req, err := http.NewRequest(httpMethod, executingUrl, bytes.NewBuffer(body))
 	if err != nil {
-		loggingClient.Error("create new request occurs error : " + err.Error())
+		lc.Error("create new request occurs error : " + err.Error())
 		return nil, err
 	}
 

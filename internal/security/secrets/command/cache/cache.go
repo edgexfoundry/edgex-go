@@ -40,12 +40,12 @@ type Command struct {
 }
 
 func NewCommand(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	configuration *config.ConfigurationStruct,
 	generate *generate.Command) (*Command, *flag.FlagSet) {
 
 	return &Command{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		configuration: configuration,
 		generate:      generate,
 	}, flag.NewFlagSet(CommandName, flag.ExitOnError)

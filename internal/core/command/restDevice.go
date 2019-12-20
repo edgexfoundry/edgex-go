@@ -32,30 +32,30 @@ import (
 func restGetDeviceCommandByCommandID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
 
-	issueDeviceCommand(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
+	issueDeviceCommand(w, r, false, lc, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByCommandID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
 
-	issueDeviceCommand(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
+	issueDeviceCommand(w, r, true, lc, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommand(
 	w http.ResponseWriter,
 	r *http.Request,
 	isPutCommand bool,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
@@ -67,7 +67,7 @@ func issueDeviceCommand(
 	cid := vars[COMMANDID]
 	b, err := ioutil.ReadAll(r.Body)
 	if b == nil && err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -79,7 +79,7 @@ func issueDeviceCommand(
 		r.URL.RawQuery,
 		isPutCommand,
 		ctx,
-		loggingClient,
+		lc,
 		dbClient,
 		deviceClient)
 	if err != nil {
@@ -104,30 +104,30 @@ func issueDeviceCommand(
 func restGetDeviceCommandByNames(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
 
-	issueDeviceCommandByNames(w, r, false, loggingClient, dbClient, deviceClient, httpErrorHandler)
+	issueDeviceCommandByNames(w, r, false, lc, dbClient, deviceClient, httpErrorHandler)
 }
 
 func restPutDeviceCommandByNames(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
 
-	issueDeviceCommandByNames(w, r, true, loggingClient, dbClient, deviceClient, httpErrorHandler)
+	issueDeviceCommandByNames(w, r, true, lc, dbClient, deviceClient, httpErrorHandler)
 }
 
 func issueDeviceCommandByNames(
 	w http.ResponseWriter,
 	r *http.Request,
 	isPutCommand bool,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	httpErrorHandler errorconcept.ErrorHandler) {
@@ -152,7 +152,7 @@ func issueDeviceCommandByNames(
 		r.URL.RawQuery,
 		isPutCommand,
 		ctx,
-		loggingClient,
+		lc,
 		dbClient,
 		deviceClient)
 

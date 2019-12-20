@@ -36,7 +36,7 @@ import (
 func restGetIntervals(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	configuration *config.ConfigurationStruct) {
 
@@ -47,17 +47,17 @@ func restGetIntervals(
 	op := interval.NewAllExecutor(dbClient, configuration.Service.MaxResultCount)
 	intervals, err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	pkg.Encode(intervals, w, loggingClient)
+	pkg.Encode(intervals, w, lc)
 }
 
 func restUpdateInterval(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -72,11 +72,11 @@ func restUpdateInterval(
 	// Problem decoding
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error decoding the interval: " + err.Error())
+		lc.Error("Error decoding the interval: " + err.Error())
 		return
 	}
 
-	loggingClient.Info("Updating Interval: " + from.ID)
+	lc.Info("Updating Interval: " + from.ID)
 	op := interval.NewUpdateExecutor(dbClient, scClient, from)
 	err = op.Execute()
 	if err != nil {
@@ -92,7 +92,7 @@ func restUpdateInterval(
 		default:
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -104,7 +104,7 @@ func restUpdateInterval(
 func restAddInterval(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -117,10 +117,10 @@ func restAddInterval(
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error decoding interval" + err.Error())
+		lc.Error("Error decoding interval" + err.Error())
 		return
 	}
-	loggingClient.Info("Posting new Interval: " + intervalObj.String())
+	lc.Info("Posting new Interval: " + intervalObj.String())
 
 	op := interval.NewAddExecutor(dbClient, scClient, intervalObj)
 	newId, err := op.Execute()
@@ -131,7 +131,7 @@ func restAddInterval(
 		default:
 			http.Error(w, t.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -142,7 +142,7 @@ func restAddInterval(
 func restGetIntervalByID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	if r.Body != nil {
@@ -154,14 +154,14 @@ func restGetIntervalByID(
 	id, err := url.QueryUnescape(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value id: " + err.Error())
+		lc.Error("Error un-escaping the value id: " + err.Error())
 		return
 	}
 
 	op := interval.NewIdExecutor(dbClient, id)
 	result, err := op.Execute()
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrIntervalNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -171,13 +171,13 @@ func restGetIntervalByID(
 		}
 		return
 	}
-	pkg.Encode(result, w, loggingClient)
+	pkg.Encode(result, w, lc)
 }
 
 func restDeleteIntervalByID(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -190,7 +190,7 @@ func restDeleteIntervalByID(
 	id, err := url.QueryUnescape(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value id: " + err.Error())
+		lc.Error("Error un-escaping the value id: " + err.Error())
 		return
 	}
 
@@ -198,7 +198,7 @@ func restDeleteIntervalByID(
 	err = op.Execute()
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		switch err.(type) {
 		case errors.ErrIntervalNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -215,7 +215,7 @@ func restDeleteIntervalByID(
 func restGetIntervalByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
@@ -226,7 +226,7 @@ func restGetIntervalByName(
 	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value name: " + err.Error())
+		lc.Error("Error un-escaping the value name: " + err.Error())
 		return
 	}
 
@@ -241,18 +241,18 @@ func restGetIntervalByName(
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
-	pkg.Encode(result, w, loggingClient)
+	pkg.Encode(result, w, lc)
 
 }
 
 func restDeleteIntervalByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) {
 
@@ -264,7 +264,7 @@ func restDeleteIntervalByName(
 	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		loggingClient.Error("Error un-escaping the value name: " + err.Error())
+		lc.Error("Error un-escaping the value name: " + err.Error())
 		return
 	}
 	op := interval.NewDeleteByNameExecutor(dbClient, scClient, name)
@@ -295,11 +295,11 @@ func restDeleteIntervalByName(
 func restScrubAllIntervals(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) {
 
 	defer r.Body.Close()
-	loggingClient.Info("Scrubbing All Interval(s) and IntervalAction(s).")
+	lc.Info("Scrubbing All Interval(s) and IntervalAction(s).")
 	op := interval.NewScrubExecutor(dbClient)
 	count, err := op.Execute()
 	if err != nil {

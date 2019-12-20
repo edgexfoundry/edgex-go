@@ -44,13 +44,13 @@ type executor struct {
 func NewExecutor(
 	genClients *agentClients.General,
 	registryClient registry.Client,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	serviceProtocol string) *executor {
 
 	return &executor{
 		genClients:      genClients,
 		registryClient:  registryClient,
-		loggingClient:   loggingClient,
+		loggingClient:   lc,
 		serviceProtocol: serviceProtocol,
 	}
 }

@@ -36,25 +36,25 @@ func BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 
 	// add dependencies to bootstrapContainer
-	scClient := NewSchedulerQueueClient(loggingClient)
+	scClient := NewSchedulerQueueClient(lc)
 	dic.Update(di.ServiceConstructorMap{
 		schedulerContainer.QueueName: func(get di.Get) interface{} {
 			return scClient
 		},
 	})
 
-	err := LoadScheduler(loggingClient, container.DBClientFrom(dic.Get), scClient, configuration)
+	err := LoadScheduler(lc, container.DBClientFrom(dic.Get), scClient, configuration)
 	if err != nil {
-		loggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
+		lc.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}
 
 	ticker := time.NewTicker(time.Duration(configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(ticker, loggingClient, configuration)
+	StartTicker(ticker, lc, configuration)
 
 	wg.Add(1)
 	go func() {

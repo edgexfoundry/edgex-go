@@ -38,13 +38,13 @@ func NewResource(
 	name string,
 	r internal.HttpCaller,
 	kongProxyBaseUrl string,
-	loggingClient logger.LoggingClient) *Resource {
+	lc logger.LoggingClient) *Resource {
 
 	return &Resource{
 		name:             name,
 		client:           r,
 		kongProxyBaseUrl: kongProxyBaseUrl,
-		loggingClient:    loggingClient,
+		loggingClient:    lc,
 	}
 }
 

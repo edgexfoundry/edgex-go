@@ -35,9 +35,9 @@ type executor struct {
 }
 
 // NewExecutor is a factory function that returns an initialized executor struct.
-func NewExecutor(loggingClient logger.LoggingClient, configuration *config.ConfigurationStruct) *executor {
+func NewExecutor(lc logger.LoggingClient, configuration *config.ConfigurationStruct) *executor {
 	return &executor{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		configuration: configuration,
 	}
 }

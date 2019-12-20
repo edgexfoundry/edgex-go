@@ -40,12 +40,12 @@ import (
 
 func restGetAllDeviceServices(
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	configuration *config.ConfigurationStruct) {
 
-	op := device_service.NewDeviceServiceLoadAll(configuration.Service, dbClient, loggingClient)
+	op := device_service.NewDeviceServiceLoadAll(configuration.Service, dbClient, lc)
 	services, err := op.Execute()
 	if err != nil {
 		errorHandler.HandleOneVariant(
@@ -55,7 +55,7 @@ func restGetAllDeviceServices(
 			errorconcept.Default.InternalServerError)
 		return
 	}
-	pkg.Encode(services, w, loggingClient)
+	pkg.Encode(services, w, lc)
 }
 
 func restAddDeviceService(
@@ -111,7 +111,7 @@ func restAddDeviceService(
 func restUpdateDeviceService(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -138,7 +138,7 @@ func restUpdateDeviceService(
 	}
 
 	if err = updateDeviceServiceFields(from, &to, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 
@@ -316,7 +316,7 @@ func restGetServiceByName(
 func restDeleteServiceById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	nc notifications.NotificationsClient,
@@ -337,8 +337,8 @@ func restDeleteServiceById(
 	}
 
 	ctx := r.Context()
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
-		loggingClient.Error(err.Error())
+	if err = deleteDeviceService(ds, w, ctx, lc, dbClient, errorHandler, nc, configuration); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -348,7 +348,7 @@ func restDeleteServiceById(
 func restDeleteServiceByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	nc notifications.NotificationsClient,
@@ -374,8 +374,8 @@ func restDeleteServiceByName(
 
 	ctx := r.Context()
 	// Delete the device service
-	if err = deleteDeviceService(ds, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
-		loggingClient.Error(err.Error())
+	if err = deleteDeviceService(ds, w, ctx, lc, dbClient, errorHandler, nc, configuration); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -390,7 +390,7 @@ func deleteDeviceService(
 	ds models.DeviceService,
 	w http.ResponseWriter,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	nc notifications.NotificationsClient,
@@ -403,7 +403,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, device := range devices {
-		if err = deleteDevice(device, w, ctx, loggingClient, dbClient, errorHandler, nc, configuration); err != nil {
+		if err = deleteDevice(device, w, ctx, lc, dbClient, errorHandler, nc, configuration); err != nil {
 			return err
 		}
 	}
@@ -415,7 +415,7 @@ func deleteDeviceService(
 		return err
 	}
 	for _, watcher := range watchers {
-		if err = deleteProvisionWatcher(watcher, w, loggingClient, dbClient, errorHandler); err != nil {
+		if err = deleteProvisionWatcher(watcher, w, lc, dbClient, errorHandler); err != nil {
 			return err
 		}
 	}
@@ -432,14 +432,14 @@ func deleteDeviceService(
 func restUpdateServiceLastConnectedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
 	var id string = vars[ID]
 	var vlc string = vars[LASTCONNECTED]
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lastConnected, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
@@ -456,8 +456,8 @@ func restUpdateServiceLastConnectedById(
 		return
 	}
 
-	if err = updateServiceLastConnected(ds, lc, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+	if err = updateServiceLastConnected(ds, lastConnected, w, dbClient, errorHandler); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -468,7 +468,7 @@ func restUpdateServiceLastConnectedById(
 func restUpdateServiceLastConnectedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -479,7 +479,7 @@ func restUpdateServiceLastConnectedByName(
 		return
 	}
 	var vlc string = vars[LASTCONNECTED]
-	lc, err := strconv.ParseInt(vlc, 10, 64)
+	lastConnected, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.DeviceService.InvalidRequest_StatusInternalServer)
 		return
@@ -497,8 +497,8 @@ func restUpdateServiceLastConnectedByName(
 	}
 
 	// Update last connected
-	if err = updateServiceLastConnected(ds, lc, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+	if err = updateServiceLastConnected(ds, lastConnected, w, dbClient, errorHandler); err != nil {
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -687,7 +687,7 @@ func restUpdateServiceAdminStateByName(
 func restUpdateServiceLastReportedById(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -712,7 +712,7 @@ func restUpdateServiceLastReportedById(
 	}
 
 	if err = updateServiceLastReported(ds, lr, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -723,7 +723,7 @@ func restUpdateServiceLastReportedById(
 func restUpdateServiceLastReportedByName(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -752,7 +752,7 @@ func restUpdateServiceLastReportedByName(
 	}
 
 	if err = updateServiceLastReported(ds, lr, w, dbClient, errorHandler); err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -784,10 +784,10 @@ func notifyAssociates(
 	id string,
 	action string,
 	actionType models.ActionType,
-	loggingClient logger.LoggingClient) error {
+	lc logger.LoggingClient) error {
 
 	for _, ds := range deviceServices {
-		if err := callback(ds, id, action, actionType, loggingClient); err != nil {
+		if err := callback(ds, id, action, actionType, lc); err != nil {
 			return err
 		}
 	}
@@ -801,7 +801,7 @@ func callback(
 	id string,
 	action string,
 	actionType models.ActionType,
-	loggingClient logger.LoggingClient) error {
+	lc logger.LoggingClient) error {
 
 	client := &http.Client{}
 	url := service.Addressable.GetCallbackURL()
@@ -816,22 +816,22 @@ func callback(
 		}
 		req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 
-		go makeRequest(client, req, loggingClient)
+		go makeRequest(client, req, lc)
 	} else {
-		loggingClient.Info("callback::no addressable for " + service.Name)
+		lc.Info("callback::no addressable for " + service.Name)
 	}
 	return nil
 }
 
 // Asynchronous call
-func makeRequest(client *http.Client, req *http.Request, loggingClient logger.LoggingClient) {
+func makeRequest(client *http.Client, req *http.Request, lc logger.LoggingClient) {
 	// Make the request
 	resp, err := client.Do(req)
 	if err == nil {
 		defer resp.Body.Close()
 		resp.Close = true
 	} else {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 	}
 }
 
