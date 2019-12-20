@@ -16,16 +16,22 @@ package data
 import (
 	"context"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // Update when the device was last reported connected
-func updateDeviceLastReportedConnected(device string, loggingClient logger.LoggingClient, mdc metadata.DeviceClient) {
+func updateDeviceLastReportedConnected(
+	device string,
+	loggingClient logger.LoggingClient,
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) {
+
 	// Config set to skip update last reported
-	if !Configuration.Writable.DeviceUpdateLastConnected {
+	if !configuration.Writable.DeviceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device connected/reported times for:  " + device)
 		return
 	}
@@ -62,9 +68,10 @@ func updateDeviceServiceLastReportedConnected(
 	device string,
 	loggingClient logger.LoggingClient,
 	mdc metadata.DeviceClient,
-	msc metadata.DeviceServiceClient) {
+	msc metadata.DeviceServiceClient,
+	configuration *config.ConfigurationStruct) {
 
-	if !Configuration.Writable.ServiceUpdateLastConnected {
+	if !configuration.Writable.ServiceUpdateLastConnected {
 		loggingClient.Debug("Skipping update of device service connected/reported times for:  " + device)
 		return
 	}
@@ -96,8 +103,13 @@ func updateDeviceServiceLastReportedConnected(
 	msc.UpdateLastReported(s.Id, t, context.Background())
 }
 
-func checkDevice(device string, ctx context.Context, mdc metadata.DeviceClient) error {
-	if Configuration.Writable.MetaDataCheck {
+func checkDevice(
+	device string,
+	ctx context.Context,
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) error {
+
+	if configuration.Writable.MetaDataCheck {
 		_, err := mdc.CheckForDevice(device, ctx)
 		if err != nil {
 			return err

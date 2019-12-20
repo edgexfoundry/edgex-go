@@ -20,13 +20,14 @@ import (
 	"io"
 	"regexp"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 const (
@@ -272,7 +273,8 @@ func addValueDescriptor(
 func updateValueDescriptor(
 	from contract.ValueDescriptor,
 	loggingClient logger.LoggingClient,
-	dbClient interfaces.DBClient) error {
+	dbClient interfaces.DBClient,
+	configuration *config.ConfigurationStruct) error {
 
 	to, err := getValueDescriptorById(from.Id, loggingClient, dbClient)
 	if err != nil {
@@ -311,7 +313,7 @@ func updateValueDescriptor(
 	if from.Name != "" {
 		// Check if value descriptor is still in use by readings if the name changes
 		if from.Name != to.Name {
-			r, err := getReadingsByValueDescriptor(to.Name, 10, loggingClient, dbClient) // Arbitrary limit, we're just checking if there are any readings
+			r, err := getReadingsByValueDescriptor(to.Name, 10, loggingClient, dbClient, configuration) // Arbitrary limit, we're just checking if there are any readings
 			if err != nil {
 				loggingClient.Error("Error checking the readings for the value descriptor: " + err.Error())
 				return err

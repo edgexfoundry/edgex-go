@@ -14,6 +14,8 @@
 package data
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 )
@@ -32,7 +34,8 @@ func initEventHandlers(
 	loggingClient logger.LoggingClient,
 	chEvents <-chan interface{},
 	mdc metadata.DeviceClient,
-	msc metadata.DeviceServiceClient) {
+	msc metadata.DeviceServiceClient,
+	configuration *config.ConfigurationStruct) {
 
 	go func() {
 		for {
@@ -42,11 +45,11 @@ func initEventHandlers(
 					switch e.(type) {
 					case DeviceLastReported:
 						dlr := e.(DeviceLastReported)
-						updateDeviceLastReportedConnected(dlr.DeviceName, loggingClient, mdc)
+						updateDeviceLastReportedConnected(dlr.DeviceName, loggingClient, mdc, configuration)
 						break
 					case DeviceServiceLastReported:
 						dslr := e.(DeviceServiceLastReported)
-						updateDeviceServiceLastReportedConnected(dslr.DeviceName, loggingClient, mdc, msc)
+						updateDeviceServiceLastReportedConnected(dslr.DeviceName, loggingClient, mdc, msc, configuration)
 						break
 					}
 				} else {

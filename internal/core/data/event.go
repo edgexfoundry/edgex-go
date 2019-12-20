@@ -19,18 +19,19 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 const (
@@ -50,9 +51,10 @@ func countEventsByDevice(
 	device string,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	mdc metadata.DeviceClient) (int, error) {
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) (int, error) {
 
-	err := checkDevice(device, ctx, mdc)
+	err := checkDevice(device, ctx, mdc, configuration)
 	if err != nil {
 		return -1, err
 	}
@@ -102,14 +104,15 @@ func addNewEvent(
 	dbClient interfaces.DBClient,
 	chEvents chan<- interface{},
 	msgClient messaging.MessageClient,
-	mdc metadata.DeviceClient) (string, error) {
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) (string, error) {
 
-	err := checkDevice(e.Device, ctx, mdc)
+	err := checkDevice(e.Device, ctx, mdc, configuration)
 	if err != nil {
 		return "", err
 	}
 
-	if Configuration.Writable.ValidateCheck {
+	if configuration.Writable.ValidateCheck {
 		loggingClient.Debug("Validation enabled, parsing events")
 		for reading := range e.Readings {
 			// Check value descriptor
@@ -130,7 +133,7 @@ func addNewEvent(
 	}
 
 	// Add the event and readings to the database
-	if Configuration.Writable.PersistData {
+	if configuration.Writable.PersistData {
 		id, err := dbClient.AddEvent(e)
 		if err != nil {
 			return "", err
@@ -138,9 +141,9 @@ func addNewEvent(
 		e.ID = id
 	}
 
-	putEventOnQueue(e, ctx, loggingClient, msgClient) // Push event to message bus for App Services to consume
-	chEvents <- DeviceLastReported{e.Device}          // update last reported connected (device)
-	chEvents <- DeviceServiceLastReported{e.Device}   // update last reported connected (device service)
+	putEventOnQueue(e, ctx, loggingClient, msgClient, configuration) // Push event to message bus for App Services to consume
+	chEvents <- DeviceLastReported{e.Device}                         // update last reported connected (device)
+	chEvents <- DeviceServiceLastReported{e.Device}                  // update last reported connected (device service)
 
 	return e.ID, nil
 }
@@ -149,7 +152,8 @@ func updateEvent(
 	from models.Event,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	mdc metadata.DeviceClient) error {
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) error {
 
 	to, err := dbClient.EventById(from.ID)
 	if err != nil {
@@ -159,7 +163,7 @@ func updateEvent(
 	// Update the fields
 	if len(from.Device) > 0 {
 		// Check device
-		err = checkDevice(from.Device, ctx, mdc)
+		err = checkDevice(from.Device, ctx, mdc, configuration)
 		if err != nil {
 			return err
 		}
@@ -226,7 +230,8 @@ func updateEventPushDateByChecksum(
 	checksum string,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	mdc metadata.DeviceClient) error {
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) error {
 
 	evts, err := dbClient.EventsByChecksum(checksum)
 	if err != nil {
@@ -239,7 +244,7 @@ func updateEventPushDateByChecksum(
 		// We only want the checksum for "marked pushed" functionality and once the event
 		// has been marked pushed there is no reason to keep the checksum around.
 		// The expectation is that above query will only return one result, but this is not guaranteed
-		err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc)
+		err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc, configuration)
 		if err != nil {
 			return err
 		}
@@ -251,7 +256,8 @@ func updateEventPushDate(
 	id string,
 	ctx context.Context,
 	dbClient interfaces.DBClient,
-	mdc metadata.DeviceClient) error {
+	mdc metadata.DeviceClient,
+	configuration *config.ConfigurationStruct) error {
 
 	e, err := getEventById(id, dbClient)
 	if err != nil {
@@ -259,7 +265,7 @@ func updateEventPushDate(
 	}
 
 	e.Pushed = db.MakeTimestamp()
-	err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc)
+	err = updateEvent(models.Event{Event: e}, ctx, dbClient, mdc, configuration)
 	if err != nil {
 		return err
 	}
@@ -271,7 +277,8 @@ func putEventOnQueue(
 	evt models.Event,
 	ctx context.Context,
 	loggingClient logger.LoggingClient,
-	msgClient messaging.MessageClient) {
+	msgClient messaging.MessageClient,
+	configuration *config.ConfigurationStruct) {
 
 	loggingClient.Info("Putting event on message queue")
 
@@ -287,11 +294,11 @@ func putEventOnQueue(
 	}
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(evt.Bytes, ctx)
-	err := msgClient.Publish(msgEnvelope, Configuration.MessageQueue.Topic)
+	err := msgClient.Publish(msgEnvelope, configuration.MessageQueue.Topic)
 	if err != nil {
 		loggingClient.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
 	} else {
-		loggingClient.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", Configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
+		loggingClient.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
 	}
 }
 

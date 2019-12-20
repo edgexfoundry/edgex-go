@@ -27,12 +27,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -176,13 +176,11 @@ func TestRestValueDescriptorsUsageHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Configuration = &ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 10}}
-			defer func() { Configuration = &ConfigurationStruct{} }()
-
-			Configuration.Service = tt.config
+			configuration := &config.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 10}}
+			configuration.Service = tt.config
 			rr := httptest.NewRecorder()
 			lc := logger.NewMockClient()
-			restValueDescriptorsUsageHandler(rr, tt.request, lc, tt.dbMock, errorconcept.NewErrorHandler(lc))
+			restValueDescriptorsUsageHandler(rr, tt.request, lc, tt.dbMock, errorconcept.NewErrorHandler(lc), configuration)
 			response := rr.Result()
 			b, _ := ioutil.ReadAll(response.Body)
 			var r []map[string]bool

@@ -6,12 +6,14 @@ import (
 	"math"
 	"testing"
 
+	dataConfig "github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
@@ -28,8 +30,15 @@ func newReadingsMockDB() interfaces.DBClient {
 
 func TestGetAllReadings(t *testing.T) {
 	reset()
-	Configuration.Service.MaxResultCount = 5
-	_, err := getAllReadings(logger.NewMockClient(), newReadingsMockDB())
+	_, err := getAllReadings(
+		logger.NewMockClient(),
+		newReadingsMockDB(),
+		&dataConfig.ConfigurationStruct{
+			Service: config.ServiceInfo{
+				MaxResultCount: 5,
+			},
+		})
+
 	if err != nil {
 		t.Errorf("Unexpected error thrown getting all readings: %s", err.Error())
 	}
@@ -37,8 +46,10 @@ func TestGetAllReadings(t *testing.T) {
 
 func TestGetAllReadingsOverLimit(t *testing.T) {
 	reset()
-	Configuration.Service.MaxResultCount = 1
-	_, err := getAllReadings(logger.NewMockClient(), newReadingsMockDB())
+	_, err := getAllReadings(logger.NewMockClient(), newReadingsMockDB(), &dataConfig.ConfigurationStruct{
+		Service: config.ServiceInfo{
+			MaxResultCount: 1,
+		}})
 
 	if err != nil {
 		switch err.(type) {
@@ -56,10 +67,13 @@ func TestGetAllReadingsOverLimit(t *testing.T) {
 
 func TestGetAllReadingsError(t *testing.T) {
 	reset()
-	Configuration.Service.MaxResultCount = 5
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("Readings").Return([]models.Reading{}, fmt.Errorf("some error"))
-	_, err := getAllReadings(logger.NewMockClient(), dbClientMock)
+	_, err := getAllReadings(logger.NewMockClient(), dbClientMock, &dataConfig.ConfigurationStruct{
+		Service: config.ServiceInfo{
+			MaxResultCount: 5,
+		}})
+
 	if err == nil {
 		t.Errorf("Expected error getting all readings")
 	}
@@ -172,7 +186,7 @@ func TestGetReadingsByDevice(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return(buildReadings(), nil)
-	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient())
+	expectedReadings, err := getReadingsByDevice("valid", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient(), &dataConfig.ConfigurationStruct{})
 	if err != nil {
 		t.Errorf("Unexpected error in getReadingsByDevice")
 	}
@@ -186,7 +200,7 @@ func TestGetReadingsByDeviceError(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByDevice", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient())
+	_, err := getReadingsByDevice("error", 0, context.Background(), logger.NewMockClient(), dbClientMock, dataMocks.NewMockDeviceClient(), &dataConfig.ConfigurationStruct{})
 	if err == nil {
 		t.Errorf("Expected error in getReadingsByDevice")
 	}
@@ -196,7 +210,7 @@ func TestGetReadingsByValueDescriptor(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, nil)
-	_, err := getReadingsByValueDescriptor("valid", 0, logger.NewMockClient(), dbClientMock)
+	_, err := getReadingsByValueDescriptor("valid", 0, logger.NewMockClient(), dbClientMock, &dataConfig.ConfigurationStruct{})
 	if err != nil {
 		t.Errorf("Unexpected error getting readings by value descriptor")
 	}
@@ -204,7 +218,7 @@ func TestGetReadingsByValueDescriptor(t *testing.T) {
 
 func TestGetReadingsByValueDescriptorOverLimit(t *testing.T) {
 	reset()
-	_, err := getReadingsByValueDescriptor("", math.MaxInt32, logger.NewMockClient(), nil)
+	_, err := getReadingsByValueDescriptor("", math.MaxInt32, logger.NewMockClient(), nil, &dataConfig.ConfigurationStruct{})
 	if err == nil {
 		t.Errorf("Expected error getting readings by value descriptor")
 	}
@@ -214,7 +228,7 @@ func TestGetReadingsByValueDescriptorError(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsByValueDescriptor", mock.Anything, mock.Anything).Return([]models.Reading{}, fmt.Errorf("some error"))
-	_, err := getReadingsByValueDescriptor("error", 0, logger.NewMockClient(), dbClientMock)
+	_, err := getReadingsByValueDescriptor("error", 0, logger.NewMockClient(), dbClientMock, &dataConfig.ConfigurationStruct{})
 	if err == nil {
 		t.Errorf("Expected error in getting readings by value descriptor")
 	}
