@@ -35,7 +35,7 @@ The binary supports multiple command line parameters
 
 An example of use of the parameters can be found in the docker compose file
 
-https://github.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-files/docker-compose-fuji-1.1.0.yml
+https://github.com/edgexfoundry/developer-scripts/blob/master/releases/fuji/compose-files/docker-compose-fuji.yml
 
 ## Docker Build
 
