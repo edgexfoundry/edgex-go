@@ -6,9 +6,9 @@ Port = 8200
 CaFilePath = '/tmp/edgex/secrets/ca/ca.pem'
 
 [TokenFileProvider]
-PrivilegedTokenPath = "resp-init.json"
-ConfigFile = "res/token-config.json"
-OutputDir = "/tmp"
+PrivilegedTokenPath = "/vault/config/assets/resp-init.json"
+ConfigFile = "res-file-token-provider/token-config.json"
+OutputDir = "/tmp/edgex/secrets"
 OutputFilename = "secrets-token.json"
 
 [Writable]

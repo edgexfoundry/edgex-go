@@ -39,6 +39,8 @@ func makeDefaultTokenParameters(serviceName string) map[string]interface{} {
 	return map[string]interface{}{
 		"display_name": serviceName,
 		"no_parent":    true,
+		"ttl":          "1h",
+		"period":       "1h",
 		"policies":     []string{"edgex-service-" + serviceName},
 	}
 }

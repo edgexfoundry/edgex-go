@@ -34,8 +34,8 @@ tokenfolderpath = "/vault/config/assets"
 tokenfile = "resp-init.json"
 vaultsecretshares = 5
 vaultsecretthreshold = 3
-tokenprovider = ""
-tokenproviderargs = [ "-confdir", "res/token-file-provider" ]
+tokenprovider = "/security-file-token-provider"
+tokenproviderargs = [ "-confdir", "res-file-token-provider" ]
 tokenprovidertype = "oneshot"
 
 [Startup]
