@@ -18,5 +18,32 @@
 package secretstore
 
 const (
-	VaultToken = "X-Vault-Token"
+	VaultToken             = "X-Vault-Token"
+	TokenCreatorPolicyName = "privileged-token-creator"
+
+	// This is an admin token policy that allow for creation of
+	// per-service tokens and policies
+	TokenCreatorPolicy = `
+path "auth/token/create" {
+  capabilities = ["create", "update", "sudo"]
+}
+
+path "auth/token/create-orphan" {
+  capabilities = ["create", "update", "sudo"]
+}
+
+path "auth/token/create/*" {
+  capabilities = ["create", "update", "sudo"]
+}
+
+path "sys/policies/acl/edgex-service-*"
+{
+  capabilities = ["create", "read", "update", "delete" ]
+}
+
+path "sys/policies/acl"
+{
+  capabilities = ["list"]
+}
+`
 )

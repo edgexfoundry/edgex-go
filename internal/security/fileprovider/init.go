@@ -33,8 +33,23 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
 )
 
+type Bootstrap struct {
+	exitCode int
+}
+
+func NewBootstrap() *Bootstrap {
+	return &Bootstrap{
+		exitCode: 0,
+	}
+}
+
+// ExitCode returns desired exit code of program
+func (b *Bootstrap) ExitCode() int {
+	return b.exitCode
+}
+
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	cfg := container.ConfigurationFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -65,6 +80,7 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 
 	if err != nil {
 		lc.Error(fmt.Sprintf("error occurred generating tokens: %s", err.Error()))
+		b.exitCode = 1
 	}
 
 	return false // Tell bootstrap.Run() to exit wait loop and terminate

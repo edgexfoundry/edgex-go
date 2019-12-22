@@ -18,6 +18,8 @@ package fileprovider
 import (
 	"context"
 	"flag"
+	"os"
+
 	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -55,6 +57,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		},
 	})
 
+	bootStrapper := NewBootstrap()
+
 	bootstrap.Run(
 		ctx,
 		cancel,
@@ -67,7 +71,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			BootstrapHandler,
+			bootStrapper.BootstrapHandler,
 		},
 	)
+
+	os.Exit(bootStrapper.ExitCode())
 }

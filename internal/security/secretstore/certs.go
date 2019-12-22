@@ -43,13 +43,9 @@ type CertPair struct {
 type Certs struct {
 	client               internal.HttpCaller
 	certPath             string
-	tokenPath            string
+	rootToken            string
 	secretServiceBaseURL string
 	loggingClient        logger.LoggingClient
-}
-
-type auth struct {
-	Token string `json:"root_token"`
 }
 
 var errNotFound = errors.New("proxy cert pair not found in secret store")
@@ -57,14 +53,14 @@ var errNotFound = errors.New("proxy cert pair not found in secret store")
 func NewCerts(
 	caller internal.HttpCaller,
 	certPath string,
-	tokenPath string,
+	rootToken string,
 	secretServiceBaseURL string,
 	lc logger.LoggingClient) Certs {
 
 	return Certs{
 		client:               caller,
 		certPath:             certPath,
-		tokenPath:            tokenPath,
+		rootToken:            rootToken,
 		secretServiceBaseURL: secretServiceBaseURL,
 		loggingClient:        lc,
 	}
@@ -89,7 +85,7 @@ func (cs *Certs) certPathUrl() (string, error) {
 	return fullUrl.String(), nil
 }
 
-func (cs *Certs) retrieve(t string) (*CertPair, error) {
+func (cs *Certs) retrieve() (*CertPair, error) {
 	certUrl, err := cs.certPathUrl()
 	if err != nil {
 		return nil, err
@@ -102,7 +98,7 @@ func (cs *Certs) retrieve(t string) (*CertPair, error) {
 		return nil, e
 	}
 
-	req.Header.Set(VaultToken, t)
+	req.Header.Set(VaultToken, cs.rootToken)
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Errorf("failed to retrieve the proxy cert on path %s with error %s", cs.certPath, err.Error())
@@ -146,11 +142,7 @@ func (cs *Certs) AlreadyinStore() (bool, error) {
 }
 
 func (cs *Certs) getCertPair() (*CertPair, error) {
-	t, err := GetAccessToken(cs.tokenPath)
-	if err != nil {
-		return nil, err
-	}
-	cp, err := cs.retrieve(t)
+	cp, err := cs.retrieve()
 	if err != nil {
 		return nil, err
 	}
@@ -178,26 +170,7 @@ func (cs *Certs) ReadFrom(certPath string, keyPath string) (*CertPair, error) {
 	return &cp, nil
 }
 
-func GetAccessToken(filename string) (string, error) {
-	a := auth{}
-	raw, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	err = json.Unmarshal(raw, &a)
-	if err != nil {
-		return "", err
-	}
-
-	return a.Token, nil
-}
-
 func (cs *Certs) UploadToStore(cp *CertPair) error {
-	t, err := GetAccessToken(cs.tokenPath)
-	if err != nil {
-		return err
-	}
-
 	cs.loggingClient.Info("trying to upload the proxy cert pair into secret store")
 	jsonBytes, err := json.Marshal(cp)
 	body := bytes.NewBuffer(jsonBytes)
@@ -214,7 +187,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 		return e
 	}
 
-	req.Header.Set(VaultToken, t)
+	req.Header.Set(VaultToken, cs.rootToken)
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to upload the proxy cert pair on path %s with error %s", cs.certPath, err.Error())
