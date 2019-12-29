@@ -38,7 +38,6 @@ func NewIntervalAction(from contract.IntervalAction) (ia IntervalAction) {
 }
 
 func (ia IntervalAction) Add() (cmds []DbCommand) {
-	cmds = make([]DbCommand, len(intervalActionKeys))
 	for _, key := range intervalActionKeys {
 		switch key {
 		case IntervalActionKey:
@@ -51,12 +50,11 @@ func (ia IntervalAction) Add() (cmds []DbCommand) {
 			cmds = append(cmds, DbCommand{Command: "SADD", Hash: key + ":" + ia.Target, Key: ia.ID})
 		}
 	}
-	return cmds
+	return
 }
 
 func (ia IntervalAction) Remove() (cmds []DbCommand) {
-	cmds = make([]DbCommand, len(intervalActionKeys))
-	for _, key := range intervalKeys {
+	for _, key := range intervalActionKeys {
 		switch key {
 		case IntervalActionKey:
 			cmds = append(cmds, DbCommand{Command: "ZREM", Hash: key, Key: ia.ID})
