@@ -29,14 +29,9 @@ type Endpoint struct {
 
 func (e Endpoint) Monitor(params types.EndpointParams) chan string {
 	ch := make(chan string, 1)
-	ch <- e.fetch(params)
 	go func() {
 		for {
-			url, err := e.buildURL(params)
-			if err != nil {
-				_, _ = fmt.Fprintln(os.Stdout, err.Error())
-			}
-			ch <- url
+			ch <- e.fetch(params)
 			time.Sleep(time.Millisecond * time.Duration(params.Interval))
 		}
 	}()
