@@ -39,16 +39,16 @@ func NewIntervalAction(from contract.IntervalAction) (ia IntervalAction) {
 
 func (ia IntervalAction) Add() (cmds []DbCommand) {
 	cmds = make([]DbCommand, len(intervalActionKeys))
-	for _, key := range intervalActionKeys {
+	for i, key := range intervalActionKeys {
 		switch key {
 		case IntervalActionKey:
-			cmds = append(cmds, DbCommand{Command: "ZADD", Hash: key, Key: ia.ID, Rank: ia.Modified})
+			cmds[i] = DbCommand{Command: "ZADD", Hash: key, Key: ia.ID, Rank: ia.Modified}
 		case IntervalActionNameKey:
-			cmds = append(cmds, DbCommand{Command: "HSET", Hash: key, Key: ia.Name, Value: ia.ID})
+			cmds[i] = DbCommand{Command: "HSET", Hash: key, Key: ia.Name, Value: ia.ID}
 		case IntervalActionParentKey:
-			cmds = append(cmds, DbCommand{Command: "SADD", Hash: key + ":" + ia.Interval, Key: ia.ID})
+			cmds[i] = DbCommand{Command: "SADD", Hash: key + ":" + ia.Interval, Key: ia.ID}
 		case IntervalActionTargetKey:
-			cmds = append(cmds, DbCommand{Command: "SADD", Hash: key + ":" + ia.Target, Key: ia.ID})
+			cmds[i] = DbCommand{Command: "SADD", Hash: key + ":" + ia.Target, Key: ia.ID}
 		}
 	}
 	return cmds
@@ -56,16 +56,16 @@ func (ia IntervalAction) Add() (cmds []DbCommand) {
 
 func (ia IntervalAction) Remove() (cmds []DbCommand) {
 	cmds = make([]DbCommand, len(intervalActionKeys))
-	for _, key := range intervalKeys {
+	for i, key := range intervalActionKeys {
 		switch key {
 		case IntervalActionKey:
-			cmds = append(cmds, DbCommand{Command: "ZREM", Hash: key, Key: ia.ID})
+			cmds[i] = DbCommand{Command: "ZREM", Hash: key, Key: ia.ID}
 		case IntervalActionNameKey:
-			cmds = append(cmds, DbCommand{Command: "HDEL", Hash: key, Key: ia.Name})
+			cmds[i] = DbCommand{Command: "HDEL", Hash: key, Key: ia.Name}
 		case IntervalActionParentKey:
-			cmds = append(cmds, DbCommand{Command: "SREM", Hash: key + ":" + ia.Interval, Key: ia.ID})
+			cmds[i] = DbCommand{Command: "SREM", Hash: key + ":" + ia.Interval, Key: ia.ID}
 		case IntervalActionTargetKey:
-			cmds = append(cmds, DbCommand{Command: "SREM", Hash: key + ":" + ia.Target, Key: ia.ID})
+			cmds[i] = DbCommand{Command: "SREM", Hash: key + ":" + ia.Target, Key: ia.ID}
 		}
 	}
 	return cmds
