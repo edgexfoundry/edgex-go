@@ -13,7 +13,8 @@ They can be launched easily with **docker-compose**.
 The simplest way to get started is to fetch the latest docker-compose.yml and start the EdgeX containers:
 
 ```sh
-wget -O docker-compose.yml https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/edinburgh/compose-files/docker-compose-edinburgh-1.0.1.yml
+wget -O docker-compose.yml \
+https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/nightly-build/compose-files/docker-compose-nexus.yml
 docker-compose up -d
 ```
 
