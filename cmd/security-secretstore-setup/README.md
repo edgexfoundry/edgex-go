@@ -18,15 +18,16 @@ This will create an executable located at `cmd/security-secretstore-setup/` if s
 The binary supports multiple command line parameters 
 
 ```sh
- --init  // run init procedure for security service
- --insecureSkipVerify // skip server side SSL verification, mainly for self-signed cert
- --configfile // use different configuration file other than the default
- --vaultInterval // time to wait between checking Vault status in seconds
+  -p, --profile <name>                Indicate configuration profile other than default
+  -r, --registry                      Indicates service should use Registry
+  --insecureSkipVerify=true/false     Indicates if skipping the server side SSL cert verifcation, similar to -k of curl
+  --configfile=<file.toml>            Use a different config file (default: res/configuration.toml)
+  --vaultInterval=<seconds>           Indicates how long the program will pause between vault initialization attempts until it succeeds
 ```
 
-An example of using the parameters can be found in the docker compose file
-
-https://github.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-files/docker-compose-fuji-1.1.0.yml
+An example of using the parameters can be found in the following docker compose 
+file: 
+https://github.com/edgexfoundry/developer-scripts/blob/master/releases/fuji/compose-files/docker-compose-fuji.yml
 
 ## Docker Build
 
