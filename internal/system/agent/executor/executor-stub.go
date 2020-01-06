@@ -15,6 +15,9 @@
 package executor
 
 import (
+	"encoding/json"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,13 +29,18 @@ type stubCall struct {
 	outError     error    // return value for specific executor call
 }
 
-type Stub struct {
-	Called         int        // number of times stub is called
-	capturedArgs   [][]string // captures arg values for each stub call
-	perCallResults []stubCall // expected arg value and return values for each stub call
+func argsToString(a []string) string {
+	return strings.Join(a, "_")
 }
 
-func NewStub(results []stubCall) Stub {
+type Stub struct {
+	mutex          sync.Mutex
+	Called         int                 // number of times stub is called
+	capturedArgs   [][]string          // captures arg values for each stub call
+	perCallResults map[string]stubCall // expected arg value and return values for each stub call
+}
+
+func NewStub(results map[string]stubCall) Stub {
 	return Stub{
 		perCallResults: results,
 	}
@@ -41,15 +49,60 @@ func NewStub(results []stubCall) Stub {
 // CommandExecutor provides the common callout to the configuration-defined executor.  This is a stub implementation of
 // the CommandExecutor interface.
 func (m *Stub) CommandExecutor(executorPath, serviceName, operation string) (string, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
 	m.Called++
 	m.capturedArgs = append(m.capturedArgs, []string{executorPath, serviceName, operation})
-	return m.perCallResults[m.Called-1].outString, m.perCallResults[m.Called-1].outError
+	if _, ok := m.perCallResults[serviceName]; ok {
+		return m.perCallResults[serviceName].outString, m.perCallResults[serviceName].outError
+	}
+	return "serviceName not found", nil
 }
 
-// AssertArgsAreEqual
-func assertArgsAreEqual(t *testing.T, expected []string, actual []string) {
-	assert.Equal(t, len(expected), len(actual))
-	for key, expectedValue := range expected {
-		assert.Equal(t, expectedValue, actual[key])
+// assertArgsAreEqualInAnyOrder compares expected to actual to ensure they are the same; note order may vary.
+func assertArgsAreEqualInAnyOrder(t *testing.T, expected []string, actual []string) {
+	actualLen := len(actual)
+	assert.Equal(t, len(expected), actualLen)
+
+	diff := make(map[string]int, actualLen)
+	for actualKey := range actual {
+		diff[actual[actualKey]]++
 	}
+
+	for _, expectedValue := range expected {
+		if _, ok := diff[expectedValue]; !ok {
+			assert.Fail(t, "missing %s", expectedValue)
+			return
+		}
+		diff[expectedValue]--
+		if diff[expectedValue] == 0 {
+			delete(diff, expectedValue)
+		}
+	}
+
+	if len(diff) != 0 {
+		assert.Fail(t, "received unexpectedly %v", diff)
+	}
+}
+
+// assertResultsAreEqualInAnyOrder compares expected to actual to ensure they are the same; note order may vary
+func assertResultsAreEqualInAnyOrder(t *testing.T, expected []interface{}, actual []interface{}) {
+	convertSlice := func(a []interface{}) []string {
+		interfaceToString := func(i interface{}) string {
+			b, e := json.Marshal(i)
+			if e != nil {
+				assert.Fail(t, "failure %v attempting to marshal %v", e, i)
+			}
+			return string(b)
+		}
+
+		r := []string{}
+		for k := range a {
+			r = append(r, interfaceToString(a[k]))
+		}
+		return r
+	}
+
+	assertArgsAreEqualInAnyOrder(t, convertSlice(expected), convertSlice(actual))
 }

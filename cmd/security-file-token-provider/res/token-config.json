@@ -1,0 +1,58 @@
+{
+  "edgex-config-seed": {
+    "edgex_use_defaults": true
+  },
+  "edgex-core-command": {
+    "edgex_use_defaults": true
+  },
+  "edgex-core-data": {
+    "edgex_use_defaults": true
+  },
+  "edgex-core-metadata": {
+    "edgex_use_defaults": true
+  },
+  "edgex-support-logging": {
+    "edgex_use_defaults": true
+  },
+  "edgex-support-notifications": {
+    "edgex_use_defaults": true
+  },
+  "edgex-sys-mgmt-agent": {
+    "edgex_use_defaults": true
+  },
+  "edgex-support-scheduler": {
+    "edgex_use_defaults": true
+  },
+  "edgex-security-secretstore-setup": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/pki/tls/edgex-kong": {
+          "capabilities": [
+            "list",
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    }
+  },
+  "edgex-security-proxy-setup": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/pki/tls/edgex-kong": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
+  "edgex-security-file-token-provider": {
+    "edgex_use_defaults": true
+  }
+}

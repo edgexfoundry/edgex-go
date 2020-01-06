@@ -12,13 +12,13 @@
 if [ $# -eq 0 ]; then
     # restart all active edgex services to ensure that they pick up their new 
     # configuration from consul
-    # for now, limit outselves to the core-*, export-*, support-*, device-*,
+    # for now, limit outselves to the core-*, support-*, device-*,
     # sys-mgmt-agent, and security-service helper services
     # this means if a user changes i.e. kong configuration they will need to
     # restart kong-daemon manually
     # TODO: maybe implement some kind of file hashing to determine which services
     # had their configs changed and only restart changed services?
-    for svc in  $(snapctl services | grep "core-*\|export-*\|support-*\|sys-mgmt-agent\|device-*\|vault-worker\|edgexproxy" | grep -v inactive | grep active | awk '{print $1}');  do
+    for svc in  $(snapctl services | grep "core-*\|support-*\|sys-mgmt-agent\|device-*\|vault-worker\|edgexproxy" | grep -v inactive | grep active | awk '{print $1}');  do
         snapctl restart "$svc"
     done
 fi

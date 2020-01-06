@@ -15,8 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // ConfigurationName contains the name of the service's config.ConfigurationStruct implementation in the DIC.

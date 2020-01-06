@@ -29,14 +29,14 @@ type DeviceUpdateExecutor interface {
 }
 
 type updateDevice struct {
-	database DeviceUpdater
-	device   contract.Device
-	events   chan DeviceEvent
-	logger   logger.LoggingClient
+	database      DeviceUpdater
+	device        contract.Device
+	events        chan DeviceEvent
+	loggingClient logger.LoggingClient
 }
 
-func NewUpdateDevice(ch chan DeviceEvent, db DeviceUpdater, d contract.Device, logger logger.LoggingClient) DeviceUpdateExecutor {
-	return updateDevice{database: db, events: ch, device: d, logger: logger}
+func NewUpdateDevice(ch chan DeviceEvent, db DeviceUpdater, d contract.Device, lc logger.LoggingClient) DeviceUpdateExecutor {
+	return updateDevice{database: db, events: ch, device: d, loggingClient: lc}
 }
 
 func (op updateDevice) Execute() (err error) {
@@ -53,7 +53,7 @@ func (op updateDevice) Execute() (err error) {
 			if err == db.ErrNotFound {
 				err = errors.NewErrItemNotFound(fmt.Sprintf("device not found: %s %s", op.device.Name, op.device.Id))
 			}
-			op.logger.Error(err.Error())
+			op.loggingClient.Error(err.Error())
 			evt.Error = err
 			op.events <- evt
 			return
@@ -65,7 +65,7 @@ func (op updateDevice) Execute() (err error) {
 	var checkD contract.Device
 	checkD, err = op.database.GetDeviceByName(op.device.Name)
 	if err != nil && err != db.ErrNotFound {
-		op.logger.Error(err.Error())
+		op.loggingClient.Error(err.Error())
 		evt.Error = err
 		op.events <- evt
 		return
@@ -75,7 +75,7 @@ func (op updateDevice) Execute() (err error) {
 	// Different IDs -> Name is not unique
 	if checkD.Id != op.device.Id {
 		err = errors.NewErrDuplicateName("Duplicate name for Device")
-		op.logger.Error(err.Error())
+		op.loggingClient.Error(err.Error())
 		evt.Error = err
 		op.events <- evt
 		return
@@ -90,9 +90,9 @@ func (op updateDevice) Execute() (err error) {
 			// Then try name
 			service, err = op.database.GetDeviceServiceByName(op.device.Service.Name)
 			if err != nil {
-				op.logger.Error(err.Error())
+				op.loggingClient.Error(err.Error())
 				err = errors.NewErrItemNotFound("Device service not found for updated device")
-				op.logger.Error(err.Error())
+				op.loggingClient.Error(err.Error())
 				evt.Error = err
 				op.events <- evt
 				return
@@ -111,7 +111,7 @@ func (op updateDevice) Execute() (err error) {
 			profile, err = op.database.GetDeviceProfileByName(op.device.Profile.Name)
 			if err != nil {
 				err = errors.NewErrItemNotFound("Device profile not found for updated device")
-				op.logger.Error(err.Error())
+				op.loggingClient.Error(err.Error())
 				evt.Error = err
 				op.events <- evt
 				return
@@ -121,7 +121,7 @@ func (op updateDevice) Execute() (err error) {
 	}
 
 	if err != nil {
-		op.logger.Error(err.Error())
+		op.loggingClient.Error(err.Error())
 		evt.Error = err
 		op.events <- evt
 		return
@@ -130,7 +130,7 @@ func (op updateDevice) Execute() (err error) {
 	updatedDevice := op.updateDeviceFields(oldDevice)
 
 	if err = op.database.UpdateDevice(updatedDevice); err != nil {
-		op.logger.Error(err.Error())
+		op.loggingClient.Error(err.Error())
 		evt.Error = err
 		op.events <- evt
 		return

@@ -27,9 +27,9 @@ type handler struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewHandler(loggingClient logger.LoggingClient) contract.DirectoryHandler {
+func NewHandler(lc logger.LoggingClient) contract.DirectoryHandler {
 	return handler{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 	}
 }
 

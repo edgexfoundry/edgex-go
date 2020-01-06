@@ -22,11 +22,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces/mocks"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -418,7 +419,7 @@ func TestGetNotificationsBySender(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -481,7 +482,7 @@ func TestGetNotificationsByStart(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -544,7 +545,7 @@ func TestGetNotificationsByEnd(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -613,7 +614,7 @@ func TestGetNotificationsByStartEnd(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -671,7 +672,7 @@ func TestGetNotificationsByLabels(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -729,7 +730,7 @@ func TestGetNotificationsNewest(t *testing.T) {
 				tt.request,
 				logger.NewMockClient(),
 				tt.dbMock,
-				notificationsConfig.ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}})
+				notificationsConfig.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{MaxResultCount: 5}})
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)

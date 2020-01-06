@@ -55,20 +55,6 @@ exec -a edgex-core-metadata ./core-metadata &
 cd $DIR
 
 ###
-# Export Client
-###
-cd $CMD/export-client
-exec -a edgex-export-client ./export-client &
-cd $DIR
-
-###
-# Export Distro
-###
-cd $CMD/export-distro
-exec -a edgex-export-distro ./export-distro &
-cd $DIR
-
-###
 # Support Notifications
 ###
 cd $CMD/support-notifications

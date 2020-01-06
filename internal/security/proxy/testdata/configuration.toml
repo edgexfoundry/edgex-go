@@ -76,16 +76,6 @@ SNIS = ["edgex-kong"]
   Host = "edgex-support-logging"
   Port = 48061
 
-  [Clients.Distro]
-  Protocol = "http"
-  Host = "edgex-export-distro"
-  Port = 48070
-	
-  [Clients.Export]
-  Protocol = "http"
-  Host = "edgex-export-client"
-  Port = 48071
-
   [Clients.Scheduler]
   Protocol = 'http'
   Host = 'edgex-support-scheduler'

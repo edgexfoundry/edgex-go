@@ -28,10 +28,10 @@ import (
 )
 
 func TestMetricsGetWithNoServices(t *testing.T) {
-	executor := NewStub([]stubCall{})
+	executor := NewStub(map[string]stubCall{})
 	sut := NewMetrics(executor.CommandExecutor, logger.NewMockClient(), "executorPathDoesNotMatter")
 
-	result := sut.Get([]string{}, context.Background())
+	result := sut.Get(context.Background(), []string{})
 
 	var emptyResult []interface{}
 	assert.Equal(t, result, emptyResult)
@@ -47,36 +47,40 @@ func TestMetricsGetWithServices(t *testing.T) {
 		service2Result = "[{\"result\":\"bar\"}]"
 	)
 
-	loggingClient := logger.NewMockClient()
+	lc := logger.NewMockClient()
 	expectedError := errors.New("expectedError")
 	tests := []struct {
 		name           string
 		services       []string
 		expectedResult []interface{}
-		executorCalls  []stubCall
+		executorCalls  map[string]stubCall
 	}{
 		{
 			"one service with no error",
 			[]string{service1Name},
-			[]interface{}{response.Process(service1Result, loggingClient)},
-			[]stubCall{{[]string{executorPath, service1Name, system.Metrics}, service1Result, nil}},
+			[]interface{}{response.Process(service1Result, lc)},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, service1Result, nil},
+			},
 		},
 		{
 			"one service with error",
 			[]string{service1Name},
 			[]interface{}{system.Failure(service1Name, system.Metrics, UnknownExecutorType, expectedError.Error())},
-			[]stubCall{{[]string{executorPath, service1Name, system.Metrics}, "", expectedError}},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, "", expectedError},
+			},
 		},
 		{
 			"two services with no errors",
 			[]string{service1Name, service2Name},
 			[]interface{}{
-				response.Process(service1Result, loggingClient),
-				response.Process(service2Result, loggingClient),
+				response.Process(service1Result, lc),
+				response.Process(service2Result, lc),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, system.Metrics}, service1Result, nil},
-				{[]string{executorPath, service2Name, system.Metrics}, service2Result, nil},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, service1Result, nil},
+				service2Name: {[]string{executorPath, service2Name, system.Metrics}, service2Result, nil},
 			},
 		},
 		{
@@ -84,23 +88,23 @@ func TestMetricsGetWithServices(t *testing.T) {
 			[]string{service1Name, service2Name},
 			[]interface{}{
 				system.Failure(service1Name, system.Metrics, UnknownExecutorType, expectedError.Error()),
-				response.Process(service2Result, loggingClient),
+				response.Process(service2Result, lc),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, system.Metrics}, "", expectedError},
-				{[]string{executorPath, service2Name, system.Metrics}, service2Result, nil},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, "", expectedError},
+				service2Name: {[]string{executorPath, service2Name, system.Metrics}, service2Result, nil},
 			},
 		},
 		{
 			"two services with second returning error",
 			[]string{service1Name, service2Name},
 			[]interface{}{
-				response.Process(service1Result, loggingClient),
+				response.Process(service1Result, lc),
 				system.Failure(service2Name, system.Metrics, UnknownExecutorType, expectedError.Error()),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, system.Metrics}, service1Result, nil},
-				{[]string{executorPath, service2Name, system.Metrics}, "", expectedError},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, service1Result, nil},
+				service2Name: {[]string{executorPath, service2Name, system.Metrics}, "", expectedError},
 			},
 		},
 		{
@@ -110,9 +114,9 @@ func TestMetricsGetWithServices(t *testing.T) {
 				system.Failure(service1Name, system.Metrics, UnknownExecutorType, expectedError.Error()),
 				system.Failure(service2Name, system.Metrics, UnknownExecutorType, expectedError.Error()),
 			},
-			[]stubCall{
-				{[]string{executorPath, service1Name, system.Metrics}, "", expectedError},
-				{[]string{executorPath, service2Name, system.Metrics}, "", expectedError},
+			map[string]stubCall{
+				service1Name: {[]string{executorPath, service1Name, system.Metrics}, "", expectedError},
+				service2Name: {[]string{executorPath, service2Name, system.Metrics}, "", expectedError},
 			},
 		},
 	}
@@ -120,16 +124,25 @@ func TestMetricsGetWithServices(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			executor := NewStub(test.executorCalls)
-			sut := NewMetrics(executor.CommandExecutor, loggingClient, executorPath)
+			sut := NewMetrics(executor.CommandExecutor, lc, executorPath)
 
-			result := sut.Get(test.services, context.Background())
+			result := sut.Get(context.Background(), test.services)
 
 			if assert.Equal(t, len(test.executorCalls), executor.Called) {
-				for key, executorCall := range test.executorCalls {
-					assertArgsAreEqual(t, executorCall.expectedArgs, executor.capturedArgs[key])
+				var expectedArgs []string
+				for key := range test.executorCalls {
+					expectedArgs = append(expectedArgs, argsToString(test.executorCalls[key].expectedArgs))
 				}
+
+				var capturedArgs []string
+				for key := range executor.capturedArgs {
+					capturedArgs = append(capturedArgs, argsToString(executor.capturedArgs[key]))
+				}
+
+				assertArgsAreEqualInAnyOrder(t, expectedArgs, capturedArgs)
 			}
-			assert.Equal(t, test.expectedResult, result)
+
+			assertResultsAreEqualInAnyOrder(t, test.expectedResult, result)
 		})
 	}
 }

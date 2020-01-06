@@ -15,9 +15,12 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -32,9 +35,9 @@ const (
 	defaultTypeValue = "defaultType"
 )
 
-func initializeTest(t *testing.T) RegistryInfo {
+func initializeTest(t *testing.T) bootstrapConfig.RegistryInfo {
 	os.Clearenv()
-	return RegistryInfo{
+	return bootstrapConfig.RegistryInfo{
 		Host: defaultHostValue,
 		Port: defaultPortValue,
 		Type: defaultTypeValue,

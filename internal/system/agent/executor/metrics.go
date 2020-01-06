@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/system"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
@@ -32,24 +33,35 @@ type metrics struct {
 }
 
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
-func NewMetrics(executor interfaces.CommandExecutor, loggingClient logger.LoggingClient, executorPath string) *metrics {
+func NewMetrics(executor interfaces.CommandExecutor, lc logger.LoggingClient, executorPath string) *metrics {
 	return &metrics{
 		executor:      executor,
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		executorPath:  executorPath,
 	}
 }
 
-// Get delegates a metrics request to the configuration-defined executor.
-func (e metrics) Get(services []string, ctx context.Context) interface{} {
-	var result []interface{}
-	for _, serviceName := range services {
-		r, err := e.executor(e.executorPath, serviceName, system.Metrics)
-		if err != nil {
-			result = append(result, system.Failure(serviceName, system.Metrics, UnknownExecutorType, err.Error()))
-			continue
-		}
-		result = append(result, response.Process(r, e.loggingClient))
+// delegateToExecutor wraps executor execution and handles error response creation when necessary.
+func (e metrics) delegateToExecutor(serviceName string) interface{} {
+	r, err := e.executor(e.executorPath, serviceName, system.Metrics)
+	if err != nil {
+		return system.Failure(serviceName, system.Metrics, UnknownExecutorType, err.Error())
 	}
-	return result
+	return response.Process(r, e.loggingClient)
+}
+
+// Get implements the Metrics interface to obtain metrics via executor for one or more services concurrently.
+func (e metrics) Get(_ context.Context, services []string) []interface{} {
+	var closures []concurrent.Closure
+	for index := range services {
+		closures = append(
+			closures,
+			func(serviceName string) concurrent.Closure {
+				return func() interface{} {
+					return e.delegateToExecutor(serviceName)
+				}
+			}(services[index]),
+		)
+	}
+	return concurrent.ExecuteAndAggregateResults(closures)
 }

@@ -19,18 +19,20 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 type ConfigurationStruct struct {
 	Writable      WritableInfo
-	Logging       config.LoggingInfo
+	Logging       bootstrapConfig.LoggingInfo
 	KongURL       KongUrlInfo
 	KongAuth      KongAuthInfo
 	KongACL       KongAclInfo
 	SecretService SecretServiceInfo
-	Clients       map[string]config.ClientInfo
+	Clients       map[string]bootstrapConfig.ClientInfo
 }
 
 type WritableInfo struct {
@@ -140,7 +142,7 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 }
 
 // SetLogLevel updates the log level in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo config.RegistryInfo) {}
+func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {}
 
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {

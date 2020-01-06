@@ -21,12 +21,14 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/executor"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -46,13 +48,13 @@ type metrics struct {
 
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
 func NewMetrics(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	genClients *agentClients.General,
 	registryClient registry.Client,
 	serviceProtocol string) *metrics {
 
 	return &metrics{
-		loggingClient:   loggingClient,
+		loggingClient:   lc,
 		genClients:      genClients,
 		registryClient:  registryClient,
 		serviceProtocol: serviceProtocol,
@@ -60,16 +62,20 @@ func NewMetrics(
 }
 
 // metricsViaDirectService calls a service's metrics endpoint directly, interprets the response, and returns a Result.
-func (m *metrics) metricsViaDirectService(serviceName string, ctx context.Context) (system.Result, error) {
+func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName string) system.Result {
 	client, ok := m.genClients.Get(serviceName)
 	if !ok {
 		if m.registryClient == nil {
-			return nil, fmt.Errorf("registryClient not initialized; required to handle unknown service: %s", serviceName)
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf("registryClient not initialized; required to handle unknown service: %s", serviceName))
 		}
 
 		// Service unknown to SMA, so ask the Registry whether `serviceName` is available.
 		if err := m.registryClient.IsServiceAvailable(serviceName); err != nil {
-			return nil, err
+			return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
 		}
 
 		m.loggingClient.Info(fmt.Sprintf("Registry responded with %s serviceName available", serviceName))
@@ -77,10 +83,17 @@ func (m *metrics) metricsViaDirectService(serviceName string, ctx context.Contex
 		// Since serviceName is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `serviceName`
 		e, err := m.registryClient.GetServiceEndpoint(serviceName)
 		if err != nil {
-			return nil, fmt.Errorf("on attempting to get ServiceEndpoint for serviceName %s, got error: %v", serviceName, err.Error())
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf(
+					"on attempting to get ServiceEndpoint for serviceName %s, got error: %v",
+					serviceName,
+					err.Error()))
 		}
 
-		configClient := config.ClientInfo{
+		configClient := bootstrapConfig.ClientInfo{
 			Protocol: m.serviceProtocol,
 			Host:     e.Host,
 			Port:     e.Port,
@@ -100,26 +113,33 @@ func (m *metrics) metricsViaDirectService(serviceName string, ctx context.Contex
 
 	result, err := client.FetchMetrics(ctx)
 	if err != nil {
-		return nil, err
+		return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
 	}
 
 	var s telemetry.SystemUsage
 	if err := json.NewDecoder(bytes.NewBuffer([]byte(result))).Decode(&s); err != nil {
-		return nil, fmt.Errorf("error decoding telemetry.SystemUsage: %s", err.Error())
+		return system.Failure(
+			serviceName,
+			executor.Metrics,
+			ExecutorType,
+			fmt.Sprintf("error decoding telemetry.SystemUsage: %s", err.Error()))
 	}
 
-	return system.MetricsSuccess(serviceName, ExecutorType, s.CpuBusyAvg, int64(s.Memory.Sys), []byte(result)), nil
+	return system.MetricsSuccess(serviceName, ExecutorType, s.CpuBusyAvg, int64(s.Memory.Sys), []byte(result))
 }
 
-func (m *metrics) Get(services []string, ctx context.Context) interface{} {
-	var result []interface{}
-	for _, service := range services {
-		out, err := m.metricsViaDirectService(service, ctx)
-		if err != nil {
-			result = append(result, system.Failure(service, executor.Metrics, ExecutorType, err.Error()))
-			continue
-		}
-		result = append(result, out)
+// Get implements the Metrics interface to obtain metrics directly from one or more services concurrently.
+func (m *metrics) Get(ctx context.Context, services []string) []interface{} {
+	var closures []concurrent.Closure
+	for index := range services {
+		closures = append(
+			closures,
+			func(serviceName string) concurrent.Closure {
+				return func() interface{} {
+					return m.metricsViaDirectService(ctx, serviceName)
+				}
+			}(services[index]),
+		)
 	}
-	return result
+	return concurrent.ExecuteAndAggregateResults(closures)
 }

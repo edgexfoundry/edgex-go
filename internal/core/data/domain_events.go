@@ -13,7 +13,12 @@
  *******************************************************************************/
 package data
 
-import "github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+)
 
 // An event indicating that a given device has just reported some data
 type DeviceLastReported struct {
@@ -25,7 +30,12 @@ type DeviceServiceLastReported struct {
 	DeviceName string
 }
 
-func initEventHandlers(loggingClient logger.LoggingClient, chEvents <-chan interface{}) {
+func initEventHandlers(
+	lc logger.LoggingClient,
+	chEvents <-chan interface{},
+	mdc metadata.DeviceClient,
+	msc metadata.DeviceServiceClient,
+	configuration *config.ConfigurationStruct) {
 	go func() {
 		for {
 			select {
@@ -34,11 +44,11 @@ func initEventHandlers(loggingClient logger.LoggingClient, chEvents <-chan inter
 					switch e.(type) {
 					case DeviceLastReported:
 						dlr := e.(DeviceLastReported)
-						updateDeviceLastReportedConnected(dlr.DeviceName, loggingClient)
+						updateDeviceLastReportedConnected(dlr.DeviceName, lc, mdc, configuration)
 						break
 					case DeviceServiceLastReported:
 						dslr := e.(DeviceServiceLastReported)
-						updateDeviceServiceLastReportedConnected(dslr.DeviceName, loggingClient)
+						updateDeviceServiceLastReportedConnected(dslr.DeviceName, lc, mdc, msc, configuration)
 						break
 					}
 				} else {

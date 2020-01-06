@@ -150,3 +150,23 @@ func TestMockRegenRootToken(t *testing.T) {
 	assert.NoError(t, err)
 	mockClient.AssertExpectations(t)
 }
+
+func TestMockCheckSecretEngineInstalled(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("CheckSecretEngineInstalled", "fake-token", "secrets/", "kv").Return(true, nil)
+
+	installed, err := mockClient.CheckSecretEngineInstalled("fake-token", "secrets/", "kv")
+	assert.NoError(t, err)
+	assert.True(t, installed)
+	mockClient.AssertExpectations(t)
+}
+
+func TestMockEnableKVSecretEngine(t *testing.T) {
+	mockClient := &MockSecretStoreClient{}
+	mockClient.On("EnableKVSecretEngine", "fake-token", "secrets/", "1").Return(http.StatusOK, nil)
+
+	rc, err := mockClient.EnableKVSecretEngine("fake-token", "secrets/", "1")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rc)
+	mockClient.AssertExpectations(t)
+}

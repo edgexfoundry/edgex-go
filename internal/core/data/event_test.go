@@ -21,16 +21,18 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/edgexfoundry/go-mod-messaging/messaging"
-
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
+	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+
 	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/mock"
 )
@@ -56,7 +58,13 @@ func TestCountByDevice(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventCountByDeviceId", mock.Anything).Return(2, nil)
 
-	count, err := countEventsByDevice(testEvent.Device, context.Background(), dbClientMock)
+	count, err := countEventsByDevice(
+		testEvent.Device,
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -66,17 +74,17 @@ func TestCountByDevice(t *testing.T) {
 	}
 }
 
-func buildEvents() []models.Event {
-	events := []models.Event{}
-	events = append(events, models.Event{
-		ID:     "1",
-		Device: testDeviceName,
-		Readings: []models.Reading{
-			{Id: "1"},
-			{Id: "2"},
+func buildEvents() []contract.Event {
+	return []contract.Event{
+		{
+			ID:     "1",
+			Device: testDeviceName,
+			Readings: []contract.Reading{
+				{Id: "1"},
+				{Id: "2"},
+			},
 		},
-	})
-	return events
+	}
 }
 
 func newDeleteEventsOlderThanAgeMockDB() *dbMock.DBClient {
@@ -121,7 +129,7 @@ func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventsOlderThanAge", mock.MatchedBy(func(age int64) bool {
 		return age == -1
-	})).Return([]models.Event{}, fmt.Errorf("some error"))
+	})).Return([]contract.Event{}, fmt.Errorf("some error"))
 
 	_, err := deleteEventsByAge(-1, logger.NewMockClient(), dbClientMock)
 
@@ -133,7 +141,7 @@ func TestDeleteEventByAgeErrorThrownByEventsOlderThanAge(t *testing.T) {
 func TestGetEvents(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("Events").Return([]models.Event{testEvent}, nil)
+	dbClientMock.On("Events").Return([]contract.Event{testEvent}, nil)
 
 	events, err := getEvents(0, dbClientMock)
 	if err != nil {
@@ -158,8 +166,8 @@ func newGetEventsWithLimitMockDB(expectedLimit int) *dbMock.DBClient {
 
 	myMock.On("EventsWithLimit", mock.MatchedBy(func(limit int) bool {
 		return limit == expectedLimit
-	})).Return(func(limit int) []models.Event {
-		events := make([]models.Event, 0)
+	})).Return(func(limit int) []contract.Event {
+		events := make([]contract.Event, 0)
 		for i := 0; i < limit; i++ {
 			events = append(events, testEvent)
 		}
@@ -212,8 +220,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 
 	dbClientMock := newAddEventMockDB(true)
 	chEvents := make(chan interface{}, 10)
-	Configuration.Writable.PersistData = true
-	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
+	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	wg := sync.WaitGroup{}
@@ -226,9 +233,14 @@ func TestAddEventWithPersistence(t *testing.T) {
 		logger.NewMockClient(),
 		dbClientMock,
 		chEvents,
-		msgClient)
+		msgClient,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{
+			Writable: config.WritableInfo{
+				PersistData: true,
+			},
+		})
 
-	Configuration.Writable.PersistData = false
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -255,8 +267,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	})
 
 	dbClientMock := newAddEventMockDB(false)
-	Configuration.Writable.PersistData = false
-	evt := models.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
+	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
 	bitEvents := make([]bool, 2)
 	chEvents := make(chan interface{})
@@ -270,7 +281,13 @@ func TestAddEventNoPersistence(t *testing.T) {
 		logger.NewMockClient(),
 		dbClientMock,
 		chEvents,
-		msgClient)
+		msgClient,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{
+			Writable: config.WritableInfo{
+				PersistData: false,
+			},
+		})
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -292,10 +309,16 @@ func TestAddEventNoPersistence(t *testing.T) {
 func TestUpdateEventNotFound(t *testing.T) {
 	reset()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("EventById", mock.Anything).Return(models.Event{}, fmt.Errorf("Event not found"))
+	dbClientMock.On("EventById", mock.Anything).Return(contract.Event{}, fmt.Errorf("Event not found"))
 
-	evt := models.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock)
+	evt := contract.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
+	err := updateEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		if x, ok := err.(errors.ErrEventNotFound); !ok {
 			t.Errorf("unexpected error type: %s", x.Error())
@@ -324,8 +347,14 @@ func TestUpdateEvent(t *testing.T) {
 	expectedDevice := "Some Value"
 	dbClientMock := newUpdateEventMockDB(expectedDevice)
 
-	evt := models.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
-	err := updateEvent(correlation.Event{Event: evt}, context.Background(), dbClientMock)
+	evt := contract.Event{ID: testEvent.ID, Device: expectedDevice, Origin: testOrigin}
+	err := updateEvent(
+		correlation.Event{Event: evt},
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -385,7 +414,13 @@ func TestUpdateEventPushDate(t *testing.T) {
 		return event.ID == testEvent.ID
 	})).Return(nil)
 
-	err := updateEventPushDate(testEvent.ID, context.Background(), dbClientMock)
+	err := updateEventPushDate(
+		testEvent.ID,
+		context.Background(),
+		dbClientMock,
+		dataMocks.NewMockDeviceClient(),
+		&config.ConfigurationStruct{})
+
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -486,7 +521,7 @@ func TestGetEventsByDeviceIdLimit(t *testing.T) {
 
 	dbClientMock.On("EventsForDeviceLimit", mock.MatchedBy(func(deviceId string) bool {
 		return deviceId == "valid"
-	}), mock.Anything).Return([]models.Event{testEvent}, nil)
+	}), mock.Anything).Return([]contract.Event{testEvent}, nil)
 
 	expectedList, expectedNil := getEventsByDeviceIdLimit(0, "valid", logger.NewMockClient(), dbClientMock)
 
@@ -527,7 +562,7 @@ func TestGetEventsByCreationTime(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventsByCreationTime", mock.MatchedBy(func(start int64) bool {
 		return start == 0xF00D
-	}), mock.Anything, mock.Anything).Return([]models.Event{}, nil)
+	}), mock.Anything, mock.Anything).Return([]contract.Event{}, nil)
 
 	expectedReadings, expectedNil := getEventsByCreationTime(0, 0xF00D, 0, logger.NewMockClient(), dbClientMock)
 
@@ -577,7 +612,7 @@ func TestDeleteEvents(t *testing.T) {
 func TestScrubPushedEvents(t *testing.T) {
 	reset()
 
-	pushedEvents := []models.Event{testEvent, testEvent}
+	pushedEvents := []contract.Event{testEvent, testEvent}
 	pushedEvents[1].ID = testUUIDString
 
 	dbClientMock := &dbMock.DBClient{}
@@ -602,7 +637,7 @@ func TestScrubPushedEvents(t *testing.T) {
 	}
 }
 
-func testEventWithoutReadings(event models.Event, t *testing.T) {
+func testEventWithoutReadings(event contract.Event, t *testing.T) {
 	if event.ID != testEvent.ID {
 		t.Error("eventId mismatch. expected " + testEvent.ID + " received " + event.ID)
 	}

@@ -29,22 +29,45 @@ import (
 
 const OneShotProvider = "oneshot"
 
+type ExecRunner interface {
+	LookPath(file string) (string, error)
+	CommandContext(ctx context.Context, name string, arg ...string) CmdRunner
+}
+
+type CmdRunner interface {
+	Start() error
+	Wait() error
+}
+
+type ExecWrapper struct{}
+
+func (w ExecWrapper) LookPath(file string) (string, error) {
+	return exec.LookPath(file)
+}
+
+func (w ExecWrapper) CommandContext(ctx context.Context, name string, arg ...string) CmdRunner {
+	return exec.CommandContext(ctx, name, arg...)
+}
+
 type TokenProvider struct {
 	loggingClient logger.LoggingClient
 	ctx           context.Context
+	execRunner    ExecRunner
 	initialized   bool
 	config        secretstoreclient.SecretServiceInfo
 	resolvedPath  string
 }
 
 // NewTokenProvider creates a new TokenProvider
-func NewTokenProvider(ctx context.Context, loggingClient logger.LoggingClient) *TokenProvider {
+func NewTokenProvider(ctx context.Context, lc logger.LoggingClient, execRunner ExecRunner) *TokenProvider {
 	return &TokenProvider{
-		loggingClient: loggingClient,
+		loggingClient: lc,
 		ctx:           ctx,
+		execRunner:    execRunner,
 	}
 }
 
+// SetConfiguration parses token provider configuration and resolves paths specified therein
 func (p *TokenProvider) SetConfiguration(config secretstoreclient.SecretServiceInfo) error {
 	var err error
 	p.config = config
@@ -53,7 +76,7 @@ func (p *TokenProvider) SetConfiguration(config secretstoreclient.SecretServiceI
 		p.loggingClient.Error(err.Error())
 		return err
 	}
-	resolvedPath, err := exec.LookPath(p.config.TokenProvider)
+	resolvedPath, err := p.execRunner.LookPath(p.config.TokenProvider)
 	if err != nil {
 		p.loggingClient.Error(fmt.Sprintf("Failed to locate %s on PATH: %s", p.config.TokenProvider, err.Error()))
 		return err
@@ -63,6 +86,7 @@ func (p *TokenProvider) SetConfiguration(config secretstoreclient.SecretServiceI
 	return nil
 }
 
+// Launch spawns the token provider function
 func (p *TokenProvider) Launch() error {
 	if !p.initialized {
 		err := fmt.Errorf("TokenProvider object not initialized; call SetConfiguration() first")
@@ -70,7 +94,7 @@ func (p *TokenProvider) Launch() error {
 	}
 
 	p.loggingClient.Info(fmt.Sprintf("Launching token provider %s with arguments %s", p.resolvedPath, strings.Join(p.config.TokenProviderArgs, " ")))
-	cmd := exec.CommandContext(p.ctx, p.resolvedPath, p.config.TokenProviderArgs...)
+	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, p.config.TokenProviderArgs...)
 	if err := cmd.Start(); err != nil {
 		// For example, this might occur if a shared library was missing
 		p.loggingClient.Error(fmt.Sprintf("%s failed to launch: %s", p.resolvedPath, err.Error()))

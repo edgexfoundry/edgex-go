@@ -21,12 +21,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading/mocks"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/reading/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 // TestErrorReadingName is the name used for testing database errors.
@@ -81,7 +82,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 		name              string
 		readingName       string
 		loader            Loader
-		config            config.ServiceInfo
+		config            bootstrapConfig.ServiceInfo
 		expectedResult    []contract.Reading
 		expectError       bool
 		expectedErrorType error
@@ -90,7 +91,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 			"Get one Reading",
 			TestReading.Name,
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 5},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 5},
 			[]contract.Reading{TestReading},
 			false,
 			nil,
@@ -100,7 +101,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 			"Get multiple Readings",
 			TestReading2.Name,
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 5},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 5},
 			[]contract.Reading{TestReading2, TestReading3},
 			false,
 			nil,
@@ -109,7 +110,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 			"Database error",
 			TestErrorReadingName,
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 5},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 5},
 			nil,
 			true,
 			TestError,
@@ -117,7 +118,7 @@ func TestGetReadingsExecutor(t *testing.T) {
 			"MaxResultCount exceeded error",
 			TestReading2.Name,
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
 			errors.ErrLimitExceeded{},

@@ -20,57 +20,44 @@ import (
 	"sync"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 )
 
-// Global variables
-var Configuration = &ConfigurationStruct{}
-
-// TODO: Refactor names in separate PR: See comments on PR #1133
-var mdc metadata.DeviceClient
-var msc metadata.DeviceServiceClient
-
-var httpErrorHandler errorconcept.ErrorHandler
-
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	// update global variables.
-	loggingClient := container.LoggingClientFrom(dic.Get)
-	httpErrorHandler = errorconcept.NewErrorHandler(loggingClient)
-
-	chEvents := make(chan interface{}, 100)
-	// initialize event handlers
-	initEventHandlers(loggingClient, chEvents)
+	lc := container.LoggingClientFrom(dic.Get)
+	configuration := dataContainer.ConfigurationFrom(dic.Get)
 
 	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
-	mdc = metadata.NewDeviceClient(
+	mdc := metadata.NewDeviceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceRoute,
 			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    Configuration.Service.ClientMonitor,
+			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+			Interval:    configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
-	msc = metadata.NewDeviceServiceClient(
+	msc := metadata.NewDeviceServiceClient(
 		types.EndpointParams{
 			ServiceKey:  clients.CoreMetaDataServiceKey,
 			Path:        clients.ApiDeviceServiceRoute,
 			UseRegistry: registryClient != nil,
-			Url:         Configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    Configuration.Service.ClientMonitor,
+			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
+			Interval:    configuration.Service.ClientMonitor,
 		},
 		endpoint.Endpoint{RegistryClient: &registryClient})
 
@@ -78,25 +65,36 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	msgClient, err := messaging.NewMessageClient(
 		msgTypes.MessageBusConfig{
 			PublishHost: msgTypes.HostInfo{
-				Host:     Configuration.MessageQueue.Host,
-				Port:     Configuration.MessageQueue.Port,
-				Protocol: Configuration.MessageQueue.Protocol,
+				Host:     configuration.MessageQueue.Host,
+				Port:     configuration.MessageQueue.Port,
+				Protocol: configuration.MessageQueue.Protocol,
 			},
-			Type: Configuration.MessageQueue.Type,
+			Type: configuration.MessageQueue.Type,
 		})
 
 	if err != nil {
-		loggingClient.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
+		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 		return false
 	}
 
+	chEvents := make(chan interface{}, 100)
+	// initialize event handlers
+	initEventHandlers(lc, chEvents, mdc, msc, configuration)
+
 	dic.Update(di.ServiceConstructorMap{
+		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
+			return mdc
+		},
 		dataContainer.MessagingClientName: func(get di.Get) interface{} {
 			return msgClient
 		},
 		dataContainer.EventsChannelName: func(get di.Get) interface{} {
 			return chEvents
-		}})
+		},
+		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
+			return errorconcept.NewErrorHandler(lc)
+		},
+	})
 
 	return true
 }

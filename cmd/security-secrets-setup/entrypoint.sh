@@ -43,17 +43,17 @@ instvaultscript=""
 posthook=""
 if [ "$1" = 'security-secrets-setup' ]; then
     # update the start_vault script for vault starting
-    instvaultscript="cp /vault/staging/start_vault.sh /vault/init/start_vault.sh"
+    echo "Installing Vault's startup script"
+    cp /vault/staging/start_vault.sh /vault/init/start_vault.sh
+
     # grant permissions of folders for vault:vault
-    posthook="chown -Rh 100:1000 ${VAULT_TLS_PATH}"
+    posthook="chown -Rh 100:1000 ${VAULT_TLS_PATH}; tail -f /dev/null"
 fi
 
 echo "Executing $@"
 "$@"
 
 if [ "$1" = 'security-secrets-setup' ]; then
-    echo "Installing Vault's startup script"
-    $instvaultscript
     echo "Executing hook=$posthook"
-    $posthook
+    eval $posthook
 fi

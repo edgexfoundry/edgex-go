@@ -4,11 +4,12 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_profile/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 var TestLabelError1 = "TestErrorLabel1"
@@ -53,7 +54,7 @@ func TestGetAllExecutor(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			op := NewGetAllExecutor(config.ServiceInfo{MaxResultCount: test.maxResultCount}, test.dl, logger.MockLogger{})
+			op := NewGetAllExecutor(bootstrapConfig.ServiceInfo{MaxResultCount: test.maxResultCount}, test.dl, logger.MockLogger{})
 			actual, err := op.Execute()
 			if err != nil && !test.expectError {
 				t.Error(err)

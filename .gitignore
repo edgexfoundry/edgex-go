@@ -16,8 +16,6 @@ cmd/config-seed/config-seed
 cmd/core-command/core-command
 cmd/core-data/core-data
 cmd/core-metadata/core-metadata
-cmd/export-client/export-client
-cmd/export-distro/export-distro
 cmd/security-proxy-setup/security-proxy-setup
 cmd/security-secrets-setup/config/*
 cmd/security-secrets-setup/security-secrets-setup

@@ -21,10 +21,12 @@ import (
 	"sync"
 	"time"
 
-	bootstrapContainer "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
@@ -34,25 +36,25 @@ func BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := bootstrapContainer.LoggingClientFrom(dic.Get)
-	configuration := container.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 
 	// add dependencies to bootstrapContainer
-	scClient := NewSchedulerQueueClient(loggingClient)
+	scClient := NewSchedulerQueueClient(lc)
 	dic.Update(di.ServiceConstructorMap{
-		container.QueueName: func(get di.Get) interface{} {
+		schedulerContainer.QueueName: func(get di.Get) interface{} {
 			return scClient
 		},
 	})
 
-	err := LoadScheduler(loggingClient, bootstrapContainer.DBClientFrom(dic.Get), scClient, configuration)
+	err := LoadScheduler(lc, container.DBClientFrom(dic.Get), scClient, configuration)
 	if err != nil {
-		loggingClient.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
+		lc.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 		return false
 	}
 
 	ticker := time.NewTicker(time.Duration(configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(ticker, loggingClient, configuration)
+	StartTicker(ticker, lc, configuration)
 
 	wg.Add(1)
 	go func() {

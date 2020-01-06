@@ -17,11 +17,12 @@
 package value_descriptor
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 // GetValueDescriptorsExecutor retrieves one or more value descriptors.
@@ -34,7 +35,7 @@ type getValueDescriptorsByNames struct {
 	loader Loader
 	names  []string
 	logger logger.LoggingClient
-	config config.ServiceInfo
+	config bootstrapConfig.ServiceInfo
 }
 
 // Execute retrieves value descriptors by one or more names.
@@ -52,7 +53,7 @@ func (g getValueDescriptorsByNames) Execute() ([]contract.ValueDescriptor, error
 }
 
 // NewGetValueDescriptorsNameExecutor creates a GetValueDescriptorsExecutor which will get value descriptors matching the provided names.
-func NewGetValueDescriptorsNameExecutor(names []string, loader Loader, logger logger.LoggingClient, config config.ServiceInfo) GetValueDescriptorsExecutor {
+func NewGetValueDescriptorsNameExecutor(names []string, loader Loader, logger logger.LoggingClient, config bootstrapConfig.ServiceInfo) GetValueDescriptorsExecutor {
 	return getValueDescriptorsByNames{
 		names:  names,
 		logger: logger,
@@ -65,7 +66,7 @@ func NewGetValueDescriptorsNameExecutor(names []string, loader Loader, logger lo
 type getAllValueDescriptors struct {
 	loader Loader
 	logger logger.LoggingClient
-	config config.ServiceInfo
+	config bootstrapConfig.ServiceInfo
 }
 
 // Execute retrieves value descriptors by the provided names.
@@ -83,7 +84,7 @@ func (g getAllValueDescriptors) Execute() ([]contract.ValueDescriptor, error) {
 }
 
 // NewGetValueDescriptorsExecutor creates a GetValueDescriptorsExecutor which will get all value descriptors.
-func NewGetValueDescriptorsExecutor(loader Loader, logger logger.LoggingClient, config config.ServiceInfo) GetValueDescriptorsExecutor {
+func NewGetValueDescriptorsExecutor(loader Loader, logger logger.LoggingClient, config bootstrapConfig.ServiceInfo) GetValueDescriptorsExecutor {
 	return getAllValueDescriptors{
 		logger: logger,
 		loader: loader,

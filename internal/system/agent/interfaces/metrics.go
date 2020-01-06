@@ -18,5 +18,5 @@ import "context"
 
 // Metrics defines a metrics gathering abstraction.
 type Metrics interface {
-	Get(services []string, ctx context.Context) interface{}
+	Get(ctx context.Context, services []string) []interface{}
 }

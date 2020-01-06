@@ -20,9 +20,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 type SystemUsage struct {
@@ -82,8 +82,8 @@ func cpuUsageAverage() {
 // and is intended to supersede the existing StartCpuUsageAverage() function when the new bootstrap package is used
 // by all of the core services.
 func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
-	loggingClient := container.LoggingClientFrom(dic.Get)
-	loggingClient.Info("Telemetry starting")
+	lc := container.LoggingClientFrom(dic.Get)
+	lc.Info("Telemetry starting")
 
 	wg.Add(1)
 	go func() {
@@ -95,7 +95,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			for seconds := 30; seconds > 0; seconds-- {
 				select {
 				case <-ctx.Done():
-					loggingClient.Info("Telemetry stopped")
+					lc.Info("Telemetry stopped")
 					return
 				default:
 					time.Sleep(time.Second)

@@ -17,7 +17,7 @@ package container
 import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 )
 
 // MetadataDeviceClientName contains the name of the client implementation in the DIC.

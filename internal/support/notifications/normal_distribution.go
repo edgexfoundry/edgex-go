@@ -25,15 +25,15 @@ import (
 
 func distributeAndMark(
 	n models.Notification,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) error {
 
-	go distribute(n, loggingClient, dbClient, config)
+	go distribute(n, lc, dbClient, config)
 
 	err := dbClient.MarkNotificationProcessed(n)
 	if err != nil {
-		loggingClient.Error("Trouble updating notification to Processed for: " + n.Slug)
+		lc.Error("Trouble updating notification to Processed for: " + n.Slug)
 		return err
 	}
 	return nil

@@ -1,5 +1,6 @@
 name: edgexfoundry
 base: core18
+type: app
 adopt-info: version
 summary: Open-source framework for IoT edge computing
 description: |
@@ -90,7 +91,10 @@ apps:
   mongod:
     adapter: full
     after: [core-config-seed]
-    command: bin/mongod --dbpath $SNAP_DATA/mongo/db --logpath $SNAP_COMMON/mongodb.log
+    command: >-
+      bin/mongod
+      --dbpath $SNAP_DATA/mongo/db
+      --logpath $SNAP_COMMON/mongodb.log
     daemon: simple
     plugs: [hardware-observe, network, network-bind, system-observe]
     stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
@@ -261,7 +265,7 @@ apps:
   support-rulesengine:
     adapter: full
     after:
-      - export-client
+      - app-service-configurable
       - core-config-seed
       - edgex-mongo
       - security-proxy-setup
@@ -270,30 +274,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
-  export-client:
-    adapter: none
-    after:
-      - core-config-seed
-      - edgex-mongo
-      - security-proxy-setup
-    command: bin/export-client -confdir $SNAP_DATA/config/export-client/res --registry
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    daemon: simple
-    plugs: [network, network-bind]
-    stop-timeout: 10s
-  export-distro:
-    adapter: full
-    after:
-      - core-config-seed
-      - edgex-mongo
-      - security-proxy-setup
-    command: bin/export-distro -confdir $SNAP_DATA/config/export-distro/res --registry
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    daemon: simple
-    plugs: [network, network-bind]
-    stop-timeout: 10s
   sys-mgmt-agent:
     adapter: none
     after:
@@ -315,9 +295,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   device-virtual:
     adapter: none
@@ -329,9 +309,9 @@ apps:
       - core-metadata
       - support-logging
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    daemon: simple
     environment:
       CONSUL_ADDR: "consul://localhost:8500"
-    daemon: simple
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
@@ -704,8 +684,6 @@ parts:
       install -DT "./cmd/config-seed/config-seed" "$SNAPCRAFT_PART_INSTALL/bin/config-seed"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
       install -DT "./cmd/core-metadata/core-metadata" "$SNAPCRAFT_PART_INSTALL/bin/core-metadata"
-      install -DT "./cmd/export-distro/export-distro" "$SNAPCRAFT_PART_INSTALL/bin/export-distro"
-      install -DT "./cmd/export-client/export-client" "$SNAPCRAFT_PART_INSTALL/bin/export-client"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
       install -DT "./cmd/support-notifications/support-notifications" "$SNAPCRAFT_PART_INSTALL/bin/support-notifications"
       install -DT "./cmd/support-scheduler/support-scheduler" "$SNAPCRAFT_PART_INSTALL/bin/support-scheduler"
@@ -720,8 +698,6 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-command/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-data/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/export-client/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
@@ -765,19 +741,7 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
-      cat "./cmd/export-client/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-client.log:\$SNAP_COMMON/export-client.log: \
-            -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
-            -e s:'http\://localhost\:48061/api/v1/logs':: > \
-       "$SNAPCRAFT_PART_INSTALL/config/export-client/res/configuration.toml"
-
-      cat "./cmd/export-distro/res/configuration.toml" | \
-        sed -e s:./logs/edgex-export-distro.log:\$SNAP_COMMON/export-distro.log: \
-            -e s:'http\://localhost\:48061/api/v1/logs':: > \
-       "$SNAPCRAFT_PART_INSTALL/config/export-distro/res/configuration.toml"
-
-      # for support-logging we also want the default persistence to be on a 
+      # for support-logging we also want the default persistence to be on a
       # file so that we can use redis (which isn't supported with support-logging)
       # in the snap by default
       cat "./cmd/support-logging/res/configuration.toml" | \
@@ -802,7 +766,8 @@ parts:
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
-      # for sys-mgmt-agent we also need to specify the operations type as "snap"
+      # for sys-mgmt-agent we also need to specify ExecutorPath as our snap
+      # executor
       cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
         sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
             -e s:"ExecutorPath = '/path/to/the/file'":"ExecutorPath = '\$SNAP/bin/sys-mgmt-agent-snap-executor.sh'": \
@@ -857,10 +822,6 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
       install -DT "./cmd/config-seed/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/Attribution.txt"
-      install -DT "./cmd/export-client/Attribution.txt" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/Attribution.txt"
-      install -DT "./cmd/export-distro/Attribution.txt" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-distro/Attribution.txt"      
       install -DT "./cmd/support-logging/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/Attribution.txt"
       install -DT "./cmd/support-notifications/Attribution.txt" \
@@ -875,10 +836,6 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metdata/LICENSE"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-distro/LICENSE"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/export-client/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/LICENSE"
       install -DT "./LICENSE" \
@@ -1085,6 +1042,8 @@ parts:
       - libyaml-dev
       - luarocks
       - lua5.1
+      - build-essential
+      - autoconf
     stage-packages:
       - perl
       - luarocks

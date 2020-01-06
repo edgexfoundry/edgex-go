@@ -21,11 +21,13 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -33,13 +35,13 @@ import (
 func TestGetAllDeviceServices(t *testing.T) {
 	tests := []struct {
 		name        string
-		cfg         config.ServiceInfo
+		cfg         bootstrapConfig.ServiceInfo
 		dbMock      DeviceServiceLoader
 		expectError bool
 	}{
 		{
 			"GetAllPass",
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			createMockLoader([]mockOutline{
 				{"GetAllDeviceServices", mock.Anything, testDeviceServices, nil},
 			}),
@@ -47,7 +49,7 @@ func TestGetAllDeviceServices(t *testing.T) {
 		},
 		{
 			"GetAllFailCount",
-			config.ServiceInfo{},
+			bootstrapConfig.ServiceInfo{},
 			createMockLoader([]mockOutline{
 				{"GetAllDeviceServices", mock.Anything, testDeviceServices, nil},
 			}),
@@ -55,7 +57,7 @@ func TestGetAllDeviceServices(t *testing.T) {
 		},
 		{
 			"GetAllFailUnexpected",
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			createMockLoader([]mockOutline{
 				{"GetAllDeviceServices", mock.Anything, nil, testError},
 			}),

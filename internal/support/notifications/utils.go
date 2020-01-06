@@ -44,9 +44,9 @@ func printBody(r io.ReadCloser) {
 	fmt.Println(bodyString)
 }
 
-func checkMaxLimit(limit int, loggingClient logger.LoggingClient, config notificationsConfig.ConfigurationStruct) error {
+func checkMaxLimit(limit int, lc logger.LoggingClient, config notificationsConfig.ConfigurationStruct) error {
 	if limit > config.Service.MaxResultCount {
-		loggingClient.Error(ExceededMaxResultCount)
+		lc.Error(ExceededMaxResultCount)
 		return errors.NewErrLimitExceeded(limit)
 	}
 

@@ -24,7 +24,7 @@ import (
 
 // Utility function for adding configured locally intervals and scheduled events
 func LoadScheduler(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient,
 	configuration *config.ConfigurationStruct) error {
@@ -35,34 +35,34 @@ func LoadScheduler(
 	// ensure queue is empty
 	clearQueue()
 
-	loggingClient.Info("loading intervals, interval actions ...")
+	lc.Info("loading intervals, interval actions ...")
 
 	// load data from support-scheduler database
-	err := loadSupportSchedulerDBInformation(loggingClient, dbClient, scClient)
+	err := loadSupportSchedulerDBInformation(lc, dbClient, scClient)
 	if err != nil {
 		return err
 	}
 
 	// load config intervals
-	errLCI := loadConfigIntervals(loggingClient, dbClient, scClient, configuration)
+	errLCI := loadConfigIntervals(lc, dbClient, scClient, configuration)
 	if errLCI != nil {
 		return errLCI
 	}
 
 	// load config interval actions
-	errLCA := loadConfigIntervalActions(loggingClient, dbClient, scClient, configuration)
+	errLCA := loadConfigIntervalActions(lc, dbClient, scClient, configuration)
 	if errLCA != nil {
 		return errLCA
 	}
 
-	loggingClient.Info("finished loading intervals, interval actions")
+	lc.Info("finished loading intervals, interval actions")
 
 	return nil
 }
 
 // Query support-scheduler scheduler client get intervals
 func getSchedulerDBIntervals(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) ([]contract.Interval, error) {
 
 	var err error
@@ -75,9 +75,9 @@ func getSchedulerDBIntervals(
 	}
 
 	if intervals != nil {
-		loggingClient.Debug("successfully queried support-scheduler intervals...")
+		lc.Debug("successfully queried support-scheduler intervals...")
 		for _, v := range intervals {
-			loggingClient.Debug("found interval", "name", v.Name, "id", v.ID, "start", v.Start)
+			lc.Debug("found interval", "name", v.Name, "id", v.ID, "start", v.Start)
 		}
 	}
 	return intervals, nil
@@ -85,7 +85,7 @@ func getSchedulerDBIntervals(
 
 // Query support-scheduler schedulerEvent client get scheduledEvents
 func getSchedulerDBIntervalActions(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) ([]contract.IntervalAction, error) {
 
 	var err error
@@ -98,9 +98,9 @@ func getSchedulerDBIntervalActions(
 
 	// debug information only
 	if intervalActions != nil {
-		loggingClient.Debug("successfully queried support-scheduler interval actions...")
+		lc.Debug("successfully queried support-scheduler interval actions...")
 		for _, v := range intervalActions {
-			loggingClient.Debug(
+			lc.Debug(
 				"found interval action",
 				"name",
 				v.Name, "id",
@@ -118,16 +118,16 @@ func getSchedulerDBIntervalActions(
 // Iterate over the received intervals add them to scheduler memory queue
 func addReceivedIntervals(
 	intervals []contract.Interval,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	scClient interfaces.SchedulerQueueClient) error {
 
 	for _, interval := range intervals {
 		err := scClient.AddIntervalToQueue(interval)
 		if err != nil {
-			loggingClient.Info("problem adding support-scheduler interval name: %s - %s", interval.Name, err.Error())
+			lc.Info("problem adding support-scheduler interval name: %s - %s", interval.Name, err.Error())
 			return err
 		}
-		loggingClient.Info("added interval", "name", interval.Name, "id", interval.ID)
+		lc.Info("added interval", "name", interval.Name, "id", interval.ID)
 	}
 	return nil
 }
@@ -135,13 +135,13 @@ func addReceivedIntervals(
 // Iterate over the received interval action(s)
 func addReceivedIntervalActions(
 	intervalActions []contract.IntervalAction,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	scClient interfaces.SchedulerQueueClient) error {
 
 	for _, intervalAction := range intervalActions {
 		err := scClient.AddIntervalActionToQueue(intervalAction)
 		if err != nil {
-			loggingClient.Info(
+			lc.Info(
 				"problem adding support-scheduler interval action",
 				"name:",
 				intervalAction.Name,
@@ -149,7 +149,7 @@ func addReceivedIntervalActions(
 				err.Error())
 			return err
 		}
-		loggingClient.Info("added interval action", "name", intervalAction.Name, "id", intervalAction.ID)
+		lc.Info("added interval action", "name", intervalAction.Name, "id", intervalAction.ID)
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func addReceivedIntervalActions(
 // Add interval to support-scheduler
 func addIntervalToSchedulerDB(
 	interval contract.Interval,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (string, error) {
 
 	var err error
@@ -169,7 +169,7 @@ func addIntervalToSchedulerDB(
 	}
 	interval.ID = id
 
-	loggingClient.Info("added interval to the support-scheduler database", "name", interval.Name, "id", ID)
+	lc.Info("added interval to the support-scheduler database", "name", interval.Name, "id", ID)
 
 	return id, nil
 }
@@ -177,7 +177,7 @@ func addIntervalToSchedulerDB(
 // Add interval event to support-scheduler
 func addIntervalActionToSchedulerDB(
 	intervalAction contract.IntervalAction,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (string, error) {
 
 	var err error
@@ -187,14 +187,14 @@ func addIntervalActionToSchedulerDB(
 	if err != nil {
 		return "", err
 	}
-	loggingClient.Info("added interval action to the support-scheduler", "name", intervalAction.Name, "id", id)
+	lc.Info("added interval action to the support-scheduler", "name", intervalAction.Name, "id", id)
 
 	return id, nil
 }
 
 // Load intervals
 func loadConfigIntervals(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient,
 	configuration *config.ConfigurationStruct) error {
@@ -217,7 +217,7 @@ func loadConfigIntervals(
 
 		if errExistingSchedule != nil {
 			// add the interval support-scheduler
-			newIntervalID, errAddedInterval := addIntervalToSchedulerDB(interval, loggingClient, dbClient)
+			newIntervalID, errAddedInterval := addIntervalToSchedulerDB(interval, lc, dbClient)
 			if errAddedInterval != nil {
 				return errAddedInterval
 			}
@@ -232,7 +232,7 @@ func loadConfigIntervals(
 				return err
 			}
 		} else {
-			loggingClient.Debug(
+			lc.Debug(
 				"did not add interval as it already exists in the scheduler database", "name",
 				interval.Name)
 		}
@@ -243,7 +243,7 @@ func loadConfigIntervals(
 
 // Load interval actions if required
 func loadConfigIntervalActions(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient,
 	configuration *config.ConfigurationStruct) error {
@@ -269,7 +269,7 @@ func loadConfigIntervalActions(
 		if err != nil {
 
 			// add the interval action to support-scheduler database
-			newIntervalActionID, err := addIntervalActionToSchedulerDB(intervalAction, loggingClient, dbClient)
+			newIntervalActionID, err := addIntervalActionToSchedulerDB(intervalAction, lc, dbClient)
 			if err != nil {
 				return err
 			}
@@ -284,7 +284,7 @@ func loadConfigIntervalActions(
 
 			}
 		} else {
-			loggingClient.Debug(
+			lc.Debug(
 				"did not load interval action as it exists in the scheduler database" +
 					":" + intervalAction.Name)
 		}
@@ -294,26 +294,26 @@ func loadConfigIntervalActions(
 
 // Query support-scheduler database information
 func loadSupportSchedulerDBInformation(
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	scClient interfaces.SchedulerQueueClient) error {
 
-	receivedIntervals, err := getSchedulerDBIntervals(loggingClient, dbClient)
+	receivedIntervals, err := getSchedulerDBIntervals(lc, dbClient)
 	if err != nil {
 		return err
 	}
 
-	err = addReceivedIntervals(receivedIntervals, loggingClient, scClient)
+	err = addReceivedIntervals(receivedIntervals, lc, scClient)
 	if err != nil {
 		return err
 	}
 
-	intervalActions, err := getSchedulerDBIntervalActions(loggingClient, dbClient)
+	intervalActions, err := getSchedulerDBIntervalActions(lc, dbClient)
 	if err != nil {
 		return err
 	}
 
-	err = addReceivedIntervalActions(intervalActions, loggingClient, scClient)
+	err = addReceivedIntervalActions(intervalActions, lc, scClient)
 	if err != nil {
 		return err
 	}

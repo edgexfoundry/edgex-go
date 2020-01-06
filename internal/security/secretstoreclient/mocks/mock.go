@@ -92,3 +92,15 @@ func (m *MockSecretStoreClient) RegenRootToken(vmkReader io.Reader, rootToken *s
 	arguments := m.Called(vmkReader, rootToken)
 	return arguments.Error(0)
 }
+
+func (m *MockSecretStoreClient) CheckSecretEngineInstalled(token string, mountPoint string, engine string) (isInstalled bool, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, mountPoint, engine)
+	return arguments.Bool(0), arguments.Error(1)
+}
+
+func (m *MockSecretStoreClient) EnableKVSecretEngine(token string, mountPoint string, kvVersion string) (statusCode int, err error) {
+	// Boilerplate that returns whatever Mock.On().Returns() is configured for
+	arguments := m.Called(token, mountPoint, kvVersion)
+	return arguments.Int(0), arguments.Error(1)
+}

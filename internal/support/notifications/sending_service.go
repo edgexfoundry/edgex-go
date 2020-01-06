@@ -38,41 +38,41 @@ func sendViaChannel(
 	n models.Notification,
 	c models.Channel,
 	receiver string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
-	loggingClient.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
+	lc.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
-		tr = sendMail(n.Content, c.MailAddresses, loggingClient, config.Smtp)
+		tr = sendMail(n.Content, c.MailAddresses, lc, config.Smtp)
 	} else {
-		tr = restSend(n.Content, c.Url, loggingClient)
+		tr = restSend(n.Content, c.Url, lc)
 	}
-	t, err := persistTransmission(tr, n, c, receiver, loggingClient, dbClient)
+	t, err := persistTransmission(tr, n, c, receiver, lc, dbClient)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient, dbClient, config)
+		handleFailedTransmission(t, lc, dbClient, config)
 	}
 }
 
 func resendViaChannel(
 	t models.Transmission,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
 	var tr models.TransmissionRecord
 	if t.Channel.Type == models.ChannelType(models.Email) {
-		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, loggingClient, config.Smtp)
+		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, lc, config.Smtp)
 	} else {
-		tr = restSend(t.Notification.Content, t.Channel.Url, loggingClient)
+		tr = restSend(t.Notification.Content, t.Channel.Url, lc)
 	}
 	t.ResendCount = t.ResendCount + 1
 	t.Status = tr.Status
 	t.Records = append(t.Records, tr)
 	err := dbClient.UpdateTransmission(t)
 	if err == nil {
-		handleFailedTransmission(t, loggingClient, dbClient, config)
+		handleFailedTransmission(t, lc, dbClient, config)
 	}
 }
 
@@ -89,21 +89,21 @@ func persistTransmission(
 	n models.Notification,
 	c models.Channel,
 	rec string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient) (models.Transmission, error) {
 
 	trx := models.Transmission{Notification: n, Receiver: rec, Channel: c, ResendCount: 0, Status: tr.Status}
 	trx.Records = []models.TransmissionRecord{tr}
 	id, err := dbClient.AddTransmission(trx)
 	if err != nil {
-		loggingClient.Error("Transmission cannot be persisted: " + trx.String())
+		lc.Error("Transmission cannot be persisted: " + trx.String())
 		return trx, err
 	}
 
 	//We need to fetch this transmission for later use in retries, otherwise timestamp information will be lost.
 	trx, err = dbClient.GetTransmissionById(id)
 	if err != nil {
-		loggingClient.Error("error fetching newly saved transmission: " + id)
+		lc.Error("error fetching newly saved transmission: " + id)
 		return models.Transmission{}, err
 	}
 	return trx, nil
@@ -112,7 +112,7 @@ func persistTransmission(
 func sendMail(
 	message string,
 	addressees []string,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	smtp notificationsConfig.SmtpInfo) models.TransmissionRecord {
 
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
@@ -122,7 +122,7 @@ func sendMail(
 	buf.WriteString(message)
 	err := smtpSend(addressees, []byte(buf.String()), smtp)
 	if err != nil {
-		loggingClient.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
+		lc.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
 		tr.Status = models.Failed
 		tr.Response = err.Error()
 		return tr
@@ -130,12 +130,12 @@ func sendMail(
 	return tr
 }
 
-func restSend(message string, url string, loggingClient logger.LoggingClient) models.TransmissionRecord {
+func restSend(message string, url string, lc logger.LoggingClient) models.TransmissionRecord {
 	tr := getTransmissionRecord("", models.Sent)
 	rs, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(message)))
 	if err != nil {
-		loggingClient.Error("Problems sending message to: " + url)
-		loggingClient.Error("Error indication was:  " + err.Error())
+		lc.Error("Problems sending message to: " + url)
+		lc.Error("Error indication was:  " + err.Error())
 		tr.Status = models.Failed
 		tr.Response = err.Error()
 		return tr
@@ -146,23 +146,23 @@ func restSend(message string, url string, loggingClient logger.LoggingClient) mo
 
 func handleFailedTransmission(
 	t models.Transmission,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	config notificationsConfig.ConfigurationStruct) {
 
 	n := t.Notification
 	if t.ResendCount >= config.Writable.ResendLimit {
-		loggingClient.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID + ", for notification: " + n.Slug)
+		lc.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID + ", for notification: " + n.Slug)
 	}
 	if t.Status == models.Failed && n.Status != models.Escalated {
-		loggingClient.Debug("Handling failed transmission for: " + t.ID + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
+		lc.Debug("Handling failed transmission for: " + t.ID + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
 			if t.ResendCount < config.Writable.ResendLimit {
 				time.AfterFunc(time.Second*5, func() {
-					criticalSeverityResend(t, loggingClient, dbClient, config)
+					criticalSeverityResend(t, lc, dbClient, config)
 				})
 			} else {
-				escalate(t, loggingClient, dbClient, config)
+				escalate(t, lc, dbClient, config)
 				t.Status = models.Trxescalated
 				dbClient.UpdateTransmission(t)
 			}

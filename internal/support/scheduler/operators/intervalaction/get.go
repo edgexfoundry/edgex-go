@@ -15,8 +15,10 @@
 package intervalaction
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -28,7 +30,7 @@ type IntervalActionsExecutor interface {
 // This type is for getting interval actions from the database with a given limit.
 type intervalActionLoadAll struct {
 	database IntervalActionLoader
-	config   config.ServiceInfo
+	config   bootstrapConfig.ServiceInfo
 }
 
 // This method gets interval actions from the database.
@@ -45,7 +47,7 @@ func (op intervalActionLoadAll) Execute() ([]contract.IntervalAction, error) {
 }
 
 // This factory method returns an executor used to get interval actions.
-func NewAllExecutor(db IntervalActionLoader, config config.ServiceInfo) IntervalActionsExecutor {
+func NewAllExecutor(db IntervalActionLoader, config bootstrapConfig.ServiceInfo) IntervalActionsExecutor {
 	return intervalActionLoadAll{
 		database: db,
 		config:   config,

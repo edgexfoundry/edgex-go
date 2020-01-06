@@ -35,7 +35,7 @@ func executeCommandByDeviceID(
 	queryParams string,
 	isPutCommand bool,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
 
@@ -66,7 +66,7 @@ func executeCommandByDeviceID(
 		return "", errors.NewErrCommandNotAssociatedWithDevice(commandID, deviceID)
 	}
 
-	return executeCommandByDevice(d, c, body, queryParams, isPutCommand, ctx, loggingClient)
+	return executeCommandByDevice(d, c, body, queryParams, isPutCommand, ctx, lc)
 }
 
 func executeCommandByName(
@@ -76,7 +76,7 @@ func executeCommandByName(
 	queryParams string,
 	isPutCommand bool,
 	ctx context.Context,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
 
@@ -94,7 +94,7 @@ func executeCommandByName(
 		return "", err
 	}
 
-	return executeCommandByDevice(d, command, body, queryParams, isPutCommand, ctx, loggingClient)
+	return executeCommandByDevice(d, command, body, queryParams, isPutCommand, ctx, lc)
 }
 
 func executeCommandByDevice(
@@ -104,14 +104,14 @@ func executeCommandByDevice(
 	queryParams string,
 	isPutCommand bool,
 	ctx context.Context,
-	loggingClient logger.LoggingClient) (string, error) {
+	lc logger.LoggingClient) (string, error) {
 
 	var ex Executor
 	var err error
 	if isPutCommand {
-		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{}, loggingClient)
+		ex, err = NewPutCommand(device, command, body, ctx, &http.Client{}, lc)
 	} else {
-		ex, err = NewGetCommand(device, command, queryParams, ctx, &http.Client{}, loggingClient)
+		ex, err = NewGetCommand(device, command, queryParams, ctx, &http.Client{}, lc)
 	}
 
 	if err != nil {

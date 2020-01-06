@@ -45,13 +45,13 @@ func NewCertificateLoader(
 	certPath string,
 	tokenPath string,
 	secretServiceBaseUrl string,
-	loggingClient logger.LoggingClient) CertificateLoader {
+	lc logger.LoggingClient) CertificateLoader {
 
 	return certificate{
 		client:               r,
 		certPath:             certPath,
 		tokenPath:            tokenPath,
-		loggingClient:        loggingClient,
+		loggingClient:        lc,
 		secretServiceBaseUrl: secretServiceBaseUrl,
 	}
 }

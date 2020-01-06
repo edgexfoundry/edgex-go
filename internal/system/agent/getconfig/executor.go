@@ -19,9 +19,10 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -43,19 +44,19 @@ type executor struct {
 func NewExecutor(
 	genClients *agentClients.General,
 	registryClient registry.Client,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	serviceProtocol string) *executor {
 
 	return &executor{
 		genClients:      genClients,
 		registryClient:  registryClient,
-		loggingClient:   loggingClient,
+		loggingClient:   lc,
 		serviceProtocol: serviceProtocol,
 	}
 }
 
 // Do fulfills the GetExecutor contract and implements the functionality to retrieve a service's configuration.
-func (e executor) Do(serviceName string, ctx context.Context) (string, error) {
+func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 	var result string
 	client, ok := e.genClients.Get(serviceName)
 	if !ok {
@@ -76,7 +77,7 @@ func (e executor) Do(serviceName string, ctx context.Context) (string, error) {
 			return "", fmt.Errorf("on attempting to get ServiceEndpoint for %s, got error: %v", serviceName, err.Error())
 		}
 
-		configClient := config.ClientInfo{
+		configClient := bootstrapConfig.ClientInfo{
 			Protocol: e.serviceProtocol,
 			Host:     ep.Host,
 			Port:     ep.Port,

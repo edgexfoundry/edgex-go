@@ -34,12 +34,12 @@ import (
 
 func restGetAllAddressables(
 	w http.ResponseWriter,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler,
 	configuration *config.ConfigurationStruct) {
 
-	op := addressable.NewAddressableLoadAll(configuration.Service, dbClient, loggingClient)
+	op := addressable.NewAddressableLoadAll(configuration.Service, dbClient, lc)
 	addressables, err := op.Execute()
 	if err != nil {
 		errorHandler.HandleOneVariant(
@@ -61,7 +61,7 @@ func restGetAllAddressables(
 func restAddAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -89,7 +89,7 @@ func restAddAddressable(
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte(id))
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 }
@@ -98,7 +98,7 @@ func restAddAddressable(
 func restUpdateAddressable(
 	w http.ResponseWriter,
 	r *http.Request,
-	loggingClient logger.LoggingClient,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -128,7 +128,7 @@ func restUpdateAddressable(
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte("true"))
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 		return
 	}
 }

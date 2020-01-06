@@ -108,6 +108,9 @@ https://bitbucket.org/bertimus9/systemstat/src/master/LICENSE
 davecgh/go-spew (ISC) https://github.com/davecgh/go-spew
 https://github.com/davecgh/go-spew/blob/master/LICENSE
 
+edgexfoundry/go-mod-bootstrap (Apache 2.0) https://github.com/edgexfoundry/go-mod-bootstrap
+https://github.com/edgexfoundry/go-mod-bootstrap/blob/master/LICENSE
+
 edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts
 https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
 

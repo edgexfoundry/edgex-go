@@ -14,29 +14,31 @@
 package data
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"io"
 	"io/ioutil"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 // Printing function purely for debugging purposes
 // Print the body of a request to the console
-func printBody(r io.ReadCloser, loggingClient logger.LoggingClient) {
+func printBody(r io.ReadCloser, lc logger.LoggingClient) {
 	body, err := ioutil.ReadAll(r)
 	bodyString := string(body)
 
 	if err != nil {
-		loggingClient.Error(err.Error())
+		lc.Error(err.Error())
 	}
 
-	loggingClient.Info(bodyString)
+	lc.Info(bodyString)
 }
 
-func checkMaxLimit(limit int, loggingClient logger.LoggingClient) error {
-	if limit > Configuration.Service.MaxResultCount {
-		loggingClient.Error(maxExceededString)
+func checkMaxLimit(limit int, lc logger.LoggingClient, configuration *config.ConfigurationStruct) error {
+	if limit > configuration.Service.MaxResultCount {
+		lc.Error(maxExceededString)
 		return errors.NewErrLimitExceeded(limit)
 	}
 

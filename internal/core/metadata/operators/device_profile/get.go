@@ -1,11 +1,26 @@
+/*******************************************************************************
+ * Copyright 2019 Dell Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ *******************************************************************************/
+
 package device_profile
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
 
 // GetProfilesExecutor retrieves one or more device profiles based on some criteria.
@@ -20,7 +35,7 @@ type GetProfileExecutor interface {
 
 // getAllDeviceProfiles encapsulates the data needed in order to get all device profiles.
 type getAllDeviceProfiles struct {
-	config config.ServiceInfo
+	config bootstrapConfig.ServiceInfo
 	loader DeviceProfileLoader
 	logger logger.LoggingClient
 }
@@ -42,7 +57,7 @@ func (g getAllDeviceProfiles) Execute() ([]contract.DeviceProfile, error) {
 }
 
 // NewGetAllExecutor creates a new GetProfilesExecutor for retrieving all device profiles.
-func NewGetAllExecutor(config config.ServiceInfo, loader DeviceProfileLoader, logger logger.LoggingClient) GetProfilesExecutor {
+func NewGetAllExecutor(config bootstrapConfig.ServiceInfo, loader DeviceProfileLoader, logger logger.LoggingClient) GetProfilesExecutor {
 	return getAllDeviceProfiles{
 		config: config,
 		loader: loader,

@@ -15,9 +15,10 @@ import (
 	"strings"
 	"testing"
 
-	types "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/logging/filter"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -185,7 +186,7 @@ func TestGetLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			configuration := &config.ConfigurationStruct{
-				Service: types.ServiceInfo{
+				Service: bootstrapConfig.ServiceInfo{
 					MaxResultCount: maxLimit,
 				},
 			}
@@ -273,7 +274,7 @@ func TestRemoveLogs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			configuration := &config.ConfigurationStruct{
-				Service: types.ServiceInfo{
+				Service: bootstrapConfig.ServiceInfo{
 					MaxResultCount: maxLimit,
 				},
 			}

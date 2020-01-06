@@ -1,24 +1,18 @@
 package data
 
 import (
-	"context"
-	"fmt"
 	"math"
-	"net/http"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/globalsign/mgo/bson"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/mock"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/globalsign/mgo/bson"
 )
 
 var testEvent contract.Event
@@ -35,7 +29,7 @@ func TestCheckMaxLimit(t *testing.T) {
 
 	testedLimit := math.MinInt32
 
-	expectedNil := checkMaxLimit(testedLimit, logger.NewMockClient())
+	expectedNil := checkMaxLimit(testedLimit, logger.NewMockClient(), &config.ConfigurationStruct{})
 
 	if expectedNil != nil {
 		t.Errorf("Should not exceed limit")
@@ -47,7 +41,7 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 
 	testedLimit := math.MaxInt32
 
-	expectedErr := checkMaxLimit(testedLimit, logger.NewMockClient())
+	expectedErr := checkMaxLimit(testedLimit, logger.NewMockClient(), &config.ConfigurationStruct{})
 
 	if expectedErr == nil {
 		t.Errorf("Exceeded limit and should throw error")
@@ -57,62 +51,10 @@ func TestCheckMaxLimitOverLimit(t *testing.T) {
 // Supporting methods
 // Reset() re-initializes dependencies for each test
 func reset() {
-	Configuration = &ConfigurationStruct{}
 	testEvent.ID = testBsonString
 	testEvent.Device = testDeviceName
 	testEvent.Origin = testOrigin
 	testEvent.Readings = buildReadings()
-}
-
-func newMockDeviceClient() *mocks.DeviceClient {
-	client := &mocks.DeviceClient{}
-
-	protocols := getProtocols()
-
-	mockDeviceResultFn := func(id string, ctx context.Context) contract.Device {
-		if bson.IsObjectIdHex(id) {
-			return contract.Device{Id: id, Name: testDeviceName, Protocols: protocols}
-		}
-		return contract.Device{}
-	}
-	client.On("Device", "valid", context.Background()).Return(mockDeviceResultFn, nil)
-	client.On("Device", "404", context.Background()).Return(mockDeviceResultFn,
-		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("Device", mock.Anything, context.Background()).Return(mockDeviceResultFn, fmt.Errorf("some error"))
-
-	mockDeviceForNameResultFn := func(name string, ctx context.Context) contract.Device {
-		device := contract.Device{Id: uuid.New().String(), Name: name, Protocols: protocols}
-
-		return device
-	}
-	client.On("DeviceForName", testDeviceName, context.Background()).Return(mockDeviceForNameResultFn, nil)
-	client.On("DeviceForName", "404", context.Background()).Return(mockDeviceForNameResultFn,
-		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("DeviceForName", mock.Anything, context.Background()).Return(mockDeviceForNameResultFn,
-		fmt.Errorf("some error"))
-
-	return client
-}
-
-func getProtocols() map[string]contract.ProtocolProperties {
-	p1 := make(map[string]string)
-	p1["host"] = "localhost"
-	p1["port"] = "1234"
-	p1["unitID"] = "1"
-
-	p2 := make(map[string]string)
-	p2["serialPort"] = "/dev/USB0"
-	p2["baudRate"] = "19200"
-	p2["dataBits"] = "8"
-	p2["stopBits"] = "1"
-	p2["parity"] = "0"
-	p2["unitID"] = "2"
-
-	wrap := make(map[string]contract.ProtocolProperties)
-	wrap["modbus-ip"] = p1
-	wrap["modbus-rtu"] = p2
-
-	return wrap
 }
 
 func buildReadings() []contract.Reading {

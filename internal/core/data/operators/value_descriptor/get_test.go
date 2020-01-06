@@ -21,15 +21,16 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/operators/value_descriptor/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
-var TestSuccessfulConfig = config.ServiceInfo{MaxResultCount: 5}
+var TestSuccessfulConfig = bootstrapConfig.ServiceInfo{MaxResultCount: 5}
 var TestError = goErrors.New("test error")
 
 var TestVDDescription = "test description"
@@ -56,7 +57,7 @@ func TestGetValueDescriptorsByNames(t *testing.T) {
 		name              string
 		loader            Loader
 		vdNames           []string
-		config            config.ServiceInfo
+		config            bootstrapConfig.ServiceInfo
 		expectedResult    []contract.ValueDescriptor
 		expectError       bool
 		expectedErrorType error
@@ -92,7 +93,7 @@ func TestGetValueDescriptorsByNames(t *testing.T) {
 			"Max result count exceeded error",
 			createMockLoader(),
 			[]string{TestVDName, TestVDNameSharedName},
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
 			errors.ErrLimitExceeded{},
@@ -132,7 +133,7 @@ func TestGetAllValueDescriptors(t *testing.T) {
 	tests := []struct {
 		name              string
 		loader            Loader
-		config            config.ServiceInfo
+		config            bootstrapConfig.ServiceInfo
 		expectedResult    []contract.ValueDescriptor
 		expectError       bool
 		expectedErrorType error
@@ -164,7 +165,7 @@ func TestGetAllValueDescriptors(t *testing.T) {
 		{
 			"Max result count exceeded error",
 			createMockLoader(),
-			config.ServiceInfo{MaxResultCount: 1},
+			bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			nil,
 			true,
 			errors.ErrLimitExceeded{},

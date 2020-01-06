@@ -22,13 +22,15 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/startup"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/di"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
@@ -64,7 +66,7 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database)
 }
 
 // Return the dbClient interface
-func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials config.Credentials) (dbInterfaces.DBClient, error) {
+func (d Database) newDBClient(lc logger.LoggingClient, credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
 	case db.MongoDB:
@@ -84,9 +86,9 @@ func (d Database) newDBClient(loggingClient logger.LoggingClient, credentials co
 					Host: databaseInfo.Host,
 					Port: databaseInfo.Port,
 				},
-				loggingClient)
+				lc)
 		}
-		return redis.NewClient(db.Configuration{Host: databaseInfo.Host, Port: databaseInfo.Port}, loggingClient)
+		return redis.NewClient(db.Configuration{Host: databaseInfo.Host, Port: databaseInfo.Port}, lc)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -99,17 +101,17 @@ func (d Database) BootstrapHandler(
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
 
-	loggingClient := container.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// get database credentials.
-	var credentials config.Credentials
+	var credentials bootstrapConfig.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
+		credentials, err = bootstrapContainer.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
 		if err == nil {
 			break
 		}
-		loggingClient.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		lc.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -117,12 +119,12 @@ func (d Database) BootstrapHandler(
 	var dbClient dbInterfaces.DBClient
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = d.newDBClient(loggingClient, credentials)
+		dbClient, err = d.newDBClient(lc, credentials)
 		if err == nil {
 			break
 		}
 		dbClient = nil
-		loggingClient.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
+		lc.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}
 
@@ -136,7 +138,7 @@ func (d Database) BootstrapHandler(
 		},
 	})
 
-	loggingClient.Info("Database connected")
+	lc.Info("Database connected")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -150,7 +152,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		loggingClient.Info("Database disconnected")
+		lc.Info("Database disconnected")
 	}()
 
 	return true
