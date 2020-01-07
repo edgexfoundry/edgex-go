@@ -69,6 +69,7 @@ func main() {
 			return configuration
 		},
 	})
+
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -79,13 +80,13 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			proxy.NewBootstrapHandler(
+			proxy.NewBootstrap(
 				insecureSkipVerify,
 				initNeeded,
 				resetNeeded,
 				userTobeCreated,
 				userOfGroup,
-				userToBeDeleted).Handler,
+				userToBeDeleted).BootstrapHandler,
 		},
 	)
 }

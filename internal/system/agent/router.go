@@ -38,9 +38,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func LoadRestRoutes(dic *di.Container) *mux.Router {
-	r := mux.NewRouter()
-
+func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	b := r.PathPrefix("/api/v1").Subrouter()
 
 	b.HandleFunc(
@@ -84,8 +82,6 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
-
-	return r
 }
 
 // metricsHandler implements a controller to execute a metrics request.

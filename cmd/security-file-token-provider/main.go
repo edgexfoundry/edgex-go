@@ -53,6 +53,7 @@ func main() {
 			return configuration
 		},
 	})
+
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -63,7 +64,7 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			fileprovider.Handler,
+			fileprovider.BootstrapHandler,
 		},
 	)
 }

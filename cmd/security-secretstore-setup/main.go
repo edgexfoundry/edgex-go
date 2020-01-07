@@ -66,6 +66,7 @@ func main() {
 			return configuration
 		},
 	})
+
 	bootstrap.Run(
 		configDir,
 		profileDir,
@@ -76,7 +77,7 @@ func main() {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secretstore.NewBootstrapHandler(insecureSkipVerify, vaultInterval).Handler,
+			secretstore.NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
 		},
 	)
 }

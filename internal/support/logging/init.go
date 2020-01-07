@@ -24,6 +24,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -36,12 +38,14 @@ type server interface {
 }
 
 type ServiceInit struct {
+	router     *mux.Router
 	server     server
 	serviceKey string
 }
 
-func NewServiceInit(server server, serviceKey string) ServiceInit {
+func NewServiceInit(router *mux.Router, server server, serviceKey string) ServiceInit {
 	return ServiceInit{
+		router:     router,
 		server:     server,
 		serviceKey: serviceKey,
 	}
@@ -66,6 +70,8 @@ func (s ServiceInit) BootstrapHandler(
 	wg *sync.WaitGroup,
 	startupTimer startup.Timer,
 	dic *di.Container) bool {
+
+	loadRestRoutes(s.router, dic)
 
 	lc := logging.FactoryToStdout(s.serviceKey)
 	configuration := container.ConfigurationFrom(dic.Get)

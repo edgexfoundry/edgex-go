@@ -27,14 +27,25 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
+	"github.com/gorilla/mux"
 )
 
+// Bootstrap contains references to dependencies required by the BootstrapHandler.
+type Bootstrap struct {
+	router *mux.Router
+}
+
+// NewBootstrap is a factory method that returns an initialized Bootstrap receiver struct.
+func NewBootstrap(router *mux.Router) *Bootstrap {
+	return &Bootstrap{
+		router: router,
+	}
+}
+
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
-func BootstrapHandler(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+	loadRestRoutes(b.router, dic)
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)

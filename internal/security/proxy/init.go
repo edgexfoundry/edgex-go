@@ -39,7 +39,7 @@ type Bootstrap struct {
 	userToBeDeleted    string
 }
 
-func NewBootstrapHandler(
+func NewBootstrap(
 	insecureSkipVerify bool,
 	initNeeded bool,
 	resetNeeded bool,
@@ -69,12 +69,7 @@ func (b *Bootstrap) haltIfError(lc logger.LoggingClient, err error) {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func (b *Bootstrap) Handler(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
-
+func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 

@@ -228,7 +228,7 @@ func delLogs(
 	_, _ = w.Write([]byte(strconv.Itoa(removed)))
 }
 
-func LoadRestRoutes(dic *di.Container) *mux.Router {
+func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	const (
 		start          = "start"
 		end            = "end"
@@ -241,8 +241,6 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 		levels         = "levels"
 		services       = "services"
 	)
-
-	r := mux.NewRouter()
 
 	// Ping Resource
 	r.HandleFunc(
@@ -372,6 +370,4 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
-
-	return r
 }
