@@ -35,6 +35,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -57,7 +59,9 @@ func main() {
 			return configuration
 		},
 	})
-	httpServer := httpserver.NewBootstrap(command.LoadRestRoutes(dic))
+
+	router := mux.NewRouter()
+	httpServer := httpserver.NewBootstrap(router)
 
 	bootstrap.Run(
 		configDir,
@@ -70,8 +74,8 @@ func main() {
 		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
-			database.NewDatabase(&httpServer, configuration).BootstrapHandler,
-			command.BootstrapHandler,
+			database.NewDatabase(httpServer, configuration).BootstrapHandler,
+			command.NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.CoreCommandServiceKey, edgex.Version).BootstrapHandler,

@@ -32,9 +32,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func LoadRestRoutes(dic *di.Container) *mux.Router {
-	r := mux.NewRouter()
-
+func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	// Ping Resource
 	r.HandleFunc(
 		clients.ApiPingRoute,
@@ -413,6 +411,4 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
-
-	return r
 }

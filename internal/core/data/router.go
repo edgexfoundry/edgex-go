@@ -36,10 +36,12 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 
 	"github.com/gorilla/mux"
@@ -49,9 +51,7 @@ import (
 // descriptor is in use.
 var ValueDescriptorUsageReadLimit = 1
 
-func LoadRestRoutes(dic *di.Container) *mux.Router {
-	r := mux.NewRouter()
-
+func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	// Ping Resource
 	r.HandleFunc(
 		clients.ApiPingRoute,
@@ -480,8 +480,6 @@ func LoadRestRoutes(dic *di.Container) *mux.Router {
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
-
-	return r
 }
 
 /*

@@ -34,7 +34,7 @@ import (
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func Handler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	cfg := container.ConfigurationFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 

@@ -55,7 +55,9 @@ func wrappedMain() (*config.ConfigurationStruct, int) {
 			return configuration
 		},
 	})
-	serviceHandler := secrets.NewBootstrapHandler()
+
+	serviceHandler := secrets.NewBootstrap()
+
 	bootstrap.Run(
 		configDir,
 		bootstrap.EmptyProfileDir,
@@ -66,7 +68,7 @@ func wrappedMain() (*config.ConfigurationStruct, int) {
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			serviceHandler.Handler,
+			serviceHandler.BootstrapHandler,
 		},
 	)
 	return configuration, serviceHandler.ExitStatusCode()
