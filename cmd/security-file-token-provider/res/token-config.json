@@ -6,28 +6,113 @@
     "edgex_use_defaults": true
   },
   "edgex-core-data": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/coredata/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-core-metadata": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/metadata/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
+  "edgex-mongo": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/mongo/*": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-support-logging": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/logging/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-support-notifications": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/notifications/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
+  "edgex-support-rulesengine": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/rulesengine/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-sys-mgmt-agent": {
     "edgex_use_defaults": true
   },
   "edgex-support-scheduler": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/scheduler/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-security-secretstore-setup": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
         "secret/edgex/pki/tls/edgex-kong": {
+          "capabilities": [
+            "list",
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "secret/edgex/mongo/*": {
           "capabilities": [
             "list",
             "read",

@@ -43,7 +43,7 @@ func TestDefaultTokenParameters(t *testing.T) {
 	bytes, err := json.Marshal(parameters)
 	assert.NoError(t, err)
 
-	expected := `{"display_name":"service-name","no_parent":true,"policies":["edgex-service-service-name"]}`
+	expected := `{"display_name":"service-name","no_parent":true,"period":"1h","policies":["edgex-service-service-name"],"ttl":"1h"}`
 	actual := string(bytes)
 	assert.Equal(t, expected, actual)
 }
