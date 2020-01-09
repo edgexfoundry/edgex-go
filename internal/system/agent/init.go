@@ -34,10 +34,26 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+
+	"github.com/gorilla/mux"
 )
 
+// Bootstrap contains references to dependencies required by the BootstrapHandler.
+type Bootstrap struct {
+	router *mux.Router
+}
+
+// NewBootstrap is a factory method that returns an initialized Bootstrap receiver struct.
+func NewBootstrap(router *mux.Router) *Bootstrap {
+	return &Bootstrap{
+		router: router,
+	}
+}
+
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
-func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+	loadRestRoutes(b.router, dic)
+
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	// validate metrics implementation

@@ -36,17 +36,12 @@ type Bootstrap struct {
 	exitStatusCode int
 }
 
-func NewBootstrapHandler() *Bootstrap {
+func NewBootstrap() *Bootstrap {
 	return &Bootstrap{}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func (b *Bootstrap) Handler(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
-
+func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 

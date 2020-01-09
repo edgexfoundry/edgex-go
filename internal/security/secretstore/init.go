@@ -39,7 +39,7 @@ type Bootstrap struct {
 	vaultInterval      int
 }
 
-func NewBootstrapHandler(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
+func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
@@ -47,12 +47,7 @@ func NewBootstrapHandler(insecureSkipVerify bool, vaultInterval int) *Bootstrap 
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func (b *Bootstrap) Handler(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	startupTimer startup.Timer,
-	dic *di.Container) bool {
-
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	configuration := container.ConfigurationFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 

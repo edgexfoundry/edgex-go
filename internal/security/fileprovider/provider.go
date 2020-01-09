@@ -153,11 +153,7 @@ func (p *fileTokenProvider) Run() error {
 			p.logger.Error(fmt.Sprintf("failed open token file for writing %s: %s", outputTokenFilename, err.Error()))
 			return err
 		}
-		defer func() {
-			if writeCloser != nil {
-				writeCloser.Close()
-			}
-		}()
+		// writeCloser is writable file -- explicitly close() to ensure we catch errors writing to it
 
 		permissionable, ok := writeCloser.(permissionable)
 		if ok {
@@ -165,10 +161,12 @@ func (p *fileTokenProvider) Run() error {
 				(serviceConfig.FilePermissions).ModeOctal != nil {
 				mode, err := strconv.ParseInt(*(serviceConfig.FilePermissions).ModeOctal, 8, 32)
 				if err != nil {
+					_ = writeCloser.Close()
 					p.logger.Error(fmt.Sprintf("invalid file mode %s: %s", *(serviceConfig.FilePermissions).ModeOctal, err.Error()))
 					return err
 				}
 				if err := permissionable.Chmod(os.FileMode(mode)); err != nil {
+					_ = writeCloser.Close()
 					p.logger.Error(fmt.Sprintf("failed to set file mode on %s: %s", outputTokenFilename, err.Error()))
 					return err
 				}
@@ -178,19 +176,31 @@ func (p *fileTokenProvider) Run() error {
 				(serviceConfig.FilePermissions).Gid != nil {
 				err := permissionable.Chown(*(serviceConfig.FilePermissions).Uid, *(serviceConfig.FilePermissions).Gid)
 				if err != nil {
+					_ = writeCloser.Close()
 					p.logger.Error(fmt.Sprintf("failed to set file user/group on %s: %s", outputTokenFilename, err.Error()))
 					return err
 				}
 			}
 		}
 
-		json.NewEncoder(writeCloser).Encode(createTokenResponse) // Write resulting token
+		encoder := json.NewEncoder(writeCloser)
+		if encoder == nil {
+			_ = writeCloser.Close()
+			err = fmt.Errorf("unable to create JSON output encoder")
+			return err
+		}
+
+		// Write resulting token
+		if err := encoder.Encode(createTokenResponse); err != nil {
+			_ = writeCloser.Close()
+			p.logger.Error(fmt.Sprintf("failed to write token file: %s", err.Error()))
+			return err
+		}
 
 		if err := writeCloser.Close(); err != nil {
 			p.logger.Error(fmt.Sprintf("failed to close %s: %s", outputTokenFilename, err.Error()))
 			return err
 		}
-		writeCloser = nil
 	}
 
 	return nil
