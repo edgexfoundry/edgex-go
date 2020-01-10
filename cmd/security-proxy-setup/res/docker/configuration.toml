@@ -46,7 +46,7 @@ Server = "edgex-vault"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
 CertPath = "v1/secret/edgex/pki/tls/edgex-kong"
-TokenPath = "/vault/config/assets/resp-init.json"
+TokenPath = "/tmp/edgex/secrets/edgex-security-proxy-setup/secrets-token.json"
 CACertPath = "/tmp/edgex/secrets/ca/ca.pem"
 SNIS = ["edgex-kong"]
 
