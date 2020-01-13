@@ -16,65 +16,14 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
-
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
-func wrappedMain() (*config.ConfigurationStruct, int) {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	var configDir string
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-	flag.Usage = usage.HelpCallbackSecuritySetup
-	flag.Parse()
-
-	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + clients.SecuritySecretsSetupServiceKey)
-		flag.Usage()
-		return nil, contract.StatusCodeExitNormal
-	}
-
-	configuration := &config.ConfigurationStruct{}
-	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
-			return configuration
-		},
-	})
-
-	serviceHandler := secrets.NewBootstrap()
-
-	bootstrap.Run(
-		configDir,
-		bootstrap.EmptyProfileDir,
-		internal.ConfigFileName,
-		bootstrap.DoNotUseRegistry,
-		clients.SecuritySecretsSetupServiceKey,
-		configuration,
-		startupTimer,
-		dic,
-		[]interfaces.BootstrapHandler{
-			serviceHandler.BootstrapHandler,
-		},
-	)
-	return configuration, serviceHandler.ExitStatusCode()
-}
-
 func main() {
-	_, exitStatusCode := wrappedMain()
+	ctx, cancel := context.WithCancel(context.Background())
+	_, exitStatusCode := secrets.Main(ctx, cancel)
 	os.Exit(exitStatusCode)
 }

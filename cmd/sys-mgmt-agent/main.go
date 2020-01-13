@@ -14,63 +14,14 @@
 package main
 
 import (
-	"flag"
+	"context"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent"
-	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
-
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	var useRegistry bool
-	var configDir, profileDir string
-
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
-	flag.Usage = usage.HelpCallback
-	flag.Parse()
-
-	configuration := &agentConfig.ConfigurationStruct{}
-	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
-			return configuration
-		},
-	})
-
-	router := mux.NewRouter()
-
-	bootstrap.Run(
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
-		clients.SystemManagementAgentServiceKey,
-		configuration,
-		startupTimer,
-		dic,
-		[]interfaces.BootstrapHandler{
-			agent.NewBootstrap(router).BootstrapHandler,
-			httpserver.NewBootstrap(router).BootstrapHandler,
-			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
-		})
+	ctx, cancel := context.WithCancel(context.Background())
+	agent.Main(ctx, cancel, mux.NewRouter(), nil)
 }
