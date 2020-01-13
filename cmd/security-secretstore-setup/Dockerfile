@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/security-secretstore-setup/security-secretstore-setup
+RUN make cmd/security-file-token-provider/security-file-token-provider cmd/security-secretstore-setup/security-secretstore-setup
 
 FROM alpine:3.10
 
@@ -26,8 +26,11 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 WORKDIR /
 
+COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.json /res-file-token-provider/token-config.json
+COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/docker/configuration.toml  /res-file-token-provider/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/docker/configuration.toml /res/configuration.toml
 
+COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
 # setup the entry point script
