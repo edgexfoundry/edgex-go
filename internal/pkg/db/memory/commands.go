@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Dell Inc.
+ * Copyright 2020 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,24 +10,28 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @author: Alain Pulluelo, ForgeRock AS
- * @author: Tingyu Zeng, Dell
- * @author: Daniel Harms, Dell
- *
  *******************************************************************************/
 
-package main
+package memory
 
-import (
-	"context"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
+func (c *Client) GetAllCommands() ([]contract.Command, error) {
+	return []contract.Command{}, nil
+}
 
-	"github.com/gorilla/mux"
-)
+func (c *Client) GetCommandById(id string) (contract.Command, error) {
+	return contract.Command{}, nil
+}
 
-func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	secretstore.Main(ctx, cancel, mux.NewRouter(), nil)
+func (c *Client) GetCommandsByName(n string) ([]contract.Command, error) {
+	return []contract.Command{}, nil
+}
+
+func (c *Client) GetCommandsByDeviceId(did string) ([]contract.Command, error) {
+	return []contract.Command{}, nil
+}
+
+func (c *Client) GetCommandByNameAndDeviceId(cname string, did string) (contract.Command, error) {
+	return contract.Command{}, nil
 }
