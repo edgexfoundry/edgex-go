@@ -17,6 +17,7 @@ cmd/core-command/core-command
 cmd/core-data/core-data
 cmd/core-metadata/core-metadata
 cmd/security-proxy-setup/security-proxy-setup
+cmd/security-file-token-provider/*
 cmd/security-secrets-setup/config/*
 cmd/security-secrets-setup/security-secrets-setup
 cmd/security-secretstore-setup/security-secretstore-setup
