@@ -30,9 +30,9 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	tokenPath := "testdata/test-resp-init.json"
-	gk := NewGokeyGenerator(tokenPath)
-	cr := NewCred(&http.Client{}, tokenPath, gk, "", logger.MockLogger{})
+	rootToken := "s.Ga5jyNq6kNfRMVQk2LY1j9iu"
+	gk := NewGokeyGenerator(rootToken)
+	cr := NewCred(&http.Client{}, rootToken, gk, "", logger.MockLogger{})
 
 	realm1 := "service1"
 	realm2 := "service2"
@@ -94,11 +94,11 @@ func TestRetrieveCred(t *testing.T) {
 	mockLogger := logger.MockLogger{}
 	cr := NewCred(
 		secretstoreclient.NewRequestor(mockLogger).Insecure(),
-		"",
+		"token",
 		NewGokeyGenerator(""),
 		configuration.SecretService.GetSecretSvcBaseURL(),
 		mockLogger)
-	pair, err := cr.retrieve(token, credPath)
+	pair, err := cr.retrieve(credPath)
 	if err != nil {
 		t.Errorf("failed to retrieve credential pair")
 		t.Errorf(err.Error())

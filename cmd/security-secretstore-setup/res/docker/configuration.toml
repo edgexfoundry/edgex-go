@@ -37,6 +37,8 @@ vaultsecretthreshold = 3
 tokenprovider = "/security-file-token-provider"
 tokenproviderargs = [ "-confdir", "res-file-token-provider" ]
 tokenprovidertype = "oneshot"
+tokenprovideradmintokenpath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
+revokeroottokens = false
 
 [Startup]
 Duration = 30

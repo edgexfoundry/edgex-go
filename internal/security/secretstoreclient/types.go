@@ -21,21 +21,23 @@ import (
 )
 
 type SecretServiceInfo struct {
-	Scheme               string
-	Server               string
-	ServerName           string
-	Port                 int
-	CertPath             string
-	CaFilePath           string
-	CertFilePath         string
-	KeyFilePath          string
-	TokenFolderPath      string
-	TokenFile            string
-	VaultSecretShares    int
-	VaultSecretThreshold int
-	TokenProvider        string
-	TokenProviderArgs    []string
-	TokenProviderType    string
+	Scheme                      string
+	Server                      string
+	ServerName                  string
+	Port                        int
+	CertPath                    string
+	CaFilePath                  string
+	CertFilePath                string
+	KeyFilePath                 string
+	TokenFolderPath             string
+	TokenFile                   string
+	VaultSecretShares           int
+	VaultSecretThreshold        int
+	TokenProvider               string
+	TokenProviderArgs           []string
+	TokenProviderType           string
+	TokenProviderAdminTokenPath string
+	RevokeRootTokens            bool
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
