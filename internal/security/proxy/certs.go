@@ -19,12 +19,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader"
+	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -65,10 +66,6 @@ type CertPair struct {
 	Key  string `json:"key,omitempty"`
 }
 
-type auth struct {
-	Token string `json:"root_token"`
-}
-
 func (cs certificate) Load() (*CertPair, error) {
 	t, err := cs.getAccessToken(cs.tokenPath)
 	if err != nil {
@@ -86,14 +83,10 @@ func (cs certificate) Load() (*CertPair, error) {
 }
 
 func (cs certificate) getAccessToken(filename string) (string, error) {
-	a := auth{}
-	raw, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return a.Token, err
-	}
-
-	err = json.Unmarshal(raw, &a)
-	return a.Token, err
+	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
+	tokenLoader := authtokenloader.NewAuthTokenLoader(fileOpener)
+	t, err := tokenLoader.Load(filename)
+	return t, err
 }
 
 func (cs certificate) retrieve(t string) (*CertPair, error) {
