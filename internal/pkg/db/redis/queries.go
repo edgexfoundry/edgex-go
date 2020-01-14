@@ -242,7 +242,9 @@ func deleteObject(remover models.Remover, id string, conn redis.Conn) {
 	for _, cmd := range remover.Remove() {
 		switch cmd.Command {
 		case "ZREM":
+			fallthrough
 		case "SREM":
+			fallthrough
 		case "HDEL":
 			_ = conn.Send(cmd.Command, cmd.Hash, cmd.Key)
 		}
