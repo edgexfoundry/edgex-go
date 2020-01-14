@@ -36,6 +36,11 @@ until /consul/scripts/consul-svc-healthy.sh security-secrets-setup; do
     sleep 1; 
 done;
 
+echo "Initializing secret store"
 /security-secretstore-setup --vaultInterval=10
 
-exec "$@"
+echo "Executing custom command: $@"
+"$@"
+
+echo "Waiting for termination signal"
+exec tail -f /dev/null

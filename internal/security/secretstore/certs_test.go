@@ -31,19 +31,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
-func TestGetAccessToken(t *testing.T) {
-	path := "testdata/test-resp-init.json"
-	s, err := GetAccessToken(path)
-	if err != nil {
-		t.Errorf("failed to parse token file")
-		t.Errorf(err.Error())
-	}
-	if s != "test-root-token" {
-		t.Errorf("incorrect token")
-		t.Errorf(s)
-	}
-}
-
 func TestRetrieve(t *testing.T) {
 	certPath := "testCertPath"
 	token := "token"
@@ -86,10 +73,10 @@ func TestRetrieve(t *testing.T) {
 	cs := NewCerts(
 		secretstoreclient.NewRequestor(mockLogger).Insecure(),
 		certPath,
-		"",
+		"token",
 		configuration.SecretService.GetSecretSvcBaseURL(),
 		mockLogger)
-	cp, err := cs.retrieve(token)
+	cp, err := cs.retrieve()
 	if err != nil {
 		t.Errorf("failed to retrieve cert pair")
 		t.Errorf(err.Error())

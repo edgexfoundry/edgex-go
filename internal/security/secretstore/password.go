@@ -39,11 +39,11 @@ type CredentialGenerator interface {
 // using tokenPath as the gokey master password and accepting the realm as the argument
 // to the Generate method
 type GokeyGenerator struct {
-	tokenPath string
+	masterPassword string
 }
 
-func NewGokeyGenerator(tokenPath string) *GokeyGenerator {
-	return &GokeyGenerator{tokenPath: tokenPath}
+func NewGokeyGenerator(masterPassword string) *GokeyGenerator {
+	return &GokeyGenerator{masterPassword: masterPassword}
 }
 
 func (gk GokeyGenerator) Generate(realm string) (string, error) {
@@ -55,11 +55,7 @@ func (gk GokeyGenerator) Generate(realm string) (string, error) {
 		Special:        1,
 		AllowedSpecial: "",
 	}
-	t, err := GetAccessToken(gk.tokenPath)
-	if err != nil {
-		return "", err
-	}
-	return gokey.GetPass(t, realm, nil, &passSpec)
+	return gokey.GetPass(gk.masterPassword, realm, nil, &passSpec)
 }
 
 type CredCollect struct {
@@ -73,7 +69,7 @@ type UserPasswordPair struct {
 
 type Cred struct {
 	client               internal.HttpCaller
-	tokenPath            string
+	rootToken            string
 	generator            CredentialGenerator
 	secretServiceBaseURL string
 	loggingClient        logger.LoggingClient
@@ -81,14 +77,14 @@ type Cred struct {
 
 func NewCred(
 	caller internal.HttpCaller,
-	tpath string,
+	rootToken string,
 	generator CredentialGenerator,
 	secretServiceBaseURL string,
 	lc logger.LoggingClient) Cred {
 
 	return Cred{
 		client:               caller,
-		tokenPath:            tpath,
+		rootToken:            rootToken,
 		generator:            generator,
 		secretServiceBaseURL: secretServiceBaseURL,
 		loggingClient:        lc,
@@ -110,18 +106,14 @@ func (cr *Cred) AlreadyInStore(path string) (bool, error) {
 }
 
 func (cr *Cred) getUserPasswordPair(path string) (*UserPasswordPair, error) {
-	t, err := GetAccessToken(cr.tokenPath)
-	if err != nil {
-		return nil, err
-	}
-	pair, err := cr.retrieve(t, path)
+	pair, err := cr.retrieve(path)
 	if err != nil {
 		return nil, err
 	}
 	return pair, nil
 }
 
-func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
+func (cr *Cred) retrieve(path string) (*UserPasswordPair, error) {
 	credUrl, err := cr.credPathURL(path)
 	if err != nil {
 		return nil, err
@@ -134,7 +126,7 @@ func (cr *Cred) retrieve(t string, path string) (*UserPasswordPair, error) {
 		return nil, e
 	}
 
-	req.Header.Set(VaultToken, t)
+	req.Header.Set(VaultToken, cr.rootToken)
 	resp, err := cr.client.Do(req)
 	if err != nil {
 		e := fmt.Errorf("failed to retrieve the credential pair on path %s with error %s", path, err.Error())
@@ -187,11 +179,6 @@ func (cr *Cred) GeneratePassword(service string) (string, error) {
 }
 
 func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
-	t, err := GetAccessToken(cr.tokenPath)
-	if err != nil {
-		return err
-	}
-
 	cr.loggingClient.Debug("trying to upload the credential pair into secret store")
 	jsonBytes, err := json.Marshal(pair)
 	body := bytes.NewBuffer(jsonBytes)
@@ -208,7 +195,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 		return e
 	}
 
-	req.Header.Set(VaultToken, t)
+	req.Header.Set(VaultToken, cr.rootToken)
 	resp, err := cr.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to upload the credential pair on path %s: %s", path, err.Error())
