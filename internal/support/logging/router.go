@@ -228,7 +228,7 @@ func delLogs(
 	_, _ = w.Write([]byte(strconv.Itoa(removed)))
 }
 
-func loadRestRoutes(r *mux.Router, dic *di.Container) {
+func loadV1Routes(r *mux.Router, dic *di.Container) {
 	const (
 		start          = "start"
 		end            = "end"

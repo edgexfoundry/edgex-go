@@ -33,6 +33,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Main is the service's execution entry point.  It takes a ctx, corresponding cancel function, a mux router, and
+// a boolean readyStream; these facilitate acceptance testing.  The production service has its own main function
+// that supplies default values for these; acceptance testing calls this function directly with its own values for
+// the parameters specific to testing.  readyStream is nil for production environments; non-nil when run in the
+// test runner context for acceptance testing.
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
@@ -44,6 +49,10 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 	//      flags.Parse(os.Args[1:])
 	//
 	f := flags.New()
+
+	var debugMode bool
+	f.FlagSet.BoolVar(&debugMode, "debug", false, "Turns on request/response debug logging.")
+
 	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
@@ -53,7 +62,10 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		},
 	})
 
-	httpServer := httpserver.NewBootstrap(router, true)
+	// readyStream is nil in production mode; non-nil when running acceptance tests in test runner context.  When
+	// it's non-nil (i.e. when running acceptance tests), the httpServer bootstrap shouldn't bind and listen on a
+	// specific port.
+	httpServer := httpserver.NewBootstrap(router, readyStream == nil)
 
 	bootstrap.Run(
 		ctx,
@@ -66,7 +78,15 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		dic,
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
-			NewServiceInit(router, httpServer, clients.SupportLoggingServiceKey).BootstrapHandler,
+			NewBootstrap(
+				router,
+				httpServer,
+				clients.SupportLoggingServiceKey,
+				debugMode,
+				// readyStream is nil in production mode; non-nil when running acceptance tests in test runner context.
+				// When it's non-nil (i.e. when running acceptance tests), the service's bootstrap handler shouldn't
+				// wire up the APIv1 endpoints.
+				readyStream != nil).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			message.NewBootstrap(clients.SupportLoggingServiceKey, edgex.Version).BootstrapHandler,

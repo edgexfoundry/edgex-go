@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Scheduler API
   description: This is the definition of the API for the Support Scheduler service in the EdgeX Foundry IOT microservice platform. Support Scheduler provides functionality for scheduling different actions in the EdgeX Foundry platform.
-  version: 2.x
+  version: "2.0"
   
 servers:
   - url: http://localhost:48085/api/v2
@@ -324,9 +324,9 @@ components:
           type: string
           description: "The name of the type applicable to the request instance contained in the 'content' property."
         version:
-          description: "Proposed field for explicitly defining version of request DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
+          description: "Explicitly defines major-only version number of request DTO."
           type: string
-          example: "2.0.x"
+          example: "2"
       required:
         - action
         - content
@@ -351,9 +351,9 @@ components:
           type: string
           description: "The name of the type applicable to the response instance contained in the 'content' property."
         version:
-          description: "Proposed field for explicitly defining version of response DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
+          description: "Explicitly defines major-only version number of response DTO."
           type: string
-          example: "2.0.x"
+          example: "2"
       required:
         - action
         - content

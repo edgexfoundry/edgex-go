@@ -38,7 +38,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func loadRestRoutes(r *mux.Router, dic *di.Container) {
+func loadV1Routes(r *mux.Router, dic *di.Container) {
 	b := r.PathPrefix("/api/v1").Subrouter()
 
 	b.HandleFunc(

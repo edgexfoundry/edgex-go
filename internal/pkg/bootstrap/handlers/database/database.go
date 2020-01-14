@@ -42,26 +42,29 @@ type httpServer interface {
 
 // Database contains references to dependencies required by the database bootstrap implementation.
 type Database struct {
-	httpServer httpServer
-	database   interfaces.Database
-	isCoreData bool
+	httpServer             httpServer
+	database               interfaces.Database
+	isCoreData             bool
+	inV2AcceptanceTestMode bool
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database interfaces.Database) Database {
+func NewDatabase(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Database {
 	return Database{
-		httpServer: httpServer,
-		database:   database,
-		isCoreData: false,
+		httpServer:             httpServer,
+		database:               database,
+		isCoreData:             false,
+		inV2AcceptanceTestMode: inV2AcceptanceTestMode,
 	}
 }
 
 // NewDatabaseForCoreData is a factory method that returns an initialized Database receiver struct.
-func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database) Database {
+func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Database {
 	return Database{
-		httpServer: httpServer,
-		database:   database,
-		isCoreData: true,
+		httpServer:             httpServer,
+		database:               database,
+		isCoreData:             true,
+		inV2AcceptanceTestMode: inV2AcceptanceTestMode,
 	}
 }
 
@@ -105,6 +108,11 @@ func (d Database) BootstrapHandler(
 	dic *di.Container) bool {
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	if d.inV2AcceptanceTestMode {
+		lc.Info("APIv1 database intentionally NOT started.")
+		return true
+	}
 
 	// get database credentials.
 	var credentials bootstrapConfig.Credentials

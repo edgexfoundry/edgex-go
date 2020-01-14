@@ -51,7 +51,7 @@ import (
 // descriptor is in use.
 var ValueDescriptorUsageReadLimit = 1
 
-func loadRestRoutes(r *mux.Router, dic *di.Container) {
+func loadV1Routes(r *mux.Router, dic *di.Container) {
 	// Ping Resource
 	r.HandleFunc(
 		clients.ApiPingRoute,

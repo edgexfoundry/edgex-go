@@ -17,8 +17,8 @@ package executor
 import (
 	"context"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 

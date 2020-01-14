@@ -21,11 +21,11 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/executor"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
