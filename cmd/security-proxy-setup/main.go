@@ -16,77 +16,14 @@
 package main
 
 import (
-	"flag"
-	"os"
+	"context"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	if len(os.Args) < 2 {
-		usage.HelpCallbackSecurityProxy()
-	}
-	var initNeeded bool
-	var insecureSkipVerify bool
-	var resetNeeded bool
-	var configDir, profileDir string
-	var userTobeCreated string
-	var userOfGroup string
-	var userToBeDeleted string
-	var useRegistry bool
-
-	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
-	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
-	flag.BoolVar(&resetNeeded, "reset", false, "reset reverse proxy by removing all services/routes/consumers")
-	flag.StringVar(&userTobeCreated, "useradd", "", "user that needs to be added to consume the edgex services")
-	flag.StringVar(&userOfGroup, "group", "user", "group that the user belongs to. By default it is in user group")
-	flag.StringVar(&userToBeDeleted, "userdel", "", "user that needs to be deleted from the edgex services")
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
-	flag.Usage = usage.HelpCallbackSecurityProxy
-	flag.Parse()
-
-	configuration := &config.ConfigurationStruct{}
-	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
-			return configuration
-		},
-	})
-
-	bootstrap.Run(
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
-		clients.SecurityProxySetupServiceKey,
-		configuration,
-		startupTimer,
-		dic,
-		[]interfaces.BootstrapHandler{
-			proxy.NewBootstrap(
-				insecureSkipVerify,
-				initNeeded,
-				resetNeeded,
-				userTobeCreated,
-				userOfGroup,
-				userToBeDeleted).BootstrapHandler,
-		},
-	)
+	ctx, cancel := context.WithCancel(context.Background())
+	proxy.Main(ctx, cancel, mux.NewRouter(), nil)
 }

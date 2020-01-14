@@ -15,69 +15,14 @@
 package main
 
 import (
-	"flag"
+	"context"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/command"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
-	container "github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
-
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	var useRegistry bool
-	var configDir, profileDir string
-
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-	flag.Usage = usage.HelpCallback
-	flag.Parse()
-
-	configuration := &config.ConfigurationStruct{}
-	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
-			return configuration
-		},
-	})
-
-	router := mux.NewRouter()
-	httpServer := httpserver.NewBootstrap(router)
-
-	bootstrap.Run(
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
-		clients.CoreCommandServiceKey,
-		configuration,
-		startupTimer,
-		dic,
-		[]interfaces.BootstrapHandler{
-			secret.NewSecret().BootstrapHandler,
-			database.NewDatabase(httpServer, configuration).BootstrapHandler,
-			command.NewBootstrap(router).BootstrapHandler,
-			telemetry.BootstrapHandler,
-			httpServer.BootstrapHandler,
-			message.NewBootstrap(clients.CoreCommandServiceKey, edgex.Version).BootstrapHandler,
-		})
+	ctx, cancel := context.WithCancel(context.Background())
+	command.Main(ctx, cancel, mux.NewRouter(), nil)
 }

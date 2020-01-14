@@ -16,55 +16,14 @@
 package main
 
 import (
-	"flag"
+	"context"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
-	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
-
-	var configDir, profileDir string
-	var useRegistry bool
-
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
-	flag.Usage = usage.HelpCallbackSecurityFileTokenProvider
-	flag.Parse()
-
-	configuration := &config.ConfigurationStruct{}
-	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
-			return configuration
-		},
-	})
-
-	bootstrap.Run(
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
-		clients.SecurityFileTokenProviderServiceKey,
-		configuration,
-		startupTimer,
-		dic,
-		[]interfaces.BootstrapHandler{
-			fileprovider.BootstrapHandler,
-		},
-	)
+	ctx, cancel := context.WithCancel(context.Background())
+	fileprovider.Main(ctx, cancel, mux.NewRouter(), nil)
 }
