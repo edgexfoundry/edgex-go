@@ -19,14 +19,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -121,19 +117,10 @@ func TestInit(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	config := SecretServiceInfo{
-		TokenFolderPath: "testdata",
-		TokenFile:       "test-resp-init.json",
-	}
-
 	host := strings.Replace(ts.URL, "https://", "", -1)
 	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
-	tokenFile, err := os.OpenFile(filepath.Join(config.TokenFolderPath, config.TokenFile), os.O_WRONLY|os.O_TRUNC, 0600)
-	if err != nil {
-		t.Errorf("failed to open token file %s", err.Error())
-	}
-	defer tokenFile.Close()
-	code, _ := vc.Init(config, tokenFile)
+	var initResp InitResponse
+	code, _ := vc.Init(1, 2, &initResp)
 	if code != http.StatusOK {
 		t.Errorf("incorrect vault init status. The returned code is %d", code)
 	}
@@ -155,19 +142,14 @@ func TestUnseal(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	config := SecretServiceInfo{
-		TokenFolderPath:   "testdata",
-		TokenFile:         "test-resp-init.json",
-		VaultSecretShares: 1,
+	initResponse := InitResponse{
+		Keys:       []string{"test-keys"},
+		KeysBase64: []string{"test-keys-base64"},
 	}
 
 	host := strings.Replace(ts.URL, "https://", "", -1)
 	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
-	tokenFile, err := fileioperformer.NewDefaultFileIoPerformer().OpenFileReader(filepath.Join(config.TokenFolderPath, config.TokenFile), os.O_RDONLY, 0400)
-	if err != nil {
-		t.Errorf("failed to open token file %s", err.Error())
-	}
-	code, err := vc.Unseal(config, tokenFile)
+	code, err := vc.Unseal(&initResponse)
 	if code != http.StatusOK {
 		t.Errorf("incorrect vault unseal status. The returned code is %d, %s", code, err.Error())
 	}

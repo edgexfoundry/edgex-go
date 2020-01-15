@@ -18,17 +18,12 @@ package secretstoreclient
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
-func (vc *vaultClient) RegenRootToken(vmkReader io.Reader, rootToken *string) (err error) {
+func (vc *vaultClient) RegenRootToken(initResp *InitResponse, rootToken *string) (err error) {
 	// cancel any previous generation attempt
 	// start root token generation --> nonce, otp
 	// provide keys, nonce --> encoded token
@@ -48,7 +43,7 @@ func (vc *vaultClient) RegenRootToken(vmkReader io.Reader, rootToken *string) (e
 		return err
 	}
 
-	if err := vc.rootTokenSubmitKeys(vmkReader, nonce, &encodedToken); err != nil {
+	if err := vc.rootTokenSubmitKeys(initResp, nonce, &encodedToken); err != nil {
 		vc.logger.Error(fmt.Sprintf("failed to generate new root token: %s", err.Error()))
 		return err
 	} else if encodedToken == "" {
@@ -96,23 +91,7 @@ func (vc *vaultClient) rootTokenStartGeneration(nonce *string, otp *string) erro
 	return err
 }
 
-func (vc *vaultClient) rootTokenSubmitKeys(vmkReader io.Reader, nonce string, encodedToken *string) error {
-	readCloser := fileioperformer.MakeReadCloser(vmkReader)
-	rawBytes, err := ioutil.ReadAll(readCloser)
-	defer readCloser.Close()
-	if err != nil {
-		msg := fmt.Sprintf("failed to read the Vault JSON response init file: %s", err.Error())
-		vc.logger.Error(msg)
-		return errors.New(msg)
-	}
-
-	initResp := InitResponse{}
-	if err = json.Unmarshal(rawBytes, &initResp); err != nil {
-		msg := fmt.Sprintf("failed to build the JSON structure from the init response body: %s", err.Error())
-		vc.logger.Error(msg)
-		return errors.New(msg)
-	}
-
+func (vc *vaultClient) rootTokenSubmitKeys(initResp *InitResponse, nonce string, encodedToken *string) error {
 	for _, key := range initResp.KeysBase64 {
 		complete, err := vc.rootTokenSubmitKey(key, nonce, encodedToken)
 		if err != nil {

@@ -18,9 +18,7 @@
 package secretstoreclient
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -28,8 +26,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 type vaultClient struct {
@@ -69,12 +65,11 @@ func (vc *vaultClient) HealthCheck() (int, error) {
 	return code, nil
 }
 
-func (vc *vaultClient) Init(config SecretServiceInfo, vmkWriter io.Writer) (statusCode int, err error) {
+func (vc *vaultClient) Init(secretThreshold int, secretShares int, initResponse *InitResponse) (statusCode int, err error) {
 	initRequest := InitRequest{
-		SecretShares:    config.VaultSecretShares,
-		SecretThreshold: config.VaultSecretThreshold,
+		SecretShares:    secretShares,
+		SecretThreshold: secretThreshold,
 	}
-	initResp := InitResponse{}
 
 	vc.logger.Info(fmt.Sprintf("vault init strategy (SSS parameters): shares=%d threshold=%d", initRequest.SecretShares, initRequest.SecretThreshold))
 
@@ -86,26 +81,19 @@ func (vc *vaultClient) Init(config SecretServiceInfo, vmkWriter io.Writer) (stat
 		BodyReader:           nil,
 		OperationDescription: "initialize secret store",
 		ExpectedStatusCode:   http.StatusOK,
-		ResponseObject:       &initResp,
+		ResponseObject:       &initResponse,
 	})
 
-	err = json.NewEncoder(vmkWriter).Encode(initResp) // Write the init response to disk
 	return code, err
 }
 
-func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (int, error) {
+func (vc *vaultClient) Unseal(initResponse *InitResponse) (int, error) {
 	vc.logger.Info(fmt.Sprintf("Vault unsealing Process. Applying key shares."))
-	initResp := InitResponse{}
-	readCloser := fileioperformer.MakeReadCloser(vmkReader)
-	defer readCloser.Close()
 
-	if err := json.NewDecoder(vmkReader).Decode(&initResp); err != nil {
-		vc.logger.Error(fmt.Sprintf("failed to build the JSON structure from the init response body: %s", err.Error()))
-		return 0, err
-	}
+	secretShares := len(initResponse.Keys)
 
 	keyCounter := 1
-	for _, key := range initResp.KeysBase64 {
+	for _, key := range initResponse.KeysBase64 {
 		unsealResponse := UnsealResponse{}
 		code, err := vc.doRequest(commonRequestArgs{
 			AuthToken:            "",
@@ -119,11 +107,11 @@ func (vc *vaultClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (in
 		})
 
 		if err != nil {
-			vc.logger.Error(fmt.Sprintf("Error applying key share %d/%d: %s", keyCounter, config.VaultSecretShares, err.Error()))
+			vc.logger.Error(fmt.Sprintf("Error applying key share %d/%d: %s", keyCounter, secretShares, err.Error()))
 			return 0, err
 		}
 
-		vc.logger.Info(fmt.Sprintf("Vault key share %d/%d successfully applied.", keyCounter, config.VaultSecretShares))
+		vc.logger.Info(fmt.Sprintf("Vault key share %d/%d successfully applied.", keyCounter, secretShares))
 		if !unsealResponse.Sealed {
 			vc.logger.Info("Vault key share threshold reached. Unsealing complete.")
 			return code, nil

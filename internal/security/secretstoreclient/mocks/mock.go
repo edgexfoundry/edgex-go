@@ -17,8 +17,6 @@
 package mocks
 
 import (
-	"io"
-
 	. "github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/stretchr/testify/mock"
 )
@@ -33,15 +31,15 @@ func (m *MockSecretStoreClient) HealthCheck() (statusCode int, err error) {
 	return arguments.Int(0), arguments.Error(1)
 }
 
-func (m *MockSecretStoreClient) Init(config SecretServiceInfo, vmkWriter io.Writer) (statusCode int, err error) {
+func (m *MockSecretStoreClient) Init(secretThreshold int, secretShares int, initResponse *InitResponse) (statusCode int, err error) {
 	// Boilerplate that returns whatever Mock.On().Returns() is configured for
-	arguments := m.Called(config, vmkWriter)
+	arguments := m.Called(secretThreshold, secretShares, initResponse)
 	return arguments.Int(0), arguments.Error(1)
 }
 
-func (m *MockSecretStoreClient) Unseal(config SecretServiceInfo, vmkReader io.Reader) (statusCode int, err error) {
+func (m *MockSecretStoreClient) Unseal(initResponse *InitResponse) (statusCode int, err error) {
 	// Boilerplate that returns whatever Mock.On().Returns() is configured for
-	arguments := m.Called(config, vmkReader)
+	arguments := m.Called(initResponse)
 	return arguments.Int(0), arguments.Error(1)
 }
 
@@ -87,9 +85,9 @@ func (m *MockSecretStoreClient) RevokeSelf(token string) (statusCode int, err er
 	return arguments.Int(0), arguments.Error(1)
 }
 
-func (m *MockSecretStoreClient) RegenRootToken(vmkReader io.Reader, rootToken *string) (err error) {
+func (m *MockSecretStoreClient) RegenRootToken(initResponse *InitResponse, rootToken *string) (err error) {
 	// Boilerplate that returns whatever Mock.On().Returns() is configured for
-	arguments := m.Called(vmkReader, rootToken)
+	arguments := m.Called(initResponse, rootToken)
 	return arguments.Error(0)
 }
 
