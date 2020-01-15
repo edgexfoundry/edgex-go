@@ -1,5 +1,5 @@
 [Writable]
-Persistence = 'database'
+Persistence = 'file'
 LogLevel = 'INFO'
 
 [Service]
@@ -23,7 +23,7 @@ File = '/edgex/logs/edgex-support-logging.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'edgex-mongo'
+  Host = 'edgex-redis'
   Name = 'logging'
   Password = 'password'
   Port = 27017
