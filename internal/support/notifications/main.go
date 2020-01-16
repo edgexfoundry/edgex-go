@@ -67,7 +67,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		},
 	})
 
-	httpServer := httpserver.NewBootstrap(router)
+	httpServer := httpserver.NewBootstrap(router, true)
 
 	bootstrap.Run(
 		ctx,
