@@ -29,12 +29,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 type Bootstrap struct {

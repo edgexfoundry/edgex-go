@@ -29,8 +29,9 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader"
-	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 type Bootstrap struct {

@@ -28,9 +28,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	. "github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient/mocks"
-	. "github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader/mocks"
-	. "github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer/mocks"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/authtokenloader/mocks"
+	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
