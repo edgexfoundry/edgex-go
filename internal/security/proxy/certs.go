@@ -24,9 +24,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/security/authtokenloader"
-	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 type CertificateLoader interface {

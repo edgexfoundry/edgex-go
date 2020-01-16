@@ -25,7 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 func (vc *vaultClient) RegenRootToken(vmkReader io.Reader, rootToken *string) (err error) {

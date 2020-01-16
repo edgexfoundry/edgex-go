@@ -47,7 +47,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/security/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 )
 
 type TokenConfFile map[string]ServiceKey
