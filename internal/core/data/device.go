@@ -23,45 +23,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 )
 
-// Update when the device was last reported connected
-func updateDeviceLastReportedConnected(
-	device string,
-	lc logger.LoggingClient,
-	mdc metadata.DeviceClient,
-	configuration *config.ConfigurationStruct) {
-	// Config set to skip update last reported
-	if !configuration.Writable.DeviceUpdateLastConnected {
-		lc.Debug("Skipping update of device connected/reported times for:  " + device)
-		return
-	}
-
-	d, err := mdc.CheckForDevice(context.Background(), device)
-	if err != nil {
-		lc.Error("Error getting device " + device + ": " + err.Error())
-		return
-	}
-
-	// Couldn't find device
-	if len(d.Name) == 0 {
-		lc.Error("Error updating device connected/reported times.  Unknown device with identifier of:  " + device)
-		return
-	}
-
-	t := db.MakeTimestamp()
-	// Found device, now update lastReported
-	// Use of context.Background because this function is invoked asynchronously from a channel
-	err = mdc.UpdateLastConnectedByName(context.Background(), d.Name, t)
-	if err != nil {
-		lc.Error("Problems updating last connected value for device: " + d.Name)
-		return
-	}
-	err = mdc.UpdateLastReportedByName(context.Background(), d.Name, t)
-	if err != nil {
-		lc.Error("Problems updating last reported value for device: " + d.Name)
-	}
-	return
-}
-
 // Update when the device service was last reported connected
 func updateDeviceServiceLastReportedConnected(
 	device string,

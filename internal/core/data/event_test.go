@@ -222,7 +222,7 @@ func TestAddEventWithPersistence(t *testing.T) {
 	chEvents := make(chan interface{}, 10)
 	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
-	bitEvents := make([]bool, 2)
+	bitEvents := make([]bool, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, chEvents, &wg, t)
@@ -269,7 +269,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	dbClientMock := newAddEventMockDB(false)
 	evt := contract.Event{Device: testDeviceName, Origin: testOrigin, Readings: buildReadings()}
 	// wire up handlers to listen for device events
-	bitEvents := make([]bool, 2)
+	bitEvents := make([]bool, 1)
 	chEvents := make(chan interface{})
 	wg := sync.WaitGroup{}
 	wg.Add(1)

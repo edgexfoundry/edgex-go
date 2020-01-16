@@ -1,5 +1,4 @@
 [Writable]
-DeviceUpdateLastConnected = false
 MetaDataCheck = false
 PersistData = true
 ServiceUpdateLastConnected = false

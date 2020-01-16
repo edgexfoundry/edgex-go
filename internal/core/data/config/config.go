@@ -33,7 +33,6 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	DeviceUpdateLastConnected  bool
 	MetaDataCheck              bool
 	PersistData                bool
 	ServiceUpdateLastConnected bool

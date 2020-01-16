@@ -142,7 +142,6 @@ func addNewEvent(
 	}
 
 	putEventOnQueue(e, ctx, lc, msgClient, configuration) // Push event to message bus for App Services to consume
-	chEvents <- DeviceLastReported{e.Device}              // update last reported connected (device)
 	chEvents <- DeviceServiceLastReported{e.Device}       // update last reported connected (device service)
 
 	return e.ID, nil

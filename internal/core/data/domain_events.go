@@ -20,11 +20,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 )
 
-// An event indicating that a given device has just reported some data
-type DeviceLastReported struct {
-	DeviceName string
-}
-
 // An event indicating that the service associated with the device that just reported data is alive.
 type DeviceServiceLastReported struct {
 	DeviceName string
@@ -42,10 +37,6 @@ func initEventHandlers(
 			case e, ok := <-chEvents:
 				if ok {
 					switch e.(type) {
-					case DeviceLastReported:
-						dlr := e.(DeviceLastReported)
-						updateDeviceLastReportedConnected(dlr.DeviceName, lc, mdc, configuration)
-						break
 					case DeviceServiceLastReported:
 						dslr := e.(DeviceServiceLastReported)
 						updateDeviceServiceLastReportedConnected(dslr.DeviceName, lc, mdc, msc, configuration)

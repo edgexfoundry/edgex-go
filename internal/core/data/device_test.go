@@ -87,21 +87,13 @@ func handleDomainEvents(bitEvents []bool, chEvents <-chan interface{}, wait *syn
 		select {
 		case evt := <-chEvents:
 			switch evt.(type) {
-			case DeviceLastReported:
-				e := evt.(DeviceLastReported)
-				if e.DeviceName != testDeviceName {
-					t.Errorf("DeviceLastReported name mismatch %s", e.DeviceName)
-					return
-				}
-				bitEvents[0] = true
-				break
 			case DeviceServiceLastReported:
 				e := evt.(DeviceServiceLastReported)
 				if e.DeviceName != testDeviceName {
 					t.Errorf("DeviceLastReported name mismatch %s", e.DeviceName)
 					return
 				}
-				bitEvents[1] = true
+				bitEvents[0] = true
 				break
 			}
 		default:
