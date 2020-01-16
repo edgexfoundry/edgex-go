@@ -48,7 +48,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
 	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
 	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
 	flag.Usage = usage.HelpCallback
 	flag.Parse()
 
@@ -59,7 +58,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		},
 	})
 
-	httpServer := httpserver.NewBootstrap(router)
+	httpServer := httpserver.NewBootstrap(router, true)
 
 	bootstrap.Run(
 		ctx,
