@@ -14,10 +14,49 @@
 
 package memory
 
-type Client struct{}
+import (
+	"sync"
 
-func NewClient() *Client {
-	panic("Memory Client must be implemented before usage.")
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+)
+
+// UnimplementedMethodPanicMessage is the common panic message used for unimplemented methods of memory.Client.
+const UnimplementedMethodPanicMessage = "This method has not been implemented."
+
+// addressableMemoryStore encapsulates the data needed to store addressables.
+type addressableMemoryStore struct {
+	// addressableMapMutex provides a guard around the addressable store to avoid race conditions.
+	// NOTE: it is up to the implementation to ensure locking and unlocking are being performed correctly.
+	addressableMapMutex sync.RWMutex
+
+	// addressableMap stores and organizes the persisted addressables.
+	// Access to the this map should be done behind the addressableMapMutex with the proper locks being acquired before
+	// accessing data.
+	addressableMap map[string]contract.Addressable
 }
 
-func (c *Client) CloseSession() {}
+// Client provides persistence using short-term storage for the underlying data-store.
+//
+// NOTE: Anything persisted will be lost if the managing process is shutdown or halted.
+type Client struct {
+	addressableStore addressableMemoryStore
+}
+
+// NewClient constructs a new Client for short-term storage.
+func NewClient() *Client {
+	return &Client{
+		addressableStore: addressableMemoryStore{
+			addressableMapMutex: sync.RWMutex{},
+			addressableMap:      make(map[string]contract.Addressable),
+		},
+	}
+}
+
+// CloseSession cleans up resources in the underlying data-store.
+//
+// NOTE: Since this is a short-term data storage mechanism any persisted data is deleted.
+func (c *Client) CloseSession() {
+	c.addressableStore.addressableMapMutex.Lock()
+	defer c.addressableStore.addressableMapMutex.Unlock()
+	c.addressableStore.addressableMap = make(map[string]contract.Addressable)
+}

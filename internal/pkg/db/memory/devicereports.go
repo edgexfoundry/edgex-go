@@ -17,33 +17,33 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetAllDeviceReports() ([]contract.DeviceReport, error) {
-	return []contract.DeviceReport{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceReportByName(n string) (contract.DeviceReport, error) {
-	return contract.DeviceReport{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error) {
-	return []contract.DeviceReport{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceReportById(id string) (contract.DeviceReport, error) {
-	return contract.DeviceReport{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceReportsByAction(n string) ([]contract.DeviceReport, error) {
-	return []contract.DeviceReport{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddDeviceReport(d contract.DeviceReport) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateDeviceReport(dr contract.DeviceReport) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteDeviceReportById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }

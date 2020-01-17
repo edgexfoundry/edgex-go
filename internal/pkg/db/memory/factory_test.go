@@ -1,5 +1,5 @@
-/*******************************************************************************
- * Copyright 2020 Dell Inc.
+/********************************************************************************
+ *  Copyright 2020 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -14,14 +14,13 @@
 
 package memory
 
-func (c *Client) ScrubMetadata() error {
-	panic(UnimplementedMethodPanicMessage)
-}
+import (
+	"testing"
+)
 
-func (c *Client) Cleanup() error {
-	panic(UnimplementedMethodPanicMessage)
-}
-
-func (c *Client) CleanupOld(age int) error {
-	panic(UnimplementedMethodPanicMessage)
+func TestNewClient(t *testing.T) {
+	client := NewClient()
+	if client == nil {
+		t.Errorf("Client is not expected to be nil")
+	}
 }

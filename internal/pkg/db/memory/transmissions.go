@@ -17,41 +17,41 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) AddTransmission(t contract.Transmission) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateTransmission(t contract.Transmission) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteTransmission(age int64, status contract.TransmissionStatus) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionById(id string) (contract.Transmission, error) {
-	return contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByNotificationSlug(slug string, limit int) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByNotificationSlugAndStartEnd(slug string, start int64, end int64, limit int) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByStartEnd(start int64, end int64, limit int) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByStart(start int64, limit int) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByEnd(end int64, limit int) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetTransmissionsByStatus(limit int, status contract.TransmissionStatus) ([]contract.Transmission, error) {
-	return []contract.Transmission{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }

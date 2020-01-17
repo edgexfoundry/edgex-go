@@ -17,45 +17,45 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetSubscriptionBySlug(slug string) (contract.Subscription, error) {
-	return contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptionByCategories(categories []string) ([]contract.Subscription, error) {
-	return []contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptionByLabels(labels []string) ([]contract.Subscription, error) {
-	return []contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptionByCategoriesLabels(categories []string, labels []string) ([]contract.Subscription, error) {
-	return []contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptionByReceiver(receiver string) ([]contract.Subscription, error) {
-	return []contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptionById(id string) (contract.Subscription, error) {
-	return contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteSubscriptionById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddSubscription(sub contract.Subscription) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateSubscription(sub contract.Subscription) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteSubscriptionBySlug(slug string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetSubscriptions() ([]contract.Subscription, error) {
-	return []contract.Subscription{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }

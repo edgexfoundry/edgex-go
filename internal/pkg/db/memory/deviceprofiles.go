@@ -17,41 +17,41 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetAllDeviceProfiles() ([]contract.DeviceProfile, error) {
-	return []contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfileById(id string) (contract.DeviceProfile, error) {
-	return contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfilesByModel(model string) ([]contract.DeviceProfile, error) {
-	return []contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfilesWithLabel(l string) ([]contract.DeviceProfile, error) {
-	return []contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfilesByManufacturerModel(man string, mod string) ([]contract.DeviceProfile, error) {
-	return []contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfilesByManufacturer(man string) ([]contract.DeviceProfile, error) {
-	return []contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetDeviceProfileByName(n string) (contract.DeviceProfile, error) {
-	return contract.DeviceProfile{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddDeviceProfile(dp contract.DeviceProfile) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateDeviceProfile(dp contract.DeviceProfile) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteDeviceProfileById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }

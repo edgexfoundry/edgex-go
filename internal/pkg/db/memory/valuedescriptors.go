@@ -17,45 +17,45 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) ValueDescriptors() ([]contract.ValueDescriptor, error) {
-	return []contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddValueDescriptor(v contract.ValueDescriptor) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateValueDescriptor(cvd contract.ValueDescriptor) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteValueDescriptorById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorByName(name string) (contract.ValueDescriptor, error) {
-	return contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorsByName(names []string) ([]contract.ValueDescriptor, error) {
-	return []contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorById(id string) (contract.ValueDescriptor, error) {
-	return contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorsByUomLabel(uomLabel string) ([]contract.ValueDescriptor, error) {
-	return []contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorsByLabel(label string) ([]contract.ValueDescriptor, error) {
-	return []contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error) {
-	return []contract.ValueDescriptor{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ScrubAllValueDescriptors() error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }

@@ -17,49 +17,49 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) Readings() ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddReading(r contract.Reading) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateReading(r contract.Reading) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingById(id string) (contract.Reading, error) {
-	return contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingCount() (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteReadingById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteReadingsByDevice(deviceId string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingsByDevice(id string, limit int) ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingsByValueDescriptor(name string, limit int) ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingsByValueDescriptorNames(names []string, limit int) ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error) {
-	return []contract.Reading{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }

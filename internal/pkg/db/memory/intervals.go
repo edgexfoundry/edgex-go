@@ -17,73 +17,73 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) Intervals() ([]contract.Interval, error) {
-	return []contract.Interval{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalsWithLimit(limit int) ([]contract.Interval, error) {
-	return []contract.Interval{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalByName(name string) (contract.Interval, error) {
-	return contract.Interval{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalById(id string) (contract.Interval, error) {
-	return contract.Interval{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddInterval(interval contract.Interval) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateInterval(interval contract.Interval) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteIntervalById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActions() ([]contract.IntervalAction, error) {
-	return []contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActionsWithLimit(limit int) ([]contract.IntervalAction, error) {
-	return []contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActionsByIntervalName(name string) ([]contract.IntervalAction, error) {
-	return []contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActionsByTarget(name string) ([]contract.IntervalAction, error) {
-	return []contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActionById(id string) (contract.IntervalAction, error) {
-	return contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) IntervalActionByName(name string) (contract.IntervalAction, error) {
-	return contract.IntervalAction{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddIntervalAction(action contract.IntervalAction) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateIntervalAction(action contract.IntervalAction) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteIntervalActionById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ScrubAllIntervalActions() (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ScrubAllIntervals() (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }

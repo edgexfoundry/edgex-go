@@ -17,21 +17,21 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetAllCommands() ([]contract.Command, error) {
-	return []contract.Command{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetCommandById(id string) (contract.Command, error) {
-	return contract.Command{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetCommandsByName(n string) ([]contract.Command, error) {
-	return []contract.Command{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetCommandsByDeviceId(did string) ([]contract.Command, error) {
-	return []contract.Command{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetCommandByNameAndDeviceId(cname string, did string) (contract.Command, error) {
-	return contract.Command{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }

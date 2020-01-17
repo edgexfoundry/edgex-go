@@ -17,65 +17,65 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetNotifications() ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationById(id string) (contract.Notification, error) {
-	return contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationBySlug(slug string) (contract.Notification, error) {
-	return contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationBySender(sender string, limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationsByLabels(labels []string, limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationsByStartEnd(start int64, end int64, limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationsByStart(start int64, limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNotificationsByEnd(end int64, limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNewNotifications(limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetNewNormalNotifications(limit int) ([]contract.Notification, error) {
-	return []contract.Notification{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddNotification(n contract.Notification) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateNotification(n contract.Notification) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) MarkNotificationProcessed(n contract.Notification) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteNotificationById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteNotificationBySlug(slug string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteNotificationsOld(age int) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }

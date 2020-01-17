@@ -21,65 +21,65 @@ import (
 )
 
 func (c *Client) Events() ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsWithLimit(limit int) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddEvent(e correlation.Event) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateEvent(e correlation.Event) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventById(id string) (contract.Event, error) {
-	return contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsByChecksum(checksum string) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventCount() (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventCountByDeviceId(id string) (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteEventById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteEventsByDevice(deviceId string) (int, error) {
-	return 0, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsForDeviceLimit(id string, limit int) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsForDevice(id string) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsByCreationTime(startTime, endTime int64, limit int) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsOlderThanAge(age int64) ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) EventsPushed() ([]contract.Event, error) {
-	return []contract.Event{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) ScrubAllEvents() error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }

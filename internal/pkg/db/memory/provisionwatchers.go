@@ -17,37 +17,37 @@ package memory
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 func (c *Client) GetAllProvisionWatchers() (pw []contract.ProvisionWatcher, err error) {
-	return []contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetProvisionWatcherByName(n string) (pw contract.ProvisionWatcher, err error) {
-	return contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetProvisionWatchersByIdentifier(k string, v string) (pw []contract.ProvisionWatcher, err error) {
-	return []contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetProvisionWatchersByServiceId(id string) (pw []contract.ProvisionWatcher, err error) {
-	return []contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetProvisionWatchersByProfileId(id string) (pw []contract.ProvisionWatcher, err error) {
-	return []contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) GetProvisionWatcherById(id string) (pw contract.ProvisionWatcher, err error) {
-	return contract.ProvisionWatcher{}, nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) AddProvisionWatcher(pw contract.ProvisionWatcher) (string, error) {
-	return "", nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) UpdateProvisionWatcher(pw contract.ProvisionWatcher) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
 
 func (c *Client) DeleteProvisionWatcherById(id string) error {
-	return nil
+	panic(UnimplementedMethodPanicMessage)
 }
