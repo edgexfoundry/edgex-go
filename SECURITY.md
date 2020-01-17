@@ -18,7 +18,7 @@ API resources.
 To get started, fetch the latest docker-compose.yml and start the EdgeX containers:
 
 ```sh
-$ wget https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/fuji/compose-files/docker-compose-fuji-1.1.0.yml
+$ wget https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus.yml
 $ docker-compose up -d
 ```
 
@@ -29,7 +29,7 @@ while sending the request. Use "admin" as group name below, as it is the privile
 `<account>` below should be substituted for the desired account name (e.g., "mary", "iot_user", etc).
 
     ```sh
-    $ docker-compose run security-proxy-setup --useradd=<account> --group=<groupname>
+    $ docker-compose run -f docker-compose-nexus.yml --rm --entrypoint /edgex/security-proxy-setup edgexproxy --init=false --useradd=<account> --group=<groupname>
     ```
     which will create an access token. One example of an access token is: 
     `eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0`.  
