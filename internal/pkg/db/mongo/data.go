@@ -55,6 +55,7 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 	// Add the readings
 	if len(e.Readings) > 0 {
 		var ui []interface{}
+		timestamp := db.MakeTimestamp()
 		for i, reading := range e.Readings {
 			var r models.Reading
 			id, err := r.FromContract(reading)
@@ -62,7 +63,8 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 				return "", err
 			}
 
-			r.TimestampForAdd()
+			r.Created = timestamp
+			r.Modified = timestamp
 
 			if reading.Device == "" {
 				r.Device = e.Device
