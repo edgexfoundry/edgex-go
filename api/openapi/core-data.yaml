@@ -125,6 +125,21 @@ components:
       required:
         - correlationId
         - requestId
+    ErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/ResponseEnvelope'
+      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
+      type: object
+      properties:
+        message:
+          description: "A field that can contain a free-form message, such as an error message."
+          type: string
+        statusCode:
+          description: "A numeric code signifying the operational status of the response."
+          type: integer
+      required:
+        - message
+        - statusCode
     EventCountResponse:
       allOf:
         - $ref: '#/components/schemas/CorrelatedResponse'
