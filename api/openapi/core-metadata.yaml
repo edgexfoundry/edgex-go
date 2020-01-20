@@ -1078,7 +1078,9 @@ paths:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
-      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service."
+      servers:
+      - url:  http://localhost:48081/api
+      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service. Version is not denoted as part of the route since it is included as a property on each RequestEnvelope."
       requestBody:
         required: true
         content:
