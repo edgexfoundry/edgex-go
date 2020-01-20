@@ -102,24 +102,6 @@ components:
           format: uuid
         slug:
           type: string
-    Channel:
-      description: "Defines the transport supported for a given notification."
-      type: object
-      properties:
-        emailAddresses:
-          description: "If the transport is EMAIL, one or more email addresses that should receive the notification."
-          type: array
-          items:
-            type: string
-        type:
-          description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL"
-          type: string
-        url:
-          description: "If the transport is REST, the target URL to which the notification will be posted."
-          type: string
-    CleanupResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
@@ -149,6 +131,24 @@ components:
       required:
         - requestId
         - statusCode
+    Channel:
+      description: "Defines the transport supported for a given notification."
+      type: object
+      properties:
+        emailAddresses:
+          description: "If the transport is EMAIL, one or more email addresses that should receive the notification."
+          type: array
+          items:
+            type: string
+        type:
+          description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL"
+          type: string
+        url:
+          description: "If the transport is REST, the target URL to which the notification will be posted."
+          type: string
+    CleanupResponse:
+      allOf:
+      - $ref: '#/components/schemas/BaseResponse'
     ErrorEnvelope:
       allOf:
         - $ref: '#/components/schemas/ResponseEnvelope'
@@ -164,6 +164,58 @@ components:
       required:
         - message
         - statusCode
+    GetConfigurationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Provides a response containing the configuration for the targeted service."
+      type: object
+      properties:
+        config:
+          description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
+          type: string
+      required:
+      - config
+    MetricsResponse:
+      allOf:
+      - $ref: '#/components/schemas/BaseResponse'
+      description: ""
+      type: object
+      properties:
+        executor:
+          description: "Indicates how the metrics were collected, either by calling a service directly or else within a container."
+          type: string
+        operation:
+          description: "Indicates the operation being performed, in this case \"Metrics\""
+          type: string
+        result:
+          description: "The detailed metrics result"
+          $ref: '#/components/schemas/MetricsResultValue'
+        service:
+          description: "The name of the service handling the request"
+          type: string
+        success:
+          description: "Indicates whether the operation was successful."
+          type: boolean
+      required:
+      - executor
+      - operation
+      - result
+      - service
+      - success
+    MetricsResultValue:
+      description: "Contains the subfields specific to a metrics result."
+      type: object
+      properties:
+        cpuUsedPercent:
+          description: "The average % of CPU utilization"
+          type: number
+        memoryUsed:
+          description: "The total bytes of memory obtained from the OS."
+          type: integer
+        raw:
+          description: "A marshalled response type containing more granular metrics."
+          type: string
+          format: byte
     Notification:
       description: "Defines the content included in a notification"
       type: object
@@ -419,6 +471,17 @@ components:
         id:
           type: string
           format: uuid
+    VersionResponse:
+      description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
+      allOf:
+      - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        version:
+          description: "The latest version supported by the service."
+          type: string
+      required:
+      - version
   parameters:
     offsetParam:
       in: query
@@ -529,6 +592,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CleanupResponse'
+  /config:
+    get:
+      summary: "Returns the current configuration of the service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConfigurationResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConfigurationResponse'
   /notification:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -867,6 +952,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/NotificationResponse'
+  /metrics:
+    get:
+      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -1466,3 +1573,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubscriptionResponse'
+  /version:
+    get:
+      summary: "A simple 'version' endpoint that will return the current version of the service"
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'

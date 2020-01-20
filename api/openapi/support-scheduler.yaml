@@ -147,6 +147,17 @@ components:
       required:
         - message
         - statusCode
+    GetConfigurationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Provides a response containing the configuration for the targeted service."
+      type: object
+      properties:
+        config:
+          description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
+          type: string
+      required:
+      - config
     Interval:
       description: "Defines the frequency at which some action should occur."
       type: object
@@ -246,6 +257,47 @@ components:
       properties:
         interval:
           $ref: '#/components/schemas/Interval'
+    MetricsResponse:
+      allOf:
+      - $ref: '#/components/schemas/BaseResponse'
+      description: ""
+      type: object
+      properties:
+        executor:
+          description: "Indicates how the metrics were collected, either by calling a service directly or else within a container."
+          type: string
+        operation:
+          description: "Indicates the operation being performed, in this case \"Metrics\""
+          type: string
+        result:
+          description: "The detailed metrics result"
+          $ref: '#/components/schemas/MetricsResultValue'
+        service:
+          description: "The name of the service handling the request"
+          type: string
+        success:
+          description: "Indicates whether the operation was successful."
+          type: boolean
+      required:
+      - executor
+      - operation
+      - result
+      - service
+      - success
+    MetricsResultValue:
+      description: "Contains the subfields specific to a metrics result."
+      type: object
+      properties:
+        cpuUsedPercent:
+          description: "The average % of CPU utilization"
+          type: number
+        memoryUsed:
+          description: "The total bytes of memory obtained from the OS."
+          type: integer
+        raw:
+          description: "A marshalled response type containing more granular metrics."
+          type: string
+          format: byte
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -408,6 +460,17 @@ components:
         id:
           type: string
           format: uuid
+    VersionResponse:
+      description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
+      allOf:
+      - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        version:
+          description: "The latest version supported by the service."
+          type: string
+      required:
+      - version
   parameters:
     offsetParam:
       in: query
@@ -472,6 +535,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ResponseEnvelope'
+  /config:
+    get:
+      summary: "Returns the current configuration of the service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConfigurationResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConfigurationResponse'
   /interval:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -982,6 +1067,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntervalActionResponse'
+  /metrics:
+    get:
+      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -1004,4 +1111,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
+  /version:
+    get:
+      summary: "A simple 'version' endpoint that will return the current version of the service"
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
       
