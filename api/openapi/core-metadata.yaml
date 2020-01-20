@@ -10,7 +10,7 @@ components:
   schemas:
     AddAddressableRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new addressable."
       type: object
       properties:
@@ -40,7 +40,7 @@ components:
         - address
     AddAddressableResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in adding an Addressable. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
       type: object
       properties:
@@ -53,7 +53,7 @@ components:
         - id
     AddDeviceRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new device associated with a specific device service and conforming to a specific device profile."
       type: object
       properties:
@@ -82,7 +82,7 @@ components:
         - protocols
     AddDeviceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in adding a Device. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
       type: object
       properties:
@@ -95,7 +95,7 @@ components:
         - id
     AddDeviceProfileRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new device profile. When making this request, the ID property should not be populated."
       type: object
       properties:
@@ -103,7 +103,7 @@ components:
           $ref: '#/components/schemas/DeviceProfile'
     AddDeviceProfileResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in adding a Device Profile. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
       type: object
       properties:
@@ -116,7 +116,7 @@ components:
         - id
     AddDeviceServiceRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new DeviceService - name must be unique and the specified addressable must already exist"
       type: object
       properties:
@@ -141,7 +141,7 @@ components:
         - adminState
     AddDeviceServiceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in adding a Device Service. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
       type: object
       properties:
@@ -154,7 +154,7 @@ components:
         - id
     AddressableResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         addressable:
@@ -227,7 +227,7 @@ components:
           type: string
     CommandResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "In the context of a device profile, defines an expected response from a command issued to a device via the core-command service."
       type: object
       properties:
@@ -239,34 +239,23 @@ components:
           type: array
           items:
             type: string
-    CorrelatedRequest:
-      description: "Provides a correlation ID that can be used when grouping multiple requests into a single batch. For example, multiple devices can be posted at once. Each AddDeviceRequest has its own request identifier while the batch has an overall identifier. This allows for visibility into whether or not a response was obtained for every request in the batch."
+    BaseRequest:
+      description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
       properties:
-        correlationId:
-          description: "Identifies the batch to which this request belongs. If used via REST, this value should be the same as that of  the ''X-Correlation-ID'' HTTP header."
-          type: string
-          format: uuid
-          example: "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
         requestId:
-          description: "Uniquely identifies this request apart from its peers in the batch. For implementation, recommend this value be generated by the type's constructor."
+          description: "Uniquely identifies this request apart from its peers in a batch. For implementation, recommend this value be generated by the type's constructor."
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
       required:
-        - correlationId
         - requestId
-    CorrelatedResponse:
-      description: "Provides a correlation ID that can be used when grouping multiple responses into a single batch. For example, multiple devices can be posted at once. The responses can be returned as a batch or individually. It doesn't matter as long as both of these properties are correctly set because either way the caller will have visibility into whether or not a response was obtained for every request in the batch."
+    BaseResponse:
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
-        correlationId:
-          description: "Identifies the batch to which this response belongs. If used via REST, this value should be the same as that of  the ''X-Correlation-ID'' HTTP header."
-          type: string
-          format: uuid
-          example: "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
         requestId:
-          description: "Uniquely identifies the request within the larger batch resulting in this response."
+          description: "Uniquely identifies the request within the larger batch that resulted in this response."
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
@@ -277,8 +266,8 @@ components:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
       required:
-        - correlationId
         - requestId
+        - statusCode
     Device:
       type: object
       properties:
@@ -364,7 +353,7 @@ components:
             $ref: '#/components/schemas/Command'
     DeviceProfileResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         profile:
@@ -387,7 +376,7 @@ components:
             type: string
     DeviceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         device:
@@ -423,7 +412,7 @@ components:
           type: string
     DeviceServiceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         service:
@@ -445,7 +434,7 @@ components:
         - statusCode
     PingResponse:
       allOf:
-      - $ref: '#/components/schemas/CorrelatedResponse'
+      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         timestamp:
@@ -603,7 +592,7 @@ components:
           type: string
     UpdateAddressableRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing addressable definition. 'id' and 'name' must be populated in order to identify the addressable. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
@@ -635,7 +624,7 @@ components:
         - name
     UpdateAddressableResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in updating an Addressable. The ID of the affected record will be returned to the caller."
       type: object
       properties:
@@ -646,7 +635,7 @@ components:
         - id
     UpdateDeviceRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device definition. 'id' and 'deviceName' must be populated in order to identify the device. If the 'notify' property is set to true, the device service managing the device will receive a notification. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
@@ -682,7 +671,7 @@ components:
         - deviceName
     UpdateDeviceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in updating the state of a device. The ID of the affected record will be returned to the caller."
       type: object
       properties:
@@ -693,7 +682,7 @@ components:
         - id
     UpdateDeviceProfileRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device profile definition. 'id' and 'name' must be populated in order to identify the profile. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
@@ -701,7 +690,7 @@ components:
           $ref: '#/components/schemas/DeviceProfile'
     UpdateDeviceProfileResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in updating a device profile. The ID of the affected record will be returned to the caller."
       type: object
       properties:
@@ -712,7 +701,7 @@ components:
         - id
     UpdateDeviceServiceRequest:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
@@ -738,7 +727,7 @@ components:
         - deviceServiceName
     UpdateDeviceServiceResponse:
       allOf:
-        - $ref: '#/components/schemas/CorrelatedResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for use in updating a device service. The ID of the affected record will be returned to the caller."
       type: object
       properties:
