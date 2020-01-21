@@ -443,42 +443,40 @@ components:
           type: string
       required:
       - config
-    MemoryUsage:
-      description: "Provides information about the memory utilization of the service."
-      type: object
-      properties:
-        alloc:
-          description: "Alloc is bytes of allocated heap objects."
-          type: integer
-        frees:
-          description: "Frees is the cumulative count of heap objects freed."
-          type: integer
-        liveObjects:
-          description: "The number of live objects is Mallocs - Frees."
-          type: integer
-        malloc:
-          description: "The cumulative count of heap objects allocated."
-          type: integer
-        sys:
-          description: "The total bytes of memory obtained from the OS."
-          type: integer
-        totalAlloc:
-          description: "Cumulative bytes allocated for heap objects."
-          type: integer
     MetricsResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
-        memory:
-          description: "Information about memory utilization"
-          $ref: '#/components/schemas/MemoryUsage'
+        memAlloc:
+          description: "Alloc is bytes of allocated heap objects."
+          type: integer
+        memFrees:
+          description: "Frees is the cumulative count of heap objects freed."
+          type: integer
+        memLiveObjects:
+          description: "The number of live objects is Mallocs - Frees."
+          type: integer
+        memMallocs:
+          description: "The cumulative count of heap objects allocated."
+          type: integer
+        memSys:
+          description: "The total bytes of memory obtained from the OS."
+          type: integer
+        memTotalAlloc:
+          description: "Cumulative bytes allocated for heap objects."
+          type: integer
         cpuBusyAvg:
           description: "Indicates the average level of CPU utilization"
           type: number
       required:
-      - memory
+      - memAlloc
+      - memFrees
+      - memLiveObjects
+      - memMallocs
+      - memSys
+      - memTotalAlloc
       - cpuBusyAvg
     PingResponse:
       allOf:
