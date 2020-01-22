@@ -21,45 +21,44 @@ package secretstore
 
 import (
 	"context"
-	"flag"
-	"github.com/gorilla/mux"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/commandline"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
+	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-	if len(os.Args) < 2 {
-		usage.HelpCallbackSecuritySecretStore()
-	}
-
 	var insecureSkipVerify bool
 	var vaultInterval int
-	var configDir, profileDir string
-	var useRegistry bool
 
-	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
-	flag.IntVar(&vaultInterval, "vaultInterval", 30, "time to wait between checking Vault status in seconds.")
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+	additionalUsage :=
+		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
+			"    --vaultInterval=<seconds>       Indicates how long the program will pause between vault initialization attempts until it succeeds"
 
-	flag.Usage = usage.HelpCallbackSecuritySecretStore
-	flag.Parse()
+	// All common command-line flags have been moved to bootstrap. Service specific flags are add here,
+	// but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
+	// Service specific used is passed below.
+	flags := commandline.NewDefaultCommonFlags(additionalUsage)
+
+	if len(os.Args) < 2 {
+		flags.Help()
+	}
+
+	flags.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
+	flags.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
+	flags.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -71,11 +70,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	bootstrap.Run(
 		ctx,
 		cancel,
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
+		flags,
 		clients.SecuritySecretStoreSetupServiceKey,
+		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
 		startupTimer,
 		dic,

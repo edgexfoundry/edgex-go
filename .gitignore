@@ -10,6 +10,7 @@ go.sum
 coverage.out
 debug
 *.dll
+.security-secrets-setup.complete
 
 # binary files
 cmd/config-seed/config-seed
@@ -26,6 +27,7 @@ cmd/support-notifications/support-notifications
 cmd/support-scheduler/support-scheduler
 cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/sys-mgmt-executor/sys-mgmt-executor
+cmd/security-file-token-provider/security-file-token-provider
 docs/_build/
 
 # log dirs

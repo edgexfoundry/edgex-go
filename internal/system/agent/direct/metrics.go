@@ -74,8 +74,16 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		}
 
 		// Service unknown to SMA, so ask the Registry whether `serviceName` is available.
-		if err := m.registryClient.IsServiceAvailable(serviceName); err != nil {
+		ok, err := m.registryClient.IsServiceAvailable(serviceName)
+		if err != nil {
 			return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
+		}
+		if !ok {
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf("%s service not available", serviceName))
 		}
 
 		m.loggingClient.Info(fmt.Sprintf("Registry responded with %s serviceName available", serviceName))

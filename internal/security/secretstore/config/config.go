@@ -86,8 +86,10 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 	return c.Writable.LogLevel
 }
 
-// SetLogLevel updates the log level in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {}
+// GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
+func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
+	return bootstrapConfig.RegistryInfo{}
+}
 
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {

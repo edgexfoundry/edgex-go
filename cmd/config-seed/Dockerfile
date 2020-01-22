@@ -101,4 +101,4 @@ COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/support
 COPY --from=build-env /go/src/github.com/edgexfoundry/edgex-go/cmd-redis/sys-mgmt-agent/res /edgex/cmd-redis/sys-mgmt-agent/res
 
 ENTRYPOINT ["/edgex/cmd/config-seed/config-seed"]
-CMD ["--profile=docker", "--cmd=/edgex/cmd"]
+CMD ["--profile=docker", "--cmd=/edgex/cmd", "-cp=consul.http://edgex-core-consul:8500"]

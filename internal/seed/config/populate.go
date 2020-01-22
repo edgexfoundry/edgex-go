@@ -24,15 +24,16 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
+	"github.com/edgexfoundry/go-mod-configuration/configuration"
+	"github.com/edgexfoundry/go-mod-configuration/pkg/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-registry/pkg/types"
-	"github.com/edgexfoundry/go-mod-registry/registry"
 	"github.com/magiconair/properties"
 	"github.com/pelletier/go-toml"
 )
 
 // Import properties files for support of legacy Java services.
-func ImportProperties(root string) error {
+func ImportProperties(root string, configProviderUrl string) error {
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -51,17 +52,15 @@ func ImportProperties(root string) error {
 			return err
 		}
 
-		registryConfig := types.Config{
-			Host:       Configuration.Registry.Host,
-			Port:       Configuration.Registry.Port,
-			Type:       Configuration.Registry.Type,
-			Stem:       Configuration.GlobalPrefix + "/",
-			ServiceKey: appKey,
+		providerConfig := types.ServiceConfig{}
+		if err := providerConfig.PopulateFromUrl(configProviderUrl); err != nil {
+			return err
 		}
+		providerConfig.BasePath = Configuration.GlobalPrefix + "/" + appKey
 
-		Registry, err = registry.NewRegistryClient(registryConfig)
+		ConfigClient, err = configuration.NewConfigurationClient(providerConfig)
 		for key := range props {
-			if err := Registry.PutConfigurationValue(key, []byte(props[key])); err != nil {
+			if err := ConfigClient.PutConfigurationValue(key, []byte(props[key])); err != nil {
 				return err
 			}
 		}
@@ -76,7 +75,7 @@ func ImportProperties(root string) error {
 
 // Import configuration files using the specified path to the cmd directory where service configuration files reside.
 // Also, profile indicates the preferred deployment target (such as "docker")
-func ImportConfiguration(root string, profile string, overwrite bool) error {
+func ImportConfiguration(root string, profile string, configProviderUrl string, overwrite bool) error {
 	dirs := listDirectories()
 	absRoot, err := determineAbsRoot(root)
 	if err != nil {
@@ -109,45 +108,45 @@ func ImportConfiguration(root string, profile string, overwrite bool) error {
 		LoggingClient.Debug("reading toml " + path)
 
 		// load the ToML file
-		configuration, err := toml.LoadFile(path)
+		serviceConfig, err := toml.LoadFile(path)
 		if err != nil {
 			LoggingClient.Warn(err.Error())
 			return nil
 		}
 
-		registryConfig := types.Config{
-			Host:       Configuration.Registry.Host,
-			Port:       Configuration.Registry.Port,
-			Type:       Configuration.Registry.Type,
-			Stem:       internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
-			ServiceKey: clients.ServiceKeyPrefix + serviceName,
+		providerConfig := types.ServiceConfig{}
+		if err := providerConfig.PopulateFromUrl(configProviderUrl); err != nil {
+			return err
 		}
-		Registry, err = registry.NewRegistryClient(registryConfig)
+		providerConfig.BasePath = internal.ConfigStemCore + internal.ConfigMajorVersion + clients.ServiceKeyPrefix + serviceName
+
+		ConfigClient, err = configuration.NewConfigurationClient(providerConfig)
 		if err != nil {
 			return err
 		}
 
-		Registry.PutConfigurationToml(environment.OverrideFromEnvironment(serviceName, configuration), overwrite)
+		if err := ConfigClient.PutConfigurationToml(environment.OverrideFromEnvironment(serviceName, serviceConfig), overwrite); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func ImportSecurityConfiguration() error {
-	registryConfig := types.Config{
-		Host: Configuration.Registry.Host,
-		Port: Configuration.Registry.Port,
-		Type: Configuration.Registry.Type,
-		Stem: internal.ConfigRegistryStemSecurity + internal.ConfigMajorVersion,
+func ImportSecurityConfiguration(configProviderUrl string) error {
+	providerConfig := types.ServiceConfig{}
+	if err := providerConfig.PopulateFromUrl(configProviderUrl); err != nil {
+		return err
 	}
+	providerConfig.BasePath = internal.ConfigStemSecurity + internal.ConfigMajorVersion
 
-	reg, err := registry.NewRegistryClient(registryConfig)
+	reg, err := configuration.NewConfigurationClient(providerConfig)
 	if err != nil {
 		return err
 	}
 
 	env := NewEnvironment()
-	namespace := strings.Replace(internal.ConfigRegistryStemSecurity, "/", ".", -1)
+	namespace := strings.Replace(internal.ConfigStemSecurity, "/", ".", -1)
 	tree, err := env.InitFromEnvironment(namespace)
 
 	err = reg.PutConfigurationToml(tree, false)

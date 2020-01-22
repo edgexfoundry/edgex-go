@@ -34,4 +34,4 @@ COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/support-logging /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/support-logging","--registry","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/support-logging","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
