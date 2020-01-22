@@ -16,15 +16,11 @@
 
 package secretstoreclient
 
-import (
-	"io"
-)
-
 // SecretStoreClient is interface to Vault
 type SecretStoreClient interface {
 	HealthCheck() (statusCode int, err error)
-	Init(config SecretServiceInfo, vmkWriter io.Writer) (statusCode int, err error)
-	Unseal(config SecretServiceInfo, vmkReader io.Reader) (statusCode int, err error)
+	Init(secretThreshold int, secretShares int, initResponse *InitResponse) (statusCode int, err error)
+	Unseal(initResponse *InitResponse) (statusCode int, err error)
 	InstallPolicy(token string,
 		policyName string, policyDocument string) (statusCode int, err error)
 	CreateToken(token string,
@@ -34,7 +30,7 @@ type SecretStoreClient interface {
 	LookupAccessor(token string, accessor string, tokenMetadata *TokenMetadata) (statusCode int, err error)
 	LookupSelf(token string, tokenMetadata *TokenMetadata) (statusCode int, err error)
 	RevokeSelf(token string) (statusCode int, err error)
-	RegenRootToken(vmkReader io.Reader, rootToken *string) (err error)
+	RegenRootToken(initResponse *InitResponse, rootToken *string) (err error)
 	CheckSecretEngineInstalled(token string, mountPoint string, engine string) (isInstalled bool, err error)
 	EnableKVSecretEngine(token string, mountPoint string, kvVersion string) (statusCode int, err error)
 }

@@ -18,6 +18,7 @@ package secretstore
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -79,24 +80,21 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
 	vc := secretstoreclient.NewSecretStoreClient(lc, req, vaultScheme, vaultHost)
+	var initResponse secretstoreclient.InitResponse // reused many places in below flow
 
 	//step 3: initialize and unseal Vault
-	path := configuration.SecretService.TokenFolderPath
-	filename := configuration.SecretService.TokenFile
-	absPath := filepath.Join(path, filename)
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
 		func() {
-			tokenFile, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, 0600)
-			if err != nil {
-				lc.Error(fmt.Sprintf("unable to open token file at %s with error: %s", absPath, err.Error()))
-				os.Exit(1)
-			}
-			defer tokenFile.Close()
 			sCode, _ := vc.HealthCheck()
 
 			switch sCode {
 			case http.StatusOK:
+				// Load the init response from disk since we need it to regenerate root token later
+				if err := loadInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
+					lc.Error(fmt.Sprintf("unable to load init response: %s", err.Error()))
+					os.Exit(1)
+				}
 				lc.Info(fmt.Sprintf("vault is initialized and unsealed (status code: %d)", sCode))
 				shouldContinue = false
 			case http.StatusTooManyRequests:
@@ -104,17 +102,28 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				shouldContinue = false
 			case http.StatusNotImplemented:
 				lc.Info(fmt.Sprintf("vault is not initialized (status code: %d). Starting initialization and unseal phases", sCode))
-				_, err := vc.Init(configuration.SecretService, tokenFile)
+				_, err := vc.Init(configuration.SecretService.VaultSecretThreshold,
+					configuration.SecretService.VaultSecretShares, &initResponse)
+				if configuration.SecretService.RevokeRootTokens {
+					// Never persist the root token to disk on secret store initialization if we intend to revoke it later
+					initResponse.RootToken = ""
+					lc.Info("Root token stripped from init response for security reasons")
+				}
+				if err := saveInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
+					lc.Error(fmt.Sprintf("unable to save init response: %s", err.Error()))
+					os.Exit(1)
+				}
+				_, err = vc.Unseal(&initResponse)
 				if err == nil {
-					tokenFile.Seek(0, 0) // Read starting at beginning
-					_, err = vc.Unseal(configuration.SecretService, tokenFile)
-					if err == nil {
-						shouldContinue = false
-					}
+					shouldContinue = false
 				}
 			case http.StatusServiceUnavailable:
 				lc.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
-				_, err := vc.Unseal(configuration.SecretService, tokenFile)
+				if err := loadInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
+					lc.Error(fmt.Sprintf("unable to load init response: %s", err.Error()))
+					os.Exit(1)
+				}
+				_, err := vc.Unseal(&initResponse)
 				if err == nil {
 					shouldContinue = false
 				}
@@ -164,17 +173,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// upload kong certificate
 	tokenMaintenance := NewTokenMaintenance(lc, vc)
 
-	tokenFile, err := fileOpener.OpenFileReader(absPath, os.O_RDONLY, 0400)
-	if err != nil {
-		lc.Error(fmt.Sprintf("could not read master key shares file %s", err.Error()))
-		os.Exit(1)
-	}
-	tokenFileCloseable := fileioperformer.MakeReadCloser(tokenFile)
-	defer tokenFileCloseable.Close()
-
 	// Create a transient root token from the key shares
 	var rootToken string
-	err = vc.RegenRootToken(tokenFileCloseable, &rootToken)
+	err := vc.RegenRootToken(&initResponse, &rootToken)
 	if err != nil {
 		lc.Error(fmt.Sprintf("could not regenerate root token %s", err.Error()))
 		os.Exit(1)
@@ -191,6 +192,14 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// Revoke the other root tokens
 	if configuration.SecretService.RevokeRootTokens {
+		if initResponse.RootToken != "" {
+			initResponse.RootToken = ""
+			if err := saveInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
+				lc.Error(fmt.Sprintf("unable to save init response: %s", err.Error()))
+				os.Exit(1)
+			}
+			lc.Info("Root token stripped from init response (on disk) for security reasons")
+		}
 		if err = tokenMaintenance.RevokeRootTokens(rootToken); err != nil {
 			lc.Warn(fmt.Sprintf("failed to revoke non-transient root tokens %s", err.Error()))
 		}
@@ -419,5 +428,71 @@ func enableKVSecretsEngine(
 	} else {
 		lc.Info("KV secrets engine already enabled...")
 	}
+	return nil
+}
+
+func loadInitResponse(
+	lc logger.LoggingClient,
+	fileOpener fileioperformer.FileIoPerformer,
+	secretConfig secretstoreclient.SecretServiceInfo,
+	initResponse *secretstoreclient.InitResponse) error {
+
+	absPath := filepath.Join(secretConfig.TokenFolderPath, secretConfig.TokenFile)
+
+	tokenFile, err := fileOpener.OpenFileReader(absPath, os.O_RDONLY, 0400)
+	if err != nil {
+		lc.Error(fmt.Sprintf("could not read master key shares file %s: %s", absPath, err.Error()))
+		return err
+	}
+	tokenFileCloseable := fileioperformer.MakeReadCloser(tokenFile)
+	defer tokenFileCloseable.Close()
+
+	decoder := json.NewDecoder(tokenFileCloseable)
+	if decoder == nil {
+		err := errors.New("Failed to create JSON decoder")
+		lc.Error(err.Error())
+		return err
+	}
+	if err := decoder.Decode(initResponse); err != nil {
+		lc.Error(fmt.Sprintf("unable to read token file at %s with error: %s", absPath, err.Error()))
+		return err
+	}
+
+	return nil
+}
+
+func saveInitResponse(
+	lc logger.LoggingClient,
+	fileOpener fileioperformer.FileIoPerformer,
+	secretConfig secretstoreclient.SecretServiceInfo,
+	initResponse *secretstoreclient.InitResponse) error {
+
+	absPath := filepath.Join(secretConfig.TokenFolderPath, secretConfig.TokenFile)
+
+	tokenFile, err := fileOpener.OpenFileWriter(absPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if err != nil {
+		lc.Error(fmt.Sprintf("could not read master key shares file %s: %s", absPath, err.Error()))
+		return err
+	}
+
+	encoder := json.NewEncoder(tokenFile)
+	if encoder == nil {
+		err := errors.New("Failed to create JSON encoder")
+		lc.Error(err.Error())
+		_ = tokenFile.Close()
+		return err
+	}
+	if err := encoder.Encode(initResponse); err != nil {
+		lc.Error(fmt.Sprintf("unable to write token file at %s with error: %s", absPath, err.Error()))
+		_ = tokenFile.Close()
+		return err
+	}
+
+	if err := tokenFile.Close(); err != nil {
+		lc.Error(fmt.Sprintf("unable to close token file at %s with error: %s", absPath, err.Error()))
+		_ = tokenFile.Close()
+		return err
+	}
+
 	return nil
 }
