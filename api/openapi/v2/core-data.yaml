@@ -114,21 +114,6 @@ components:
             mediaType:
               description: "E.g. MIME Type, indicates what the content type of the binaryValue property is if it's populated."
               type: string
-    ErrorEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/ResponseEnvelope'
-      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
-      type: object
-      properties:
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
-      required:
-        - message
-        - statusCode
     EventCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -169,6 +154,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BaseReading'
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a generic error to the caller."
+      type: object
     EventResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -488,7 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /event:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -513,7 +503,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddEventResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddEventResponse'
   /event/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -531,7 +523,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items: 
+                items:
                   $ref: '#/components/schemas/EventResponse'
         '500':
           description: "An unexpected error occurred on the server"
@@ -542,8 +534,8 @@ paths:
             application/json:
               schema:
                 type: array
-                items: 
-                  $ref: '#/components/schemas/EventResponse'
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
   /event/id/{id}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -574,7 +566,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -583,7 +575,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes an event by ID"
       responses:
@@ -600,7 +592,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -609,7 +601,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -618,7 +610,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /event/pushed:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -643,7 +635,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateEventPushedByChecksumResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateEventPushedByChecksumResponse'
   /event/count:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -667,7 +661,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /event/count/device/{deviceId}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -698,7 +692,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -707,7 +701,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -716,7 +710,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /event/device/{deviceId}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -743,7 +737,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/EventResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -752,7 +746,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/EventResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -761,7 +755,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/EventResponse'
+               $ref: '#/components/schemas/ErrorResponse'
   /event/device/{deviceId}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -798,7 +792,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -809,7 +803,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -820,7 +814,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /event/start/{start}/end/{end}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -862,7 +856,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -873,7 +867,7 @@ paths:
               schema:
                 type: array
                 items: 
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /event/age/{age}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -899,7 +893,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -908,7 +902,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -917,7 +911,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /event/scrub:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -937,7 +931,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /metrics:
     get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
@@ -959,7 +953,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetricsResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -981,7 +975,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /reading/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1017,7 +1011,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /reading/count:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1041,7 +1035,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadingCountResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /reading/id/{id}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1072,7 +1066,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1081,7 +1075,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /reading/device/{deviceId}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1118,7 +1112,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1129,7 +1123,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1140,7 +1134,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /reading/type/{type}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1176,7 +1170,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SimpleReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1187,7 +1181,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SimpleReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1198,7 +1192,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SimpleReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /reading/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1240,7 +1234,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1251,7 +1245,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReadingResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /version:
     get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
@@ -1273,4 +1267,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/ErrorResponse'

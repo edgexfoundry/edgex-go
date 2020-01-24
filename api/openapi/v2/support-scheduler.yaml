@@ -132,21 +132,11 @@ components:
       required:
         - requestId
         - statusCode
-    ErrorEnvelope:
+    ErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ResponseEnvelope'
-      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a generic error to the caller."
       type: object
-      properties:
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
-      required:
-        - message
-        - statusCode
     GetConfigurationResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -528,7 +518,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResponseEnvelope'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/ResponseEnvelope'
   /config:
     get:
       summary: "Returns the current configuration of the service."
@@ -550,7 +542,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /interval:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -575,7 +567,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddIntervalResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddIntervalResponse'
     patch:
       summary: "Update one or more existing Intervals"
       requestBody:
@@ -597,7 +591,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateIntervalResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateIntervalResponse'
   /interval/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -627,7 +623,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IntervalResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /interval/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -658,7 +654,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -667,7 +663,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes an interval according to the specified ID. Associated actions will also be deleted."
       responses:
@@ -684,7 +680,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -693,7 +689,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -702,7 +698,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /interval/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -732,7 +728,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -741,7 +737,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes an interval according to the specified name. Associated actions will also be deleted."
       responses:
@@ -758,7 +754,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -767,7 +763,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -776,7 +772,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /intervalaction:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -801,7 +797,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddIntervalActionResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddIntervalActionResponse'
     patch:
       summary: "Update one or more existing IntervalActions"
       requestBody:
@@ -823,7 +821,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateIntervalActionResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateIntervalActionResponse'
   /intervalaction/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -853,7 +853,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IntervalActionResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /intervalaction/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -884,7 +884,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -893,7 +893,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes an interval action by ID"
       responses:
@@ -910,7 +910,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -919,7 +919,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -928,7 +928,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /intervalaction/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -958,7 +958,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -967,7 +967,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes an interval action by name"
       responses:
@@ -984,7 +984,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -993,7 +993,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1002,7 +1002,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /intervalaction/target/{target}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1039,7 +1039,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IntervalActionResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Deletes all interval actions associated with the specified target."
       responses:
@@ -1060,7 +1060,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /metrics:
     get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
@@ -1082,7 +1082,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetricsResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -1104,7 +1104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
     get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
@@ -1126,5 +1126,5 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
       
