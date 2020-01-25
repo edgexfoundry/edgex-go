@@ -52,10 +52,18 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 	s := mc.getSessionCopy()
 	defer s.Close()
 
+	if e.Created == 0 {
+		e.Created = db.MakeTimestamp()
+		e.Modified = e.Created
+	}
+
+	if e.Modified == 0 {
+		e.Modified = db.MakeTimestamp()
+	}
+
 	// Add the readings
 	if len(e.Readings) > 0 {
 		var ui []interface{}
-		timestamp := db.MakeTimestamp()
 		for i, reading := range e.Readings {
 			var r models.Reading
 			id, err := r.FromContract(reading)
@@ -63,8 +71,8 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 				return "", err
 			}
 
-			r.Created = timestamp
-			r.Modified = timestamp
+			r.Created = e.Created
+			r.Modified = e.Modified
 
 			if reading.Device == "" {
 				r.Device = e.Device
@@ -84,8 +92,6 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	mapped.TimestampForAdd()
 
 	if err = s.DB(mc.database.Name).C(db.EventsCollection).Insert(mapped); err != nil {
 		return "", errorMap(err)
