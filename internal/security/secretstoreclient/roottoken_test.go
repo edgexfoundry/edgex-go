@@ -20,14 +20,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -73,14 +69,12 @@ func TestRegenRootToken(t *testing.T) {
 	vc := NewSecretStoreClient(mockLogger, NewRequestor(mockLogger).Insecure(), "https", host)
 
 	// Act
-	config := SecretServiceInfo{
-		TokenFolderPath:   "testdata",
-		TokenFile:         "test-resp-init.json",
-		VaultSecretShares: 1,
+	initResp := InitResponse{
+		// Keys is unused
+		KeysBase64: []string{"dGVzdC1rZXktMQ==", "dGVzdC1rZXktMgo="},
 	}
-	vmkReader, err := fileioperformer.NewDefaultFileIoPerformer().OpenFileReader(filepath.Join(config.TokenFolderPath, config.TokenFile), os.O_RDONLY, 0400)
 	var rootToken string
-	err = vc.RegenRootToken(vmkReader, &rootToken)
+	err := vc.RegenRootToken(&initResp, &rootToken)
 
 	// Assert
 	assert.Nil(err)
