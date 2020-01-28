@@ -54,11 +54,10 @@ func (mc MongoClient) AddEvent(e correlation.Event) (string, error) {
 
 	if e.Created == 0 {
 		e.Created = db.MakeTimestamp()
-		e.Modified = e.Created
 	}
 
 	if e.Modified == 0 {
-		e.Modified = db.MakeTimestamp()
+		e.Modified = e.Created
 	}
 
 	// Add the readings
