@@ -3,7 +3,17 @@
     "edgex_use_defaults": true
   },
   "edgex-core-command": {
-    "edgex_use_defaults": true
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/metadata/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
   },
   "edgex-core-data": {
     "edgex_use_defaults": true,
