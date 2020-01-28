@@ -39,21 +39,11 @@ components:
       required:
         - requestId
         - statusCode
-    ErrorEnvelope:
+    ErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ResponseEnvelope'
-      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a generic error to the caller."
       type: object
-      properties:
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
-      required:
-        - message
-        - statusCode
     GetConfigurationResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -308,7 +298,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResponseEnvelope'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/ResponseEnvelope'
   /config:
     get:
       summary: "Returns the current configuration of the service."
@@ -330,7 +322,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /logs:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -355,7 +347,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/WriteLogEntryResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/WriteLogEntryResponse'
   /logs/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -389,7 +383,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LogEntryResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Allows deletion of log entries matching the specified parameters (levels, keywords, services, etc)"
       responses:
@@ -406,7 +400,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -415,7 +409,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /logs/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -461,7 +455,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LogEntryResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -472,7 +466,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LogEntryResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Allows deletion of log entries within a given time range"
       responses:
@@ -489,7 +483,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -498,7 +492,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogEntryResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /metrics:
     get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
@@ -520,7 +514,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetricsResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -542,7 +536,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
     get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
@@ -564,4 +558,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/ErrorResponse'

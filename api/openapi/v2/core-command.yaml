@@ -90,21 +90,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Command'
-    ErrorEnvelope:
+    ErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ResponseEnvelope'
-      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a generic error to the caller."
       type: object
-      properties:
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
-      required:
-        - message
-        - statusCode
     GetConfigurationResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -320,7 +310,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ResponseEnvelope'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/ResponseEnvelope'
   /command:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -345,7 +337,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IssueCommandResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/IssueCommandResponse'
   /config:
     get:
       summary: "Returns the current configuration of the service."
@@ -367,7 +361,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /device/id/{deviceid}/command/{commandid}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -405,7 +399,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -414,7 +408,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '423':
           description: "The device is locked (AdminState)"
           headers:
@@ -423,7 +417,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -432,7 +426,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       summary: "Issue the specified write command referenced by the command id to the device/sensor, also referenced by id."
       responses:
@@ -446,7 +440,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IssueCommandResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/IssueCommandResponse'
   /device/name/{deviceName}/command/{commandName}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -482,7 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -491,7 +487,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '423':
           description: "The device is locked (AdminState)"
           headers:
@@ -500,7 +496,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -509,7 +505,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IssueCommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       summary: "Issue the specified write command referenced by the command name to the device/sensor, also referenced by name."
       responses:
@@ -523,7 +519,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/IssueCommandResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/IssueCommandResponse'
   /device/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -554,7 +552,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -563,7 +561,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /device/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -593,7 +591,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -602,7 +600,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /device/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -632,7 +630,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CommandResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /metrics:
     get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
@@ -654,7 +652,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetricsResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -676,7 +674,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
     get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
@@ -698,4 +696,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/ErrorResponse'

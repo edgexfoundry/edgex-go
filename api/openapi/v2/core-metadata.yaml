@@ -417,21 +417,11 @@ components:
       properties:
         service:
           $ref: '#/components/schemas/DeviceService'
-    ErrorEnvelope:
+    ErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ResponseEnvelope'
-      description: "A type utilized by the /batch endpoint for returning an error applicable to an individual request."
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a generic error to the caller."
       type: object
-      properties:
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
-      required:
-        - message
-        - statusCode
     GetConfigurationResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -861,7 +851,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddAddressableResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddAddressableResponse'
     patch:
       summary: "Allows updates to an existing addressable"
       requestBody:
@@ -883,7 +875,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateAddressableResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateAddressableResponse'
   /addressable/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -913,7 +907,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddressableResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /addressable/host/{host}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -943,7 +937,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -952,7 +946,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /addressable/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -983,7 +977,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -992,7 +986,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete an addressable by ID"
       responses:
@@ -1009,7 +1003,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1018,7 +1012,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /addressable/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1048,7 +1042,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1057,7 +1051,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete an addressable by name"
       responses:
@@ -1074,7 +1068,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1083,7 +1077,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /addressable/port/{port}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1119,7 +1113,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddressableResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1130,7 +1124,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddressableResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /batch:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1179,7 +1173,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /device:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1204,7 +1198,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddDeviceResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddDeviceResponse'
     patch:
       summary: "Allows updates to an existing device"
       requestBody:
@@ -1226,7 +1222,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateDeviceResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateDeviceResponse'
   /device/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1257,7 +1255,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /device/check/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1284,7 +1282,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1293,7 +1291,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
   /device/check/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1319,7 +1317,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1328,7 +1326,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
   /device/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1359,7 +1357,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1368,7 +1366,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device by ID"
       responses:
@@ -1385,7 +1383,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1394,7 +1392,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceResponse'
+               $ref: '#/components/schemas/ErrorResponse'
   /device/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1424,7 +1422,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1433,7 +1431,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device by name"
       responses:
@@ -1450,7 +1448,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1459,7 +1457,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /device/profile/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1495,7 +1493,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1506,7 +1504,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /device/profile/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1542,7 +1540,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1553,7 +1551,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /device/service/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1589,7 +1587,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1600,7 +1598,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /device/service/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1636,7 +1634,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1647,7 +1645,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1672,7 +1670,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddDeviceProfileResponse'
     put:
       summary: "Allows updates to an existing device profile"
       requestBody:
@@ -1694,7 +1694,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateDeviceProfileResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateDeviceProfileResponse'
   /deviceprofile/uploadfile:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1728,7 +1730,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: "Conflict detected. Device name and command names must be universally unique."
           headers:
@@ -1737,7 +1739,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error happened on the server."
           headers:
@@ -1746,7 +1748,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1777,7 +1779,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1788,7 +1790,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1819,7 +1821,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1828,7 +1830,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device profile by ID. This operation will fail if there are devices actively using the profile."
       responses:
@@ -1845,7 +1847,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1854,7 +1856,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: "The provided request conflicts with existing data"
           headers:
@@ -1863,7 +1865,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1872,7 +1874,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1902,7 +1904,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1911,7 +1913,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device profile by its unique name. This operation will fail if there are devices actively using the profile."
       responses:
@@ -1928,7 +1930,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1937,7 +1939,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: "The provided request conflicts with existing data"
           headers:
@@ -1946,7 +1948,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1955,7 +1957,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/manufacturer/{manufacturer}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1991,7 +1993,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2002,7 +2004,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/manufacturer/{manufacturer}/model/{model}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2044,7 +2046,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2055,7 +2057,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/model/{model}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2091,7 +2093,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2102,7 +2104,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceProfileResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceservice:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2127,7 +2129,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AddDeviceServiceResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/AddDeviceServiceResponse'
     patch:
       summary: "Allows updates to an existing device service"
       requestBody:
@@ -2147,7 +2151,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateDeviceServiceResponse'
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/UpdateDeviceServiceResponse'
   /deviceservice/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2178,7 +2184,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceServiceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2189,7 +2195,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceServiceResponse'
+                  $ref: '#/components/schemas/ErrorResponse'
   /deviceservice/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2220,7 +2226,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2229,7 +2235,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device service by ID"
       responses:
@@ -2246,7 +2252,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2255,7 +2261,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceservice/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2285,7 +2291,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2294,7 +2300,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       summary: "Delete a device service by its unique name"
       responses:
@@ -2311,7 +2317,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2320,7 +2326,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceservice/addressable/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2351,7 +2357,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -2360,7 +2366,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2369,7 +2375,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceservice/addressable/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2399,7 +2405,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -2408,7 +2414,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /metrics:
     get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
@@ -2430,7 +2436,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetricsResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -2452,7 +2458,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PingResponse'
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
     get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
@@ -2474,4 +2480,4 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/ErrorResponse'
