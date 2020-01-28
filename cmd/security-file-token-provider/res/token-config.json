@@ -113,7 +113,7 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/pki/tls/edgex-kong": {
+        "secret/edgex/edgex-security-proxy-setup/kong-tls": {
           "capabilities": [
             "list",
             "read",
@@ -135,17 +135,7 @@
     }
   },
   "edgex-security-proxy-setup": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/pki/tls/edgex-kong": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "edgex-security-file-token-provider": {
     "edgex_use_defaults": true
