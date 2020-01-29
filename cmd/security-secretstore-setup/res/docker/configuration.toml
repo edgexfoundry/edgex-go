@@ -26,7 +26,7 @@ File = './logs/security-secretstore-setup.log'
 scheme = "https"
 server = "edgex-vault"
 port = 8200
-certpath = "v1/secret/edgex/pki/tls/edgex-kong"
+certpath = "v1/secret/edgex/edgex-security-proxy-setup/kong-tls"
 cafilepath = "/tmp/edgex/secrets/ca/ca.pem"
 certfilepath = "/tmp/edgex/secrets/edgex-kong/server.crt"
 keyfilepath = "/tmp/edgex/secrets/edgex-kong/server.key"
@@ -38,7 +38,7 @@ tokenprovider = "/security-file-token-provider"
 tokenproviderargs = [ "-confdir", "res-file-token-provider" ]
 tokenprovidertype = "oneshot"
 tokenprovideradmintokenpath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
-revokeroottokens = false
+revokeroottokens = true
 
 [Startup]
 Duration = 30
