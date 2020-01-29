@@ -154,7 +154,12 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
-    GetConfigurationResponse:
+    ConfigRequest:
+      description: "A request associated with the /config endpoint."
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
+    ConfigResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
       description: "Provides a response containing the configuration for the targeted service."
@@ -165,6 +170,11 @@ components:
           type: string
       required:
       - config
+    MetricsRequest:
+      description: "A request associated with the /metrics endpoint."
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
     MetricsResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -249,6 +259,11 @@ components:
       properties:
         notification:
           $ref: '#/components/schemas/Notification'
+    PingRequest:
+      description: "A request associated with the /ping endpoint."
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -455,6 +470,11 @@ components:
         id:
           type: string
           format: uuid
+    VersionRequest:
+      description: "A request associated with the /version endpoint."
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -569,28 +589,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /config:
-    get:
-      summary: "Returns the current configuration of the service."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetConfigurationResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -940,50 +938,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /metrics:
-    get:
-      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetricsResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /ping:
-    get:
-      summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PingResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /subscription:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1565,9 +1519,154 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /config:
+    post:
+      summary: "Returns the current configuration of the service."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/ConfigRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/ConfigRequest'
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/ConfigResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /metrics:
+    post:
+      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/MetricsRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/MetricsRequest'
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/MetricsResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /ping:
+    post:
+      summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/PingRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/PingRequest'
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingResponse'
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/PingResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /version:
-    get:
+    post:
       summary: "A simple 'version' endpoint that will return the current version of the service"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/VersionRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/VersionRequest'
       responses:
         '200':
           description: "OK"
@@ -1578,8 +1677,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/VersionResponse'
+        '400':
+          description: "Bad request"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
