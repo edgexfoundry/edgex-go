@@ -1,0 +1,1136 @@
+openapi: 3.0.0
+info:
+  title: core-data
+  version: 1.1.0
+servers:
+- url: http://localhost:48080/api
+paths:
+  /v1/config:
+    get:
+      description: Fetch the current state of the service's configuration.
+      responses:
+        200:
+          description: The service's configuration as JSON document
+  /v1/event:
+    get:
+      description: Fetch all events with their associated readings. LimitExceededException
+        (HTTP 413) if the number of events exceeds the current max limit. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      responses:
+        200:
+          description: list of events
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/event'
+        413:
+          description: if the number of events exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Update the event data (not including updating the readings). NotFoundException
+        (HTTP 404) if the event cannot be found by id. ServiceException (HTTP 500)
+        for unknown or unanticipated issues.
+      requestBody:
+        $ref: '#/components/requestBodies/event'
+      responses:
+        200:
+          description: boolean on success of update request
+        400:
+          description: update request is invalid
+        404:
+          description: if the event cannot be found by id.
+        500:
+          description: for unknown or unanticipated issues.
+    post:
+      description: Add a new event (with its associated readings). Prefers the event
+        device is a device name but can also be a device id (database generated).
+        DataValidationException (HTTP 409) if the a reading is associated to a non-existent
+        value descriptor. ServiceException (HTTP 500) for unknown or unanticipated
+        issues.
+      requestBody:
+        $ref: '#/components/requestBodies/event'
+      responses:
+        200:
+          description: new event database generated id
+        400:
+          description: creation request is invalid
+        404:
+          description: if the a reading is associated to a non-existent value descriptor,
+            or if device verification is enabled and the device is not found.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/checksum/{checksum}:
+    put:
+      description: Update an existing event's pushed time
+      parameters:
+      - name: checksum
+        in: path
+        description: checksum value of the event provided by core-data via the message
+          bus
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: success no body returned
+        404:
+          description: if the event cannot be found by checksum.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/count:
+    get:
+      description: Return a count of the number of events in core data.  ServiceException
+        (HTTP 500) for unknown or unanticipated issues..
+      responses:
+        200:
+          description: number of events in the collection
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/count/{deviceId}:
+    get:
+      description: Return a count of the number of events in core data for a given
+        device - identified by id or name.  InternalServerError (HTTP 500) for unknown
+        or unanticipated issues..
+      parameters:
+      - name: deviceId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: number of events for the device
+        400:
+          description: query request is invalid
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/device/{deviceId}:
+    delete:
+      description: Delete all events (and their readings) associated to a device given
+        the device's id (either database generated id or name). ServiceException (HTTP
+        500) for unknown or unanticipated issues.   NotFoundException (HTTP 404) if
+        the meta data checks are on and no device is found for supplied id.
+      parameters:
+      - name: deviceId
+        in: path
+        description: the id (database generated id) or name of the device associated
+          to events
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: count of the number of events deleted
+        400:
+          description: could not unescape URL
+        404:
+          description: if the meta data checks are on and no device is found for supplied
+            id.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/device/{deviceId}/{limit}:
+    get:
+      description: 'Return list of events with their associated readings for a given
+        device, sorted by event modified date.  Newest events are at the top of list.  May
+        be an empty list if none are associated to the device.  Note: does not yet
+        handle device managers. LimitExceededException (HTTP 413) if the number of
+        events exceeds the current max limit. ServiceException (HTTP 500) for unknown
+        or unanticipated issues.  NotFoundException (HTTP 404) if the meta data checks
+        are on and no device is found for supplied id.'
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of events to fetch, must be < max limit
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: deviceId
+        in: path
+        description: the id (database generated id) or name of the device associated
+          to events
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of events associated to the matching device by id - limited
+            in size by the limit parameter
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/event'
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if the meta data checks are on and no device is found for supplied
+            id.
+        413:
+          description: if the number of events exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/id/{id}:
+    put:
+      description: Update the event to be pushed (out of EdgeX to an enterprise or
+        cloud system) by setting the pushed timestamp to the current time. NotFoundException
+        (HTTP 404) if the event cannot be found by id. ServiceException (HTTP 500)
+        for unknown or unanticipated issues.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean on success of update request
+        404:
+          description: if the event cannot be found by id
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Delete an event and all its readings given its database generated
+        id. NotFoundException (HTTP 404) if the event cannot be found by id. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean on success of deletion request
+        404:
+          description: if the event cannot be found by id.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/removeold/age/{age}:
+    delete:
+      description: Remove all old events (and associated readings) based on delimiting
+        age.  ServiceException (HTTP 500) for unknown or unanticipated issues.  Should
+        only be used by the scrubber micro service
+      parameters:
+      - name: age
+        in: path
+        description: minimum age in milliseconds (from created timestamp) an event
+          should be in order to be removed
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        200:
+          description: count of the number of events removed
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/scrub:
+    delete:
+      description: Remove all pushed events and their associated readings.ServiceException
+        (HTTP 500) for unknown or unanticipated issues.  Should only be used by the
+        scrubber micro service
+      responses:
+        200:
+          description: count of the number of events scrubbed
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/{id}:
+    get:
+      description: 'Fetch a specific event by database specified id - returning null
+        if none are found. Note: does not yet handle device managers. ServiceException
+        (HTTP 500) for unknown or unanticipated issues'
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: event
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/event'
+        404:
+          description: if the event cannot be found by id.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/event/{start}/{end}/{limit}:
+    get:
+      description: Return all events between a given begin and end date/time (in the
+        form of longs) sorted by event modified date.  Newest events are at the top
+        of list. LimitExceededException (HTTP 413) if the number of events exceeds
+        the current max limit. ServiceException (HTTP 500) for unknown or unanticipated
+        issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of events to fetch, must be < max limit
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: start
+        in: path
+        description: start date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: end
+        in: path
+        description: end date in long form
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        200:
+          description: list of events between the specified dates
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/event'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of events exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/ping:
+    get:
+      description: Test service providing an indication that the service is available.
+      responses:
+        200:
+          description: return value of "pong"
+        503:
+          description: for unknown or unanticipated issues
+  /v1/reading:
+    get:
+      description: Return list of all readings. Sorts by reading id. LimitExceededException
+        (HTTP 413) if the number of readings exceeds the current max limit. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      responses:
+        200:
+          description: list of all readings
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the reading.  Reading object needs to contain the database
+        generated id of the existing reading. NotFoundException (HTTP 404) if the
+        reading cannot be found by id. ServiceException (HTTP 500) for unknown or
+        unanticipated issues. DataValidationException if the associated value descriptor
+        is non-existent.
+      requestBody:
+        $ref: '#/components/requestBodies/reading'
+      responses:
+        200:
+          description: boolean indicating success of the update operation
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if the reading cannot be found by id
+        409:
+          description: if the associated value descriptor is non-existent.
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new reading. ServiceException (HTTP 500) for unknown or unanticipated
+        issues. DataValidationException (HTTP 409) if the associated value descriptor
+        is non-existent.
+      requestBody:
+        $ref: '#/components/requestBodies/reading'
+      responses:
+        200:
+          description: String id (database id) of the new Reading
+        400:
+          description: request is invalid or unparseable
+        409:
+          description: if the associated value descriptor is non-existent
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/count:
+    get:
+      description: Return a count of the number of readings in core dataServiceException
+        (HTTP 500) for unknown or unanticipated issues..
+      responses:
+        200:
+          description: number of readings in the collection
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/device/{deviceId}/{limit}:
+    get:
+      description: 'Return list of all readings for a given device, sorted by the
+        readings modified date.  Newest readings are at the top of list.  Note: does
+        not yet handle device managers. LimitExceededException (HTTP 413) if the number
+        of readings exceeds the current max limit. ServiceException (HTTP 500) for
+        unknown or unanticipated issues. NotFoundException (HTTP 404) if meta checks
+        are in place and if the device id or name does not match any existing devices.'
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings requested (not to exceed max limit)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: deviceId
+        in: path
+        description: device database generated id or device name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: List of readings for a device, could be an empty list if none
+            match
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if meta checks are in place and if the device id or name does
+            not match any existing devices
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: or unknown or unanticipated issues
+  /v1/reading/id/{id}:
+    delete:
+      description: Delete the reading from persistent storage. NotFoundException (HTTP
+        404) if the reading cannot be found by id. ServiceException (HTTP 500) for
+        unknown or unanticipated issues.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id of the reading to be deleted
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the delete operation
+        404:
+          description: if the reading cannot be found by id
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/label/{label}/{limit}:
+    get:
+      description: Return a list of readings with an associated value descriptor of
+        the label specified, sorted by the readings modified date.  Newest readings
+        are at the top of list. LimitExceededException (HTTP 413) if the number of
+        readings exceeds the current max limit. ServiceException (HTTP 500) for unknown
+        or unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings to return (must not exceed max limit)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: label
+        in: path
+        description: label that should be in matching Value Descriptor's label array
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of matching readings having value descriptor with the
+            associated label. Could be an empty list if none match.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/name/{name}/device/{device}/{limit}:
+    get:
+      description: Return a list of readings that are associated to a ValueDescripter
+        by name and Device by name (or id), sorted by the readings modified date.  Newest
+        readings are at the top of list.  LimitExceededException (HTTP 413) if the
+        number of readings exceeds the current max limit. ServiceException (HTTP 500)
+        for unknown or unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings to return (must not exceed max limit)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: name
+        in: path
+        description: name of the matching ValueDescriptor
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: device
+        in: path
+        description: name or id of the matching device (as the device is represented
+          in the associated event)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of readings matching on the value descriptor name and
+            device name (or id)
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/name/{name}/{limit}:
+    get:
+      description: Return a list of readings that are associated to a ValueDescripter
+        by name, sorted by the readings modified date.  Newest readings are at the
+        top of list.  LimitExceededException (HTTP 413) if the number of readings
+        exceeds the current max limit. ServiceException (HTTP 500) for unknown or
+        unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings to return (must not exceed max limit)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: name
+        in: path
+        description: name of the matching ValueDescriptor
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of readings matching on the value descriptor name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/type/{type}/{limit}:
+    get:
+      description: Return a list of readings with an associated value descriptor of
+        the type (IoTType) specified, sorted by the readings modified date.  Newest
+        readings are at the top of list. LimitExceededException (HTTP 413) if the
+        number of readings exceeds the current max limit. ServiceException (HTTP 500)
+        for unknown or unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings to be allowed to be returned
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: type
+        in: path
+        description: an IoTType in string form (one of I, B, F, S for integer, Boolean,
+          Floating point or String)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of matching readings having value descriptor of the types
+            specified. Could be an empty list if none match.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/uomlabel/{uomLabel}/{limit}:
+    get:
+      description: Return a list of readings with an associated value descriptor of
+        the UoM label specified, sorted by the readings modified date.  Newest readings
+        are at the top of list. LimitExceededException (HTTP 413) if the number of
+        readings exceeds the current max limit. ServiceException (HTTP 500) for unknown
+        or unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: exceed max limit)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: uomLabel
+        in: path
+        description: Unit of Measure label (UoMLabel) matching the ValueDescriptor
+          associated to the reading
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of matching readings having value descriptor with UoM
+            label specified
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/reading/{id}:
+    get:
+      description: Retrieve a reading by its database generated id.  NotFoundException
+        (HTTP 404) if reading not found by id.  ServiceException (HTTP 500) for unknown
+        or unanticipated issues
+      parameters:
+      - name: id
+        in: path
+        description: reading database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Reading
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        404:
+          description: if the reading cannot be found by id
+        500:
+          description: for unknown or unanticipated issues
+  /v1/reading/{start}/{end}/{limit}:
+    get:
+      description: Return a list of readings between two timestamps - limited by the
+        number specified in the limit parameter, sorted by the readings modified date.  Newest
+        readings are at the top of list. LimitExceededException (HTTP 413) if the
+        number of readings exceeds the current max limit. ServiceException (HTTP 500)
+        for unknown or unanticipated issues.
+      parameters:
+      - name: limit
+        in: path
+        description: maximum number of readings to be allowed to be returned
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: start
+        in: path
+        description: millisecond (long) timestamp of the beginning of the time
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: end
+        in: path
+        description: millisecond (long) timestamp of the end of the time rage
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        200:
+          description: list of matching readings in this range (limited by the limit
+            parameter)
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/reading'
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: if the number of readings exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor:
+    get:
+      description: Return all ValueDescriptor objects. LimitExceededException (HTTP
+        413) if the number of value descriptors exceeds the current max limit. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      responses:
+        200:
+          description: list of ValueDescriptors
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        413:
+          description: if the number of value descriptors exceeds the current max
+            limit
+        500:
+          description: for unknown or unanticipated issues.
+    put:
+      description: Update the ValueDescriptor identified by the id or name in the
+        object provided. Id is used first, name is used second for identification
+        purposes. ServiceException (HTTP 500) for unknown or unanticipated issues.
+        DataValidationException (HTTP 409) if the a formatting string of the value
+        descriptor is not a valid printf format. NotFoundException (404) if the value
+        descriptor cannot be located by the identifier.
+      requestBody:
+        $ref: '#/components/requestBodies/valueDescriptor'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if the value descriptor cannot be located by the identifier.
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new ValueDescriptor whose name must be unique. ServiceException
+        (HTTP 500) for unknown or unanticipated issues. DataValidationException (HTTP
+        409) if the a formatting string of the value descriptor is not a valid printf
+        format.
+      requestBody:
+        $ref: '#/components/requestBodies/valueDescriptor'
+      responses:
+        200:
+          description: database generated id of the new ValueDescriptor
+        400:
+          description: request is invalid or unparseable
+        409:
+          description: if the a formatting string of the value descriptor is not a
+            valid printf format or if the name is determined to not be unique with
+            regard to other value descriptors.
+        500:
+          description: for unknown or unanticipated issues
+  /v1/valuedescriptor/deviceid/{id}:
+    get:
+      description: Fetch all ValueDescriptors that are associated to a Device's command
+        set as either a put command parameter name or get/put response expected value.  NotFoundException
+        (HTTP 404) if the Device cannot be found by name.  ServiceException (HTTP
+        500) for unknown or unanticipated issues
+      parameters:
+      - name: id
+        in: path
+        description: database generated id of the device
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of ValueDescriptors
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if the device cannot be found by the id provided
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor/devicename/{name}:
+    get:
+      description: Fetch all ValueDescriptors that are associated to a Device's command
+        set as either a put command parameter name or get/put response expected value.  NotFoundException
+        (HTTP 404) if the Device cannot be found by name.  ServiceException (HTTP
+        500) for unknown or unanticipated issues
+      parameters:
+      - name: name
+        in: path
+        description: unique name of the device
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of ValueDescriptors
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if the device cannot be found by the name provided
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor/id/{id}:
+    delete:
+      description: Remove the ValueDescriptor designated by database generated identifier.
+        ServiceException (HTTP 500) for unknown or unanticipated issues. DataValidationException
+        (HTTP 409) if the value descriptor is still referenced in Readings. NotFoundException
+        (404) if the value descriptor cannot be located by the identifier.
+      parameters:
+      - name: id
+        in: path
+        description: Value descriptor database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: id is invalid or unparseable
+        404:
+          description: if the value descriptor cannot be located by the identifier.
+        409:
+          description: if the value descriptor is still referenced in Readings
+        500:
+          description: for unknown or unanticipated issues
+  /v1/valuedescriptor/label/{label}:
+    get:
+      description: Return ValueDescriptor objects with given label. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: label
+        in: path
+        description: tag or label
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of ValueDescriptor matching UoM Label
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        400:
+          description: request is invalid or unparseable
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor/name/{name}:
+    get:
+      description: Return ValueDescriptor object with given name. Could be null if
+        no value descriptors found by the name (name is unique across all value descriptors).  NotFoundException
+        (HTTP 404) if the value descriptor cannont be found by nmee.  ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: name
+        in: path
+        description: Unique name of the value descriptor
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: ValueDescriptor having the provided name, could be null if
+            none are found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if the value descriptor cannot be located by the name
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Remove the ValueDescriptor designated by name. ServiceException
+        (HTTP 500) for unknown or unanticipated issues. DataValidationException (HTTP
+        409) if the value descriptor is still referenced in Readings. NotFoundException
+        (404) if the value descriptor cannot be located by the identifier.
+      parameters:
+      - name: name
+        in: path
+        description: Unique name of the value descriptor
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: request is invalid or unparseable
+        404:
+          description: if the value descriptor cannot be located by the identifier
+        409:
+          description: if the value descriptor is still referenced in Readings
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor/uomlabel/{uomLabel}:
+    get:
+      description: Return ValueDescriptor objects with given UoM label. ServiceException
+        (HTTP 500) for unknown or unanticipated issues.
+      parameters:
+      - name: uomLabel
+        in: path
+        description: unit of measure
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of ValueDescriptor matching UoM Label
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/valueDescriptor'
+        400:
+          description: request is invalid or unparseable
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/valuedescriptor/usage:
+    get:
+      description: Get a list of value descripors and usage state. True if the value
+        descriptor is in use and should not be modified. Otherwise, false.
+      parameters:
+      - name: names
+        in: query
+        description: A comma separated list of value descriptor names for which to
+          perform the usage check.
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: list of ValueDescriptors and thier current usage state
+        400:
+          description: Malformed query parameters
+        413:
+          description: the maximum number of results has been exceeded
+        500:
+          description: for unknown or unanticipated issues
+  /v1/valuedescriptor/{id}:
+    get:
+      description: Fetch a specific ValueDescriptor by its database generated id.  NotFoundException
+        (HTTP 404) if the value descriptor cannot be found by id.  ServiceException
+        (HTTP 500) for unknown or unanticipated issues
+      parameters:
+      - name: id
+        in: path
+        description: database generated id for the value descriptor
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: ValueDescriptor
+        404:
+          description: if the value descriptor cannot be located by the identifier
+        500:
+          description: for unknown or unanticipated issues
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    event:
+      title: event
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        device:
+          title: device
+          type: string
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        origin:
+          title: origin
+          type: integer
+        pushed:
+          title: pushed
+          type: integer
+        readings:
+          title: readings
+          uniqueItems: false
+          type: array
+          items:
+            $ref: '#/components/schemas/reading'
+      description: Core device/sensor event
+    reading:
+      title: reading
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        pushed:
+          title: pushed
+          type: integer
+        value:
+          title: value
+          type: string
+      description: Core device/sensor reading
+    valueDescriptor:
+      title: valueDescriptor
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        defaultValue:
+          title: defaultValue
+          type: string
+        description:
+          title: description
+          type: string
+        formatting:
+          title: formatting
+          type: string
+        id:
+          title: id
+          type: string
+        labels:
+          title: labels
+          uniqueItems: false
+          type: array
+          items:
+            title: labels
+            type: string
+        max:
+          title: max
+          type: string
+        min:
+          title: min
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        type:
+          title: type
+          type: string
+        uomLabel:
+          title: uomLabel
+          type: string
+      description: Core and MetaData value descriptor - describes device/sensor data
+        sent and received
+  requestBodies:
+    event:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/event'
+      required: true
+    reading:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/reading'
+      required: true
+    valueDescriptor:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/valueDescriptor'
+      required: true

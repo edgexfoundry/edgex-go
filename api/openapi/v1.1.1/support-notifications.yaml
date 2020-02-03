@@ -1,0 +1,1293 @@
+openapi: 3.0.0
+info:
+  title: support-notifications
+  version: 1.1.0
+servers:
+- url: http://localhost:48060/api
+paths:
+  /cleanup:
+    delete:
+      description: Delete all the Notifications if the current timestamp minus their
+        last modification timestamp is less than a default age setting, and the corresponding
+        Transmissions will also be deleted.
+      responses:
+        202:
+          description: Return 202 Accepted status code without content when receiving
+            the request, because it is an asynchronous operation.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /cleanup/age/{age}:
+    delete:
+      description: Delete all the Notifications if the current timestamp minus their
+        last modification timestamp is less than the age parameter, and the corresponding
+        Transmissions will also be deleted.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of <<typeName>>, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        202:
+          description: Return 202 Accepted status code without content when receiving
+            the request, because it is an asynchronous operation.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification:
+    post:
+      description: Receive Alerts or Notifications.  If the severity is CRITICAL,
+        the Notifications are processed (distributed) immediately.  Or, the Notification
+        is processed in batch.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      responses:
+        202:
+          description: If Alerts and Notifications Service is available, it always
+            returns 202 Accepted to clients with the new ID to indicate the Notification
+            has been received.
+        409:
+          description: The slug is duplicate.  Please try another one.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/age/{age}:
+    delete:
+      description: Delete the proccessed Notifications if the current timestamp minus
+        their last modification timestamp is less than the age parameter, and the
+        corresponding Transmissions will also be deteled.  Please notice this API
+        is only for proccessed Notifications (status = PROCCESSED).  If the deletion
+        purpose includes each kind of Notifications, please refer to /cleanup API.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of Notification, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/end/{end}/{limit}:
+    get:
+      description: Query the Notifications by creation timestamp before end date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: End date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/labels/{labels}/{limit}:
+    get:
+      description: Query the Notifications by labels matching any one of them.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: labels
+        in: path
+        description: Accept multiple labels separated by comma.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/new/{limit}:
+    get:
+      description: Fetch the unprocessed Notifications (status = NEW).
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/sender/{sender}/{limit}:
+    get:
+      description: Query the Notifications by sender name with limited returned records.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: sender
+        in: path
+        description: The sender name of the Subscription, which could be partially
+          matched, and is case insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/slug/{slug}:
+    get:
+      description: Query a specific Notification by slug.
+      parameters:
+      - name: slug
+        in: path
+        description: Slug is a meaningful identifier provided by client, and is case
+          insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Notification
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Notification'
+        404:
+          description: The targeted resource is not found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: Delete a specific Notification by slug.
+      parameters:
+      - name: slug
+        in: path
+        description: Slug is a meaningful identifier provided by client, and is case
+          insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        404:
+          description: The targeted resource is not found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/start/{start}/end/{end}/{limit}:
+    get:
+      description: Query the Notifications by creation timestamp between start date
+        and end date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: start
+        in: path
+        description: Start date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: End date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/notification/start/{start}/{limit}:
+    get:
+      description: Query the Notifications by creation timestamp after start date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: start
+        in: path
+        description: Start date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Notification array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/NotificationArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/ping:
+    get:
+      description: Test service providing an indication that the service is available.
+      responses:
+        200:
+          description: Return value of "pong."
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription:
+    get:
+      description: List all Subscriptions.
+      responses:
+        200:
+          description: Return a Subscription array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubscriptionArray'
+    put:
+      description: Update a specific Subscription according to the slug in request
+        body, and the Boolean value "true" will be returned to indicate updating successfully.  If
+        the slug doesn't exit, the 404 NotFound error will be returned.
+      requestBody:
+        $ref: '#/components/requestBodies/Subscription'
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: Create a new Subscritpion.
+      requestBody:
+        $ref: '#/components/requestBodies/Subscription'
+      responses:
+        201:
+          description: Return the slug when the Subscription has been created successfully.
+        409:
+          description: The slug is duplicate.  Please try another one.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/categories/{categories}:
+    get:
+      description: Query the Subscription by subscribed categories matching any one
+        of them.
+      parameters:
+      - name: categories
+        in: path
+        description: The subscribed categories, accepting multiple categories separated
+          by comma.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Subscription array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubscriptionArray'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/categories/{categories}/labels/{labels}:
+    get:
+      description: Query the Subscription by subscribed categories and labels matching
+        any one of them.
+      parameters:
+      - name: categories
+        in: path
+        description: The subscribed categories, accepting multiple categories separated
+          by comma.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: labels
+        in: path
+        description: The subscribed labels, accepting multiple labels separated by
+          comma.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Subscription array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubscriptionArray'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/labels/{labels}:
+    get:
+      description: Query the Subscription by subscribed labels matching any one of
+        them.
+      parameters:
+      - name: labels
+        in: path
+        description: The subscribed labels, accepting multiple labels separated by
+          comma.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Subscription array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubscriptionArray'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/receiver/{receiver}:
+    get:
+      description: Query the Subscriptions by Receiver Name.
+      parameters:
+      - name: receiver
+        in: path
+        description: The receiver name of the Subscription, which could be partially
+          matched, and is case insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Subscription array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubscriptionArray'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/slug/{slug}:
+    get:
+      description: Query a specific Subscription by slug.
+      parameters:
+      - name: slug
+        in: path
+        description: Slug is a meaningful identifier provided by client, and is case
+          insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Subscription.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Subscription'
+        404:
+          description: The targeted resource is not found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: Delete a specific Subscription by slug.
+      parameters:
+      - name: slug
+        in: path
+        description: Slug is a meaningful identifier provided by client, and is case
+          insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        404:
+          description: The targeted resource is not found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subscription/{id}:
+    get:
+      description: Fetch a specific subscription by database specified id - returning
+        null if none are found. ServiceException (HTTP 500) for unknown or unanticipated
+        issues
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: subscription
+        404:
+          description: if the subscription cannot be found by id.
+        500:
+          description: for unknown or unanticipated issues.
+    delete:
+      description: Delete a subscription given its database generated ID. NotFoundException
+        (HTTP 404) if the subscription cannot be found by ID. ServiceException (HTTP
+        500) for unknown or unanticipated issues.
+      parameters:
+      - name: id
+        in: path
+        description: database generated id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean on success of deletion request
+        404:
+          description: if the subscription cannot be found by id.
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/transmission/acknowledged/age/{age}:
+    delete:
+      description: Delete all the acknowledged Transmissions (status = ACKNOWLEDGED)
+        if the current timestamp minus their last modification timestamp is less than
+        the age parameter.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of Transmission, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/end/{end}/{limit}:
+    get:
+      description: Query the Transmissions by creation timestamp before end date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: End date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/escalated/age/{age}:
+    delete:
+      description: Delete all the escalated Transmissions (status = ESCALATED) if
+        the current timestamp minus their last modification timestamp is less than
+        the age parameter.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of Transmission, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/escalated/{limit}:
+    get:
+      description: Query the escalated Transmissions (status = ESCALATED)
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/failed/age/{age}:
+    delete:
+      description: Delete all the failed Transmissions (status = FAILED and resendCount
+        >= resend limit) if the current timestamp minus their last modification timestamp
+        is less than the age parameter.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of Transmission, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/failed/{limit}:
+    get:
+      description: Query the failed Transmissions (status = FAILED)
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/sent/age/{age}:
+    delete:
+      description: Delete all the sent Transmissions (status = SENT) if the current
+        timestamp minus their last modification timestamp is less than the age parameter.
+      parameters:
+      - name: age
+        in: path
+        description: Specify the age of Transmission, and the format is in milliseconds.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return "True" to represent successful.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/slug/{slug}/start/{start}/end/{end}/{limit}:
+    get:
+      description: Query limited transmissions with specified slug and created date
+        range
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: slug
+        in: path
+        description: This is a Notification slug which is a meaningful identifier
+          provided by client, and it is case insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: start
+        in: path
+        description: Start date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: End date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: list of transmissions
+        400:
+          description: request is invalid or unparseable
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: for unknown or unanticipated issues.
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/slug/{slug}/{limit}:
+    get:
+      description: Query the Transmissions associating a specific Notification by
+        the Notification slug.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: slug
+        in: path
+        description: This is a Notification slug which is a meaningful identifier
+          provided by client, and it is case insensitive for query.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/start/{start}/end/{end}/{limit}:
+    get:
+      description: Query the Transmissions by creation timestamp between start date
+        and end date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: start
+        in: path
+        description: Start date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: end
+        in: path
+        description: End date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/transmission/start/{start}/{limit}:
+    get:
+      description: Query the Transmissions by creation timestamp after start date.
+      parameters:
+      - name: limit
+        in: path
+        description: The maximum number of records to fetch.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      - name: start
+        in: path
+        description: Start date in long form.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: number
+      responses:
+        200:
+          description: Return a Transmission array.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TransmissionArray'
+        413:
+          description: The assigned limit perameter exceeds the current max limit.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    Error:
+      title: Error Schema
+      required:
+      - error
+      - status
+      - timestamp
+      type: object
+      properties:
+        error:
+          type: string
+        exception:
+          type: string
+          description: The exception class in the code
+        message:
+          type: string
+        path:
+          type: string
+        status:
+          type: integer
+          description: HTTP status code
+        timestamp:
+          type: integer
+    Notification:
+      title: Notification Schema
+      required:
+      - category
+      - content
+      - sender
+      - severity
+      - slug
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+          - SECURITY
+          - HW_HEALTH
+          - SW_HEALTH
+        content:
+          type: string
+        created:
+          minimum: 0
+          type: integer
+          description: The creation timestamp
+        description:
+          type: string
+        id:
+          type: string
+          description: generated and used by system, and users can ignore this property
+        labels:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        modified:
+          minimum: 0
+          type: integer
+          description: The last modification timestamp
+        sender:
+          type: string
+        severity:
+          type: string
+          enum:
+          - CRITICAL
+          - NORMAL
+        slug:
+          type: string
+          description: A meaningful identifier provided by client
+        status:
+          type: string
+          enum:
+          - NEW
+          - PROCESSED
+          - ESCALATED
+    NotificationArray:
+      title: The Array of Notification
+      type: array
+      items:
+        $ref: '#/components/schemas/Notification'
+    Subscription:
+      title: Subscription Schema
+      required:
+      - channels
+      - receiver
+      - slug
+      type: object
+      properties:
+        channels:
+          uniqueItems: true
+          type: array
+          items:
+            type: object
+            anyOf:
+            - $ref: '#/components/schemas/RESTfulChannel'
+            - $ref: '#/components/schemas/EMAILChannel'
+        created:
+          minimum: 0
+          type: integer
+          description: The creation timestamp
+        description:
+          type: string
+        id:
+          type: string
+        modified:
+          minimum: 0
+          type: integer
+          description: The last modification timestamp
+        receiver:
+          type: string
+        slug:
+          type: string
+          description: A meaningful identifier provided by client
+        subscribedCategories:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - SECURITY
+            - HW_HEALTH
+            - SW_HEALTH
+        subscribedLabels:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    SubscriptionArray:
+      title: The Array of Subscription
+      type: array
+      items:
+        $ref: '#/components/schemas/Subscription'
+    Transmission:
+      title: Transmission Schema
+      required:
+      - channel
+      - notification
+      - receiver
+      - records
+      - resendCount
+      - status
+      type: object
+      properties:
+        channel:
+          type: object
+          oneOf:
+          - $ref: '#/components/schemas/RESTfulChannel'
+          - $ref: '#/components/schemas/EMAILChannel'
+        created:
+          minimum: 0
+          type: integer
+          description: The creation timestamp
+        id:
+          type: string
+        modified:
+          minimum: 0
+          type: integer
+          description: The last modification timestamp
+        notification:
+          $ref: '#/components/schemas/Notification'
+        receiver:
+          type: string
+        records:
+          minItems: 1
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/TransmissionRecord'
+        resendCount:
+          minimum: 0
+          type: integer
+        status:
+          type: string
+          enum:
+          - FAILED
+          - SENT
+          - ACKNOWLEDGED
+          - TRXESCALATED
+    TransmissionArray:
+      title: The Array of Transmission
+      type: array
+      items:
+        $ref: '#/components/schemas/Transmission'
+    EMAILChannel:
+      required:
+      - mailAddresses
+      - type
+      type: object
+      properties:
+        mailAddresses:
+          minItems: 1
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+          enum:
+          - EMAIL
+    RESTfulChannel:
+      required:
+      - type
+      - url
+      type: object
+      properties:
+        contentType:
+          type: string
+        httpMethod:
+          type: string
+          enum:
+          - POST
+          - PUT
+        type:
+          type: string
+          enum:
+          - REST
+        url:
+          type: string
+    TransmissionRecord:
+      required:
+      - sent
+      - status
+      type: object
+      properties:
+        response:
+          type: string
+        sent:
+          minimum: 0
+          type: integer
+          description: The sending timestamp
+        status:
+          type: string
+          enum:
+          - FAILED
+          - SENT
+          - ACKNOWLEDGED
+  requestBodies:
+    Subscription:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Subscription'
+      required: true

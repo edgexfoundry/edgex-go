@@ -1,0 +1,488 @@
+openapi: 3.0.0
+info:
+  title: support-scheduler
+  version: 1.1.0
+servers:
+- url: http://localhost:48085/api
+paths:
+  /v1/info/{name}:
+    get:
+      description: Return Interval matching given name (interval names should be unique).
+        May be null if no interval matches on the name provided. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if no Interval is found with the provided name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/interval'
+        404:
+          description: if no interval is found for the identifier provided.
+        500:
+          description: for unknown or unanticipated issues
+  /v1/interval:
+    get:
+      description: Return all intervals sorted by id. Returns Internal Service Error
+        (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of intervals
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/interval'
+        400:
+          description: for malformed or unparsable requests
+        413:
+          description: if the number of intervals exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update an Interval identified by the id or name in the object provided.
+        Id is used first, name is used second for identification purposes. Returns
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. DataValidationException
+        (HTTP // 409) if any the time or frequency strings are not properly formatted.
+        NotFoundException (HTTP 404) if no interval is found for the id.
+      requestBody:
+        $ref: '#/components/requestBodies/interval'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        409:
+          description: if the start, end, or frequency strings are not properly formatted
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new Interval - name must be unique. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. DataValidationException
+        (HTTP 409) if the cron expression string is not properly formatted.
+      requestBody:
+        $ref: '#/components/requestBodies/interval'
+      responses:
+        200:
+          description: database generated identifier for the new interval
+        400:
+          description: for malformed or unparsable requests
+        409:
+          description: if the start, end, or frequency strings are not properly formatted
+            or if the name is determined to not be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues
+  /v1/interval/name/{name}:
+    get:
+      description: Return Interval matching given name (interval names should be unique).
+        May be null if no interval matches on the name provided. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if no Interval is found with the provided name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval matching on name
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/interval'
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no interval is found for the identifier provided.
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the Interval designated by name. Internal Service Error
+        (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP 404)
+        if no Interval is found with the provided name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no interval is found for the name provided.
+        500:
+          description: for unknown or unanticipated issues
+  /v1/interval/{id}:
+    get:
+      description: Fetch a specific Interval by database generated id. May return
+        null if no interval with the id is found. Returns Internal Service Error (HTTP
+        500) for unknown or unanticipated issues. NotFoundException (HTTP 404) if
+        no Interval is found with the provided id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval matching on the id
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/interval'
+        404:
+          description: if no interval is found for the identifier provided.
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the Interval designated by database generated id. Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if no Interval is found with the provided id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no interval is found for the identifier provided.
+        503:
+          description: for unknown or unanticipated issues
+  /v1/intervalaction:
+    get:
+      description: Return all interval events sorted by id. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. Returns LimitExceededException
+        (HTTP 413) if the number returned exceeds the max limit.
+      responses:
+        200:
+          description: list of interval events
+        413:
+          description: if the number of intervals exceeds the current max limit.
+        500:
+          description: for unknown or unanticipated issues
+    put:
+      description: Update the IntervalAction identified by the id or name in the object
+        provided. Id is used first, name is used second for identification purposes.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        DataValidationException (HTTP 409) if an attempt to change the name is made
+        when the interval action is still being referenced by device reports. NotFoundException
+        (HTTP 404) if no interval is found for the identifier provided.
+      requestBody:
+        $ref: '#/components/requestBodies/intervalAction'
+      responses:
+        200:
+          description: boolean indicating success of the update
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no interval is found for the identifier provided.
+        409:
+          description: if an attempt to change the name is made when the interval
+            action is still being referenced by device reports
+        500:
+          description: for unknown or unanticipated issues
+    post:
+      description: Add a new IntervalAction - name must be unique. Returns Internal
+        Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if the action's associated interval is not found (referenced by
+        name). DataValidationException (HTTP 409) if the interval was not provided.
+      requestBody:
+        $ref: '#/components/requestBodies/intervalAction'
+      responses:
+        200:
+          description: database generated identifier for the new interval
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if the action's associated interval is not found (referenced
+            by name)
+        409:
+          description: if the interval was not provided or if the name is determined
+            to not be unique with regard to others
+        500:
+          description: for unknown or unanticipated issues or if interval action name
+            is a duplicate
+  /v1/intervalaction/name/{name}:
+    get:
+      description: Return IntervalActions matching given name (interval names should
+        be unique). May be null if no interval events matches on the name provided.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        NotFoundException (HTTP 404) if no IntervalAction is found with the provided
+        name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval action matching on name
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no IntervalAction is found with the provided name
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the IntervalAction designated by name. Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP
+        404) if no IntervalAction is found with the provided name. DataValidationException
+        (HTTP 409) if an attempt to delete a interval action still being referenced
+        by device reports.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no IntervalAction is found with the provided name
+        409:
+          description: if an attempt to delete a interval action still being referenced
+            by device reports
+        500:
+          description: for unknown or unanticipated issues
+  /v1/intervalaction/target/{name}:
+    get:
+      description: Return IntervalActions matching given name (interval names should
+        be unique). May be null if no interval events matches on the name provided.
+        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
+        NotFoundException (HTTP 404) if no IntervalAction is found with the provided
+        name.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval action matching on name
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no IntervalAction is found with the provided name
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the IntervalAction(s) designated by name. Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP
+        404) if no IntervalAction is found with the provided name. DataValidationException
+        (HTTP 409) if an attempt to delete a interval action still being referenced
+        by device reports.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        400:
+          description: for malformed or unparsable requests
+        404:
+          description: if no IntervalAction is found with the provided name
+        409:
+          description: if an attempt to delete a interval action still being referenced
+            by device reports
+        500:
+          description: for unknown or unanticipated issues
+  /v1/intervalaction/{id}:
+    get:
+      description: Fetch a specific IntervalAction by database generated id. May return
+        null if no interval action with the id is found. Returns Internal Service
+        Error (HTTP 500) for unknown or unanticipated issues. NotFoundException (HTTP
+        404) if no IntervalAction is found with the provided id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: interval action matching on the id
+        404:
+          description: if no IntervalAction is found with the provided id
+        500:
+          description: for unknown or unanticipated issues
+    delete:
+      description: Remove the IntervalAction designated by database generated id.
+        Internal Service Error (HTTP 500) for unknown or unanticipated issues. NotFoundException
+        (HTTP 404) if no IntervalAction is found with the provided id. DataValidationException
+        (HTTP 409) if an attempt to delete a interval action still being referenced
+        by device reports.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: boolean indicating success of the remove operation
+        404:
+          description: if no IntervalAction is found with the provided id
+        409:
+          description: if an attempt to delete a interval action still being referenced
+            by device reports
+        503:
+          description: for unknown or unanticipated issues
+  /v1/ping:
+    get:
+      description: ping
+      responses:
+        200:
+          description: Successful Response
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    interval:
+      title: interval
+      type: object
+      properties:
+        created:
+          title: created
+          type: integer
+        end:
+          title: end
+          type: integer
+        frequency:
+          title: frequency
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        start:
+          title: start
+          type: integer
+      description: meta data around anything that needs to be scheduled (frequency
+        with optional start and end times).
+    intervalAction:
+      title: intervalAction
+      required:
+      - target
+      type: object
+      properties:
+        parameters:
+          title: parameters
+          type: string
+        address:
+          title: address
+          type: string
+        created:
+          title: created
+          type: integer
+        httpmethod:
+          title: httpmethod
+          type: string
+        id:
+          title: id
+          type: string
+        interval:
+          title: interval
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        password:
+          title: password
+          type: string
+        path:
+          title: path
+          type: string
+        port:
+          title: port
+          type: integer
+        protocol:
+          title: protocol
+          type: string
+        publisher:
+          title: publisher
+          type: string
+        target:
+          title: target
+          type: string
+        topic:
+          title: topic
+          type: string
+        user:
+          title: user
+          type: string
+  requestBodies:
+    interval:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/interval'
+      required: true
+    intervalAction:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/intervalAction'
+      required: true
