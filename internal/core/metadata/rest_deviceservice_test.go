@@ -20,6 +20,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	metadataConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
@@ -47,6 +48,20 @@ var testDeviceServices = []contract.DeviceService{testDeviceService}
 var testOperatingState, _ = contract.GetOperatingState(contract.Enabled)
 var testAdminState, _ = contract.GetAdminState(contract.Unlocked)
 var testError = errors.New("some error")
+var testDeviceServiceLastUpdated = contract.DeviceService{
+	Id:           testDeviceServiceLastUpdatedId,
+	Name:         testDeviceServiceName,
+	LastReported: lastReported}
+var testDeviceServiceLastUpdatedId = "b3445cc6-87df-48f4-b8b0-587dc8a4e1c2"
+var testDeviceServiceLastUpdatedNotExist = contract.DeviceService{
+	Id:           testDeviceServiceLastUpdatedNotExistId,
+	Name:         testDeviceServiceName,
+	LastReported: lastReported}
+var testDeviceServiceLastUpdatedNotExistId = "0"
+
+const (
+	lastReported = 123546789
+)
 
 func TestGetAllDeviceServices(t *testing.T) {
 	tests := []struct {
@@ -90,7 +105,7 @@ func TestGetServiceByName(t *testing.T) {
 		{
 			"OK",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{testDeviceService, nil}},
 			}),
 			testDeviceServiceName,
 			http.StatusOK,
@@ -104,7 +119,7 @@ func TestGetServiceByName(t *testing.T) {
 		{
 			"Device service not found",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, db.ErrNotFound},
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
 			}),
 			testDeviceServiceName,
 			http.StatusNotFound,
@@ -112,7 +127,7 @@ func TestGetServiceByName(t *testing.T) {
 		{
 			"Device services lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, testError},
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, testError}},
 			}),
 			testDeviceServiceName,
 			http.StatusInternalServerError,
@@ -146,21 +161,21 @@ func TestGetServiceById(t *testing.T) {
 		{
 			"OK",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{testDeviceService, nil}},
 			}),
 			http.StatusOK,
 		},
 		{
 			"Device service not found",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, db.ErrNotFound},
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
 			}),
 			http.StatusNotFound,
 		},
 		{
 			"Device services lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, testError},
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, testError}},
 			}),
 			http.StatusInternalServerError,
 		},
@@ -188,8 +203,8 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		{
 			"OK",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", testDeviceServiceName, testAddressable, nil},
-				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
+				{"GetAddressableByName", []interface{}{testDeviceServiceName}, []interface{}{testAddressable, nil}},
+				{"GetDeviceServicesByAddressableId", []interface{}{testDeviceServiceId}, []interface{}{testDeviceServices, nil}},
 			}),
 			testDeviceServiceName,
 			http.StatusOK,
@@ -197,7 +212,7 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		{
 			"Addressable not found",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", testDeviceServiceName, contract.Addressable{}, db.ErrNotFound},
+				{"GetAddressableByName", []interface{}{testDeviceServiceName}, []interface{}{contract.Addressable{}, db.ErrNotFound}},
 			}),
 			testDeviceServiceName,
 			http.StatusNotFound,
@@ -205,7 +220,7 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		{
 			"No name provided",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+				{"GetAddressableByName", []interface{}{""}, []interface{}{contract.Addressable{}, db.ErrNotFound}},
 			}),
 			"",
 			http.StatusNotFound,
@@ -219,7 +234,7 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		{
 			"Addressable lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", testDeviceServiceName, contract.Addressable{}, testError},
+				{"GetAddressableByName", []interface{}{testDeviceServiceName}, []interface{}{contract.Addressable{}, testError}},
 			}),
 			testDeviceServiceName,
 			http.StatusInternalServerError,
@@ -227,8 +242,8 @@ func TestGetServiceByAddressableName(t *testing.T) {
 		{
 			"Device services lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", testDeviceServiceName, testAddressable, nil},
-				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
+				{"GetAddressableByName", []interface{}{testDeviceServiceName}, []interface{}{testAddressable, nil}},
+				{"GetDeviceServicesByAddressableId", []interface{}{testDeviceServiceId}, []interface{}{nil, testError}},
 			}),
 			testDeviceServiceName,
 			http.StatusInternalServerError,
@@ -261,8 +276,8 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		{
 			"OK",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
-				{"GetDeviceServicesByAddressableId", testDeviceServiceId, testDeviceServices, nil},
+				{"GetAddressableById", []interface{}{testDeviceServiceId}, []interface{}{testAddressable, nil}},
+				{"GetDeviceServicesByAddressableId", []interface{}{testDeviceServiceId}, []interface{}{testDeviceServices, nil}},
 			}),
 			testDeviceServiceId,
 			http.StatusOK,
@@ -270,7 +285,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		{
 			"No ID provided",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableByName", "", contract.Addressable{}, db.ErrNotFound},
+				{"GetAddressableByName", []interface{}{""}, []interface{}{contract.Addressable{}, db.ErrNotFound}},
 			}),
 			"",
 			http.StatusNotFound,
@@ -278,7 +293,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		{
 			"Addressable not found",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, db.ErrNotFound},
+				{"GetAddressableById", []interface{}{testDeviceServiceId}, []interface{}{contract.Addressable{}, db.ErrNotFound}},
 			}),
 			testDeviceServiceId,
 			http.StatusNotFound,
@@ -286,7 +301,7 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		{
 			"Addressable lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableById", testDeviceServiceId, contract.Addressable{}, testError},
+				{"GetAddressableById", []interface{}{testDeviceServiceId}, []interface{}{contract.Addressable{}, testError}},
 			}),
 			testDeviceServiceId,
 			http.StatusInternalServerError,
@@ -294,8 +309,8 @@ func TestGetServiceByAddressableId(t *testing.T) {
 		{
 			"Device services lookup error",
 			createMockWithOutlines([]mockOutline{
-				{"GetAddressableById", testDeviceServiceId, testAddressable, nil},
-				{"GetDeviceServicesByAddressableId", testDeviceServiceId, nil, testError},
+				{"GetAddressableById", []interface{}{testDeviceServiceId}, []interface{}{testAddressable, nil}},
+				{"GetDeviceServicesByAddressableId", []interface{}{testDeviceServiceId}, []interface{}{nil, testError}},
 			}),
 			testDeviceServiceId,
 			http.StatusInternalServerError,
@@ -331,8 +346,9 @@ func TestUpdateOpStateById(t *testing.T) {
 		{"OK",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", operatingStateEnabled, nil, nil}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{operatingStateEnabled}, []interface{}{nil, nil}},
+			}),
 			http.StatusOK,
 		},
 		{"Invalid operating state",
@@ -343,20 +359,23 @@ func TestUpdateOpStateById(t *testing.T) {
 		{"Device service not found",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, db.ErrNotFound}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+			}),
 			http.StatusNotFound,
 		},
 		{"Device service lookup error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, testError}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, testError}},
+			}),
 			http.StatusInternalServerError,
 		},
 		{"Update error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", operatingStateEnabled, testError, nil}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{operatingStateEnabled}, []interface{}{testError, nil}},
+			}),
 			http.StatusInternalServerError,
 		},
 	}
@@ -386,8 +405,9 @@ func TestUpdateOpStateByName(t *testing.T) {
 		{"OK",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", operatingStateEnabled, nil, nil}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{operatingStateEnabled}, []interface{}{nil, nil}},
+			}),
 			http.StatusOK,
 		},
 		{"Invalid operating state",
@@ -403,20 +423,23 @@ func TestUpdateOpStateByName(t *testing.T) {
 		{"Device service not found",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, db.ErrNotFound}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+			}),
 			http.StatusNotFound,
 		},
 		{"Device service lookup error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, testError}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, testError}},
+			}),
 			http.StatusInternalServerError,
 		},
 		{"Update error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, OPSTATE: ENABLED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", operatingStateEnabled, testError, nil}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{operatingStateEnabled}, []interface{}{testError, nil}},
+			}),
 			http.StatusInternalServerError,
 		},
 	}
@@ -450,8 +473,9 @@ func TestUpdateAdminStateById(t *testing.T) {
 		{"OK",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, nil, nil}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{adminStateEnabled}, []interface{}{nil, nil}},
+			}),
 			http.StatusOK,
 		},
 		{"Invalid admin state",
@@ -462,20 +486,23 @@ func TestUpdateAdminStateById(t *testing.T) {
 		{"Device service not found",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, db.ErrNotFound}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+			}),
 			http.StatusNotFound,
 		},
 		{"Device service lookup error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, contract.DeviceService{}, testError}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{contract.DeviceService{}, testError}},
+			}),
 			http.StatusInternalServerError,
 		},
 		{"Update error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{ID: testDeviceServiceId, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceById", testDeviceServiceId, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, testError, nil}}),
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceId}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{adminStateEnabled}, []interface{}{testError, nil}},
+			}),
 			http.StatusInternalServerError,
 		},
 	}
@@ -509,8 +536,9 @@ func TestUpdateAdminStateByName(t *testing.T) {
 		{"OK",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, nil, nil}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{adminStateEnabled}, []interface{}{nil, nil}},
+			}),
 			http.StatusOK,
 		},
 		{"Invalid admin state",
@@ -526,20 +554,23 @@ func TestUpdateAdminStateByName(t *testing.T) {
 		{"Device service not found",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, db.ErrNotFound}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+			}),
 			http.StatusNotFound,
 		},
 		{"Device service lookup error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, contract.DeviceService{}, testError}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{contract.DeviceService{}, testError}},
+			}),
 			http.StatusInternalServerError,
 		},
 		{"Update error",
 			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceService, map[string]string{NAME: testDeviceServiceName, ADMINSTATE: UNLOCKED}),
 			createMockWithOutlines([]mockOutline{
-				{"GetDeviceServiceByName", testDeviceServiceName, testDeviceService, nil},
-				{"UpdateDeviceService", adminStateEnabled, testError, nil}}),
+				{"GetDeviceServiceByName", []interface{}{testDeviceServiceName}, []interface{}{testDeviceService, nil}},
+				{"UpdateDeviceService", []interface{}{adminStateEnabled}, []interface{}{testError, nil}},
+			}),
 			http.StatusInternalServerError,
 		},
 	}
@@ -552,6 +583,72 @@ func TestUpdateAdminStateByName(t *testing.T) {
 				tt.dbMock,
 				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
+				return
+			}
+		})
+	}
+}
+
+func TestUpdateServiceLastReportedById(t *testing.T) {
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"ok",
+			createDeviceServiceRequestWithBody(
+				http.MethodPut, testDeviceServiceLastUpdated, map[string]string{ID: testDeviceServiceLastUpdatedId, LASTREPORTED: strconv.Itoa(lastReported)}),
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceLastUpdatedId}, []interface{}{testDeviceServiceLastUpdated, nil}},
+				{"UpdateDeviceService", []interface{}{testDeviceServiceLastUpdated}, []interface{}{nil, nil}},
+			}),
+			http.StatusOK,
+		},
+		{
+			"request validation error",
+			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceServiceLastUpdated, map[string]string{ID: testDeviceServiceLastUpdatedId, LASTREPORTED: ""}),
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceLastUpdatedId}, []interface{}{testDeviceServiceLastUpdated, testError}},
+				{"UpdateDeviceService", []interface{}{testDeviceServiceLastUpdated}, []interface{}{nil, testError}},
+			}),
+			http.StatusBadRequest,
+		},
+		{
+			"device service lookup error",
+			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceServiceLastUpdatedNotExist, map[string]string{ID: testDeviceServiceLastUpdatedNotExistId, LASTREPORTED: strconv.Itoa(lastReported)}),
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceLastUpdatedNotExistId}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+				{"UpdateDeviceService", []interface{}{testDeviceServiceLastUpdatedNotExist}, []interface{}{contract.DeviceService{}, db.ErrNotFound}},
+			}),
+			http.StatusNotFound,
+		},
+		{
+			"update service last reported error",
+			createDeviceServiceRequestWithBody(http.MethodPut, testDeviceServiceLastUpdated, map[string]string{ID: testDeviceServiceLastUpdatedId, LASTREPORTED: strconv.Itoa(lastReported)}),
+			createMockWithOutlines([]mockOutline{
+				{"GetDeviceServiceById", []interface{}{testDeviceServiceLastUpdatedId}, []interface{}{testDeviceServiceLastUpdated, nil}},
+				{"UpdateDeviceService", []interface{}{testDeviceServiceLastUpdated}, []interface{}{testError}},
+			}),
+			http.StatusServiceUnavailable,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			loggerMock := logger.NewMockClient()
+			restUpdateServiceLastReportedById(
+				rr,
+				tt.request,
+				loggerMock,
+				tt.dbMock,
+				errorconcept.NewErrorHandler(loggerMock))
+			response := rr.Result()
+
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
 				return
