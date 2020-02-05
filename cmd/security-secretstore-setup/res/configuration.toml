@@ -13,7 +13,7 @@
 #
 #################################################################################
 
-# This is a TOML config file for EdgeX secret-securitystore-setup service.
+# This is a TOML config file for EdgeX security-secretstore-setup service.
 
 [Writable]
 LogLevel = 'DEBUG'
