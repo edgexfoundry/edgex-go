@@ -149,8 +149,8 @@ func TestAddDeviceProfile(t *testing.T) {
 			"OK",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
-				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusOK,
@@ -159,8 +159,8 @@ func TestAddDeviceProfile(t *testing.T) {
 			"OK with value descriptor management",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfileValidated, TestDeviceProfileID, nil},
-				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusOK,
@@ -169,7 +169,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			"Value descriptor management service client error",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
-				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{types.ErrServiceClient{StatusCode: http.StatusTeapot}},
 			http.StatusTeapot,
@@ -178,7 +178,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			"Value descriptor management service other error",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
-				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{TestError},
 			http.StatusInternalServerError,
@@ -201,8 +201,8 @@ func TestAddDeviceProfile(t *testing.T) {
 			"Empty device profile name",
 			createRequestWithBody(http.MethodPost, emptyName),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
-				{"GetDeviceProfileByName", "", contract.DeviceProfile{}, db.ErrNotFound},
+				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
+				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusBadRequest,
@@ -211,8 +211,8 @@ func TestAddDeviceProfile(t *testing.T) {
 			"Unsuccessful database call",
 			createRequestWithBody(http.MethodPost, TestDeviceProfile),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", TestDeviceProfileValidated, "", TestError},
-				{"GetDeviceProfileByName", TestDeviceProfileName, contract.DeviceProfile{}, db.ErrNotFound},
+				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{"", TestError}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
 			MockValueDescriptorClient{},
 			http.StatusInternalServerError,
@@ -933,7 +933,7 @@ func TestAddProfileByYaml(t *testing.T) {
 			"OK",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
 			}),
 			http.StatusOK,
 		},
@@ -965,7 +965,7 @@ func TestAddProfileByYaml(t *testing.T) {
 			"Duplicate profile name",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", dp, "", db.ErrNotUnique},
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", db.ErrNotUnique}},
 			}),
 			http.StatusConflict,
 		},
@@ -973,7 +973,7 @@ func TestAddProfileByYaml(t *testing.T) {
 			"Empty device profile name",
 			createDeviceProfileRequestWithFile(emptyBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
 			}),
 			http.StatusBadRequest,
 		},
@@ -981,7 +981,7 @@ func TestAddProfileByYaml(t *testing.T) {
 			"Unsuccessful database call",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", dp, "", TestError},
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
 			}),
 			http.StatusInternalServerError,
 		},
@@ -1025,7 +1025,7 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			"OK",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", dp, TestDeviceProfileID, nil},
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
 			}),
 			http.StatusOK,
 		},
@@ -1039,15 +1039,16 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			"Empty device profile name",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyBody)),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", emptyName, "", db.ErrNameEmpty},
+				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
 			}),
+
 			http.StatusBadRequest,
 		},
 		{
 			"Unsuccessful database call",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", dp, "", TestError},
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
 			}),
 			http.StatusInternalServerError,
 		},
@@ -1270,7 +1271,7 @@ func createDBClientWithOutlines(outlines []mockOutline) interfaces.DBClient {
 	dbMock := mocks.DBClient{}
 
 	for _, o := range outlines {
-		dbMock.On(o.methodName, o.arg).Return(o.ret, o.err)
+		dbMock.On(o.methodName, o.arg...).Return(o.ret...)
 	}
 
 	return &dbMock
