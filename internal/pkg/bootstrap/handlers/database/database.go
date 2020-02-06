@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/memory"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
@@ -43,29 +42,26 @@ type httpServer interface {
 
 // Database contains references to dependencies required by the database bootstrap implementation.
 type Database struct {
-	httpServer             httpServer
-	database               interfaces.Database
-	isCoreData             bool
-	forceMemoryPersistence bool
+	httpServer httpServer
+	database   interfaces.Database
+	isCoreData bool
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database interfaces.Database, forceMemoryPersistence bool) Database {
+func NewDatabase(httpServer httpServer, database interfaces.Database) Database {
 	return Database{
-		httpServer:             httpServer,
-		database:               database,
-		isCoreData:             false,
-		forceMemoryPersistence: forceMemoryPersistence,
+		httpServer: httpServer,
+		database:   database,
+		isCoreData: false,
 	}
 }
 
 // NewDatabaseForCoreData is a factory method that returns an initialized Database receiver struct.
-func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database, forceMemoryPersistence bool) Database {
+func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database) Database {
 	return Database{
-		httpServer:             httpServer,
-		database:               database,
-		isCoreData:             true,
-		forceMemoryPersistence: forceMemoryPersistence,
+		httpServer: httpServer,
+		database:   database,
+		isCoreData: true,
 	}
 }
 
@@ -73,10 +69,6 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database,
 func (d Database) newDBClient(
 	lc logger.LoggingClient,
 	credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
-
-	if d.forceMemoryPersistence {
-		return memory.NewClient(), nil
-	}
 
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
