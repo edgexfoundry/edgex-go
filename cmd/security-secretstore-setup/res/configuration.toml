@@ -13,7 +13,7 @@
 #
 #################################################################################
 
-# This is a TOML config file for EdgeX secret-securitystore-setup service.
+# This is a TOML config file for EdgeX security-secretstore-setup service.
 
 [Writable]
 LogLevel = 'DEBUG'
@@ -23,20 +23,22 @@ EnableRemote = false
 File = './logs/security-secretstore-setup.log'
 
 [SecretService]
-scheme = "https"
-server = "edgex-vault"
-port = 8200
-certpath = "v1/secret/edgex/edgex-security-proxy-setup/kong-tls"
-cafilepath = "/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"
-certfilepath = "/vault/config/pki/EdgeXFoundryCA/edgex-kong.pem"
-keyfilepath = "/vault/config/pki/EdgeXFoundryCA/edgex-kong.priv.key"
-tokenfolderpath = "/vault/config/assets"
-tokenfile = "resp-init.json"
-vaultsecretshares = 5
-vaultsecretthreshold = 3
-tokenprovider = ""
-tokenproviderargs = [ "-confdir", "res/token-file-provider" ]
-tokenprovidertype = "oneshot"
+Scheme = "https"
+Server = "edgex-vault"
+Port = 8200
+CertPath = "v1/secret/edgex/edgex-security-proxy-setup/kong-tls"
+CaFilePath = "/tmp/edgex/secrets/ca/ca.pem"
+CertFilePath = "/tmp/edgex/secrets/edgex-kong/server.crt"
+KeyFilePath = "/tmp/edgex/secrets/edgex-kong/server.key"
+TokenFolderPath = "/vault/config/assets"
+TokenFile = "resp-init.json"
+VaultSecretShares = 5
+VaultSecretThreshold = 3
+TokenProvider = "/security-file-token-provider"
+TokenProviderArgs = [ "-confdir", "res-file-token-provider" ]
+TokenProviderType = "oneshot"
+TokenProviderAdminTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
+RevokeRootTokens = true
 
 [Startup]
 Duration = 30
