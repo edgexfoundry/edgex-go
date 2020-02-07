@@ -86,7 +86,8 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 				Port:     configuration.MessageQueue.Port,
 				Protocol: configuration.MessageQueue.Protocol,
 			},
-			Type: configuration.MessageQueue.Type,
+			Type:     configuration.MessageQueue.Type,
+			Optional: configuration.MessageQueue.Optional,
 		})
 
 	if err != nil {
