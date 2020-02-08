@@ -65,8 +65,12 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		}
 
 		// Service unknown to SMA, so ask the Registry whether `serviceName` is available.
-		if err := e.registryClient.IsServiceAvailable(serviceName); err != nil {
+		ok, err := e.registryClient.IsServiceAvailable(serviceName)
+		if err != nil {
 			return "", err
+		}
+		if !ok {
+			return "", fmt.Errorf("service %s is not available", serviceName)
 		}
 
 		e.loggingClient.Info(fmt.Sprintf("Registry responded with %s available", serviceName))

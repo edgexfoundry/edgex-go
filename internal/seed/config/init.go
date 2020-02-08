@@ -21,10 +21,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-configuration/configuration"
+	"github.com/edgexfoundry/go-mod-configuration/pkg/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/pkg/types"
-	"github.com/edgexfoundry/go-mod-registry/registry"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 )
@@ -32,12 +32,12 @@ import (
 // Global variables
 var Configuration *ConfigurationStruct
 var LoggingClient logger.LoggingClient
-var Registry registry.Client
+var ConfigClient configuration.Client
 
 // The purpose of Retry is different here than in other services. In this case, we use a retry in order
 // to initialize the RegistryClient that will be used to write configuration information. Other services
 // use Retry to read their information. Config-seed writes information.
-func Retry(configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch chan error) {
+func Retry(configDir, profileDir string, configProviderUrl string, timeout int, wait *sync.WaitGroup, ch chan error) {
 	until := time.Now().Add(time.Millisecond * time.Duration(timeout))
 	for time.Now().Before(until) {
 		var err error
@@ -52,16 +52,16 @@ func Retry(configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch c
 				LoggingClient = logger.NewClient(clients.ConfigSeedServiceKey, Configuration.EnableRemoteLogging, logTarget, Configuration.LoggingLevel)
 			}
 		}
-		//Check to verify Registry connectivity
-		if Registry == nil {
-			Registry, err = initRegistryClient("")
+		//Check to verify Configuration Provider connectivity
+		if ConfigClient == nil {
+			ConfigClient, err = initConfigClient("", configProviderUrl)
 
 			if err != nil {
 				ch <- err
 			}
 		} else {
-			if !Registry.IsAlive() {
-				ch <- fmt.Errorf("Registry (%s) is not running", Configuration.Registry.Type)
+			if !ConfigClient.IsAlive() {
+				ch <- fmt.Errorf("Configuration Provider (%s) is not running", configProviderUrl)
 			} else {
 				break
 			}
@@ -76,7 +76,7 @@ func Retry(configDir, profileDir string, timeout int, wait *sync.WaitGroup, ch c
 }
 
 func Init() bool {
-	if Configuration != nil && Registry != nil {
+	if Configuration != nil && ConfigClient != nil {
 		return true
 	}
 	return false
@@ -88,28 +88,31 @@ func initializeConfiguration(configDir, profileDir string) (*ConfigurationStruct
 	if err != nil {
 		return nil, err
 	}
-	conf.Registry = config.OverrideFromEnvironment(conf.Registry)
 	return conf, nil
 }
 
-func initRegistryClient(serviceKey string) (registry.Client, error) {
-	registryConfig := types.Config{
-		Host:       Configuration.Registry.Host,
-		Port:       Configuration.Registry.Port,
-		Type:       Configuration.Registry.Type,
-		ServiceKey: serviceKey,
+func initConfigClient(serviceKey string, configProviderUrl string) (configuration.Client, error) {
+	if configProviderUrl == "" {
+		return nil, fmt.Errorf("Configuation Provder URL must be specified via command line or environment variable")
 	}
-	registryClient, err := registry.NewRegistryClient(registryConfig)
+
+	providerConfig := types.ServiceConfig{}
+	if err := providerConfig.PopulateFromUrl(configProviderUrl); err != nil {
+		return nil, err
+	}
+	providerConfig.BasePath = serviceKey
+
+	configClient, err := configuration.NewConfigurationClient(providerConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create New Registry: %v", err)
 	}
 
-	if !registryClient.IsAlive() {
+	if !configClient.IsAlive() {
 		return nil, fmt.Errorf("registry is not available")
 
 	}
 
-	return registryClient, nil
+	return configClient, nil
 }
 
 // Helper method to get the body from the response after making the request

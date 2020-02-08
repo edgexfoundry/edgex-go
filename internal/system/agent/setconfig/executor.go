@@ -20,12 +20,12 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
+
+	"github.com/edgexfoundry/go-mod-configuration/configuration"
+	"github.com/edgexfoundry/go-mod-configuration/pkg/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
 	responses "github.com/edgexfoundry/go-mod-core-contracts/responses/configuration"
-
-	"github.com/edgexfoundry/go-mod-registry/pkg/types"
-	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // executor contains references to dependencies required to execute a set configuration request.
@@ -59,14 +59,13 @@ func (e executor) Do(service string, sc requests.SetConfigRequest) responses.Set
 
 	// create a registryClient specific to the service and connect to the registry as if we are that service so
 	// that we can update the service's corresponding key based on the request we received.
-	var serviceSpecificRegistryClient registry.Client
-	serviceSpecificRegistryClient, err := registry.NewRegistryClient(
-		types.Config{
-			Host:       e.configuration.Registry.Host,
-			Port:       e.configuration.Registry.Port,
-			Type:       e.configuration.Registry.Type,
-			Stem:       internal.ConfigRegistryStemCore + internal.ConfigMajorVersion,
-			ServiceKey: service,
+	var serviceSpecificConfigClient configuration.Client
+	serviceSpecificConfigClient, err := configuration.NewConfigurationClient(
+		types.ServiceConfig{
+			Host:     e.configuration.Registry.Host,
+			Port:     e.configuration.Registry.Port,
+			Type:     e.configuration.Registry.Type,
+			BasePath: internal.ConfigStemCore + internal.ConfigMajorVersion + service,
 		})
 	if err != nil {
 		return createErrorResponse("unable to create new registry client")
@@ -74,14 +73,14 @@ func (e executor) Do(service string, sc requests.SetConfigRequest) responses.Set
 
 	// Validate whether the key exists.
 	key := strings.Replace(sc.Key, ".", "/", -1)
-	exists, err := serviceSpecificRegistryClient.ConfigurationValueExists(key)
+	exists, err := serviceSpecificConfigClient.ConfigurationValueExists(key)
 	switch {
 	case err != nil:
 		return createErrorResponse(err.Error())
 	case !exists:
 		return createErrorResponse("key does not exist")
 	default:
-		if err := serviceSpecificRegistryClient.PutConfigurationValue(key, []byte(sc.Value)); err != nil {
+		if err := serviceSpecificConfigClient.PutConfigurationValue(key, []byte(sc.Value)); err != nil {
 			return createErrorResponse("unable to update key")
 		}
 
