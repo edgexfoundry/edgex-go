@@ -26,7 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/commandline"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
@@ -34,7 +34,9 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	"github.com/gorilla/mux"
 )
 
@@ -48,8 +50,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 	//      ....
 	//      flags.Parse(os.Args[1:])
 	//
-	flags := commandline.NewDefaultCommonFlags("")
-	flags.Parse(os.Args[1:])
+	f := flags.New()
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -63,7 +65,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 	bootstrap.Run(
 		ctx,
 		cancel,
-		flags,
+		f,
 		clients.CoreCommandServiceKey,
 		internal.ConfigStemCore+internal.ConfigMajorVersion,
 		configuration,

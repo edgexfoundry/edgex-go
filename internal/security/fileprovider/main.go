@@ -24,11 +24,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/commandline"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
 	"github.com/gorilla/mux"
 )
 
@@ -43,8 +45,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	//      flags.Parse(os.Args[1:])
 	//
 
-	flags := commandline.NewDefaultCommonFlags("")
-	flags.Parse(os.Args[1:])
+	f := flags.New()
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -58,7 +60,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	bootstrap.Run(
 		ctx,
 		cancel,
-		flags,
+		f,
 		clients.SecurityFileTokenProviderServiceKey,
 		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
