@@ -101,7 +101,7 @@ apps:
       CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
       - bin/snapcraft-preload
     plugs:
       - network
@@ -398,7 +398,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createuser should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
   psql-any:
     adapter: full
@@ -422,7 +422,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createuser should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
   createdb:
     adapter: full
@@ -435,7 +435,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createdb should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
 
 parts:
@@ -493,15 +493,13 @@ parts:
     stage-packages:
       - to amd64:
           - lib32stdc++6
-  gosu:
-    source: https://github.com/tianon/gosu.git
-    source-tag: "1.11"
-    plugin: go
-    go-importpath: github.com/tianon/gosu
-    build-snaps: []
-    after: [go]
-    build-environment:
-      - CGO_ENABLED: "0"
+  drop-user:
+    source: snap/local/parts/drop-user
+    plugin: make
+    build-packages:
+    - build-essential
+    organize:
+      drop: bin/drop
   postgres:
     plugin: nil
     source: snap/local/build-helpers
