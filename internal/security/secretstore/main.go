@@ -28,10 +28,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/commandline"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
@@ -43,22 +44,21 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	var insecureSkipVerify bool
 	var vaultInterval int
 
-	additionalUsage :=
-		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
-			"    --vaultInterval=<seconds>       Indicates how long the program will pause between vault initialization attempts until it succeeds"
-
 	// All common command-line flags have been moved to bootstrap. Service specific flags are add here,
 	// but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
 	// Service specific used is passed below.
-	flags := commandline.NewDefaultCommonFlags(additionalUsage)
+	f := flags.NewWithUsage(
+		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
+			"    --vaultInterval=<seconds>       Indicates how long the program will pause between vault initialization attempts until it succeeds",
+	)
 
 	if len(os.Args) < 2 {
-		flags.Help()
+		f.Help()
 	}
 
-	flags.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
-	flags.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
-	flags.Parse(os.Args[1:])
+	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
+	f.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -70,7 +70,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	bootstrap.Run(
 		ctx,
 		cancel,
-		flags,
+		f,
 		clients.SecuritySecretStoreSetupServiceKey,
 		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,

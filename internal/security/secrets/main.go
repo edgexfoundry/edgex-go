@@ -36,8 +36,8 @@ func Main(ctx context.Context, cancel context.CancelFunc) (*config.Configuration
 
 	// Common Command-line flags have been moved to command.CommonFlags, but this service doesn't use all
 	// the common flags so we are using our own implementation of the CommonFlags interface
-	flags := command.NewCommonFlags()
-	flags.Parse(os.Args[1:])
+	f := command.NewCommonFlags()
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -51,7 +51,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) (*config.Configuration
 	bootstrap.Run(
 		ctx,
 		cancel,
-		flags,
+		f,
 		clients.SecuritySecretsSetupServiceKey,
 		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
