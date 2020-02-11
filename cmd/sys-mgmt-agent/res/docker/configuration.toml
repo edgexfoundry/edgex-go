@@ -24,7 +24,7 @@ Port = 48090
 Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the System Management Agent Service'
-Timeout = 10000
+Timeout = 20000
 FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
 
 [Registry]
