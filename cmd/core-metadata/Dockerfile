@@ -38,5 +38,5 @@ EXPOSE $APP_PORT
 WORKDIR /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/core-metadata /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/core-metadata","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-metadata/res/configuration.toml /res/configuration.toml
+ENTRYPOINT ["/core-metadata","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]

@@ -13,7 +13,6 @@ debug
 .security-secrets-setup.complete
 
 # binary files
-cmd/config-seed/config-seed
 cmd/core-command/core-command
 cmd/core-data/core-data
 cmd/core-metadata/core-metadata

@@ -57,7 +57,6 @@ Upon installation, the following EdgeX services are automatically and immediatel
 * core-data
 * core-command
 * core-metadata
-* core-config-seed
 * security-services (see [note below](https://github.com/edgexfoundry/edgex-go/tree/master/snap#security-services))
 
 The following services are disabled by default:

@@ -6,8 +6,8 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/cloudflare/gokey v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.24
-	github.com/edgexfoundry/go-mod-configuration v0.0.0
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.26
+	github.com/edgexfoundry/go-mod-configuration v0.0.3
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.52
 	github.com/edgexfoundry/go-mod-messaging v0.1.14
 	github.com/edgexfoundry/go-mod-registry v0.1.17
@@ -17,11 +17,9 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/mux v1.7.1
 	github.com/imdario/mergo v0.3.6
-	github.com/magiconair/properties v1.8.0
-	github.com/pelletier/go-toml v1.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.5.1
 	github.com/ugorji/go v1.1.4
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.2.8

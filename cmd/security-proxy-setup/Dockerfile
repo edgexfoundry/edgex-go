@@ -25,7 +25,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 WORKDIR /edgex
 
-COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/docker/configuration.toml res/configuration.toml
+COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/configuration.toml res/configuration.toml
 
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
 

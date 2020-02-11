@@ -74,29 +74,15 @@ apps:
     command: bin/start-consul.sh
     daemon: forking
     plugs: [network, network-bind]
-  core-config-seed:
-    adapter: none
-    after: [consul]
-    command: >-
-      bin/config-seed
-      --cmd $SNAP_DATA/config
-      -confdir $SNAP_DATA/config/config-seed/res
-      --props $SNAP_DATA/config/config-seed/res/properties
-      $REGISTRY_ARG
-    environment:
-      REGISTRY_ARG: "--registry=consul://localhost:8500"
-    daemon: oneshot
-    start-timeout: 15m
-    plugs: [network, network-bind]
   redis:
     adapter: full
-    after: [core-config-seed]
+    after: [consul]
     command: bin/redis-server $SNAP_DATA/redis/redis.conf
     daemon: simple
     plugs: [network, network-bind]
   mongod:
     adapter: full
-    after: [core-config-seed]
+    after: [consul]
     command: >-
       bin/mongod
       --dbpath $SNAP_DATA/mongo/db
@@ -154,7 +140,6 @@ apps:
     after:
       - consul
       - security-secrets-setup
-      - core-config-seed
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
     environment:
@@ -196,7 +181,6 @@ apps:
   core-data:
     adapter: full
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
@@ -211,7 +195,6 @@ apps:
   core-metadata:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
@@ -223,7 +206,6 @@ apps:
   core-command:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
@@ -235,7 +217,6 @@ apps:
   support-logging:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
@@ -247,7 +228,6 @@ apps:
   support-notifications:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
@@ -259,7 +239,6 @@ apps:
   support-scheduler:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
@@ -272,7 +251,6 @@ apps:
     adapter: full
     after:
       - app-service-configurable
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/support-rulesengine-wrapper.sh
@@ -283,7 +261,6 @@ apps:
   sys-mgmt-agent:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
@@ -294,7 +271,6 @@ apps:
   device-virtual:
     adapter: none
     after:
-      - core-config-seed
       - edgex-mongo
       - security-proxy-setup
       - core-data
@@ -322,10 +298,6 @@ apps:
     adapter: full
     command: bin/redis-cli
     plugs: [home, removable-media, network]
-  push-config:
-    adapter: full
-    command: bin/push-config.sh
-    plugs: [network, network-bind]
   mongo:
     adapter: full
     command: bin/mongo
@@ -669,7 +641,6 @@ parts:
 
       # copy service binaries
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
-      install -DT "./cmd/config-seed/config-seed" "$SNAPCRAFT_PART_INSTALL/bin/config-seed"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
       install -DT "./cmd/core-metadata/core-metadata" "$SNAPCRAFT_PART_INSTALL/bin/core-metadata"
       install -DT "./cmd/support-logging/support-logging" "$SNAPCRAFT_PART_INSTALL/bin/support-logging"
@@ -685,7 +656,6 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-command/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-data/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/"
@@ -694,18 +664,6 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/"
-      install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
-
-      # handle application.properties for the remaining java services
-      cat "./cmd/config-seed/res/properties/edgex-support-rulesengine/application.properties" | \
-        sed -e s:edgex/rules:\$SNAP_DATA/support-rulesengine/rules: \
-            -e s:edgex/templates:\$SNAP_DATA/support-rulesengine/templates: > \
-       "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/application.properties"
-
-      cat "./cmd/config-seed/res/configuration.toml" | \
-        sed -e s:./logs/edgex-config-seed.log:\$SNAP_COMMON/config-seed.log: \
-            -e s:'http\://localhost\:48061/api/v1/logs':: > \
-       "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/configuration.toml"
 
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
@@ -803,9 +761,7 @@ parts:
       cp "./cmd/security-file-token-provider/res/token-config.json" \
         "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
-      # FIXME: temporarily using docker configuration as there was never a native configuration.toml added.
-      # As docker configuration.toml files may go away completely, wait for this change to happen.
-      cat "./cmd/security-secretstore-setup/res-file-token-provider/docker/configuration.toml" | \
+      cat "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" | \
         sed -e s:./logs/security-file-token-provider.log:\$SNAP_COMMON/security-file-token-provider.log: \
             -e "s@Server = \"edgex-vault\"@Server = \"localhost\"@" \
             -e "s@ServerName = \"edgex-vault\"@ServerName = \"localhost\"@" \
@@ -826,8 +782,6 @@ parts:
              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-data/Attribution.txt"
       install -DT "./cmd/core-metadata/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/core-metadata/Attribution.txt"
-      install -DT "./cmd/config-seed/Attribution.txt" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/Attribution.txt"
       install -DT "./cmd/support-logging/Attribution.txt" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-logging/Attribution.txt"
       install -DT "./cmd/support-notifications/Attribution.txt" \
@@ -848,8 +802,6 @@ parts:
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-notifications/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/support-scheduler/LICENSE"
-      install -DT "./LICENSE" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/config-seed/LICENSE"
       install -DT "./LICENSE" \
               "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/sys-mgmt-agent/LICENSE"
 

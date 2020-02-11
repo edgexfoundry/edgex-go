@@ -39,8 +39,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 # Copy over the SMA executable bits.
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/docker/configuration.toml /res/docker/configuration.toml
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/docker/configuration.toml /res/configuration.toml
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/configuration.toml
 
 # Copy over the golang "executor" executable.
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
@@ -49,7 +48,7 @@ RUN apk --no-cache add py-pip
 RUN pip install docker-compose==1.23.2
 RUN apk --no-cache add curl
 
-ENTRYPOINT ["/sys-mgmt-agent","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/sys-mgmt-agent","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]
 
 # Following (commented-out) line is a life-saving DEBUG statement.
 # ENTRYPOINT tail -f /dev/null
