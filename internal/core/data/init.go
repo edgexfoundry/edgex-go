@@ -23,6 +23,7 @@ import (
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
@@ -30,8 +31,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
@@ -51,32 +50,36 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
-	lc := container.LoggingClientFrom(dic.Get)
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
-
-	// initialize clients required by service.
 	registryClient := container.RegistryFrom(dic.Get)
-	mdc := metadata.NewDeviceClient(
-		types.EndpointParams{
-			ServiceKey:  clients.CoreMetaDataServiceKey,
-			Path:        clients.ApiDeviceRoute,
-			UseRegistry: registryClient != nil,
-			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    configuration.Service.ClientMonitor,
-		},
-		endpoint.Endpoint{RegistryClient: &registryClient})
-	msc := metadata.NewDeviceServiceClient(
-		types.EndpointParams{
-			ServiceKey:  clients.CoreMetaDataServiceKey,
-			Path:        clients.ApiDeviceServiceRoute,
-			UseRegistry: registryClient != nil,
-			Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-			Interval:    configuration.Service.ClientMonitor,
-		},
-		endpoint.Endpoint{RegistryClient: &registryClient})
+
+	mdc := metadata.NewDeviceClient(urlclient.New(
+		registryClient != nil,
+		endpoint.New(
+			ctx,
+			wg,
+			&registryClient,
+			clients.CoreMetaDataServiceKey,
+			clients.ApiDeviceRoute,
+			configuration.Service.ClientMonitor,
+		),
+		configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
+	))
+	msc := metadata.NewDeviceServiceClient(urlclient.New(
+		registryClient != nil,
+		endpoint.New(
+			ctx,
+			wg,
+			&registryClient,
+			clients.CoreMetaDataServiceKey,
+			clients.ApiDeviceServiceRoute,
+			configuration.Service.ClientMonitor,
+		),
+		configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
+	))
 
 	// Create the messaging client
 	msgClient, err := messaging.NewMessageClient(
@@ -90,6 +93,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 			Optional: configuration.MessageQueue.Optional,
 		})
 
+	lc := container.LoggingClientFrom(dic.Get)
 	if err != nil {
 		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 		return false

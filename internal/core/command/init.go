@@ -23,6 +23,7 @@ import (
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
@@ -30,8 +31,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/gorilla/mux"
 )
 
@@ -48,7 +47,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
-func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
@@ -58,15 +57,18 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
 		container.MetadataDeviceClientName: func(get di.Get) interface{} {
-			return metadata.NewDeviceClient(
-				types.EndpointParams{
-					ServiceKey:  clients.CoreMetaDataServiceKey,
-					Path:        clients.ApiDeviceRoute,
-					UseRegistry: registryClient != nil,
-					Url:         configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute,
-					Interval:    configuration.Service.ClientMonitor,
-				},
-				endpoint.Endpoint{RegistryClient: &registryClient})
+			return metadata.NewDeviceClient(urlclient.New(
+				registryClient != nil,
+				endpoint.New(
+					ctx,
+					wg,
+					&registryClient,
+					clients.CoreMetaDataServiceKey,
+					clients.ApiDeviceRoute,
+					configuration.Service.ClientMonitor,
+				),
+				configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
+			))
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(lc)

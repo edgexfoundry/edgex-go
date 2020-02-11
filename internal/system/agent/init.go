@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
@@ -33,8 +34,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/gorilla/mux"
 )
 
@@ -51,7 +50,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
-func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
@@ -108,21 +107,25 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		},
 	})
 
-	// initialize clients required by service.
 	generalClients := container.GeneralClientsFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
+
 	for serviceKey, serviceName := range config.ListDefaultServices() {
 		generalClients.Set(
 			serviceKey,
-			general.NewGeneralClient(
-				types.EndpointParams{
-					ServiceKey:  serviceKey,
-					Path:        "/",
-					UseRegistry: registryClient != nil,
-					Url:         configuration.Clients[serviceName].Url(),
-					Interval:    internal.ClientMonitorDefault,
-				},
-				endpoint.Endpoint{RegistryClient: &registryClient}))
+			general.NewGeneralClient(urlclient.New(
+				registryClient != nil,
+				endpoint.New(
+					ctx,
+					&sync.WaitGroup{},
+					&registryClient,
+					serviceKey,
+					"/",
+					internal.ClientMonitorDefault,
+				),
+				configuration.Clients[serviceName].Url(),
+			)),
+		)
 	}
 
 	return true

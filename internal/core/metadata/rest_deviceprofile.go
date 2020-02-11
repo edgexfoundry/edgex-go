@@ -56,7 +56,7 @@ func restGetAllDeviceProfiles(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(&res)
+	_ = json.NewEncoder(w).Encode(&res)
 }
 
 func restAddDeviceProfile(
@@ -119,7 +119,7 @@ func restUpdateDeviceProfile(
 	}
 
 	if configuration.Writable.EnableValueDescriptorManagement {
-		vdOp := device_profile.NewUpdateValueDescriptorExecutor(from, dbClient, vdc, lc, r.Context())
+		vdOp := device_profile.NewUpdateValueDescriptorExecutor(r.Context(), from, dbClient, vdc, lc)
 		err := vdOp.Execute()
 		if err != nil {
 			errorHandler.HandleManyVariants(
@@ -179,7 +179,7 @@ func restGetProfileByProfileId(
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restDeleteProfileByProfileId(
@@ -382,7 +382,7 @@ func restGetProfileByModel(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProfileWithLabel(
@@ -411,7 +411,7 @@ func restGetProfileWithLabel(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProfileByManufacturerModel(
@@ -445,7 +445,7 @@ func restGetProfileByManufacturerModel(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProfileByManufacturer(
@@ -473,7 +473,7 @@ func restGetProfileByManufacturer(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProfileByName(
@@ -498,7 +498,7 @@ func restGetProfileByName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetYamlProfileByName(
@@ -533,14 +533,6 @@ func restGetYamlProfileByName(
 	w.Write(out)
 }
 
-/*
- * Implementation: https://groups.google.com/forum/#!topic/golang-nuts/EZHtFOXA8UE
- * Response:
- * 	- 200: database generated identifier for the new device profile
- *	- 400: YAML file is empty
- *	- 409: an associated command's name is a duplicate for the profile or if the name is determined to not be uniqe with regard to others
- * 	- 503: Server Error
- */
 func restGetYamlProfileById(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -594,15 +586,15 @@ func notifyProfileAssociates(
 		return err
 	}
 
-	// Get the services for each device
+	// Get the services for each dev
 	// Use map as a Set
 	dsMap := map[string]models.DeviceService{}
 	ds := []models.DeviceService{}
-	for _, device := range d {
+	for _, dev := range d {
 		// Only add if not there
-		if _, ok := dsMap[device.Service.Id]; !ok {
-			dsMap[device.Service.Id] = device.Service
-			ds = append(ds, device.Service)
+		if _, ok := dsMap[dev.Service.Id]; !ok {
+			dsMap[dev.Service.Id] = dev.Service
+			ds = append(ds, dev.Service)
 		}
 	}
 

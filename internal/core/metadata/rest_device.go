@@ -59,7 +59,7 @@ func restGetAllDevices(
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(&devices)
+	_ = json.NewEncoder(w).Encode(&devices)
 }
 
 // Post a new device
@@ -195,7 +195,7 @@ func restGetDevicesWithLabel(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetDeviceByProfileId(
@@ -205,7 +205,7 @@ func restGetDeviceByProfileId(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var pid string = vars[PROFILEID]
+	var pid = vars[PROFILEID]
 
 	// Check if the device profile exists
 	_, err := dbClient.GetDeviceProfileById(pid)
@@ -221,7 +221,7 @@ func restGetDeviceByProfileId(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetDeviceByServiceId(
@@ -231,7 +231,7 @@ func restGetDeviceByServiceId(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var sid string = vars[SERVICEID]
+	var sid = vars[SERVICEID]
 
 	// Check if the device service exists
 	_, err := dbClient.GetDeviceServiceById(sid)
@@ -247,7 +247,7 @@ func restGetDeviceByServiceId(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 // If the result array is empty, don't return http.NotFound, just return empty array
@@ -279,7 +279,7 @@ func restGetDeviceByServiceName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetDeviceByProfileName(
@@ -310,7 +310,7 @@ func restGetDeviceByProfileName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetDeviceById(
@@ -320,7 +320,7 @@ func restGetDeviceById(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var did string = vars[ID]
+	var did = vars[ID]
 
 	res, err := dbClient.GetDeviceById(did)
 	if err != nil {
@@ -328,10 +328,10 @@ func restGetDeviceById(
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
-//Shouldn't need "rest" in any of these methods. Adding it here for consistency right now.
+// Shouldn't need "rest" in any of these methods. Adding it here for consistency right now.
 func restCheckForDevice(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -340,9 +340,9 @@ func restCheckForDevice(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	token := vars[ID] //referring to this as "token" for now since the source variable is double purposed
+	token := vars[ID] // referring to this as "token" for now since the source variable is double purposed
 
-	//Check for name first since we're using that meaning by default.
+	// Check for name first since we're using that meaning by default.
 	dev, err := dbClient.GetDeviceByName(token)
 	if err != nil {
 		if err != db.ErrNotFound {
@@ -353,7 +353,7 @@ func restCheckForDevice(
 		}
 	}
 
-	//If lookup by name failed, see if we were passed the ID
+	// If lookup by name failed, see if we were passed the ID
 	if len(dev.Name) == 0 {
 		if dev, err = dbClient.GetDeviceById(token); err != nil {
 			errorHandler.HandleManyVariants(
@@ -369,12 +369,12 @@ func restCheckForDevice(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(dev)
+	_ = json.NewEncoder(w).Encode(dev)
 }
 
 func decodeState(r *http.Request) (mode string, state string, err error) {
-	var admin admin.UpdateRequest
-	var ops operating.UpdateRequest
+	var adminReq admin.UpdateRequest
+	var opsReq operating.UpdateRequest
 
 	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -383,7 +383,7 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 
 	var errMsg string
 	decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
-	err = decoder.Decode(&admin)
+	err = decoder.Decode(&adminReq)
 	if err != nil {
 		switch err := err.(type) {
 		case models.ErrContractInvalid:
@@ -392,12 +392,12 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 			return "", "", err
 		}
 	} else {
-		return ADMINSTATE, string(admin.AdminState), nil
+		return ADMINSTATE, string(adminReq.AdminState), nil
 	}
 
 	// In this case, the supplied request was not for the AdminState. Try OperatingState.
 	decoder = json.NewDecoder(bytes.NewBuffer(bodyBytes))
-	err = decoder.Decode(&ops)
+	err = decoder.Decode(&opsReq)
 	if err != nil {
 		switch err := err.(type) {
 		case models.ErrContractInvalid:
@@ -406,7 +406,7 @@ func decodeState(r *http.Request) (mode string, state string, err error) {
 			return "", "", err
 		}
 	} else {
-		return OPSTATE, string(ops.OperatingState), nil
+		return OPSTATE, string(opsReq.OperatingState), nil
 	}
 
 	// In this case, the request we were given in completely invalid
@@ -445,7 +445,7 @@ func restSetDeviceStateById(
 	}
 
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, r.Context(), lc, dbClient, nc, configuration)
+	_ = notifyDeviceAssociates(d, http.MethodPut, r.Context(), lc, dbClient, nc, configuration)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -486,7 +486,7 @@ func restSetDeviceStateByDeviceName(
 
 	ctx := r.Context()
 	// Notify
-	notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
+	_ = notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -511,7 +511,7 @@ func restDeleteDeviceById(
 	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
-	var did string = vars[ID]
+	var did = vars[ID]
 
 	// Check if the device exists
 	d, err := dbClient.GetDeviceById(did)
@@ -613,7 +613,7 @@ func deleteAssociatedReportsForDevice(
 			errorHandler.Handle(w, err, errorconcept.Common.DeleteError)
 			return err
 		}
-		notifyDeviceReportAssociates(report, http.MethodDelete, lc, dbClient)
+		_ = notifyDeviceReportAssociates(report, http.MethodDelete, lc, dbClient)
 	}
 
 	return nil
@@ -629,8 +629,8 @@ func restSetDeviceLastConnectedById(
 	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
-	var did string = vars[ID]
-	var vlc string = vars[LASTCONNECTED]
+	var did = vars[ID]
+	var vlc = vars[LASTCONNECTED]
 	lastConnected, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
@@ -712,7 +712,7 @@ func restSetDeviceLastConnectedByName(
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
-	var vlc string = vars[LASTCONNECTED]
+	var vlc = vars[LASTCONNECTED]
 	lastConnected, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
@@ -752,7 +752,7 @@ func restSetDeviceLastConnectedByNameNotify(
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
-	var vlc string = vars[LASTCONNECTED]
+	var vlc = vars[LASTCONNECTED]
 	lastConnected, err := strconv.ParseInt(vlc, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
@@ -802,7 +802,7 @@ func setLastConnected(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
+		_ = notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
 	}
 
 	return nil
@@ -818,8 +818,8 @@ func restSetDeviceLastReportedById(
 	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
-	var did string = vars[ID]
-	var vlr string = vars[LASTREPORTED]
+	var did = vars[ID]
+	var vlr = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
@@ -863,8 +863,8 @@ func restSetDeviceLastReportedByIdNotify(
 	configuration *config.ConfigurationStruct) {
 
 	vars := mux.Vars(r)
-	var did string = vars[ID]
-	var vlr string = vars[LASTREPORTED]
+	var did = vars[ID]
+	var vlr = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
@@ -909,7 +909,7 @@ func restSetDeviceLastReportedByName(
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	var vlr string = vars[LASTREPORTED]
+	var vlr = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
@@ -958,7 +958,7 @@ func restSetDeviceLastReportedByNameNotify(
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	var vlr string = vars[LASTREPORTED]
+	var vlr = vars[LASTREPORTED]
 	lr, err := strconv.ParseInt(vlr, 10, 64)
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
@@ -1008,7 +1008,7 @@ func setLastReported(
 	}
 
 	if notify {
-		notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
+		_ = notifyDeviceAssociates(d, http.MethodPut, ctx, lc, dbClient, nc, configuration)
 	}
 
 	return nil
@@ -1032,7 +1032,7 @@ func restGetDeviceByName(
 		return
 	}
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 // Notify the associated device service for the device
@@ -1074,7 +1074,7 @@ func postNotification(
 		// Make the notification
 		notification := notifications.Notification{
 			Slug:        configuration.Notifications.Slug + strconv.FormatInt(db.MakeTimestamp(), 10),
-			Content:     configuration.Notifications.Content + name + "-" + string(action),
+			Content:     configuration.Notifications.Content + name + "-" + action,
 			Category:    notifications.SW_HEALTH,
 			Description: configuration.Notifications.Description,
 			Labels:      []string{configuration.Notifications.Label},
@@ -1082,6 +1082,6 @@ func postNotification(
 			Severity:    notifications.NORMAL,
 		}
 
-		nc.SendNotification(notification, ctx)
+		_ = nc.SendNotification(ctx, notification)
 	}
 }
