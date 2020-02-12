@@ -14,17 +14,18 @@
 package internal
 
 const (
-	BootTimeoutDefault         = BootTimeoutSecondsDefault * 1000
-	BootTimeoutSecondsDefault  = 30
-	BootRetrySecondsDefault    = 1
-	ClientMonitorDefault       = 15000
-	ConfigFileName             = "configuration.toml"
-	ConfigRegistryStemCore     = "edgex/core/"
-	ConfigRegistryStemSecurity = "edgex/security/"
-	ConfigMajorVersion         = "1.0/"
-	LogDurationKey             = "duration"
+	BootTimeoutDefault        = BootTimeoutSecondsDefault * 1000
+	BootTimeoutSecondsDefault = 30
+	BootRetrySecondsDefault   = 1
+	ClientMonitorDefault      = 15000
+	ConfigFileName            = "configuration.toml"
+	ConfigStemCore            = "edgex/core/"
+	ConfigStemSecurity        = "edgex/security/"
+	ConfigMajorVersion        = "1.0/"
+	LogDurationKey            = "duration"
 )
 
 const (
-	WritableKey = "/Writable"
+	ConfigProviderEnvVar = "edgex_configuration_provider"
+	WritableKey          = "/Writable"
 )

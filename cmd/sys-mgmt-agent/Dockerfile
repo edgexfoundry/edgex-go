@@ -49,7 +49,7 @@ RUN apk --no-cache add py-pip
 RUN pip install docker-compose==1.23.2
 RUN apk --no-cache add curl
 
-ENTRYPOINT ["/sys-mgmt-agent", "--registry","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/sys-mgmt-agent","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
 
 # Following (commented-out) line is a life-saving DEBUG statement.
 # ENTRYPOINT tail -f /dev/null

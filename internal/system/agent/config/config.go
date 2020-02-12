@@ -90,7 +90,7 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 	return c.Writable.LogLevel
 }
 
-// SetLogLevel updates the log level in the ConfigurationStruct.
-func (c *ConfigurationStruct) SetRegistryInfo(registryInfo bootstrapConfig.RegistryInfo) {
-	c.Registry = registryInfo
+// GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
+func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
+	return c.Registry
 }

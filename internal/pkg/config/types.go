@@ -45,6 +45,10 @@ type MessageQueueInfo struct {
 	Type string
 	// Indicates the topic the data is published/subscribed
 	Topic string
+	// Provides additional configuration properties which do not fit within the existing field.
+	// Typically the key is the name of the configuration property and the value is a string representation of the
+	// desired value for the configuration property.
+	Optional map[string]string
 }
 
 func (m MessageQueueInfo) Uri() string {

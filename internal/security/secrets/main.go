@@ -17,36 +17,27 @@ package secrets
 
 import (
 	"context"
-	"flag"
-	"fmt"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) (*config.ConfigurationStruct, int) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-	var configDir string
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-	flag.Usage = usage.HelpCallbackSecuritySetup
-	flag.Parse()
-
-	if flag.NArg() < 1 {
-		fmt.Println("Please specify subcommand for " + clients.SecuritySecretsSetupServiceKey)
-		flag.Usage()
-		return nil, contract.StatusCodeExitNormal
-	}
+	// Common Command-line flags have been moved to command.CommonFlags, but this service doesn't use all
+	// the common flags so we are using our own implementation of the CommonFlags interface
+	f := command.NewCommonFlags()
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -60,11 +51,9 @@ func Main(ctx context.Context, cancel context.CancelFunc) (*config.Configuration
 	bootstrap.Run(
 		ctx,
 		cancel,
-		configDir,
-		bootstrap.EmptyProfileDir,
-		internal.ConfigFileName,
-		bootstrap.DoNotUseRegistry,
+		f,
 		clients.SecuritySecretsSetupServiceKey,
+		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
 		startupTimer,
 		dic,
