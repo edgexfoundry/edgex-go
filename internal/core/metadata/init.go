@@ -58,30 +58,34 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 			return errorconcept.NewErrorHandler(bootstrapContainer.LoggingClientFrom(get))
 		},
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
-			return coredata.NewValueDescriptorClient(urlclient.New(
-				registryClient != nil,
-				endpoint.New(
-					ctx,
-					wg,
-					&registryClient,
-					clients.CoreDataServiceKey,
-					clients.ApiValueDescriptorRoute,
-					configuration.Service.ClientMonitor),
-				configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
-			))
+			return coredata.NewValueDescriptorClient(
+				urlclient.New(
+					registryClient != nil,
+					endpoint.New(
+						ctx,
+						wg,
+						&registryClient,
+						clients.CoreDataServiceKey,
+						clients.ApiValueDescriptorRoute,
+						configuration.Service.ClientMonitor),
+					configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
+				),
+			)
 		},
 		container.NotificationsClientName: func(get di.Get) interface{} {
-			return notifications.NewNotificationsClient(urlclient.New(
-				registryClient != nil,
-				endpoint.New(
-					ctx,
-					wg,
-					&registryClient,
-					clients.SupportNotificationsServiceKey,
-					clients.ApiNotificationRoute,
-					configuration.Service.ClientMonitor),
-				configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
-			))
+			return notifications.NewNotificationsClient(
+				urlclient.New(
+					registryClient != nil,
+					endpoint.New(
+						ctx,
+						wg,
+						&registryClient,
+						clients.SupportNotificationsServiceKey,
+						clients.ApiNotificationRoute,
+						configuration.Service.ClientMonitor),
+					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
+				),
+			)
 		},
 	})
 

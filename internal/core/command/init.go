@@ -57,18 +57,20 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
 		container.MetadataDeviceClientName: func(get di.Get) interface{} {
-			return metadata.NewDeviceClient(urlclient.New(
-				registryClient != nil,
-				endpoint.New(
-					ctx,
-					wg,
-					&registryClient,
-					clients.CoreMetaDataServiceKey,
-					clients.ApiDeviceRoute,
-					configuration.Service.ClientMonitor,
+			return metadata.NewDeviceClient(
+				urlclient.New(
+					registryClient != nil,
+					endpoint.New(
+						ctx,
+						wg,
+						&registryClient,
+						clients.CoreMetaDataServiceKey,
+						clients.ApiDeviceRoute,
+						configuration.Service.ClientMonitor,
+					),
+					configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 				),
-				configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
-			))
+			)
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(lc)

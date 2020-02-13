@@ -72,7 +72,10 @@ func (e Endpoint) Monitor() chan interfaces.URLStream {
 			ch <- interfaces.URLStream(url)
 			time.Sleep(time.Millisecond * time.Duration(e.interval))
 
-			// use ctx to drop out of infinite when ctx indicates done().
+			select {
+			case <-e.ctx.Done():
+				break
+			}
 		}
 	}()
 	return ch

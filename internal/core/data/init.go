@@ -56,30 +56,34 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	registryClient := container.RegistryFrom(dic.Get)
 
-	mdc := metadata.NewDeviceClient(urlclient.New(
-		registryClient != nil,
-		endpoint.New(
-			ctx,
-			wg,
-			&registryClient,
-			clients.CoreMetaDataServiceKey,
-			clients.ApiDeviceRoute,
-			configuration.Service.ClientMonitor,
+	mdc := metadata.NewDeviceClient(
+		urlclient.New(
+			registryClient != nil,
+			endpoint.New(
+				ctx,
+				wg,
+				&registryClient,
+				clients.CoreMetaDataServiceKey,
+				clients.ApiDeviceRoute,
+				configuration.Service.ClientMonitor,
+			),
+			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
-		configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
-	))
-	msc := metadata.NewDeviceServiceClient(urlclient.New(
-		registryClient != nil,
-		endpoint.New(
-			ctx,
-			wg,
-			&registryClient,
-			clients.CoreMetaDataServiceKey,
-			clients.ApiDeviceServiceRoute,
-			configuration.Service.ClientMonitor,
+	)
+	msc := metadata.NewDeviceServiceClient(
+		urlclient.New(
+			registryClient != nil,
+			endpoint.New(
+				ctx,
+				wg,
+				&registryClient,
+				clients.CoreMetaDataServiceKey,
+				clients.ApiDeviceServiceRoute,
+				configuration.Service.ClientMonitor,
+			),
+			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
-		configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
-	))
+	)
 
 	// Create the messaging client
 	msgClient, err := messaging.NewMessageClient(

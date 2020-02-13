@@ -331,7 +331,6 @@ func restGetDeviceById(
 	_ = json.NewEncoder(w).Encode(res)
 }
 
-// Shouldn't need "rest" in any of these methods. Adding it here for consistency right now.
 func restCheckForDevice(
 	w http.ResponseWriter,
 	r *http.Request,

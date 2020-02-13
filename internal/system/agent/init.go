@@ -113,18 +113,20 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	for serviceKey, serviceName := range config.ListDefaultServices() {
 		generalClients.Set(
 			serviceKey,
-			general.NewGeneralClient(urlclient.New(
-				registryClient != nil,
-				endpoint.New(
-					ctx,
-					&sync.WaitGroup{},
-					&registryClient,
-					serviceKey,
-					"/",
-					internal.ClientMonitorDefault,
+			general.NewGeneralClient(
+				urlclient.New(
+					registryClient != nil,
+					endpoint.New(
+						ctx,
+						&sync.WaitGroup{},
+						&registryClient,
+						serviceKey,
+						"/",
+						internal.ClientMonitorDefault,
+					),
+					configuration.Clients[serviceName].Url(),
 				),
-				configuration.Clients[serviceName].Url(),
-			)),
+			),
 		)
 	}
 
