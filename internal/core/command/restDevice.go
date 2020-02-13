@@ -72,7 +72,16 @@ func issueDeviceCommand(
 	}
 
 	ctx := r.Context()
-	body, err := executeCommandByDeviceID(ctx, did, cid, string(b), r.URL.RawQuery, isPutCommand, lc, dbClient, deviceClient)
+	body, err := executeCommandByDeviceID(
+		ctx,
+		did,
+		cid,
+		string(b),
+		r.URL.RawQuery,
+		isPutCommand,
+		lc,
+		dbClient,
+		deviceClient)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -136,7 +145,16 @@ func issueDeviceCommandByNames(
 		httpErrorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
 		return
 	}
-	body, err := executeCommandByName(ctx, dn, cn, string(b), r.URL.RawQuery, isPutCommand, lc, dbClient, deviceClient)
+	body, err := executeCommandByName(
+		ctx,
+		dn,
+		cn,
+		string(b),
+		r.URL.RawQuery,
+		isPutCommand,
+		lc,
+		dbClient,
+		deviceClient)
 
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
