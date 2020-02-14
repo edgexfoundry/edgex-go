@@ -18,52 +18,54 @@ package proxy
 
 import (
 	"context"
-	"flag"
-	"github.com/gorilla/mux"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
+	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-	if len(os.Args) < 2 {
-		usage.HelpCallbackSecurityProxy()
-	}
 	var initNeeded bool
 	var insecureSkipVerify bool
 	var resetNeeded bool
-	var configDir, profileDir string
 	var userTobeCreated string
 	var userOfGroup string
 	var userToBeDeleted string
-	var useRegistry bool
 
-	flag.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "skip server side SSL verification, mainly for self-signed cert")
-	flag.BoolVar(&initNeeded, "init", false, "run init procedure for security service.")
-	flag.BoolVar(&resetNeeded, "reset", false, "reset reverse proxy by removing all services/routes/consumers")
-	flag.StringVar(&userTobeCreated, "useradd", "", "user that needs to be added to consume the edgex services")
-	flag.StringVar(&userOfGroup, "group", "user", "group that the user belongs to. By default it is in user group")
-	flag.StringVar(&userToBeDeleted, "userdel", "", "user that needs to be deleted from the edgex services")
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
+	// All common command-line flags have been moved to bootstrap. Service specific flags are added below.
+	f := flags.NewWithUsage(
+		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
+			"    --init=true/false               Indicates if security service should be initialized\n" +
+			"    --reset=true/false              Indicate if security service should be reset to initialization status\n" +
+			"    --useradd=<username>            Create an account and return JWT\n" +
+			"    --group=<groupname>             Group name the user belongs to\n" +
+			"    --userdel=<username>            Delete an account",
+	)
 
-	flag.Usage = usage.HelpCallbackSecurityProxy
-	flag.Parse()
+	if len(os.Args) < 2 {
+		f.Help()
+	}
+
+	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
+	f.FlagSet.BoolVar(&initNeeded, "init", false, "")
+	f.FlagSet.BoolVar(&resetNeeded, "reset", false, "")
+	f.FlagSet.StringVar(&userTobeCreated, "useradd", "", "")
+	f.FlagSet.StringVar(&userOfGroup, "group", "user", "")
+	f.FlagSet.StringVar(&userToBeDeleted, "userdel", "", "")
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -75,11 +77,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	bootstrap.Run(
 		ctx,
 		cancel,
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
+		f,
 		clients.SecurityProxySetupServiceKey,
+		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
 		startupTimer,
 		dic,

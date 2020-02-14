@@ -1,0 +1,384 @@
+openapi: 3.0.0
+info:
+  title: core-command
+  version: 1.1.0
+servers:
+- url: http://localhost:48082/api
+paths:
+  /v1/config:
+    get:
+      description: Fetch the current state of the service's configuration.
+      responses:
+        200:
+          description: The service's configuration as JSON document
+  /v1/device:
+    get:
+      description: Retrieve a list of (all) devices and their command offerings. Throws
+        ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
+      responses:
+        200:
+          description: List of CommandResponse (containing the devices and their commands)
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/commandresponse'
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /v1/device/name/{name}:
+    get:
+      description: Retrieve a device (by name) and its command offerings. Throws ServiceException
+        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
+        (HTTP 404) if no device exists by the name provided.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: CommandResponse containing the device and its commands
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/commandresponse'
+        404:
+          description: if no device exists by the name provided.
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /v1/device/name/{name}/command/{commandname}:
+    get:
+      description: Issue the get command referenced by the command name to the device/sensor
+        (also referenced by name). It is associated to via the device service. ServiceException
+        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
+        (HTTP 404) if device with given name does not exist or device doesn't have
+        command with the given commandname. Throws LockedException (HTTP 423) if device
+        adminState is locked.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commandname
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: String as returned by the device/sensor via the device service.
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if device with given name does not exist or device doesn't
+            have command with the given commandname.
+        423:
+          description: if the device is locked (admin state).
+        500:
+          description: for unanticipated or unknown issues encountered.
+    put:
+      description: Issue the put command referenced by the command name to the device/sensor
+        (also referenced by name) it is associated to via the device service. ServiceException
+        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
+        (HTTP 404) if device with given name does not exist or device doesn't have
+        command with the given commandname. Throws LockedException (HTTP 423) if device
+        adminState is locked.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commandname
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/setting'
+      responses:
+        200:
+          description: String as returned by the device/sensor via the device service.
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if device with given name does not exist or device doesn't
+            have a command with the given commandname.
+        423:
+          description: if the device is locked (admin state)
+        500:
+          description: for unanticipated or unknown issues encountered
+  /v1/device/{id}:
+    get:
+      description: Retrieve a device (by database generated id) and its command offerings.
+        Throws ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
+        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: CommandResponse containing the device and its commands
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/commandresponse'
+        404:
+          description: if no device exists by the id provided.
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /v1/device/{id}/command/{commandid}:
+    get:
+      description: Issue the get command referenced by the command id to the device/sensor
+        (also referenced by database generated id) it is associated to via the device
+        service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
+        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        Throws LockedException (HTTP 423) if the device is locked (admin state).
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commandid
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: String as returned by the device/sensor via the device service.
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if no device exists by the id provided
+        423:
+          description: if the device is locked (admin state).
+        500:
+          description: for unanticipated or unknown issues encountered.
+    put:
+      description: Issue the put command referenced by the command id to the device/sensor
+        (also referenced by database generated id) it is associated to via the device
+        service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
+        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+        Throws LockedException (HTTP 423) if the device is locked (admin state).
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: commandid
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/setting'
+      responses:
+        200:
+          description: String as returned by the device/sensor via the device service.
+        400:
+          description: if the request is malformed or unparsable
+        404:
+          description: if no device exists by the id provided
+        423:
+          description: if the device is locked (admin state)
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /v1/metrics:
+    get:
+      description: Fetch the current state of the service's metrics.
+      responses:
+        200:
+          description: The service's metrics as JSON document
+  /v1/ping:
+    get:
+      description: Test service providing an indication that the service is available.
+      responses:
+        200:
+          description: pong as a string
+        500:
+          description: for unanticipated or unknown issues encountered.
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    addressable:
+      title: addressable
+      type: object
+      properties:
+        address:
+          title: address
+          type: string
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        password:
+          title: password
+          type: string
+        path:
+          title: path
+          type: string
+        port:
+          title: port
+          type: integer
+        protocol:
+          title: protocol
+          type: string
+        publisher:
+          title: publisher
+          type: string
+        topic:
+          title: topic
+          type: string
+        user:
+          title: user
+          type: string
+    commandresponse:
+      title: commandresponse
+      type: object
+      properties:
+        host:
+          title: host
+          type: string
+        device:
+          $ref: '#/components/schemas/device'
+    device:
+      title: device
+      type: object
+      properties:
+        addressable:
+          $ref: '#/components/schemas/device_addressable'
+        adminState:
+          title: adminState
+          type: string
+        created:
+          title: created
+          type: integer
+        description:
+          title: description
+          type: string
+        id:
+          title: id
+          type: string
+        labels:
+          title: labels
+          uniqueItems: false
+          type: array
+          items:
+            title: labels
+            type: string
+        lastConnected:
+          title: lastConnected
+          type: integer
+        lastReported:
+          title: lastReported
+          type: integer
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        operatingState:
+          title: operatingState
+          type: string
+        origin:
+          title: origin
+          type: integer
+      description: device or sensor supplying data and taking actuation commands
+    setting:
+      title: setting
+      type: object
+      additionalProperties:
+        type: string
+    device_addressable:
+      type: object
+      properties:
+        address:
+          title: address
+          type: string
+        created:
+          title: created
+          type: integer
+        id:
+          title: id
+          type: string
+        modified:
+          title: modified
+          type: integer
+        name:
+          title: name
+          type: string
+        origin:
+          title: origin
+          type: integer
+        password:
+          title: password
+          type: string
+        path:
+          title: path
+          type: string
+        port:
+          title: port
+          type: integer
+        protocol:
+          title: protocol
+          type: string
+        publisher:
+          title: publisher
+          type: string
+        topic:
+          title: topic
+          type: string
+        user:
+          title: user
+          type: string
+  requestBodies:
+    setting:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/setting'
+      required: true

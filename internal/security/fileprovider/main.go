@@ -17,38 +17,36 @@ package fileprovider
 
 import (
 	"context"
-	"flag"
 	"os"
 
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/usage"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+
+	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
 	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
 
-	var configDir, profileDir string
-	var useRegistry bool
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// by inserting service specific flag prior to call to commonFlags.Parse().
+	// Example:
+	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
+	//      ....
+	//      flags.Parse(os.Args[1:])
+	//
 
-	flag.BoolVar(&useRegistry, "registry", false, "Indicates the service should use registry service.")
-	flag.BoolVar(&useRegistry, "r", false, "Indicates the service should use registry service.")
-	flag.StringVar(&profileDir, "profile", "", "Specify a profile other than default.")
-	flag.StringVar(&profileDir, "p", "", "Specify a profile other than default.")
-	flag.StringVar(&configDir, "confdir", "", "Specify local configuration directory")
-
-	flag.Usage = usage.HelpCallbackSecurityFileTokenProvider
-	flag.Parse()
+	f := flags.New()
+	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -62,11 +60,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	bootstrap.Run(
 		ctx,
 		cancel,
-		configDir,
-		profileDir,
-		internal.ConfigFileName,
-		useRegistry,
+		f,
 		clients.SecurityFileTokenProviderServiceKey,
+		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
 		configuration,
 		startupTimer,
 		dic,

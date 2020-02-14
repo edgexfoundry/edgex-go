@@ -14,8 +14,6 @@
  *******************************************************************************/
 package config
 
-import "github.com/edgexfoundry/go-mod-bootstrap/config"
-
 type ConfigurationStruct struct {
 	ConfigPath                   string
 	GlobalPrefix                 string
@@ -29,5 +27,4 @@ type ConfigurationStruct struct {
 	LoggingFile                  string
 	LoggingRemoteURL             string
 	LoggingLevel                 string
-	Registry                     config.RegistryInfo
 }

@@ -15,7 +15,11 @@
 
 package agent
 
-import "github.com/edgexfoundry/go-mod-registry/registry"
+import (
+	"fmt"
+
+	"github.com/edgexfoundry/go-mod-registry/registry"
+)
 
 func getHealth(services []string, registryClient registry.Client) (map[string]interface{}, error) {
 	health := make(map[string]interface{})
@@ -26,11 +30,15 @@ func getHealth(services []string, registryClient registry.Client) (map[string]in
 		}
 
 		// the registry service returns nil for a healthy service
-		if err := registryClient.IsServiceAvailable(service); err != nil {
+		ok, err := registryClient.IsServiceAvailable(service)
+		if err != nil {
 			health[service] = err.Error()
 			continue
 		}
-
+		if !ok {
+			health[service] = fmt.Sprintf("service %s is not available", service)
+			continue
+		}
 		health[service] = true
 	}
 	return health, nil

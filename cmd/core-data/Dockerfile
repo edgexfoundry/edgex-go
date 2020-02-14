@@ -44,4 +44,4 @@ COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/Attri
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/core-data /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/docker/configuration.toml /res/docker/configuration.toml
 
-ENTRYPOINT ["/core-data","--registry","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/core-data","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]

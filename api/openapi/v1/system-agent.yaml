@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: system-agent
+  version: 1.1.0
+servers:
+- url: http://localhost:48090/api
+paths:
+  /v1/config/{services}:
+    get:
+      description: Fetch the configuration of the specified EdgeX services by their
+        unique names - returning null if none is found for the service. HTTP 500 for
+        unknown or unanticipated issues
+      parameters:
+      - name: services
+        in: path
+        description: EdgeX micro service names (the unique name of each service comma
+          delimited)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: an array of config
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/config'
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/metrics/{services}:
+    get:
+      description: Fetch the operating performance metrics of the specified EdgeX
+        services by their unique names - returning null if none is found for the service.
+        HTTP 500 for unknown or unanticipated issues
+      parameters:
+      - name: services
+        in: path
+        description: EdgeX micro service names (the unique name of each service comma
+          delimited)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: an array of metrics
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/metric'
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/operation:
+    post:
+      description: Issue a start, stop or restart action to the specified services.  HTTP
+        500 for unknown or unanticipated issues.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/operation'
+        required: true
+      responses:
+        500:
+          description: for unknown or unanticipated issues.
+  /v1/ping:
+    get:
+      description: Test service providing an indication that the service is available.
+      responses:
+        200:
+          description: return value of "pong"
+        503:
+          description: for unknown or unanticipated issues
+  /version:
+    get:
+      description: Get the API version
+      responses:
+        200:
+          description: The service's API version as JSON document
+components:
+  schemas:
+    config:
+      title: config
+      type: object
+      properties:
+        Config:
+          title: Config
+          type: string
+        Service:
+          title: Service
+          type: string
+      description: Service configuration
+    metric:
+      title: metric
+      type: object
+      properties:
+        Metrics:
+          title: Metrics
+          type: string
+        Service:
+          title: Service
+          type: string
+      description: Service metrics
+    operation:
+      title: operation
+      type: object
+      properties:
+        action:
+          title: Action
+          type: string
+        services:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+      description: Service operation
