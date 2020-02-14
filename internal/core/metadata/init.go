@@ -67,7 +67,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 						&registryClient,
 						clients.CoreDataServiceKey,
 						clients.ApiValueDescriptorRoute,
-						configuration.Service.ClientMonitor),
+						configuration.Service.ClientMonitor).Monitor(),
 					configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
 				),
 			)
@@ -82,7 +82,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 						&registryClient,
 						clients.SupportNotificationsServiceKey,
 						clients.ApiNotificationRoute,
-						configuration.Service.ClientMonitor),
+						configuration.Service.ClientMonitor).Monitor(),
 					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
 				),
 			)

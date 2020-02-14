@@ -88,18 +88,20 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(urlclient.New(
-			true,
-			endpoint.New(
-				ctx,
-				&sync.WaitGroup{},
-				&e.registryClient,
-				ep.ServiceId,
-				"/",
-				internal.ClientMonitorDefault,
+		client = general.NewGeneralClient(
+			urlclient.New(
+				true,
+				endpoint.New(
+					ctx,
+					&sync.WaitGroup{},
+					&e.registryClient,
+					ep.ServiceId,
+					"/",
+					internal.ClientMonitorDefault,
+				).Monitor(),
+				configClient.Url()+clients.ApiConfigRoute,
 			),
-			configClient.Url()+clients.ApiConfigRoute,
-		))
+		)
 		e.genClients.Set(ep.ServiceId, client)
 	}
 

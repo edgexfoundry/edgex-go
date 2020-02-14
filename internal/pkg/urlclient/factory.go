@@ -16,17 +16,15 @@
 package urlclient
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/retry"
 )
 
 // New is a factory function that uses parameters defined in edgex-go to decide which implementation of URLClient to use
-func New(useRegistry bool, endpoint *endpoint.Endpoint, url string) interfaces.URLClient {
+func New(useRegistry bool, urlStream chan interfaces.URLStream, url string) interfaces.URLClient {
 	if useRegistry {
-		return retry.New(endpoint.Monitor(), 500, 10)
+		return retry.New(urlStream, 500, 10)
 	}
 
 	return local.New(url)

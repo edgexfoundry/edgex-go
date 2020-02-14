@@ -17,7 +17,6 @@ package clients
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
@@ -37,7 +36,7 @@ func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
 	sut := NewGeneral()
-	client := general.NewGeneralClient(urlclient.New(false, &endpoint.Endpoint{}, "/"))
+	client := general.NewGeneralClient(urlclient.New(false, nil, "/"))
 	sut.Set(clientName, client)
 
 	result, ok := sut.Get(clientName)

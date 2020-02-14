@@ -533,6 +533,7 @@ func restGetYamlProfileByName(
 	w.Write(out)
 }
 
+// restGetYamlProfileById looks up a device profile by its ID. It will be output in a YAML formatted string.
 func restGetYamlProfileById(
 	w http.ResponseWriter,
 	r *http.Request,

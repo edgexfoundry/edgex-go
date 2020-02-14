@@ -108,18 +108,20 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(urlclient.New(
-			true,
-			endpoint.New(
-				ctx,
-				&sync.WaitGroup{},
-				&m.registryClient,
-				e.ServiceId,
-				"/",
-				internal.ClientMonitorDefault,
+		client = general.NewGeneralClient(
+			urlclient.New(
+				true,
+				endpoint.New(
+					ctx,
+					&sync.WaitGroup{},
+					&m.registryClient,
+					e.ServiceId,
+					"/",
+					internal.ClientMonitorDefault,
+				).Monitor(),
+				configClient.Url()+clients.ApiMetricsRoute,
 			),
-			configClient.Url()+clients.ApiMetricsRoute,
-		))
+		)
 		m.genClients.Set(e.ServiceId, client)
 	}
 

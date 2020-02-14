@@ -26,7 +26,7 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-type Endpoint struct {
+type endpoint struct {
 	ctx            context.Context
 	wg             *sync.WaitGroup
 	RegistryClient *registry.Client
@@ -42,9 +42,9 @@ func New(
 	registryClient *registry.Client,
 	serviceKey string,
 	path string,
-	interval int) *Endpoint {
+	interval int) *endpoint {
 
-	return &Endpoint{
+	return &endpoint{
 		ctx:            ctx,
 		wg:             wg,
 		RegistryClient: registryClient,
@@ -54,7 +54,7 @@ func New(
 	}
 }
 
-func (e Endpoint) Monitor() chan interfaces.URLStream {
+func (e endpoint) Monitor() chan interfaces.URLStream {
 	ch := make(chan interfaces.URLStream, 1)
 	url, err := e.buildURL()
 	if err != nil {
@@ -66,30 +66,26 @@ func (e Endpoint) Monitor() chan interfaces.URLStream {
 	go func() {
 		defer e.wg.Done()
 		for {
+			select {
+			case <-e.ctx.Done():
+				break
+			}
+
 			url, err := e.buildURL()
 			if err != nil {
 				_, _ = fmt.Fprintln(os.Stdout, err.Error())
 			}
 			ch <- interfaces.URLStream(url)
 			time.Sleep(time.Millisecond * time.Duration(e.interval))
-
-			select {
-			case <-e.ctx.Done():
-				break
-			}
 		}
 	}()
 	return ch
 }
 
-func (e Endpoint) buildURL() (string, error) {
-	if e.RegistryClient != nil {
-		endpoint, err := (*e.RegistryClient).GetServiceEndpoint(e.serviceKey)
-		if err != nil {
-			return "", fmt.Errorf("unable to get Service endpoint for %s: %s", e.serviceKey, err.Error())
-		}
-		return fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, e.path), nil
-	} else {
-		return "", fmt.Errorf("unable to get Service endpoint for %s: Registry client is nil", e.serviceKey)
+func (e endpoint) buildURL() (string, error) {
+	endpoint, err := (*e.RegistryClient).GetServiceEndpoint(e.serviceKey)
+	if err != nil {
+		return "", fmt.Errorf("unable to get Service endpoint for %s: %s", e.serviceKey, err.Error())
 	}
+	return fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, e.path), nil
 }

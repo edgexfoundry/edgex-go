@@ -123,7 +123,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 						serviceKey,
 						"/",
 						internal.ClientMonitorDefault,
-					),
+					).Monitor(),
 					configuration.Clients[serviceName].Url(),
 				),
 			),

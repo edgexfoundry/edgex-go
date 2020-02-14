@@ -66,7 +66,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 				clients.CoreMetaDataServiceKey,
 				clients.ApiDeviceRoute,
 				configuration.Service.ClientMonitor,
-			),
+			).Monitor(),
 			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
 	)
@@ -80,7 +80,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 				clients.CoreMetaDataServiceKey,
 				clients.ApiDeviceServiceRoute,
 				configuration.Service.ClientMonitor,
-			),
+			).Monitor(),
 			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
 	)

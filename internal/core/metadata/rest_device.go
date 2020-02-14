@@ -331,6 +331,8 @@ func restGetDeviceById(
 	_ = json.NewEncoder(w).Encode(res)
 }
 
+// restCheckForDevice looks for a device using both its name and device, in that order. If found,
+// it is returned as a JSON encoded string.
 func restCheckForDevice(
 	w http.ResponseWriter,
 	r *http.Request,
