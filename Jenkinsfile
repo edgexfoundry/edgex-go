@@ -16,12 +16,10 @@
 
 edgeXGeneric([
     project: 'edgex-go',
-    mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN'],
-    credentials: [ string(credentialsId: 'swaggerhub-api-key', variable: 'APIKEY') ],
+    mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN', 'swaggerhub-api-key:APIKEY'],
     env: [
         GOPATH: '/opt/go-custom/go',
         GO_VERSION: '1.13',
-        REPO_ROOT: "/home/jenkins/$BUILD_ID/gopath/src/github.com/edgexfoundry/edgex-go/",
         DEPLOY_TYPE: 'staging'
     ],
     path: [
@@ -31,7 +29,7 @@ edgeXGeneric([
         '*': [
             pre_build: ['shell/install_custom_golang.sh'],
             build: [
-                'make test raml_verify && make build docker',
+                'REPO_ROOT=${WORKSPACE} make test raml_verify && make build docker',
                 'shell/codecov-uploader.sh'
             ]
         ],
