@@ -291,7 +291,7 @@ func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) (objec
 		return nil, err
 	}
 
-	if limit < 0 {
+	if limit < 0 || limit > len(ids) {
 		limit = len(ids)
 	}
 	objects, err = redis.ByteSlices(conn.Do("MGET", ids[0:limit]...))

@@ -397,10 +397,12 @@ func (c *Client) ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor st
 		return readings, nil
 	}
 
-	objects, err := getObjectsByRangeFilter(conn,
+	objects, err := getObjectsByValuesSorted(
+		conn,
+		limit,
 		db.ReadingsCollection+":device:"+deviceId,
-		db.ReadingsCollection+":name:"+valueDescriptor,
-		0, limit-1)
+		db.ReadingsCollection+":name:"+valueDescriptor)
+
 	if err != nil {
 		return readings, err
 	}
