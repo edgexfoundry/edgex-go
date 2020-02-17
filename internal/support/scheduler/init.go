@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v1"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/application/delegate"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/common/middleware/debugging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/common"
@@ -76,7 +76,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	// disable v1 behavior that requires database if we're running in v2 acceptance test mode.
 	if !b.inV2AcceptanceTestMode {
-		err := LoadScheduler(lc, container.DBClientFrom(dic.Get), scClient, configuration)
+		err := LoadScheduler(lc, v1.DBClientFrom(dic.Get), scClient, configuration)
 		if err != nil {
 			lc.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
 			return false

@@ -22,7 +22,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database/v1"
+	v2 "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database/v2"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
@@ -88,7 +89,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 			// readyStream is nil in production mode; non-nil when running acceptance tests in test runner context.
 			// When it's non-nil (i.e. when running acceptance tests), the database bootstrap shouldn't create an
 			// APIv1 connection.
-			database.NewDatabase(httpServer, configuration, readyStream != nil).BootstrapHandler,
+			v1.NewDatabase(httpServer, configuration, readyStream != nil).BootstrapHandler,
+			// APIv2 persistence.
+			v2.NewPersistence(httpServer).BootstrapHandler,
 			// readyStream is nil in production mode; non-nil when running acceptance tests in test runner context.
 			// When it's non-nil (i.e. when running acceptance tests), the service's bootstrap handler shouldn't
 			// wire up the APIv1 endpoints.

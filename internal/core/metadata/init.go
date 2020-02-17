@@ -19,12 +19,17 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	v2 "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v2"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/application/delegate"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/common/middleware/debugging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/common"
+	addressableCreate "github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/core/metadata/addressable/create"
+	addressableDelete "github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/core/metadata/addressable/delete"
+	addressableRead "github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/core/metadata/addressable/read"
+	addressableUpdate "github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/controllers/core/metadata/addressable/update"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/correlationid"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/ui/http/router"
 
@@ -102,7 +107,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 }
 
 // loadV2Routes creates a new command-query router and handles the related mux.Router initialization for API V2 routes.
-func (b *Bootstrap) loadV2Routes(_ *di.Container, lc logger.LoggingClient) {
+func (b *Bootstrap) loadV2Routes(dic *di.Container, lc logger.LoggingClient) {
 	correlationid.WireUp(b.muxRouter)
 
 	handlers := []delegate.Handler{}
@@ -110,12 +115,21 @@ func (b *Bootstrap) loadV2Routes(_ *di.Container, lc logger.LoggingClient) {
 		handlers = append(handlers, debugging.New(lc).Handler)
 	}
 
+	persistence := v2.PersistenceFrom(dic.Get)
+	service := persistence.Metadata()
+	addressable := service.Addressable()
+
 	router.Initialize(
 		b.muxRouter,
 		handlers,
 		common.V2Routes(
 			b.inV2AcceptanceTestMode,
-			[]router.Controller{},
+			[]router.Controller{
+				addressableCreate.New(addressable),
+				addressableUpdate.New(addressable),
+				addressableRead.New(addressable),
+				addressableDelete.New(addressable),
+			},
 		),
 	)
 }

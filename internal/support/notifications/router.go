@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v1"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	notificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
@@ -68,7 +68,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	b.HandleFunc(
@@ -78,7 +78,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+NOTIFICATION+"/{"+ID+"}",
@@ -87,7 +87,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
@@ -96,7 +96,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+NOTIFICATION+"/"+SLUG+"/{"+SLUG+"}",
@@ -105,7 +105,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+NOTIFICATION+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -114,7 +114,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+NOTIFICATION+"/"+SENDER+"/{"+SENDER+"}/{"+LIMIT+":[0-9]+}",
@@ -123,7 +123,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
@@ -133,7 +133,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
@@ -143,7 +143,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
@@ -153,7 +153,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
@@ -163,7 +163,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
@@ -173,7 +173,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				*notificationsContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
@@ -185,7 +185,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION,
@@ -194,7 +194,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION,
@@ -203,7 +203,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/{"+ID+"}",
@@ -212,7 +212,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/{"+ID+"}",
@@ -221,7 +221,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
@@ -230,7 +230,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+SLUG+"/{"+SLUG+"}",
@@ -239,7 +239,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}/"+LABELS+"/{"+LABELS+"}",
@@ -248,7 +248,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+CATEGORIES+"/{"+CATEGORIES+"}",
@@ -257,7 +257,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+LABELS+"/{"+LABELS+"}",
@@ -266,7 +266,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+SUBSCRIPTION+"/"+RECEIVER+"/{"+RECEIVER+"}",
@@ -275,7 +275,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Transmissions
@@ -286,7 +286,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/{"+LIMIT+":[0-9]+}",
@@ -295,7 +295,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+SLUG+"/{"+SLUG+"}/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
@@ -304,7 +304,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+START+"/{"+START+"}/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
@@ -313,7 +313,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+START+"/{"+START+"}/{"+LIMIT+":[0-9]+}",
@@ -322,7 +322,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+END+"/{"+END+"}/{"+LIMIT+":[0-9]+}",
@@ -331,7 +331,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+ESCALATED+"/{"+LIMIT+":[0-9]+}",
@@ -340,7 +340,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+FAILED+"/{"+LIMIT+":[0-9]+}",
@@ -349,7 +349,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+SENT+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -358,7 +358,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+ESCALATED+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -367,7 +367,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+ACKNOWLEDGED+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -376,7 +376,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+TRANSMISSION+"/"+FAILED+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -385,7 +385,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	// Cleanup
@@ -396,7 +396,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	b.HandleFunc(
 		"/"+CLEANUP+"/"+AGE+"/{"+AGE+":[0-9]+}",
@@ -405,7 +405,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)

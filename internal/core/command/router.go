@@ -19,7 +19,7 @@ import (
 
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v1"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
@@ -74,7 +74,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			restGetAllCommands(
 				w,
 				r,
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				commandContainer.ConfigurationFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
@@ -89,7 +89,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			restGetCommandsByDeviceID(
 				w,
 				r,
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				commandContainer.ConfigurationFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
@@ -101,7 +101,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodGet)
@@ -112,7 +112,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodPut)
@@ -126,7 +126,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 			restGetCommandsByDeviceName(
 				w,
 				r,
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				commandContainer.ConfigurationFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
@@ -138,7 +138,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodGet)
@@ -149,7 +149,7 @@ func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				commandContainer.MetadataDeviceClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodPut)

@@ -68,7 +68,7 @@ func AssertContentTypeIsJSON(t *testing.T, headers http.Header) {
 
 // assertJSONBodyEquals provides common implementation to assert a response body has the expected value.
 func assertJSONBodyEquals(t *testing.T, expected interface{}, actual []byte) {
-	_ = assert.Equal(t, Marshal(t, expected), actual)
+	_ = assert.Equal(t, string(Marshal(t, expected)), string(actual))
 }
 
 // permutation is recursive function used by assertJSONBodyEqualsForMultiple to test all permutations of a.

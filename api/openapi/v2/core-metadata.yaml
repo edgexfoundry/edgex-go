@@ -10,6 +10,36 @@ servers:
 
 components:
   schemas:
+    Addressable:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        created:
+          type: integer
+        modified:
+          type: integer
+        name:
+          type: string
+        protocol:
+          type: string
+        method:
+          type: string
+        address:
+          type: string
+        port:
+          type: integer
+        path:
+          type: string
+        publisher:
+          type: string
+        user:
+          type: string
+        password:
+          type: string
+        topic:
+          type: string
     AddAddressableRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -49,10 +79,38 @@ components:
         id:
           type: string
           format: uuid
-        message:
+      required:
+        - id
+    GetAddressableByIDRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      description: "A request to get addressable by ID."
+      type: object
+      properties:
+        id:
           type: string
       required:
         - id
+    GetAddressableByIDResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        addressable:
+          $ref: '#/components/schemas/Addressable'
+    DeleteAddressableByIDRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      description: "A request to delete addressable by ID."
+      type: object
+      properties:
+        id:
+          type: string
+      required:
+        - id
+    DeleteAddressableByIDResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
     AddDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -154,43 +212,6 @@ components:
           type: string
       required:
         - id
-    AddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        addressable:
-          $ref: '#/components/schemas/Addressable'
-    Addressable:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        created:
-          type: integer
-        modified:
-          type: integer
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
     AutoEvent:
       type: object
       properties:
@@ -674,7 +695,6 @@ components:
           type: string
       required:
         - id
-        - name
     UpdateAddressableResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -852,17 +872,28 @@ paths:
   /addressable:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
+    put:
       summary: "Allows definition of new addressables"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AddAddressableRequest'
+              anyOf:
+                - $ref: '#/components/schemas/AddAddressableRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/AddAddressableRequest'
       responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddAddressableResponse'
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
@@ -876,6 +907,15 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/AddAddressableResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
       summary: "Allows updates to an existing addressable"
       requestBody:
@@ -883,10 +923,21 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UpdateAddressableRequest'
+              anyOf:
+                - $ref: '#/components/schemas/UpdateAddressableRequest'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/UpdateAddressableRequest'
       responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateAddressableResponse'
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
@@ -900,6 +951,15 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/UpdateAddressableResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /addressable/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -990,18 +1050,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
+                $ref: '#/components/schemas/GetAddressableByIDResponse'
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/GetAddressableByIDResponse'
+        '400':
+          description: "Bad request"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1012,22 +1076,30 @@ paths:
     delete:
       summary: "Delete an addressable by ID"
       responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
+        '200':
+          description: "OK"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
+                $ref: '#/components/schemas/DeleteAddressableByIDResponse'
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/DeleteAddressableByIDResponse'
+        '400':
+          description: "Bad request"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'

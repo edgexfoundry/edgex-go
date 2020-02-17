@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2019 Dell Inc.
+ * Copyright 2020 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -12,18 +12,9 @@
  * the License.
  *******************************************************************************/
 
-package container
+package metadata
 
-import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
-
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-)
-
-// DBClientInterfaceName contains the name of the interfaces.DBClient implementation in the DIC.
-var DBClientInterfaceName = di.TypeInstanceToName((*interfaces.DBClient)(nil))
-
-// DBClientFrom helper function queries the DIC and returns the interfaces.DBClient implementation.
-func DBClientFrom(get di.Get) interfaces.DBClient {
-	return get(DBClientInterfaceName).(interfaces.DBClient)
+// Store defines the metadata service's repository contract.
+type Store interface {
+	Addressable() Addressable
 }

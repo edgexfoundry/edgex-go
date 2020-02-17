@@ -15,8 +15,14 @@
 package infrastructure
 
 // Status is the common type definition for the service's transport-agnostic status code.
+//
+// - infrastructure layer: 1 - 9999
+// - domain layer: 10000 - 19999
+// - application layer: 20000 - 29999
+// - user interface layer: 30000 - 39999
 type Status int
 
 const (
-	StatusSuccess Status = 0
+	StatusSuccess             Status = 0
+	StatusPersistenceNotFound Status = 1
 )

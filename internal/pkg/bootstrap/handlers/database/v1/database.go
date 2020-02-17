@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package database
+package v1
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v1"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
@@ -40,8 +40,8 @@ type httpServer interface {
 	IsRunning() bool
 }
 
-// Database contains references to dependencies required by the database bootstrap implementation.
-type Database struct {
+// Handler contains references to dependencies required by the database bootstrap implementation.
+type Handler struct {
 	httpServer             httpServer
 	database               interfaces.Database
 	isCoreData             bool
@@ -49,8 +49,8 @@ type Database struct {
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Database {
-	return Database{
+func NewDatabase(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Handler {
+	return Handler{
 		httpServer:             httpServer,
 		database:               database,
 		isCoreData:             false,
@@ -59,8 +59,8 @@ func NewDatabase(httpServer httpServer, database interfaces.Database, inV2Accept
 }
 
 // NewDatabaseForCoreData is a factory method that returns an initialized Database receiver struct.
-func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Database {
-	return Database{
+func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database, inV2AcceptanceTestMode bool) Handler {
+	return Handler{
 		httpServer:             httpServer,
 		database:               database,
 		isCoreData:             true,
@@ -69,7 +69,7 @@ func NewDatabaseForCoreData(httpServer httpServer, database interfaces.Database,
 }
 
 // Return the dbClient interface
-func (d Database) newDBClient(
+func (d Handler) newDBClient(
 	lc logger.LoggingClient,
 	credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
 
@@ -101,7 +101,7 @@ func (d Database) newDBClient(
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and initializes the database.
-func (d Database) BootstrapHandler(
+func (d Handler) BootstrapHandler(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	startupTimer startup.Timer,
@@ -144,12 +144,12 @@ func (d Database) BootstrapHandler(
 	}
 
 	dic.Update(di.ServiceConstructorMap{
-		container.DBClientInterfaceName: func(get di.Get) interface{} {
+		v1.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClient
 		},
 	})
 
-	lc.Info("Database connected")
+	lc.Info("APIv1 database connected")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -163,7 +163,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		lc.Info("Database disconnected")
+		lc.Info("APIv1 database disconnected")
 	}()
 
 	return true

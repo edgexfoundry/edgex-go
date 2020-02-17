@@ -17,11 +17,17 @@ package application
 import "github.com/edgexfoundry/edgex-go/internal/pkg/v2/infrastructure"
 
 const (
-	StatusBatchNotRoutableRequestFailure infrastructure.Status = 1
-	StatusBatchUnmarshalFailure          infrastructure.Status = 2
-	StatusUseCaseContentErrorFailure     infrastructure.Status = 3
-	StatusUseCaseUnmarshalFailure        infrastructure.Status = 4
-	StatusTypeAssertionFailure           infrastructure.Status = 5
-	StatusRequestIdEmptyFailure          infrastructure.Status = 6
-	StatusBehaviorNotValidFailure        infrastructure.Status = 7
+	StatusBatchNotRoutableRequestFailure infrastructure.Status = 20001
+	StatusBatchUnmarshalFailure          infrastructure.Status = 20002
+	StatusUseCaseContentErrorFailure     infrastructure.Status = 20003
+	StatusUseCaseUnmarshalFailure        infrastructure.Status = 20004
+	StatusTypeAssertionFailure           infrastructure.Status = 20005
+	StatusRequestIdEmptyFailure          infrastructure.Status = 20006
+	StatusBehaviorNotValidFailure        infrastructure.Status = 20007
+
+	// core/metadata
+	StatusAddressableMissingID       infrastructure.Status = 21000
+	StatusAddressableMissingName     infrastructure.Status = 21001
+	StatusAddressableMissingProtocol infrastructure.Status = 21002
+	StatusAddressableMissingAddress  infrastructure.Status = 21003
 )

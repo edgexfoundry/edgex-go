@@ -18,7 +18,7 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container/v1"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
@@ -65,7 +65,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	r.HandleFunc(clients.
@@ -75,7 +75,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodPut)
 	r.HandleFunc(clients.
@@ -85,7 +85,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	interval := r.PathPrefix(clients.ApiIntervalRoute).Subrouter()
@@ -96,7 +96,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	interval.HandleFunc(
 		"/{"+ID+"}",
@@ -105,7 +105,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	interval.HandleFunc(
@@ -115,7 +115,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	interval.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}",
@@ -124,7 +124,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	// Scrub "Intervals and IntervalActions"
@@ -135,7 +135,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	// IntervalAction
@@ -146,7 +146,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	r.HandleFunc(clients.
@@ -156,7 +156,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	r.HandleFunc(clients.
@@ -166,7 +166,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get),
 				schedulerContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPut)
@@ -178,7 +178,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodDelete)
 	intervalAction.HandleFunc(
@@ -188,7 +188,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
+				v1.DBClientFrom(dic.Get),
 				schedulerContainer.QueueFrom(dic.Get))
 		}).Methods(http.MethodGet, http.MethodDelete)
 	intervalAction.HandleFunc(
@@ -198,7 +198,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 	intervalAction.HandleFunc(
 		"/"+INTERVAL+"/{"+INTERVAL+"}",
@@ -207,7 +207,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodGet)
 
 	// Scrub "IntervalActions"
@@ -218,7 +218,7 @@ func loadV1Routes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get))
+				v1.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)

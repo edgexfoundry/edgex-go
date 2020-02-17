@@ -15,8 +15,15 @@
 package application
 
 const (
+	// common
 	KindMetrics = "metrics"
 	KindPing    = "ping"
 	KindTest    = "test"
 	KindVersion = "version"
+
+	// metadata
+	KindAddressableAdd    = "addressableAdd"
+	KindAddressableRead   = "addressableRead"
+	KindAddressableUpdate = "addressableUpdate"
+	KindAddressableDelete = "addressableDelete"
 )
