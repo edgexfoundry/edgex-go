@@ -28,7 +28,7 @@ import (
 type Endpoint struct {
 	ctx            context.Context
 	wg             *sync.WaitGroup
-	registryClient *registry.Client
+	registryClient registry.Client
 	serviceKey     string // The key of the service as found in the service registry (e.g. Consul)
 	path           string // The path to the service's endpoint following port number in the URL
 	interval       int    // The interval in milliseconds governing how often the client polls to keep the endpoint current
@@ -38,7 +38,7 @@ type Endpoint struct {
 func New(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	registryClient *registry.Client,
+	registryClient registry.Client,
 	serviceKey string,
 	path string,
 	interval int) *Endpoint {
@@ -78,7 +78,7 @@ func (e Endpoint) Monitor() chan interfaces.URLStream {
 }
 
 func (e Endpoint) fetchURL(ch chan interfaces.URLStream) {
-	endpoint, err := (*e.registryClient).GetServiceEndpoint(e.serviceKey)
+	endpoint, err := (e.registryClient).GetServiceEndpoint(e.serviceKey)
 	if err != nil {
 		_, _ = fmt.Println(fmt.Errorf("unable to get service endpoint for %s: %s", e.serviceKey, err.Error()))
 		return

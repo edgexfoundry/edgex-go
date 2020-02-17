@@ -36,7 +36,7 @@ func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
 	sut := NewGeneral()
-	client := general.NewGeneralClient(urlclient.New(false, nil, "/"))
+	client := general.NewGeneralClient(urlclient.New(nil, nil, nil, "", "", 0, "/"))
 	sut.Set(clientName, client)
 
 	result, ok := sut.Get(clientName)

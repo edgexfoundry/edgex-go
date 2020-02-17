@@ -21,7 +21,6 @@ import (
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
@@ -58,29 +57,23 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	mdc := metadata.NewDeviceClient(
 		urlclient.New(
-			registryClient != nil,
-			endpoint.New(
-				ctx,
-				wg,
-				&registryClient,
-				clients.CoreMetaDataServiceKey,
-				clients.ApiDeviceRoute,
-				configuration.Service.ClientMonitor,
-			).Monitor(),
+			ctx,
+			wg,
+			registryClient,
+			clients.CoreMetaDataServiceKey,
+			clients.ApiDeviceRoute,
+			configuration.Service.ClientMonitor,
 			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
 	)
 	msc := metadata.NewDeviceServiceClient(
 		urlclient.New(
-			registryClient != nil,
-			endpoint.New(
-				ctx,
-				wg,
-				&registryClient,
-				clients.CoreMetaDataServiceKey,
-				clients.ApiDeviceServiceRoute,
-				configuration.Service.ClientMonitor,
-			).Monitor(),
+			ctx,
+			wg,
+			registryClient,
+			clients.CoreMetaDataServiceKey,
+			clients.ApiDeviceServiceRoute,
+			configuration.Service.ClientMonitor,
 			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
 		),
 	)

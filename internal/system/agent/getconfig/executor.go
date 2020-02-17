@@ -20,7 +20,6 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 
@@ -90,15 +89,12 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		// Add the serviceName key to the map where the value is the respective GeneralClient
 		client = general.NewGeneralClient(
 			urlclient.New(
-				true,
-				endpoint.New(
-					ctx,
-					&sync.WaitGroup{},
-					&e.registryClient,
-					ep.ServiceId,
-					"/",
-					internal.ClientMonitorDefault,
-				).Monitor(),
+				ctx,
+				&sync.WaitGroup{},
+				e.registryClient,
+				ep.ServiceId,
+				"/",
+				internal.ClientMonitorDefault,
 				configClient.Url()+clients.ApiConfigRoute,
 			),
 		)

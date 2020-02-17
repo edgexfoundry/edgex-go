@@ -20,7 +20,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
@@ -60,14 +59,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
 			return coredata.NewValueDescriptorClient(
 				urlclient.New(
-					registryClient != nil,
-					endpoint.New(
-						ctx,
-						wg,
-						&registryClient,
-						clients.CoreDataServiceKey,
-						clients.ApiValueDescriptorRoute,
-						configuration.Service.ClientMonitor).Monitor(),
+					ctx,
+					wg,
+					registryClient,
+					clients.CoreDataServiceKey,
+					clients.ApiValueDescriptorRoute,
+					configuration.Service.ClientMonitor,
 					configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
 				),
 			)
@@ -75,14 +72,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		container.NotificationsClientName: func(get di.Get) interface{} {
 			return notifications.NewNotificationsClient(
 				urlclient.New(
-					registryClient != nil,
-					endpoint.New(
-						ctx,
-						wg,
-						&registryClient,
-						clients.SupportNotificationsServiceKey,
-						clients.ApiNotificationRoute,
-						configuration.Service.ClientMonitor).Monitor(),
+					ctx,
+					wg,
+					registryClient,
+					clients.SupportNotificationsServiceKey,
+					clients.ApiNotificationRoute,
+					configuration.Service.ClientMonitor,
 					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
 				),
 			)

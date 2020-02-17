@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system"
@@ -110,15 +109,12 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		// Add the serviceName key to the map where the value is the respective GeneralClient
 		client = general.NewGeneralClient(
 			urlclient.New(
-				true,
-				endpoint.New(
-					ctx,
-					&sync.WaitGroup{},
-					&m.registryClient,
-					e.ServiceId,
-					"/",
-					internal.ClientMonitorDefault,
-				).Monitor(),
+				ctx,
+				&sync.WaitGroup{},
+				m.registryClient,
+				e.ServiceId,
+				"/",
+				internal.ClientMonitorDefault,
 				configClient.Url()+clients.ApiMetricsRoute,
 			),
 		)

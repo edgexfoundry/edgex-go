@@ -20,7 +20,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
@@ -115,15 +114,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 			serviceKey,
 			general.NewGeneralClient(
 				urlclient.New(
-					registryClient != nil,
-					endpoint.New(
-						ctx,
-						&sync.WaitGroup{},
-						&registryClient,
-						serviceKey,
-						"/",
-						internal.ClientMonitorDefault,
-					).Monitor(),
+					ctx,
+					&sync.WaitGroup{},
+					registryClient,
+					serviceKey,
+					"/",
+					internal.ClientMonitorDefault,
 					configuration.Clients[serviceName].Url(),
 				),
 			),
