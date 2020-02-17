@@ -18,7 +18,6 @@ package endpoint
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -26,10 +25,10 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-type endpoint struct {
+type Endpoint struct {
 	ctx            context.Context
 	wg             *sync.WaitGroup
-	RegistryClient *registry.Client
+	registryClient *registry.Client
 	serviceKey     string // The key of the service as found in the service registry (e.g. Consul)
 	path           string // The path to the service's endpoint following port number in the URL
 	interval       int    // The interval in milliseconds governing how often the client polls to keep the endpoint current
@@ -42,50 +41,48 @@ func New(
 	registryClient *registry.Client,
 	serviceKey string,
 	path string,
-	interval int) *endpoint {
+	interval int) *Endpoint {
 
-	return &endpoint{
+	return &Endpoint{
 		ctx:            ctx,
 		wg:             wg,
-		RegistryClient: registryClient,
+		registryClient: registryClient,
 		serviceKey:     serviceKey,
 		path:           path,
 		interval:       interval,
 	}
 }
 
-func (e endpoint) Monitor() chan interfaces.URLStream {
-	ch := make(chan interfaces.URLStream, 1)
-	url, err := e.buildURL()
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stdout, err.Error())
-	}
-	ch <- interfaces.URLStream(url)
-
+func (e Endpoint) Monitor() chan interfaces.URLStream {
+	ch := make(chan interfaces.URLStream)
+	ticker := time.NewTicker(time.Millisecond * time.Duration(e.interval))
 	e.wg.Add(1)
 	go func() {
 		defer e.wg.Done()
+
+		// run fetchURL once before looping so we get the first check before the first timer interval
+		e.fetchURL(ch)
 		for {
 			select {
 			case <-e.ctx.Done():
-				break
-			}
+				ticker.Stop()
+				return
 
-			url, err := e.buildURL()
-			if err != nil {
-				_, _ = fmt.Fprintln(os.Stdout, err.Error())
+			case <-ticker.C:
+				e.fetchURL(ch)
 			}
-			ch <- interfaces.URLStream(url)
-			time.Sleep(time.Millisecond * time.Duration(e.interval))
 		}
 	}()
+
 	return ch
 }
 
-func (e endpoint) buildURL() (string, error) {
-	endpoint, err := (*e.RegistryClient).GetServiceEndpoint(e.serviceKey)
+func (e Endpoint) fetchURL(ch chan interfaces.URLStream) {
+	endpoint, err := (*e.registryClient).GetServiceEndpoint(e.serviceKey)
 	if err != nil {
-		return "", fmt.Errorf("unable to get Service endpoint for %s: %s", e.serviceKey, err.Error())
+		_, _ = fmt.Println(fmt.Errorf("unable to get service endpoint for %s: %s", e.serviceKey, err.Error()))
+		return
 	}
-	return fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, e.path), nil
+
+	ch <- interfaces.URLStream(fmt.Sprintf("http://%s:%v%s", endpoint.Host, endpoint.Port, e.path))
 }
