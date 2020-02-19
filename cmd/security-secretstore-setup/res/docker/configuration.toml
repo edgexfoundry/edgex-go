@@ -81,10 +81,6 @@ Interval = 1
   Service = "logging"
   Username = "logging"
 
-  [Databases.exportclient]
-  Service = "exportclient"
-  Username = "exportclient"
-
   [Databases.application-service]
   Service = "appservice"
   Username = "appservice"
