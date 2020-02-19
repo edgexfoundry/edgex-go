@@ -42,9 +42,9 @@ File = './logs/edgex-core-data.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'coredata'
-  Password = ''
+  Password = 'password'
   Port = 27017
-  Username = ''
+  Username = 'core'
   Timeout = 5000
   Type = 'mongodb'
 

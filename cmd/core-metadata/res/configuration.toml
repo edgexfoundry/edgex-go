@@ -41,9 +41,9 @@ File = './logs/edgex-core-metadata.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'metadata'
-  Password = ''
+  Password = 'password'
   Port = 27017
-  Username = ''
+  Username = 'meta'
   Timeout = 5000
   Type = 'mongodb'
 

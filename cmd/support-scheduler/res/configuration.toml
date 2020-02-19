@@ -32,9 +32,9 @@ File = './logs/edgex-support-scheduler.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'scheduler'
-  Password = ''
+  Password = 'password'
   Port = 27017
-  Username = ''
+  Username = 'scheduler'
   Timeout = 5000
   Type = 'mongodb'
 
