@@ -93,7 +93,7 @@ func (op deviceNotifier) postNotification(name string, action string) {
 			Severity:    notifications.NORMAL,
 		}
 
-		op.notifyClient.SendNotification(notification, op.ctx)
+		op.notifyClient.SendNotification(op.ctx, notification)
 	}
 }
 

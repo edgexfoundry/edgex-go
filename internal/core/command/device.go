@@ -29,17 +29,17 @@ import (
 )
 
 func executeCommandByDeviceID(
+	ctx context.Context,
 	deviceID string,
 	commandID string,
 	body string,
 	queryParams string,
 	isPutCommand bool,
-	ctx context.Context,
 	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
 
-	d, err := deviceClient.Device(deviceID, ctx)
+	d, err := deviceClient.Device(ctx, deviceID)
 	if err != nil {
 		return "", err
 	}
@@ -66,21 +66,21 @@ func executeCommandByDeviceID(
 		return "", errors.NewErrCommandNotAssociatedWithDevice(commandID, deviceID)
 	}
 
-	return executeCommandByDevice(d, c, body, queryParams, isPutCommand, ctx, lc)
+	return executeCommandByDevice(ctx, d, c, body, queryParams, isPutCommand, lc)
 }
 
 func executeCommandByName(
+	ctx context.Context,
 	dn string,
 	cn string,
 	body string,
 	queryParams string,
 	isPutCommand bool,
-	ctx context.Context,
 	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient) (string, error) {
 
-	d, err := deviceClient.DeviceForName(dn, ctx)
+	d, err := deviceClient.DeviceForName(ctx, dn)
 	if err != nil {
 		return "", err
 	}
@@ -94,16 +94,16 @@ func executeCommandByName(
 		return "", err
 	}
 
-	return executeCommandByDevice(d, command, body, queryParams, isPutCommand, ctx, lc)
+	return executeCommandByDevice(ctx, d, command, body, queryParams, isPutCommand, lc)
 }
 
 func executeCommandByDevice(
+	ctx context.Context,
 	device contract.Device,
 	command contract.Command,
 	body string,
 	queryParams string,
 	isPutCommand bool,
-	ctx context.Context,
 	lc logger.LoggingClient) (string, error) {
 
 	var ex Executor
@@ -154,13 +154,13 @@ func getAllCommands(
 }
 
 func getCommandsByDeviceID(
-	did string,
 	ctx context.Context,
+	did string,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	configuration *config.ConfigurationStruct) (contract.CommandResponse, error) {
 
-	d, err := deviceClient.Device(did, ctx)
+	d, err := deviceClient.Device(ctx, did)
 	if err != nil {
 		return contract.CommandResponse{}, err
 	}
@@ -169,13 +169,13 @@ func getCommandsByDeviceID(
 }
 
 func getCommandsByDeviceName(
-	dn string,
 	ctx context.Context,
+	dn string,
 	dbClient interfaces.DBClient,
 	deviceClient metadata.DeviceClient,
 	configuration *config.ConfigurationStruct) (contract.CommandResponse, error) {
 
-	d, err := deviceClient.DeviceForName(dn, ctx)
+	d, err := deviceClient.DeviceForName(ctx, dn)
 	if err != nil {
 		return contract.CommandResponse{}, err
 	}

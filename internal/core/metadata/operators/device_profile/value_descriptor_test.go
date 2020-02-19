@@ -258,7 +258,12 @@ func TestUpdateValueDescriptors(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			op := NewUpdateValueDescriptorExecutor(test.newDP, test.loader, test.client, logger.MockLogger{}, TestContext)
+			op := NewUpdateValueDescriptorExecutor(
+				TestContext,
+				test.newDP,
+				test.loader,
+				test.client,
+				logger.MockLogger{})
 			err := op.Execute()
 
 			if test.expectError && err == nil {

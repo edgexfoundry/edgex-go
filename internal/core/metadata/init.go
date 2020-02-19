@@ -20,18 +20,15 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/gorilla/mux"
 )
 
@@ -48,12 +45,10 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
-func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
-
-	// initialize clients required by service.
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
 	// add dependencies to container
@@ -63,24 +58,29 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		},
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
 			return coredata.NewValueDescriptorClient(
-				types.EndpointParams{
-					ServiceKey:  clients.CoreDataServiceKey,
-					Path:        clients.ApiValueDescriptorRoute,
-					UseRegistry: registryClient != nil,
-					Url:         configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute,
-					Interval:    configuration.Service.ClientMonitor,
-				},
-				endpoint.Endpoint{RegistryClient: &registryClient})
+				urlclient.New(
+					ctx,
+					wg,
+					registryClient,
+					clients.CoreDataServiceKey,
+					clients.ApiValueDescriptorRoute,
+					configuration.Service.ClientMonitor,
+					configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
+				),
+			)
 		},
 		container.NotificationsClientName: func(get di.Get) interface{} {
-			return notifications.NewNotificationsClient(types.EndpointParams{
-				ServiceKey:  clients.SupportNotificationsServiceKey,
-				Path:        clients.ApiNotificationRoute,
-				UseRegistry: registryClient != nil,
-				Url:         configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute,
-				Interval:    configuration.Service.ClientMonitor,
-			},
-				endpoint.Endpoint{RegistryClient: &registryClient})
+			return notifications.NewNotificationsClient(
+				urlclient.New(
+					ctx,
+					wg,
+					registryClient,
+					clients.SupportNotificationsServiceKey,
+					clients.ApiNotificationRoute,
+					configuration.Service.ClientMonitor,
+					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
+				),
+			)
 		},
 	})
 
