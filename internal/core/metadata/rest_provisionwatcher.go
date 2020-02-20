@@ -50,7 +50,7 @@ func restGetProvisionWatchers(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(&res)
+	_ = json.NewEncoder(w).Encode(&res)
 }
 
 func restDeleteProvisionWatcherById(
@@ -61,7 +61,7 @@ func restDeleteProvisionWatcherById(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var id string = vars[ID]
+	var id = vars[ID]
 
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
@@ -144,7 +144,7 @@ func restGetProvisionWatcherById(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var id string = vars[ID]
+	var id = vars[ID]
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
@@ -157,7 +157,7 @@ func restGetProvisionWatcherById(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatcherByName(
@@ -184,7 +184,7 @@ func restGetProvisionWatcherByName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatchersByProfileId(
@@ -194,7 +194,7 @@ func restGetProvisionWatchersByProfileId(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var pid string = vars[ID]
+	var pid = vars[ID]
 
 	// Check if the device profile exists
 	if _, err := dbClient.GetDeviceProfileById(pid); err != nil {
@@ -209,7 +209,7 @@ func restGetProvisionWatchersByProfileId(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatchersByProfileName(
@@ -228,7 +228,12 @@ func restGetProvisionWatchersByProfileName(
 	// Check if the device profile exists
 	dp, err := dbClient.GetDeviceProfileByName(pn)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusNotFound,
+			errorconcept.Default.InternalServerError,
+		)
 		return
 	}
 
@@ -239,7 +244,7 @@ func restGetProvisionWatchersByProfileName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatchersByServiceId(
@@ -249,11 +254,11 @@ func restGetProvisionWatchersByServiceId(
 	errorHandler errorconcept.ErrorHandler) {
 
 	vars := mux.Vars(r)
-	var sid string = vars[ID]
+	var sid = vars[ID]
 
 	// Check if the device service exists
 	if _, err := dbClient.GetDeviceServiceById(sid); err != nil {
-		errorHandler.Handle(w, errors.New("Device Service not found"), errorconcept.Default.NotFound)
+		errorHandler.Handle(w, errors.New("device Service not found"), errorconcept.Default.NotFound)
 		return
 	}
 
@@ -264,7 +269,7 @@ func restGetProvisionWatchersByServiceId(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatchersByServiceName(
@@ -283,7 +288,12 @@ func restGetProvisionWatchersByServiceName(
 	// Check if the device service exists
 	ds, err := dbClient.GetDeviceServiceByName(sn)
 	if err != nil {
-		errorHandler.HandleOneVariant(w, err, errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusNotFound, errorconcept.Default.InternalServerError)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusNotFound,
+			errorconcept.Default.InternalServerError,
+		)
 		return
 	}
 
@@ -295,7 +305,7 @@ func restGetProvisionWatchersByServiceName(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restGetProvisionWatchersByIdentifier(
@@ -323,7 +333,7 @@ func restGetProvisionWatchersByIdentifier(
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(res)
 }
 
 func restAddProvisionWatcher(
@@ -346,7 +356,7 @@ func restAddProvisionWatcher(
 	if pw.Name == "" {
 		errorHandler.HandleOneVariant(
 			w,
-			errors.New("No name provided for new provision watcher"),
+			errors.New("no name provided for new provision watcher"),
 			nil,
 			errorconcept.Default.Conflict)
 		return
@@ -479,14 +489,24 @@ func updateProvisionWatcherFields(
 		// Check that the name is unique
 		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
 		if err != nil {
-			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			errorHandler.HandleOneVariant(
+			errorHandler.Handle(
 				w,
 				err,
-				errorconcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),
 				errorconcept.Default.ServiceUnavailable)
+
+			return err
 		}
-		to.Name = from.Name
+		if checkPW.Id == to.Id {
+			err = errors.New("duplicate provision watcher")
+			errorHandler.Handle(
+				w,
+				err,
+				// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
+				errorconcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),
+			)
+
+			return err
+		}
 	}
 
 	return nil
