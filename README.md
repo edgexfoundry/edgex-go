@@ -141,7 +141,7 @@ Follow the "Installation and Execution" steps above for obtaining and building t
 make docker run_docker
 ```
 
-**Note** The default behavior is to use Mongo for the database, use the command `make EDGEX_DB=redis run_docker` to start EdgeX with Redis.
+**Note** The default behavior is to use Redis for the database, use the command `make EDGEX_DB=mongo run_docker` to start EdgeX with Mongo.
 
 # Community
 

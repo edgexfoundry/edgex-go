@@ -39,13 +39,13 @@ File = '/edgex/logs/edgex-core-data.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'edgex-mongo'
+  Host = 'edgex-redis'
   Name = 'coredata'
   Password = 'password'
-  Port = 27017
+  Port = 6379
   Username = 'core'
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [MessageQueue]
 Protocol = 'tcp'

@@ -1,5 +1,5 @@
 [Writable]
-Persistence = 'database'
+Persistence = 'file'
 LogLevel = 'INFO'
 
 [Service]

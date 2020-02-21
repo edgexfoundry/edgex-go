@@ -32,11 +32,14 @@ File = './logs/edgex-support-scheduler.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'scheduler'
-  Password = 'password'
-  Port = 27017
-  Username = 'scheduler'
+  # Temporarily commented out. Will be pulled back in with secure Redis PR.
+  # Password = 'password'
+  # Username = 'scheduler'
+  Password = ''
+  Username = ''
+  Port = 6379
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [Intervals]
     [Intervals.Midnight]
