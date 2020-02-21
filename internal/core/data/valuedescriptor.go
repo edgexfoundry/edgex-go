@@ -185,14 +185,14 @@ func getValueDescriptorsByDevice(
 }
 
 func getValueDescriptorsByDeviceName(
-	name string,
 	ctx context.Context,
+	name string,
 	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
-	device, err := mdc.DeviceForName(name, ctx)
+	device, err := mdc.DeviceForName(ctx, name)
 	if err != nil {
 		lc.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
@@ -202,14 +202,14 @@ func getValueDescriptorsByDeviceName(
 }
 
 func getValueDescriptorsByDeviceId(
-	id string,
 	ctx context.Context,
+	id string,
 	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	mdc metadata.DeviceClient) (vdList []contract.ValueDescriptor, err error) {
 
 	// Get the device
-	device, err := mdc.Device(id, ctx)
+	device, err := mdc.Device(ctx, id)
 	if err != nil {
 		lc.Error("Problem getting device from metadata: " + err.Error())
 		return []contract.ValueDescriptor{}, err
@@ -313,14 +313,18 @@ func updateValueDescriptor(
 	if from.Name != "" {
 		// Check if value descriptor is still in use by readings if the name changes
 		if from.Name != to.Name {
-			r, err := getReadingsByValueDescriptor(to.Name, 10, lc, dbClient, configuration) // Arbitrary limit, we're just checking if there are any readings
+			// Arbitrary limit, we're just checking if there are any readings
+			r, err := getReadingsByValueDescriptor(to.Name, 10, lc, dbClient, configuration)
 			if err != nil {
 				lc.Error("Error checking the readings for the value descriptor: " + err.Error())
 				return err
 			}
 			// Value descriptor is still in use
 			if len(r) != 0 {
-				lc.Error("Data integrity issue.  Value Descriptor with name:  " + from.Name + " is still referenced by existing readings.")
+				lc.Error(
+					"Data integrity issue.  Value Descriptor with name:  " +
+						from.Name +
+						" is still referenced by existing readings.")
 				return errors.NewErrValueDescriptorInUse(from.Name)
 			}
 		}

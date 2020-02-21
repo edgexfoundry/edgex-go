@@ -19,13 +19,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/edgexfoundry/edgex-go/internal/mocks"
 )
 
 const testDeviceName string = "Test Device"
@@ -36,26 +37,26 @@ func NewMockDeviceClient() *mocks.DeviceClient {
 
 	protocols := getProtocols()
 
-	mockDeviceResultFn := func(id string, ctx context.Context) contract.Device {
+	mockDeviceResultFn := func(ctx context.Context, id string) contract.Device {
 		if bson.IsObjectIdHex(id) {
 			return contract.Device{Id: id, Name: testDeviceName, Protocols: protocols}
 		}
 		return contract.Device{}
 	}
-	client.On("Device", "valid", context.Background()).Return(mockDeviceResultFn, nil)
-	client.On("Device", "404", context.Background()).Return(mockDeviceResultFn,
+	client.On("Device", context.Background(), "valid").Return(mockDeviceResultFn, nil)
+	client.On("Device", context.Background(), "404").Return(mockDeviceResultFn,
 		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("Device", mock.Anything, context.Background()).Return(mockDeviceResultFn, fmt.Errorf("some error"))
+	client.On("Device", context.Background(), mock.Anything).Return(mockDeviceResultFn, fmt.Errorf("some error"))
 
-	mockDeviceForNameResultFn := func(name string, ctx context.Context) contract.Device {
+	mockDeviceForNameResultFn := func(ctx context.Context, name string) contract.Device {
 		device := contract.Device{Id: uuid.New().String(), Name: name, Protocols: protocols}
 
 		return device
 	}
-	client.On("DeviceForName", testDeviceName, context.Background()).Return(mockDeviceForNameResultFn, nil)
-	client.On("DeviceForName", "404", context.Background()).Return(mockDeviceForNameResultFn,
+	client.On("DeviceForName", context.Background(), testDeviceName).Return(mockDeviceForNameResultFn, nil)
+	client.On("DeviceForName", context.Background(), "404").Return(mockDeviceForNameResultFn,
 		types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("DeviceForName", mock.Anything, context.Background()).Return(mockDeviceForNameResultFn,
+	client.On("DeviceForName", context.Background(), mock.Anything).Return(mockDeviceForNameResultFn,
 		fmt.Errorf("some error"))
 
 	return client

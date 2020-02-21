@@ -7,7 +7,7 @@
 #
 
 # Docker image for Golang Core Data micro service 
-FROM golang:1.12-alpine AS builder
+FROM golang:1.13-alpine AS builder
 
 ENV GO111MODULE=on
 WORKDIR /go/src/github.com/edgexfoundry/edgex-go

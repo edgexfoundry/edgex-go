@@ -35,7 +35,7 @@ func updateDeviceLastReportedConnected(
 		return
 	}
 
-	d, err := mdc.CheckForDevice(device, context.Background())
+	d, err := mdc.CheckForDevice(context.Background(), device)
 	if err != nil {
 		lc.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -50,12 +50,12 @@ func updateDeviceLastReportedConnected(
 	t := db.MakeTimestamp()
 	// Found device, now update lastReported
 	// Use of context.Background because this function is invoked asynchronously from a channel
-	err = mdc.UpdateLastConnectedByName(d.Name, t, context.Background())
+	err = mdc.UpdateLastConnectedByName(context.Background(), d.Name, t)
 	if err != nil {
 		lc.Error("Problems updating last connected value for device: " + d.Name)
 		return
 	}
-	err = mdc.UpdateLastReportedByName(d.Name, t, context.Background())
+	err = mdc.UpdateLastReportedByName(context.Background(), d.Name, t)
 	if err != nil {
 		lc.Error("Problems updating last reported value for device: " + d.Name)
 	}
@@ -78,7 +78,7 @@ func updateDeviceServiceLastReportedConnected(
 	t := db.MakeTimestamp()
 
 	// Get the device
-	d, err := mdc.CheckForDevice(device, context.Background())
+	d, err := mdc.CheckForDevice(context.Background(), device)
 	if err != nil {
 		lc.Error("Error getting device " + device + ": " + err.Error())
 		return
@@ -98,8 +98,8 @@ func updateDeviceServiceLastReportedConnected(
 	}
 
 	// Use of context.Background because this function is invoked asynchronously from a channel
-	msc.UpdateLastConnected(s.Id, t, context.Background())
-	msc.UpdateLastReported(s.Id, t, context.Background())
+	_ = msc.UpdateLastConnected(context.Background(), s.Id, t)
+	_ = msc.UpdateLastReported(context.Background(), s.Id, t)
 }
 
 func checkDevice(
@@ -109,7 +109,7 @@ func checkDevice(
 	configuration *config.ConfigurationStruct) error {
 
 	if configuration.Writable.MetaDataCheck {
-		_, err := mdc.CheckForDevice(device, ctx)
+		_, err := mdc.CheckForDevice(ctx, device)
 		if err != nil {
 			return err
 		}

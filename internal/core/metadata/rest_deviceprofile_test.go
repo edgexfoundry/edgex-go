@@ -1356,7 +1356,7 @@ type MockValueDescriptorClient struct {
 	errorToThrow error
 }
 
-func (MockValueDescriptorClient) ValueDescriptorsUsage(names []string, ctx context.Context) (map[string]bool, error) {
+func (MockValueDescriptorClient) ValueDescriptorsUsage(ctx context.Context, names []string) (map[string]bool, error) {
 	usage := map[string]bool{}
 	for _, n := range names {
 		if n == TestInUseDeviceResource.Name {
@@ -1369,7 +1369,7 @@ func (MockValueDescriptorClient) ValueDescriptorsUsage(names []string, ctx conte
 	return usage, nil
 }
 
-func (mvdc MockValueDescriptorClient) Add(vdr *contract.ValueDescriptor, ctx context.Context) (string, error) {
+func (mvdc MockValueDescriptorClient) Add(ctx context.Context, vdr *contract.ValueDescriptor) (string, error) {
 	if mvdc.errorToThrow != nil {
 		return "", mvdc.errorToThrow
 	}
@@ -1377,15 +1377,15 @@ func (mvdc MockValueDescriptorClient) Add(vdr *contract.ValueDescriptor, ctx con
 	return "", nil
 }
 
-func (MockValueDescriptorClient) Update(vdr *contract.ValueDescriptor, ctx context.Context) error {
+func (MockValueDescriptorClient) Update(ctx context.Context, vdr *contract.ValueDescriptor) error {
 	return nil
 }
 
-func (MockValueDescriptorClient) DeleteByName(name string, ctx context.Context) error {
+func (MockValueDescriptorClient) DeleteByName(ctx context.Context, name string) error {
 	return nil
 }
 
-func (MockValueDescriptorClient) ValueDescriptorForName(name string, ctx context.Context) (contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptorForName(ctx context.Context, name string) (contract.ValueDescriptor, error) {
 	return contract.ValueDescriptor{Id: name}, nil
 }
 
@@ -1393,26 +1393,26 @@ func (MockValueDescriptorClient) ValueDescriptors(ctx context.Context) ([]contra
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) ValueDescriptor(id string, ctx context.Context) (contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptor(ctx context.Context, id string) (contract.ValueDescriptor, error) {
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) ValueDescriptorsByLabel(label string, ctx context.Context) ([]contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptorsByLabel(ctx context.Context, label string) ([]contract.ValueDescriptor, error) {
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) ValueDescriptorsForDevice(deviceId string, ctx context.Context) ([]contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptorsForDevice(ctx context.Context, deviceId string) ([]contract.ValueDescriptor, error) {
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) ValueDescriptorsForDeviceByName(deviceName string, ctx context.Context) ([]contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptorsForDeviceByName(ctx context.Context, deviceName string) ([]contract.ValueDescriptor, error) {
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) ValueDescriptorsByUomLabel(uomLabel string, ctx context.Context) ([]contract.ValueDescriptor, error) {
+func (MockValueDescriptorClient) ValueDescriptorsByUomLabel(ctx context.Context, uomLabel string) ([]contract.ValueDescriptor, error) {
 	panic("not expected to be invoked")
 }
 
-func (MockValueDescriptorClient) Delete(id string, ctx context.Context) error {
+func (MockValueDescriptorClient) Delete(ctx context.Context, id string) error {
 	panic("not expected to be invoked")
 }

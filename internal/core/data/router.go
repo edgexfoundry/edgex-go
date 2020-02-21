@@ -1903,7 +1903,7 @@ func valueDescriptorByDeviceHandler(
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceName(device, ctx, lc, dbClient, mdc)
+	vdList, err := getValueDescriptorsByDeviceName(ctx, device, lc, dbClient, mdc)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -1942,7 +1942,7 @@ func valueDescriptorByDeviceIdHandler(
 
 	ctx := r.Context()
 	// Get the value descriptors
-	vdList, err := getValueDescriptorsByDeviceId(deviceId, ctx, lc, dbClient, mdc)
+	vdList, err := getValueDescriptorsByDeviceId(ctx, deviceId, lc, dbClient, mdc)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,

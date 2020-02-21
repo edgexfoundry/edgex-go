@@ -28,9 +28,9 @@ import (
 
 func envSetup() func() {
 	envOrig := os.Getenv(EnvXdgRuntimeDir)
-	os.Unsetenv(EnvXdgRuntimeDir)
+	_ = os.Unsetenv(EnvXdgRuntimeDir)
 	return func() {
-		os.Setenv(EnvXdgRuntimeDir, envOrig)
+		_ = os.Setenv(EnvXdgRuntimeDir, envOrig)
 	}
 }
 
@@ -67,7 +67,7 @@ func TestGetWorkDirDefault(t *testing.T) {
 func TestWorkDirEnvVar(t *testing.T) {
 	defer (envSetup())()
 	const workDir = "./tmp"
-	os.Setenv(EnvXdgRuntimeDir, workDir)
+	_ = os.Setenv(EnvXdgRuntimeDir, workDir)
 	configuration := &config.ConfigurationStruct{}
 
 	d, err := GetWorkDir(configuration)
@@ -86,14 +86,18 @@ func TestGetCertConfigDirValid(t *testing.T) {
 		},
 	}
 	if err := CreateDirectoryIfNotExists(certConfigDir); err != nil {
-		assert.Fail(t, "unable to create directory")
+		assert.FailNow(t, "unable to create directory")
+	}
+
+	file, err := os.Create(filepath.Join(certConfigDir, testFileName))
+	if err != nil {
+		_ = os.RemoveAll(certConfigDir)
+		assert.FailNow(t, "unable to create file")
 	}
 	defer func() {
-		os.RemoveAll(certConfigDir)
+		_ = file.Close()
+		_ = os.RemoveAll(certConfigDir)
 	}()
-	if _, err := os.Create(filepath.Join(certConfigDir, testFileName)); err != nil {
-		assert.Fail(t, "unable to create file")
-	}
 
 	d, err := GetCertConfigDir(configuration)
 
@@ -134,7 +138,7 @@ func TestGetCacheDirValid(t *testing.T) {
 		assert.Fail(t, "unable to create directory")
 	}
 	defer func() {
-		os.Remove(cacheDir)
+		_ = os.Remove(cacheDir)
 	}()
 
 	d, err := GetCacheDir(configuration)
@@ -176,7 +180,7 @@ func TestGetDeployDirValid(t *testing.T) {
 		assert.Fail(t, "unable to create directory")
 	}
 	defer func() {
-		os.Remove(deployDir)
+		_ = os.Remove(deployDir)
 	}()
 
 	d, err := GetDeployDir(configuration)

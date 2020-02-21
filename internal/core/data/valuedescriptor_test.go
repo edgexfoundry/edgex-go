@@ -255,7 +255,7 @@ func TestGetValueDescriptorsByTypeError(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceName(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceName(testDeviceName, context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceName(context.Background(), testDeviceName, logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device name")
 	}
@@ -263,7 +263,7 @@ func TestGetValueDescriptorsByDeviceName(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceNameNotFound(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceName("404", context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceName(context.Background(), "404", logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err != nil {
 		switch err := err.(type) {
 		case types.ErrServiceClient:
@@ -283,7 +283,7 @@ func TestGetValueDescriptorsByDeviceNameNotFound(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceNameError(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceName("error", context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceName(context.Background(), "error", logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err == nil {
 		t.Errorf("Expected error getting value descriptor by device name with some error")
 	}
@@ -291,7 +291,7 @@ func TestGetValueDescriptorsByDeviceNameError(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceId(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceId("valid", context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceId(context.Background(), "valid", logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err != nil {
 		t.Errorf("Unexpected error getting value descriptor by device id")
 	}
@@ -299,7 +299,7 @@ func TestGetValueDescriptorsByDeviceId(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceIdNotFound(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceId("404", context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceId(context.Background(), "404", logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err != nil {
 		switch err := err.(type) {
 		case types.ErrServiceClient:
@@ -319,7 +319,7 @@ func TestGetValueDescriptorsByDeviceIdNotFound(t *testing.T) {
 
 func TestGetValueDescriptorsByDeviceIdError(t *testing.T) {
 	reset()
-	_, err := getValueDescriptorsByDeviceId("error", context.Background(), logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
+	_, err := getValueDescriptorsByDeviceId(context.Background(), "error", logger.NewMockClient(), nil, dataMocks.NewMockDeviceClient())
 	if err == nil {
 		t.Errorf("Expected error getting value descriptor by device id with some error")
 	}
