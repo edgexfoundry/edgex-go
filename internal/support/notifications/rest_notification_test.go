@@ -15,6 +15,8 @@
 package notifications
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -27,8 +29,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces/mocks"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+
 	"github.com/gorilla/mux"
 )
 
@@ -45,6 +50,11 @@ var TestInvalidAge = "invalid age"
 var TestSender = "System Management"
 var TestStart int64 = 1564758450
 var TestEnd int64 = 1564758650
+var notificationId = "526c5c28-7a21-48a8-90f6-8009400441f4"
+var invalidNotificationId = "..."
+var badNotificationId = "11111111-7a21-48a8-90f6-8009400441f4"
+var notificationServiceURI = clients.ApiBase + "/" + NOTIFICATIONSERVICE
+var testError = errors.New("some error")
 
 var TestLabels = []string{
 	"test_label",
@@ -54,6 +64,10 @@ var TestLabels = []string{
 var TestCategories = []string{
 	"test_category",
 }
+
+const (
+	NOTIFICATIONSERVICE = "notification"
+)
 
 func TestGetNotificationById(t *testing.T) {
 	tests := []struct {
@@ -259,6 +273,139 @@ func createNotifications(howMany int) []contract.Notification {
 		})
 	}
 	return notifications
+}
+
+func createNotificationBySeverityLevel(severityLevel string) contract.Notification {
+	var notification contract.Notification
+
+	switch severityLevel {
+	case contract.Critical:
+		notification = contract.Notification{
+			ID:       notificationId,
+			Slug:     "notice-critical-123",
+			Sender:   "Sender A",
+			Category: "SECURITY",
+			Severity: contract.Critical,
+			Content:  "Hello, Notification!",
+			Status:   "NEW",
+			Labels: []string{
+				"first-label",
+				"second-label",
+			},
+		}
+	case contract.Normal:
+		notification = contract.Notification{
+			ID:       notificationId,
+			Slug:     "notice-normal-123",
+			Sender:   "Sender B",
+			Category: "SECURITY",
+			Severity: contract.Normal,
+			Content:  "Hello, Notification!",
+			Status:   "NEW",
+			Labels: []string{
+				"first-label",
+				"second-label",
+			},
+		}
+	default:
+		//	...
+	}
+
+	return notification
+}
+
+func createInvalidNotification() contract.Notification {
+	var notification contract.Notification
+
+	notification = contract.Notification{
+		ID:       invalidNotificationId,
+		Slug:     "...",
+		Sender:   "...",
+		Category: "...",
+		Severity: contract.Critical,
+		Content:  "...",
+		Status:   "...",
+		Labels: []string{
+			"...",
+			"...",
+		},
+	}
+	return notification
+}
+
+func createInvalidCategoriesAndLabelsNotification() contract.Notification {
+	var notification contract.Notification
+
+	notification = contract.Notification{
+		ID:       notificationId,
+		Slug:     "notice-critical-123",
+		Sender:   "Sender A",
+		Category: "...",
+		Severity: contract.Critical,
+		Content:  "Hello, Notification!",
+		Status:   "NEW",
+		Labels: []string{
+			"first-bad-label",
+			"second-bad-label",
+		},
+	}
+	return notification
+}
+
+func createBadNotification() contract.Notification {
+	var notification contract.Notification
+
+	notification = contract.Notification{
+		ID:       badNotificationId,
+		Slug:     "notice-normal-123",
+		Sender:   "Sender B",
+		Category: "SECURITY",
+		Severity: contract.Critical,
+		Content:  "Hello, Notification!",
+		Status:   "NEW",
+		Labels: []string{
+			"first-label",
+			"second-label",
+		},
+	}
+	return notification
+}
+
+// This function serves to update the unexported isValidated field (in "go-mod-core-contracts"),
+// which can only be done by marshalling and unmarshalling to JSON.
+func validateNotification(notification *contract.Notification) contract.Notification {
+	b, _ := json.Marshal(notification)
+	_ = notification.UnmarshalJSON(b)
+	return *notification
+}
+
+func createNotificationHandlerRequestWithBody(
+	httpMethod string,
+	notification contract.Notification,
+	pathParams map[string]string) *http.Request {
+
+	// if your JSON marshalling fails you've got bigger problems
+	body, _ := json.Marshal(notification)
+
+	req := httptest.NewRequest(httpMethod, notificationServiceURI, bytes.NewReader(body))
+
+	return mux.SetURLVars(req, pathParams)
+}
+
+type mockOutline struct {
+	methodName string
+	arg        []interface{}
+	ret        []interface{}
+}
+
+func createMockWithOutlines(outlines []mockOutline) interfaces.DBClient {
+	dbMock := mocks.DBClient{}
+
+	for _, o := range outlines {
+		dbMock.On(o.methodName, o.arg...).Return(o.ret...)
+	}
+
+	return &dbMock
 }
 
 func TestDeleteNotificationById(t *testing.T) {
@@ -752,6 +899,135 @@ func TestGetNotificationsNewest(t *testing.T) {
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
 
+				return
+			}
+		})
+	}
+}
+
+func TestNotificationHandler(t *testing.T) {
+
+	notificationNormal := createNotificationBySeverityLevel(contract.Normal)
+	notificationCritical := createNotificationBySeverityLevel(contract.Critical)
+	notificationInvalid := createInvalidNotification()
+	notificationBad := createBadNotification()
+	notificationInvalidCategoriesAndLabels := createInvalidCategoriesAndLabelsNotification()
+
+	var categories []string
+	categories = append(categories, string(notificationNormal.Category))
+	var labels = []string{"first-label", "second-label"}
+
+	var badCategories []string
+	badCategories = append(badCategories, string(notificationInvalidCategoriesAndLabels.Category))
+	var badLabels = []string{"first-bad-label", "second-bad-label"}
+
+	tests := []struct {
+		name           string
+		request        *http.Request
+		dbMock         interfaces.DBClient
+		expectedStatus int
+	}{
+		{
+			"ok normal notification",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationNormal, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationNormal)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationNormal, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationNormal)}, []interface{}{nil}},
+			}),
+			http.StatusAccepted,
+		},
+		{
+			"ok critical notification",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationCritical, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationCritical)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationCritical, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationCritical)}, []interface{}{nil}},
+			}),
+			http.StatusAccepted,
+		},
+		{
+			"notification validation error",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationInvalid, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationInvalid)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{invalidNotificationId}, []interface{}{notificationInvalid, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationInvalid)}, []interface{}{nil}},
+			}),
+			http.StatusBadRequest,
+		},
+		{
+			"add notification error",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationCritical, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationCritical)}, []interface{}{invalidNotificationId, testError}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationCritical, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationCritical)}, []interface{}{nil}},
+			}),
+			http.StatusConflict,
+		},
+		{
+			"get notification error",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationCritical, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationCritical)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationBad, testError}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationCritical)}, []interface{}{nil}},
+			}),
+			http.StatusInternalServerError,
+		},
+		{
+			"distribute and mark notification ok",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationCritical, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationCritical)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationCritical, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, nil}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationCritical)}, []interface{}{nil}},
+			}),
+			http.StatusAccepted,
+		},
+		{
+			"distribute and mark notification processed",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationCritical, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationCritical)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationCritical, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{categories, labels}, []interface{}{[]contract.Subscription{}, testError}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationCritical)}, []interface{}{testError}},
+			}),
+			http.StatusOK,
+		},
+		{
+			"distribute and mark notification error",
+			createNotificationHandlerRequestWithBody(http.MethodPost, notificationInvalidCategoriesAndLabels, nil),
+			createMockWithOutlines([]mockOutline{
+				{"AddNotification", []interface{}{validateNotification(&notificationInvalidCategoriesAndLabels)}, []interface{}{notificationId, nil}},
+				{"GetNotificationById", []interface{}{notificationId}, []interface{}{notificationInvalidCategoriesAndLabels, nil}},
+				{"GetSubscriptionByCategoriesLabels", []interface{}{badCategories, badLabels}, []interface{}{[]contract.Subscription{}, testError}},
+				{"MarkNotificationProcessed", []interface{}{validateNotification(&notificationInvalidCategoriesAndLabels)}, []interface{}{testError}},
+			}),
+			http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			LoggingClient = logger.MockLogger{}
+			Configuration = &ConfigurationStruct{Service: config.ServiceInfo{MaxResultCount: 5}}
+			dbClient = tt.dbMock
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(notificationHandler)
+			handler.ServeHTTP(rr, tt.request)
+			response := rr.Result()
+			if response.StatusCode != tt.expectedStatus {
+				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
 				return
 			}
 		})

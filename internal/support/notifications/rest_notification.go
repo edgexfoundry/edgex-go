@@ -53,21 +53,19 @@ func notificationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if n.Severity == models.NotificationsSeverity(models.Critical) {
-		LoggingClient.Info("Critical severity scheduler is triggered for: " + n.Slug)
-		n, err = dbClient.GetNotificationById(n.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			LoggingClient.Error(err.Error())
-			return
-		}
-
-		err := distributeAndMark(n)
-		if err != nil {
-			return
-		}
-		LoggingClient.Info("Critical severity scheduler has completed for: " + n.Slug)
+	LoggingClient.Debug("The scheduler is triggered for: " + n.Slug)
+	n, err = dbClient.GetNotificationById(n.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		LoggingClient.Error(err.Error())
+		return
 	}
+
+	err = distributeAndMark(n)
+	if err != nil {
+		return
+	}
+	LoggingClient.Debug("The scheduler has completed for: " + n.Slug)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusAccepted)
