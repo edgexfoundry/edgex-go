@@ -18,20 +18,7 @@ import (
 	"fmt"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 )
-
-func ListDefaultServices() map[string]string {
-	return map[string]string{
-		clients.SupportNotificationsServiceKey: "Notifications",
-		clients.CoreCommandServiceKey:          "Command",
-		clients.CoreDataServiceKey:             "CoreData",
-		clients.CoreMetaDataServiceKey:         "Metadata",
-		clients.SupportLoggingServiceKey:       "Logging",
-		clients.SupportSchedulerServiceKey:     "Scheduler",
-	}
-}
 
 // MessageQueueInfo provides parameters related to connecting to a message queue
 type MessageQueueInfo struct {

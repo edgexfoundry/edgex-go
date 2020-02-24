@@ -23,15 +23,17 @@ EnableRemote = true
 File = '/edgex/logs/edgex-core-metadata.log'
 
 [Clients]
-  [Clients.Logging]
+  [Clients.edgex-support-logging]
   Protocol = 'http'
   Host = 'edgex-support-logging'
   Port = 48061
-  [Clients.Notifications]
+
+  [Clients.edgex-support-notifications]
   Protocol = 'http'
   Host = 'edgex-support-notifications'
   Port = 48060
-  [Clients.CoreData]
+
+  [Clients.edgex-core-data]
   Protocol = 'http'
   Host = 'edgex-core-data'
   Port = 48080
