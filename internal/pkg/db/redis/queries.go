@@ -18,6 +18,7 @@ import (
 	"strconv"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis/models"
@@ -72,7 +73,7 @@ func getObjectByHash(conn redis.Conn, hash string, field string, unmarshal unmar
 	return unmarshal(object, out)
 }
 
-func getObjectsByValue(conn redis.Conn, v string) (objects [][]byte, err error) {
+func getObjectsByValue(conn redis.Conn, v string) ([][]byte, error) {
 	ids, err := redis.Values(conn.Do("SMEMBERS", v))
 	if err != nil {
 		return nil, err
@@ -82,7 +83,7 @@ func getObjectsByValue(conn redis.Conn, v string) (objects [][]byte, err error) 
 		return nil, nil
 	}
 
-	objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+	objects, err := redis.ByteSlices(conn.Do("MGET", ids...))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func getObjectsByValue(conn redis.Conn, v string) (objects [][]byte, err error) 
 	return objects, nil
 }
 
-func getObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err error) {
+func getObjectsByValues(conn redis.Conn, vals ...string) ([][]byte, error) {
 	args := redis.Args{}
 	for _, v := range vals {
 		args = args.Add(v)
@@ -104,7 +105,7 @@ func getObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err 
 		return nil, nil
 	}
 
-	objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+	objects, err := redis.ByteSlices(conn.Do("MGET", ids...))
 	if err != nil {
 		return nil, err
 	}
@@ -114,19 +115,19 @@ func getObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err 
 
 // getObjectsByRange retrieves the entries for keys enumerated in a sorted set.
 // The entries are retrieved in the sorted set order.
-func getObjectsByRange(conn redis.Conn, key string, start, end int) (objects [][]byte, err error) {
+func getObjectsByRange(conn redis.Conn, key string, start, end int) ([][]byte, error) {
 	return getObjectsBySomeRange(conn, "ZRANGE", key, start, end)
 }
 
 // getObjectsByRevRange retrieves the entries for keys enumerated in a sorted set.
 // The entries are retrieved in the reverse sorted set order.
-func getObjectsByRevRange(conn redis.Conn, key string, start int, end int) (objects [][]byte, err error) {
+func getObjectsByRevRange(conn redis.Conn, key string, start int, end int) ([][]byte, error) {
 	return getObjectsBySomeRange(conn, "ZREVRANGE", key, start, end)
 }
 
 // getObjectsBySomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
 // command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
-func getObjectsBySomeRange(conn redis.Conn, command string, key string, start int, end int) (objects [][]byte, err error) {
+func getObjectsBySomeRange(conn redis.Conn, command string, key string, start int, end int) ([][]byte, error) {
 	ids, err := redis.Values(conn.Do(command, key, start, end))
 	if err != nil && err != redis.ErrNil {
 		return nil, err
@@ -140,6 +141,7 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 		}
 	}
 
+	var objects [][]byte
 	for _, obj := range result {
 		if obj != nil {
 			objects = append(objects, obj)
@@ -153,12 +155,13 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 // Return objects by a score from a zset
 // if limit is 0, all are returned
 // if end is negative, it is considered as positive infinity
-func getObjectsByRangeFilter(conn redis.Conn, key string, filter string, start, end int) (objects [][]byte, err error) {
+func getObjectsByRangeFilter(conn redis.Conn, key string, filter string, start, end int) ([][]byte, error) {
 	ids, err := redis.Values(conn.Do("ZRANGE", key, start, end))
 	if err != nil && err != redis.ErrNil {
 		return nil, err
 	}
 
+	var objects [][]byte
 	// https://github.com/golang/go/wiki/SliceTricks#filtering-without-allocating
 	fids := ids[:0]
 	if len(ids) > 0 {
@@ -187,7 +190,7 @@ func getObjectsByRangeFilter(conn redis.Conn, key string, filter string, start, 
 	return objects, nil
 }
 
-func getObjectsByScore(conn redis.Conn, key string, start, end int64, limit int) (objects [][]byte, err error) {
+func getObjectsByScore(conn redis.Conn, key string, start, end int64, limit int) ([][]byte, error) {
 	args := []interface{}{key, start}
 	if end < 0 {
 		args = append(args, "+inf")
@@ -204,6 +207,7 @@ func getObjectsByScore(conn redis.Conn, key string, start, end int64, limit int)
 		return nil, err
 	}
 
+	var objects [][]byte
 	if len(ids) > 0 {
 		objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
 		if err != nil {
@@ -251,7 +255,7 @@ func deleteObject(remover models.Remover, id string, conn redis.Conn) {
 	}
 }
 
-func getUnionObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte, err error) {
+func getUnionObjectsByValues(conn redis.Conn, vals ...string) ([][]byte, error) {
 	args := redis.Args{}
 	for _, v := range vals {
 		args = args.Add(v)
@@ -265,7 +269,7 @@ func getUnionObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte,
 		return nil, nil
 	}
 
-	objects, err = redis.ByteSlices(conn.Do("MGET", ids...))
+	objects, err := redis.ByteSlices(conn.Do("MGET", ids...))
 	if err != nil {
 		return nil, err
 	}
@@ -273,20 +277,23 @@ func getUnionObjectsByValues(conn redis.Conn, vals ...string) (objects [][]byte,
 	return objects, nil
 }
 
-func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) (objects [][]byte, err error) {
+func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) ([][]byte, error) {
 	args := redis.Args{}
-	args = append(args, "desset")
+
+	cacheSet := uuid.New().String()
+
+	args = append(args, cacheSet)
 	args = append(args, strconv.Itoa(len(vals)))
 	for _, val := range vals {
 		args = append(args, val)
 	}
 
-	_, err = conn.Do("ZINTERSTORE", args...)
+	_, err := conn.Do("ZINTERSTORE", args...)
 	if err != nil {
 		return nil, err
 	}
 
-	ids, err := redis.Values(conn.Do("ZRANGE", "desset", 0, -1))
+	ids, err := redis.Values(conn.Do("ZRANGE", cacheSet, 0, -1))
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +301,13 @@ func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) (objec
 	if limit < 0 || limit > len(ids) {
 		limit = len(ids)
 	}
-	objects, err = redis.ByteSlices(conn.Do("MGET", ids[0:limit]...))
+	objects, err := redis.ByteSlices(conn.Do("MGET", ids[0:limit]...))
+	if err != nil {
+		return nil, err
+	}
+
+	// clean up now unused ZINTERSTORE cache
+	_, err = redis.Int(conn.Do("DEL", cacheSet))
 	if err != nil {
 		return nil, err
 	}
