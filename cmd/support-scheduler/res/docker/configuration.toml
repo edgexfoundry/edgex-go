@@ -30,13 +30,13 @@ File = '/edgex/logs/edgex-support-scheduler.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'edgex-mongo'
+  Host = 'edgex-redis'
   Name = 'scheduler'
   Password = 'password'
-  Port = 27017
+  Port = 6379
   Username = 'scheduler'
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [Intervals]
     [Intervals.Midnight]

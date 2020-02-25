@@ -1,5 +1,5 @@
 [Writable]
-Persistence = 'database'
+Persistence = 'file'
 LogLevel = 'INFO'
 
 [Service]
@@ -25,9 +25,9 @@ File = './logs/edgex-support-logging.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'logging'
-  Password = ''
+  Password = 'password'
   Port = 27017
-  Username = ''
+  Username = 'logging'
   Timeout = 5000
   Type = 'mongodb'
 

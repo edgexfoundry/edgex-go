@@ -30,13 +30,13 @@ File = '/edgex/logs/edgex-support-notifications.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'edgex-mongo'
+  Host = 'edgex-redis'
   Name = 'notifications'
   Password = ''
-  Port = 27017
+  Port = 6379
   Username = ''
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [Smtp]
   Host = 'smtp.gmail.com'

@@ -36,11 +36,14 @@ File = './logs/edgex-core-command.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'metadata'
+  # Temporarily commented out. Will be pulled back in with secure Redis PR.
+  # Password = 'password'
+  # Username = 'meta'
   Password = ''
-  Port = 27017
   Username = ''
+  Port = 6379
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [SecretStore]
 Host = 'localhost'
