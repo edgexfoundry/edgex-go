@@ -6,12 +6,12 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/cloudflare/gokey v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.20
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.21
 	github.com/edgexfoundry/go-mod-configuration v0.0.0
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.48
 	github.com/edgexfoundry/go-mod-messaging v0.1.14
 	github.com/edgexfoundry/go-mod-registry v0.1.17
-	github.com/edgexfoundry/go-mod-secrets v0.0.15
+	github.com/edgexfoundry/go-mod-secrets v0.0.17
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.0
