@@ -293,7 +293,7 @@ func getObjectsByValuesSorted(conn redis.Conn, limit int, vals ...string) ([][]b
 		return nil, err
 	}
 
-	ids, err := redis.Values(conn.Do("ZRANGE", cacheSet, 0, -1))
+	ids, err := redis.Values(conn.Do("ZREVRANGE", cacheSet, 0, -1))
 	if err != nil {
 		return nil, err
 	}
