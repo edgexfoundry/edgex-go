@@ -399,6 +399,7 @@ func restAddProvisionWatcher(
 			errorconcept.Default.ServiceUnavailable)
 		return
 	}
+	pw.Id = id
 
 	// Notify Associates
 	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, lc, dbClient); err != nil {
