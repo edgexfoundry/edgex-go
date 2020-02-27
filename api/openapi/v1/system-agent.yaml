@@ -8,13 +8,12 @@ paths:
   /v1/config/{services}:
     get:
       description: Fetch the configuration of the specified EdgeX services by their
-        unique names - returning null if none is found for the service. HTTP 500 for
-        unknown or unanticipated issues
+        unique names.
       parameters:
       - name: services
         in: path
-        description: EdgeX micro service names (the unique name of each service comma
-          delimited)
+        description: A comma-separated list of EdgeX service names to query for
+          configuration.
         required: true
         style: simple
         explode: false
@@ -22,23 +21,23 @@ paths:
           type: string
       responses:
         200:
-          description: an array of config
+          description: A list of configuration data corresponding to each requested,
+            valid service.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/config'
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/metrics/{services}:
     get:
       description: Fetch the operating performance metrics of the specified EdgeX
-        services by their unique names - returning null if none is found for the service.
-        HTTP 500 for unknown or unanticipated issues
+        unique names.
       parameters:
       - name: services
         in: path
-        description: EdgeX micro service names (the unique name of each service comma
-          delimited)
+        description: A comma-separated list of EdgeX service names to query for
+          configuration.
         required: true
         style: simple
         explode: false
@@ -46,13 +45,38 @@ paths:
           type: string
       responses:
         200:
-          description: an array of metrics
+          description: A list of metrics data corresponding to each requested,
+            valid service.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/metric'
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
+  /v1/health/{services}:
+    get:
+      description: Fetch the health of the specified EdgeX services by their
+        unique names.
+      parameters:
+        - name: services
+          in: path
+          description: A comma-separated list of EdgeX service names to query for
+            health.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: A list of health data corresponding to each requested,
+            valid service.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/health'
+        500:
+          description: For unknown or unanticipated issues.
   /v1/operation:
     post:
       description: Issue a start, stop or restart action to the specified services.  HTTP
@@ -64,16 +88,22 @@ paths:
               $ref: '#/components/schemas/operation'
         required: true
       responses:
+        200:
+          description: A list of services and their executors.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/operation'
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/ping:
     get:
       description: Test service providing an indication that the service is available.
       responses:
         200:
-          description: return value of "pong"
+          description: Return value of "pong"
         503:
-          description: for unknown or unanticipated issues
+          description: For unknown or unanticipated issues
   /version:
     get:
       description: Get the API version
