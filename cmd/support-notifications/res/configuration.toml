@@ -32,11 +32,14 @@ File = './logs/edgex-support-notifications.log'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'notifications'
+  # Temporarily commented out. Will be pulled back in with secure Redis PR.
+  # Password = 'password'
+  # Username = 'notifications'
   Password = ''
-  Port = 27017
   Username = ''
+  Port = 6379
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [Smtp]
   Host = 'smtp.gmail.com'

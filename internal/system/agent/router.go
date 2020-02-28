@@ -182,15 +182,5 @@ func healthHandler(
 	vars := mux.Vars(r)
 	lc.Debug("health status data requested")
 
-	list := vars["services"]
-	var services []string
-	services = strings.Split(list, ",")
-
-	send, err := getHealth(services, registryClient)
-	if err != nil {
-		lc.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	pkg.Encode(send, w, lc)
+	pkg.Encode(getHealth(strings.Split(vars["services"], ","), registryClient), w, lc)
 }
