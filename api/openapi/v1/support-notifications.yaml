@@ -5,15 +5,24 @@ info:
 servers:
 - url: http://localhost:48060/api
 paths:
+  /v1/config:
+    get:
+      description: Fetch the current state of the service's configuration.
+      responses:
+        200:
+          description: The service's configuration as a JSON document
+        400:
+          description: Request is either invalid, unparseable, or the
+            configuration cannot be serialized.
   /cleanup:
     delete:
-      description: Delete all the Notifications if the current timestamp minus their
+      description: Delete all the notifications if the current timestamp minus their
         last modification timestamp is less than a default age setting, and the corresponding
-        Transmissions will also be deleted.
+        transmissions will also be deleted.
       responses:
         202:
           description: Return 202 Accepted status code without content when receiving
-            the request, because it is an asynchronous operation.
+            the request.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -22,13 +31,13 @@ paths:
                 $ref: '#/components/schemas/Error'
   /cleanup/age/{age}:
     delete:
-      description: Delete all the Notifications if the current timestamp minus their
+      description: Delete all the notifications if the current timestamp minus their
         last modification timestamp is less than the age parameter, and the corresponding
-        Transmissions will also be deleted.
+        transmissions will also be deleted.
       parameters:
       - name: age
         in: path
-        description: Specify the age of <<typeName>>, and the format is in milliseconds.
+        description: Specify the age of the type name, where the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -36,8 +45,8 @@ paths:
           type: number
       responses:
         202:
-          description: Return 202 Accepted status code without content when receiving
-            the request, because it is an asynchronous operation.
+          description: Return a 202 Accepted status code without content when receiving
+            the request.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -46,22 +55,19 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification:
     post:
-      description: Receive Alerts or Notifications.  If the severity is CRITICAL,
-        the Notifications are processed (distributed) immediately.  Or, the Notification
-        is processed in batch.
+      description: Receive alerts or notifications. Notifications of any severity
+        level are processed / distributed immediately.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Notification'
+              $ref: '#/components/schemas/notification'
         required: true
       responses:
         202:
-          description: If Alerts and Notifications Service is available, it always
-            returns 202 Accepted to clients with the new ID to indicate the Notification
-            has been received.
+          description: Indicates that the notification has been received.
         409:
-          description: The slug is duplicate.  Please try another one.
+          description: The slug is duplicate. Try another one.
           content:
             text/plain:
               schema:
@@ -74,15 +80,12 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/age/{age}:
     delete:
-      description: Delete the proccessed Notifications if the current timestamp minus
-        their last modification timestamp is less than the age parameter, and the
-        corresponding Transmissions will also be deteled.  Please notice this API
-        is only for proccessed Notifications (status = PROCCESSED).  If the deletion
-        purpose includes each kind of Notifications, please refer to /cleanup API.
+      description: Delete the proccessed notifications if the current timestamp minus
+        their last modification timestamp is less than the age parameter.
       parameters:
       - name: age
         in: path
-        description: Specify the age of Notification, and the format is in milliseconds.
+        description: Specify the age of notification, and the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -90,7 +93,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -99,7 +102,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/end/{end}/{limit}:
     get:
-      description: Query the Notifications by creation timestamp before end date.
+      description: Query the notification by creation timestamp before end date.
       parameters:
       - name: limit
         in: path
@@ -119,7 +122,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -138,7 +141,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/labels/{labels}/{limit}:
     get:
-      description: Query the Notifications by labels matching any one of them.
+      description: Query the notification by labels matching any one of them.
       parameters:
       - name: limit
         in: path
@@ -158,7 +161,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -177,7 +180,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/new/{limit}:
     get:
-      description: Fetch the unprocessed Notifications (status = NEW).
+      description: Fetch the unprocessed notification, where status = NEW.
       parameters:
       - name: limit
         in: path
@@ -189,7 +192,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -208,7 +211,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/sender/{sender}/{limit}:
     get:
-      description: Query the Notifications by sender name with limited returned records.
+      description: Query the notification by sender name with limited returned records.
       parameters:
       - name: limit
         in: path
@@ -220,7 +223,7 @@ paths:
           type: number
       - name: sender
         in: path
-        description: The sender name of the Subscription, which could be partially
+        description: The sender name of the subscription, which could be partially
           matched, and is case insensitive for query.
         required: true
         style: simple
@@ -229,7 +232,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -248,7 +251,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/slug/{slug}:
     get:
-      description: Query a specific Notification by slug.
+      description: Query a specific notification by slug.
       parameters:
       - name: slug
         in: path
@@ -261,11 +264,11 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Notification
+          description: Return a notification
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/Notification'
+                $ref: '#/components/schemas/notification'
         404:
           description: The targeted resource is not found.
           content:
@@ -279,7 +282,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     delete:
-      description: Delete a specific Notification by slug.
+      description: Delete a specific notification by slug.
       parameters:
       - name: slug
         in: path
@@ -292,7 +295,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         404:
           description: The targeted resource is not found.
           content:
@@ -307,7 +310,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/start/{start}/end/{end}/{limit}:
     get:
-      description: Query the Notifications by creation timestamp between start date
+      description: Query the notification by creation timestamp between start date
         and end date.
       parameters:
       - name: limit
@@ -336,7 +339,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -355,7 +358,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/notification/start/{start}/{limit}:
     get:
-      description: Query the Notifications by creation timestamp after start date.
+      description: Query the notification by creation timestamp after start date.
       parameters:
       - name: limit
         in: path
@@ -375,7 +378,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Notification array.
+          description: Return a list of notifications.
           content:
             '*/*':
               schema:
@@ -406,23 +409,22 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription:
     get:
-      description: List all Subscriptions.
+      description: List all subscriptions.
       responses:
         200:
-          description: Return a Subscription array.
+          description: Return subscriptions.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SubscriptionArray'
     put:
-      description: Update a specific Subscription according to the slug in request
-        body, and the Boolean value "true" will be returned to indicate updating successfully.  If
-        the slug doesn't exit, the 404 NotFound error will be returned.
+      description: Update a specific subscription according to the slug in request
+        body, and the Boolean value "true" will be returned to indicate updating successfully.
       requestBody:
-        $ref: '#/components/requestBodies/Subscription'
+        $ref: '#/components/requestBodies/subscription'
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -432,12 +434,12 @@ paths:
     post:
       description: Create a new Subscritpion.
       requestBody:
-        $ref: '#/components/requestBodies/Subscription'
+        $ref: '#/components/requestBodies/subscription'
       responses:
         201:
-          description: Return the slug when the Subscription has been created successfully.
+          description: Return the slug when the subscription has been created successfully.
         409:
-          description: The slug is duplicate.  Please try another one.
+          description: The slug is duplicate. Try another one.
           content:
             text/plain:
               schema:
@@ -450,7 +452,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/categories/{categories}:
     get:
-      description: Query the Subscription by subscribed categories matching any one
+      description: Query the subscription by subscribed categories matching any one
         of them.
       parameters:
       - name: categories
@@ -464,7 +466,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Subscription array.
+          description: Return subscriptions.
           content:
             '*/*':
               schema:
@@ -477,7 +479,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/categories/{categories}/labels/{labels}:
     get:
-      description: Query the Subscription by subscribed categories and labels matching
+      description: Query the subscription by subscribed categories and labels matching
         any one of them.
       parameters:
       - name: categories
@@ -500,7 +502,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Subscription array.
+          description: Return subscriptions.
           content:
             '*/*':
               schema:
@@ -513,7 +515,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/labels/{labels}:
     get:
-      description: Query the Subscription by subscribed labels matching any one of
+      description: Query the subscription by subscribed labels matching any one of
         them.
       parameters:
       - name: labels
@@ -527,7 +529,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Subscription array.
+          description: Return subscriptions.
           content:
             '*/*':
               schema:
@@ -540,11 +542,11 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/receiver/{receiver}:
     get:
-      description: Query the Subscriptions by Receiver Name.
+      description: Query the subscriptions by Receiver Name.
       parameters:
       - name: receiver
         in: path
-        description: The receiver name of the Subscription, which could be partially
+        description: The receiver name of the subscription, which could be partially
           matched, and is case insensitive for query.
         required: true
         style: simple
@@ -553,7 +555,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Subscription array.
+          description: Return subscriptions.
           content:
             '*/*':
               schema:
@@ -566,7 +568,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/slug/{slug}:
     get:
-      description: Query a specific Subscription by slug.
+      description: Query a specific subscription by slug.
       parameters:
       - name: slug
         in: path
@@ -579,11 +581,11 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Subscription.
+          description: Return a subscription.
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/Subscription'
+                $ref: '#/components/schemas/subscription'
         404:
           description: The targeted resource is not found.
           content:
@@ -597,7 +599,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     delete:
-      description: Delete a specific Subscription by slug.
+      description: Delete a specific subscription by slug.
       parameters:
       - name: slug
         in: path
@@ -610,7 +612,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         404:
           description: The targeted resource is not found.
           content:
@@ -625,13 +627,13 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/subscription/{id}:
     get:
-      description: Fetch a specific subscription by database specified id - returning
-        null if none are found. ServiceException (HTTP 500) for unknown or unanticipated
+      description: Fetch a specific subscription by database specified ID, returning
+        null if none are found.
         issues
       parameters:
       - name: id
         in: path
-        description: database generated id
+        description: database-generated ID
         required: true
         style: simple
         explode: false
@@ -641,17 +643,15 @@ paths:
         200:
           description: subscription
         404:
-          description: if the subscription cannot be found by id.
+          description: If the subscription cannot be found by ID.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
     delete:
-      description: Delete a subscription given its database generated ID. NotFoundException
-        (HTTP 404) if the subscription cannot be found by ID. ServiceException (HTTP
-        500) for unknown or unanticipated issues.
+      description: Delete a subscription given its database-generated ID.
       parameters:
       - name: id
         in: path
-        description: database generated id
+        description: Database-generated ID
         required: true
         style: simple
         explode: false
@@ -659,20 +659,20 @@ paths:
           type: string
       responses:
         200:
-          description: boolean on success of deletion request
+          description: Boolean on success of deletion request
         404:
-          description: if the subscription cannot be found by id.
+          description: If the subscription cannot be found by ID.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/transmission/acknowledged/age/{age}:
     delete:
-      description: Delete all the acknowledged Transmissions (status = ACKNOWLEDGED)
+      description: Delete all the acknowledged transmissions, where status = ACKNOWLEDGED
         if the current timestamp minus their last modification timestamp is less than
         the age parameter.
       parameters:
       - name: age
         in: path
-        description: Specify the age of Transmission, and the format is in milliseconds.
+        description: Specify the age of transmission, and the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -680,7 +680,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -689,7 +689,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/end/{end}/{limit}:
     get:
-      description: Query the Transmissions by creation timestamp before end date.
+      description: Query the transmissions by creation timestamp before end date.
       parameters:
       - name: limit
         in: path
@@ -709,7 +709,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -728,13 +728,13 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/escalated/age/{age}:
     delete:
-      description: Delete all the escalated Transmissions (status = ESCALATED) if
+      description: Delete all the escalated transmissions, where status = ESCALATED if
         the current timestamp minus their last modification timestamp is less than
         the age parameter.
       parameters:
       - name: age
         in: path
-        description: Specify the age of Transmission, and the format is in milliseconds.
+        description: Specify the age of transmission, and the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -742,7 +742,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -751,7 +751,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/escalated/{limit}:
     get:
-      description: Query the escalated Transmissions (status = ESCALATED)
+      description: Query the escalated transmissions, where status = ESCALATED
       parameters:
       - name: limit
         in: path
@@ -763,7 +763,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -782,13 +782,13 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/failed/age/{age}:
     delete:
-      description: Delete all the failed Transmissions (status = FAILED and resendCount
-        >= resend limit) if the current timestamp minus their last modification timestamp
+      description: Delete all the failed transmissions, where status = FAILED and resendCount
+        >= resend limit if the current timestamp minus their last modification timestamp
         is less than the age parameter.
       parameters:
       - name: age
         in: path
-        description: Specify the age of Transmission, and the format is in milliseconds.
+        description: Specify the age of transmission, and the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -796,7 +796,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -805,7 +805,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/failed/{limit}:
     get:
-      description: Query the failed Transmissions (status = FAILED)
+      description: Query the failed transmissions, where status = FAILED
       parameters:
       - name: limit
         in: path
@@ -817,7 +817,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -836,12 +836,12 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/sent/age/{age}:
     delete:
-      description: Delete all the sent Transmissions (status = SENT) if the current
+      description: Delete all the sent transmissions, where status = SENT if the current
         timestamp minus their last modification timestamp is less than the age parameter.
       parameters:
       - name: age
         in: path
-        description: Specify the age of Transmission, and the format is in milliseconds.
+        description: Specify the age of transmission, and the format is in milliseconds.
         required: true
         style: simple
         explode: false
@@ -849,7 +849,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return "True" to represent successful.
+          description: Return true to represent success.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -871,7 +871,7 @@ paths:
           type: number
       - name: slug
         in: path
-        description: This is a Notification slug which is a meaningful identifier
+        description: This is a notification slug which is a meaningful identifier
           provided by client, and it is case insensitive for query.
         required: true
         style: simple
@@ -896,9 +896,9 @@ paths:
           type: number
       responses:
         200:
-          description: list of transmissions
+          description: List of transmissions
         400:
-          description: request is invalid or unparseable
+          description: Request is invalid or unparseable
         413:
           description: The assigned limit perameter exceeds the current max limit.
           content:
@@ -906,7 +906,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
         503:
           description: For unanticipated or unknown issues encountered.
           content:
@@ -915,8 +915,8 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/slug/{slug}/{limit}:
     get:
-      description: Query the Transmissions associating a specific Notification by
-        the Notification slug.
+      description: Query the transmissions associating a specific notification by
+        the notification slug.
       parameters:
       - name: limit
         in: path
@@ -928,7 +928,7 @@ paths:
           type: number
       - name: slug
         in: path
-        description: This is a Notification slug which is a meaningful identifier
+        description: This is a notification slug which is a meaningful identifier
           provided by client, and it is case insensitive for query.
         required: true
         style: simple
@@ -937,7 +937,7 @@ paths:
           type: string
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -956,7 +956,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/start/{start}/end/{end}/{limit}:
     get:
-      description: Query the Transmissions by creation timestamp between start date
+      description: Query the transmissions by creation timestamp between start date
         and end date.
       parameters:
       - name: limit
@@ -985,7 +985,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -1004,7 +1004,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /v1/transmission/start/{start}/{limit}:
     get:
-      description: Query the Transmissions by creation timestamp after start date.
+      description: Query the transmissions by creation timestamp after start date.
       parameters:
       - name: limit
         in: path
@@ -1024,7 +1024,7 @@ paths:
           type: number
       responses:
         200:
-          description: Return a Transmission array.
+          description: Return transmissions.
           content:
             '*/*':
               schema:
@@ -1071,8 +1071,8 @@ components:
           description: HTTP status code
         timestamp:
           type: integer
-    Notification:
-      title: Notification Schema
+    notification:
+      title: notification Schema
       required:
       - category
       - content
@@ -1097,7 +1097,7 @@ components:
           type: string
         id:
           type: string
-          description: generated and used by system, and users can ignore this property
+          description: Generated and used by system, and users can ignore this property
         labels:
           uniqueItems: true
           type: array
@@ -1124,12 +1124,12 @@ components:
           - PROCESSED
           - ESCALATED
     NotificationArray:
-      title: The Array of Notification
+      title: The array of notifications
       type: array
       items:
-        $ref: '#/components/schemas/Notification'
-    Subscription:
-      title: Subscription Schema
+        $ref: '#/components/schemas/notification'
+    subscription:
+      title: subscription Schema
       required:
       - channels
       - receiver
@@ -1176,12 +1176,12 @@ components:
           items:
             type: string
     SubscriptionArray:
-      title: The Array of Subscription
+      title: The array of subscriptions
       type: array
       items:
-        $ref: '#/components/schemas/Subscription'
-    Transmission:
-      title: Transmission Schema
+        $ref: '#/components/schemas/subscription'
+    transmission:
+      title: transmission Schema
       required:
       - channel
       - notification
@@ -1207,7 +1207,7 @@ components:
           type: integer
           description: The last modification timestamp
         notification:
-          $ref: '#/components/schemas/Notification'
+          $ref: '#/components/schemas/notification'
         receiver:
           type: string
         records:
@@ -1227,10 +1227,10 @@ components:
           - ACKNOWLEDGED
           - TRXESCALATED
     TransmissionArray:
-      title: The Array of Transmission
+      title: The array of transmissions
       type: array
       items:
-        $ref: '#/components/schemas/Transmission'
+        $ref: '#/components/schemas/transmission'
     EMAILChannel:
       required:
       - mailAddresses
@@ -1285,9 +1285,9 @@ components:
           - SENT
           - ACKNOWLEDGED
   requestBodies:
-    Subscription:
+    subscription:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Subscription'
+            $ref: '#/components/schemas/subscription'
       required: true
