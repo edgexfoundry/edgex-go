@@ -38,13 +38,13 @@ File = '/edgex/logs/edgex-core-metadata.log'
 
 [Databases]
   [Databases.Primary]
-  Host = 'edgex-mongo'
+  Host = 'edgex-redis'
   Name = 'metadata'
   Password = 'password'
-  Port = 27017
+  Port = 6379
   Username = 'meta'
   Timeout = 5000
-  Type = 'mongodb'
+  Type = 'redisdb'
 
 [Notifications]
 PostDeviceChanges = true

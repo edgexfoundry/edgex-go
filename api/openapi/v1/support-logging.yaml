@@ -11,9 +11,12 @@ paths:
       responses:
         200:
           description: The service's configuration as JSON document
+        400:
+          description: Request is invalid or unparseable or if the
+            underlying configuration cannot be serialized to JSON properly.
   /v1/logs:
     post:
-      description: Create a new LogEntry
+      description: Create a new log entry
       requestBody:
         content:
           application/json:
@@ -22,15 +25,15 @@ paths:
         required: true
       responses:
         202:
-          description: accepted to clients with timestamp being accepted.
+          description: Accepted to clients with timestamp being accepted.
         400:
-          description: creation request is malformed
+          description: Creation request is malformed
   /v1/logs/keywords/{keywords}/{start}/{end}:
     delete:
       parameters:
       - name: keywords
         in: path
-        description: accepting multiple keywords separated by comma
+        description: Accepting multiple keywords separated by comma
         required: true
         style: simple
         explode: false
@@ -38,7 +41,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -46,7 +49,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -54,15 +57,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/keywords/{keywords}/{start}/{end}/{limit}:
     get:
       parameters:
       - name: keywords
         in: path
-        description: accepting multiple keywords separated by comma
+        description: Accepting multiple keywords separated by comma
         required: true
         style: simple
         explode: false
@@ -70,7 +73,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -78,7 +81,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -86,7 +89,7 @@ paths:
           type: number
       - name: limit
         in: path
-        description: the maximum number of records to fetch
+        description: The maximum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -94,19 +97,19 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry whose message containing any
+          description: List a collection of log entries whose message containing any
             of the specified keywords and being created between the specified start
-            and end dates - limited in size by the limit parameter
+            and end dates, limited in size by the limit parameter
         413:
-          description: if the number of events exceeds the current max limit
+          description: If the number of events exceeds the current max limit
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/logLevels/{logLevels}/originServices/{originServices}/{start}/{end}:
     delete:
       parameters:
       - name: logLevels
         in: path
-        description: accepting multiple logLevels separated by comma
+        description: Accepting multiple logLevels separated by comma
         required: true
         style: simple
         explode: false
@@ -114,7 +117,7 @@ paths:
           type: string
       - name: originServices
         in: path
-        description: accepting multiple originServices separated by comma
+        description: Accepting multiple origin services separated by comma
         required: true
         style: simple
         explode: false
@@ -122,7 +125,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -130,7 +133,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -138,15 +141,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/logLevels/{logLevels}/originServices/{originServices}/{start}/{end}/{limit}:
     get:
       parameters:
       - name: logLevels
         in: path
-        description: accepting multiple logLevels separated by comma
+        description: Accepting multiple logLevels separated by comma
         required: true
         style: simple
         explode: false
@@ -154,7 +157,7 @@ paths:
           type: string
       - name: originServices
         in: path
-        description: accepting multiple originServices separated by comma
+        description: Accepting multiple origin services separated by comma
         required: true
         style: simple
         explode: false
@@ -162,7 +165,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -170,7 +173,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -178,7 +181,7 @@ paths:
           type: number
       - name: limit
         in: path
-        description: the maximum number of records to fetch
+        description: The maximum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -186,19 +189,19 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry matching any of the specified
-            logLevels, originServices, and also being created between the specified
-            start and end dates - limited in size by the limit parameter
+          description: List a collection of log entries matching any of the specified
+            logLevels, origin services, and also being created between the specified
+            start and end dates, limited in size by the limit parameter
         413:
-          description: if the number of events exceeds the current max limit
+          description: If the number of events exceeds the current max limit
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/logLevels/{logLevels}/{start}/{end}:
     delete:
       parameters:
       - name: logLevels
         in: path
-        description: accepting multiple logLevels separated by comma
+        description: Accepting multiple logLevels separated by comma
         required: true
         style: simple
         explode: false
@@ -206,7 +209,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -214,7 +217,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -222,15 +225,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/logLevels/{logLevels}/{start}/{end}/{limit}:
     get:
       parameters:
       - name: logLevels
         in: path
-        description: accepting multiple logLevels separated by comma
+        description: Accepting multiple logLevels separated by comma
         required: true
         style: simple
         explode: false
@@ -238,7 +241,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -246,7 +249,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -254,7 +257,7 @@ paths:
           type: number
       - name: limit
         in: path
-        description: the maximum number of records to fetch
+        description: The maximum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -262,19 +265,19 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry matching any of the specified
-            logLevels and being created between the specified start and end dates
-            - limited in size by the limit parameter
+          description: List a collection of log entries matching any of the specified
+            logLevels and being created between the specified start and end dates,
+            limited in size by the limit parameter
         413:
-          description: if the number of events exceeds the current max limit
+          description: If the number of events exceeds the current max limit
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/originServices/{originServices}/{start}/{end}:
     delete:
       parameters:
       - name: originServices
         in: path
-        description: accepting multiple originServices separated by comma
+        description: Accepting multiple origin services separated by comma
         required: true
         style: simple
         explode: false
@@ -282,7 +285,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -290,7 +293,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -298,15 +301,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/originServices/{originServices}/{start}/{end}/{limit}:
     get:
       parameters:
       - name: originServices
         in: path
-        description: accepting multiple originServices separated by comma
+        description: Accepting multiple origin services separated by comma
         required: true
         style: simple
         explode: false
@@ -314,7 +317,7 @@ paths:
           type: string
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -322,7 +325,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -330,7 +333,7 @@ paths:
           type: number
       - name: limit
         in: path
-        description: the maximum number of records to fetch
+        description: The maximum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -338,9 +341,9 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry matching any of the specified
-            originServices and being created between the specified start and end dates
-            - limited in size by the limit parameter
+          description: List a collection of log entries matching any of the specified
+            origin services and being created between the specified start and end
+            dates, limited in size by the limit parameter
         413:
           description: if the number of events exceeds the current max limit
         500:
@@ -350,7 +353,7 @@ paths:
       parameters:
       - name: age
         in: path
-        description: minimum age in milliseconds (from created timestamp) a LogEntry
+        description: Minimum age in milliseconds from created timestamp that a log entry
           should be in order to be removed
         required: true
         style: simple
@@ -359,15 +362,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/{limit}:
     get:
       parameters:
       - name: limit
         in: path
-        description: the maximum number of records to fetch
+        description: The maximum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -375,18 +378,18 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry - limited in size by the limit
+          description: List a collection of log entries, limited in size by the limit
             parameter
         413:
-          description: if the number of events exceeds the current max limit
+          description: If the number of events exceeds the current max limit
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/{start}/{end}:
     delete:
       parameters:
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -394,7 +397,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -402,15 +405,15 @@ paths:
           type: number
       responses:
         200:
-          description: count of the number of LogEntry being deleted
+          description: Count of the number of log entries being deleted
         503:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/logs/{start}/{end}/{limit}:
     get:
       parameters:
       - name: start
         in: path
-        description: start date in long form
+        description: Start date in long form
         required: true
         style: simple
         explode: false
@@ -418,7 +421,7 @@ paths:
           type: number
       - name: end
         in: path
-        description: end date in long form
+        description: End date in long form
         required: true
         style: simple
         explode: false
@@ -426,7 +429,7 @@ paths:
           type: number
       - name: limit
         in: path
-        description: the maximimum number of records to fetch
+        description: The maximimum number of records to fetch
         required: true
         style: simple
         explode: false
@@ -434,20 +437,20 @@ paths:
           type: number
       responses:
         200:
-          description: list a collection of LogEntry created between the specified
-            start and end dates - limited in size by the limit parameter
+          description: List a collection of log entries created between the specified
+            start and end dates, limited in size by the limit parameter
         413:
-          description: if the number of events exceeds the current max limit
+          description: If the number of events exceeds the current max limit
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/ping:
     get:
       description: Test service providing an indication that the service is available.
       responses:
         200:
-          description: return value of "pong"
+          description: Return value of "pong"
         503:
-          description: for unknown or unanticipated issues
+          description: For unknown or unanticipated issues
   /version:
     get:
       description: Get the API version
