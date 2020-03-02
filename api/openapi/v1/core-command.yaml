@@ -11,24 +11,26 @@ paths:
       responses:
         200:
           description: The service's configuration as JSON document
+        400:
+          description: Request is invalid or unparseable or if the
+            underlying configuration cannot be serialized to JSON properly.
   /v1/device:
     get:
-      description: Retrieve a list of (all) devices and their command offerings. Throws
-        ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
+      description: Retrieve a list of all devices and their available commands.
       responses:
         200:
-          description: List of CommandResponse (containing the devices and their commands)
+          description: List of CommandResponse containing the devices and their commands.
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: '#/components/schemas/commandresponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/commandresponse'
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
   /v1/device/name/{name}:
     get:
-      description: Retrieve a device (by name) and its command offerings. Throws ServiceException
-        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
-        (HTTP 404) if no device exists by the name provided.
+      description: Retrieve a device by name and its available commands.
       parameters:
       - name: name
         in: path
@@ -39,23 +41,19 @@ paths:
           type: string
       responses:
         200:
-          description: CommandResponse containing the device and its commands
+          description: CommandResponse containing the device and its commands.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/commandresponse'
         404:
-          description: if no device exists by the name provided.
+          description: If no device exists by the name provided.
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
   /v1/device/name/{name}/command/{commandname}:
     get:
-      description: Issue the get command referenced by the command name to the device/sensor
-        (also referenced by name). It is associated to via the device service. ServiceException
-        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
-        (HTTP 404) if device with given name does not exist or device doesn't have
-        command with the given commandname. Throws LockedException (HTTP 423) if device
-        adminState is locked.
+      description: Issue the GET command referenced by the command name to the device/sensor,
+        also referenced by name. It is associated to via the device service.
       parameters:
       - name: name
         in: path
@@ -75,21 +73,17 @@ paths:
         200:
           description: String as returned by the device/sensor via the device service.
         400:
-          description: if the request is malformed or unparsable
+          description: If the request is malformed or unparsable
         404:
-          description: if device with given name does not exist or device doesn't
-            have command with the given commandname.
+          description: If device with given name does not exist or device doesn't
+            have command with the given command name.
         423:
-          description: if the device is locked (admin state).
+          description: If the device is locked in an admin state.
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
     put:
-      description: Issue the put command referenced by the command name to the device/sensor
-        (also referenced by name) it is associated to via the device service. ServiceException
-        (HTTP 500) for unanticipated or unknown issues encountered. Throws NotFoundException
-        (HTTP 404) if device with given name does not exist or device doesn't have
-        command with the given commandname. Throws LockedException (HTTP 423) if device
-        adminState is locked.
+      description: Issue the PUT command referenced by the command name to the device/sensor
+        also referenced by name it is associated to via the device service.
       parameters:
       - name: name
         in: path
@@ -111,19 +105,17 @@ paths:
         200:
           description: String as returned by the device/sensor via the device service.
         400:
-          description: if the request is malformed or unparsable
+          description: If the request is malformed or unparsable
         404:
-          description: if device with given name does not exist or device doesn't
-            have a command with the given commandname.
+          description: If device with given name does not exist or device doesn't
+            have a command with the given command name.
         423:
-          description: if the device is locked (admin state)
+          description: If the device is locked in an admin state
         500:
-          description: for unanticipated or unknown issues encountered
+          description: For unanticipated or unknown issues encountered
   /v1/device/{id}:
     get:
-      description: Retrieve a device (by database generated id) and its command offerings.
-        Throws ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
-        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
+      description: Retrieve a device by database generated ID and its available commands.
       parameters:
       - name: id
         in: path
@@ -134,22 +126,20 @@ paths:
           type: string
       responses:
         200:
-          description: CommandResponse containing the device and its commands
+          description: CommandResponse containing the device and its commands.
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: '#/components/schemas/commandresponse'
         404:
-          description: if no device exists by the id provided.
+          description: If no device exists by the ID provided.
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
   /v1/device/{id}/command/{commandid}:
     get:
-      description: Issue the get command referenced by the command id to the device/sensor
-        (also referenced by database generated id) it is associated to via the device
-        service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
-        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
-        Throws LockedException (HTTP 423) if the device is locked (admin state).
+      description: Issue the GET command referenced by the command ID to the device/sensor,
+        also referenced by database generated ID that it is associated to via the device
+        service.
       parameters:
       - name: id
         in: path
@@ -169,19 +159,17 @@ paths:
         200:
           description: String as returned by the device/sensor via the device service.
         400:
-          description: if the request is malformed or unparsable
+          description: If the request is malformed or unparsable
         404:
-          description: if no device exists by the id provided
+          description: If no device exists by the ID provided
         423:
-          description: if the device is locked (admin state).
+          description: If the device is locked in an admin state.
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
     put:
-      description: Issue the put command referenced by the command id to the device/sensor
-        (also referenced by database generated id) it is associated to via the device
-        service. ServiceException (HTTP 500) for unanticipated or unknown issues encountered.
-        Throws NotFoundException (HTTP 404) if no device exists by the id provided.
-        Throws LockedException (HTTP 423) if the device is locked (admin state).
+      description: Issue the PUT command referenced by the command ID to the device/sensor,
+        also referenced by database generated ID that it is associated to via the device
+        service.
       parameters:
       - name: id
         in: path
@@ -202,14 +190,18 @@ paths:
       responses:
         200:
           description: String as returned by the device/sensor via the device service.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/setting'
         400:
-          description: if the request is malformed or unparsable
+          description: If the request is malformed or unparsable
         404:
-          description: if no device exists by the id provided
+          description: If no device exists by the ID provided
         423:
-          description: if the device is locked (admin state)
+          description: If the device is locked in an admin state
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
   /v1/metrics:
     get:
       description: Fetch the current state of the service's metrics.
@@ -221,9 +213,9 @@ paths:
       description: Test service providing an indication that the service is available.
       responses:
         200:
-          description: pong as a string
+          description: String literal confirming that the service is up.
         500:
-          description: for unanticipated or unknown issues encountered.
+          description: For unanticipated or unknown issues encountered.
   /version:
     get:
       description: Get the API version

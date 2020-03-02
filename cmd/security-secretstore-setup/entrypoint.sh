@@ -19,6 +19,11 @@
 
 set -e
 
+if [ ! -z "${SECRETSTORE_SETUP_DONE_FLAG}" -a -f "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+  echo "Clearing secretstore-setup completion flag"
+  rm -f "${SECRETSTORE_SETUP_DONE_FLAG}"
+fi
+
 echo "creating /vault/config/assets"
 
 # create token directory and
@@ -41,6 +46,14 @@ echo "Initializing secret store"
 
 echo "Executing custom command: $@"
 "$@"
+
+# write a sentinel file when we're done because consul is not
+# secure and we don't trust it it access to the EdgeX secret store
+if [ ! -z "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+    echo "Signaling secretstore-setup completion"
+    mkdir -p `dirname "${SECRETSTORE_SETUP_DONE_FLAG}"`
+    touch "${SECRETSTORE_SETUP_DONE_FLAG}"
+fi
 
 echo "Waiting for termination signal"
 exec tail -f /dev/null
