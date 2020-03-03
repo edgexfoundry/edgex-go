@@ -23,7 +23,7 @@ EnableRemote = false
 File = './logs/edgex-support-notifications.log'
 
 [Clients]
-  [Clients.Logging]
+  [Clients.edgex-support-logging]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061

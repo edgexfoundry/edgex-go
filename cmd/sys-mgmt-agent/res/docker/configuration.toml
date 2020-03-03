@@ -37,32 +37,32 @@ EnableRemote = true
 File = '/edgex/logs/edgex-sys-mgmt-agent.log'
 
 [Clients]
-  [Clients.Notifications]
+  [Clients.edgex-support-notifications]
   Protocol = 'http'
   Host = 'edgex-support-notifications'
   Port = 48060
 
-  [Clients.Command]
+  [Clients.edgex-core-command]
   Protocol = 'http'
   Host = 'edgex-core-command'
   Port = 48082
 
-  [Clients.Metadata]
+  [Clients.edgex-core-metadata]
   Protocol = 'http'
   Host = 'edgex-core-metadata'
   Port = 48081
 
-  [Clients.Logging]
+  [Clients.edgex-support-logging]
   Protocol = 'http'
   Host = 'edgex-support-logging'
   Port = 48061
 
-  [Clients.CoreData]
+  [Clients.edgex-core-data]
   Protocol = 'http'
   Host = 'edgex-core-data'
   Port = 48080
 
-  [Clients.Scheduler]
+  [Clients.edgex-support-scheduler]
   Protocol = 'http'
   Host = 'edgex-support-scheduler'
   Port = 48085
