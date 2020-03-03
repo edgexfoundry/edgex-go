@@ -70,7 +70,7 @@ func (c Client) GetNotificationById(id string) (notification contract.Notificati
 
 	err = getObjectById(conn, id, unmarshalObject, &notification)
 	if err != nil {
-		return notification, err
+		return contract.Notification{}, err
 	}
 	return notification, nil
 }
@@ -232,7 +232,7 @@ func (c Client) DeleteNotificationById(id string) error {
 
 	n, err := c.GetNotificationById(id)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = c.deleteTransmissionBySlug(conn, n.Slug)
