@@ -13,8 +13,11 @@ description: |
 
 icon: snap/local/assets/edgex-snap-icon.png
 
-# delhi is epoch 0, edinburgh epoch 1, etc.
-epoch: 2
+# Different epochs prevent refreshes between major versions of EdgeX due
+# to continued configuration changes.
+#
+# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3
+epoch: 3
 
 # TODO: add armhf here when that's supported
 architectures:
