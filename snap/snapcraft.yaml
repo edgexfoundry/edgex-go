@@ -82,6 +82,9 @@ apps:
       --cmd $SNAP_DATA/config
       -confdir $SNAP_DATA/config/config-seed/res
       --props $SNAP_DATA/config/config-seed/res/properties
+      $REGISTRY_ARG
+    environment:
+      REGISTRY_ARG: "--registry=consul://localhost:8500"
     daemon: oneshot
     start-timeout: 15m
     plugs: [network, network-bind]
