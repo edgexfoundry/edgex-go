@@ -529,20 +529,12 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=go1.12.5.linux-amd64.tar.gz
-          FILE_HASH=aea86e3c73495f205929cfebba0d63f1382c8ac59be081b6351681415f4063cf
+          FILE_NAME=go1.13.8.linux-amd64.tar.gz
+          FILE_HASH=0567734d558aef19112f2b2873caa0c600f1b4a5827930eb5a7f35235219e9d8
           ;;
         arm64)
-          FILE_NAME=go1.12.5.linux-arm64.tar.gz
-          FILE_HASH=ff09f34935cd189a4912f3f308ec83e4683c309304144eae9cf60ebc552e7cd8
-          ;;
-        armhf)
-          FILE_NAME=go1.12.5.linux-armv6l.tar.gz
-          FILE_HASH=311f5e76c7cec1ec752474a61d837e474b8e750b8e3eed267911ab57c0e5da9a
-          ;;
-        i386)
-          FILE_NAME=go1.12.5.linux-386.tar.gz
-          FILE_HASH=146605e13bf337ff3aacd941a816c5d97a8fef8b5817e07fcec4540632085980
+          FILE_NAME=go1.13.8.linux-arm64.tar.gz
+          FILE_HASH=b46c0235054d0eb69a295a2634aec8a11c7ae19b3dc53556a626b89dc1f8cdb0
           ;;
       esac
       # download the archive, failing on ssl cert problems
@@ -567,6 +559,14 @@ parts:
       # the file from the vault part instead
       - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
     override-build: |
+      # When the snap is built by Jenkins w/in a docker instance, the existence of
+      # the top level go.mod file causes the consul build to fail when using go 1.13.
+      # This workaround can probably be removed if/when consul is updated to a more
+      # recent version.
+      if [ -f /build/go.mod ]; then
+        mv /build/go.mod /build/go.mod.bk
+      fi
+
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
       export GO111MODULES=off
@@ -593,6 +593,10 @@ parts:
       for i in `find . -type f -name "LICENSE"`; do
         install -DT "$i" \
                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      if [ -f /build/go.mod.bk ]; then
+        mv /build/go.mod.bk /build/go.mod
+      fi
     build-packages:
       - make
       - zip
@@ -1109,6 +1113,14 @@ parts:
     source-tag: v1.0.2
     source-depth: 1
     override-build: |
+      # When the snap is built by Jenkins w/in a docker instance, the existence of
+      # the top level go.mod file causes the consul build to fail when using go 1.13.
+      # This workaround can probably be removed if/when consul is updated to a more
+      # recent version.
+      if [ -f /build/go.mod ]; then
+        mv /build/go.mod /build/go.mod.bk
+      fi
+
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/vault
       export GO111MODULES=off
@@ -1143,6 +1155,9 @@ parts:
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
 
+      if [ -f /build/go.mod.bk ]; then
+        mv /build/go.mod.bk /build/go.mod
+      fi
   # DEVICE SERVICES parts
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
