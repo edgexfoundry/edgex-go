@@ -10,7 +10,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # into $SNAP_DATA/config
 # note that app-service-configurable is handled separately
 mkdir -p "$SNAP_DATA/config"
-for service in edgex-mongo security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-random device-virtual; do
+for service in edgex-mongo security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
@@ -36,9 +36,6 @@ if [ ! -f "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG" ]; then
         -e "s@\$SNAP@$SNAP_CURRENT@g" \
         "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG"
 fi
-
-# handle device-random device profile
-cp "$SNAP/config/device-random/res/device.random.yaml" "$SNAP_DATA/config/device-random/res/device.random.yaml"
 
 # handle device-virtual device profiles
 for profileType in bool float int uint; do
@@ -189,7 +186,7 @@ snapctl stop "$SNAP_NAME.postgres"
 # off.
 # also the app-service-configurable service since that is meant to replace the 
 # export services
-for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-random device-virtual redis; do
+for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-virtual redis; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off

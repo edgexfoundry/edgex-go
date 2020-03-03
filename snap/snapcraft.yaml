@@ -285,20 +285,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
-  device-random:
-    adapter: none
-    after:
-      - core-config-seed
-      - edgex-mongo
-      - security-proxy-setup
-      - core-data
-      - core-metadata
-      - support-logging
-    command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
-    daemon: simple
-    environment:
-      CONSUL_ADDR: "consul://localhost:8500"
-    plugs: [network, network-bind]
   device-virtual:
     adapter: none
     after:
@@ -1190,36 +1176,6 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
-
-  device-random:
-    source: https://github.com/edgexfoundry/device-random.git
-    source-depth: 1
-    source-branch: master
-    plugin: make
-    after: [go]
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT "./cmd/device-random" "$SNAPCRAFT_PART_INSTALL/bin/device-random"
-
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile'
-      install -d "$SNAPCRAFT_PART_INSTALL/config/device-random/res/"
-
-      # install configuration & default device profile
-      cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-random.log\":\'\$SNAP_COMMON/device-random.log\': \
-          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-random/res\"': > \
-        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/configuration.toml"
-
-      install -T "./cmd/res/device.random.yaml" \
-        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/device.random.yaml"
-
-      install -DT "./cmd/Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE"
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
