@@ -297,10 +297,12 @@ apps:
       - core-data
       - core-metadata
       - support-logging
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
     daemon: simple
     environment:
-      CONSUL_ADDR: "consul://localhost:8500"
+      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
+      PROFILE_ARG: "--profile=res"
+      REGISTRY_ARG: "--registry=consul://localhost:8500"
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
