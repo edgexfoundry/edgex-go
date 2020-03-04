@@ -14,7 +14,9 @@
 
 package command
 
+import "net/http"
+
 // Executor interface used to execute commands
 type Executor interface {
-	Execute() (string, int, error)
+	Execute() (deviceServiceResponse *http.Response, failure error)
 }

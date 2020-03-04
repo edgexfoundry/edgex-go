@@ -15,16 +15,13 @@
 package command
 
 import (
-	"bytes"
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
-
-// DefaultErrorCode the default value used when an error has occurred and no response code was received.
-const DefaultErrorCode = 0
 
 // serviceCommand type which encapsulates command information to be sent to the command service.
 type serviceCommand struct {
@@ -34,23 +31,18 @@ type serviceCommand struct {
 	logger.LoggingClient
 }
 
-// Execute sends the command to the command service
-func (sc serviceCommand) Execute() (string, int, error) {
+// Execute sends the command to the core-command service and gets a deviceServiceResponse back,
+// which it then returns, along with other parameters.
+func (sc serviceCommand) Execute() (deviceServiceResponse *http.Response, failure error) {
+
 	sc.LoggingClient.Debug("Issuing" + sc.Request.Method + " command to: " + sc.Request.URL.String())
-	resp, reqErr := sc.HttpCaller.Do(sc.Request)
+	deviceServiceResponse, reqErr := sc.HttpCaller.Do(sc.Request)
 	if reqErr != nil {
 		sc.LoggingClient.Error(reqErr.Error())
-		return "", http.StatusInternalServerError, reqErr
-
+		return nil, reqErr
 	}
 
-	buf := new(bytes.Buffer)
-	_, readErr := buf.ReadFrom(resp.Body)
-
-	if readErr != nil {
-		return "", DefaultErrorCode, readErr
-	}
-	return buf.String(), resp.StatusCode, nil
+	return deviceServiceResponse, nil
 }
 
 func newServiceCommand(

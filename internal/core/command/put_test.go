@@ -17,6 +17,8 @@ package command
 import (
 	"context"
 	"io/ioutil"
+	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -26,7 +28,8 @@ import (
 func TestNewPutCommandWithCorrelationId(t *testing.T) {
 	expectedCorrelationIDHeaderValue := "Testing"
 	testContext := context.WithValue(context.Background(), clients.CorrelationHeader, expectedCorrelationIDHeaderValue)
-	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test body", testContext, nil, logger.NewMockClient())
+	req := newRequestWithHeaders(map[string]string{clients.ContentType: clients.ContentTypeCBOR}, http.MethodPut)
+	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test body", testContext, nil, logger.NewMockClient(), req)
 	actualCorrelationIDHeaderValue := putCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue == "" {
 		t.Errorf("The populated PutCommand's request should contain a correlation ID header value")
@@ -36,8 +39,10 @@ func TestNewPutCommandWithCorrelationId(t *testing.T) {
 		t.Errorf("The populated PutCommand's request should contain the correct correlation ID")
 	}
 }
+
 func TestNewPutCommandNoCorrelationIDInContext(t *testing.T) {
-	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test Body", context.Background(), nil, logger.NewMockClient())
+	req := newRequestWithHeaders(map[string]string{clients.ContentType: clients.ContentTypeJSON}, http.MethodPut)
+	putCommand, _ := NewPutCommand(testDevice, testCommand, "Test Body", context.Background(), nil, logger.NewMockClient(), req)
 	actualCorrelationIDHeaderValue := putCommand.(serviceCommand).Request.Header.Get(clients.CorrelationHeader)
 	if actualCorrelationIDHeaderValue != "" {
 		t.Errorf("No correlation ID should be specified")
@@ -48,21 +53,23 @@ func TestNewPutCommandInvalidBaseUrl(t *testing.T) {
 	device := testDevice
 	device.Service.Addressable.Address = "!@#$"
 
-	_, err := NewPutCommand(device, testCommand, "Test body", context.Background(), nil, logger.NewMockClient())
+	req := newRequestWithHeaders(map[string]string{clients.ContentType: clients.ContentTypeCBOR}, http.MethodPut)
+	_, err := NewPutCommand(device, testCommand, "Test body", context.Background(), nil, logger.NewMockClient(), req)
 	if err != nil {
-		t.Errorf("The invalid URL error was not properly propegated to the caller")
+		t.Errorf("The invalid URL error was not properly propagated to the caller")
 	}
 }
 
 func TestNewPutCommandBody(t *testing.T) {
 	expectedRequestBody := "Test Request Body"
-	expectedRequestBodySize := len(expectedRequestBody)
-	putCommand, err := NewPutCommand(testDevice, testCommand, expectedRequestBody, context.Background(), nil, logger.NewMockClient())
+	req := newRequestWithHeaders(map[string]string{clients.ContentType: clients.ContentTypeJSON}, http.MethodPut)
+	putCommand, err := NewPutCommand(testDevice, testCommand, expectedRequestBody, context.Background(), nil, logger.NewMockClient(), req)
 
 	if err != nil {
 		t.Errorf("Unexpectedly failed while creating a PutCommand")
 	}
 
+	expectedRequestBodySize := len(expectedRequestBody)
 	actualBodyBytes, _ := ioutil.ReadAll(putCommand.(serviceCommand).Body)
 	if expectedRequestBodySize != len(actualBodyBytes) {
 		t.Errorf("Failed to verify the request body size")
@@ -71,5 +78,63 @@ func TestNewPutCommandBody(t *testing.T) {
 	actualRequestBody := string(actualBodyBytes)
 	if expectedRequestBody != actualRequestBody {
 		t.Error("Failed to verify the request body contents")
+	}
+}
+
+func TestNewPutCommandContentType(t *testing.T) {
+	tests := []struct {
+		name            string
+		originalHeaders map[string]string
+		expectedHeaders map[string]string
+	}{
+		{
+			name:            "cbor content type header propagated",
+			originalHeaders: map[string]string{clients.ContentType: clients.ContentTypeCBOR},
+			expectedHeaders: map[string]string{clients.ContentType: clients.ContentTypeCBOR},
+		},
+		{
+			name:            "json content type header propagated",
+			originalHeaders: map[string]string{clients.ContentType: clients.ContentTypeJSON},
+			expectedHeaders: map[string]string{clients.ContentType: clients.ContentTypeJSON},
+		},
+		{
+			name:            "no content type header provided",
+			originalHeaders: map[string]string{clients.ContentType: ""},
+			expectedHeaders: map[string]string{},
+		},
+		{
+			name:            "cbor content type propagated, random header not propagated",
+			originalHeaders: map[string]string{clients.ContentType: clients.ContentTypeCBOR, NonPropagatedHeader: "NonPropagatedHeader"},
+			expectedHeaders: map[string]string{clients.ContentType: clients.ContentTypeCBOR},
+		},
+		{
+			name:            "json content type propagated, random header not propagated",
+			originalHeaders: map[string]string{clients.ContentType: clients.ContentTypeJSON, NonPropagatedHeader: "NonPropagatedHeader"},
+			expectedHeaders: map[string]string{clients.ContentType: clients.ContentTypeJSON},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var loggerMock = logger.NewMockClient()
+			ctx := context.Background()
+			proxiedRequest := newRequestWithHeaders(tt.originalHeaders, http.MethodGet)
+			putCommand, _ := NewPutCommand(
+				testDevice,
+				testCommand,
+				"Test Body",
+				ctx,
+				nil,
+				loggerMock,
+				proxiedRequest)
+			actualHeaders := map[string]string{}
+			for headerName, headerValues := range putCommand.(serviceCommand).Request.Header {
+				// Extract the first element only from slice.
+				actualHeaders[headerName] = headerValues[0]
+			}
+			if !reflect.DeepEqual(actualHeaders, tt.expectedHeaders) {
+				t.Errorf("expected %s does not match the observed %s", tt.expectedHeaders, actualHeaders)
+			}
+		})
 	}
 }
