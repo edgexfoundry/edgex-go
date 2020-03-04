@@ -170,7 +170,7 @@ apps:
     command: bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $INIT_ARG
     daemon: oneshot
     environment:
-      INIT_ARG: "--init=true"
+      INIT_ARG: "--vaultInterval=10"
     start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
@@ -658,7 +658,7 @@ parts:
       # the install hook
       cat "./cmd/res/configuration.toml" | \
         sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
-            -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
             -e "s@CACertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
@@ -687,7 +687,7 @@ parts:
       install -DT "./cmd/security-proxy-setup/security-proxy-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-proxy-setup"
       install -DT "./cmd/security-secrets-setup/security-secrets-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secrets-setup"
       install -DT "./cmd/security-secretstore-setup/security-secretstore-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secretstore-setup"
-
+      install -DT "./cmd/security-file-token-provider/security-file-token-provider" "$SNAPCRAFT_PART_INSTALL/bin/security-file-token-provider"
 
       # FIXME: settings can't be overridden from the cmd-line!
       # Override 'LogFile' and 'LoggingRemoteURL'
@@ -702,7 +702,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/"
-
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
 
       # handle application.properties for the remaining java services
@@ -719,21 +719,21 @@ parts:
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-command/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
 
       cat "./cmd/core-data/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-data.log:\$SNAP_COMMON/core-data.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-data/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
 
       cat "./cmd/core-metadata/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-metadata.log:\$SNAP_COMMON/core-metadata.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
@@ -743,7 +743,7 @@ parts:
       cat "./cmd/support-logging/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-logging.log:\$SNAP_COMMON/support-logging.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-support-logging/secrets-token.json\"@" \
             -e s:"Persistence = 'database'":"Persistence = 'file'":\
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
@@ -751,14 +751,14 @@ parts:
       cat "./cmd/support-notifications/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgxe-support-notifications/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
       cat "./cmd/support-scheduler/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
@@ -790,23 +790,43 @@ parts:
       # certificate location as well
       cat "./cmd/security-proxy-setup/res/configuration.toml" | \
         sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
-            -e "s@TokenPath = \"res/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenPath = \"res/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json\"@" \
             -e "s@CACertPath = \"res/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/configuration.toml"
 
-      # for security-secretstore-setup we need to replace the token location and the 
-      # certificate location as well
       cat "./cmd/security-secretstore-setup/res/configuration.toml" | \
         sed -e s:./logs/security-secretstore-setup.log:\$SNAP_COMMON/security-secretstore-setup.log: \
-            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
-            -e "s@cafilepath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@cafilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@server = \"edgex-vault\"@server = \"localhost\"@" \
-            -e "s@certfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.pem\"@certfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem\"@" \
-            -e "s@keyfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.priv.key\"@keyfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key\"@" \
+            -e "s@Server = \"edgex-vault\"@Server = \"localhost\"@" \
+            -e "s@CaFilePath = \"/tmp/edgex/secrets/ca/ca.pem\"@CaFilePath = \"\$SNAP_DATA/pki/ca/ca.pem\"@" \
+            -e "s@CertFilePath = \"/tmp/edgex/secrets/edgex-kong/server.crt\"@CertFilePath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem\"@" \
+            -e "s@KeyFilePath = \"/tmp/edgex/secrets/edgex-kong/server.key\"@KeyFilePath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key\"@" \
+            -e "s@TokenFolderPath = \"/vault/config/assets\"@TokenFolderPath = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
+            -e "s@TokenProvider = \"/security-file-token-provider\"@TokenProvider = \"\$SNAP/bin/security-file-token-provider\"@" \
+            -e "s@TokenProviderArgs = \[ \"-confdir\", \"res-file-token-provider\" \]@TokenProviderArgs = \[ \"-confdir\", \"\$SNAP_DATA/config/security-file-token-provider/res\" \]@" \
+            -e "s@TokenProviderAdminTokenPath = \"/run/edgex/secrets/tokenprovider/secrets-token.json\"@TokenProviderAdminTokenPath = \"\$SNAP_DATA/secrets/tokenprovider/secrets-token.json\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/configuration.toml"
 
+      # Copy token-provider JSON config file
+      cp "./cmd/security-file-token-provider/res/token-config.json" \
+        "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
+
+      # FIXME: temporarily using docker configuration as there was never a native configuration.toml added.
+      # As docker configuration.toml files may go away completely, wait for this change to happen.
+      cat "./cmd/security-secretstore-setup/res-file-token-provider/docker/configuration.toml" | \
+        sed -e s:./logs/security-file-token-provider.log:\$SNAP_COMMON/security-file-token-provider.log: \
+            -e "s@Server = \"edgex-vault\"@Server = \"localhost\"@" \
+            -e "s@ServerName = \"edgex-vault\"@ServerName = \"localhost\"@" \
+            -e "s@CaFilePath = '/tmp/edgex/secrets/ca/ca.pem'@CaFilePath = \"\$SNAP_DATA/pki/ca/ca.pem\"@" \
+            -e "s@PrivilegedTokenPath = \"/run/edgex/secrets/tokenprovider/secrets-token.json\"@PrivilegedTokenPath = \"\$SNAP_DATA/secrets/tokenprovider/secrets-token.json\"@" \
+            -e "s@ConfigFile = \"res-file-token-provider/token-config.json\"@ConfigFile = \"\$SNAP_DATA/config/security-file-token-provider/res/token-config.json\"@" \
+            -e "s@OutputDir = \"/tmp/edgex/secrets\"@OutputDir = \"\$SNAP_DATA/secrets\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
+
+      install -DT "./cmd/security-file-token-provider/res/token-config.json" \
+              "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
       # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
