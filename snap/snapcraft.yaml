@@ -675,6 +675,7 @@ parts:
       cd $SNAPCRAFT_PART_SRC
       make build
 
+      # copy service binaries
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
       install -DT "./cmd/config-seed/config-seed" "$SNAPCRAFT_PART_INSTALL/bin/config-seed"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
@@ -688,8 +689,7 @@ parts:
       install -DT "./cmd/security-secretstore-setup/security-secretstore-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secretstore-setup"
       install -DT "./cmd/security-file-token-provider/security-file-token-provider" "$SNAPCRAFT_PART_INSTALL/bin/security-file-token-provider"
 
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile' and 'LoggingRemoteURL'
+      # create config directories
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-command/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-data/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
