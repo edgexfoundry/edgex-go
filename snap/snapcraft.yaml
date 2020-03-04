@@ -657,8 +657,7 @@ parts:
       # these things are also configurable by the user, that handling is done in
       # the install hook
       cat "./cmd/res/configuration.toml" | \
-        sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
-            -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
+        sed -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
             -e "s@CACertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
