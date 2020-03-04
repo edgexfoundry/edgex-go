@@ -145,7 +145,7 @@ mkdir -p "$SNAP_DATA/postgresql"
 chown -R snap_daemon:snap_daemon "$SNAP_DATA/postgresql" 
 
 # setup the postgres data directory
-gosu snap_daemon "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
+drop "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
 
 # ensure the sockets dir exists and is properly owned
 mkdir -p "$SNAP_COMMON/sockets"
@@ -160,7 +160,7 @@ snapctl start "$SNAP_NAME.postgres"
 # trying to do this because we have to wait for postgres to start up
 iter_num=0
 MAX_POSTGRES_INIT_ITERATIONS=10
-until gosu snap_daemon "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createuser" kong; do
+until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createuser" kong; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
     if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
@@ -169,7 +169,7 @@ until gosu snap_daemon "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createuser"
     fi
 done
 iter_num=0
-until gosu snap_daemon "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
+until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
     if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
