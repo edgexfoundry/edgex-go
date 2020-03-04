@@ -10,7 +10,7 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # into $SNAP_DATA/config
 # note that app-service-configurable is handled separately
 mkdir -p "$SNAP_DATA/config"
-for service in edgex-mongo security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual; do
+for service in edgex-mongo security-file-token-provider security-proxy-setup security-secrets-setup security-secretstore-setup core-command config-seed core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
@@ -77,6 +77,9 @@ for svc in kong vault; do
         chmod 600 "$SNAP_DATA/$CONFIG_FILE_PATH"
     fi
 done
+
+# copy the security-file-token-provider config into place
+cp "$SNAP/config/security-file-token-provider/res/token-config.json" "$SNAP_DATA/config/security-file-token-provider/res/token-config.json"
 
 # ensure consul dirs exist
 mkdir -p "$SNAP_DATA/consul/data"
