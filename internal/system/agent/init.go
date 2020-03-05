@@ -18,10 +18,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/factory"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
 
@@ -29,6 +32,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/gorilla/mux"
 )
 
@@ -48,7 +52,6 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	// validate metrics implementation
@@ -56,40 +59,72 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	case direct.MetricsMechanism:
 	case executor.MetricsMechanism:
 	default:
+		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		lc.Error("the requested metrics mechanism is not supported")
 		return false
 	}
 
-	clientFactory := factory.New(
-		ctx,
-		wg,
-		bootstrapContainer.RegistryFrom(dic.Get),
-		configuration.Clients,
-		configuration.Service.Protocol,
-	)
-
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
+		container.GeneralClientsName: func(get di.Get) interface{} {
+			return clients.NewGeneral()
+		},
 		container.MetricsInterfaceName: func(get di.Get) interface{} {
+			logging := bootstrapContainer.LoggingClientFrom(get)
 			switch configuration.MetricsMechanism {
 			case direct.MetricsMechanism:
-				return direct.NewMetrics(clientFactory)
+				return direct.NewMetrics(
+					logging,
+					container.GeneralClientsFrom(get),
+					bootstrapContainer.RegistryFrom(get),
+					configuration.Service.Protocol,
+				)
 			case executor.MetricsMechanism:
-				return executor.NewMetrics(executor.CommandExecutor, lc, configuration.ExecutorPath)
+				return executor.NewMetrics(executor.CommandExecutor, logging, configuration.ExecutorPath)
 			default:
 				panic("unsupported metrics mechanism " + container.MetricsInterfaceName)
 			}
 		},
 		container.OperationsInterfaceName: func(get di.Get) interface{} {
-			return executor.NewOperations(executor.CommandExecutor, lc, configuration.ExecutorPath)
+			return executor.NewOperations(
+				executor.CommandExecutor,
+				bootstrapContainer.LoggingClientFrom(get),
+				configuration.ExecutorPath)
 		},
 		container.GetConfigInterfaceName: func(get di.Get) interface{} {
-			return getconfig.New(getconfig.NewExecutor(clientFactory), lc)
+			logging := bootstrapContainer.LoggingClientFrom(get)
+			return getconfig.New(
+				getconfig.NewExecutor(
+					container.GeneralClientsFrom(get),
+					bootstrapContainer.RegistryFrom(get),
+					logging,
+					configuration.Service.Protocol),
+				logging)
 		},
 		container.SetConfigInterfaceName: func(get di.Get) interface{} {
-			return setconfig.New(setconfig.NewExecutor(lc, configuration))
+			return setconfig.New(setconfig.NewExecutor(bootstrapContainer.LoggingClientFrom(get), configuration))
 		},
 	})
+
+	generalClients := container.GeneralClientsFrom(dic.Get)
+	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
+
+	for serviceKey, serviceName := range config.ListDefaultServices() {
+		generalClients.Set(
+			serviceKey,
+			general.NewGeneralClient(
+				urlclient.New(
+					ctx,
+					&sync.WaitGroup{},
+					registryClient,
+					serviceKey,
+					"/",
+					internal.ClientMonitorDefault,
+					configuration.Clients[serviceName].Url(),
+				),
+			),
+		)
+	}
 
 	return true
 }

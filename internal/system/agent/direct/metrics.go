@@ -19,37 +19,106 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system"
+	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
 	"github.com/edgexfoundry/edgex-go/internal/system/executor"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
-)
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
-// clientFactory defines contract for creating/retrieving a general client.
-type clientFactory interface {
-	New(serviceName string) (general.GeneralClient, error)
-}
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-registry/registry"
+)
 
 // metrics contains references to dependencies required to handle the metrics via direct service use case.
 type metrics struct {
-	clientFactory clientFactory
+	loggingClient   logger.LoggingClient
+	genClients      *agentClients.General
+	registryClient  registry.Client
+	serviceProtocol string
 }
 
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
-func NewMetrics(clientFactory clientFactory) *metrics {
+func NewMetrics(
+	lc logger.LoggingClient,
+	genClients *agentClients.General,
+	registryClient registry.Client,
+	serviceProtocol string) *metrics {
+
 	return &metrics{
-		clientFactory: clientFactory,
+		loggingClient:   lc,
+		genClients:      genClients,
+		registryClient:  registryClient,
+		serviceProtocol: serviceProtocol,
 	}
 }
 
 // metricsViaDirectService calls a service's metrics endpoint directly, interprets the response, and returns a Result.
 func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName string) system.Result {
-	client, err := m.clientFactory.New(serviceName)
-	if err != nil {
-		return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
+	client, ok := m.genClients.Get(serviceName)
+	if !ok {
+		if m.registryClient == nil {
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf("registryClient not initialized; required to handle unknown service: %s", serviceName))
+		}
+
+		// Service unknown to SMA, so ask the Registry whether `serviceName` is available.
+		ok, err := m.registryClient.IsServiceAvailable(serviceName)
+		if err != nil {
+			return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
+		}
+		if !ok {
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf("%s service not available", serviceName))
+		}
+
+		m.loggingClient.Info(fmt.Sprintf("Registry responded with %s serviceName available", serviceName))
+
+		// Since serviceName is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `serviceName`
+		e, err := m.registryClient.GetServiceEndpoint(serviceName)
+		if err != nil {
+			return system.Failure(
+				serviceName,
+				executor.Metrics,
+				ExecutorType,
+				fmt.Sprintf(
+					"on attempting to get ServiceEndpoint for serviceName %s, got error: %v",
+					serviceName,
+					err.Error()))
+		}
+
+		configClient := bootstrapConfig.ClientInfo{
+			Protocol: m.serviceProtocol,
+			Host:     e.Host,
+			Port:     e.Port,
+		}
+
+		// Add the serviceName key to the map where the value is the respective GeneralClient
+		client = general.NewGeneralClient(
+			urlclient.New(
+				ctx,
+				&sync.WaitGroup{},
+				m.registryClient,
+				e.ServiceId,
+				"/",
+				internal.ClientMonitorDefault,
+				configClient.Url()+clients.ApiMetricsRoute,
+			),
+		)
+		m.genClients.Set(e.ServiceId, client)
 	}
 
 	result, err := client.FetchMetrics(ctx)

@@ -23,7 +23,7 @@ EnableRemote = false
 File = './logs/edgex-support-scheduler.log'
 
 [Clients]
-  [Clients.edgex-support-logging]
+  [Clients.Logging]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061

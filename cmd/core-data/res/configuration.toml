@@ -28,12 +28,12 @@ EnableRemote = false
 File = './logs/edgex-core-data.log'
 
 [Clients]
-  [Clients.edgex-core-metadata]
+  [Clients.Metadata]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48081
 
-  [Clients.edgex-support-logging]
+  [Clients.Logging]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48061

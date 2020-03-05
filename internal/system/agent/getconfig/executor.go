@@ -16,32 +16,94 @@ package getconfig
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-registry/registry"
 )
-
-// clientFactory defines contract for creating/retrieving a general client.
-type clientFactory interface {
-	New(serviceName string) (general.GeneralClient, error)
-}
 
 // executor contains references to dependencies required to execute a get configuration request.
 type executor struct {
-	clientFactory clientFactory
+	genClients      *agentClients.General
+	registryClient  registry.Client
+	loggingClient   logger.LoggingClient
+	serviceProtocol string
 }
 
 // NewExecutor is a factory function that returns an initialized executor struct.
-func NewExecutor(clientFactory clientFactory) *executor {
+func NewExecutor(
+	genClients *agentClients.General,
+	registryClient registry.Client,
+	lc logger.LoggingClient,
+	serviceProtocol string) *executor {
+
 	return &executor{
-		clientFactory: clientFactory,
+		genClients:      genClients,
+		registryClient:  registryClient,
+		loggingClient:   lc,
+		serviceProtocol: serviceProtocol,
 	}
 }
 
 // Do fulfills the GetExecutor contract and implements the functionality to retrieve a service's configuration.
 func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
-	client, err := e.clientFactory.New(serviceName)
+	var result string
+	client, ok := e.genClients.Get(serviceName)
+	if !ok {
+		if e.registryClient == nil {
+			return "", fmt.Errorf("registryClient not initialized; required to handle unknown service: %s", serviceName)
+		}
+
+		// Service unknown to SMA, so ask the Registry whether `serviceName` is available.
+		ok, err := e.registryClient.IsServiceAvailable(serviceName)
+		if err != nil {
+			return "", err
+		}
+		if !ok {
+			return "", fmt.Errorf("service %s is not available", serviceName)
+		}
+
+		e.loggingClient.Info(fmt.Sprintf("Registry responded with %s available", serviceName))
+
+		// Since serviceName is unknown to SMA, ask the Registry for a ServiceEndpoint associated with `serviceName`
+		ep, err := e.registryClient.GetServiceEndpoint(serviceName)
+		if err != nil {
+			return "", fmt.Errorf("on attempting to get ServiceEndpoint for %s, got error: %v", serviceName, err.Error())
+		}
+
+		configClient := bootstrapConfig.ClientInfo{
+			Protocol: e.serviceProtocol,
+			Host:     ep.Host,
+			Port:     ep.Port,
+		}
+
+		// Add the serviceName key to the map where the value is the respective GeneralClient
+		client = general.NewGeneralClient(
+			urlclient.New(
+				ctx,
+				&sync.WaitGroup{},
+				e.registryClient,
+				ep.ServiceId,
+				"/",
+				internal.ClientMonitorDefault,
+				configClient.Url()+clients.ApiConfigRoute,
+			),
+		)
+		e.genClients.Set(ep.ServiceId, client)
+	}
+
+	result, err := client.FetchConfiguration(ctx)
 	if err != nil {
 		return "", err
 	}
-	return client.FetchConfiguration(ctx)
+	return result, nil
 }
