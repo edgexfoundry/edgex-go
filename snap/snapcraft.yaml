@@ -453,7 +453,6 @@ parts:
   # snapcraft-preload
   snapcraft-preload:
     source: https://github.com/sergiusens/snapcraft-preload.git
-    source-depth: 1
     # unfortunately no tags or releases we can rely on, so just hard-code
     # master at the time of writing for this
     source-commit: d654bbe8a5add5a4bea14d96342b656990c5c818
