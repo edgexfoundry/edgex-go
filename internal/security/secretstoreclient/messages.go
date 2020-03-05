@@ -25,9 +25,11 @@ type InitRequest struct {
 
 // InitResponse contains a Vault init response
 type InitResponse struct {
-	Keys       []string `json:"keys"`
-	KeysBase64 []string `json:"keys_base64"`
-	RootToken  string   `json:"root_token,omitempty"`
+	Keys          []string `json:"keys,omitempty"`
+	KeysBase64    []string `json:"keys_base64,omitempty"`
+	EncryptedKeys []string `json:"encrypted_keys,omitempty"`
+	Nonces        []string `json:"nonces,omitempty"`
+	RootToken     string   `json:"root_token,omitempty"`
 }
 
 // UnsealRequest contains a Vault unseal request
