@@ -51,32 +51,42 @@ CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["localhost"]
 
 [Clients]
-  [Clients.edgex-core-data]
+  [Clients.Coredata]
   Protocol = "http"
   Host = "localhost"
   Port = 48080
 	
-  [Clients.edgex-core-metadata]
+  [Clients.Metadata]
   Protocol = "http"
   Host = "localhost"
   Port = 48081
 	
-  [Clients.edgex-core-command]
+  [Clients.Command]
   Protocol = "http"
   Host = "localhost"
   Port = 48082
 	
-  [Clients.edgex-support-notifications]
+  [Clients.Notifications]
   Protocol = "http"
   Host = "localhost"
   Port = 48060
 		
-  [Clients.edgex-support-logging]
+  [Clients.Logging]
   Protocol = "http"
   Host = "localhost"
   Port = 48061
 
-  [Clients.edgex-support-scheduler]
+  [Clients.Distro]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48070
+	
+  [Clients.Export]
+  Protocol = "http"
+  Host = "localhost"
+  Port = 48071
+
+  [Clients.Scheduler]
   Protocol = "http"
   Host = "localhost"
   Port = 48085

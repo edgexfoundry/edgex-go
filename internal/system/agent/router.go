@@ -135,8 +135,8 @@ func getConfigHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	lc logger.LoggingClient,
-	getConfigImpl interfaces.GetConfig) {
 
+	getConfigImpl interfaces.GetConfig) {
 	vars := mux.Vars(r)
 	lc.Debug("retrieved service names")
 
