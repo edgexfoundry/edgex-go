@@ -185,11 +185,11 @@ done
 snapctl stop "$SNAP_NAME.postgres"
 
 # finally, disable and turn off non-default services
-# by default, we want the support-*, device-*, and redis services
+# by default, we want the support-*, device-*, and mongo services
 # off.
 # also the app-service-configurable service since that is meant to replace the 
 # export services
-for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-virtual redis; do
+for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-virtual edgex-mongo mongod; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
