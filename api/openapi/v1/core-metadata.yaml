@@ -2028,6 +2028,28 @@ paths:
           description: for unknown or unanticipated issues or for any duplicate name
             (key) error.
   /v1/provisionwatcher/id/{id}:
+    get:
+      description: Retrieve the provision watcher that has the requested ID from the database.
+      parameters:
+        - name: id
+        in: path
+        description: Globally unique ID associated with this provision watcher.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        200:
+          description: The requested provision watcher as a JSON document.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/provisionwatcher'
+        404:
+          description: If no provision watcher with the provided ID is found.
+        500:
+          description: For unknown or unanticipated issues.
     delete:
       description: Remove the ProvisionWatcher designated by the database generated
         id for the ProvisionWatcher. Returns Internal Service Error (HTTP 500) for
@@ -2051,11 +2073,7 @@ paths:
           description: for unknown or unanticipated issues
   /v1/provisionwatcher/identifier/{key}/{value}:
     get:
-      description: Find the provision watchers associated to the identifier key/value
-        pair.  The identifier key/value pair identify a protocol and address of the
-        protocol to watch for by the Device Service. List may be none if no provision
-        watcher match. Returns Internal Service Error (HTTP 500) for unknown or unanticipated
-        issues.
+      description: Find the provision watchers associated to the identifier key/value pair.
       parameters:
       - name: key
         in: path
@@ -2073,25 +2091,24 @@ paths:
           type: string
       responses:
         200:
-          description: List of ProvisionWatcher associated to the device service
+          description: List of provision watchers associated to the device service on the given protocol.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         400:
-          description: for malformed or unparsable requests
+          description: For malformed or unparsable requests.
+        404:
+          description: If no provision watcher with the provided identifier is found.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/provisionwatcher/name/{name}:
     get:
-      description: Return ProvisionWatcher with matching name (name should be unique).
-        May be null if none match. Returns Internal Service Error (HTTP 500) for unknown
-        or unanticipated issues. Returns NotFoundException (HTTP 404) if no provision
-        watcher with the provided name is found.
+      description: Find the provision watcher that has the requested name.
       parameters:
       - name: name
         in: path
-        description: unique name of provision watcher
+        description: Unique name of provision watcher
         required: true
         style: simple
         explode: false
@@ -2099,17 +2116,17 @@ paths:
           type: string
       responses:
         200:
-          description: provision watcher matching on name
+          description: The requested provision watcher as a JSON document.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         400:
-          description: for malformed or unparsable requests
+          description: For malformed or unparsable requests
         404:
-          description: if no provision watcher with the provided name is found.
+          description: If no provision watcher with the provided name is found.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
     delete:
       description: Remove the ProvisionWatcher designated by unique name identifier.
         Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
@@ -2135,11 +2152,8 @@ paths:
           description: for unknown or unanticipated issues.
   /v1/provisionwatcher/profile/{profileId}:
     get:
-      description: Find all provision watchers associated to the DeviceProfile with
-        the specified profile database generated identifier. List may be empty if
-        no provision watchers match. Returns Internal Service Error (HTTP 500) for
-        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no
-        DeviceProfile match on the id provided.
+      description: Find all provision watchers associated to the device profile with
+        the specified profile database generated identifier.
       parameters:
       - name: profileId
         in: path
@@ -2150,22 +2164,20 @@ paths:
           type: string
       responses:
         200:
-          description: List of ProvisionWatchers associated to the device profile
+          description: List of provision watchers associated to the device profile, if any.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         404:
-          description: if no device profile match on the id provided.
+          description: If no provision watcher is associated with the provided device profile, or if the device
+          profile or provision watcher cannot be found.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/provisionwatcher/profilename/{profilename}:
     get:
-      description: Find all provision watchers associated to the DeviceProfile with
-        the specified profile name. List may be empty if no provision watcher match.
-        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
-        Returns NotFoundException (HTTP 404) if no DeviceProfile match on the name
-        provided.
+      description: Find all provision watchers associated to the device profile with
+        the specified profile name.
       parameters:
       - name: profilename
         in: path
@@ -2176,24 +2188,20 @@ paths:
           type: string
       responses:
         200:
-          description: List of ProvisionWatcher associated to the profile
+          description: List of provision watchers associated to the profile, if any.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         400:
-          description: for malformed or unparsable requests
+          description: For malformed or unparsable requests.
         404:
-          description: if no DeviceProfile match on the id provided.
+          description: If no device profile match on the ID provided.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/provisionwatcher/service/{serviceId}:
     get:
-      description: Find the provision watchers associated to the DeviceService with
-        the specified service database generated identifier. List may be empty if
-        no provision watchers match. Returns Internal Service Error (HTTP 500) for
-        unknown or unanticipated issues. Returns NotFoundException (HTTP 404) if no
-        DeviceService match on the id provided.
+      description: Find the provision watchers associated with a device service with the specified device service ID.
       parameters:
       - name: serviceId
         in: path
@@ -2204,22 +2212,19 @@ paths:
           type: string
       responses:
         200:
-          description: List of ProvisionWatchers associated to the device service
+          description: List of provision watchers associated to the device service, if any.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         404:
-          description: if no device service match on the id provided.
+          description: If no provision watcher is associated with the provided device service, or if the device
+            service or provision watcher cannot be found.
         500:
-          description: for unknown or unanticipated issues.
+          description: For unknown or unanticipated issues.
   /v1/provisionwatcher/servicename/{servicename}:
     get:
-      description: Find the provision watchers associated to the DeviceService with
-        the specified service name. List may be none if no provision watcher match.
-        Returns Internal Service Error (HTTP 500) for unknown or unanticipated issues.
-        Returns NotFoundException (HTTP 404) if no DeviceService match on the name
-        provided.
+      description: Find the provision watchers associated with a device service with the specified device service name.
       parameters:
       - name: servicename
         in: path
@@ -2230,43 +2235,18 @@ paths:
           type: string
       responses:
         200:
-          description: List of ProvisionWatcher associated to the device service
+          description: List of provision watchers associated to the device service, if any.
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/provisionwatcher'
         400:
-          description: for malformed or unparsable requests
+          description: For malformed or unparsable requests
         404:
-          description: if no DeviceService match on the id provided.
+          description: If no provision watcher is associated with the provided device service, or if the device
+            service or provision watcher cannot be found.
         500:
-          description: for unknown or unanticipated issues.
-  /v1/provisionwatcher/{id}:
-    get:
-      description: Fetch a specific provision watcher by database generated id. May
-        return null if no provision watcher matches on id. Returns Internal Service
-        Error (HTTP 500) for unknown or unanticipated issues.  Returns NotFoundException
-        (HTTP 404) if no provision watcher with the provided id is found.
-      parameters:
-      - name: id
-        in: path
-        description: database generated id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        200:
-          description: provision watcher
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/provisionwatcher'
-        404:
-          description: if no provision watcher with the provided id is found.
-        500:
-          description: for unknown or unanticipated issues
+          description: For unknown or unanticipated issues.
   /version:
     get:
       description: Get the API version
