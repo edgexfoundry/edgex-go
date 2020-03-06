@@ -640,6 +640,7 @@ parts:
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    # TODO (geneva): pin this to a commit or tag for release
     source-branch: master
     source-depth: 1
     plugin: make
@@ -652,19 +653,11 @@ parts:
 
       install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
 
-      # set CACertPath and TokenPath to work with security on by default
-      # these things are also configurable by the user, that handling is done in
-      # the install hook
       cat "./cmd/res/configuration.toml" | \
-        sed -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
-            -e "s@CACertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+        sed -e "s@TokenFile = \"/vault/config/assets/resp-init.json\"@TokenFile = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
+            -e "s@RootCaCertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
-
-      install -DT "./cmd/Attribution.txt" \
-        "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/Attribution.txt"
-      install -DT "./LICENSE-2.0.TXT" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/LICENSE-2.0.TXT"
 
   edgex-go:
     source: .
