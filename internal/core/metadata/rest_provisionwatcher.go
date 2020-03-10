@@ -22,6 +22,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -338,53 +339,64 @@ func restAddProvisionWatcher(
 	var err error
 
 	if err = json.NewDecoder(r.Body).Decode(&pw); err != nil {
-		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
+		errorHandler.Handle(w, err, errorconcept.Common.JsonDecoding)
 		return
 	}
 
 	// Check if the name exists
 	if pw.Name == "" {
-		errorHandler.HandleOneVariant(
+		errorHandler.Handle(
 			w,
-			errors.New("No name provided for new provision watcher"),
-			nil,
-			errorconcept.Default.Conflict)
+			errors.New("no name provided for new provision watcher"),
+			errorconcept.Common.InvalidRequest_StatusBadRequest,
+		)
 		return
 	}
 
 	// Check if the device profile exists
-	// Try by ID
 	var profile models.DeviceProfile
 	if pw.Profile.Id != "" {
 		profile, err = dbClient.GetDeviceProfileById(pw.Profile.Id)
+		// we don't want to fail if we haven't found anything at this point because we've yet to do name lookup
+		if err != nil && err != db.ErrNotFound {
+			errorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
+			return
+		}
 	}
-	if pw.Profile.Id == "" || err != nil {
-		// Try by name
+	// we only want to do a lookup by name if ID does not exist or if ID does not exist in the DB
+	if pw.Profile.Id == "" || err == db.ErrNotFound {
 		if profile, err = dbClient.GetDeviceProfileByName(pw.Profile.Name); err != nil {
 			errorHandler.HandleOneVariant(
 				w,
 				err,
 				errorconcept.ProvisionWatcher.DeviceProfileNotFound_StatusConflict,
-				errorconcept.Default.ServiceUnavailable)
+				errorconcept.Default.InternalServerError,
+			)
 			return
 		}
 	}
 	pw.Profile = profile
 
 	// Check if the device service exists
-	// Try by ID
 	var service models.DeviceService
 	if pw.Service.Id != "" {
 		service, err = dbClient.GetDeviceServiceById(pw.Service.Id)
+		// we don't want to fail if we haven't found anything at this point because we've yet to do name lookup
+		if err != nil && err != db.ErrNotFound {
+			errorHandler.Handle(w, err, errorconcept.Default.ServiceUnavailable)
+			return
+		}
 	}
-	if pw.Service.Id == "" || err != nil {
-		// Try by name
+
+	// we only want to do a lookup by name if ID does not exist or if ID does not exist in the DB
+	if pw.Service.Id == "" || err == db.ErrNotFound {
 		if service, err = dbClient.GetDeviceServiceByName(pw.Service.Name); err != nil {
 			errorHandler.HandleOneVariant(
 				w,
 				err,
 				errorconcept.ProvisionWatcher.DeviceServiceNotFound_StatusConflict,
-				errorconcept.Default.ServiceUnavailable)
+				errorconcept.Default.ServiceUnavailable,
+			)
 			return
 		}
 	}
@@ -396,15 +408,16 @@ func restAddProvisionWatcher(
 			w,
 			err,
 			errorconcept.ProvisionWatcher.NotUnique,
-			errorconcept.Default.ServiceUnavailable)
+			errorconcept.Default.ServiceUnavailable,
+		)
 		return
 	}
 	pw.Id = id
 
 	// Notify Associates
 	if err = notifyProvisionWatcherAssociates(pw, http.MethodPost, lc, dbClient); err != nil {
-		lc.Error(
-			"Problem with notifying associating device services for the provision watcher: " + err.Error())
+		errorHandler.Handle(w, err, errorconcept.Default.ServiceUnavailable)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
