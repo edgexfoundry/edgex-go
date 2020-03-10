@@ -927,6 +927,7 @@ func TestAddProfileByYaml(t *testing.T) {
 		name           string
 		request        *http.Request
 		dbMock         interfaces.DBClient
+		vdcMock        MockValueDescriptorClient
 		expectedStatus int
 	}{
 		{
@@ -934,31 +935,40 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusOK,
 		},
 		{
 			"Wrong content type",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			nil,
+			MockValueDescriptorClient{},
 			http.StatusInternalServerError,
 		},
 		{
 			"Missing file",
 			emptyFileRequest,
 			nil,
+			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
 			"Empty file",
 			createDeviceProfileRequestWithFile([]byte{}),
 			nil,
+			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
 			"Duplicate command name",
 			createDeviceProfileRequestWithFile(dupeBody),
-			nil,
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
+			}),
+			MockValueDescriptorClient{},
 			http.StatusConflict,
 		},
 		{
@@ -966,7 +976,9 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", db.ErrNotUnique}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusConflict,
 		},
 		{
@@ -974,7 +986,9 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(emptyBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
+				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
@@ -982,14 +996,22 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restAddProfileByYaml(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
+			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: true},
+				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
+			}
+			restAddProfileByYaml(
+				rr, tt.request, loggerMock, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()), tt.vdcMock, &configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
@@ -1019,6 +1041,7 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 		name           string
 		request        *http.Request
 		dbMock         interfaces.DBClient
+		vdcMock        MockValueDescriptorClient
 		expectedStatus int
 	}{
 		{
@@ -1026,13 +1049,16 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusOK,
 		},
 		{
 			"YAML unmarshal error",
 			createDeviceProfileRequestWithFile(dupeBody),
 			nil,
+			MockValueDescriptorClient{},
 			http.StatusServiceUnavailable,
 		},
 		{
@@ -1040,8 +1066,9 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
+				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-
+			MockValueDescriptorClient{},
 			http.StatusBadRequest,
 		},
 		{
@@ -1049,14 +1076,21 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			MockValueDescriptorClient{},
 			http.StatusInternalServerError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restAddProfileByYamlRaw(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
+			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: true},
+				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
+			}
+			restAddProfileByYamlRaw(rr, tt.request, loggerMock, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()), tt.vdcMock, &configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
