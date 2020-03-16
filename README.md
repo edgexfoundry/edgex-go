@@ -50,8 +50,8 @@ on the snap, including how to install it, please refer to [EdgeX snap](https://g
 
 #### Go
 
-- The current targeted version of the Go language runtime for release artifacts is v1.12.x
-- The minimum supported version of the Go language runtime is v1.11.x (currently v1.11.13)
+- The current targeted version of the Go language runtime for release artifacts is v1.13.x
+- The minimum supported version of the Go language runtime is v1.13.x (currently v1.13)
 
 #### pkg-config
 
@@ -141,7 +141,7 @@ Follow the "Installation and Execution" steps above for obtaining and building t
 make docker run_docker
 ```
 
-**Note** The default behavior is to use Mongo for the database, use the command `make EDGEX_DB=redis run_docker` to start EdgeX with Redis.
+**Note** The default behavior is to use Redis for the database, use the command `make EDGEX_DB=mongo run_docker` to start EdgeX with Mongo.
 
 # Community
 

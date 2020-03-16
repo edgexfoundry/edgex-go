@@ -13,7 +13,7 @@ type ValueDescriptorAdder struct {
 }
 
 // Add provides a mock function with given fields: vdr, ctx
-func (_m *ValueDescriptorAdder) Add(vdr *models.ValueDescriptor, ctx context.Context) (string, error) {
+func (_m *ValueDescriptorAdder) Add(ctx context.Context, vdr *models.ValueDescriptor) (string, error) {
 	ret := _m.Called(vdr, ctx)
 
 	var r0 string

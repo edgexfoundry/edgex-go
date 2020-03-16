@@ -49,7 +49,9 @@ func (g getAllDeviceProfiles) Execute() ([]contract.DeviceProfile, error) {
 
 	if len(dps) > g.config.MaxResultCount {
 		err = errors.NewErrLimitExceeded(g.config.MaxResultCount)
-		g.logger.Error(err.Error())
+		if err != nil {
+			g.logger.Error(err.Error())
+		}
 		return nil, err
 	}
 
@@ -57,7 +59,11 @@ func (g getAllDeviceProfiles) Execute() ([]contract.DeviceProfile, error) {
 }
 
 // NewGetAllExecutor creates a new GetProfilesExecutor for retrieving all device profiles.
-func NewGetAllExecutor(config bootstrapConfig.ServiceInfo, loader DeviceProfileLoader, logger logger.LoggingClient) GetProfilesExecutor {
+func NewGetAllExecutor(
+	config bootstrapConfig.ServiceInfo,
+	loader DeviceProfileLoader,
+	logger logger.LoggingClient) GetProfilesExecutor {
+
 	return getAllDeviceProfiles{
 		config: config,
 		loader: loader,
@@ -103,7 +109,8 @@ func NewGetLabelExecutor(label string, loader DeviceProfileLoader) GetProfilesEx
 	}
 }
 
-// getDeviceProfilesByManufacturerModel encapsulates the data needed in order to get devices profiles by manufacturer and model.
+// getDeviceProfilesByManufacturerModel encapsulates the data needed in order to get device's profiles by
+// manufacturer and model.
 type getDeviceProfilesByManufacturerModel struct {
 	manufacturer string
 	model        string
@@ -115,8 +122,13 @@ func (g getDeviceProfilesByManufacturerModel) Execute() ([]contract.DeviceProfil
 	return g.loader.GetDeviceProfilesByManufacturerModel(g.manufacturer, g.model)
 }
 
-// NewGetManufacturerModelExecutor creates a new GetProfilesExecutor for retrieving device profiles by manufacturer and model.
-func NewGetManufacturerModelExecutor(manufacturer string, model string, loader DeviceProfileLoader) GetProfilesExecutor {
+// NewGetManufacturerModelExecutor creates a new GetProfilesExecutor for retrieving device profiles by manufacturer
+// and model.
+func NewGetManufacturerModelExecutor(
+	manufacturer string,
+	model string,
+	loader DeviceProfileLoader) GetProfilesExecutor {
+
 	return getDeviceProfilesByManufacturerModel{
 		manufacturer: manufacturer,
 		model:        model,

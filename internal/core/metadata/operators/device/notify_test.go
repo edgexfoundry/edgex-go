@@ -94,13 +94,13 @@ var testNotificationInfo = config.NotificationInfo{PostDeviceChanges: true, Slug
 */
 type mockNotificationClientOK struct{}
 
-func (m mockNotificationClientOK) SendNotification(n notifications.Notification, ctx context.Context) error {
+func (m mockNotificationClientOK) SendNotification(_ context.Context, _ notifications.Notification) error {
 	return nil
 }
 
 type mockNotificationClientFail struct{}
 
-func (m mockNotificationClientFail) SendNotification(n notifications.Notification, ctx context.Context) error {
+func (m mockNotificationClientFail) SendNotification(_ context.Context, _ notifications.Notification) error {
 	return errors.NewErrBadRequest("simulated bad request 400 response")
 }
 

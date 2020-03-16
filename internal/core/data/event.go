@@ -225,7 +225,8 @@ func getEventById(id string, dbClient interfaces.DBClient) (contract.Event, erro
 	return e, nil
 }
 
-// updateEventPushDateByChecksum updates the pushed dated for all events with a matching checksum which have not already been marked pushed
+// updateEventPushDateByChecksum updates the pushed dated for all events with a matching checksum which
+// have not already been marked pushed
 func updateEventPushDateByChecksum(
 	checksum string,
 	ctx context.Context,
@@ -284,7 +285,7 @@ func putEventOnQueue(
 
 	evt.CorrelationId = correlation.FromContext(ctx)
 	// Re-marshal JSON content into bytes.
-	if clients.FromContext(clients.ContentType, ctx) == clients.ContentTypeJSON {
+	if clients.FromContext(ctx, clients.ContentType) == clients.ContentTypeJSON {
 		data, err := json.Marshal(evt)
 		if err != nil {
 			lc.Error(fmt.Sprintf("error marshaling event: %s", evt.String()))
@@ -298,7 +299,11 @@ func putEventOnQueue(
 	if err != nil {
 		lc.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
 	} else {
-		lc.Info(fmt.Sprintf("Event Published on message queue. Topic: %s, Correlation-id: %s ", configuration.MessageQueue.Topic, msgEnvelope.CorrelationID))
+		lc.Info(fmt.Sprintf(
+			"Event Published on message queue. Topic: %s, Correlation-id: %s ",
+			configuration.MessageQueue.Topic,
+			msgEnvelope.CorrelationID,
+		))
 	}
 }
 

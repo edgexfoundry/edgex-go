@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	mdMocks "github.com/edgexfoundry/go-mod-core-contracts/clients/metadata/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -30,6 +29,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces/mocks"
+	mdMocks "github.com/edgexfoundry/edgex-go/internal/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -107,12 +107,12 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, actualErr := executeCommandByDeviceID(
+				context.Background(),
 				tt.deviceId,
 				TestCommandId,
 				"",
 				"",
 				false,
-				context.Background(),
 				logger.NewMockClient(),
 				newMockDBClient(),
 				newMockDeviceClient())
@@ -128,15 +128,15 @@ func TestExecuteGETCommandByDeviceIdAndCommandId(t *testing.T) {
 
 func newMockDeviceClient() *mdMocks.DeviceClient {
 	client := mdMocks.DeviceClient{}
-	client.On("Device", status404, context.Background()).Return(contract.Device{}, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
-	client.On("Device", status400, context.Background()).Return(contract.Device{}, types.NewErrServiceClient(400, []byte("Invalid object ID")))
-	client.On("Device", status500, context.Background()).Return(contract.Device{}, goErrors.New("unexpected error"))
-	client.On("Device", status423, context.Background()).Return(contract.Device{Id: status423, AdminState: "LOCKED"}, nil)
-	client.On("Device", d200c404, context.Background()).Return(contract.Device{Id: status400}, nil)
-	client.On("Device", d200c500, context.Background()).Return(contract.Device{Id: status500}, nil)
-	client.On("Device", mismatch, context.Background()).Return(contract.Device{Id: mismatch}, nil)
+	client.On("Device", context.Background(), status404).Return(contract.Device{}, types.NewErrServiceClient(http.StatusNotFound, []byte{}))
+	client.On("Device", context.Background(), status400).Return(contract.Device{}, types.NewErrServiceClient(400, []byte("Invalid object ID")))
+	client.On("Device", context.Background(), status500).Return(contract.Device{}, goErrors.New("unexpected error"))
+	client.On("Device", context.Background(), status423).Return(contract.Device{Id: status423, AdminState: "LOCKED"}, nil)
+	client.On("Device", context.Background(), d200c404).Return(contract.Device{Id: status400}, nil)
+	client.On("Device", context.Background(), d200c500).Return(contract.Device{Id: status500}, nil)
+	client.On("Device", context.Background(), mismatch).Return(contract.Device{Id: mismatch}, nil)
 
-	client.On("Device", "d200c200", context.Background()).Return(contract.Device{Id: TestDeviceId}, nil)
+	client.On("Device", context.Background(), "d200c200").Return(contract.Device{Id: TestDeviceId}, nil)
 	return &client
 }
 

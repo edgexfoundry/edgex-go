@@ -73,12 +73,12 @@ func issueDeviceCommand(
 
 	ctx := r.Context()
 	body, err := executeCommandByDeviceID(
+		ctx,
 		did,
 		cid,
 		string(b),
 		r.URL.RawQuery,
 		isPutCommand,
-		ctx,
 		lc,
 		dbClient,
 		deviceClient)
@@ -146,12 +146,12 @@ func issueDeviceCommandByNames(
 		return
 	}
 	body, err := executeCommandByName(
+		ctx,
 		dn,
 		cn,
 		string(b),
 		r.URL.RawQuery,
 		isPutCommand,
-		ctx,
 		lc,
 		dbClient,
 		deviceClient)
@@ -185,7 +185,7 @@ func restGetCommandsByDeviceID(
 	vars := mux.Vars(r)
 	did := vars[ID]
 	ctx := r.Context()
-	device, err := getCommandsByDeviceID(did, ctx, dbClient, deviceClient, configuration)
+	device, err := getCommandsByDeviceID(ctx, did, dbClient, deviceClient, configuration)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,
@@ -215,7 +215,7 @@ func restGetCommandsByDeviceName(
 	vars := mux.Vars(r)
 	dn := vars[NAME]
 	ctx := r.Context()
-	devices, err := getCommandsByDeviceName(dn, ctx, dbClient, deviceClient, configuration)
+	devices, err := getCommandsByDeviceName(ctx, dn, dbClient, deviceClient, configuration)
 	if err != nil {
 		httpErrorHandler.HandleManyVariants(
 			w,

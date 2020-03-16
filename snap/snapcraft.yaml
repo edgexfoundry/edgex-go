@@ -13,8 +13,11 @@ description: |
 
 icon: snap/local/assets/edgex-snap-icon.png
 
-# delhi is epoch 0, edinburgh epoch 1, etc.
-epoch: 2
+# Different epochs prevent refreshes between major versions of EdgeX due
+# to continued configuration changes.
+#
+# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3
+epoch: 3
 
 # TODO: add armhf here when that's supported
 architectures:
@@ -79,6 +82,9 @@ apps:
       --cmd $SNAP_DATA/config
       -confdir $SNAP_DATA/config/config-seed/res
       --props $SNAP_DATA/config/config-seed/res/properties
+      $REGISTRY_ARG
+    environment:
+      REGISTRY_ARG: "--registry=consul://localhost:8500"
     daemon: oneshot
     start-timeout: 15m
     plugs: [network, network-bind]
@@ -106,7 +112,7 @@ apps:
       CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
       - bin/snapcraft-preload
     plugs:
       - network
@@ -164,7 +170,7 @@ apps:
     command: bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $INIT_ARG
     daemon: oneshot
     environment:
-      INIT_ARG: "--init=true"
+      INIT_ARG: "--vaultInterval=10"
     start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
@@ -285,20 +291,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     daemon: simple
     plugs: [network, network-bind]
-  device-random:
-    adapter: none
-    after:
-      - core-config-seed
-      - edgex-mongo
-      - security-proxy-setup
-      - core-data
-      - core-metadata
-      - support-logging
-    command: bin/device-random -confdir $SNAP_DATA/config/device-random -profile res --registry $CONSUL_ADDR
-    daemon: simple
-    environment:
-      CONSUL_ADDR: "consul://localhost:8500"
-    plugs: [network, network-bind]
   device-virtual:
     adapter: none
     after:
@@ -308,10 +300,12 @@ apps:
       - core-data
       - core-metadata
       - support-logging
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -profile res --registry $CONSUL_ADDR
+    command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
     daemon: simple
     environment:
-      CONSUL_ADDR: "consul://localhost:8500"
+      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
+      PROFILE_ARG: "--profile=res"
+      REGISTRY_ARG: "--registry=consul://localhost:8500"
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
@@ -379,7 +373,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createuser should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
   psql-any:
     adapter: full
@@ -403,7 +397,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createuser should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
   createdb:
     adapter: full
@@ -416,7 +410,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createdb should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/gosu-snap_daemon.sh
+      - bin/drop
     plugs: [home, removable-media, network]
 
 parts:
@@ -459,7 +453,6 @@ parts:
   # snapcraft-preload
   snapcraft-preload:
     source: https://github.com/sergiusens/snapcraft-preload.git
-    source-depth: 1
     # unfortunately no tags or releases we can rely on, so just hard-code
     # master at the time of writing for this
     source-commit: d654bbe8a5add5a4bea14d96342b656990c5c818
@@ -474,15 +467,13 @@ parts:
     stage-packages:
       - to amd64:
           - lib32stdc++6
-  gosu:
-    source: https://github.com/tianon/gosu.git
-    source-tag: "1.11"
-    plugin: go
-    go-importpath: github.com/tianon/gosu
-    build-snaps: []
-    after: [go]
-    build-environment:
-      - CGO_ENABLED: "0"
+  drop-user:
+    source: snap/local/parts/drop-user
+    plugin: make
+    build-packages:
+    - build-essential
+    organize:
+      drop: bin/drop
   postgres:
     plugin: nil
     source: snap/local/build-helpers
@@ -529,20 +520,12 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=go1.12.5.linux-amd64.tar.gz
-          FILE_HASH=aea86e3c73495f205929cfebba0d63f1382c8ac59be081b6351681415f4063cf
+          FILE_NAME=go1.13.8.linux-amd64.tar.gz
+          FILE_HASH=0567734d558aef19112f2b2873caa0c600f1b4a5827930eb5a7f35235219e9d8
           ;;
         arm64)
-          FILE_NAME=go1.12.5.linux-arm64.tar.gz
-          FILE_HASH=ff09f34935cd189a4912f3f308ec83e4683c309304144eae9cf60ebc552e7cd8
-          ;;
-        armhf)
-          FILE_NAME=go1.12.5.linux-armv6l.tar.gz
-          FILE_HASH=311f5e76c7cec1ec752474a61d837e474b8e750b8e3eed267911ab57c0e5da9a
-          ;;
-        i386)
-          FILE_NAME=go1.12.5.linux-386.tar.gz
-          FILE_HASH=146605e13bf337ff3aacd941a816c5d97a8fef8b5817e07fcec4540632085980
+          FILE_NAME=go1.13.8.linux-arm64.tar.gz
+          FILE_HASH=b46c0235054d0eb69a295a2634aec8a11c7ae19b3dc53556a626b89dc1f8cdb0
           ;;
       esac
       # download the archive, failing on ssl cert problems
@@ -567,6 +550,14 @@ parts:
       # the file from the vault part instead
       - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
     override-build: |
+      # When the snap is built by Jenkins w/in a docker instance, the existence of
+      # the top level go.mod file causes the consul build to fail when using go 1.13.
+      # This workaround can probably be removed if/when consul is updated to a more
+      # recent version.
+      if [ -f /build/go.mod ]; then
+        mv /build/go.mod /build/go.mod.bk
+      fi
+
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/consul
       export GO111MODULES=off
@@ -593,6 +584,10 @@ parts:
       for i in `find . -type f -name "LICENSE"`; do
         install -DT "$i" \
                  "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+
+      if [ -f /build/go.mod.bk ]; then
+        mv /build/go.mod.bk /build/go.mod
+      fi
     build-packages:
       - make
       - zip
@@ -645,6 +640,7 @@ parts:
         redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
+    # TODO (geneva): pin this to a commit or tag for release
     source-branch: master
     source-depth: 1
     plugin: make
@@ -657,20 +653,11 @@ parts:
 
       install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
 
-      # set CACertPath and TokenPath to work with security on by default
-      # these things are also configurable by the user, that handling is done in
-      # the install hook
       cat "./cmd/res/configuration.toml" | \
-        sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
-            -e "s@TokenPath = \"/vault/config/assets/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
-            -e "s@CACertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+        sed -e "s@TokenFile = \"/vault/config/assets/resp-init.json\"@TokenFile = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
+            -e "s@RootCaCertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
-
-      install -DT "./cmd/Attribution.txt" \
-        "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/Attribution.txt"
-      install -DT "./LICENSE-2.0.TXT" \
-              "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/docker-edgex-mongo/LICENSE-2.0.TXT"
 
   edgex-go:
     source: .
@@ -680,6 +667,7 @@ parts:
       cd $SNAPCRAFT_PART_SRC
       make build
 
+      # copy service binaries
       install -DT "./cmd/core-command/core-command" "$SNAPCRAFT_PART_INSTALL/bin/core-command"
       install -DT "./cmd/config-seed/config-seed" "$SNAPCRAFT_PART_INSTALL/bin/config-seed"
       install -DT "./cmd/core-data/core-data" "$SNAPCRAFT_PART_INSTALL/bin/core-data"
@@ -691,10 +679,9 @@ parts:
       install -DT "./cmd/security-proxy-setup/security-proxy-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-proxy-setup"
       install -DT "./cmd/security-secrets-setup/security-secrets-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secrets-setup"
       install -DT "./cmd/security-secretstore-setup/security-secretstore-setup" "$SNAPCRAFT_PART_INSTALL/bin/security-secretstore-setup"
+      install -DT "./cmd/security-file-token-provider/security-file-token-provider" "$SNAPCRAFT_PART_INSTALL/bin/security-file-token-provider"
 
-
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile' and 'LoggingRemoteURL'
+      # create config directories
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-command/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-data/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/"
@@ -706,7 +693,7 @@ parts:
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/"
-
+      install -d "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/"
       install -d "$SNAPCRAFT_PART_INSTALL/config/config-seed/res/properties/edgex-support-rulesengine/"
 
       # handle application.properties for the remaining java services
@@ -723,21 +710,21 @@ parts:
       cat "./cmd/core-command/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-command.log:\$SNAP_COMMON/core-command.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-command/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-command/res/configuration.toml"
 
       cat "./cmd/core-data/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-data.log:\$SNAP_COMMON/core-data.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-data/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-data/res/configuration.toml"
 
       cat "./cmd/core-metadata/res/configuration.toml" | \
         sed -e s:./logs/edgex-core-metadata.log:\$SNAP_COMMON/core-metadata.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
 
@@ -747,7 +734,7 @@ parts:
       cat "./cmd/support-logging/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-logging.log:\$SNAP_COMMON/support-logging.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-support-logging/secrets-token.json\"@" \
             -e s:"Persistence = 'database'":"Persistence = 'file'":\
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-logging/res/configuration.toml"
@@ -755,22 +742,21 @@ parts:
       cat "./cmd/support-notifications/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-notifications.log:\$SNAP_COMMON/support-notifications.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgxe-support-notifications/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-notifications/res/configuration.toml"
 
       cat "./cmd/support-scheduler/res/configuration.toml" | \
         sed -e s:./logs/edgex-support-scheduler.log:\$SNAP_COMMON/support-scheduler.log: \
             -e "s@RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenFile = '/vault/config/assets/resp-init.json'@TokenFile = \"\$SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json\"@" \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/support-scheduler/res/configuration.toml"
 
-      # for sys-mgmt-agent we also need to specify ExecutorPath as our snap
-      # executor
+      # update ExecutorPath so that the SMA operations work in the snap
       cat "./cmd/sys-mgmt-agent/res/configuration.toml" | \
         sed -e s:./logs/edgex-sys-mgmt-agent.log:\$SNAP_COMMON/sys-mgmt-agent.log: \
-            -e s:"ExecutorPath = '/path/to/the/file'":"ExecutorPath = '\$SNAP/bin/sys-mgmt-agent-snap-executor.sh'": \
+            -e s:"ExecutorPath = '../sys-mgmt-executor/sys-mgmt-executor'":"ExecutorPath = '\$SNAP/bin/sys-mgmt-agent-snap-executor.sh'": \
             -e s:'http\://localhost\:48061/api/v1/logs':: > \
        "$SNAPCRAFT_PART_INSTALL/config/sys-mgmt-agent/res/configuration.toml"
 
@@ -795,23 +781,43 @@ parts:
       # certificate location as well
       cat "./cmd/security-proxy-setup/res/configuration.toml" | \
         sed -e s:./logs/security-proxy-setup.log:\$SNAP_COMMON/security-proxy-setup.log: \
-            -e "s@TokenPath = \"res/resp-init.json\"@TokenPath = \"\$SNAP_DATA/config/security-secrets-setup/res/resp-init.json\"@" \
+            -e "s@TokenPath = \"res/resp-init.json\"@TokenPath = \"\$SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json\"@" \
             -e "s@CACertPath = \"res/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@CACertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/res/configuration.toml"
 
-      # for security-secretstore-setup we need to replace the token location and the 
-      # certificate location as well
       cat "./cmd/security-secretstore-setup/res/configuration.toml" | \
         sed -e s:./logs/security-secretstore-setup.log:\$SNAP_COMMON/security-secretstore-setup.log: \
-            -e "s@tokenfolderpath = \"/vault/config/assets\"@tokenfolderpath = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
-            -e "s@cafilepath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@cafilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
-            -e "s@server = \"edgex-vault\"@server = \"localhost\"@" \
-            -e "s@certfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.pem\"@certfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem\"@" \
-            -e "s@keyfilepath = \"/vault/config/pki/EdgeXFoundryCA/edgex-kong.priv.key\"@keyfilepath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key\"@" \
+            -e "s@Server = \"edgex-vault\"@Server = \"localhost\"@" \
+            -e "s@CaFilePath = \"/tmp/edgex/secrets/ca/ca.pem\"@CaFilePath = \"\$SNAP_DATA/pki/ca/ca.pem\"@" \
+            -e "s@CertFilePath = \"/tmp/edgex/secrets/edgex-kong/server.crt\"@CertFilePath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem\"@" \
+            -e "s@KeyFilePath = \"/tmp/edgex/secrets/edgex-kong/server.key\"@KeyFilePath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key\"@" \
+            -e "s@TokenFolderPath = \"/vault/config/assets\"@TokenFolderPath = \"\$SNAP_DATA/config/security-secrets-setup/res\"@" \
+            -e "s@TokenProvider = \"/security-file-token-provider\"@TokenProvider = \"\$SNAP/bin/security-file-token-provider\"@" \
+            -e "s@TokenProviderArgs = \[ \"-confdir\", \"res-file-token-provider\" \]@TokenProviderArgs = \[ \"-confdir\", \"\$SNAP_DATA/config/security-file-token-provider/res\" \]@" \
+            -e "s@TokenProviderAdminTokenPath = \"/run/edgex/secrets/tokenprovider/secrets-token.json\"@TokenProviderAdminTokenPath = \"\$SNAP_DATA/secrets/tokenprovider/secrets-token.json\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/configuration.toml"
 
+      # Copy token-provider JSON config file
+      cp "./cmd/security-file-token-provider/res/token-config.json" \
+        "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
+
+      # FIXME: temporarily using docker configuration as there was never a native configuration.toml added.
+      # As docker configuration.toml files may go away completely, wait for this change to happen.
+      cat "./cmd/security-secretstore-setup/res-file-token-provider/docker/configuration.toml" | \
+        sed -e s:./logs/security-file-token-provider.log:\$SNAP_COMMON/security-file-token-provider.log: \
+            -e "s@Server = \"edgex-vault\"@Server = \"localhost\"@" \
+            -e "s@ServerName = \"edgex-vault\"@ServerName = \"localhost\"@" \
+            -e "s@CaFilePath = '/tmp/edgex/secrets/ca/ca.pem'@CaFilePath = \"\$SNAP_DATA/pki/ca/ca.pem\"@" \
+            -e "s@PrivilegedTokenPath = \"/run/edgex/secrets/tokenprovider/secrets-token.json\"@PrivilegedTokenPath = \"\$SNAP_DATA/secrets/tokenprovider/secrets-token.json\"@" \
+            -e "s@ConfigFile = \"res-file-token-provider/token-config.json\"@ConfigFile = \"\$SNAP_DATA/config/security-file-token-provider/res/token-config.json\"@" \
+            -e "s@OutputDir = \"/tmp/edgex/secrets\"@OutputDir = \"\$SNAP_DATA/secrets\"@" \
+            > \
+       "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
+
+      install -DT "./cmd/security-file-token-provider/res/token-config.json" \
+              "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
       # handle license/attribution files
       install -DT "./cmd/core-command/Attribution.txt" \
@@ -1109,6 +1115,14 @@ parts:
     source-tag: v1.0.2
     source-depth: 1
     override-build: |
+      # When the snap is built by Jenkins w/in a docker instance, the existence of
+      # the top level go.mod file causes the consul build to fail when using go 1.13.
+      # This workaround can probably be removed if/when consul is updated to a more
+      # recent version.
+      if [ -f /build/go.mod ]; then
+        mv /build/go.mod /build/go.mod.bk
+      fi
+
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
       gopartbootstrap github.com/hashicorp/vault
       export GO111MODULES=off
@@ -1143,6 +1157,9 @@ parts:
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
       rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
 
+      if [ -f /build/go.mod.bk ]; then
+        mv /build/go.mod.bk /build/go.mod
+      fi
   # DEVICE SERVICES parts
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
@@ -1175,36 +1192,6 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
-
-  device-random:
-    source: https://github.com/edgexfoundry/device-random.git
-    source-depth: 1
-    source-branch: master
-    plugin: make
-    after: [go]
-    override-build: |
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT "./cmd/device-random" "$SNAPCRAFT_PART_INSTALL/bin/device-random"
-
-      # FIXME: settings can't be overridden from the cmd-line!
-      # Override 'LogFile'
-      install -d "$SNAPCRAFT_PART_INSTALL/config/device-random/res/"
-
-      # install configuration & default device profile
-      cat "./cmd/res/configuration.toml" | \
-        sed -e s:\"./device-random.log\":\'\$SNAP_COMMON/device-random.log\': \
-          -e s:'ProfilesDir = \"./res\"':'ProfilesDir = \"\$SNAP_DATA/config/device-random/res\"': > \
-        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/configuration.toml"
-
-      install -T "./cmd/res/device.random.yaml" \
-        "$SNAPCRAFT_PART_INSTALL/config/device-random/res/device.random.yaml"
-
-      install -DT "./cmd/Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-random/LICENSE"
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git

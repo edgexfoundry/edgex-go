@@ -7,7 +7,6 @@ ALL_SERVICES=""
 # base services
 ALL_SERVICES="$ALL_SERVICES consul"
 ALL_SERVICES="$ALL_SERVICES mongod"
-ALL_SERVICES="$ALL_SERVICES mongo-worker"
 ALL_SERVICES="$ALL_SERVICES redis"
 
 # core services
@@ -26,7 +25,6 @@ ALL_SERVICES="$ALL_SERVICES support-rulesengine"
 ALL_SERVICES="$ALL_SERVICES app-service-configurable"
 
 # device services
-ALL_SERVICES="$ALL_SERVICES device-random"
 ALL_SERVICES="$ALL_SERVICES device-virtual"
 
 # security services
@@ -70,7 +68,7 @@ for key in $ALL_SERVICES; do
             # handle the service too
             handle_svc "$key" "$status"
             ;;
-        mongo-worker|security-proxy-setup|security-secretstore-setup)
+        security-proxy-setup|security-secretstore-setup)
             # it doesn't make any sense to disable the *-worker daemons since 
             # they are just oneshot daemons that run after other daemons, so
             # just ignore this request
@@ -163,9 +161,9 @@ case "$dbProvider" in
                 json2toml --preserve-key-order > "$configFile.tmp"
             mv "$configFile.tmp" "$configFile"
 
-            # turn mongod and mongo-worker off
+            # turn mongod and edgex-mongo off
             handle_svc "mongod" "off"
-            handle_svc "mongo-worker" "off"
+            handle_svc "edgex-mongo" "off"
 
             # turn redis on
             handle_svc "redis" "on"
@@ -204,7 +202,7 @@ case "$dbProvider" in
             
             # turn mongod and mongo-worker on
             handle_svc "mongod" "on"
-            handle_svc "mongo-worker" "on"
+            handle_svc "edgex-mongo" "on"
 
             # since the configuration files have been modified, those 
             # changes need to be progpogated into relevant services, so 

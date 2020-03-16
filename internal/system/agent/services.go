@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
-func getHealth(services []string, registryClient registry.Client) (map[string]interface{}, error) {
+func getHealth(services []string, registryClient registry.Client) map[string]interface{} {
 	health := make(map[string]interface{})
 	for _, service := range services {
 		if registryClient == nil {
@@ -41,5 +41,5 @@ func getHealth(services []string, registryClient registry.Client) (map[string]in
 		}
 		health[service] = true
 	}
-	return health, nil
+	return health
 }

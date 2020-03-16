@@ -13,7 +13,7 @@ type ValueDescriptorUpdater struct {
 }
 
 // Add provides a mock function with given fields: vdr, ctx
-func (_m *ValueDescriptorUpdater) Add(vdr *models.ValueDescriptor, ctx context.Context) (string, error) {
+func (_m *ValueDescriptorUpdater) Add(ctx context.Context, vdr *models.ValueDescriptor) (string, error) {
 	ret := _m.Called(vdr, ctx)
 
 	var r0 string
@@ -34,7 +34,7 @@ func (_m *ValueDescriptorUpdater) Add(vdr *models.ValueDescriptor, ctx context.C
 }
 
 // DeleteByName provides a mock function with given fields: name, ctx
-func (_m *ValueDescriptorUpdater) DeleteByName(name string, ctx context.Context) error {
+func (_m *ValueDescriptorUpdater) DeleteByName(ctx context.Context, name string) error {
 	ret := _m.Called(name, ctx)
 
 	var r0 error
@@ -48,7 +48,7 @@ func (_m *ValueDescriptorUpdater) DeleteByName(name string, ctx context.Context)
 }
 
 // Update provides a mock function with given fields: vdr, ctx
-func (_m *ValueDescriptorUpdater) Update(vdr *models.ValueDescriptor, ctx context.Context) error {
+func (_m *ValueDescriptorUpdater) Update(ctx context.Context, vdr *models.ValueDescriptor) error {
 	ret := _m.Called(vdr, ctx)
 
 	var r0 error
@@ -62,7 +62,7 @@ func (_m *ValueDescriptorUpdater) Update(vdr *models.ValueDescriptor, ctx contex
 }
 
 // ValueDescriptorForName provides a mock function with given fields: name, ctx
-func (_m *ValueDescriptorUpdater) ValueDescriptorForName(name string, ctx context.Context) (models.ValueDescriptor, error) {
+func (_m *ValueDescriptorUpdater) ValueDescriptorForName(ctx context.Context, name string) (models.ValueDescriptor, error) {
 	ret := _m.Called(name, ctx)
 
 	var r0 models.ValueDescriptor
@@ -83,7 +83,7 @@ func (_m *ValueDescriptorUpdater) ValueDescriptorForName(name string, ctx contex
 }
 
 // ValueDescriptorsUsage provides a mock function with given fields: names, ctx
-func (_m *ValueDescriptorUpdater) ValueDescriptorsUsage(names []string, ctx context.Context) (map[string]bool, error) {
+func (_m *ValueDescriptorUpdater) ValueDescriptorsUsage(ctx context.Context, names []string) (map[string]bool, error) {
 	ret := _m.Called(names, ctx)
 
 	var r0 map[string]bool

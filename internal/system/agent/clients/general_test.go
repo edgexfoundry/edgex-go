@@ -17,11 +17,9 @@ package clients
 import (
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/endpoint"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +36,7 @@ func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
 	sut := NewGeneral()
-	client := general.NewGeneralClient(types.EndpointParams{}, endpoint.Endpoint{RegistryClient: nil})
+	client := general.NewGeneralClient(urlclient.New(nil, nil, nil, "", "", 0, "/"))
 	sut.Set(clientName, client)
 
 	result, ok := sut.Get(clientName)

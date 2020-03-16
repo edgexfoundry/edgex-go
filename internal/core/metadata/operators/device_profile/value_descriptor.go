@@ -14,16 +14,16 @@ import (
 
 // ValueDescriptorAdder provides the necessary functionality for creating a ValueDescriptor.
 type ValueDescriptorAdder interface {
-	Add(vdr *contract.ValueDescriptor, ctx context.Context) (string, error)
+	Add(ctx context.Context, vdr *contract.ValueDescriptor) (string, error)
 }
 
 // ValueDescriptorAdder provides the necessary functionality for updating a ValueDescriptor.
 type ValueDescriptorUpdater interface {
-	ValueDescriptorsUsage(names []string, ctx context.Context) (map[string]bool, error)
-	Add(vdr *contract.ValueDescriptor, ctx context.Context) (string, error)
-	Update(vdr *contract.ValueDescriptor, ctx context.Context) error
-	DeleteByName(name string, ctx context.Context) error
-	ValueDescriptorForName(name string, ctx context.Context) (contract.ValueDescriptor, error)
+	ValueDescriptorsUsage(ctx context.Context, names []string) (map[string]bool, error)
+	Add(ctx context.Context, vdr *contract.ValueDescriptor) (string, error)
+	Update(ctx context.Context, vdr *contract.ValueDescriptor) error
+	DeleteByName(ctx context.Context, name string) error
+	ValueDescriptorForName(ctx context.Context, name string) (contract.ValueDescriptor, error)
 }
 
 // ValueDescriptorAddExecutor creates ValueDescriptor(s) via the operator pattern.
@@ -43,7 +43,7 @@ func (a addValueDescriptor) Execute() error {
 	for _, dr := range a.drs {
 
 		desc := contract.From(dr)
-		id, err := a.client.Add(&desc, a.ctx)
+		id, err := a.client.Add(a.ctx, &desc)
 		if err != nil {
 			a.logger.Error(fmt.Sprintf("Unable to create value descriptor: %s", err.Error()))
 			return err
@@ -54,7 +54,12 @@ func (a addValueDescriptor) Execute() error {
 }
 
 // NewAddValueDescriptorExecutor creates a new ValueDescriptorAddExecutor.
-func NewAddValueDescriptorExecutor(ctx context.Context, client ValueDescriptorAdder, lc logger.LoggingClient, drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
+func NewAddValueDescriptorExecutor(
+	ctx context.Context,
+	client ValueDescriptorAdder,
+	lc logger.LoggingClient,
+	drs ...contract.DeviceResource) ValueDescriptorAddExecutor {
+
 	return addValueDescriptor{
 		ctx:    ctx,
 		drs:    drs,
@@ -113,7 +118,7 @@ func (u updateValueDescriptor) Execute() error {
 
 	// Check if any of the ValueDescriptors associated with the DeviceResources are in use.
 	// If so return an error stating all the ValueDescriptors which are in use.
-	valueDescriptorUsage, err := u.client.ValueDescriptorsUsage(persistedDeviceResourceNames, u.ctx)
+	valueDescriptorUsage, err := u.client.ValueDescriptorsUsage(u.ctx, persistedDeviceResourceNames)
 	if err != nil {
 		return err
 	}
@@ -135,7 +140,7 @@ func (u updateValueDescriptor) Execute() error {
 
 	// Execute the necessary operations to get the DeviceProfile to the desired state.
 	for _, d := range deleted {
-		err = u.client.DeleteByName(d.Name, u.ctx)
+		err = u.client.DeleteByName(u.ctx, d.Name)
 		if err != nil {
 			return err
 		}
@@ -143,20 +148,20 @@ func (u updateValueDescriptor) Execute() error {
 	}
 
 	for _, up := range update {
-		v, err := u.client.ValueDescriptorForName(up.Name, u.ctx)
+		v, err := u.client.ValueDescriptorForName(u.ctx, up.Name)
 		if err != nil {
 			return err
 		}
 
 		up.Id = v.Id
-		err = u.client.Update(&up, u.ctx)
+		err = u.client.Update(u.ctx, &up)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, c := range create {
-		_, err = u.client.Add(&c, u.ctx)
+		_, err = u.client.Add(u.ctx, &c)
 		if err != nil {
 			return err
 		}
@@ -166,7 +171,13 @@ func (u updateValueDescriptor) Execute() error {
 }
 
 // NewUpdateValueDescriptorExecutor creates a UpdateValueDescriptorExecutor which will update ValueDescriptors.
-func NewUpdateValueDescriptorExecutor(dp contract.DeviceProfile, loader DeviceProfileUpdater, client ValueDescriptorUpdater, logger logger.LoggingClient, ctx context.Context) UpdateValueDescriptorExecutor {
+func NewUpdateValueDescriptorExecutor(
+	ctx context.Context,
+	dp contract.DeviceProfile,
+	loader DeviceProfileUpdater,
+	client ValueDescriptorUpdater,
+	logger logger.LoggingClient) UpdateValueDescriptorExecutor {
+
 	return updateValueDescriptor{
 		dp:     dp,
 		loader: loader,
@@ -182,7 +193,10 @@ func NewUpdateValueDescriptorExecutor(dp contract.DeviceProfile, loader DevicePr
 //  Returns created - a slice of ValueDescriptors which need to be created.
 //	Returns update - a slice of ValueDescriptors which need to be updated.
 //	Returns deleted - a slice of ValueDescriptors which need to be deleted.
-func determineValueDescriptor(existingDeviceProfile, updatedDeviceProfile contract.DeviceProfile) (create, update, deleted []contract.ValueDescriptor) {
+func determineValueDescriptor(
+	existingDeviceProfile,
+	updatedDeviceProfile contract.DeviceProfile) (create, update, deleted []contract.ValueDescriptor) {
+
 	existingValueDescriptors := map[string]contract.ValueDescriptor{}
 	updatedValueDescriptors := map[string]contract.ValueDescriptor{}
 
