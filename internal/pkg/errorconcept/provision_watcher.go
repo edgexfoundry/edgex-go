@@ -148,7 +148,7 @@ func (r provisionWatcherDuplicate) httpErrorCode() int {
 }
 
 func (r provisionWatcherDuplicate) isA(err error) bool {
-	return err != db.ErrNotFound && r.currentId != r.newId
+	return err == nil && r.currentId == r.newId
 }
 
 func (r provisionWatcherDuplicate) message(err error) string {
