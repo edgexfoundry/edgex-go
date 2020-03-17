@@ -506,16 +506,21 @@ func restDeleteProvisionWatcherById(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.NotFoundById)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotFoundById,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler)
-	if err != nil {
+	if err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler); err != nil {
 		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
@@ -545,9 +550,10 @@ func restDeleteProvisionWatcherByName(
 	}
 
 	if err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler); err != nil {
-		lc.Error("Problem deleting provision watcher: " + err.Error())
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
@@ -566,12 +572,10 @@ func deleteProvisionWatcher(
 		return err
 	}
 
-	if err := notifyProvisionWatcherAssociates(
-		pw,
-		http.MethodDelete,
-		lc,
-		dbClient); err != nil {
+	err := notifyProvisionWatcherAssociates(pw, http.MethodDelete, lc, dbClient)
+	if err != nil {
 		lc.Error("Problem notifying associated device services to provision watcher: " + err.Error())
+		return err
 	}
 
 	return nil
