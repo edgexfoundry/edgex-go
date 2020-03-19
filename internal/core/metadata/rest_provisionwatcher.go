@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	pwErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -393,32 +394,18 @@ func restUpdateProvisionWatcher(
 		return
 	}
 
-	// explicitly do not check for errors here, we may have to lookup by name
-	from, _ := dbClient.GetProvisionWatcherById(to.Id)
-
-	byName, err := dbClient.GetProvisionWatcherByName(to.Name)
-	if err == nil {
-		// the only name collision we allow is same name and same ID,
-		// because that just means neither the ID or the name is going to change
-		// we have the guard for empty update IDs to allow for updating by name
-		if (byName.Name == to.Name && byName.Id != to.Id && to.Id != "") ||
-			(byName.Name == from.Name && byName.Id != from.Id && to.Id != "") {
-			errorHandler.Handle(w, err, errorconcept.NewProvisionWatcherDuplicateErrorConcept(byName.Id, to.Id))
-			return
-		}
-	} else {
-		errorHandler.HandleOneVariant(
+	from, err := getProvisionWatcher(to, dbClient)
+	if err != nil {
+		errorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.ProvisionWatcher.NotFoundByName,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.ProvisionWatcher.NotFoundByName,
+				errorconcept.ProvisionWatcher.NameCollision,
+			},
 			errorconcept.Common.RetrieveError_StatusInternalServer,
 		)
 		return
-	}
-
-	// if the ID lookup was successful, that's our update from base. else, use the name lookup.
-	if reflect.DeepEqual(from, models.ProvisionWatcher{}) {
-		from = byName
 	}
 
 	// from is the object currently in the database; "the provision watcher we are updating *from*"
@@ -455,7 +442,7 @@ func restUpdateProvisionWatcher(
 		return
 	}
 
-	if err := notifyProvisionWatcherAssociates(to, http.MethodPut, lc, dbClient); err != nil {
+	if err := notifyProvisionWatcherAssociates(from, http.MethodPut, lc, dbClient); err != nil {
 		errorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
 		return
 	}
@@ -463,6 +450,43 @@ func restUpdateProvisionWatcher(
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
+}
+
+// getProvisionWatcher is a helper function that first attempts to lookup by ID, and, failing that,
+// will attempt a lookup by name before finally bubbling the error up
+func getProvisionWatcher(lookup models.ProvisionWatcher, dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+	// explicitly do not check for errors here, we have to lookup by name to verify no collisions
+	byID, _ := dbClient.GetProvisionWatcherById(lookup.Id)
+
+	byName, err := dbClient.GetProvisionWatcherByName(lookup.Name)
+	if err == nil {
+		// ensure that neither the lookup by name nor the lookup by ID have unwanted name collisions
+		if namesCollide(byName, lookup) {
+			return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, lookup.Id)
+		} else if namesCollide(byName, byID) {
+			return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, byID.Id)
+		}
+	}
+
+	// only use the result of the name lookup if we didn't get anything from the ID lookup
+	if reflect.DeepEqual(byID, models.ProvisionWatcher{}) {
+		return byName, nil
+	}
+
+	return byID, nil
+}
+
+// namesCollide consolidates the logic of determining whether provision watcher data that we are attempting to update
+// will have either an ID or a name collision
+func namesCollide(base models.ProvisionWatcher, update models.ProvisionWatcher) bool {
+	// breaking this down piece by piece:
+	// there is a collision if base and update have the same name ...
+	//
+	// ... only if the IDs don't match. If the IDs match, then we are correctly performing an update on an existing PW
+	//
+	// if the update PW has no ID, then we never say there is a collision and always assume that this is a valid update.
+	// or, thinking about it differently, this clause is "update by name"
+	return base.Name == update.Name && base.Id != update.Id && update.Id != ""
 }
 
 func restDeleteProvisionWatcherById(
