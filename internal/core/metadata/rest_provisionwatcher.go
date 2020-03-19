@@ -455,17 +455,21 @@ func restUpdateProvisionWatcher(
 // getProvisionWatcher is a helper function that first attempts to lookup by ID, and, failing that,
 // will attempt a lookup by name before finally bubbling the error up
 func getProvisionWatcher(lookup models.ProvisionWatcher, dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
-	// explicitly do not check for errors here, we have to lookup by name to verify no collisions
-	byID, _ := dbClient.GetProvisionWatcherById(lookup.Id)
+	byID, err := dbClient.GetProvisionWatcherById(lookup.Id)
+	if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
+		return models.ProvisionWatcher{}, err
+	}
 
 	byName, err := dbClient.GetProvisionWatcherByName(lookup.Name)
-	if err == nil {
-		// ensure that neither the lookup by name nor the lookup by ID have unwanted name collisions
-		if namesCollide(byName, lookup) {
-			return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, lookup.Id)
-		} else if namesCollide(byName, byID) {
-			return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, byID.Id)
-		}
+	if err != nil {
+		return models.ProvisionWatcher{}, err
+	}
+
+	// ensure that neither the lookup by name nor the lookup by ID have unwanted name collisions
+	if namesCollide(byName, lookup) {
+		return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, lookup.Id)
+	} else if namesCollide(byName, byID) {
+		return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, byID.Id)
 	}
 
 	// only use the result of the name lookup if we didn't get anything from the ID lookup
