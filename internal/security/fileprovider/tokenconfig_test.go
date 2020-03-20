@@ -24,6 +24,7 @@ import (
 	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const sampleJSON = `{
@@ -77,4 +78,168 @@ func TestLoadTokenConfigError2(t *testing.T) {
 	var tokenConf TokenConfFile
 	err := LoadTokenConfig(mockFileIoPerformer, "dummy-file", &tokenConf)
 	assert.Error(t, err)
+}
+
+func TestMergeWithNoDuplicates(t *testing.T) {
+	map1 := TokenConfFile{
+		"key1": ServiceKey{},
+		"key2": ServiceKey{},
+	}
+
+	map2 := TokenConfFile{
+		"key3": ServiceKey{},
+		"key4": ServiceKey{},
+		"key5": ServiceKey{},
+	}
+
+	// merge two maps with no duplicated keys from each other
+	merged := map1.mergeWith(map2)
+
+	assert.Equal(t, 5, len(merged), "expect 5 entries in merged map")
+
+	// should get all keys in the merged map
+	expectedKeys := []string{"key1", "key2", "key3", "key4", "key5"}
+	for _, k := range expectedKeys {
+		assert.True(t, merged.keyExists(k))
+	}
+}
+
+func TestMergeWithEmptyKey(t *testing.T) {
+	map1 := TokenConfFile{
+		"key1": ServiceKey{},
+		"key2": ServiceKey{},
+	}
+	// merge with an empty key case
+	empty := TokenConfFile{}
+	merged := map1.mergeWith(empty)
+	assert.Equal(t, map1, merged)
+
+	// empty key merges with non-empty map
+	merged = empty.mergeWith(map1)
+	assert.Equal(t, map1, merged)
+}
+
+func TestMergeWithDuplicateKeys(t *testing.T) {
+	map1 := TokenConfFile{
+		"key1": ServiceKey{},
+		"key2": ServiceKey{},
+	}
+
+	map2 := TokenConfFile{
+		"key3": ServiceKey{},
+		"key4": ServiceKey{},
+		"key5": ServiceKey{},
+		"key7": ServiceKey{},
+	}
+
+	// some duplicate keys with other maps
+	map3 := TokenConfFile{
+		"key1": ServiceKey{UseDefaults: true},
+		"key3": ServiceKey{UseDefaults: true},
+		"key7": ServiceKey{UseDefaults: true},
+	}
+
+	// merge two maps with one duplicated key
+	merged := map1.mergeWith(map3)
+
+	assert.Equal(t, 4, len(merged), "expect 4 entries in merged map")
+	expectedKeys := []string{"key1", "key2", "key3", "key7"}
+	expectedServiceKeyValues := []ServiceKey{
+		ServiceKey{UseDefaults: true},
+		ServiceKey{UseDefaults: false},
+		ServiceKey{UseDefaults: true},
+		ServiceKey{UseDefaults: true}}
+	for i, k := range expectedKeys {
+		assert.True(t, merged.keyExists(k))
+		assert.Equal(t, expectedServiceKeyValues[i].UseDefaults, merged[k].UseDefaults)
+	}
+
+	// use merged map and merge again with more than one duplicated keys
+	merged = merged.mergeWith(map2)
+	assert.Equal(t, 6, len(merged), "expect 6 entries in merged map")
+	expectedKeys = []string{"key1", "key2", "key3", "key4", "key5", "key7"}
+	expectedServiceKeyValues = []ServiceKey{
+		ServiceKey{UseDefaults: true},
+		ServiceKey{UseDefaults: false},
+		ServiceKey{UseDefaults: false},
+		ServiceKey{UseDefaults: false},
+		ServiceKey{UseDefaults: false},
+		ServiceKey{UseDefaults: false}}
+	for i, k := range expectedKeys {
+		assert.True(t, merged.keyExists(k))
+		assert.Equal(t, expectedServiceKeyValues[i].UseDefaults, merged[k].UseDefaults)
+	}
+}
+
+func TestGetTokenConfigFromEnv(t *testing.T) {
+	oringEnv := os.Getenv(addSecretstoreTokensEnvKey)
+	defer func() {
+		os.Setenv(addSecretstoreTokensEnvKey, oringEnv)
+	}()
+
+	tests := []struct {
+		name            string
+		serviceNameList string
+		expectedKeys    []string
+		expectError     bool
+	}{
+		{
+			name:            "Empty list",
+			serviceNameList: "",
+			expectedKeys:    []string{},
+			expectError:     false,
+		},
+		{
+			name:            "One service name",
+			serviceNameList: "service1",
+			expectedKeys:    []string{"service1"},
+			expectError:     false,
+		},
+		{
+			name:            "Two service names",
+			serviceNameList: "service1, service2",
+			expectedKeys:    []string{"service1", "service2"},
+			expectError:     false,
+		},
+		{
+			name:            "More than 2 service names",
+			serviceNameList: "service1,service2, service3",
+			expectedKeys:    []string{"service1", "service2", "service3"},
+			expectError:     false,
+		},
+		{
+			name:            "With some empty service names",
+			serviceNameList: "service1, ,service3",
+			expectedKeys:    []string{"service1", "service3"},
+			expectError:     false,
+		},
+		{
+			name:            "Malformed service name list",
+			serviceNameList: "slash/,,backslash\\",
+			expectedKeys:    []string{},
+			expectError:     true,
+		},
+	}
+
+	for _, test := range tests {
+		currentTest := test
+		t.Run(test.name, func(t *testing.T) {
+			os.Setenv(addSecretstoreTokensEnvKey, currentTest.serviceNameList)
+			tokenFileMap, err := GetTokenConfigFromEnv()
+
+			if currentTest.expectError {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			assert.Equal(t, len(currentTest.expectedKeys), len(tokenFileMap))
+
+			for _, expectedServiceName := range currentTest.expectedKeys {
+				_, found := tokenFileMap[expectedServiceName]
+				assert.Truef(t, found, "expected service name: %s", expectedServiceName)
+			}
+		})
+	}
 }
