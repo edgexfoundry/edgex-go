@@ -32,9 +32,9 @@ File = '/edgex/logs/edgex-support-notifications.log'
   [Databases.Primary]
   Host = 'edgex-redis'
   Name = 'notifications'
-  Password = ''
+  Password = 'password'
   Port = 6379
-  Username = ''
+  Username = 'notifications'
   Timeout = 5000
   Type = 'redisdb'
 
