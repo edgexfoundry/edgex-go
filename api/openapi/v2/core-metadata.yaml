@@ -248,26 +248,8 @@ components:
       properties:
         path:
           type: string
-        responses:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommandResponse'
         url:
           type: string
-    CommandResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "In the context of a device profile, defines an expected response from a command issued to a device via the core-command service."
-      type: object
-      properties:
-        code:
-          type: string
-        description:
-          type: string
-        expectedValues:
-          type: array
-          items:
-            type: string
     Device:
       type: object
       properties:
@@ -369,7 +351,7 @@ components:
         tag:
           type: string
         properties:
-          $ref: '#/components/schemas/ProfileProperty'
+          $ref: '#/components/schemas/PropertyValue'
         attributes:
           type: object
           additionalProperties:
@@ -492,14 +474,6 @@ components:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
-    ProfileProperty:
-      description: "A property defining the data type of a device's reading"
-      type: object
-      properties:
-        value:
-          $ref: '#/components/schemas/PropertyValue'
-        units:
-          $ref: '#/components/schemas/Units'
     ProfileResource:
       description: "Defines read/write capabilities native to the device"
       type: object
@@ -522,13 +496,13 @@ components:
           type: string
         readWrite:
           type: string
+        units:
+          type: string
         minimum:
           type: string
         maximum:
           type: string
         defaultValue:
-          type: string
-        size:
           type: string
         mask:
           type: string
@@ -541,8 +515,6 @@ components:
         base:
           type: string
         assertion:
-          type: string
-        precision:
           type: string
         floatEncoding:
           type: string
@@ -560,13 +532,9 @@ components:
           type: string
         operation:
           type: string
-        object:
-          type: string
         deviceResource:
           type: string
         parameter:
-          type: string
-        resource:
           type: string
         deviceCommand:
           type: string
@@ -632,15 +600,6 @@ components:
         - strategy
         - type
         - version
-    Units:
-      type: object
-      properties:
-        type:
-          type: string
-        readWrite:
-          type: string
-        defaultValue:
-          type: string
     UpdateAddressableRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'

@@ -10,17 +10,6 @@ servers:
   
 components:
   schemas:
-    ActionResponse:
-      type: object
-      properties:
-        code:
-          type: string
-        description:
-          type: string
-        expectedValues:
-          type: array
-          items:
-            type: string
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
@@ -71,10 +60,6 @@ components:
       properties:
         path:
           type: string
-        responses:
-          type: array
-          items:
-            $ref: '#/components/schemas/ActionResponse'
         url:
           type: string
     CommandResponse:
