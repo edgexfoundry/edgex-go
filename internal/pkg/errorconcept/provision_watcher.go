@@ -17,6 +17,7 @@ package errorconcept
 import (
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
@@ -29,6 +30,7 @@ type provisionWatcherErrorConcept struct {
 	DeviceProfileNotFound_StatusNotFound provisionWatcherDeviceProfileNotFound_StatusNotFound
 	DeviceServiceNotFound_StatusConflict provisionWatcherDeviceServiceNotFound_StatusConflict
 	DeviceServiceNotFound_StatusNotFound provisionWatcherDeviceServiceNotFound_StatusNotFound
+	NameCollision                        provisionWatcherNameCollision
 	NotFoundById                         provisionWatcherNotFoundById
 	NotFoundByName                       provisionWatcherNotFoundByName
 	NotUnique                            provisionWatcherNotUnique
@@ -133,26 +135,19 @@ func (r provisionWatcherNotFoundByName) message(err error) string {
 	return "Provision Watcher not found: " + err.Error()
 }
 
-// NewProvisionWatcherDuplicateErrorConcept instantiates a new error concept for a given set of ids
-func NewProvisionWatcherDuplicateErrorConcept(currentId string, newId string) provisionWatcherDuplicate {
-	return provisionWatcherDuplicate{currentId: currentId, newId: newId}
-}
+type provisionWatcherNameCollision struct{}
 
-type provisionWatcherDuplicate struct {
-	currentId string
-	newId     string
-}
-
-func (r provisionWatcherDuplicate) httpErrorCode() int {
+func (r provisionWatcherNameCollision) httpErrorCode() int {
 	return http.StatusConflict
 }
 
-func (r provisionWatcherDuplicate) isA(err error) bool {
-	return err != db.ErrNotFound && r.currentId != r.newId
+func (r provisionWatcherNameCollision) isA(err error) bool {
+	_, isA := err.(errors.ErrNameCollision)
+	return isA
 }
 
-func (r provisionWatcherDuplicate) message(err error) string {
-	return "Duplicate name for the provision watcher"
+func (r provisionWatcherNameCollision) message(err error) string {
+	return err.Error()
 }
 
 type provisionWatcherNotUnique struct{}

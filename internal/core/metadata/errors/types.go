@@ -165,3 +165,21 @@ func NewErrEmptyFile(fileType string) ErrEmptyFile {
 		fileType: fileType,
 	}
 }
+
+type ErrNameCollision struct {
+	name   string
+	fromID string
+	toID   string
+}
+
+func (e ErrNameCollision) Error() string {
+	return fmt.Sprintf("%s is used by two provision watchers: %s and %s", e.name, e.fromID, e.toID)
+}
+
+func NewErrNameCollision(name, fromID, toID string) ErrNameCollision {
+	return ErrNameCollision{
+		name:   name,
+		fromID: fromID,
+		toID:   toID,
+	}
+}
