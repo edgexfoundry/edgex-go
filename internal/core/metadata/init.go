@@ -48,6 +48,13 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
+	// TODO: there is an outstanding known issue (https://github.com/edgexfoundry/edgex-go/issues/2462)
+	// 		that could be seemingly be solved by moving from JIT initialization of these external clients to static
+	// 		init on startup, like registryClient and configuration are initialized.
+	// 		Doing so would cover over the symptoms of the bug, but the root problem of server processing taking longer
+	// 		than the configured client time out would still be present.
+	// 		Until that problem is addressed by larger architectural changes, if you are experiencing a bug similar to
+	//		https://github.com/edgexfoundry/edgex-go/issues/2421, the correct fix is to bump up the client timeout.
 	configuration := container.ConfigurationFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 

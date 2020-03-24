@@ -201,7 +201,7 @@ func restGetCommandsByDeviceID(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(&device)
+	_ = json.NewEncoder(w).Encode(&device)
 }
 
 func restGetCommandsByDeviceName(
@@ -230,7 +230,7 @@ func restGetCommandsByDeviceName(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(&devices)
+	_ = json.NewEncoder(w).Encode(&devices)
 }
 
 func restGetAllCommands(
@@ -257,5 +257,5 @@ func restGetAllCommands(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(devices)
+	_ = json.NewEncoder(w).Encode(devices)
 }
