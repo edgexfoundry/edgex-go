@@ -19,8 +19,10 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"reflect"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	pwErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
@@ -386,75 +388,109 @@ func restUpdateProvisionWatcher(
 	errorHandler errorconcept.ErrorHandler) {
 
 	defer r.Body.Close()
-	var from models.ProvisionWatcher
-	if err := json.NewDecoder(r.Body).Decode(&from); err != nil {
+	var to models.ProvisionWatcher
+	if err := json.NewDecoder(r.Body).Decode(&to); err != nil {
 		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusServiceUnavailable)
 		return
 	}
 
-	// Check if the provision watcher exists
-	// Try by ID
-	to, err := dbClient.GetProvisionWatcherById(from.Id)
+	from, err := getProvisionWatcher(to, dbClient)
 	if err != nil {
-		// Try by name
-		if to, err = dbClient.GetProvisionWatcherByName(from.Name); err != nil {
-			errorHandler.HandleOneVariant(
-				w,
-				err,
+		errorHandler.HandleManyVariants(
+			w,
+			err,
+			[]errorconcept.ErrorConceptType{
 				errorconcept.ProvisionWatcher.NotFoundByName,
-				errorconcept.Common.RetrieveError_StatusServiceUnavailable)
-			return
-		}
-	}
-
-	if err := updateProvisionWatcherFields(from, &to, w, dbClient, errorHandler); err != nil {
-		lc.Error("Problem updating provision watcher: " + err.Error())
+				errorconcept.ProvisionWatcher.NameCollision,
+			},
+			errorconcept.Common.RetrieveError_StatusInternalServer,
+		)
 		return
 	}
 
-	if err := dbClient.UpdateProvisionWatcher(to); err != nil {
-		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusServiceUnavailable)
+	// from is the object currently in the database; "the provision watcher we are updating *from*"
+	// to is the target object state; "the provision watcher we are updating *to*"
+	if to.Origin != 0 {
+		from.Origin = to.Origin
+	}
+
+	if to.Name != "" {
+		from.Name = to.Name
+	}
+
+	if to.Identifiers != nil {
+		from.Identifiers = to.Identifiers
+	}
+
+	if to.BlockingIdentifiers != nil {
+		from.BlockingIdentifiers = to.BlockingIdentifiers
+	}
+
+	if !reflect.DeepEqual(to.Profile, models.DeviceProfile{}) {
+		from.Profile = to.Profile
+	}
+
+	if !reflect.DeepEqual(to.Service, models.DeviceService{}) {
+		from.Service = to.Service
+	}
+
+	// always update admin state
+	from.AdminState = to.AdminState
+
+	if err := dbClient.UpdateProvisionWatcher(from); err != nil {
+		errorHandler.Handle(w, err, errorconcept.Common.UpdateError_StatusInternalServer)
 		return
 	}
 
-	// Notify Associates
-	if err := notifyProvisionWatcherAssociates(to, http.MethodPut, lc, dbClient); err != nil {
-		lc.Error("Problem notifying associated device services for provision watcher: " + err.Error())
+	if err := notifyProvisionWatcherAssociates(from, http.MethodPut, lc, dbClient); err != nil {
+		errorHandler.Handle(w, err, errorconcept.Default.InternalServerError)
+		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
 
-// Update the relevant fields of the provision watcher
-func updateProvisionWatcherFields(
-	from models.ProvisionWatcher,
-	to *models.ProvisionWatcher,
-	w http.ResponseWriter,
-	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) error {
-
-	if from.Identifiers != nil {
-		to.Identifiers = from.Identifiers
-	}
-	if from.Origin != 0 {
-		to.Origin = from.Origin
-	}
-	if from.Name != "" {
-		// Check that the name is unique
-		checkPW, err := dbClient.GetProvisionWatcherByName(from.Name)
-		if err != nil {
-			// DuplicateProvisionWatcherErrorConcept will evaluate to true if the ID is a duplicate
-			errorHandler.HandleOneVariant(
-				w,
-				err,
-				errorconcept.NewProvisionWatcherDuplicateErrorConcept(checkPW.Id, to.Id),
-				errorconcept.Default.ServiceUnavailable)
-		}
-		to.Name = from.Name
+// getProvisionWatcher is a helper function that first attempts to lookup by ID, and, failing that,
+// will attempt a lookup by name before finally bubbling the error up
+func getProvisionWatcher(lookup models.ProvisionWatcher, dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+	byID, err := dbClient.GetProvisionWatcherById(lookup.Id)
+	if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
+		return models.ProvisionWatcher{}, err
 	}
 
-	return nil
+	byName, err := dbClient.GetProvisionWatcherByName(lookup.Name)
+	if err != nil {
+		return models.ProvisionWatcher{}, err
+	}
+
+	// ensure that neither the lookup by name nor the lookup by ID have unwanted name collisions
+	if namesCollide(byName, lookup) {
+		return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, lookup.Id)
+	} else if namesCollide(byName, byID) {
+		return models.ProvisionWatcher{}, pwErrors.NewErrNameCollision(byName.Name, byName.Id, byID.Id)
+	}
+
+	// only use the result of the name lookup if we didn't get anything from the ID lookup
+	if reflect.DeepEqual(byID, models.ProvisionWatcher{}) {
+		return byName, nil
+	}
+
+	return byID, nil
+}
+
+// namesCollide consolidates the logic of determining whether provision watcher data that we are attempting to update
+// will have either an ID or a name collision
+func namesCollide(base models.ProvisionWatcher, update models.ProvisionWatcher) bool {
+	// breaking this down piece by piece:
+	// there is a collision if base and update have the same name ...
+	//
+	// ... only if the IDs don't match. If the IDs match, then we are correctly performing an update on an existing PW
+	//
+	// if the update PW has no ID, then we never say there is a collision and always assume that this is a valid update.
+	// or, thinking about it differently, this clause is "update by name"
+	return base.Name == update.Name && base.Id != update.Id && update.Id != ""
 }
 
 func restDeleteProvisionWatcherById(
@@ -541,7 +577,7 @@ func deleteProvisionWatcher(
 	return nil
 }
 
-// Notify the associated device services for the provision watcher
+// notifyProvisionWatcherAssociates triggers the callbacks in the device service attached to this provision watcher.
 func notifyProvisionWatcherAssociates(
 	pw models.ProvisionWatcher,
 	action string,
@@ -551,10 +587,14 @@ func notifyProvisionWatcherAssociates(
 	// Get the device service for the provision watcher
 	ds, err := dbClient.GetDeviceServiceById(pw.Service.Id)
 	if err != nil {
-		return err
+		// try by name
+		ds, err = dbClient.GetDeviceServiceByName(pw.Service.Name)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Notify the service
+	// notify the device service
 	err = notifyAssociates([]models.DeviceService{ds}, pw.Id, action, models.PROVISIONWATCHER, lc)
 	if err != nil {
 		return err

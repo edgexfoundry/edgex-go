@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: system-agent
-  version: 1.1.0
+  version: 1.2.0
 servers:
 - url: http://localhost:48090/api
 paths:
