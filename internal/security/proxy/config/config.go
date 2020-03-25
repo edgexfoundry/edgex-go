@@ -23,6 +23,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
 
 type ConfigurationStruct struct {
@@ -31,6 +32,7 @@ type ConfigurationStruct struct {
 	KongURL       KongUrlInfo
 	KongAuth      KongAuthInfo
 	KongACL       KongAclInfo
+	SecretStore   bootstrapConfig.SecretStoreInfo
 	SecretService SecretServiceInfo
 	Clients       map[string]bootstrapConfig.ClientInfo
 }
@@ -129,10 +131,26 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // structure -- until we can make backwards-breaking configuration.toml changes (which would consolidate these fields
 // into an interfaces.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
+	//To keep config file for proxy unchanged in Geneva we need to create a temporary SecretStore struct so that bootstrapHandler can use it to create a secret client
+	//The config file may be changed in the future version and SecretStore can be used directly like other core services
+	ss := bootstrapConfig.SecretStoreInfo{
+		Host:                    c.SecretService.Server,
+		Port:                    c.SecretService.Port,
+		Path:                    c.SecretService.CertPath,
+		Protocol:                "https",
+		RootCaCertPath:          c.SecretService.CACertPath,
+		ServerName:              c.SecretService.Server,
+		Authentication:          vault.AuthenticationInfo{AuthType: "X-Vault-Token"},
+		AdditionalRetryAttempts: 10,
+		RetryWaitPeriod:         "5s",
+		TokenFile:               c.SecretService.TokenPath,
+	}
+
 	// temporary until we can make backwards-breaking configuration.toml change
 	return interfaces.BootstrapConfiguration{
-		Clients: c.Clients,
-		Logging: c.Logging,
+		Clients:     c.Clients,
+		Logging:     c.Logging,
+		SecretStore: ss,
 	}
 }
 

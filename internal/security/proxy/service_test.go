@@ -28,14 +28,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+
 	"github.com/BurntSushi/toml"
 )
-
-type mockCertificateLoader struct{}
-
-func (m mockCertificateLoader) Load() (*CertPair, error) {
-	return &CertPair{"test-certificate", "test-private-key"}, nil
-}
 
 func TestPostCertExists(t *testing.T) {
 	fileName := "./testdata/configuration.toml"
@@ -73,10 +69,10 @@ func TestPostCertExists(t *testing.T) {
 		AdminPort: port,
 	}
 
-	mock := mockCertificateLoader{}
 	mockLogger := logger.MockLogger{}
 	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
-	e := service.postCert(mock)
+	mockCertPair := bootstrapConfig.CertKeyPair{Cert: "test-certificate", Key: "test-private-key"}
+	e := service.postCert(mockCertPair)
 	if e == nil {
 		t.Errorf("failed on testing existing certificate on proxy - failed to catch bad request")
 	}
@@ -133,10 +129,10 @@ func TestInit(t *testing.T) {
 		AdminPort: port,
 	}
 
-	mock := mockCertificateLoader{}
+	mockCertPair := bootstrapConfig.CertKeyPair{Cert: "test-certificate", Key: "test-private-key"}
 	mockLogger := logger.MockLogger{}
 	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
-	err = service.Init(mock)
+	err = service.Init(mockCertPair)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
