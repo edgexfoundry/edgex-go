@@ -129,7 +129,7 @@ func restAddProvisionWatcher(
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	_, _ = w.Write([]byte(id))
 }
 
 // read endpoints
@@ -449,12 +449,15 @@ func restUpdateProvisionWatcher(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 // getProvisionWatcher is a helper function that first attempts to lookup by ID, and, failing that,
 // will attempt a lookup by name before finally bubbling the error up
-func getProvisionWatcher(lookup models.ProvisionWatcher, dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+func getProvisionWatcher(
+	lookup models.ProvisionWatcher,
+	dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+
 	byID, err := dbClient.GetProvisionWatcherById(lookup.Id)
 	if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
 		return models.ProvisionWatcher{}, err
@@ -521,7 +524,7 @@ func restDeleteProvisionWatcherById(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 func restDeleteProvisionWatcherByName(
@@ -556,7 +559,7 @@ func restDeleteProvisionWatcherByName(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 // delete endpoints
