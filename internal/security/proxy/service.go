@@ -30,6 +30,8 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 type CertUploadErrorType int
@@ -116,8 +118,8 @@ func (s *Service) ResetProxy() error {
 	return nil
 }
 
-func (s *Service) Init(cert CertificateLoader) error {
-	postErr := s.postCert(cert)
+func (s *Service) Init(cp bootstrapConfig.CertKeyPair) error {
+	postErr := s.postCert(cp)
 	if postErr != nil {
 		switch postErr.reason {
 		case CertExisting:
@@ -167,13 +169,7 @@ func (s *Service) Init(cert CertificateLoader) error {
 	return nil
 }
 
-func (s *Service) postCert(cert CertificateLoader) *CertError {
-	cp, err := cert.Load()
-
-	if err != nil {
-		return &CertError{err.Error(), InternalError}
-	}
-
+func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
