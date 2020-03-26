@@ -129,7 +129,7 @@ func restAddProvisionWatcher(
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	_, _ = w.Write([]byte(id))
 }
 
 // read endpoints
@@ -449,12 +449,15 @@ func restUpdateProvisionWatcher(
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 // getProvisionWatcher is a helper function that first attempts to lookup by ID, and, failing that,
 // will attempt a lookup by name before finally bubbling the error up
-func getProvisionWatcher(lookup models.ProvisionWatcher, dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+func getProvisionWatcher(
+	lookup models.ProvisionWatcher,
+	dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
+
 	byID, err := dbClient.GetProvisionWatcherById(lookup.Id)
 	if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
 		return models.ProvisionWatcher{}, err
@@ -506,17 +509,22 @@ func restDeleteProvisionWatcherById(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.NotFoundById)
+		errorHandler.HandleOneVariant(
+			w,
+			err,
+			errorconcept.ProvisionWatcher.NotFoundById,
+			errorconcept.Default.InternalServerError)
 		return
 	}
 
-	err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler)
-	if err != nil {
+	if err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler); err != nil {
 		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
-	w.Write([]byte("true"))
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("true"))
 }
 
 func restDeleteProvisionWatcherByName(
@@ -545,12 +553,13 @@ func restDeleteProvisionWatcherByName(
 	}
 
 	if err = deleteProvisionWatcher(pw, w, lc, dbClient, errorHandler); err != nil {
-		lc.Error("Problem deleting provision watcher: " + err.Error())
+		errorHandler.Handle(w, err, errorconcept.ProvisionWatcher.DeleteError_StatusInternalServer)
 		return
 	}
+
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("true"))
+	_, _ = w.Write([]byte("true"))
 }
 
 // delete endpoints
@@ -566,12 +575,10 @@ func deleteProvisionWatcher(
 		return err
 	}
 
-	if err := notifyProvisionWatcherAssociates(
-		pw,
-		http.MethodDelete,
-		lc,
-		dbClient); err != nil {
+	err := notifyProvisionWatcherAssociates(pw, http.MethodDelete, lc, dbClient)
+	if err != nil {
 		lc.Error("Problem notifying associated device services to provision watcher: " + err.Error())
+		return err
 	}
 
 	return nil
