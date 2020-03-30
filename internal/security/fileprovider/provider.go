@@ -77,14 +77,25 @@ func (p *fileTokenProvider) Run() error {
 		return err
 	}
 
+	tokenConfEnv, err := GetTokenConfigFromEnv()
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("failed to get token config from environment variable %s with error: %s", addSecretstoreTokensEnvKey, err.Error()))
+		return err
+	}
+
 	var tokenConf TokenConfFile
 	if err := LoadTokenConfig(p.fileOpener, p.tokenConfig.ConfigFile, &tokenConf); err != nil {
 		p.logger.Error(fmt.Sprintf("failed to read token configuration file %s: %s", p.tokenConfig.ConfigFile, err.Error()))
 		return err
 	}
 
-	for serviceName, serviceConfig := range tokenConf {
+	// merge the additional token configuration list from environment variable
+	// note that the configuration file takes precedence, as the tokenConf will override
+	// the tokenConfEnv with same duplicate keys
+	// The tokenConfEnv only uses default settings.
+	tokenConf = tokenConfEnv.mergeWith(tokenConf)
 
+	for serviceName, serviceConfig := range tokenConf {
 		p.logger.Info(fmt.Sprintf("generating policy/token defaults for service %s", serviceName))
 
 		servicePolicy := make(map[string]interface{})
