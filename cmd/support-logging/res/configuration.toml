@@ -24,13 +24,7 @@ File = ''
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'logging'
-  Password = 'password'
-  Port = 27017
-  Username = 'logging'
-  Timeout = 5000
-  Type = 'mongodb'
+  Type = 'file'
 
 [SecretStore]
 Host = 'localhost'
