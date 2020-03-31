@@ -17,12 +17,14 @@ package mongo
 import (
 	"errors"
 	"fmt"
-	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
+
+	types "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo/models"
 )
 
 /* ----------------------Device Report --------------------------*/
@@ -108,6 +110,15 @@ func (mc MongoClient) AddDeviceReport(d contract.DeviceReport) (string, error) {
 }
 
 func (mc MongoClient) UpdateDeviceReport(dr contract.DeviceReport) error {
+	if dr.Id == "" {
+		byName, err := mc.GetDeviceReportByName(dr.Name)
+		if err != nil {
+			return err
+		}
+
+		dr = byName
+	}
+
 	var mapped models.DeviceReport
 	id, err := mapped.FromContract(dr)
 	if err != nil {
@@ -156,6 +167,15 @@ func (mc MongoClient) AddDevice(d contract.Device, commands []contract.Command) 
 }
 
 func (mc MongoClient) UpdateDevice(d contract.Device) error {
+	if d.Id == "" {
+		byName, err := mc.GetDeviceByName(d.Name)
+		if err != nil {
+			return err
+		}
+
+		d = byName
+	}
+
 	var mapped models.Device
 	id, err := mapped.FromContract(d, mc, mc, mc)
 	if err != nil {
@@ -380,6 +400,15 @@ func (mc MongoClient) AddDeviceProfile(dp contract.DeviceProfile) (string, error
 }
 
 func (mc MongoClient) UpdateDeviceProfile(dp contract.DeviceProfile) error {
+	if dp.Id == "" {
+		byName, err := mc.GetDeviceProfileByName(dp.Name)
+		if err != nil {
+			return err
+		}
+
+		dp = byName
+	}
+
 	var mapped models.DeviceProfile
 	id, err := mapped.FromContract(dp)
 	if err != nil {
@@ -424,6 +453,15 @@ func (mc MongoClient) AddressableToDBRef(a models.Addressable) (dbRef mgo.DBRef,
 }
 
 func (mc MongoClient) UpdateAddressable(a contract.Addressable) error {
+	if a.Id == "" {
+		byName, err := mc.GetAddressableByName(a.Name)
+		if err != nil {
+			return err
+		}
+
+		a = byName
+	}
+
 	var mapped models.Addressable
 	id, err := mapped.FromContract(a)
 	if err != nil {
@@ -690,6 +728,15 @@ func (mc MongoClient) AddDeviceService(ds contract.DeviceService) (string, error
 }
 
 func (mc MongoClient) UpdateDeviceService(ds contract.DeviceService) error {
+	if ds.Id == "" {
+		byName, err := mc.GetDeviceServiceByName(ds.Name)
+		if err != nil {
+			return err
+		}
+
+		ds = byName
+	}
+
 	var mapped models.DeviceService
 	id, err := mapped.FromContract(ds, mc)
 	if err != nil {
@@ -874,6 +921,33 @@ func (mc MongoClient) AddProvisionWatcher(pw contract.ProvisionWatcher) (string,
 }
 
 func (mc MongoClient) UpdateProvisionWatcher(pw contract.ProvisionWatcher) error {
+	if pw.Id == "" {
+		byName, err := mc.GetProvisionWatcherByName(pw.Name)
+		if err != nil {
+			return err
+		}
+
+		pw = byName
+	}
+
+	if pw.Profile.Id == "" {
+		byName, err := mc.GetDeviceProfileByName(pw.Profile.Name)
+		if err != nil {
+			return err
+		}
+
+		pw.Profile = byName
+	}
+
+	if pw.Service.Id == "" {
+		byName, err := mc.GetDeviceServiceByName(pw.Service.Name)
+		if err != nil {
+			return err
+		}
+
+		pw.Service = byName
+	}
+
 	var mapped models.ProvisionWatcher
 	id, err := mapped.FromContract(pw, mc, mc, mc)
 	if err != nil {
