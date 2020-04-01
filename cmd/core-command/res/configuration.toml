@@ -10,7 +10,7 @@ Port = 48082
 Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the Core Command Microservice'
-Timeout = 5000
+Timeout = 45000
 
 [Registry]
 Host = 'localhost'
