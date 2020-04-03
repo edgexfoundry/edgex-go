@@ -35,5 +35,5 @@ COPY --from=builder /usr/share/ca-certificates /usr/share/ca-certificates
 COPY --from=builder /etc/ssl /etc/ssl
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/support-notifications /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/docker/configuration.toml /res/docker/configuration.toml
-ENTRYPOINT ["/support-notifications","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-notifications/res/configuration.toml /res/configuration.toml
+ENTRYPOINT ["/support-notifications","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]

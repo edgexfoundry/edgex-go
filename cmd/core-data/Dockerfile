@@ -42,6 +42,6 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 RUN apk --no-cache add zeromq
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/core-data /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/docker/configuration.toml /res/docker/configuration.toml
+COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml
 
-ENTRYPOINT ["/core-data","-cp=consul.http://edgex-core-consul:8500","--registry","--profile=docker","--confdir=/res"]
+ENTRYPOINT ["/core-data","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]

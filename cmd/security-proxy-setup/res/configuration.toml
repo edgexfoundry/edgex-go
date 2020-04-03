@@ -45,7 +45,7 @@ WhiteList = "admin"
 Server = "localhost"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
-CertPath = "v1/secret/edgex/edgex-security-proxy-setup/kong-tls"
+CertPath = "/v1/secret/edgex/edgex-security-proxy-setup/"
 TokenPath = "res/resp-init.json"
 CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["localhost"]
@@ -75,16 +75,6 @@ SNIS = ["localhost"]
   Protocol = "http"
   Host = "localhost"
   Port = 48061
-
-  [Clients.Distro]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 48070
-	
-  [Clients.Export]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 48071
 
   [Clients.Scheduler]
   Protocol = "http"

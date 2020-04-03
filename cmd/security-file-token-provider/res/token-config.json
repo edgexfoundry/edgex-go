@@ -1,7 +1,4 @@
 {
-  "edgex-config-seed": {
-    "edgex_use_defaults": true
-  },
   "edgex-core-command": {
     "edgex_use_defaults": true,
     "custom_policy": {

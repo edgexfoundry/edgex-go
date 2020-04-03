@@ -38,11 +38,6 @@ func NewCommonFlags() *CommonFlags {
 	return &commonFlags
 }
 
-// ConfigFileName returns the name of the local configuration file
-func (f *CommonFlags) ConfigFileName() string {
-	return internal.ConfigFileName
-}
-
 // Parse parses the command-line arguments
 func (f *CommonFlags) Parse(_ []string) {
 	flag.StringVar(&f.configDir, "confdir", "", "")
@@ -60,9 +55,25 @@ func (f *CommonFlags) Parse(_ []string) {
 	_ = os.Setenv(internal.ConfigProviderEnvVar, "")
 }
 
+// ConfigFileName returns the name of the local configuration file
+func (f *CommonFlags) ConfigFileName() string {
+	return internal.ConfigFileName
+}
+
+// OverwriteConfig returns false since the Configuration provider is not used
+func (f *CommonFlags) OverwriteConfig() bool {
+	return false
+}
+
 // UseRegistry returns false since registry is not used
 func (f *CommonFlags) UseRegistry() bool {
 	return false
+}
+
+// RegistryUrl returns the registry if one was specified
+// TODO: Remove for release V2.0.0 when -registry is back to just bool flag
+func (f *CommonFlags) RegistryUrl() string {
+	return ""
 }
 
 // ConfigProviderUrl returns the empty url since Configuration Provider is not used.
