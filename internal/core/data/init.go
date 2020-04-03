@@ -54,6 +54,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	registryClient := container.RegistryFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
 
 	mdc := metadata.NewDeviceClient(
 		urlclient.New(
@@ -90,11 +91,41 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 			Optional: configuration.MessageQueue.Optional,
 		})
 
-	lc := container.LoggingClientFrom(dic.Get)
 	if err != nil {
 		lc.Error(fmt.Sprintf("failed to create messaging client: %s", err.Error()))
 		return false
 	}
+
+	err = msgClient.Connect()
+	if err != nil {
+		lc.Error(fmt.Sprintf("failed to connect to message bus: %s", err.Error()))
+		return false
+	}
+
+	// Setup special "defer" go func that will disconnect from the message bus when the service is exiting
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				if err := msgClient.Disconnect(); err != nil {
+					lc.Error("failed to disconnect from the Message Bus")
+					return
+				}
+				lc.Info("Message Bus disconnected")
+				return
+			}
+		}
+	}()
+
+	lc.Info(fmt.Sprintf(
+		"Connected to %s Message Bus @ %s://%s:%d publishing on '%s' topic",
+		configuration.MessageQueue.Type,
+		configuration.MessageQueue.Protocol,
+		configuration.MessageQueue.Host,
+		configuration.MessageQueue.Port,
+		configuration.MessageQueue.Topic))
 
 	chEvents := make(chan interface{}, 100)
 	// initialize event handlers
