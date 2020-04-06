@@ -58,6 +58,10 @@ components:
           description: "The unique identifier for the reading"
           type: string
           format: uuid
+        name:
+          description: "The name of the device resource from which the reading originated"
+          type: string
+          format: uuid
         labels:
           description: "One or more custom labels that can be assigned to a reading"
           type: array
@@ -240,14 +244,11 @@ components:
     ReadingCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate reading count. If the deviceId property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate reading count to all readings in the database."
       type: object
       properties:
         count:
           type: integer
-        deviceId:
-          type: string
-          format: uuid
       required:
         - count
     ReadingResponse:
@@ -321,7 +322,7 @@ components:
             floatEncoding:
               description: "Indicates how a float value is encoded, if the value property contains a float."
               type: string
-            type:
+            valueType:
               description: "Indicates the datatype of the value property"
               type: string
             value:
