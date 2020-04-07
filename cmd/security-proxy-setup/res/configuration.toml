@@ -51,7 +51,7 @@ CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["localhost"]
 
 [Clients]
-  [Clients.Coredata]
+  [Clients.CoreData]
   Protocol = "http"
   Host = "localhost"
   Port = 48080
