@@ -30,6 +30,7 @@ type provisionWatcherErrorConcept struct {
 	DeviceProfileNotFound_StatusNotFound provisionWatcherDeviceProfileNotFound_StatusNotFound
 	DeviceServiceNotFound_StatusConflict provisionWatcherDeviceServiceNotFound_StatusConflict
 	DeviceServiceNotFound_StatusNotFound provisionWatcherDeviceServiceNotFound_StatusNotFound
+	InvalidID                            provisionWatcherInvalidId
 	NameCollision                        provisionWatcherNameCollision
 	NotFoundById                         provisionWatcherNotFoundById
 	NotFoundByName                       provisionWatcherNotFoundByName
@@ -133,6 +134,20 @@ func (r provisionWatcherNotFoundByName) isA(err error) bool {
 
 func (r provisionWatcherNotFoundByName) message(err error) string {
 	return "Provision Watcher not found: " + err.Error()
+}
+
+type provisionWatcherInvalidId struct{}
+
+func (r provisionWatcherInvalidId) httpErrorCode() int {
+	return http.StatusNotFound
+}
+
+func (r provisionWatcherInvalidId) isA(err error) bool {
+	return err == db.ErrInvalidObjectId
+}
+
+func (r provisionWatcherInvalidId) message(err error) string {
+	return db.ErrInvalidObjectId.Error()
 }
 
 type provisionWatcherNameCollision struct{}
