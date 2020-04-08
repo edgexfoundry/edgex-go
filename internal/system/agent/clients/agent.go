@@ -17,39 +17,39 @@ package clients
 import (
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 )
 
-// GeneralType is an alias for general.GeneralClient and hides implementation detail.
-type GeneralType general.GeneralClient
+// AgentType is an alias for general.GeneralClient and hides implementation detail.
+type AgentType agent.AgentClient
 
 // clientMap defines internal map structure to track multiple instances of general.GeneralClient.
-type clientMap map[string]GeneralType
+type clientMap map[string]AgentType
 
-// General contains implementation structures for tracking multiple instances of GeneralType.
-type General struct {
+// Agent contains implementation structures for tracking multiple instances of AgentType.
+type Agent struct {
 	clients clientMap
 	mutex   sync.RWMutex
 }
 
-// NewGeneral is a factory function that returns an initialized General receiver struct.
-func NewGeneral() *General {
-	return &General{
+// NewAgent is a factory function that returns an initialized Agent receiver struct.
+func NewAgent() *Agent {
+	return &Agent{
 		clients: make(clientMap),
 		mutex:   sync.RWMutex{},
 	}
 }
 
-// Get returns the GeneralType and ok = true for the requested client name if it exists, otherwise ok = false.
-func (c *General) Get(clientName string) (client GeneralType, ok bool) {
+// Get returns the AgentType and ok = true for the requested client name if it exists, otherwise ok = false.
+func (c *Agent) Get(clientName string) (client AgentType, ok bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	client, ok = c.clients[clientName]
 	return
 }
 
-// Set updates the list of clients to ensure the provided clientName key contains the provided GeneralType value.
-func (c *General) Set(clientName string, value GeneralType) {
+// Set updates the list of clients to ensure the provided clientName key contains the provided AgentType value.
+func (c *Agent) Set(clientName string, value AgentType) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.clients[clientName] = value

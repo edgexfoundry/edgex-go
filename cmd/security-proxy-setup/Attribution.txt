@@ -141,8 +141,11 @@ https://github.com/stretchr/objx/blob/master/LICENSE
 stretchr/testify (MIT) https://github.com/stretchr/testify
 https://github.com/stretchr/testify/blob/master/LICENSE
 
-ugorji/go (MIT) https://github.com/ugorji/go
-https://github.com/ugorji/go/blob/master/LICENSE
+fxamacker/cbor (MIT) https://github.com/fxamacker/cbor/v2
+https://github.com/fxamacker/cbor/blob/master/README.md#license
+
+x448/float16 (MIT) https://github.com/x448/float16
+https://github.com/x448/float16/blob/master/LICENSE
 
 golang.org/x/net (Unspecified) https://github.com/golang/net
 https://github.com/golang/net/blob/master/LICENSE

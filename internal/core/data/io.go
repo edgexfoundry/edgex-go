@@ -16,7 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/OneOfOne/xxhash"
-	"github.com/ugorji/go/codec"
+	"github.com/fxamacker/cbor/v2"
 )
 
 const (
@@ -78,8 +78,7 @@ func (cr cborReader) Read(reader io.Reader, ctx *context.Context) (models.Event,
 		return event, err
 	}
 
-	x := codec.CborHandle{}
-	err = codec.NewDecoderBytes(bytes, &x).Decode(&event)
+	err = cbor.Unmarshal(bytes, &event)
 	if err != nil {
 		return event, err
 	}

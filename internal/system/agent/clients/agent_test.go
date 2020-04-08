@@ -19,12 +19,12 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEmptyGetReturnsExpectedValues(t *testing.T) {
-	sut := NewGeneral()
+	sut := NewAgent()
 
 	result, ok := sut.Get("nonExistentKey")
 
@@ -35,8 +35,8 @@ func TestEmptyGetReturnsExpectedValues(t *testing.T) {
 func TestGetForKnownReturnsExpectedValues(t *testing.T) {
 	const clientName = "clientName"
 
-	sut := NewGeneral()
-	client := general.NewGeneralClient(urlclient.New(nil, nil, nil, "", "", 0, "/"))
+	sut := NewAgent()
+	client := agent.NewAgentClient(urlclient.New(nil, nil, nil, "", "", 0, "/"))
 	sut.Set(clientName, client)
 
 	result, ok := sut.Get(clientName)

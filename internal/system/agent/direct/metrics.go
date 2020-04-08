@@ -32,7 +32,7 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
@@ -40,7 +40,7 @@ import (
 // metrics contains references to dependencies required to handle the metrics via direct service use case.
 type metrics struct {
 	loggingClient   logger.LoggingClient
-	genClients      *agentClients.General
+	genClients      *agentClients.Agent
 	registryClient  registry.Client
 	serviceProtocol string
 }
@@ -48,7 +48,7 @@ type metrics struct {
 // NewMetrics is a factory function that returns an initialized metrics receiver struct.
 func NewMetrics(
 	lc logger.LoggingClient,
-	genClients *agentClients.General,
+	genClients *agentClients.Agent,
 	registryClient registry.Client,
 	serviceProtocol string) *metrics {
 
@@ -107,7 +107,7 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(
+		client = agent.NewAgentClient(
 			urlclient.New(
 				ctx,
 				&sync.WaitGroup{},
@@ -121,7 +121,7 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		m.genClients.Set(e.ServiceId, client)
 	}
 
-	result, err := client.FetchMetrics(ctx)
+	result, err := client.Metrics(ctx, []string{serviceName})
 	if err != nil {
 		return system.Failure(serviceName, executor.Metrics, ExecutorType, err.Error())
 	}

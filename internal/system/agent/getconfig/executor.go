@@ -26,14 +26,14 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-registry/registry"
 )
 
 // executor contains references to dependencies required to execute a get configuration request.
 type executor struct {
-	genClients      *agentClients.General
+	genClients      *agentClients.Agent
 	registryClient  registry.Client
 	loggingClient   logger.LoggingClient
 	serviceProtocol string
@@ -41,7 +41,7 @@ type executor struct {
 
 // NewExecutor is a factory function that returns an initialized executor struct.
 func NewExecutor(
-	genClients *agentClients.General,
+	genClients *agentClients.Agent,
 	registryClient registry.Client,
 	lc logger.LoggingClient,
 	serviceProtocol string) *executor {
@@ -87,7 +87,7 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(
+		client = agent.NewAgentClient(
 			urlclient.New(
 				ctx,
 				&sync.WaitGroup{},
@@ -101,7 +101,7 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		e.genClients.Set(ep.ServiceId, client)
 	}
 
-	result, err := client.FetchConfiguration(ctx)
+	result, err := client.Configuration(ctx, []string{serviceName})
 	if err != nil {
 		return "", err
 	}

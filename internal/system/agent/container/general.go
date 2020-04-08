@@ -21,9 +21,9 @@ import (
 )
 
 // GeneralClientsName contains the name of the clients.Clients implementation in the DIC.
-var GeneralClientsName = di.TypeInstanceToName((*clients.General)(nil))
+var GeneralClientsName = di.TypeInstanceToName((*clients.Agent)(nil))
 
-// GeneralClientsFrom helper function queries the DIC and returns the clients.General implementation.
-func GeneralClientsFrom(get di.Get) *clients.General {
-	return get(GeneralClientsName).(*clients.General)
+// GeneralClientsFrom helper function queries the DIC and returns the clients.Agent implementation.
+func GeneralClientsFrom(get di.Get) *clients.Agent {
+	return get(GeneralClientsName).(*clients.Agent)
 }

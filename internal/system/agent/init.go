@@ -32,7 +32,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 	"github.com/gorilla/mux"
 )
 
@@ -67,7 +67,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
 		container.GeneralClientsName: func(get di.Get) interface{} {
-			return clients.NewGeneral()
+			return clients.NewAgent()
 		},
 		container.MetricsInterfaceName: func(get di.Get) interface{} {
 			logging := bootstrapContainer.LoggingClientFrom(get)
@@ -112,7 +112,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	for serviceKey, serviceName := range config.ListDefaultServices() {
 		generalClients.Set(
 			serviceKey,
-			general.NewGeneralClient(
+			agent.NewAgentClient(
 				urlclient.New(
 					ctx,
 					&sync.WaitGroup{},
