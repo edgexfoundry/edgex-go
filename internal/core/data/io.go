@@ -21,6 +21,7 @@ import (
 
 const (
 	checksumContextKey = "payload-checksum"
+	maxEventSize       = int64(25 * 1e6) // 25 MB
 )
 
 // ErrUnsupportedContentType an error used when a request is received with an unsupported content type
@@ -73,7 +74,7 @@ func NewCborReader(configuration *config.ConfigurationStruct) cborReader {
 func (cr cborReader) Read(reader io.Reader, ctx *context.Context) (models.Event, error) {
 	c := context.WithValue(*ctx, clients.ContentType, clients.ContentTypeCBOR)
 	event := models.Event{}
-	bytes, err := ioutil.ReadAll(reader)
+	bytes, err := ioutil.ReadAll(io.LimitReader(reader, maxEventSize))
 	if err != nil {
 		return event, err
 	}

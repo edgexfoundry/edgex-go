@@ -20,10 +20,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/agent"
 )
 
-// AgentType is an alias for general.GeneralClient and hides implementation detail.
+// AgentType is an alias for agent.AgentClient and hides implementation detail.
 type AgentType agent.AgentClient
 
-// clientMap defines internal map structure to track multiple instances of general.GeneralClient.
+// clientMap defines internal map structure to track multiple instances of agent.AgentClient.
 type clientMap map[string]AgentType
 
 // Agent contains implementation structures for tracking multiple instances of AgentType.
