@@ -86,6 +86,15 @@ func (ds *DeviceService) FromContract(from contract.DeviceService, transform add
 	ds.OperatingState = from.OperatingState
 	ds.Labels = from.Labels
 
+	if from.Addressable.Id == "" {
+		byName, err := transform.GetAddressableByName(from.Addressable.Name)
+		if err != nil {
+			return "", err
+		}
+
+		from.Addressable = byName
+	}
+
 	var aModel Addressable
 	if _, err = aModel.FromContract(from.Addressable); err != nil {
 		return
