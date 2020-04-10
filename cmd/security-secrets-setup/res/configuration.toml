@@ -1,9 +1,10 @@
 [Writable]
 LogLevel = 'INFO'
 
+# Remote and file logging disabled so only stdout logging is used
 [Logging]
 EnableRemote = false
-File = './logs/security-secrets-setup.log'
+File = ''
 
 [SecretsSetup]
 WorkDir = "/tmp/edgex/secrets-setup"
