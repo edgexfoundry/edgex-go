@@ -15,11 +15,11 @@
 package mocks
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	secretsConfig "github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 )
 
-func CreateValidX509ConfigMock() config.X509Config {
-	key := config.KeyScheme{
+func CreateValidX509ConfigMock() secretsConfig.X509 {
+	key := secretsConfig.KeyScheme{
 		DumpKeys:   "false",
 		RSA:        "false",
 		RSAKeySize: "4096",
@@ -27,7 +27,7 @@ func CreateValidX509ConfigMock() config.X509Config {
 		ECCurve:    "384",
 	}
 
-	root := config.RootCA{
+	root := secretsConfig.RootCA{
 		CAName:     "EdgeXTrustCA",
 		CACountry:  "US",
 		CAState:    "CA",
@@ -35,7 +35,7 @@ func CreateValidX509ConfigMock() config.X509Config {
 		CAOrg:      "EdgeXFoundry",
 	}
 
-	tls := config.TLSServer{
+	tls := secretsConfig.TLSServer{
 		TLSHost:     "edgex-kong",
 		TLSDomain:   "local",
 		TLSCountry:  "US",
@@ -44,7 +44,7 @@ func CreateValidX509ConfigMock() config.X509Config {
 		TLSOrg:      "Kong",
 	}
 
-	cfg := config.X509Config{
+	cfg := secretsConfig.X509{
 		WorkingDir:      ".",
 		CreateNewRootCA: "false",
 		PKISetupDir:     "testdata",

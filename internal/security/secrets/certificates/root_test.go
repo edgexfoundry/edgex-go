@@ -15,10 +15,11 @@
 package certificates
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	secretsConfig "github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/seed"
 
@@ -71,7 +72,7 @@ func TestRootCertGenerate(t *testing.T) {
 	}
 }
 
-func createDirectoryHandlerMock(cfg config.X509Config, t *testing.T) contract.DirectoryHandler {
+func createDirectoryHandlerMock(cfg secretsConfig.X509, t *testing.T) contract.DirectoryHandler {
 	dir, err := cfg.PkiCADir()
 	if err != nil {
 		t.Error(err.Error())

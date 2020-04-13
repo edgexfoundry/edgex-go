@@ -38,7 +38,7 @@ func TestLoadX509Config(t *testing.T) {
 	assert := assert.New(t)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			x509Config, err := NewX509Config(tt.file)
+			x509Config, err := NewX509(tt.file)
 
 			if tt.expectError {
 				assert.NotNil(err, "expected error, none returned")
@@ -52,7 +52,7 @@ func TestLoadX509Config(t *testing.T) {
 }
 
 func TestPkiCAOutDir(t *testing.T) {
-	x509Config, err := NewX509Config(testJSONFileName)
+	x509Config, err := NewX509(testJSONFileName)
 
 	assert := assert.New(t)
 	assert.Nil(err)
@@ -67,28 +67,28 @@ func TestPkiCAOutDir(t *testing.T) {
 
 func TestGetCAPemFileName(t *testing.T) {
 	// ignore the file reading error since it will be caught by other test already
-	x509Config, _ := NewX509Config(testJSONFileName)
+	x509Config, _ := NewX509(testJSONFileName)
 	pemFileName := x509Config.GetCAPemFileName()
 	assert.Equal(t, "EdgeXFoundryCA."+certFileExt, pemFileName)
 }
 
 func TestGetCAPrivateKeyFileName(t *testing.T) {
 	// ignore the file reading error since it will be caught by other test already
-	x509Config, _ := NewX509Config(testJSONFileName)
+	x509Config, _ := NewX509(testJSONFileName)
 	prvKeyFileName := x509Config.GetCAPrivateKeyFileName()
 	assert.Equal(t, "EdgeXFoundryCA."+skFileExt, prvKeyFileName)
 }
 
 func TestGetTLSPemFileName(t *testing.T) {
 	// ignore the file reading error since it will be caught by other test already
-	x509Config, _ := NewX509Config(testJSONFileName)
+	x509Config, _ := NewX509(testJSONFileName)
 	pemFileName := x509Config.GetTLSPemFileName()
 	assert.Equal(t, "edgex-kong."+certFileExt, pemFileName)
 }
 
 func TestGetTLSPrivateKeyFileName(t *testing.T) {
 	// ignore the file reading error since it will be caught by other test already
-	x509Config, _ := NewX509Config(testJSONFileName)
+	x509Config, _ := NewX509(testJSONFileName)
 	prvKeyFileName := x509Config.GetTLSPrivateKeyFileName()
 	assert.Equal(t, "edgex-kong."+skFileExt, prvKeyFileName)
 }

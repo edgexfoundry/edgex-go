@@ -6,18 +6,24 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
+
+	metaConfig "github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 func TestNotification(t *testing.T) {
-	pass := DeviceEvent{DeviceId: uuid.New().String(), DeviceName: testDeviceName, HttpMethod: http.MethodPost, ServiceId: testDeviceServiceId}
+	pass := DeviceEvent{
+		DeviceId:   uuid.New().String(),
+		DeviceName: testDeviceName,
+		HttpMethod: http.MethodPost,
+		ServiceId:  testDeviceServiceId,
+	}
 	fail := DeviceEvent{Error: db.ErrNotFound}
 	failInvalidMethod := pass
 	failInvalidMethod.HttpMethod = "{}"
@@ -48,7 +54,15 @@ func TestNotification(t *testing.T) {
 			defer close(ch)
 
 			wg.Add(1)
-			op := NewNotifier(ch, nc, testNotificationInfo, tt.dbMock, requester, newMockNotifyLogger(tt.expectError, t), context.Background())
+			op := NewNotifier(
+				ch,
+				nc,
+				testNotificationInfo,
+				tt.dbMock,
+				requester,
+				newMockNotifyLogger(tt.expectError, t),
+				context.Background(),
+			)
 			go func(wg *sync.WaitGroup) {
 				op.Execute()
 				wg.Done()
@@ -81,8 +95,14 @@ func createNotifyEmptyAddressableDbMockFail() DeviceServiceLoader {
 	return dbMock
 }
 
-var testNotificationInfo = config.NotificationInfo{PostDeviceChanges: true, Slug: "device-change-", Content: "Device update: ", Sender: "core-metadata",
-	Description: "Metadata device notice", Label: "metadata"}
+var testNotificationInfo = metaConfig.NotificationInfo{
+	PostDeviceChanges: true,
+	Slug:              "device-change-",
+	Content:           "Device update: ",
+	Sender:            "core-metadata",
+	Description:       "Metadata device notice",
+	Label:             "metadata",
+}
 
 /*
   I really struggled with the question of whether to create these structs or whether to use Mockery as in the case of
@@ -116,20 +136,20 @@ func newMockNotifyLogger(expectError bool, t *testing.T) logger.LoggingClient {
 }
 
 // SetLogLevel simulates setting a log severity level
-func (lc mockNotifyLogger) SetLogLevel(loglevel string) error {
+func (lc mockNotifyLogger) SetLogLevel(_ string) error {
 	return nil
 }
 
 // Info simulates logging an entry at the INFO severity level
-func (lc mockNotifyLogger) Info(msg string, args ...interface{}) {
+func (lc mockNotifyLogger) Info(_ string, _ ...interface{}) {
 }
 
 // Debug simulates logging an entry at the DEBUG severity level
-func (lc mockNotifyLogger) Debug(msg string, args ...interface{}) {
+func (lc mockNotifyLogger) Debug(_ string, _ ...interface{}) {
 }
 
 // Error simulates logging an entry at the ERROR severity level
-func (lc mockNotifyLogger) Error(msg string, args ...interface{}) {
+func (lc mockNotifyLogger) Error(msg string, _ ...interface{}) {
 	if !lc.expectError {
 		lc.t.Error(msg)
 		lc.t.Fail()
@@ -137,9 +157,9 @@ func (lc mockNotifyLogger) Error(msg string, args ...interface{}) {
 }
 
 // Trace simulates logging an entry at the TRACE severity level
-func (lc mockNotifyLogger) Trace(msg string, args ...interface{}) {
+func (lc mockNotifyLogger) Trace(_ string, _ ...interface{}) {
 }
 
 // Warn simulates logging an entry at the WARN severity level
-func (lc mockNotifyLogger) Warn(msg string, args ...interface{}) {
+func (lc mockNotifyLogger) Warn(_ string, _ ...interface{}) {
 }

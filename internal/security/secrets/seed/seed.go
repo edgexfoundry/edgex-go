@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	secretsConfig "github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 )
 
@@ -93,7 +93,7 @@ type CertificateSeed struct {
 	TLSState    string
 }
 
-func NewCertificateSeed(cfg config.X509Config, directory contract.DirectoryHandler) (seed CertificateSeed, err error) {
+func NewCertificateSeed(cfg secretsConfig.X509, directory contract.DirectoryHandler) (seed CertificateSeed, err error) {
 	// Convert create_new_ca JSON string "true|false" to boolean
 	seed.NewCA, err = strconv.ParseBool(cfg.CreateNewRootCA)
 	if err != nil {

@@ -28,10 +28,10 @@ const (
 	certFileExt = "pem"
 )
 
-// NewX509Config will populate a struct representing configuration for X.509 key generation
-func NewX509Config(configFilePtr string) (X509Config, error) {
+// NewX509 will populate a struct representing configuration for X.509 key generation
+func NewX509(configFilePtr string) (X509, error) {
 
-	var jsonX509Config X509Config
+	var jsonX509Config X509
 
 	// Open JSON config file
 	bytes, err := ioutil.ReadFile(configFilePtr)
@@ -49,8 +49,8 @@ func NewX509Config(configFilePtr string) (X509Config, error) {
 	return jsonX509Config, nil
 }
 
-// X509Config JSON config file main structure
-type X509Config struct {
+// X509 JSON config file main structure
+type X509 struct {
 	CreateNewRootCA string    `json:"create_new_rootca"`
 	WorkingDir      string    `json:"working_dir"`
 	PKISetupDir     string    `json:"pki_setup_dir"`
@@ -61,7 +61,7 @@ type X509Config struct {
 }
 
 // PkiCADir returns the pkisetup root CA dir
-func (cfg X509Config) PkiCADir() (string, error) {
+func (cfg X509) PkiCADir() (string, error) {
 	dir, err := filepath.Abs(cfg.WorkingDir)
 	if err != nil {
 		// Looking at the implementation of filepath.Abs it does NOT verify the existence of the path
@@ -72,22 +72,22 @@ func (cfg X509Config) PkiCADir() (string, error) {
 }
 
 // GetCAPemFileName returns the file name of CA certificate
-func (cfg X509Config) GetCAPemFileName() string {
+func (cfg X509) GetCAPemFileName() string {
 	return cfg.RootCA.CAName + "." + certFileExt
 }
 
 // GetCAPrivateKeyFileName returns the file name of CA private key
-func (cfg X509Config) GetCAPrivateKeyFileName() string {
+func (cfg X509) GetCAPrivateKeyFileName() string {
 	return cfg.RootCA.CAName + "." + skFileExt
 }
 
 // GetTLSPemFileName returns the file name of TLS certificate
-func (cfg X509Config) GetTLSPemFileName() string {
+func (cfg X509) GetTLSPemFileName() string {
 	return cfg.TLSServer.TLSHost + "." + certFileExt
 }
 
 // GetTLSPrivateKeyFileName returns the file name of TLS private key
-func (cfg X509Config) GetTLSPrivateKeyFileName() string {
+func (cfg X509) GetTLSPrivateKeyFileName() string {
 	return cfg.TLSServer.TLSHost + "." + skFileExt
 }
 
