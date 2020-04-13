@@ -15,7 +15,7 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"fmt"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
@@ -25,12 +25,12 @@ import (
 type ConfigurationStruct struct {
 	Writable        WritableInfo
 	Clients         map[string]bootstrapConfig.ClientInfo
-	Databases       config.DatabaseInfo
+	Databases       map[string]bootstrapConfig.Database
 	Logging         bootstrapConfig.LoggingInfo
 	Registry        bootstrapConfig.RegistryInfo
 	Service         bootstrapConfig.ServiceInfo
-	Intervals       map[string]config.IntervalInfo
-	IntervalActions map[string]config.IntervalActionInfo
+	Intervals       map[string]IntervalInfo
+	IntervalActions map[string]IntervalActionInfo
 	SecretStore     bootstrapConfig.SecretStoreInfo
 	Startup         bootstrapConfig.StartupInfo
 }
@@ -38,6 +38,49 @@ type ConfigurationStruct struct {
 type WritableInfo struct {
 	ScheduleIntervalTime int
 	LogLevel             string
+}
+
+type IntervalInfo struct {
+	// Name of the schedule must be unique?
+	Name string
+	// Start time in ISO 8601 format YYYYMMDD'T'HHmmss
+	Start string
+	// End time in ISO 8601 format YYYYMMDD'T'HHmmss
+	End string
+	// Periodicity of the schedule
+	Frequency string
+	// Cron style regular expression indicating how often the action under schedule should occur.
+	// Use either runOnce, frequency or cron and not all.
+	Cron string
+	// Boolean indicating that this schedules runs one time - at the time indicated by the start
+	RunOnce bool
+}
+
+type IntervalActionInfo struct {
+	// Host is the hostname or IP address of a service.
+	Host string
+	// Port defines the port on which to access a given service
+	Port int
+	// Protocol indicates the protocol to use when accessing a given service
+	Protocol string
+	// Action name
+	Name string
+	// Action http method *const prob*
+	Method string
+	// Acton target name
+	Target string
+	// Action target parameters
+	Parameters string
+	// Action target API path
+	Path string
+	// Associated Schedule for the Event
+	Interval string
+}
+
+// URI constructs a URI from the protocol, host and port and returns that as a string.
+func (e IntervalActionInfo) URL() string {
+	url := fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
+	return url
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -97,6 +140,6 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
 }

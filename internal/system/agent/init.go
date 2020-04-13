@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
@@ -32,6 +31,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
+	contracts "github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
 	"github.com/gorilla/mux"
 )
@@ -49,7 +49,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
-func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
@@ -109,7 +109,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	generalClients := container.GeneralClientsFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
-	for serviceKey, serviceName := range config.ListDefaultServices() {
+	for serviceKey, serviceName := range listDefaultServices() {
 		generalClients.Set(
 			serviceKey,
 			general.NewGeneralClient(
@@ -127,4 +127,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	}
 
 	return true
+}
+
+func listDefaultServices() map[string]string {
+	return map[string]string{
+		contracts.SupportNotificationsServiceKey: "Notifications",
+		contracts.CoreCommandServiceKey:          "Command",
+		contracts.CoreDataServiceKey:             "CoreData",
+		contracts.CoreMetaDataServiceKey:         "Metadata",
+		contracts.SupportLoggingServiceKey:       "Logging",
+		contracts.SupportSchedulerServiceKey:     "Scheduler",
+	}
 }

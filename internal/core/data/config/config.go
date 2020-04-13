@@ -14,7 +14,7 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
+	"fmt"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
@@ -22,9 +22,9 @@ import (
 
 type ConfigurationStruct struct {
 	Writable     WritableInfo
-	MessageQueue config.MessageQueueInfo
+	MessageQueue MessageQueueInfo
 	Clients      map[string]bootstrapConfig.ClientInfo
-	Databases    config.DatabaseInfo
+	Databases    map[string]bootstrapConfig.Database
 	Logging      bootstrapConfig.LoggingInfo
 	Registry     bootstrapConfig.RegistryInfo
 	Service      bootstrapConfig.ServiceInfo
@@ -40,6 +40,30 @@ type WritableInfo struct {
 	ValidateCheck              bool
 	LogLevel                   string
 	ChecksumAlgo               string
+}
+
+// MessageQueueInfo provides parameters related to connecting to a message queue
+type MessageQueueInfo struct {
+	// Host is the hostname or IP address of the broker, if applicable.
+	Host string
+	// Port defines the port on which to access the message queue.
+	Port int
+	// Protocol indicates the protocol to use when accessing the message queue.
+	Protocol string
+	// Indicates the message queue platform being used.
+	Type string
+	// Indicates the topic the data is published/subscribed
+	Topic string
+	// Provides additional configuration properties which do not fit within the existing field.
+	// Typically the key is the name of the configuration property and the value is a string representation of the
+	// desired value for the configuration property.
+	Optional map[string]string
+}
+
+// URL constructs a URL from the protocol, host and port and returns that as a string.
+func (m MessageQueueInfo) URL() string {
+	uri := fmt.Sprintf("%s://%s:%v", m.Protocol, m.Host, m.Port)
+	return uri
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -99,6 +123,6 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
 }
