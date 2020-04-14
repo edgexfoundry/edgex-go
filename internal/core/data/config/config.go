@@ -62,8 +62,7 @@ type MessageQueueInfo struct {
 
 // URL constructs a URL from the protocol, host and port and returns that as a string.
 func (m MessageQueueInfo) URL() string {
-	uri := fmt.Sprintf("%s://%s:%v", m.Protocol, m.Host, m.Port)
-	return uri
+	return fmt.Sprintf("%s://%s:%v", m.Protocol, m.Host, m.Port)
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

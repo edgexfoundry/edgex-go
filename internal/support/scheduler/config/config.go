@@ -79,8 +79,7 @@ type IntervalActionInfo struct {
 
 // URI constructs a URI from the protocol, host and port and returns that as a string.
 func (e IntervalActionInfo) URL() string {
-	url := fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
-	return url
+	return fmt.Sprintf("%s://%s:%v", e.Protocol, e.Host, e.Port)
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

@@ -14,12 +14,10 @@
 
 package interfaces
 
-import (
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-)
+import "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 // Database interface provides an abstraction for obtaining the database configuration information.
 type Database interface {
 	// GetDatabaseInfo returns a database information map.
-	GetDatabaseInfo() map[string]bootstrapConfig.Database
+	GetDatabaseInfo() map[string]config.Database
 }

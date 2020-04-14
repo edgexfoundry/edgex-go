@@ -109,7 +109,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	generalClients := container.GeneralClientsFrom(dic.Get)
 	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
-	for serviceKey, serviceName := range listDefaultServices() {
+	for serviceKey, serviceName := range b.listDefaultServices() {
 		generalClients.Set(
 			serviceKey,
 			general.NewGeneralClient(
@@ -129,7 +129,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	return true
 }
 
-func listDefaultServices() map[string]string {
+func (Bootstrap) listDefaultServices() map[string]string {
 	return map[string]string{
 		contracts.SupportNotificationsServiceKey: "Notifications",
 		contracts.CoreCommandServiceKey:          "Command",
