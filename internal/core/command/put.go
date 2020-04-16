@@ -20,7 +20,8 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
@@ -32,17 +33,23 @@ func NewPutCommand(
 	body string,
 	context context.Context,
 	httpCaller internal.HttpCaller,
-	lc logger.LoggingClient) (Executor, error) {
-	url := device.Service.Addressable.GetBaseURL() + strings.Replace(command.Put.Action.Path, DEVICEIDURLPARAM, device.Id, -1)
-	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
+	lc logger.LoggingClient,
+	originalRequest *http.Request) (Executor, error) {
+
+	url := device.Service.Addressable.GetBaseURL() + strings.Replace(
+		command.Put.Action.Path,
+		DEVICEIDURLPARAM,
+		device.Id,
+		-1)
+	deviceServiceProxiedRequest, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
 		return serviceCommand{}, err
 	}
 
-	correlationID := context.Value(clients.CorrelationHeader)
-	if correlationID != nil {
-		request.Header.Set(clients.CorrelationHeader, correlationID.(string))
+	err = addHeadersToRequest(originalRequest, deviceServiceProxiedRequest, context)
+	if err != nil {
+		return serviceCommand{}, errors.NewErrParsingOriginalRequest("header")
 	}
 
-	return newServiceCommand(device, httpCaller, request, lc), nil
+	return newServiceCommand(device, httpCaller, deviceServiceProxiedRequest, lc), nil
 }

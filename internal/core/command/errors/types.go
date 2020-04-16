@@ -26,3 +26,36 @@ func (e ErrCommandNotAssociatedWithDevice) Error() string {
 func NewErrCommandNotAssociatedWithDevice(commandID string, deviceID string) error {
 	return ErrCommandNotAssociatedWithDevice{commandID, deviceID}
 }
+
+// ErrExtractingInfoFromRequest is a struct that serves as the value
+// receiver for Error as defined for NewErrExtractingInfoFromRequest
+type ErrExtractingInfoFromRequest struct {
+}
+
+// Error returns a meaningful string message describing error details.
+func (e ErrExtractingInfoFromRequest) Error() string {
+	return fmt.Sprintf("error extracting command id and device id.")
+}
+
+// NewErrExtractingInfoFromRequest returns the relevant, properly-
+// constructed error type.
+func NewErrExtractingInfoFromRequest() error {
+	return ErrExtractingInfoFromRequest{}
+}
+
+// ErrBadRequest is a struct that serves as the value receiver
+// for Error as defined for NewErrParsingOriginalRequest
+type ErrBadRequest struct {
+	value string
+}
+
+// Error returns a meaningful string message describing error details.
+func (e ErrBadRequest) Error() string {
+	return fmt.Sprintf("error in parsing related to '%s'", e.value)
+}
+
+// NewErrParsingOriginalRequest returns the relevant, properly-
+// constructed error type.
+func NewErrParsingOriginalRequest(invalid string) error {
+	return ErrBadRequest{value: invalid}
+}
