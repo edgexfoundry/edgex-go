@@ -16,7 +16,7 @@ The snap currently supports running on both `amd64` and `arm64` platforms. Once 
 
 ### Installing snapd
 The snap can be installed on any system that supports snaps. You can see how to install 
-snaps on your system [here](https://docs.snapcraft.io/t/installing-snapd/6735).
+snaps on your system [here](https://snapcraft.io/docs/installing-snapd).
 
 However for full security confinement, the snap should be installed on an 
 Ubuntu 16.04 LTS or later Desktop or Server, or a system running Ubuntu Core 16 or later.
@@ -145,7 +145,7 @@ $ cd edgex-go
 
 ### Installing snapcraft
 
-There are a few different ways to install snapcraft and use it, depending on what OS you are building on. However after building, the snap can only be run on a Linux machine (either a VM or natively). To install snapcraft on a Linux distro, first [install support for snaps](https://docs.snapcraft.io/installing-snapd), then install snapcraft as a snap with:
+There are a few different ways to install snapcraft and use it, depending on what OS you are building on. However after building, the snap can only be run on a Linux machine (either a VM or natively). To install snapcraft on a Linux distro, first [install support for snaps](https://snapcraft.io/docs/installing-snapd), then install snapcraft as a snap with:
 
 ```bash
 $ sudo snap install snapcraft
@@ -157,7 +157,7 @@ $ sudo snap install snapcraft
 
 #### Running snapcraft on MacOS
 
-To install snapcraft on MacOS, see [this link](https://docs.snapcraft.io/install-snapcraft-on-macos). After doing so, follow in the below build instructions for "Building with multipass"
+To install snapcraft on MacOS, see [this link](https://snapcraft.io/docs/install-snapcraft-on-macos). After doing so, follow in the below build instructions for "Building with multipass"
 
 #### Running snapcraft on Windows
 
@@ -173,7 +173,7 @@ $ snapcraft
 
 ### Building with LXD containers
 
-Alternatively, you can instruct snapcraft to use LXD containers instead of multipass VM's. This requires installing LXD as documented [here](https://docs.snapcraft.io/build-on-lxd).
+Alternatively, you can instruct snapcraft to use LXD containers instead of multipass VM's. This requires installing LXD as documented [here](https://snapcraft.io/docs/build-on-lxd).
 
 ```bash
 $ snapcraft --use-lxd
