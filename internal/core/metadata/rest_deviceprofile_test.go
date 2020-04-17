@@ -137,13 +137,15 @@ func TestAddDeviceProfile(t *testing.T) {
 	// this one uses validated because it needs it for input and the dbMock
 	emptyName := TestDeviceProfileValidated
 	emptyName.Name = ""
+	requestContext := httptest.NewRequest(http.MethodPost, AddressableTestURI, nil).Context()
 
 	tests := []struct {
-		name           string
-		request        *http.Request
-		dbMock         interfaces.DBClient
-		vdcMock        MockValueDescriptorClient
-		expectedStatus int
+		name                            string
+		request                         *http.Request
+		dbMock                          interfaces.DBClient
+		vdcMock                         MockValueDescriptorClient
+		enableValueDescriptorManagement bool
+		expectedStatus                  int
 	}{
 		{
 			"OK",
@@ -152,7 +154,10 @@ func TestAddDeviceProfile(t *testing.T) {
 				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{TestDeviceProfileID, nil}},
 				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusOK,
 		},
 		{
@@ -162,7 +167,10 @@ func TestAddDeviceProfile(t *testing.T) {
 				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{TestDeviceProfileID, nil}},
 				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusOK,
 		},
 		{
@@ -171,7 +179,10 @@ func TestAddDeviceProfile(t *testing.T) {
 			createDBClientWithOutlines([]mockOutline{
 				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{types.ErrServiceClient{StatusCode: http.StatusTeapot}},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, types.ErrServiceClient{StatusCode: http.StatusTeapot}),
+			true,
 			http.StatusTeapot,
 		},
 		{
@@ -180,21 +191,26 @@ func TestAddDeviceProfile(t *testing.T) {
 			createDBClientWithOutlines([]mockOutline{
 				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{TestError},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, TestError),
+			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"YAML unmarshal error",
 			httptest.NewRequest(http.MethodPost, AddressableTestURI, bytes.NewBuffer(nil)),
 			nil,
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
 			"Duplicate commands",
 			createRequestWithBody(http.MethodPost, createTestDeviceProfileWithCommands(TestDeviceProfileID, TestDeviceProfileName, TestDeviceProfileLabels, TestDeviceProfileManufacturer, TestDeviceProfileModel, TestCommand, TestCommand)),
 			nil,
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
@@ -204,7 +220,10 @@ func TestAddDeviceProfile(t *testing.T) {
 				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
 				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
@@ -214,8 +233,22 @@ func TestAddDeviceProfile(t *testing.T) {
 				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{"", TestError}},
 				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-			MockValueDescriptorClient{},
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusInternalServerError,
+		},
+		{
+			"Add device profile without enable value descriptor management",
+			createRequestWithBody(http.MethodPost, TestDeviceProfile),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", []interface{}{TestDeviceProfileValidated}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
+			}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			false,
+			http.StatusOK,
 		},
 	}
 	for _, tt := range tests {
@@ -223,7 +256,7 @@ func TestAddDeviceProfile(t *testing.T) {
 			rr := httptest.NewRecorder()
 			var loggerMock = logger.NewMockClient()
 			configuration := metadataConfig.ConfigurationStruct{
-				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: true},
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
 				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
 			}
 			restAddDeviceProfile(
@@ -240,6 +273,7 @@ func TestAddDeviceProfile(t *testing.T) {
 
 				return
 			}
+			tt.vdcMock.AssertExpectations(t)
 		})
 	}
 }
@@ -922,43 +956,64 @@ func TestAddProfileByYaml(t *testing.T) {
 	emptyFileRequest := createDeviceProfileRequestWithFile(okBody)
 	emptyFileRequest.MultipartForm = new(multipart.Form)
 	emptyFileRequest.MultipartForm.File = nil
+	requestContext := httptest.NewRequest(http.MethodPost, AddressableTestURI, nil).Context()
 
 	tests := []struct {
-		name           string
-		request        *http.Request
-		dbMock         interfaces.DBClient
-		expectedStatus int
+		name                            string
+		request                         *http.Request
+		dbMock                          interfaces.DBClient
+		vdcMock                         MockValueDescriptorClient
+		enableValueDescriptorManagement bool
+		expectedStatus                  int
 	}{
 		{
 			"OK",
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusOK,
 		},
 		{
 			"Wrong content type",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			nil,
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusInternalServerError,
 		},
 		{
 			"Missing file",
 			emptyFileRequest,
 			nil,
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
 			"Empty file",
 			createDeviceProfileRequestWithFile([]byte{}),
 			nil,
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
 			"Duplicate command name",
 			createDeviceProfileRequestWithFile(dupeBody),
-			nil,
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
+			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusConflict,
 		},
 		{
@@ -966,7 +1021,10 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", db.ErrNotUnique}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, nil}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusConflict,
 		},
 		{
@@ -974,7 +1032,12 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(emptyBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
+				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
@@ -982,20 +1045,43 @@ func TestAddProfileByYaml(t *testing.T) {
 			createDeviceProfileRequestWithFile(okBody),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusInternalServerError,
+		},
+		{
+			"Add device profile without enable value descriptor management",
+			createDeviceProfileRequestWithFile(okBody),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
+			}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			false,
+			http.StatusOK,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restAddProfileByYaml(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
+			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
+				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
+			}
+			restAddProfileByYaml(
+				rr, tt.request, loggerMock, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()), tt.vdcMock, &configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
 
 				return
 			}
+			tt.vdcMock.AssertExpectations(t)
 		})
 	}
 }
@@ -1014,25 +1100,35 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 	emptyName := dp
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
+	requestContext := httptest.NewRequest(http.MethodPost, AddressableTestURI, nil).Context()
 
 	tests := []struct {
-		name           string
-		request        *http.Request
-		dbMock         interfaces.DBClient
-		expectedStatus int
+		name                            string
+		request                         *http.Request
+		dbMock                          interfaces.DBClient
+		vdcMock                         MockValueDescriptorClient
+		enableValueDescriptorManagement bool
+		expectedStatus                  int
 	}{
 		{
 			"OK",
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusOK,
 		},
 		{
 			"YAML unmarshal error",
 			createDeviceProfileRequestWithFile(dupeBody),
 			nil,
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusServiceUnavailable,
 		},
 		{
@@ -1040,8 +1136,12 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{emptyName}, []interface{}{"", db.ErrNameEmpty}},
+				{"GetDeviceProfileByName", []interface{}{""}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
-
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusBadRequest,
 		},
 		{
@@ -1049,20 +1149,42 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
 			createDBClientWithOutlines([]mockOutline{
 				{"AddDeviceProfile", []interface{}{dp}, []interface{}{"", TestError}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
 			}),
+			createMockValueDescriptorClient([]mockOutline{
+				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
+			}, requestContext, TestDeviceProfile, nil),
+			true,
 			http.StatusInternalServerError,
+		},
+		{
+			"Add device profile without enable value descriptor management",
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(okBody)),
+			createDBClientWithOutlines([]mockOutline{
+				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
+				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
+			}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			false,
+			http.StatusOK,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			restAddProfileByYamlRaw(rr, tt.request, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()))
+			var loggerMock = logger.NewMockClient()
+			configuration := metadataConfig.ConfigurationStruct{
+				Writable: metadataConfig.WritableInfo{EnableValueDescriptorManagement: tt.enableValueDescriptorManagement},
+				Service:  bootstrapConfig.ServiceInfo{MaxResultCount: 1},
+			}
+			restAddProfileByYamlRaw(rr, tt.request, loggerMock, tt.dbMock, errorconcept.NewErrorHandler(logger.NewMockClient()), tt.vdcMock, &configuration)
 			response := rr.Result()
 			if response.StatusCode != tt.expectedStatus {
 				t.Errorf("status code mismatch -- expected %v got %v", tt.expectedStatus, response.StatusCode)
 
 				return
 			}
+			tt.vdcMock.AssertExpectations(t)
 		})
 	}
 }
@@ -1277,6 +1399,23 @@ func createDBClientWithOutlines(outlines []mockOutline) interfaces.DBClient {
 	return &dbMock
 }
 
+func createMockValueDescriptorClient(outlines []mockOutline, requestContext context.Context, deviceProfile contract.DeviceProfile, err error) MockValueDescriptorClient {
+	mockClient := MockValueDescriptorClient{&mock.Mock{}, err}
+
+	for _, o := range outlines {
+		for _, dr := range deviceProfile.DeviceResources {
+			vd := contract.From(dr)
+			mockClient.On(o.methodName, requestContext, &vd).Return("", err).Once()
+			// Value descriptor client occur error, so only call the add method once.
+			if mockClient.errorToThrow != nil {
+				break
+			}
+		}
+	}
+
+	return mockClient
+}
+
 // createTestDeviceProfile creates a device profile to be used during testing.
 // This function handles some of the necessary creation nuances which need to take place for proper mocking and equality
 // verifications.
@@ -1353,6 +1492,7 @@ func createCoreCommands(commands []contract.Command) []contract.Command {
 }
 
 type MockValueDescriptorClient struct {
+	*mock.Mock
 	errorToThrow error
 }
 
@@ -1370,6 +1510,7 @@ func (MockValueDescriptorClient) ValueDescriptorsUsage(ctx context.Context, name
 }
 
 func (mvdc MockValueDescriptorClient) Add(ctx context.Context, vdr *contract.ValueDescriptor) (string, error) {
+	mvdc.Called(ctx, vdr)
 	if mvdc.errorToThrow != nil {
 		return "", mvdc.errorToThrow
 	}
