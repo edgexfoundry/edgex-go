@@ -32,9 +32,10 @@ Host = 'localhost'
 Port = 8500
 Type = 'consul'
 
+# Remote and file logging disabled so only stdout logging is used
 [Logging]
 EnableRemote = false
-File = './logs/edgex-sys-mgmt-agent.log'
+File = ''
 
 [Clients]
   [Clients.Notifications]

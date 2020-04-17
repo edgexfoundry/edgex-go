@@ -51,7 +51,7 @@ CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["edgex-kong"]
 
 [Clients]
-  [Clients.Coredata]
+  [Clients.CoreData]
   Protocol = "http"
   Host = "edgex-core-data"
   Port = 48080

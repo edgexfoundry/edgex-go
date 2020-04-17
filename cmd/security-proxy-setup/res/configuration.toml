@@ -20,9 +20,10 @@
 LogLevel = "DEBUG"
 RequestTimeout = 10
 
+# Remote and file logging disabled so only stdout logging is used
 [Logging]
 EnableRemote = false
-File = "./logs/security-proxy-setup.log"
+File = ""
 
 [KongURL]
 Server = "127.0.0.1"
@@ -51,7 +52,7 @@ CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["localhost"]
 
 [Clients]
-  [Clients.Coredata]
+  [Clients.CoreData]
   Protocol = "http"
   Host = "localhost"
   Port = 48080

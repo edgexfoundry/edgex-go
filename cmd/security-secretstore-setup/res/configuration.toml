@@ -18,9 +18,10 @@
 [Writable]
 LogLevel = 'DEBUG'
 
+# Remote and file logging disabled so only stdout logging is used
 [Logging]
 EnableRemote = false
-File = './logs/security-secretstore-setup.log'
+File = ""
 
 [SecretService]
 Scheme = "https"

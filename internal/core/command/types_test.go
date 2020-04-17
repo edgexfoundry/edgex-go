@@ -15,6 +15,7 @@
 package command
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -40,7 +41,7 @@ type ReadFailMockHttpCaller struct{}
 func (ReadFailMockHttpCaller) Do(req *http.Request) (*http.Response, error) {
 	return &http.Response{
 		Body: MockBody{},
-	}, nil
+	}, errors.New("testing error")
 }
 
 // MockBody a Body which will return 0 and an error when attempting to read.
@@ -67,18 +68,31 @@ func TestExecute(t *testing.T) {
 
 	request, _ := http.NewRequest(http.MethodGet, ts.URL, nil)
 	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &http.Client{}, request, logger.NewMockClient())
+	deviceServiceResponse, err := sc.Execute()
 
-	body, responseCode, err := sc.Execute()
 	if err != nil {
 		t.Errorf("No error should be present for happy path")
 	}
 
-	if body != expectedResponseBody {
-		t.Errorf("The response body was not properly propegated to the caller")
+	// Extract the headers from the device service's response.
+	headers := map[string]string{"Content-Type": ""}
+	m := make(map[string][]string)
+	m = deviceServiceResponse.Header
+	for name, values := range m {
+		for _, value := range values {
+			headers[name] = value
+		}
 	}
 
-	if responseCode != expectedResponseCode {
-		t.Errorf("The response code was not properly propegated to the caller")
+	if headers == nil {
+		t.Errorf("The response body was properly propagated to the caller")
+	}
+
+	// Extract the response body from the device service's response.
+	responseBody := new(bytes.Buffer)
+	_, _ = responseBody.ReadFrom(deviceServiceResponse.Body)
+	if responseBody.String() != expectedResponseBody {
+		t.Errorf("The response body was not properly propagated to the caller")
 	}
 }
 
@@ -86,22 +100,18 @@ func TestExecuteHttpRequestError(t *testing.T) {
 	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &FailingMockHttpCaller{}, request, logger.NewMockClient())
 
-	_, _, err := sc.Execute()
+	_, err := sc.Execute()
 	if err == nil {
 		t.Errorf("No error should be present for happy path")
 	}
 }
 
 func TestExecuteHttpReadResponseError(t *testing.T) {
-	request, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	request, _ := http.NewRequest(http.MethodGet, "", nil)
 	sc := newServiceCommand(contract.Device{AdminState: contract.Unlocked}, &ReadFailMockHttpCaller{}, request, logger.NewMockClient())
 
-	_, responseCode, err := sc.Execute()
+	_, err := sc.Execute()
 	if err == nil {
-		t.Errorf("The error was not properly propegated to the caller")
-	}
-
-	if responseCode != DefaultErrorCode {
-		t.Errorf("The response code should be the default value for failing requests")
+		t.Errorf("The error was not properly propagated to the caller")
 	}
 }

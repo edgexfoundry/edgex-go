@@ -74,7 +74,12 @@ func (pw *ProvisionWatcher) ToContract(dpt deviceProfileTransform, dst deviceSer
 	return
 }
 
-func (pw *ProvisionWatcher) FromContract(from contract.ProvisionWatcher, dpt deviceProfileTransform, dst deviceServiceTransform, at addressableTransform) (id string, err error) {
+func (pw *ProvisionWatcher) FromContract(
+	from contract.ProvisionWatcher,
+	dpt deviceProfileTransform,
+	dst deviceServiceTransform,
+	at addressableTransform) (id string, err error) {
+
 	pw.Id, pw.Uuid, err = fromContractId(from.Id)
 	if err != nil {
 		return

@@ -20,11 +20,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
@@ -131,10 +134,77 @@ func TestInit(t *testing.T) {
 
 	mockCertPair := bootstrapConfig.CertKeyPair{Cert: "test-certificate", Key: "test-private-key"}
 	mockLogger := logger.MockLogger{}
-	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
-	err = service.Init(mockCertPair)
-	if err != nil {
-		t.Errorf(err.Error())
+
+	origProxyRoutEnv := os.Getenv(AddProxyRoutesEnv)
+	defer func() {
+		_ = os.Setenv(AddProxyRoutesEnv, origProxyRoutEnv)
+	}()
+
+	tests := []struct {
+		name               string
+		proxyRouteEnvValue string
+		expectNumRoutes    int
+	}{
+		{ // the original number of routes is from configuration file
+			name:               "empty env",
+			proxyRouteEnvValue: "",
+			expectNumRoutes:    8,
+		},
+		{
+			name:               "add one unique route",
+			proxyRouteEnvValue: "testService.http://edgex-testService:12345",
+			expectNumRoutes:    9,
+		},
+		{
+			name:               "add two unique routes",
+			proxyRouteEnvValue: "testService1.http://edgex-testService1:12345, testService2.http://edgex-testService2:12346",
+			expectNumRoutes:    10,
+		},
+		{
+			name:               "add one duplicate route",
+			proxyRouteEnvValue: "CoreData.http://edgex-core-data:48080",
+			expectNumRoutes:    8,
+		},
+		{
+			name:               "add one unique, one duplicate route",
+			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080",
+			expectNumRoutes:    9,
+		},
+		{
+			name:               "add one unique, multiple duplicate routes",
+			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
+			expectNumRoutes:    9,
+		},
+		// invalid syntax tests:
+		// the bad one is not added into kong route pool
+		{
+			name:               "bad spec without dot . in the definition for route",
+			proxyRouteEnvValue: "testServcie=https://edgex-test-servcie1:12345",
+			expectNumRoutes:    8,
+		},
+		{
+			name:               "bad URL without full quallified URL",
+			proxyRouteEnvValue: "testServcie.edgex-test-servcie1:12345",
+			expectNumRoutes:    8,
+		},
+		{
+			name:               "empty service name",
+			proxyRouteEnvValue: ".https://edgex-test-servcie1:12345",
+			expectNumRoutes:    8,
+		},
+	}
+	for _, tt := range tests {
+		currentTest := tt
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv(AddProxyRoutesEnv, currentTest.proxyRouteEnvValue)
+			service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
+
+			err = service.Init(mockCertPair)
+
+			require.NoError(t, err)
+
+			assert.Equal(t, currentTest.expectNumRoutes, len(service.routes), "number of Kong routes not the same")
+		})
 	}
 }
 

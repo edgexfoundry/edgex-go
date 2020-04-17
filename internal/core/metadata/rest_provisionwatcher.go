@@ -401,6 +401,7 @@ func restUpdateProvisionWatcher(
 			err,
 			[]errorconcept.ErrorConceptType{
 				errorconcept.ProvisionWatcher.NotFoundByName,
+				errorconcept.ProvisionWatcher.InvalidID,
 				errorconcept.ProvisionWatcher.NameCollision,
 			},
 			errorconcept.Common.RetrieveError_StatusInternalServer,
@@ -458,9 +459,14 @@ func getProvisionWatcher(
 	lookup models.ProvisionWatcher,
 	dbClient interfaces.DBClient) (models.ProvisionWatcher, error) {
 
-	byID, err := dbClient.GetProvisionWatcherById(lookup.Id)
-	if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
-		return models.ProvisionWatcher{}, err
+	// if ID is the empty string, do not attempt a lookup by ID. doing so can foul up some ID validators, like BSON
+	var byID models.ProvisionWatcher
+	if lookup.Id != "" {
+		var err error
+		byID, err = dbClient.GetProvisionWatcherById(lookup.Id)
+		if err != nil && err != db.ErrNotFound { // ignore ErrNotFound, we can still do a name lookup
+			return models.ProvisionWatcher{}, err
+		}
 	}
 
 	byName, err := dbClient.GetProvisionWatcherByName(lookup.Name)
@@ -509,10 +515,13 @@ func restDeleteProvisionWatcherById(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.ProvisionWatcher.NotFoundById,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.ProvisionWatcher.NotFoundById,
+				errorconcept.ProvisionWatcher.InvalidID,
+			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
@@ -544,10 +553,13 @@ func restDeleteProvisionWatcherByName(
 	// Check if the provision watcher exists
 	pw, err := dbClient.GetProvisionWatcherByName(n)
 	if err != nil {
-		errorHandler.HandleOneVariant(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.ProvisionWatcher.NotFoundByName,
+			[]errorconcept.ErrorConceptType{
+				errorconcept.ProvisionWatcher.NotFoundByName,
+				errorconcept.ProvisionWatcher.InvalidID,
+			},
 			errorconcept.Default.InternalServerError)
 		return
 	}
