@@ -23,6 +23,7 @@ import (
 type addressableTransform interface {
 	DBRefToAddressable(dbRef mgo.DBRef) (model Addressable, err error)
 	AddressableToDBRef(model Addressable) (dbRef mgo.DBRef, err error)
+	GetAddressableByName(n string) (contract.Addressable, error)
 }
 
 type Addressable struct {
