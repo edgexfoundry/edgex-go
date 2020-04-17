@@ -15,8 +15,6 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
@@ -90,6 +88,6 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	panic("GetDatabaseInfo() called unexpectedly.")
 }

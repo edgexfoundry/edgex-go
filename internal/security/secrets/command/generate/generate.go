@@ -20,7 +20,6 @@ import (
 	"os"
 	"path/filepath"
 
-	x509 "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
@@ -151,12 +150,12 @@ func (c *Command) GeneratePkis() (int, error) {
 }
 
 func (c *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiSetupKongJSONPath string) (int, error) {
-	vaultConfig, readErr := x509.NewX509Config(pkiSetupVaultJSONPath)
+	vaultConfig, readErr := config.NewX509(pkiSetupVaultJSONPath)
 	if readErr != nil {
 		return contract.StatusCodeExitWithError, readErr
 	}
 
-	kongConfig, readErr := x509.NewX509Config(pkiSetupKongJSONPath)
+	kongConfig, readErr := config.NewX509(pkiSetupKongJSONPath)
 	if readErr != nil {
 		return contract.StatusCodeExitWithError, readErr
 	}
@@ -191,7 +190,7 @@ func (c *Command) rearrangePkiByServices(workingDir, pkiSetupVaultJSONPath, pkiS
 	return contract.StatusCodeExitNormal, nil
 }
 
-func (c *Command) copyGeneratedForService(servicePath string, config x509.X509Config) error {
+func (c *Command) copyGeneratedForService(servicePath string, config config.X509) error {
 	if err := helper.CreateDirectoryIfNotExists(servicePath); err != nil {
 		return err
 	}

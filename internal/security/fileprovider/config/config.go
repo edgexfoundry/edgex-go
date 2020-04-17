@@ -17,7 +17,6 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
@@ -99,6 +98,6 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return nil
 }

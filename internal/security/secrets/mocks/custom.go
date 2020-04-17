@@ -14,11 +14,9 @@
 
 package mocks
 
-import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-)
+import "github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 
-func CreateValidX509ConfigMock() config.X509Config {
+func CreateValidX509ConfigMock() config.X509 {
 	key := config.KeyScheme{
 		DumpKeys:   "false",
 		RSA:        "false",
@@ -44,7 +42,7 @@ func CreateValidX509ConfigMock() config.X509Config {
 		TLSOrg:      "Kong",
 	}
 
-	cfg := config.X509Config{
+	cfg := config.X509{
 		WorkingDir:      ".",
 		CreateNewRootCA: "false",
 		PKISetupDir:     "testdata",

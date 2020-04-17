@@ -27,7 +27,6 @@ import (
 	"strconv"
 	"time"
 
-	x509 "github.com/edgexfoundry/edgex-go/internal/pkg/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/certificates"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/directory"
@@ -319,8 +318,8 @@ func GetDeployDir(configuration *config.ConfigurationStruct) (string, error) {
 
 // GenTLSAssets generates the TLS assets based on the JSON configuration file
 func GenTLSAssets(jsonConfig string, lc logger.LoggingClient) error {
-	// Read the Json x509 file and unmarshall content into struct type X509Config
-	x509Config, err := x509.NewX509Config(jsonConfig)
+	// Read the Json x509 file and unmarshall content into struct type X509
+	x509Config, err := config.NewX509(jsonConfig)
 	if err != nil {
 		return err
 	}

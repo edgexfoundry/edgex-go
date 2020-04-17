@@ -14,15 +14,13 @@
 package config
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/config"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
 type ConfigurationStruct struct {
 	Writable    WritableInfo
-	Databases   config.DatabaseInfo
+	Databases   map[string]bootstrapConfig.Database
 	Logging     bootstrapConfig.LoggingInfo
 	Registry    bootstrapConfig.RegistryInfo
 	Service     bootstrapConfig.ServiceInfo
@@ -92,6 +90,6 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() config.DatabaseInfo {
+func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
 }

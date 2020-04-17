@@ -14,10 +14,10 @@
 
 package interfaces
 
-import "github.com/edgexfoundry/edgex-go/internal/pkg/config"
+import "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 // Database interface provides an abstraction for obtaining the database configuration information.
 type Database interface {
 	// GetDatabaseInfo returns a database information map.
-	GetDatabaseInfo() config.DatabaseInfo
+	GetDatabaseInfo() map[string]config.Database
 }
