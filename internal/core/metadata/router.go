@@ -393,8 +393,11 @@ func loadDeviceProfileRoutes(b *mux.Router, dic *di.Container) {
 			restAddProfileByYaml(
 				w,
 				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.CoreDataValueDescriptorClientFrom(dic.Get),
+				metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	dp.HandleFunc(
 		"/"+UPLOAD,
@@ -402,8 +405,11 @@ func loadDeviceProfileRoutes(b *mux.Router, dic *di.Container) {
 			restAddProfileByYamlRaw(
 				w,
 				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
-				errorContainer.ErrorHandlerFrom(dic.Get))
+				errorContainer.ErrorHandlerFrom(dic.Get),
+				metadataContainer.CoreDataValueDescriptorClientFrom(dic.Get),
+				metadataContainer.ConfigurationFrom(dic.Get))
 		}).Methods(http.MethodPost)
 	dp.HandleFunc(
 		"/"+MODEL+"/{"+MODEL+"}",
