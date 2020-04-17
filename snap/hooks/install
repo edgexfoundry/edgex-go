@@ -14,11 +14,15 @@ for service in edgex-mongo security-file-token-provider security-proxy-setup sec
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
-        # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
-        sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
-            -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
-            -e "s@\$SNAP@$SNAP_CURRENT@g" \
-            "$SNAP_DATA/config/$service/res/configuration.toml"
+
+        # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables only in file-token-provider
+        # as it's exec'd by security-secretstore-setup, so it's not possible to make these changes via env override
+        if [ "$service" == "security-file-token-provider" ]; then
+            sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
+                -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
+                -e "s@\$SNAP@$SNAP_CURRENT@g" \
+                "$SNAP_DATA/config/$service/res/configuration.toml"
+        fi
     fi
 done
 

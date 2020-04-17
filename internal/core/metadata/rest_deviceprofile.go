@@ -80,7 +80,7 @@ func restAddDeviceProfile(
 		// will fail during the creation process later on.
 		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
 		_, err := nameOp.Execute()
-		// The operator will return an ItemNotFound error if the DeviceProfile can not be found.
+		// The operator will return an DuplicateName error if the DeviceProfile exist.
 		if err == nil {
 			errorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
 			return
@@ -246,8 +246,11 @@ func restDeleteProfileByName(
 func restAddProfileByYaml(
 	w http.ResponseWriter,
 	r *http.Request,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	vdc coredata.ValueDescriptorClient,
+	configuration *config.ConfigurationStruct) {
 
 	f, _, err := r.FormFile("file")
 	if err != nil {
@@ -276,6 +279,29 @@ func restAddProfileByYaml(
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.DeviceProfile.UnmarshalYaml_StatusInternalServer)
 		return
+	}
+
+	if configuration.Writable.EnableValueDescriptorManagement {
+		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
+		// will fail during the creation process later on.
+		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
+		_, err := nameOp.Execute()
+		// The operator will return an DuplicateName error if the DeviceProfile exist.
+		if err == nil {
+			errorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
+			return
+		}
+
+		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, lc, dp.DeviceResources...)
+		err = op.Execute()
+		if err != nil {
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Default.InternalServerError)
+			return
+		}
 	}
 
 	// Avoid using the 'addDeviceProfile' function because we need to be backwards compatibility for API response codes.
@@ -308,8 +334,11 @@ func restAddProfileByYaml(
 func restAddProfileByYamlRaw(
 	w http.ResponseWriter,
 	r *http.Request,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
-	errorHandler errorconcept.ErrorHandler) {
+	errorHandler errorconcept.ErrorHandler,
+	vdc coredata.ValueDescriptorClient,
+	configuration *config.ConfigurationStruct) {
 
 	// Get the YAML string
 	body, err := ioutil.ReadAll(r.Body)
@@ -324,6 +353,29 @@ func restAddProfileByYamlRaw(
 	if err != nil {
 		errorHandler.Handle(w, err, errorconcept.DeviceProfile.UnmarshalYaml_StatusServiceUnavailable)
 		return
+	}
+
+	if configuration.Writable.EnableValueDescriptorManagement {
+		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
+		// will fail during the creation process later on.
+		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
+		_, err := nameOp.Execute()
+		// The operator will return an DuplicateName error if the DeviceProfile exist.
+		if err == nil {
+			errorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
+			return
+		}
+
+		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, lc, dp.DeviceResources...)
+		err = op.Execute()
+		if err != nil {
+			errorHandler.HandleOneVariant(
+				w,
+				err,
+				errorconcept.NewServiceClientHttpError(err),
+				errorconcept.Default.InternalServerError)
+			return
+		}
 	}
 
 	addDeviceProfile(dp, dbClient, w, errorHandler)
