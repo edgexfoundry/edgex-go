@@ -16,4 +16,4 @@ LogLevel = 'DEBUG'
 
 [Logging]
 EnableRemote = false
-File = './logs/security-file-token-provider.log'
+File = ''
