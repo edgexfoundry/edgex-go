@@ -255,6 +255,7 @@ func restGetCommandsByDeviceName(
 		return
 	}
 
+	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(&devices)
 }
