@@ -166,11 +166,15 @@ func restGetProvisionWatcherById(
 
 	res, err := dbClient.GetProvisionWatcherById(id)
 	if err != nil {
-		errorHandler.HandleOneVariant(
+		errorHandler.HandleManyVariants(
 			w,
 			err,
-			errorconcept.ProvisionWatcher.NotFoundById,
-			errorconcept.Default.InternalServerError)
+			[]errorconcept.ErrorConceptType{
+				errorconcept.ProvisionWatcher.NotFoundById,
+				errorconcept.ProvisionWatcher.InvalidID,
+			},
+			errorconcept.Default.InternalServerError,
+		)
 		return
 	}
 
