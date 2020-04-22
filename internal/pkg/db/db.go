@@ -21,6 +21,10 @@ import (
 
 const (
 	// Databases
+
+	// MongoDB the unique identifier used in configuring the system to signal the underlying database used is MongoDB.
+	//
+	// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 	MongoDB = "mongodb"
 	RedisDB = "redisdb"
 

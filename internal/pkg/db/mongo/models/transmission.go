@@ -27,6 +27,9 @@ type TransmissionRecord struct {
 	Sent     int64                       `bson:"sent"`
 }
 
+// Transmission
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Transmission struct {
 	Created      int64                       `bson:"created"`
 	Modified     int64                       `bson:"modified"`

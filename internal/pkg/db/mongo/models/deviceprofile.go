@@ -26,6 +26,9 @@ type deviceProfileTransform interface {
 	DeviceProfileToDBRef(model DeviceProfile) (dbRef mgo.DBRef, err error)
 }
 
+// PropertyValue
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type PropertyValue struct {
 	Type          string `bson:"type"`         // ValueDescriptor Type of property after transformations
 	ReadWrite     string `bson:"readWrite"`    // Read/Write Permissions set for this property
@@ -44,17 +47,26 @@ type PropertyValue struct {
 	MediaType     string `bson:"mediaType"`
 }
 
+// Units
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Units struct {
 	Type         string `bson:"type"`
 	ReadWrite    string `bson:"readWrite"`
 	DefaultValue string `bson:"defaultValue"`
 }
 
+// ProfileProperty
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type ProfileProperty struct {
 	Value PropertyValue `bson:"value"`
 	Units Units         `bson:"units"`
 }
 
+// DeviceResource
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type DeviceResource struct {
 	Description string            `bson:"description"`
 	Name        string            `bson:"name"`
@@ -63,6 +75,9 @@ type DeviceResource struct {
 	Attributes  map[string]string `bson:"attributes"`
 }
 
+// ResourceOperation
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type ResourceOperation struct {
 	Index          string            `bson:"index"`
 	Operation      string            `bson:"operation"`
@@ -75,12 +90,18 @@ type ResourceOperation struct {
 	Mappings       map[string]string `bson:"mappings"`
 }
 
+// ProfileResource
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type ProfileResource struct {
 	Name string              `bson:"name"`
 	Get  []ResourceOperation `bson:"get"`
 	Set  []ResourceOperation `bson:"set"`
 }
 
+// Addressable
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type DeviceProfile struct {
 	Created         int64             `bson:"created"`
 	Modified        int64             `bson:"modified"`

@@ -23,6 +23,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Event
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Event struct {
 	Created  int64         `bson:"created"`
 	Modified int64         `bson:"modified"`

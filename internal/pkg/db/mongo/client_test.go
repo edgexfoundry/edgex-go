@@ -10,6 +10,10 @@
 // the tests with a command like:
 // go test -tags mongoRunning
 
+// Package mongo provides integration tests for interaction with MongoDO.
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release and no new functionality should be added;
+// Only bugs which address legacy issues
 package mongo
 
 import (
@@ -19,6 +23,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/test"
 )
 
+// TestMongoDB
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 func TestMongoDB(t *testing.T) {
 
 	t.Log("This test needs to have a running mongo on localhost")
@@ -57,6 +64,9 @@ func TestMongoDB(t *testing.T) {
 	test.TestSchedulerDB(t, mongo)
 }
 
+// BenchmarkMongoDB
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 func BenchmarkMongoDB(b *testing.B) {
 
 	b.Log("This benchmark needs to have a running mongo on localhost")

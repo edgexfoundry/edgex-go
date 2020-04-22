@@ -22,12 +22,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-/*
- * This file is the model for the Device object in EdgeX
- *
- *
- * Device struct
- */
+// Device
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Device struct {
 	Created        int64                   `bson:"created"`
 	Modified       int64                   `bson:"modified"`

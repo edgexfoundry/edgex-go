@@ -26,6 +26,9 @@ type deviceServiceTransform interface {
 	DeviceServiceToDBRef(model DeviceService) (dbRef mgo.DBRef, err error)
 }
 
+// DeviceService
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type DeviceService struct {
 	Created        int64                   `bson:"created"`
 	Modified       int64                   `bson:"modified"`

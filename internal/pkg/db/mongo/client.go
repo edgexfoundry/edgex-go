@@ -11,6 +11,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
+// Package mongo provides an implementation of DBClient which uses MongoDB as the underlying data-store.
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release and no new functionality should be added;
+// Only bugs which address legacy issues
 package mongo
 
 import (
@@ -23,12 +28,18 @@ import (
 
 var currentMongoClient MongoClient // Singleton used so that mongoEvent can use it to de-reference readings
 
+// MongoClient implements DBClient and provides functionality for interacting with MongoDB.
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release and no new functionality should be added;
+// Only bugs which address legacy issues
 type MongoClient struct {
 	session  *mgo.Session  // Mongo database session
 	database *mgo.Database // Mongo database
 }
 
 // Return a pointer to the MongoClient
+//
+// Deprecated: MongoClient is deprecated as of the Geneva release.
 func NewClient(config db.Configuration) (MongoClient, error) {
 	m := MongoClient{}
 
