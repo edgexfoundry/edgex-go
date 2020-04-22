@@ -87,6 +87,10 @@ https://github.com/hashicorp/go-immutable-radix/blob/master/LICENSE
 hashicorp/golang-lru (Mozilla Public License 2.0) https://github.com/hashicorp/golang-lru
 https://github.com/hashicorp/golang-lru/blob/master/LICENSE
 
+github.com/go-redis/redis/v7 (BSD-2) https://github.com/go-redis/redis
+https://github.com/go-redis/redis/blob/master/LICENSE
+https://github.com/go-redis/redis/blob/master/LICENSE
+
 gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo
 https://github.com/gomodule/redigo/blob/master/LICENSE
 
