@@ -176,21 +176,10 @@ func loadConfigIntervals() error {
 
 		if errExistingSchedule != nil {
 			// add the interval support-scheduler
-			newIntervalID, errAddedInterval := addIntervalToSchedulerDB(interval)
+			_, errAddedInterval := addIntervalToSchedulerDB(interval)
 			if errAddedInterval != nil {
 				LoggingClient.Error("problem adding interval to the scheduler database:" + errAddedInterval.Error())
 				return errAddedInterval
-			}
-
-			// add the support-scheduler scheduler.id
-			interval.ID = newIntervalID
-
-			// add the interval to the scheduler
-			err := scClient.AddIntervalToQueue(interval)
-
-			if err != nil {
-				LoggingClient.Error("problem loading interval from the scheduler config: " + err.Error())
-				return err
 			}
 		} else {
 			LoggingClient.Debug("did not add interval as it already exists in the scheduler database", "name", interval.Name)
@@ -249,19 +238,6 @@ func loadConfigIntervalActions() error {
 
 // Query support-scheduler database information
 func loadSupportSchedulerDBInformation() error {
-
-	receivedIntervals, err := getSchedulerDBIntervals()
-	if err != nil {
-		LoggingClient.Error("failed to receive intervals from support-scheduler database:" + err.Error())
-		return err
-	}
-
-	err = addReceivedIntervals(receivedIntervals)
-	if err != nil {
-		LoggingClient.Error("failed to add received intervals from support-scheduler database:" + err.Error())
-		return err
-	}
-
 	intervalActions, err := getSchedulerDBIntervalActions()
 	if err != nil {
 		LoggingClient.Error("failed to receive interval actions from support-scheduler database:" + err.Error())

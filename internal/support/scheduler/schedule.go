@@ -10,13 +10,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	queueV1 "gopkg.in/eapache/queue.v1"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	queueV1 "gopkg.in/eapache/queue.v1"
 )
 
 //the interval specific shared variables
@@ -276,23 +277,26 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 		return errors.New(logMsg)
 	}
 
-	// Ensure we have an existing Interval
-	intervalId, exists := intervalNameToIdMap[intervalName]
-	if !exists {
+	// get the interval by interval name
+	interval, err := getIntervalByName(intervalName)
+	if err != nil {
 		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
 		LoggingClient.Warn(logMsg)
 		return errors.New(logMsg)
 	}
 
 	// Get the Schedule Context
-	intervalContext, exists := intervalIdToContextMap[intervalId]
+	_, exists := intervalNameToContextMap[intervalName]
 	if !exists {
 		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
 		LoggingClient.Warn(logMsg)
-		return errors.New(logMsg)
+		context := IntervalContext{
+			IntervalActionsMap: make(map[string]contract.IntervalAction),
+			MarkedDeleted:      false,
+		}
+		context.Reset(interval)
+		addIntervalOperation(interval, &context)
 	}
-
-	interval := intervalContext.Interval
 
 	addIntervalActionOperation(interval, intervalAction)
 
@@ -309,58 +313,75 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 
 	LoggingClient.Debug(fmt.Sprintf("updating the intervalAction with id: %s ", intervalActionId))
 
-	oldIntervalId, exists := intervalActionIdToIntervalMap[intervalActionId]
+	// get old interval id by intervalActionId
+	oldIntervalID, exists := intervalActionIdToIntervalMap[intervalActionId]
 	if !exists {
 		logMsg := fmt.Sprintf("there is no mapping from interval action id : %s to interval.", intervalActionId)
 		LoggingClient.Error(logMsg)
 		return errors.New(logMsg)
 	}
 
-	// Refactor START
-
-	intervalContext, exists := intervalNameToContextMap[intervalAction.Interval]
-	if !exists {
-		logMsg := fmt.Sprintf("query the interval with name : %s  and did not exist.", intervalAction.Interval)
+	// get the new interval by new interval name
+	interval, err := getIntervalByName(intervalAction.Interval)
+	if err != nil {
+		logMsg := fmt.Sprintf("query the interval by name : %s  and did not exist.", intervalAction.Interval)
 		return errors.New(logMsg)
 	}
 
-	//if the interval action switched interval
-	interval := intervalContext.Interval
+	// get the new interval id from new interval
+	intervalID := interval.ID
 
-	newIntervalId := interval.ID
+	if intervalID == oldIntervalID { // if interval not changed, just update the intervalAction
+		// get the old interval context by old interval id
+		oldIntervalContext, exists := intervalIdToContextMap[oldIntervalID]
+		if !exists {
+			logMsg := fmt.Sprintf("there is no mapping from the interval id : %s to context.", oldIntervalID)
+			return errors.New(logMsg)
+		}
+		oldIntervalContext.IntervalActionsMap[intervalActionId] = intervalAction
+	} else {
+		LoggingClient.Debug(fmt.Sprintf("the interval action switched interval from ID: %s to new ID: %s", oldIntervalID, intervalID))
 
-	if newIntervalId != oldIntervalId {
-		LoggingClient.Debug(fmt.Sprintf("the interval action switched interval from ID: %s to new ID: %s", oldIntervalId, newIntervalId))
+		// get the old interval context by old interval id
+		oldIntervalContext, exists := intervalIdToContextMap[oldIntervalID]
+		if exists {
+			//remove the old interval action entry
+			LoggingClient.Debug(fmt.Sprintf("remove the intervalAction with ID: %s from interval with ID: %s ", intervalActionId, oldIntervalID))
+			delete(oldIntervalContext.IntervalActionsMap, intervalActionId)
 
-		//remove the old interval action entry
-		LoggingClient.Debug(fmt.Sprintf("remove the intervalAction with ID: %s from interval with ID: %s ", intervalActionId, oldIntervalId))
-		delete(intervalContext.IntervalActionsMap, intervalActionId)
+			//if there are no more events for the interval, remove the interval context
+			if len(oldIntervalContext.IntervalActionsMap) == 0 {
+				LoggingClient.Debug("there are no more events for the interval : " + oldIntervalID + ", remove it.")
 
-		//if there are no more events for the interval, remove the interval context
-		// TODO: Not sure we want to just remove the interval from the interval context
-		if len(intervalContext.IntervalActionsMap) == 0 {
-			LoggingClient.Debug("there are no more events for the interval : " + oldIntervalId + ", remove it.")
-			deleteIntervalOperation(interval, intervalContext)
+				oldInterval, err := getIntervalById(oldIntervalID)
+				if err != nil {
+					logMsg := fmt.Sprintf("query the interval by id : %s  and did not exist.", oldIntervalID)
+					return errors.New(logMsg)
+				}
+				deleteIntervalOperation(oldInterval, oldIntervalContext)
+			}
 		}
 
-		//add Interval Event
-		LoggingClient.Info(fmt.Sprintf("add the intervalAction with id: %s to interval with id: %s", intervalActionId, newIntervalId))
-
-		if _, exists := intervalIdToContextMap[newIntervalId]; !exists {
+		// check if the context of new interval alrealy exist
+		// if not, create and add it to interval queue
+		_, exists = intervalIdToContextMap[intervalID]
+		if !exists {
 			context := IntervalContext{
 				IntervalActionsMap: make(map[string]contract.IntervalAction),
 				MarkedDeleted:      false,
 			}
 			context.Reset(interval)
-
 			addIntervalOperation(interval, &context)
 		}
+
+		//add Interval Event
+		LoggingClient.Info(fmt.Sprintf("add the intervalAction with id: %s to interval with id: %s", intervalActionId, intervalID))
+
+		// add the interval action to the new interval and context maps
 		addIntervalActionOperation(interval, intervalAction)
-	} else { // if not, just update the interval action in place
-		intervalContext.IntervalActionsMap[intervalActionId] = intervalAction
 	}
 
-	LoggingClient.Info(fmt.Sprintf("updated the intervalAction with id: %s to interval id:  %s", intervalAction.ID, interval.ID))
+	LoggingClient.Info(fmt.Sprintf("updated the intervalAction with id: %s to interval id:  %s", intervalActionId, intervalID))
 
 	return nil
 }

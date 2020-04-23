@@ -75,13 +75,6 @@ func addNewInterval(interval contract.Interval) (string, error) {
 		return "", err
 	}
 
-	// Push the new interval into scheduler queue
-	interval.ID = ID
-	err = scClient.AddIntervalToQueue(interval)
-	if err != nil {
-		//failed to add to scheduler queue
-		LoggingClient.Error(err.Error())
-	}
 	return ID, nil
 }
 

@@ -161,6 +161,12 @@ func updateIntervalAction(from contract.IntervalAction) error {
 		to.Parameters = params
 	}
 
+	// Path
+	path := from.Path
+	if path != to.Path {
+		to.Path = path
+	}
+
 	// Validate the IntervalAction does not exist in the scheduler queue
 	_, err = scClient.QueryIntervalActionByName(to.Name)
 	if err == nil {
