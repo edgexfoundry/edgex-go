@@ -14,7 +14,9 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/security-file-token-provider/security-file-token-provider cmd/security-secretstore-setup/security-secretstore-setup
+RUN make cmd/security-file-token-provider/security-file-token-provider \
+  cmd/security-secretstore-setup/security-secretstore-setup \
+  cmd/security-secretstore-read/security-secretstore-read
 
 FROM alpine:3.10
 
@@ -29,9 +31,12 @@ WORKDIR /
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.json /res-file-token-provider/token-config.json
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/configuration.toml  /res-file-token-provider/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/security-secretstore-read/res/configuration.toml /res-read/configuration.toml
+
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
+COPY --from=builder /edgex-go/cmd/security-secretstore-read/security-secretstore-read .
 
 # setup the entry point script
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/entrypoint.sh /usr/local/bin/

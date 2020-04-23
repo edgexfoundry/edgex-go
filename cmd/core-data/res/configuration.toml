@@ -43,11 +43,8 @@ File = ''
   [Databases.Primary]
   Host = 'localhost'
   Name = 'coredata'
-  # Temporarily commented out. Will be pulled back in with secure Redis PR.
-  # Password = 'password'
-  # Username = 'core'
-  Password = ''
-  Username = ''
+  Password = 'password'
+  Username = 'core'
   Port = 6379
   Timeout = 5000
   Type = 'redisdb'

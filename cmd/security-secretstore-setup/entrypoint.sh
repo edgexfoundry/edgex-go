@@ -1,6 +1,6 @@
 #!/usr/bin/dumb-init /bin/sh
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2019 Intel Corporation
+#  Copyright (c) 2020 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 set -e
 
-if [ ! -z "${SECRETSTORE_SETUP_DONE_FLAG}" -a -f "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ] && [ -f "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
   echo "Clearing secretstore-setup completion flag"
   rm -f "${SECRETSTORE_SETUP_DONE_FLAG}"
 fi
@@ -47,11 +47,18 @@ echo "Initializing secret store"
 echo "Executing custom command: $@"
 "$@"
 
+# Maybe share Redis v5 password via ${REDIS5_PASSWORD_PATHNAME} pathname (usually
+# /tmp/edgex/secrets/edgex-redis/redis5-password)
+if [ -n "${REDIS5_PASSWORD_PATHNAME}" ]; then
+  echo "Reading Redis5 password"
+  /security-secretstore-read -confdir /res-read
+fi
+
 # write a sentinel file when we're done because consul is not
 # secure and we don't trust it it access to the EdgeX secret store
-if [ ! -z "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
     echo "Signaling secretstore-setup completion"
-    mkdir -p `dirname "${SECRETSTORE_SETUP_DONE_FLAG}"`
+    mkdir -p $(dirname "${SECRETSTORE_SETUP_DONE_FLAG}")
     touch "${SECRETSTORE_SETUP_DONE_FLAG}"
 fi
 

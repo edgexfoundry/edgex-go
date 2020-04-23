@@ -257,6 +257,29 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	cred := NewCred(req, rootToken, gk, configuration.SecretService.GetSecretSvcBaseURL(), lc)
 
 	// continue credential creation
+
+	// A little note on why there are two secrets paths. For each microservice, the
+	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/mongodb and
+	// /v1/secret/edgex/mongo/%s). The go-mod-secrets client requires a Path property to prefix all
+	// secrets. docker-edgex-mongo uses that
+	// (https://github.com/edgexfoundry/docker-edgex-mongo/blob/master/cmd/res/configuration.toml) in
+	// order to enumerate the users and passwords when setting up the initial database authentication.
+	// So edgex/%s/monodb is for the microservices (microservices are restricted to their specific
+	// edgex/%s), and edgex/mongo/* is enumerated to initialize the database.
+
+	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
+	// to a per service password.
+
+	redis5Password, err := cred.GeneratePassword("redis5")
+	if err != nil {
+		lc.Error("failed to generate redis5 password")
+		os.Exit(1)
+	}
+	redis5Pair := UserPasswordPair{
+		User:     "redis5",
+		Password: redis5Password,
+	}
+
 	for dbname, info := range configuration.Databases {
 		service := info.Service
 		// generate credentials
@@ -272,39 +295,32 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 		// add credentials to service path if specified and they're not already there
 		if len(service) != 0 {
-			servicePath := fmt.Sprintf("/v1/secret/edgex/%s/mongodb", service)
-			existing, err := cred.AlreadyInStore(servicePath)
+			err = addServiceCredential(lc, "mongodb", cred, service, pair)
 			if err != nil {
 				lc.Error(err.Error())
 				os.Exit(1)
 			}
-			if !existing {
-				err = cred.UploadToStore(&pair, servicePath)
-				if err != nil {
-					lc.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, servicePath))
-					os.Exit(1)
-				}
-			} else {
-				lc.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, servicePath))
+
+			err = addServiceCredential(lc, "redisdb", cred, service, redis5Pair)
+			if err != nil {
+				lc.Error(err.Error())
+				os.Exit(1)
 			}
 		}
 
-		mongoPath := fmt.Sprintf("/v1/secret/edgex/mongo/%s", dbname)
-		// add credentials to mongo path if they're not already there
-		existing, err := cred.AlreadyInStore(mongoPath)
+		err = addDBCredential(lc, "mongo", cred, dbname, pair)
 		if err != nil {
 			lc.Error(err.Error())
 			os.Exit(1)
 		}
-		if !existing {
-			err = cred.UploadToStore(&pair, mongoPath)
-			if err != nil {
-				lc.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", dbname, mongoPath))
-				os.Exit(1)
-			}
-		} else {
-			lc.Info(fmt.Sprintf("credentials for %s already present at path %s", dbname, mongoPath))
-		}
+	}
+
+	// XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
+	// variadic functions
+	err = addDBCredential(lc, "redis", cred, "redis5", redis5Pair)
+	if err != nil {
+		lc.Error(err.Error())
+		os.Exit(1)
 	}
 
 	cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
@@ -337,6 +353,45 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	lc.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
 	return false
+}
+
+func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
+	path := fmt.Sprintf("/v1/secret/edgex/%s/%s", service, db)
+	existing, err := cred.AlreadyInStore(path)
+	if err != nil {
+		return err
+	}
+	if !existing {
+		err = cred.UploadToStore(&pair, path)
+		if err != nil {
+			lc.Error(fmt.Sprintf("failed to upload credential pair for %s on path %s", service, path))
+			return err
+		}
+	} else {
+		lc.Info(fmt.Sprintf("credentials for %s already present at path %s", service, path))
+	}
+
+	return err
+}
+
+func addDBCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
+	path := fmt.Sprintf("/v1/secret/edgex/%s/%s", db, service)
+	existing, err := cred.AlreadyInStore(path)
+	if err != nil {
+		lc.Error(err.Error())
+		return err
+	}
+	if !existing {
+		err = cred.UploadToStore(&pair, path)
+		if err != nil {
+			lc.Error(fmt.Sprintf("failed to upload credential pair for db %s on path %s", service, path))
+			return err
+		}
+	} else {
+		lc.Info(fmt.Sprintf("credentials for %s already present at path %s", service, path))
+	}
+
+	return err
 }
 
 func makeTokenIssuingToken(

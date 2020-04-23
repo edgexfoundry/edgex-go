@@ -8,6 +8,12 @@
             "list",
             "read"
           ]
+        },
+        "secret/edgex/metadata/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
         }
       }
     }
@@ -17,6 +23,12 @@
     "custom_policy": {
       "path": {
         "secret/edgex/coredata/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/coredata/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -34,6 +46,12 @@
             "list",
             "read"
           ]
+        },
+        "secret/edgex/metadata/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
         }
       }
     }
@@ -43,6 +61,19 @@
     "custom_policy": {
       "path": {
         "secret/edgex/mongo/*": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
+  "edgex-redis": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/redis/*": {
           "capabilities": [
             "list",
             "read"
@@ -73,6 +104,12 @@
             "list",
             "read"
           ]
+        },
+        "secret/edgex/notifications/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
         }
       }
     }
@@ -82,6 +119,12 @@
     "custom_policy": {
       "path": {
         "secret/edgex/rulesengine/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/rulesengine/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -98,6 +141,12 @@
     "custom_policy": {
       "path": {
         "secret/edgex/scheduler/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/scheduler/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -120,6 +169,15 @@
           ]
         },
         "secret/edgex/mongo/*": {
+          "capabilities": [
+            "list",
+            "read",
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "secret/edgex/redis/*": {
           "capabilities": [
             "list",
             "read",
