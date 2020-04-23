@@ -16,6 +16,7 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -63,8 +64,10 @@ func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error
 	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
 		opts := []redis.DialOption{
-			redis.DialPassword(config.Password),
 			redis.DialConnectTimeout(time.Duration(config.Timeout) * time.Millisecond),
+		}
+		if os.Getenv("EDGEX_SECURITY_SECRET_STORE") != "false" {
+			opts = append(opts, redis.DialPassword(config.Password))
 		}
 
 		dialFunc := func() (redis.Conn, error) {
