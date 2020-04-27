@@ -1037,7 +1037,7 @@ parts:
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/device.virtual.$profileType.yaml"
       done
 
-      install -DT "./cmd/Attribution.txt" \
+      install -DT "./Attribution.txt" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
