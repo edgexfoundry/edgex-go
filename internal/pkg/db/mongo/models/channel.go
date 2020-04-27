@@ -16,6 +16,9 @@ package models
 
 import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
+// Channel
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Channel struct {
 	Type          contract.ChannelType `bson:"type,omitempty"`
 	MailAddresses []string             `bson:"mailAddresses,omitempty"`

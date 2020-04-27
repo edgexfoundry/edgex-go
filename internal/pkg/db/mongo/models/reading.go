@@ -25,6 +25,9 @@ type readingTransform interface {
 	ReadingToDBRef(a Reading) (dbRef mgo.DBRef, err error)
 }
 
+// Reading
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Reading struct {
 	Created       int64         `bson:"created"`
 	Modified      int64         `bson:"modified"`

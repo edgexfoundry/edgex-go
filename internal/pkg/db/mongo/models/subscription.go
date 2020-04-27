@@ -22,12 +22,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-/*
- * A subscription for notification alerts
- *
- *
- * Subscription struct
- */
+// Subscription
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Subscription struct {
 	Created              int64                            `bson:"created"`
 	Modified             int64                            `bson:"modified"`

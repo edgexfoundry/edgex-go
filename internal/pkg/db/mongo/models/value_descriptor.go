@@ -19,6 +19,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// ValueDescriptor
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type ValueDescriptor struct {
 	Id            bson.ObjectId `bson:"_id,omitempty"`
 	Uuid          string        `bson:"uuid"`

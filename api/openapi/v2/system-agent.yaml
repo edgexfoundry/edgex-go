@@ -148,7 +148,7 @@ components:
         service:
           description: "The name of the targeted service"
           type: string
-          example: edgex-mongo
+          example: edgex-redis
         executor:
           description: "The type of executor which processed the operation"
           type: string

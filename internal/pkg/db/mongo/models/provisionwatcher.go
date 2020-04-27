@@ -21,6 +21,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// ProvisionWatcher
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type ProvisionWatcher struct {
 	Created             int64                   `bson:"created"`
 	Modified            int64                   `bson:"modified"`

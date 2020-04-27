@@ -11,6 +11,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
+// Package models provides an internal representation of data structures that can be used when interacting with MongoDB.
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release and no new functionality should be added;
+// Only bugs which address legacy issues
 package models
 
 import (
@@ -26,6 +31,9 @@ type addressableTransform interface {
 	GetAddressableByName(n string) (contract.Addressable, error)
 }
 
+// Addressable
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Addressable struct {
 	Created    int64         `bson:"created"`
 	Modified   int64         `bson:"modified"`

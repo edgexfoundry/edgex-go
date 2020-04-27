@@ -6,6 +6,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// IntervalAction
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type IntervalAction struct {
 	Created    int64         `bson:"created"`
 	Modified   int64         `bson:"modified"`

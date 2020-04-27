@@ -21,6 +21,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// Notification
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Notification struct {
 	Created     int64                          `bson:"created"`
 	Modified    int64                          `bson:"modified"`

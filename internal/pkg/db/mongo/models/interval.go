@@ -20,6 +20,9 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// Interval
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Interval struct {
 	Created   int64         `bson:"created"`
 	Modified  int64         `bson:"modified"`

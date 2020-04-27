@@ -20,18 +20,27 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+// Response
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Response struct {
 	Code           string   `bson:"code"`
 	Description    string   `bson:"description"`
 	ExpectedValues []string `bson:"expectedValues"`
 }
 
+// Get
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Get struct {
 	Path      string     `bson:"path"`      // path used by service for action on a device or sensor
 	Responses []Response `bson:"responses"` // responses from get or put requests to service
 	URL       string     // url for requests from command service
 }
 
+// Put
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Put struct {
 	Path           string     `bson:"path"`      // path used by service for action on a device or sensor
 	Responses      []Response `bson:"responses"` // responses from get or put requests to service
@@ -39,6 +48,9 @@ type Put struct {
 	ParameterNames []string   `bson:"parameterNames"`
 }
 
+// CommandProfile
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type CommandProfile struct {
 	Name string `bson:"name"`
 	Get  Get    `bson:"get"`
@@ -115,6 +127,9 @@ func (c *Command) TimestampForAdd() {
 	c.Created = c.Modified
 }
 
+// Command
+//
+// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 type Command struct {
 	CommandProfile `bson:",inline"`
 	Id             bson.ObjectId `bson:"_id,omitempty"`

@@ -72,6 +72,7 @@ func (d Database) newDBClient(
 
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
+	// Deprecated: Mongo functionality is deprecated as of the Geneva release.
 	case db.MongoDB:
 		return mongo.NewClient(
 			db.Configuration{
