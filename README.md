@@ -14,7 +14,7 @@ The simplest way to get started is to fetch the latest docker-compose.yml and st
 
 ```sh
 wget -O docker-compose.yml \
-https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/nightly-build/compose-files/docker-compose-nexus.yml
+https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml
 docker-compose up -d
 ```
 
