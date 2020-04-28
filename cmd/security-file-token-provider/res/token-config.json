@@ -133,6 +133,25 @@
       }
     }
   },
+  "edgex-application-service": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/appservice/mongodb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/appservice/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
   "edgex-sys-mgmt-agent": {
     "edgex_use_defaults": true
   },
