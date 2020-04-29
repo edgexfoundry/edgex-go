@@ -2116,6 +2116,19 @@ components:
         user:
           title: user
           type: string
+    autoevent:
+      title: autoevent
+      type: object
+      properties:
+        frequency:
+          title: frequency
+          type: string
+        onchange:
+          title: onchange
+          type: boolean
+        resource:
+          title: resource
+          type: string
     command:
       title: command
       type: object
@@ -2143,11 +2156,14 @@ components:
       title: device
       type: object
       properties:
-        addressable:
-          $ref: '#/components/schemas/device_addressable'
         adminState:
           title: adminState
           type: string
+        autoevents:
+          type: array
+          items:
+            title: autoevent
+            $ref: '#/components/schemas/autoevent'
         created:
           title: created
           type: integer
@@ -2182,6 +2198,10 @@ components:
         origin:
           title: origin
           type: integer
+        protocols:
+          type: object
+          additionalProperties: true
+          example: {"modbus-tcp":{"host":"localhost","port":"1234","unitID":"1"}}
       description: Device or sensor supplying data and taking actuation commands
     deviceprofile:
       title: deviceprofile
