@@ -151,7 +151,15 @@ apps:
     environment:
       VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
       VAULT_ADDR: "https://localhost:8200"
-      VAULT_UI: "true"
+    plugs:
+      - network
+      - network-bind
+  vault-cli:
+    adapter: none
+    command: bin/vault
+    environment:
+      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
+      VAULT_ADDR: "https://localhost:8200"
     plugs:
       - network
       - network-bind
@@ -526,7 +534,35 @@ parts:
   # from edgex-go which at this point will fail
   # eventually we would like these changes to be upstreamed but until then
   # they live here. see also https://github.com/edgexfoundry/edgex-go/issues/1109
-  go:
+  go112:
+    plugin: nil
+    source: snap/local/build-helpers
+    override-build: |
+      # use dpkg architecture to figure out our target arch
+      # note - we specifically don't use arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=go1.12.7.linux-amd64.tar.gz
+          FILE_HASH=66d83bfb5a9ede000e33c6579a91a29e6b101829ad41fffb5c5bb6c900e109d9
+          ;;
+        arm64)
+          FILE_NAME=go1.12.7.linux-arm64.tar.gz
+          FILE_HASH=4da1f7198a8fa0c4067852656b6c10153a4eca5a26aca28ef02ae9f4a7939ba5
+          ;;
+      esac
+      # download the archive, failing on ssl cert problems
+      curl https://dl.google.com/go/$FILE_NAME -O
+      echo "$FILE_HASH $FILE_NAME" > sha256
+      sha256sum -c sha256 | grep OK
+      mkdir -p $SNAPCRAFT_STAGE/go1.12
+      tar -C $SNAPCRAFT_STAGE/go1.12 -xf "$FILE_NAME" --strip-components=1
+    prime:
+      - "-*"
+    # build after kong to prevent staging go binaries into the snap as they
+    # are large - see the TODO on the kong part
+    after: [go-build-helper, kong]
+
+  go113:
     plugin: nil
     source: snap/local/build-helpers
     override-build: |
@@ -546,23 +582,24 @@ parts:
       curl https://dl.google.com/go/$FILE_NAME -O
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
-      tar -C $SNAPCRAFT_STAGE -xf go*.tar.gz --strip-components=1
+      mkdir -p $SNAPCRAFT_STAGE/go1.13
+      tar -C $SNAPCRAFT_STAGE/go1.13 -xf "$FILE_NAME" --strip-components=1
     prime:
       - "-*"
-    # build after kong to prevent staging go binaries into the snap as they
-    # are large - see the TODO on the kong part
-    after: [go-build-helper, kong]
+    after: [go112]
 
   consul:
-    after: [go]
+    after: [go113]
     plugin: make
     source: https://github.com/hashicorp/consul.git
-    source-tag: v1.3.1
+    source-tag: v1.7.2
     source-depth: 1
     stage:
       # duplicated file with the deps of vault, so just drop this one and use
       # the file from the vault part instead
       - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
+      - -usr/share/doc/github.com/miekg/dns/LICENSE
+
     override-build: |
       # When the snap is built by Jenkins w/in a docker instance, the existence of
       # the top level go.mod file causes the consul build to fail when using go 1.13.
@@ -573,7 +610,7 @@ parts:
       fi
 
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/consul
+      gopartbootstrap github.com/hashicorp/consul 1.13
       export GO111MODULES=off
       go get -u github.com/kardianos/govendor
       govendor install
@@ -640,7 +677,7 @@ parts:
       LICENSE: usr/share/doc/remarshal/LICENSE
   redis:
     source: https://github.com/antirez/redis.git
-    source-tag: "5.0.4"
+    source-tag: "5.0.8"
     source-depth: 1
     plugin: make
     make-install-var: PREFIX
@@ -658,8 +695,9 @@ parts:
     source-branch: master
     source-depth: 1
     plugin: make
-    after: [go]
+    after: [go113]
     override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       make build
 
@@ -676,9 +714,11 @@ parts:
   edgex-go:
     source: .
     plugin: make
-    after: [go]
+    after: [go113]
     override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
+
       make build
 
       # copy service binaries, configuration, and license files into the snap install
@@ -966,22 +1006,17 @@ parts:
 
   # SECURITY SERVICES PARTS
   vault:
-    after: [go]
+    after: [go112]
     plugin: make
     source: https://github.com/hashicorp/vault.git
-    source-tag: v1.0.2
+    source-tag: v1.3.1
     source-depth: 1
     override-build: |
-      # When the snap is built by Jenkins w/in a docker instance, the existence of
-      # the top level go.mod file causes the consul build to fail when using go 1.13.
-      # This workaround can probably be removed if/when consul is updated to a more
-      # recent version.
-      if [ -f /build/go.mod ]; then
-        mv /build/go.mod /build/go.mod.bk
-      fi
+      # see https://github.com/hashicorp/vault/issues/8927
+      patch -p1 < "$SNAPCRAFT_PROJECT_DIR/snap/local/patches/0001-Makefile-rm-golangci-lint-tool.patch"
 
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/vault
+      gopartbootstrap github.com/hashicorp/vault 1.12
       export GO111MODULES=off
       make bootstrap
       make dev
@@ -1017,14 +1052,16 @@ parts:
       if [ -f /build/go.mod.bk ]; then
         mv /build/go.mod.bk /build/go.mod
       fi
+
   # DEVICE SERVICES parts
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
     source-branch: master
     plugin: make
-    after: [go]
+    after: [go113]
     override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       make build
 
@@ -1048,8 +1085,9 @@ parts:
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
-    after: [go]
+    after: [go113]
     override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       make build
 

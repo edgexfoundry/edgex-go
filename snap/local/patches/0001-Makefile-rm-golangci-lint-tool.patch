@@ -1,0 +1,28 @@
+From 27c697fdc0a1e01b781921a0748277feba430e22 Mon Sep 17 00:00:00 2001
+From: Tony Espy <espy@canonical.com>
+Date: Fri, 24 Apr 2020 08:33:04 -0400
+Subject: [PATCH] Makefile: rm golangci-lint tool
+
+Remopve golangci-lint from EXTERNAL_TOOLS as
+it breaks the build.
+---
+ Makefile | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 2e80db5..bf6062c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -15,8 +15,7 @@ EXTERNAL_TOOLS=\
+ 	github.com/hashicorp/go-bindata/... \
+ 	github.com/mitchellh/gox \
+ 	github.com/kardianos/govendor \
+-	github.com/client9/misspell/cmd/misspell \
+-	github.com/golangci/golangci-lint/cmd/golangci-lint
++	github.com/client9/misspell/cmd/misspell
+ GOFMT_FILES?=$$(find . -name '*.go' | grep -v pb.go | grep -v vendor)
+ 
+ GO_VERSION_MIN=1.12.7
+-- 
+2.7.4
+

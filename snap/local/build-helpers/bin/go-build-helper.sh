@@ -1,6 +1,10 @@
 #!/bin/bash
+#
+# $1 - go import path
+# $2 - maj/min version of go; must correspond to a go part in the snap
+#
 # example usage:
-# $ gopartbootstrap github.com/edgexfoundry/edgex-go
+# $ gopartbootstrap github.com/edgexfoundry/edgex-go 1.13
 gopartbootstrap() 
 {
     # first set the GOPATH to be in the current directory and in ".gopath"
@@ -9,7 +13,7 @@ gopartbootstrap()
     # setup path to include both $SNAPCRAFT_STAGE/bin and $GOPATH/bin
     # the former is for the go tools, as well as things like glide, etc.
     # while the later is for govendor, etc. and other go tools that might need to be installed
-    export PATH="$SNAPCRAFT_STAGE/bin:$GOPATH/bin:$PATH"
+    export PATH="$SNAPCRAFT_STAGE/go$2/bin:$GOPATH/bin:$PATH"
     # set GOROOT to be whatever the go tool from SNAPCRAFT_STAGE/bin is
     GOROOT=$(go env GOROOT)
     export GOROOT
