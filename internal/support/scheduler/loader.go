@@ -171,10 +171,10 @@ func loadConfigIntervals() error {
 			RunOnce:    intervals[i].RunOnce,
 		}
 
-		// query scheduler service for interval in memory queue
-		_, errExistingSchedule := scClient.QueryIntervalByName(interval.Name)
+		// query interval in db
+		_, errExistInterval := dbClient.IntervalByName(interval.Name)
 
-		if errExistingSchedule != nil {
+		if errExistInterval != nil {
 			// add the interval support-scheduler
 			_, errAddedInterval := addIntervalToSchedulerDB(interval)
 			if errAddedInterval != nil {
@@ -207,10 +207,10 @@ func loadConfigIntervalActions() error {
 			Address:    intervalActions[ia].Host,
 		}
 
-		// query scheduler in memory queue and determine of intervalAction exists
-		_, err := scClient.QueryIntervalActionByName(intervalAction.Name)
+		// query IntervalAction in db
+		_, errExistIntervalAction := dbClient.IntervalActionByName(intervalAction.Name)
 
-		if err != nil {
+		if errExistIntervalAction != nil {
 
 			// add the interval action to support-scheduler database
 			newIntervalActionID, err := addIntervalActionToSchedulerDB(intervalAction)

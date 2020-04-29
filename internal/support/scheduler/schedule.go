@@ -269,7 +269,7 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 	intervalName := intervalAction.Interval
 	intervalActionName := intervalAction.Name
 
-	LoggingClient.Debug(fmt.Sprintf("adding the intervalAction with id  : %s to interval : %s into the queue", intervalActionId, intervalName))
+	LoggingClient.Debug(fmt.Sprintf("adding the intervalAction with id: %s to interval: %s into the queue", intervalActionId, intervalName))
 
 	if _, exists := intervalActionNameToIntervalMap[intervalActionName]; exists {
 		logMsg := fmt.Sprintf("scheduler found existing intervalAction with same name: %s", intervalName)
@@ -280,23 +280,14 @@ func (qc *QueueClient) AddIntervalActionToQueue(intervalAction contract.Interval
 	// get the interval by interval name
 	interval, err := getIntervalByName(intervalName)
 	if err != nil {
-		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
+		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name: %s", intervalName)
 		LoggingClient.Warn(logMsg)
 		return errors.New(logMsg)
 	}
 
-	// Get the Schedule Context
-	_, exists := intervalNameToContextMap[intervalName]
-	if !exists {
-		logMsg := fmt.Sprintf("scheduler could not find a interval with interval name : %s", intervalName)
-		LoggingClient.Warn(logMsg)
-		context := IntervalContext{
-			IntervalActionsMap: make(map[string]contract.IntervalAction),
-			MarkedDeleted:      false,
-		}
-		context.Reset(interval)
-		addIntervalOperation(interval, &context)
-	}
+	mutex.Unlock()
+	qc.AddIntervalToQueue(interval)
+	mutex.Lock()
 
 	addIntervalActionOperation(interval, intervalAction)
 
@@ -366,12 +357,13 @@ func (qc *QueueClient) UpdateIntervalActionQueue(intervalAction contract.Interva
 		// if not, create and add it to interval queue
 		_, exists = intervalIdToContextMap[intervalID]
 		if !exists {
-			context := IntervalContext{
-				IntervalActionsMap: make(map[string]contract.IntervalAction),
-				MarkedDeleted:      false,
-			}
-			context.Reset(interval)
-			addIntervalOperation(interval, &context)
+			mutex.Unlock()
+			qc.AddIntervalToQueue(interval)
+			mutex.Lock()
+		} else {
+			mutex.Unlock()
+			qc.UpdateIntervalInQueue(interval)
+			mutex.Lock()
 		}
 
 		//add Interval Event

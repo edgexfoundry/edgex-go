@@ -48,25 +48,24 @@ type scrubIntervals struct {
 
 // Execute performs the deletion of the interval.
 func (dibi deleteIntervalByID) Execute() error {
-	// check in memory first
-	inMemory, err := dibi.scDeleter.QueryIntervalByID(dibi.did)
+	interval, err := dibi.db.IntervalById(dibi.did)
 	if err != nil {
 		if err == db.ErrNotFound {
 			err = errors.NewErrIntervalNotFound(dibi.did)
 		}
 		return err
+	}
+
+	intervalActions, err := dibi.db.IntervalActionsByIntervalName(interval.Name)
+	if err != nil {
+		return err
+	}
+
+	if len(intervalActions) > 0 {
+		return errors.NewErrIntervalStillInUse(interval.Name)
 	}
 
 	if err = dibi.db.DeleteIntervalById(dibi.did); err != nil {
-		if err == db.ErrNotFound {
-			err = errors.NewErrIntervalNotFound(dibi.did)
-		}
-		return err
-	}
-
-	// remove in memory
-	err = dibi.scDeleter.RemoveIntervalInQueue(inMemory.ID)
-	if err != nil {
 		if err == db.ErrNotFound {
 			err = errors.NewErrIntervalNotFound(dibi.did)
 		}

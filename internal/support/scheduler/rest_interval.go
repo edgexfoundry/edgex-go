@@ -169,6 +169,8 @@ func restDeleteIntervalByID(w http.ResponseWriter, r *http.Request) {
 		switch err.(type) {
 		case errors.ErrIntervalNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
+		case errors.ErrIntervalStillUsedByIntervalActions:
+			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
