@@ -777,7 +777,7 @@ parts:
 
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-branch: "master"
+    source-tag: v1.1.0
     source-depth: 1
     plugin: maven
     maven-options: ["-Dmaven.test.skip=true"]
@@ -1076,7 +1076,8 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-branch: master
+    # TODO: update to v1.2.0 rel tag (or latest dev tag)
+    source-tag: v1.2.0-dev.12
     plugin: make
     after: [go113]
     override-build: |
@@ -1100,7 +1101,8 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    source-branch: master
+    # TODO: update to v1.2.0 rel tag (or latest dev tag)
+    source-tag: v1.1.0-dev.13
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
