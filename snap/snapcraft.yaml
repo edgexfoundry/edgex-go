@@ -46,6 +46,7 @@ passthrough:
     configure:
       command-chain:
         - snap/command-chain/snapcraft-runner
+      plugs: [network]
     install:
       environment:
         LC_ALL: C.UTF-8

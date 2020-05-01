@@ -15,9 +15,10 @@ for service in edgex-mongo security-file-token-provider security-proxy-setup sec
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
 
-        # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables only in file-token-provider
-        # as it's exec'd by security-secretstore-setup, so it's not possible to make these changes via env override
-        if [ "$service" == "security-file-token-provider" ] ||
+        # replace $SNAP, $SNAP_DATA, $SNAP_COMMON env vars for edgex-mono, file-token-provider,
+        # and security-secretstore-setup, as they don't support env var overrides
+        if [ "$service" = "edgex-mongo" ] ||
+	    [ "$service" == "security-file-token-provider" ] ||
             [ "$service" == "security-secretstore-read" ]; then
             sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
                 -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
@@ -95,6 +96,9 @@ done
 
 # create redis data dir
 mkdir -p "$SNAP_DATA/redis"
+
+# set redis as the prevdbtype in order to support configure hook switching
+echo "redis" > "$SNAP_DATA/prevdbtype"
 
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
