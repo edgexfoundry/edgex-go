@@ -393,7 +393,7 @@ apps:
       PGDATABASE: kong
     command-chain:
       - bin/perl5lib-launch.sh
-      # createuser should be run as the snap_daemon user, which is the user
+      # psql should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
       - bin/drop
     plugs: [home, removable-media, network]
@@ -407,19 +407,6 @@ apps:
       PSQLRC: $SNAP_USER_COMMON/.psqlrc
     command-chain:
       - bin/perl5lib-launch.sh
-    plugs: [home, removable-media, network]
-  createuser:
-    adapter: full
-    command: usr/bin/createuser
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PGHOST: $SNAP_COMMON/sockets
-    command-chain:
-      - bin/perl5lib-launch.sh
-      # createuser should be run as the snap_daemon user, which is the user
-      # who is initially created as a role with postgres
-      - bin/drop
     plugs: [home, removable-media, network]
   createdb:
     adapter: full
@@ -457,6 +444,7 @@ parts:
     # infrequently and will minimize unnecessary part re-building by snapcraft
     source: snap/local/build-helpers
     stage-packages:
+      - apg
       - curl
       - jq
 

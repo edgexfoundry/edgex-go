@@ -156,15 +156,6 @@ snapctl start "$SNAP_NAME.postgres"
 # trying to do this because we have to wait for postgres to start up
 iter_num=0
 MAX_POSTGRES_INIT_ITERATIONS=10
-until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createuser" kong; do
-    sleep 1
-    iter_num=$(( iter_num + 1 ))
-    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
-        echo "failed to create kong user in postgres after $iter_num iterations"
-        exit 1
-    fi
-done
-iter_num=0
 until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
@@ -174,8 +165,37 @@ until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
     fi
 done
 
+# generate a random password using the automatic password generator (apg)
+# debian package sourced from the Ubuntu 18.04 archive as a snap stage-package.
+#
+# -M ncl -- says the generator should use lowercase, uppercase, and numeric symbols
+# -n 1   -- generate a single password
+# -x 24  -- maximum password len
+# -m 16  -- minimum password len
+PGPASSWD=`$SNAP/usr/lib/apg/apg -a 0 -M ncl -n 1 -x 24 -m 16`
+mkdir -p "$SNAP_DATA/config/postgres/"
+echo "$PGPASSWD" > "$SNAP_DATA/config/postgres/kongpw"
+
+# createuser doesn't support specification of a password, so use psql instead.
+# Also as psql will use the database 'snap_daemon' by default, specify 'kong'
+# via environment variable.
+export PGDATABASE="kong"
+iter_num=0
+until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
+	   "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
+    sleep 1
+    iter_num=$(( iter_num + 1 ))
+    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+        echo "failed to create kong user in postgres after $iter_num iterations"
+        exit 1
+    fi
+done
+
 # stop postgres again in case the security services should be turned off
 snapctl stop "$SNAP_NAME.postgres"
+
+# modify postgres authentication config to use 'md5' (password)
+drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 
 # finally, disable and turn off non-default services
 # by default, we want the support-*, device-*, and mongo services
