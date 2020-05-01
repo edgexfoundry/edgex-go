@@ -196,7 +196,8 @@ drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 # off.
 # also the app-service-configurable service since that is meant to replace the 
 # export services
-for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine device-virtual edgex-mongo mongod; do
+for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine \
+    device-virtual edgex-mongo mongod sys-mgmt-agent; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
