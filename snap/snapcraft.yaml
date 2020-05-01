@@ -338,8 +338,9 @@ apps:
     adapter: full
     command: bin/app-service-configurable -confdir $SNAP_DATA/config/app-service-configurable/res -profile rules-engine --registry
     daemon: simple
+    environment:
+      Binding_PublishTopic: events
     plugs: [network, network-bind]
-
   # helper commands the snap exposes
   security-proxy-setup-cmd:
     adapter: none
@@ -422,6 +423,27 @@ apps:
       # who is initially created as a role with postgres
       - bin/drop
     plugs: [home, removable-media, network]
+  kuiper:
+    adapter: full
+    command: bin/kuiper-server
+    daemon: simple
+    environment:
+      KuiperBaseKey: $SNAP_DATA/kuiper
+      # KUIPER_DEBUG: "true"
+      KUIPER_CONSOLE_LOG: "true"
+      KUIPER_REST_PORT: 48075
+      EDGEX_SERVER: localhost
+      EDGEX_SERVICE_SERVER: http://localhost:48080
+      EDGEX_TOPIC: events
+      EDGEX_PROTOCOL: tcp
+      EDGEX_PORT: 5566
+    plugs: [network, network-bind]
+  kuiper-cli:
+    adapter: full
+    command: bin/kuiper-cli
+    environment:
+      KuiperBaseKey: $SNAP_DATA/kuiper
+    plugs: [home, network, network-bind]
 
 parts:
   version:
@@ -1097,3 +1119,30 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/Attribution.txt"
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/LICENSE"
+
+  kuiper:
+    source: https://github.com/emqx/kuiper.git
+    source-tag: 0.3.2
+    plugin: make
+    after: [go113]
+    override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
+
+      cd $SNAPCRAFT_PART_SRC
+      export BUILD_PATH=$SNAPCRAFT_PART_BUILD
+      export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
+      make build_with_edgex
+      make real_pkg
+      cd $SNAPCRAFT_PART_INSTALL
+      tar -xvf kuiper*.tar.gz --strip-components=1
+      rm *.zip *.gz
+
+      install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
+         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
+    organize:
+      bin/cli: bin/kuiper-cli
+      bin/server: bin/kuiper-server
+    stage:
+      - -etc/mqtt_source.yaml
+    stage-packages:
+      - libzmq3-dev

@@ -58,6 +58,15 @@ if [ ! -f "$SNAP_DATA/support-rulesengine/rules" ]; then
     mkdir -p "$SNAP_DATA/support-rulesengine/rules"
 fi
 
+# create kuiper directories in $SNAP_DATA
+if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
+    mkdir -p "$SNAP_DATA/kuiper/data"
+    mkdir -p "$SNAP_DATA/kuiper/etc/sources"
+
+    cp "$SNAP/etc/"*.yaml "$SNAP_DATA/kuiper/etc"
+    cp "$SNAP/etc/sources/"*.yaml "$SNAP_DATA/kuiper/etc/sources"
+fi
+
 # for the kong pki setup file, we need to set the hostname as localhost
 # and then set the directory to store the cert files as $SNAP_DATA/kong/ssl
 mkdir -p "$SNAP_DATA/config/security-secrets-setup/res"
@@ -195,13 +204,17 @@ snapctl stop "$SNAP_NAME.postgres"
 # modify postgres authentication config to use 'md5' (password)
 drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 
-# finally, disable and turn off non-default services
-# by default, we want the support-*, device-*, and mongo services
-# off.
-# also the app-service-configurable service since that is meant to replace the 
-# export services
+# finally, disable and turn off non-default services:
+#
+# - app-service-configurable (used for rules integration)
+# - device-virtual
+# - kuiper (replacement for support-rulesengine)
+# - mongo
+# - support-*
+# - sys-mgmt-agent (see https://github.com/edgexfoundry/edgex-go/issues/2486)
+#
 for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine \
-    device-virtual edgex-mongo mongod sys-mgmt-agent; do
+    device-virtual edgex-mongo mongod sys-mgmt-agent kuiper; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
