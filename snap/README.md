@@ -3,14 +3,13 @@
 
 This folder contains snap packaging for the EdgeX Foundry reference implementation.
 
-The snap contains Consul, MongoDB, all of the EdgeX Go-based micro services from
-this repository, device-virtual, as well as Vault, Kong, Cassandra, and the 
-two go-based security micro services. The snap also contains a single OpenJDK 
-JRE used to run device-virtual.
+The snap contains Consul, MongoDB, Redis, and all of the EdgeX Go-based micro services from
+this repository, device-virtual, as well as Vault, Kong, PostgreSQL. The snap also contains a
+single OpenJDK JRE used to run the legacy support-rulesengine (deprecated).
 
-The project maintains a rolling release of the snap on the `edge` channel that is rebuilt and published at least once daily through the jenkins jobs setup for the EdgeX project. You can see the jobs run [here](https://jenkins.edgexfoundry.org/view/Snap/) specifically looking at the `edgex-go-snap-{branch}-stage-snap`.
+The project maintains a rolling release of the snap on the `edge` channel that is rebuilt and published at least once daily through the jenkins jobs setup for the EdgeX project.
 
-The snap currently supports running on both `amd64` and `arm64` platforms. Once the project no longer depends on MongoDB as it's primary database, the snap should start working on `armhf` platforms that support snaps as well.
+The snap currently supports running on both `amd64` and `arm64` platforms.
 
 ## Installation
 
@@ -35,25 +34,25 @@ The snap can be installed using `snap install`. To install the snap from the edg
 $ sudo snap install edgexfoundry --edge
 ```
 
-You can specify install specific releases using the `--channel` option. For example to install the Delhi release of the snap:
+You can specify install specific releases using the `--channel` option. For example to install the Fuji release of the snap:
 
 ```bash
-$ sudo snap install edgexfoundry --channel=delhi
+$ sudo snap install edgexfoundry --channel=fuji
+
 ```
 
 Lastly, on a system supporting it, the snap may be installed using GNOME (or Ubuntu) Software Center by searching for `edgexfoundry`.
 
 **Note** - the snap has only been tested on Ubuntu Desktop/Server versions 18.04 and 16.04, as well as Ubuntu Core versions 16 and 18.
 
-**WARNING** - don't install the EdgeX snap on a system which is already running mongoDB or Consul.
+**WARNING** - don't install the EdgeX snap on a system which is already running one of the included services (e.g. Consul, Redis, Vault, ...).
 
 ## Using the EdgeX snap
 
 Upon installation, the following EdgeX services are automatically and immediately started:
 
 * consul
-* mongod
-* mongo-worker
+* redis
 * core-data
 * core-command
 * core-metadata
@@ -61,10 +60,14 @@ Upon installation, the following EdgeX services are automatically and immediatel
 
 The following services are disabled by default:
 
-* support-notifications
-* support-logging
-* support-scheduler
+* app-service-configurable (required for Kuiper and support-rulesengine)
 * device-virtual
+* kuiper
+* support-logging
+* support-notifications
+* support-rulesengine (deprecated)
+* support-scheduler
+* sys-mgmt-agent
 
 Any disabled services can be enabled and started up using `snap set`:
 
@@ -82,7 +85,11 @@ All services which are installed on the system as systemd units, which if enable
 
 ### Configuring individual services
 
-All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`. The configuration files in `$SNAP_DATA` may then be modified. You may wish to restart the snap's services to take configuration into account with:
+All default configuration files are shipped with the snap inside `$SNAP/config`, however because `$SNAP` isn't writable, all of the config files are copied during snap installation (specifically during the install hook, see `snap/hooks/install` in this repository) to `$SNAP_DATA/config`.
+
+Note - as the core-config-seed was removed as part of the Geneva release, services self-seed their configuration on startup. This means that if a service is
+started by default in the snap, the only way to change configuration is to use the Consul UI or [kv REST API](https://www.consul.io/api/kv.html). Services that
+aren't started by default (see above) *will* pickup any changes made to their config files when enabled.
 
 ```bash
 $ sudo snap restart edgexfoundry
@@ -114,20 +121,25 @@ $ journalctl -u snap.edgexfoundry.consul
 
 Currently, the security services are enabled by default. The security services consitute the following components:
 
- * Vault
- * Cassandra
  * Kong
- * vault-worker (from [security-secret-store](https://github.com/edgexfoundry/security-secret-store))
- * kong-worker (from [security-api-gateway](https://github.com/edgexfoundry/security-api-gateway/))
+ * PostgreSQL
+ * Vault
+ * security-secrets-setup
+ * security-secretstore-setup
+ * security-proxy-setup
 
-All services are currently bundled in the singular service, `security-services` (see issue [#485](https://github.com/edgexfoundry/edgex-go/issues/485) for more details on why). 
+Vault is used for secret management, and Kong is used as an HTTPS proxy for all the services.
 
-When security is enabled, Consul is secured using Vault for secret management, and Kong is used as an HTTPS proxy for all the services. The HTTPS keys for Kong and Vault are placed in `$SNAP_DATA/vault/pki`. Kong needs a database to manage itself, and can use either Postgres or Cassandra. Because Postgres cannot run inside of a snap due to issues running as root (currently all snap services must run as root, see [this post](https://forum.snapcraft.io/t/multiple-users-and-groups-in-snaps/1461) for details), we use Cassandra. 
-
-To turn off security, use `snap set`:
+Kong can be disabled by using the following command:
 
 ```bash
-$ sudo snap set edgexfoundry security-services=off
+$ sudo snap set edgexfoundry security-proxy=off
+```
+
+Vault can be also be disabled, but doing so will also disable Kong, as it depends on Vault. Thus the following command will disable both:
+
+```bash
+$ sudo snap set edgexfoundry security-secret-store=off
 ```
 
 ## Limitations
@@ -234,8 +246,6 @@ After building the snap from one of the above methods, you will have a binary sn
 ```bash
 $ sudo snap install --devmode edgexfoundry*.snap
 ```
-
-**Note** You can try installing a locally built snap with the `--dangerous` flag (instead of the `--devmode` flag), but there is a race condition with this method. Specifically Cassandra, MongoDB, and other services require accesses not provided by default to the snap, and these are provided by connecting the interfaces detailed below. The race condition occurs because if the services fail to start because the accesses were denied (because the interfaces weren't connected soon enough), the installation may be entirely aborted by snapd.  If you do install with `--dangerous`, it is recommended to perform the connections detailed below in the same shell command to minimize the time between the installation (and hence service startup) and granting of accesses from interface connection. Note this race condition doesn't happen when installing the snap from the store because the interface connection automatically happens before starting the services.
 
 In addition, if you are using snapcraft with multipass VM's, you can speedup development by not creating a *.snap file and instead running in "try" mode . This is done by running `snapcraft try` which results in a `prime` folder placed in the root project directory that can then be "installed" using `snap try`. For example:
 
