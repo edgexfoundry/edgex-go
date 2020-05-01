@@ -43,7 +43,7 @@ if [ ! -f "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG" ]; then
 fi
 
 # handle device-virtual device profiles
-for profileType in bool float int uint; do
+for profileType in bool float int uint binary; do
     cp "$SNAP/config/device-virtual/res/device.virtual.$profileType.yaml" "$SNAP_DATA/config/device-virtual/res/device.virtual.$profileType.yaml"
 done
 
