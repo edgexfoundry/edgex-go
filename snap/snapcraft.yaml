@@ -1065,7 +1065,7 @@ parts:
       install -DT "./cmd/res/configuration.toml" \
         "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/configuration.toml"
 
-      for profileType in bool float int uint; do
+      for profileType in bool float int uint binary; do
         install -T "./cmd/res/device.virtual.$profileType.yaml" \
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/device.virtual.$profileType.yaml"
       done
