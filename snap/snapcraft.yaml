@@ -70,7 +70,6 @@ confinement: strict
 # This applies to all apps
 environment:
   SecretStore_RootCaCertPath: $SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem
-
 apps:
   # edgex microservices
   consul:
@@ -80,8 +79,8 @@ apps:
     plugs: [network, network-bind]
   redis:
     adapter: full
-    after: [consul]
-    command: bin/redis-server $SNAP_DATA/redis/redis.conf
+    after: [security-secretstore-setup]
+    command: bin/redis-launch.sh
     daemon: simple
     plugs: [network, network-bind]
   mongod:
@@ -166,10 +165,9 @@ apps:
   security-secretstore-setup:
     adapter: full
     after: [vault]
-    command: bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $INIT_ARG
+    command: bin/security-secretstore-setup-launch.sh
     daemon: oneshot
     environment:
-      INIT_ARG: "--vaultInterval=10"
       SecretService_Server: localhost
       SecretService_ServerName: localhost
       SecretService_CaFilePath: $SNAP_DATA/pki/ca/ca.pem
@@ -185,6 +183,8 @@ apps:
       TokenFileProvider_ConfigFile: $SNAP_DATA/config/security-file-token-provider/res/token-config.json
       TokenFileProvider_OutputDir: $SNAP_DATA/secrets
 
+      # environment var for security-secretstore-read, exec'd by wrapper script
+      REDIS5_PASSWORD_PATHNAME: $SNAP_DATA/secrets/edgex-redis/redis5-password
     start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
@@ -669,14 +669,6 @@ parts:
     source-depth: 1
     plugin: make
     make-install-var: PREFIX
-    override-build: |
-      snapcraftctl build
-      # process the config file to specify the working directory for redis
-      # as $SNAP_DATA/redis
-      cd $SNAPCRAFT_PART_SRC
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/redis
-      sed -e s@'dir ./'@'dir \$SNAP_DATA/redis'@ \
-        redis.conf > $SNAPCRAFT_PART_INSTALL/config/redis/redis.conf
   edgex-mongo:
     source: https://github.com/edgexfoundry/docker-edgex-mongo.git
     # TODO (geneva): pin this to a commit or tag for release
@@ -711,11 +703,27 @@ parts:
 
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent \
-          security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider; do
+          security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider security-secretstore-read; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
 
-          if [ "$service" != "security-file-token-provider" ]; then
+          if [ "$service" = "security-secretstore-read" ]; then
+              mkdir -p "$SNAPCRAFT_PART_INSTALL/config/$service/res/"
+
+              # since security-secretstore-read doesn't support config env overrides, edit the
+              # configuration file at build time
+              CONFIG_FILE="./cmd/$service/res/configuration.toml"
+              if grep -q "/tmp/edgex" "$CONFIG_FILE"; then
+                  sed -e "s@\"/tmp/edgex/secrets/ca/ca.pem\"@\"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+                      -e "s@\"/tmp/edgex/secrets/edgex-redis/secrets-token.json\"@\"\$SNAP_DATA/secrets/edgex-redis/secrets-token.json\"@" \
+                      -e "s@\"/tmp/edgex/secrets/edgex-redis/redis5-password\"@\"\$SNAP_DATA/secrets/edgex-redis/redis5-password\"@" \
+                      -e "s@edgex-vault@localhost@" \
+                      "$CONFIG_FILE" > "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.toml"
+              else
+                  echo "Build failed; part is out of sync with edgex-go"
+                  exit 1
+              fi
+          elif [ "$service" != "security-file-token-provider" ]; then
               install -DT "./cmd/$service/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.toml"
           else
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \
