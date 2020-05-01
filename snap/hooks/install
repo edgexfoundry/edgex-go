@@ -10,14 +10,15 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # into $SNAP_DATA/config
 # note that app-service-configurable is handled separately
 mkdir -p "$SNAP_DATA/config"
-for service in edgex-mongo security-file-token-provider security-proxy-setup security-secrets-setup security-secretstore-setup core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual; do
+for service in edgex-mongo security-file-token-provider security-proxy-setup security-secrets-setup security-secretstore-setup core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual security-secretstore-read; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
 
         # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables only in file-token-provider
         # as it's exec'd by security-secretstore-setup, so it's not possible to make these changes via env override
-        if [ "$service" == "security-file-token-provider" ]; then
+        if [ "$service" == "security-file-token-provider" ] ||
+            [ "$service" == "security-secretstore-read" ]; then
             sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
                 -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
                 -e "s@\$SNAP@$SNAP_CURRENT@g" \
@@ -92,15 +93,8 @@ for type in proxy admin; do
     done
 done
 
-# install redis configuration files
-if [ ! -f "$SNAP_DATA/config/redis/redis.conf" ]; then
-    mkdir -p "$SNAP_DATA/redis"
-    cp "$SNAP/config/redis/redis.conf" "$SNAP_DATA/redis/redis.conf"
-    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
-        -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
-        -e "s@\$SNAP@$SNAP_CURRENT@g" \
-        "$SNAP_DATA/redis/redis.conf"
-fi
+# create redis data dir
+mkdir -p "$SNAP_DATA/redis"
 
 # the vault config needs to be generated with sed, replacing $SNAP_DATA in the file 
 # with the actual absolute directory
