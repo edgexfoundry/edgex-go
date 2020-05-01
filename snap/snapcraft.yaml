@@ -657,9 +657,9 @@ parts:
   mongodb:
     plugin: dump
     source:
-      - on amd64: http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.0.tgz
+      - on amd64: http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.6.tgz
       - else:
-          - on arm64: http://downloads.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-4.2.0.tgz
+          - on arm64: http://downloads.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-4.2.6.tgz
       - else fail
     organize:
       MPL-2: usr/share/doc/mongodb/MPL-2
