@@ -178,8 +178,8 @@ func restDeleteIntervalByID(
 	w http.ResponseWriter,
 	r *http.Request,
 	lc logger.LoggingClient,
-	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) {
+	scClient interfaces.SchedulerQueueClient,
+	intervalDeleter interval.IntervalDeleter) {
 
 	if r.Body != nil {
 		defer r.Body.Close()
@@ -188,23 +188,18 @@ func restDeleteIntervalByID(
 	// URL parameters
 	vars := mux.Vars(r)
 	id, err := url.QueryUnescape(vars["id"])
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		lc.Error("Error un-escaping the value id: " + err.Error())
 		return
 	}
 
-	op := interval.NewDeleteByIDExecutor(dbClient, scClient, id)
+	op := interval.NewDeleteByIDExecutor(intervalDeleter, scClient, id)
 	err = op.Execute()
 
 	if err != nil {
-		lc.Error(err.Error())
-		switch err.(type) {
-		case errors.ErrIntervalNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		handleDeleteIntervalRestErrors(err, w, lc)
 		return
 	}
 
@@ -212,6 +207,7 @@ func restDeleteIntervalByID(
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("true"))
 }
+
 func restGetIntervalByName(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -253,35 +249,29 @@ func restDeleteIntervalByName(
 	w http.ResponseWriter,
 	r *http.Request,
 	lc logger.LoggingClient,
-	dbClient interfaces.DBClient,
-	scClient interfaces.SchedulerQueueClient) {
+	scClient interfaces.SchedulerQueueClient,
+	intervalDeleter interval.IntervalDeleter) {
 
-	defer r.Body.Close()
+	if r.Body != nil {
+		defer r.Body.Close()
+	}
 
+	// URL parameters
 	vars := mux.Vars(r)
 	name, err := url.QueryUnescape(vars["name"])
 
-	// Issues un-escaping
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		lc.Error("Error un-escaping the value name: " + err.Error())
 		return
 	}
-	op := interval.NewDeleteByNameExecutor(dbClient, scClient, name)
-	err = op.Execute()
-	if err != nil {
 
-		switch err.(type) {
-		case errors.ErrIntervalNotFound:
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		case errors.ErrIntervalStillUsedByIntervalActions:
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		default:
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	op := interval.NewDeleteByNameExecutor(intervalDeleter, scClient, name)
+	err = op.Execute()
+
+	if err != nil {
+		handleDeleteIntervalRestErrors(err, w, lc)
+		return
 	}
 
 	w.Header().Set(clients.ContentType, clients.ContentTypeJSON)
@@ -290,6 +280,28 @@ func restDeleteIntervalByName(
 }
 
 // ************************ UTILITY HANDLERS ************************************
+
+func handleDeleteIntervalRestErrors(err error, w http.ResponseWriter, lc logger.LoggingClient) {
+
+	lc.Debug(err.Error())
+	switch err.(type) {
+	case errors.ErrIntervalNotFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	case errors.ErrDbNotFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	case errors.ErrIntervalStillUsedByIntervalActions:
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	case errors.ErrIntervalNameInUse:
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
 // Scrub all the Intervals and IntervalActions
 func restScrubAllIntervals(
