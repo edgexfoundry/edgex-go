@@ -812,8 +812,6 @@ parts:
       - -usr/lib/jvm/*/jre/man
       - -usr/lib/jvm/*/jre/lib/images
       - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
       - -usr/lib/jvm/*/docs
       - -usr/lib/jvm/*/src.zip
       - -usr/share/X11
