@@ -141,6 +141,7 @@ Vault can be also be disabled, but doing so will also disable Kong, as it depend
 ```bash
 $ sudo snap set edgexfoundry security-secret-store=off
 ```
+**Note** - Kong is currently not supported in the snap when installed on an arm64-based device, so it will be disabled on install.
 
 ## Limitations
 
