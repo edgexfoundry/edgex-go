@@ -104,7 +104,9 @@ for key in $ALL_SERVICES; do
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
                 handle_svc "support-rulesengine" "off"
-            fi
+            elif [ "$status" = "off" ]; then
+                handle_svc "app-service-configurable" "off"
+	    fi
             # handle the service too
             handle_svc "$key" "$status"
             ;;
@@ -154,7 +156,9 @@ for key in $ALL_SERVICES; do
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
                 handle_svc "kuiper" "off"
-            fi
+            elif [ "$status" = "off" ]; then
+                handle_svc "app-service-configurable" "off"
+	    fi
             # handle the service too
             handle_svc "$key" "$status"
             ;;
