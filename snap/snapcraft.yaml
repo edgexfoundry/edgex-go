@@ -345,6 +345,9 @@ apps:
   security-proxy-setup-cmd:
     adapter: none
     command: bin/security-proxy-setup
+    environment:
+      SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SecretService_CACertPath: $SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
