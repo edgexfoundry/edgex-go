@@ -78,6 +78,38 @@ paths:
             text/plain:
               schema:
                 $ref: '#/components/schemas/Error'
+  /v1/notification/{id}:
+    get:
+      description: Fetch a specific notification by database specified ID, returning
+        null if none are found.
+      parameters:
+        - name: id
+          in: path
+          description: database-generated ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Return a notification
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/notification'
+        404:
+          description: A notification with the specified ID cannot be found.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: For unanticipated or unknown issues encountered.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/notification/age/{age}:
     delete:
       description: Delete the proccessed notifications if the current timestamp minus
