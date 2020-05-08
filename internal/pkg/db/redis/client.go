@@ -101,6 +101,12 @@ func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error
 			loggingClient: lc,
 		}
 	})
+
+	// Test connectivity now so don't have failures later when doing lazy connect.
+	if _, err := currClient.Pool.Dial(); err != nil {
+		return nil, err
+	}
+
 	return currClient, nil
 }
 
