@@ -33,6 +33,12 @@ export XDG_RUNTIME_DIR PATH VAULT_TLS_PATH
 echo XDG_RUNTIME_DIR $XDG_RUNTIME_DIR
 echo BASE_DIR $BASE_DIR
 
+# Cleanup old password file. Remove this for Hanoi.
+if [ -n "${REDIS5_PASSWORD_PATHNAME}" ] && [ -f "${REDIS5_PASSWORD_PATHNAME}" ]; then
+    echo Removing old Redis5 password file
+    rm -f "${REDIS5_PASSWORD_PATHNAME}"
+fi
+
 # if running security-secrets-setup subcommand
 # build full command line into positional args
 if [ "$1" = 'generate' -o "$1" = 'cache' -o "$1" = 'import' -o "$1" = 'legacy' ]; then
