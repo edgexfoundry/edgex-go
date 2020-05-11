@@ -117,9 +117,7 @@ func (c *Client) Connect() error {
 
 // CloseSession closes the connections to Redis
 func (c *Client) CloseSession() {
-	c.Pool.Close()
-	close(deleteEventsChannel)
-	close(deleteReadingsChannel)
+	_ = c.Pool.Close()
 	currClient = nil
 	once = sync.Once{}
 }
