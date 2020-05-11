@@ -294,8 +294,7 @@ func testDBTransmission(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Error populating db: %v\n", err)
 	}
 	afterTime := dbp.MakeTimestamp()
-
-	transmissions, err = db.GetTransmissionsByStartEnd(beforeTime, afterTime, resendCount)
+	transmissions, err = db.GetTransmissionsByStartEnd(beforeTime, afterTime, amount)
 	if err != nil {
 		t.Fatalf("Fail to get transmission by start time and end time, %v", err)
 	}
@@ -304,7 +303,7 @@ func testDBTransmission(t *testing.T, db interfaces.DBClient) {
 	}
 
 	// Test GetTransmissionsByStart
-	transmissions, err = db.GetTransmissionsByStart(beforeTime, resendCount)
+	transmissions, err = db.GetTransmissionsByStart(beforeTime, amount)
 	if err != nil {
 		t.Fatalf("Fail to get transmission by start time, %v", err)
 	}
@@ -313,7 +312,7 @@ func testDBTransmission(t *testing.T, db interfaces.DBClient) {
 	}
 
 	// Test GetTransmissionsByEnd
-	transmissions, err = db.GetTransmissionsByEnd(afterTime, resendCount)
+	transmissions, err = db.GetTransmissionsByEnd(afterTime, amount)
 	if err != nil {
 		t.Fatalf("Fail to get transmission by start time, %v", err)
 	}
@@ -395,7 +394,10 @@ func populateSubscription(db interfaces.DBClient, count int) error {
 
 func getTransmission(slug string, resendCount int) contract.Transmission {
 	t := contract.Transmission{}
-	t.Notification = contract.Notification{Slug: slug}
+	t.Notification = getNotification(slug, contract.New)
+	t.Channel = contract.Channel{
+		Type: contract.Email,
+	}
 	t.Receiver = "test-receiver"
 	t.Status = contract.Sent
 	t.ResendCount = resendCount

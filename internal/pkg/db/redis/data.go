@@ -27,6 +27,8 @@ import (
 	"github.com/imdario/mergo"
 )
 
+var emptyBinaryValue = make([]byte, 0)
+
 // deleteReadingsChannel channel used to delete readings asynchronously
 var deleteReadingsChannel = make(chan string, 50)
 var deleteEventsChannel = make(chan string, 50)
@@ -1186,6 +1188,10 @@ func checksumByEventID(conn redis.Conn, id string) (string, error) {
 
 // Add a reading to the database
 func addReading(conn redis.Conn, tx bool, r contract.Reading) (id string, err error) {
+	// Clear the binary data since we do not want to persist binary data to save on memory.
+	// This is an explicit architectural decision.
+	r.BinaryValue = emptyBinaryValue
+
 	if r.Created == 0 {
 		r.Created = db.MakeTimestamp()
 	}

@@ -16,12 +16,17 @@ package interfaces
 
 import (
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 type DBClient interface {
 	CloseSession()
 
+	/*
+		Events
+		NOTE: Readings that contain binary data will not be persisted.
+	*/
 	Events() ([]contract.Event, error)
 	EventsWithLimit(limit int) ([]contract.Event, error)
 	AddEvent(e correlation.Event) (string, error)
@@ -39,6 +44,10 @@ type DBClient interface {
 	EventsPushed() ([]contract.Event, error)
 	ScrubAllEvents() error
 
+	/*
+		Readings
+		NOTE: Readings that contain binary data will not be persisted.
+	*/
 	Readings() ([]contract.Reading, error)
 	AddReading(r contract.Reading) (string, error)
 	UpdateReading(r contract.Reading) error
@@ -52,6 +61,9 @@ type DBClient interface {
 	ReadingsByCreationTime(start, end int64, limit int) ([]contract.Reading, error)
 	ReadingsByDeviceAndValueDescriptor(deviceId, valueDescriptor string, limit int) ([]contract.Reading, error)
 
+	/*
+		ValueDescriptors
+	*/
 	ValueDescriptors() ([]contract.ValueDescriptor, error)
 	AddValueDescriptor(v contract.ValueDescriptor) (string, error)
 	UpdateValueDescriptor(cvd contract.ValueDescriptor) error
@@ -64,6 +76,9 @@ type DBClient interface {
 	ValueDescriptorsByType(t string) ([]contract.ValueDescriptor, error)
 	ScrubAllValueDescriptors() error
 
+	/*
+		Device Reports
+	*/
 	GetAllDeviceReports() ([]contract.DeviceReport, error)
 	GetDeviceReportByName(n string) (contract.DeviceReport, error)
 	GetDeviceReportByDeviceName(n string) ([]contract.DeviceReport, error)
@@ -73,6 +88,9 @@ type DBClient interface {
 	UpdateDeviceReport(dr contract.DeviceReport) error
 	DeleteDeviceReportById(id string) error
 
+	/*
+		Devices
+	*/
 	GetAllDevices() ([]contract.Device, error)
 	AddDevice(d contract.Device, commands []contract.Command) (string, error)
 	UpdateDevice(d contract.Device) error
@@ -83,6 +101,9 @@ type DBClient interface {
 	GetDevicesByServiceId(id string) ([]contract.Device, error)
 	GetDevicesWithLabel(l string) ([]contract.Device, error)
 
+	/*
+		Device Profiles
+	*/
 	GetAllDeviceProfiles() ([]contract.DeviceProfile, error)
 	GetDeviceProfileById(id string) (contract.DeviceProfile, error)
 	GetDeviceProfilesByModel(model string) ([]contract.DeviceProfile, error)
@@ -94,6 +115,9 @@ type DBClient interface {
 	UpdateDeviceProfile(dp contract.DeviceProfile) error
 	DeleteDeviceProfileById(id string) error
 
+	/*
+		Addressables
+	*/
 	GetAddressables() ([]contract.Addressable, error)
 	UpdateAddressable(a contract.Addressable) error
 	GetAddressableById(id string) (contract.Addressable, error)
@@ -105,6 +129,9 @@ type DBClient interface {
 	GetAddressablesByAddress(add string) ([]contract.Addressable, error)
 	DeleteAddressableById(id string) error
 
+	/*
+		Device Services
+	*/
 	GetDeviceServiceByName(n string) (contract.DeviceService, error)
 	GetDeviceServiceById(id string) (contract.DeviceService, error)
 	GetAllDeviceServices() ([]contract.DeviceService, error)
@@ -114,6 +141,9 @@ type DBClient interface {
 	UpdateDeviceService(ds contract.DeviceService) error
 	DeleteDeviceServiceById(id string) error
 
+	/*
+		Provision Watchers
+	*/
 	GetAllProvisionWatchers() (pw []contract.ProvisionWatcher, err error)
 	GetProvisionWatcherByName(n string) (pw contract.ProvisionWatcher, err error)
 	GetProvisionWatchersByIdentifier(k string, v string) (pw []contract.ProvisionWatcher, err error)
@@ -124,6 +154,9 @@ type DBClient interface {
 	UpdateProvisionWatcher(pw contract.ProvisionWatcher) error
 	DeleteProvisionWatcherById(id string) error
 
+	/*
+		Commands
+	*/
 	GetAllCommands() ([]contract.Command, error)
 	GetCommandById(id string) (contract.Command, error)
 	GetCommandsByName(n string) ([]contract.Command, error)
@@ -132,6 +165,9 @@ type DBClient interface {
 
 	ScrubMetadata() error
 
+	/*
+		Notifications
+	*/
 	GetNotifications() ([]contract.Notification, error)
 	GetNotificationById(id string) (contract.Notification, error)
 	GetNotificationBySlug(slug string) (contract.Notification, error)
@@ -149,6 +185,9 @@ type DBClient interface {
 	DeleteNotificationBySlug(slug string) error
 	DeleteNotificationsOld(age int) error
 
+	/*
+		Subscriptions
+	*/
 	GetSubscriptionBySlug(slug string) (contract.Subscription, error)
 	GetSubscriptionByCategories(categories []string) ([]contract.Subscription, error)
 	GetSubscriptionByLabels(labels []string) ([]contract.Subscription, error)
@@ -161,6 +200,9 @@ type DBClient interface {
 	DeleteSubscriptionBySlug(slug string) error
 	GetSubscriptions() ([]contract.Subscription, error)
 
+	/*
+		Transmissions
+	*/
 	AddTransmission(t contract.Transmission) (string, error)
 	UpdateTransmission(t contract.Transmission) error
 	DeleteTransmission(age int64, status contract.TransmissionStatus) error
@@ -175,6 +217,9 @@ type DBClient interface {
 	Cleanup() error
 	CleanupOld(age int) error
 
+	/*
+		Intervals
+	*/
 	Intervals() ([]contract.Interval, error)
 	IntervalsWithLimit(limit int) ([]contract.Interval, error)
 	IntervalByName(name string) (contract.Interval, error)
@@ -183,6 +228,9 @@ type DBClient interface {
 	UpdateInterval(interval contract.Interval) error
 	DeleteIntervalById(id string) error
 
+	/*
+		Interval Actions
+	*/
 	IntervalActions() ([]contract.IntervalAction, error)
 	IntervalActionsWithLimit(limit int) ([]contract.IntervalAction, error)
 	IntervalActionsByIntervalName(name string) ([]contract.IntervalAction, error)

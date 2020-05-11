@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/interfaces"
 	dataBase "github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMetadataDB(t *testing.T, db interfaces.DBClient) {
@@ -537,13 +539,8 @@ func testDBCommand(t *testing.T, db interfaces.DBClient) {
 		t.Fatalf("Name does not match %s - %s", command.Name, cn)
 	}
 
-	commands, err = db.GetCommandsByDeviceId(uuid.New().String())
-	if err != nil {
-		t.Fatalf("Error getting commands by device id %v", err)
-	}
-	if len(commands) != 0 {
-		t.Fatalf("There should be 0 commands instead of %d", len(commands))
-	}
+	_, err = db.GetCommandsByDeviceId(uuid.New().String())
+	require.IsType(t, err, errors.ErrItemNotFound{})
 
 	err = db.DeleteDeviceById(did)
 	if err != nil {

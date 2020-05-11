@@ -12,10 +12,12 @@ import (
 	"strconv"
 	"testing"
 
+	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/stretchr/testify/require"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	dbp "github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
 func populateDbReadings(db interfaces.DBClient, count int) (string, error) {
@@ -657,10 +659,74 @@ func testDBValueDescriptors(t *testing.T, db interfaces.DBClient) {
 	}
 }
 
+func testBinaryEvent(t *testing.T, db interfaces.DBClient) {
+	eventWithBinaryReading := correlation.Event{
+		CorrelationId: "",
+		Event: contract.Event{
+			Device: "BinaryDevice",
+			Readings: []contract.Reading{
+				{
+					Name:        "BinaryReading",
+					ValueType:   contract.ValueTypeBinary,
+					BinaryValue: []byte{1},
+					MediaType:   "cbor",
+				},
+			},
+		},
+	}
+
+	// Ensure an Add does not persist Binary data
+	id, err := db.AddEvent(eventWithBinaryReading)
+	require.NoError(t, err)
+	persistedEventFromDB, err := db.EventById(id)
+	require.NoError(t, err)
+	for _, reading := range persistedEventFromDB.Readings {
+		require.Empty(t, reading.BinaryValue)
+	}
+
+	// Ensure an Update does not persist Binary data
+	eventWithBinaryReading.ID = persistedEventFromDB.ID
+	eventWithBinaryReading.Device = "AnotherBinaryDevice"
+	err = db.UpdateEvent(eventWithBinaryReading)
+	require.NoError(t, err)
+	persistedEventFromDB, err = db.EventById(id)
+	require.NoError(t, err)
+	for _, reading := range persistedEventFromDB.Readings {
+		require.Empty(t, reading.BinaryValue)
+	}
+}
+
+func testBinaryReading(t *testing.T, db interfaces.DBClient) {
+	readingWithBinaryReading := contract.Reading{
+		Name:        "BinaryReading",
+		ValueType:   contract.ValueTypeBinary,
+		BinaryValue: []byte{1},
+		MediaType:   "cbor",
+	}
+
+	// Ensure an Add does not persist Binary data
+	id, err := db.AddReading(readingWithBinaryReading)
+	require.NoError(t, err)
+	persistedReadingFromDB, err := db.ReadingById(id)
+	require.NoError(t, err)
+	require.Empty(t, persistedReadingFromDB.BinaryValue)
+
+	// Ensure an Update does not persist Binary data
+	readingWithBinaryReading.Id = persistedReadingFromDB.Id
+	readingWithBinaryReading.Device = "AnotherBinaryDevice"
+	err = db.UpdateReading(readingWithBinaryReading)
+	require.NoError(t, err)
+	persistedReadingFromDB, err = db.ReadingById(id)
+	require.NoError(t, err)
+	require.Empty(t, persistedReadingFromDB.BinaryValue)
+}
+
 func TestDataDB(t *testing.T, db interfaces.DBClient) {
 	testDBReadings(t, db)
 	testDBEvents(t, db)
 	testDBValueDescriptors(t, db)
+	testBinaryEvent(t, db)
+	testBinaryReading(t, db)
 
 	db.CloseSession()
 	// Calling CloseSession twice to test that there is no panic when closing an

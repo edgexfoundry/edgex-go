@@ -1,4 +1,4 @@
-// +build redisRunning
+// +build redisIntegration
 
 /*******************************************************************************
  * Copyright 2018 Redis Labs Inc.
@@ -26,48 +26,48 @@
 package redis
 
 import (
+	"errors"
+	"fmt"
+	"net/url"
+	"os"
+	"strconv"
 	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/test"
 )
 
 const (
-	redisHost = "0.0.0.0"
-	redisPort = 6379
+	RedisURLEnvName = "REDIS_SERVER_TEST"
+	DefaultRedisURL = "redis://localhost:6379"
 )
 
 func TestRedisDB(t *testing.T) {
-
-	t.Log("This test needs to have a running Redis on localhost")
-
-	config := db.Configuration{
-		Host: redisHost,
-		Port: redisPort,
-	}
-
-	rc, err := NewClient(config)
+	config, err := getDBConfiguration()
+	require.NoError(t, err)
+	rc, err := NewClient(config, logger.MockLogger{})
 	if err != nil {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
 	test.TestDataDB(t, rc)
 	rc.CloseSession()
 
-	rc, err = NewClient(config)
+	rc, err = NewClient(config, logger.MockLogger{})
 	if err != nil {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
 	test.TestMetadataDB(t, rc)
 	rc.CloseSession()
 
-	rc, err = NewClient(config)
+	rc, err = NewClient(config, logger.MockLogger{})
 	if err != nil {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
-	test.TestExportDB(t, rc)
-	rc.CloseSession()
 
-	rc, err = NewClient(config)
+	rc, err = NewClient(config, logger.MockLogger{})
 	if err != nil {
 		t.Fatalf("Could not connect with Redis: %v", err)
 	}
@@ -77,18 +77,34 @@ func TestRedisDB(t *testing.T) {
 }
 
 func BenchmarkRedisDB(b *testing.B) {
-
-	b.Log("This benchmark needs to have a running Redis on localhost")
-
-	config := db.Configuration{
-		Host: redisHost,
-		Port: redisPort,
-	}
-
-	rc, err := NewClient(config)
+	config, err := getDBConfiguration()
+	require.NoError(b, err)
+	rc, err := NewClient(config, logger.MockLogger{})
 	if err != nil {
 		b.Fatalf("Could not connect with Redis: %v", err)
 	}
 
 	test.BenchmarkDB(b, rc)
+}
+
+func getDBConfiguration() (db.Configuration, error) {
+	redisURLString := os.Getenv(RedisURLEnvName)
+	if redisURLString == "" {
+		redisURLString = DefaultRedisURL
+	}
+
+	redisURL, err := url.Parse(redisURLString)
+	if err != nil {
+		return db.Configuration{}, errors.New(fmt.Sprintf("unable to parse provided Redis URL '%s'", redisURLString))
+	}
+
+	portInt, err := strconv.Atoi(redisURL.Port())
+	if err != nil {
+		return db.Configuration{}, errors.New(fmt.Sprintf("unable to parse provided Redis Port '%s'", redisURLString))
+	}
+
+	return db.Configuration{
+		Host: redisURL.Hostname(),
+		Port: portInt,
+	}, nil
 }

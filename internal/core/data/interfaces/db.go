@@ -23,6 +23,8 @@ type DBClient interface {
 	CloseSession()
 
 	// ********************** EVENT FUNCTIONS *******************************
+	// NOTE: Readings that contain binary data will not be persisted.
+
 	// Return all the events
 	// UnexpectedError - failed to retrieve events from the database
 	Events() ([]contract.Event, error)
@@ -101,6 +103,8 @@ type DBClient interface {
 	ScrubAllEvents() error
 
 	// ********************* READING FUNCTIONS *************************
+	// NOTE: Readings that contain binary data will not be persisted.
+
 	// Return a list of readings sorted by reading id
 	Readings() ([]contract.Reading, error)
 
