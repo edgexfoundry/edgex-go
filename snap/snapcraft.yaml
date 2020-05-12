@@ -70,7 +70,7 @@ confinement: strict
 
 # This applies to all apps
 environment:
-  SecretStore_RootCaCertPath: $SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem
+  SecretStore_RootCaCertPath: $SNAP_DATA/secrets/ca/ca.pem
 apps:
   # edgex microservices
   consul:
@@ -137,7 +137,7 @@ apps:
     command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
     daemon: oneshot
     environment:
-      SecretsSetup_DeployDir: $SNAP_DATA/pki/
+      SecretsSetup_DeployDir: $SNAP_DATA/secrets/
       SecretsSetup_CertConfigDir: $SNAP_DATA/config/security-secrets-setup/res
       XDG_RUNTIME_DIR: /tmp
     start-timeout: 15m
@@ -171,9 +171,9 @@ apps:
     environment:
       SecretService_Server: localhost
       SecretService_ServerName: localhost
-      SecretService_CaFilePath: $SNAP_DATA/pki/ca/ca.pem
-      SecretService_CertFilePath: $SNAP_DATA/pki/EdgeXFoundryCA/localhost.pem
-      SecretService_KeyFilePath: $SNAP_DATA/pki/EdgeXFoundryCA/localhost.priv.key
+      SecretService_CaFilePath: $SNAP_DATA/secrets/ca/ca.pem
+      SecretService_CertFilePath: $SNAP_DATA/secrets/edgex-kong/server.crt
+      SecretService_KeyFilePath: $SNAP_DATA/secrets/edgex-kong/server.key
       SecretService_TokenFolderPath: $SNAP_DATA/config/security-secrets-setup/res
       SecretService_TokenProvider: $SNAP/bin/security-file-token-provider
       SecretService_TokenProviderArgs: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
@@ -197,7 +197,7 @@ apps:
     environment:
       INIT_ARG: "--init=true"
       SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
-      SecretService_CACertPath: $SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem
+      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -347,7 +347,7 @@ apps:
     command: bin/security-proxy-setup
     environment:
       SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
-      SecretService_CACertPath: $SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem
+      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
@@ -713,7 +713,7 @@ parts:
 
       cat "./cmd/res/configuration.toml" | \
         sed -e "s@TokenFile = \"/vault/config/assets/resp-init.json\"@TokenFile = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
-            -e "s@RootCaCertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@RootCaCertPath = \"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+            -e "s@RootCaCertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@RootCaCertPath = \"\$SNAP_DATA/secrets/ca/ca.pem\"@" \
             > \
        "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
 
@@ -740,7 +740,7 @@ parts:
               # configuration file at build time
               CONFIG_FILE="./cmd/$service/res/configuration.toml"
               if grep -q "/tmp/edgex" "$CONFIG_FILE"; then
-                  sed -e "s@\"/tmp/edgex/secrets/ca/ca.pem\"@\"\$SNAP_DATA/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@" \
+                  sed -e "s@\"/tmp/edgex/secrets/ca/ca.pem\"@\"\$SNAP_DATA/secrets/ca/ca.pem\"@" \
                       -e "s@\"/tmp/edgex/secrets/edgex-redis/secrets-token.json\"@\"\$SNAP_DATA/secrets/edgex-redis/secrets-token.json\"@" \
                       -e "s@\"/tmp/edgex/secrets/edgex-redis/redis5-password\"@\"\$SNAP_DATA/secrets/edgex-redis/redis5-password\"@" \
                       -e "s@edgex-vault@localhost@" \

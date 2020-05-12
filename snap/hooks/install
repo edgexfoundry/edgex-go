@@ -74,9 +74,8 @@ for svc in kong vault; do
     CONFIG_FILE_PATH="config/security-secrets-setup/res/pkisetup-$svc.json"
     if [ ! -f "$SNAP_DATA/$CONFIG_FILE_PATH" ]; then
         # replace the hostname with localhost using jq
-        jq --arg WORKDIR "$SNAP_DATA_CURRENT" \
-            '.x509_tls_server_parameters.tls_host = "localhost" | .pki_setup_dir = "pki" | .working_dir  = $WORKDIR' \
-            "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
+        jq '.x509_tls_server_parameters.tls_host = "localhost"' \
+           "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
         mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
         chmod 600 "$SNAP_DATA/$CONFIG_FILE_PATH"
     fi
@@ -92,8 +91,8 @@ mkdir -p "$SNAP_DATA/consul/config"
 # ensure mongodb data dirs exist
 mkdir -p "$SNAP_DATA/mongo/db"
 
-# ensure vault pki directory exists
-mkdir -p "$SNAP_DATA/vault/pki"
+# ensure secrets dir exists
+mkdir -p "$SNAP_DATA/secrets"
 
 # touch all the kong log files to ensure they exist
 mkdir -p "$SNAP_COMMON/logs"
