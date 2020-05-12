@@ -336,10 +336,14 @@ apps:
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
-    command: bin/app-service-configurable -confdir $SNAP_DATA/config/app-service-configurable/res -profile rules-engine --registry
+    command: >-
+      bin/app-service-configurable -cp -r
+      -confdir $SNAP_DATA/config/app-service-configurable/res
+      -profile rules-engine
     daemon: simple
     environment:
       Binding_PublishTopic: events
+      EDGEX_SECURITY_SECRET_STORE: "false"
     plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
@@ -1108,8 +1112,7 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    # TODO: update to v1.2.0 rel tag (or latest dev tag)
-    source-tag: v1.1.0-dev.13
+    source-tag: v1.1.0
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
