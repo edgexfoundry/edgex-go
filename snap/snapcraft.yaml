@@ -1090,13 +1090,14 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    # TODO: update to v1.2.0 rel tag (or latest dev tag)
-    source-tag: v1.2.0-dev.12
+    source-tag: v1.2.0
     plugin: make
     after: [go113]
     override-build: |
       export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
+      # create VERSION file (supposed to be created by jenkins pipeline...)
+      echo "1.2.0" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
