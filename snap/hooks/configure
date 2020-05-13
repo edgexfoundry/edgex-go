@@ -104,8 +104,12 @@ for key in $ALL_SERVICES; do
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
                 handle_svc "support-rulesengine" "off"
-            elif [ "$status" = "off" ]; then
-                handle_svc "app-service-configurable" "off"
+	    elif [ "$status" = "off" ]; then
+		# only disable if support-rulesengine is disabled too
+                status=$(snapctl get "support-rulesengine")
+                if [ "$status" = "off" ]; then
+                    handle_svc "app-service-configurable" "off"
+		fi
 	    fi
             # handle the service too
             handle_svc "$key" "$status"
@@ -156,8 +160,12 @@ for key in $ALL_SERVICES; do
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
                 handle_svc "kuiper" "off"
-            elif [ "$status" = "off" ]; then
-                handle_svc "app-service-configurable" "off"
+	    elif [ "$status" = "off" ]; then
+		# only disable if kuiper is disabled too
+                status=$(snapctl get "kuiper")
+                if [ "$status" = "off" ]; then
+                    handle_svc "app-service-configurable" "off"
+		fi
 	    fi
             # handle the service too
             handle_svc "$key" "$status"
