@@ -64,8 +64,7 @@ layout:
   /etc/luarocks:
     bind: $SNAP/etc/luarocks
 
-# TODO: upgrade to stable before releasing to beta/candidate/stable
-grade: devel
+grade: stable
 confinement: strict
 
 # This applies to all apps
@@ -336,10 +335,14 @@ apps:
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
-    command: bin/app-service-configurable -confdir $SNAP_DATA/config/app-service-configurable/res -profile rules-engine --registry
+    command: >-
+      bin/app-service-configurable -cp -r
+      -confdir $SNAP_DATA/config/app-service-configurable/res
+      -profile rules-engine
     daemon: simple
     environment:
       Binding_PublishTopic: events
+      EDGEX_SECURITY_SECRET_STORE: "false"
     plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
@@ -473,6 +476,7 @@ parts:
       - apg
       - curl
       - jq
+      - openjdk-8-jdk
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -815,6 +819,8 @@ parts:
       - -usr/lib/jvm/*/jre/man
       - -usr/lib/jvm/*/jre/lib/images
       - -usr/lib/jvm/*/include
+      - -usr/lib/jvm/*/bin
+      - -usr/lib/jvm/*/lib
       - -usr/lib/jvm/*/docs
       - -usr/lib/jvm/*/src.zip
       - -usr/share/X11
@@ -1083,13 +1089,14 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    # TODO: update to v1.2.0 rel tag (or latest dev tag)
-    source-tag: v1.2.0-dev.12
+    source-tag: v1.2.0
     plugin: make
     after: [go113]
     override-build: |
       export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
+      # create VERSION file (supposed to be created by jenkins pipeline...)
+      echo "1.2.0" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
@@ -1108,8 +1115,7 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    # TODO: update to v1.2.0 rel tag (or latest dev tag)
-    source-tag: v1.1.0-dev.13
+    source-tag: v1.1.0
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
