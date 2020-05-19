@@ -55,6 +55,20 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
+[MessageQueue.Optional]
+    # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
+    # Client Identifiers
+    Username =""
+    Password =""
+    ClientId ="core-data"
+    # Connection information
+    Qos          =  "0" # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
+    KeepAlive    =  "10" # Seconds (must be 2 or greater)
+    Retained     = "false"
+    AutoReconnect  = "true"
+    ConnectTimeout = "5" # Seconds
+    # TLS configuration - Only used if Cert/Key file or Cert/Key PEMblock are specified
+    SkipCertVerify = "false"
 
 [SecretStore]
 Host = 'localhost'
