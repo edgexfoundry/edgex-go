@@ -44,7 +44,7 @@ func (h handler) Create(path string) error {
 		return fmt.Errorf("Attempted removal of existing CA PKI config directory: %s (%s)", path, err)
 	}
 
-	h.loggingClient.Debug("Creating CA PKI setup directory: %s", path)
+	h.loggingClient.Debug(fmt.Sprintf("Creating CA PKI setup directory: %s", path))
 	err = os.MkdirAll(path, 0750) // Create pkiCaDir
 	if err != nil {
 		return fmt.Errorf("Failed to create the CA PKI configuration directory: %s (%s)", path, err)
