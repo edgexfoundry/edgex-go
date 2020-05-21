@@ -17,6 +17,7 @@ package interval
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
+
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -31,25 +32,29 @@ type ScrubExecutor interface {
 }
 
 type deleteIntervalByID struct {
-	db        IntervalDeleter
-	scDeleter SchedulerQueueDeleter
-	did       string
+	intervalLoader       IntervalLoader
+	intervalActionLoader IntervalActionLoader
+	intervalDeleter      IntervalDeleter
+	sqDeleter            SchedulerQueueDeleter
+	did                  string
 }
 
 type deleteIntervalByName struct {
-	db        IntervalDeleter
-	scDeleter SchedulerQueueDeleter
-	dname     string
+	intervalLoader       IntervalLoader
+	intervalActionLoader IntervalActionLoader
+	intervalDeleter      IntervalDeleter
+	sqDeleter            SchedulerQueueDeleter
+	dname                string
 }
 
 type scrubIntervals struct {
 	db IntervalDeleter
 }
 
-// Execute performs the deletion of the interval.
+// Execute() deletes the interval by ID.
 func (dibi deleteIntervalByID) Execute() error {
-	// check in memory first
-	inMemory, err := dibi.scDeleter.QueryIntervalByID(dibi.did)
+	// Check in memory.
+	inMemory, err := dibi.sqDeleter.QueryIntervalByID(dibi.did)
 	if err != nil {
 		if err == db.ErrNotFound {
 			err = errors.NewErrIntervalNotFound(dibi.did)
@@ -57,46 +62,57 @@ func (dibi deleteIntervalByID) Execute() error {
 		return err
 	}
 
-	if err = dibi.db.DeleteIntervalById(dibi.did); err != nil {
-		if err == db.ErrNotFound {
-			err = errors.NewErrIntervalNotFound(dibi.did)
-		}
-		return err
-	}
-
-	// remove in memory
-	err = dibi.scDeleter.RemoveIntervalInQueue(inMemory.ID)
-	if err != nil {
-		if err == db.ErrNotFound {
-			err = errors.NewErrIntervalNotFound(dibi.did)
-		}
-		return err
-	}
-
-	return nil
+	return deleteInterval(inMemory, dibi.intervalDeleter, dibi.sqDeleter)
 }
 
+// Execute() deletes the interval by Name.
 func (dibn deleteIntervalByName) Execute() error {
-	// check in memory first
-	inMemory, err := dibn.scDeleter.QueryIntervalByName(dibn.dname)
+	// Check in memory.
+	inMemory, err := dibn.sqDeleter.QueryIntervalByName(dibn.dname)
 	if err != nil {
-		return errors.NewErrIntervalNotFound(dibn.dname)
+		if err == db.ErrNotFound {
+			err = errors.NewErrIntervalNotFound(dibn.dname)
+		}
+		return err
 	}
-	// remove in memory
-	err = dibn.scDeleter.RemoveIntervalInQueue(inMemory.ID)
-	if err != nil {
-		return errors.NewErrIntervalNotFound(inMemory.ID)
-	}
-	// check if interval exist
-	op := NewNameExecutor(dibn.db, dibn.dname)
-	result, err := op.Execute()
 
+	return deleteInterval(inMemory, dibn.intervalDeleter, dibn.sqDeleter)
+}
+
+// deleteInterval first checks the Interval to determine that it is not in use before deleting
+// from both memory and database. Note that a failure in this function may result in the system
+// ending up in an undesirable state, and "rollbacks" are not handled here. For example, if we
+// first remove the Interval from memory, then encounter failure while trying to delete from the
+// database, we will end up with GET /interval API calls still responding with the "deleted" Interval.
+func deleteInterval(
+	interval contract.Interval,
+	intervalDeleter IntervalDeleter,
+	sqDeleter SchedulerQueueDeleter) error {
+
+	// Check if interval is in use. Get all IntervalActions that are associated with this interval.
+	allIntervalActions, err := intervalDeleter.IntervalActionsByIntervalName(interval.Name)
 	if err != nil {
 		return err
 	}
-	if err = deleteInterval(result, dibn); err != nil {
+
+	if len(allIntervalActions) != 0 {
+		return errors.NewErrIntervalNameInUse(interval.Name)
+	}
+
+	// Remove interval in memory
+	err = sqDeleter.RemoveIntervalInQueue(interval.ID)
+	if err != nil {
+		if err == db.ErrNotFound {
+			err = errors.NewErrIntervalNotFound(interval.ID)
+		}
 		return err
 	}
+
+	// Delete the interval
+	if err = intervalDeleter.DeleteIntervalById(interval.ID); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -108,38 +124,29 @@ func (si scrubIntervals) Execute() (int, error) {
 	return count, nil
 }
 
-func deleteInterval(interval contract.Interval, dibn deleteIntervalByName) error {
-	intervalActions, err := dibn.db.IntervalActionsByIntervalName(interval.Name)
-	if err != nil {
-		return err
-	}
-	if len(intervalActions) > 0 {
-		return errors.NewErrIntervalStillInUse(interval.Name)
-	}
-
-	// Delete the interval
-	if err = dibn.db.DeleteIntervalById(interval.ID); err != nil {
-		return err
-	}
-	return nil
-
-}
-
 // NewDeleteByIDExecutor creates a new DeleteExecutor which deletes an interval based on id.
-func NewDeleteByIDExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, did string) DeleteExecutor {
+func NewDeleteByIDExecutor(
+	intervalDeleter IntervalDeleter,
+	sqDeleter SchedulerQueueDeleter,
+	did string) DeleteExecutor {
+
 	return deleteIntervalByID{
-		db:        db,
-		scDeleter: scDeleter,
-		did:       did,
+		intervalDeleter: intervalDeleter,
+		sqDeleter:       sqDeleter,
+		did:             did,
 	}
 }
 
 // NewDeleteByNameExecutor creates a new DeleteExecutor which deletes an interval based on name.
-func NewDeleteByNameExecutor(db IntervalDeleter, scDeleter SchedulerQueueDeleter, dname string) DeleteExecutor {
+func NewDeleteByNameExecutor(
+	intervalDeleter IntervalDeleter,
+	sqDeleter SchedulerQueueDeleter,
+	dname string) DeleteExecutor {
+
 	return deleteIntervalByName{
-		db:        db,
-		scDeleter: scDeleter,
-		dname:     dname,
+		intervalDeleter: intervalDeleter,
+		sqDeleter:       sqDeleter,
+		dname:           dname,
 	}
 }
 
