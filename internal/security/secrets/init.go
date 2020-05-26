@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/cache"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/generate"
 	_import "github.com/edgexfoundry/edgex-go/internal/security/secrets/command/import"
-	"github.com/edgexfoundry/edgex-go/internal/security/secrets/command/legacy"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/contract"
 
@@ -50,8 +49,6 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	commandName := flag.Args()[0]
 	switch commandName {
-	case legacy.CommandName:
-		command, flagSet = legacy.NewCommand(lc)
 	case generate.CommandName:
 		command, flagSet = generate.NewCommand(lc, configuration)
 	case cache.CommandName:
