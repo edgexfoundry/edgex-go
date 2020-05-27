@@ -30,6 +30,10 @@ FROM scratch
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'
 
+ENV APP_PORT=48060
+#expose support notifications port
+EXPOSE $APP_PORT
+
 COPY --from=builder /bin/sh /bin/sh
 COPY --from=builder /usr/share/ca-certificates /usr/share/ca-certificates
 COPY --from=builder /etc/ssl /etc/ssl

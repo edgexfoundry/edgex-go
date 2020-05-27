@@ -37,6 +37,10 @@ RUN rm -rf /var/cache/apk/*
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell'
 
+ENV APP_PORT=48090
+#expose system mgmt agent port
+EXPOSE $APP_PORT
+
 # Copy over the SMA executable bits.
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/configuration.toml
