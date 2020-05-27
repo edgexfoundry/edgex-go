@@ -25,10 +25,15 @@ RUN go mod download
 COPY . .
 RUN make cmd/support-logging/support-logging
 
+#Next image - Copy built Go binary into new workspace
 FROM scratch
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium'
+
+ENV APP_PORT=48061
+#expose support logging port
+EXPOSE $APP_PORT
 
 COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/support-logging/Attribution.txt /
