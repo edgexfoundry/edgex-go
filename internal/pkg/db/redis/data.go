@@ -1081,8 +1081,11 @@ func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 		if err != nil {
 			return id, err
 		}
+
+		e.Readings[i].Id = id
 		rids[i*2+1] = 0
 		rids[i*2+2] = id
+
 	}
 	if len(rids) > 1 {
 		_ = conn.Send("ZADD", rids...)
