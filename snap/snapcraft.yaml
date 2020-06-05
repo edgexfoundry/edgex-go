@@ -476,7 +476,6 @@ parts:
       - apg
       - curl
       - jq
-      - openjdk-8-jdk
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -808,25 +807,39 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE"
       install -DT "./src/main/resources/rule-template.drl" \
          "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
+    stage-packages:
+      - openjdk-8-jre-headless
     prime:
+      - -bin
       - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
+      - -etc/gss
+      - -etc/init.d
+      - -etc/java-8-openjdk/management
+      - -etc/java-11-openjdk
+      - -etc/ucf.conf
+      - -etc/X11
+      - -sbin
+      - -usr/bin
+      - -usr/include
+      - -usr/lib/debug
+      - -usr/lib/.java-1.11.0-openjdk-amd64.jinfo
+      - -usr/lib/jvm/java-11-openjdk-amd64
+      - -usr/lib/jvm/java-1.11.0-openjdk-amd64
       - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
       - -usr/lib/jvm/*/jre/THIRD_PARTY_README
       - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
+      - -usr/lib/X11
+      - -usr/sbin
       - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
       - -usr/share/alsa
+      - -usr/share/apport
+      - -usr/share/bash*
+      - -usr/share/fonts
+      - -usr/share/gdb
+      - -usr/share/man
+      - -usr/share/xml
+      - -var/lib
+      - -X11
 
   # KONG + OPENRESTY PARTS
   openresty-kong-patches:
