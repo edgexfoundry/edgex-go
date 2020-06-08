@@ -41,7 +41,7 @@ fi
 
 # if running security-secrets-setup subcommand
 # build full command line into positional args
-if [ "$1" = 'generate' -o "$1" = 'cache' -o "$1" = 'import' -o "$1" = 'legacy' ]; then
+if [ "$1" = 'generate' -o "$1" = 'cache' -o "$1" = 'import' ]; then
     set -- security-secrets-setup "$@"
 fi
 

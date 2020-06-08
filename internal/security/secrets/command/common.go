@@ -107,8 +107,6 @@ func helpCallback() {
 			"	generate                        Generate PKI afresh every time and deployed. Typically, this will be whenever the framework is started.\n"+
 			"	cache                           Generate PKI exactly once and then copied to a designated cache location for future use.  The PKI is then deployed from the cached location.\n"+
 			"	import                          Import PKI from cached location to deployed location.  It requires PKI assets to be pre-populated first and it raises an error if the PKI assets in the cached location are empty.\n"+
-			"	legacy                          [Will be deprecated] Legacy mode to generate PKI\n"+
-			"	  -c, --config <name>           Provide absolute path to JSON configuration file\n"+
 			"\n"+
 			"Common Options:\n"+
 			"    -h, --help                      Show this message",
