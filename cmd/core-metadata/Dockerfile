@@ -26,12 +26,13 @@ RUN go mod download
 COPY . .
 RUN make cmd/core-metadata/core-metadata
 
+#Next image - Copy built Go binary into new workspace
 FROM scratch
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium'
 
-ENV APP_PORT=48082
+ENV APP_PORT=48081
 #expose meta data port
 EXPOSE $APP_PORT
 
