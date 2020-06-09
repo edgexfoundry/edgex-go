@@ -609,7 +609,7 @@ parts:
     after: [go113]
     plugin: make
     source: https://github.com/hashicorp/consul.git
-    source-tag: v1.7.2
+    source-tag: v1.7.3
     source-depth: 1
     stage:
       # duplicated file with the deps of vault, so just drop this one and use
@@ -776,10 +776,11 @@ parts:
         "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
     build-packages:
+      - libzmq3-dev
       - zip
       - pkg-config
     stage-packages:
-      - libzmq3-dev
+      - libzmq5
 
   support-rulesengine:
     source: https://github.com/edgexfoundry/support-rulesengine.git
@@ -996,7 +997,7 @@ parts:
       - perl
       - luarocks
       - lua5.1
-      - libyaml-dev
+      - libyaml-0-2
     override-build: |
       # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
       # it will be generated/configured during the install hook
@@ -1054,7 +1055,7 @@ parts:
     after: [go112]
     plugin: make
     source: https://github.com/hashicorp/vault.git
-    source-tag: v1.3.1
+    source-tag: v1.3.6
     source-depth: 1
     override-build: |
       # see https://github.com/hashicorp/vault/issues/8927
@@ -1150,7 +1151,7 @@ parts:
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
-    source-tag: 0.3.2
+    source-tag: 0.4.1
     plugin: make
     after: [go113]
     override-build: |
@@ -1173,4 +1174,4 @@ parts:
     stage:
       - -etc/mqtt_source.yaml
     stage-packages:
-      - libzmq3-dev
+      - libzmq5

@@ -162,8 +162,9 @@ for key in $ALL_SERVICES; do
                 handle_svc "kuiper" "off"
 	    elif [ "$status" = "off" ]; then
 		# only disable if kuiper is disabled too
-                status=$(snapctl get "kuiper")
-                if [ "$status" = "off" ]; then
+                kstatus=$(snapctl get "kuiper")
+
+                if [ "$kstatus" = "off" ]; then
                     handle_svc "app-service-configurable" "off"
 		fi
 	    fi
