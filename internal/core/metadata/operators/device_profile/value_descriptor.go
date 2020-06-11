@@ -10,6 +10,7 @@ import (
 
 	dataErrors "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
 // ValueDescriptorAdder provides the necessary functionality for creating a ValueDescriptor.
@@ -86,9 +87,14 @@ type UpdateValueDescriptorExecutor interface {
 func (u updateValueDescriptor) Execute() error {
 	// Get pre-existing device profile so we can determine what to do with the device resources provided in the update.
 	// For example, update/create/delete.
-	persistedDeviceProfile, err := u.loader.GetDeviceProfileByName(u.dp.Name)
+	persistedDeviceProfile, err := u.loader.GetDeviceProfileById(u.dp.Id)
 	if err != nil {
-		return err
+		persistedDeviceProfile, err = u.loader.GetDeviceProfileByName(u.dp.Name)
+		if err == db.ErrNotFound {
+			return errors.NewErrDeviceProfileNotFound(u.dp.Id, u.dp.Name)
+		} else if err != nil {
+			return err
+		}
 	}
 
 	devices, err := u.loader.GetDevicesByProfileId(persistedDeviceProfile.Id)
