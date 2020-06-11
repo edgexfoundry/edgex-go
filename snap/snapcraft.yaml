@@ -1103,14 +1103,14 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-tag: v1.2.0
+    source-tag: v1.2.1
     plugin: make
     after: [go113]
     override-build: |
       export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       # create VERSION file (supposed to be created by jenkins pipeline...)
-      echo "1.2.0" > ./VERSION
+      echo "1.2.1" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
@@ -1129,7 +1129,7 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    source-tag: v1.1.0
+    source-tag: v1.2.0
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
