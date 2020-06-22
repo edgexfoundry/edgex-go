@@ -19,14 +19,15 @@ import (
 	"fmt"
 	"sync"
 
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
+	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -53,31 +54,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	loadRestRoutes(b.router, dic)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
-	registryClient := container.RegistryFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	mdc := metadata.NewDeviceClient(
-		urlclient.New(
-			ctx,
-			wg,
-			registryClient,
-			clients.CoreMetaDataServiceKey,
-			clients.ApiDeviceRoute,
-			configuration.Service.ClientMonitor,
-			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
-		),
-	)
-	msc := metadata.NewDeviceServiceClient(
-		urlclient.New(
-			ctx,
-			wg,
-			registryClient,
-			clients.CoreMetaDataServiceKey,
-			clients.ApiDeviceServiceRoute,
-			configuration.Service.ClientMonitor,
-			configuration.Clients["Metadata"].Url()+clients.ApiDeviceRoute,
-		),
-	)
+	mdc := metadata.NewDeviceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
+	msc := metadata.NewDeviceServiceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
 
 	// Create the messaging client
 	msgClient, err := messaging.NewMessageClient(

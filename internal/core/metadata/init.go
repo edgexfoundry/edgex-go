@@ -18,10 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
@@ -30,6 +27,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -56,7 +57,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	// 		Until that problem is addressed by larger architectural changes, if you are experiencing a bug similar to
 	//		https://github.com/edgexfoundry/edgex-go/issues/2421, the correct fix is to bump up the client timeout.
 	configuration := container.ConfigurationFrom(dic.Get)
-	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
@@ -65,29 +65,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
 			return coredata.NewValueDescriptorClient(
-				urlclient.New(
-					ctx,
-					wg,
-					registryClient,
-					clients.CoreDataServiceKey,
-					clients.ApiValueDescriptorRoute,
-					configuration.Service.ClientMonitor,
-					configuration.Clients["CoreData"].Url()+clients.ApiValueDescriptorRoute,
-				),
-			)
+				local.New(configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute))
 		},
 		container.NotificationsClientName: func(get di.Get) interface{} {
 			return notifications.NewNotificationsClient(
-				urlclient.New(
-					ctx,
-					wg,
-					registryClient,
-					clients.SupportNotificationsServiceKey,
-					clients.ApiNotificationRoute,
-					configuration.Service.ClientMonitor,
-					configuration.Clients["Notifications"].Url()+clients.ApiNotificationRoute,
-				),
-			)
+				local.New(configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute))
+
 		},
 	})
 

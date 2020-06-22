@@ -9,7 +9,6 @@ ChecksumAlgo = 'xxHash'
 
 [Service]
 BootTimeout = 30000
-ClientMonitor = 15000
 CheckInterval = '10s'
 Host = 'localhost'
 Port = 48080

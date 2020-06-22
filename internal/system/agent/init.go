@@ -18,8 +18,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/direct"
@@ -107,22 +107,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	})
 
 	generalClients := container.GeneralClientsFrom(dic.Get)
-	registryClient := bootstrapContainer.RegistryFrom(dic.Get)
 
 	for serviceKey, serviceName := range b.listDefaultServices() {
 		generalClients.Set(
 			serviceKey,
-			general.NewGeneralClient(
-				urlclient.New(
-					ctx,
-					&sync.WaitGroup{},
-					registryClient,
-					serviceKey,
-					"/",
-					internal.ClientMonitorDefault,
-					configuration.Clients[serviceName].Url(),
-				),
-			),
+			general.NewGeneralClient(local.New(configuration.Clients[serviceName].Url())),
 		)
 	}
 

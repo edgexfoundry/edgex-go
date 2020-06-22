@@ -17,7 +17,6 @@ const (
 	BootTimeoutDefault        = BootTimeoutSecondsDefault * 1000
 	BootTimeoutSecondsDefault = 30
 	BootRetrySecondsDefault   = 1
-	ClientMonitorDefault      = 15000
 	ConfigFileName            = "configuration.toml"
 	ConfigStemCore            = "edgex/core/"
 	ConfigStemSecurity        = "edgex/security/"
