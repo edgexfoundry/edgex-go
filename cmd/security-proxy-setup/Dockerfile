@@ -1,6 +1,5 @@
-FROM golang:1.13-alpine AS builder
-
-ENV GO111MODULE=on
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
@@ -26,7 +25,6 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 WORKDIR /edgex
 
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/configuration.toml res/configuration.toml
-
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
 
 ENTRYPOINT ["/edgex/security-proxy-setup"]

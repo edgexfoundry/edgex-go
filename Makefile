@@ -27,6 +27,7 @@ VERSION=$(shell cat ./VERSION)
 DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
 
@@ -77,7 +78,7 @@ clean:
 	rm -f $(MICROSERVICES)
 
 test:
-	GO111MODULE=on go test -race -coverprofile=coverage.out ./...
+	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 	GO111MODULE=on go vet ./...
 	gofmt -l .
 	[ "`gofmt -l .`" = "" ]
@@ -194,6 +195,6 @@ docker_security_secretstore_setup:
 
 raml_verify:
 	docker run --rm --privileged \
-		-v $(PWD):/raml-verification -w /raml-verification \
-		nexus3.edgexfoundry.org:10003/edgex-docs-builder:$(ARCH) \
+		-v $(WORKSPACE):/raml-verification -w /raml-verification \
+		nexus3.edgexfoundry.org:10003/edgex-devops/edgex-docs-builder:$(ARCH) \
 		/scripts/raml-verify.sh

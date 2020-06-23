@@ -6,11 +6,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# Docker image for Golang Core Data micro service 
-FROM golang:1.13-alpine AS builder
+# Docker image for Golang Core Data micro service
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
-ENV GO111MODULE=on
-WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+WORKDIR /edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
@@ -20,7 +20,6 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 RUN apk update && apk add zeromq-dev libsodium-dev pkgconfig build-base git
 
 COPY go.mod .
-#COPY go.sum .
 
 RUN go mod download
 
@@ -42,7 +41,8 @@ EXPOSE $APP_PORT
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk --no-cache add zeromq
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/Attribution.txt /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/core-data /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/core-data/Attribution.txt /
+COPY --from=builder /edgex-go/cmd/core-data/core-data /
+COPY --from=builder /edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml
+
 ENTRYPOINT ["/core-data","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]
