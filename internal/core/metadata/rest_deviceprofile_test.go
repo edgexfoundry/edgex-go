@@ -940,8 +940,7 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 
 func TestAddProfileByYaml(t *testing.T) {
 	// we have to overwrite the CoreCommands so that their isValidated is false
-	dp := TestDeviceProfile
-	dp.CoreCommands = []contract.Command{TestCommand}
+	dp := TestDeviceProfileValidated
 
 	okBody, _ := yaml.Marshal(dp)
 
@@ -952,6 +951,16 @@ func TestAddProfileByYaml(t *testing.T) {
 	emptyName := dp
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
+
+	emptyDeviceResource := createTestDeviceProfile()
+	emptyDeviceResource.DeviceCommands[0].Get = []contract.ResourceOperation{
+		{Index: "test index", Operation: "test operation", DeviceResource: ""},
+	}
+	emptyDeviceResourceBody, _ := yaml.Marshal(emptyDeviceResource)
+
+	emptyCoreCmdName := createTestDeviceProfile()
+	emptyCoreCmdName.CoreCommands[0].Name = ""
+	emptyCoreCmdNameBody, _ := yaml.Marshal(emptyCoreCmdName)
 
 	emptyFileRequest := createDeviceProfileRequestWithFile(okBody)
 	emptyFileRequest.MultipartForm = new(multipart.Form)
@@ -1006,15 +1015,10 @@ func TestAddProfileByYaml(t *testing.T) {
 		{
 			"Duplicate command name",
 			createDeviceProfileRequestWithFile(dupeBody),
-			createDBClientWithOutlines([]mockOutline{
-				{"AddDeviceProfile", []interface{}{dp}, []interface{}{TestDeviceProfileID, nil}},
-				{"GetDeviceProfileByName", []interface{}{TestDeviceProfileName}, []interface{}{contract.DeviceProfile{}, db.ErrNotFound}},
-			}),
-			createMockValueDescriptorClient([]mockOutline{
-				{"Add", []interface{}{TestDeviceProfileValidated}, []interface{}{}},
-			}, requestContext, TestDeviceProfile, nil),
+			createDBClientWithOutlines([]mockOutline{}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
 			true,
-			http.StatusConflict,
+			http.StatusBadRequest,
 		},
 		{
 			"Duplicate profile name",
@@ -1064,6 +1068,22 @@ func TestAddProfileByYaml(t *testing.T) {
 			false,
 			http.StatusOK,
 		},
+		{
+			"Resource operation's deviceResource is empty",
+			createDeviceProfileRequestWithFile(emptyDeviceResourceBody),
+			createDBClientWithOutlines([]mockOutline{}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
+			http.StatusBadRequest,
+		},
+		{
+			"Core command name is empty",
+			createDeviceProfileRequestWithFile(emptyCoreCmdNameBody),
+			createDBClientWithOutlines([]mockOutline{}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
+			http.StatusBadRequest,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1088,8 +1108,7 @@ func TestAddProfileByYaml(t *testing.T) {
 
 func TestAddProfileByYamlRaw(t *testing.T) {
 	// we have to overwrite the CoreCommands so that their isValidated is false
-	dp := TestDeviceProfile
-	dp.CoreCommands = []contract.Command{TestCommand}
+	dp := TestDeviceProfileValidated
 
 	okBody, _ := yaml.Marshal(dp)
 
@@ -1100,6 +1119,17 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 	emptyName := dp
 	emptyName.Name = ""
 	emptyBody, _ := yaml.Marshal(emptyName)
+
+	emptyDeviceResource := createTestDeviceProfile()
+	emptyDeviceResource.DeviceCommands[0].Get = []contract.ResourceOperation{
+		{Index: "test index", Operation: "test operation", DeviceResource: ""},
+	}
+	emptyDeviceResourceBody, _ := yaml.Marshal(emptyDeviceResource)
+
+	emptyCoreCmdName := createTestDeviceProfile()
+	emptyCoreCmdName.CoreCommands[0].Name = ""
+	emptyCoreCmdNameBody, _ := yaml.Marshal(emptyCoreCmdName)
+
 	requestContext := httptest.NewRequest(http.MethodPost, AddressableTestURI, nil).Context()
 
 	tests := []struct {
@@ -1124,12 +1154,12 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			http.StatusOK,
 		},
 		{
-			"YAML unmarshal error",
-			createDeviceProfileRequestWithFile(dupeBody),
+			"Duplicate command name",
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(dupeBody)),
 			nil,
 			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
 			true,
-			http.StatusServiceUnavailable,
+			http.StatusBadRequest,
 		},
 		{
 			"Empty device profile name",
@@ -1167,6 +1197,22 @@ func TestAddProfileByYamlRaw(t *testing.T) {
 			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
 			false,
 			http.StatusOK,
+		},
+		{
+			"Resource operation's deviceResource is empty",
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyDeviceResourceBody)),
+			createDBClientWithOutlines([]mockOutline{}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
+			http.StatusBadRequest,
+		},
+		{
+			"Core command name is empty",
+			httptest.NewRequest(http.MethodPut, AddressableTestURI, bytes.NewBuffer(emptyCoreCmdNameBody)),
+			createDBClientWithOutlines([]mockOutline{}),
+			createMockValueDescriptorClient([]mockOutline{}, requestContext, TestDeviceProfile, nil),
+			true,
+			http.StatusBadRequest,
 		},
 	}
 	for _, tt := range tests {
