@@ -160,9 +160,9 @@ func (op updateDevice) updateDeviceFields(original contract.Device) (updated con
 	if len(op.device.Protocols) > 0 {
 		updated.Protocols = op.device.Protocols
 	}
-	if len(op.device.AutoEvents) > 0 {
-		updated.AutoEvents = op.device.AutoEvents
-	}
+
+	updated.AutoEvents = op.device.AutoEvents
+
 	if op.device.AdminState != "" {
 		updated.AdminState = op.device.AdminState
 	}
