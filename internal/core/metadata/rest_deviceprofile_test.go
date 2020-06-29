@@ -1363,6 +1363,7 @@ func createDBClientPersistDeviceInUseError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	inUse := TestDeviceProfile
 	inUse.DeviceResources = append(inUse.DeviceResources, TestInUseDeviceResource)
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(inUse, nil)
 	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(inUse, nil)
 	d.On("GetDevicesByProfileId", TestDeviceProfileID).Return([]contract.Device{}, nil)
 
@@ -1373,6 +1374,7 @@ func createDBClientUpdateValueDescriptorError() interfaces.DBClient {
 	d := &mocks.DBClient{}
 	inUse := TestDeviceProfile
 	inUse.DeviceResources = append(inUse.DeviceResources, TestInUseDeviceResource)
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, TestError)
 	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, TestError)
 
 	return d
@@ -1382,6 +1384,9 @@ func createDBServiceClientError(statusCode int) interfaces.DBClient {
 	d := &mocks.DBClient{}
 	inUse := TestDeviceProfile
 	inUse.DeviceResources = append(inUse.DeviceResources, TestInUseDeviceResource)
+	d.On("GetDeviceProfileById", TestDeviceProfileID).Return(contract.DeviceProfile{}, types.ErrServiceClient{
+		StatusCode: statusCode,
+	})
 	d.On("GetDeviceProfileByName", TestDeviceProfileName).Return(contract.DeviceProfile{}, types.ErrServiceClient{
 		StatusCode: statusCode,
 	})
