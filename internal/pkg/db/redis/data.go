@@ -339,7 +339,7 @@ func (c *Client) EventsForDeviceLimit(id string, limit int) (events []contract.E
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, db.EventsCollection+":device:"+id, 0, limit-1)
+	objects, err := getObjectsByRevRange(conn, db.EventsCollection+":device:"+id, 0, limit-1)
 	if err != nil {
 		if err != redis.ErrNil {
 			return events, err
