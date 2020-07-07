@@ -48,16 +48,6 @@ for profileType in bool float int uint binary; do
     cp "$SNAP/config/device-virtual/res/device.virtual.$profileType.yaml" "$SNAP_DATA/config/device-virtual/res/device.virtual.$profileType.yaml"
 done
 
-# create support-rulesengine directories for templates/rules
-if [ ! -f "$SNAP_DATA/support-rulesengine/templates" ]; then
-    mkdir -p "$SNAP_DATA/support-rulesengine/templates"
-    cp "$SNAP/jar/support-rulesengine/templates/rule-template.drl" "$SNAP_DATA/support-rulesengine/templates/rule-template.drl"
-fi
-
-if [ ! -f "$SNAP_DATA/support-rulesengine/rules" ]; then
-    mkdir -p "$SNAP_DATA/support-rulesengine/rules"
-fi
-
 # create kuiper directories in $SNAP_DATA
 if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
     mkdir -p "$SNAP_DATA/kuiper/data"
@@ -212,7 +202,7 @@ drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 # - support-*
 # - sys-mgmt-agent (see https://github.com/edgexfoundry/edgex-go/issues/2486)
 #
-for svc in support-notifications support-scheduler support-logging app-service-configurable support-rulesengine \
+for svc in support-notifications support-scheduler support-logging app-service-configurable \
     device-virtual edgex-mongo mongod sys-mgmt-agent kuiper; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306

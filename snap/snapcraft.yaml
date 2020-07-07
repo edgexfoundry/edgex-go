@@ -7,9 +7,9 @@ description: |
   EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
   Foundation building a common open framework for IoT edge computing. This 
   snap contains all of the EdgeX core, security, and support reference 
-  services, as well as Consul, Kong, MongoDB, Vault, a JRE for the two 
-  remaining Java services, and a set of basic device services. The packaging 
-  for this snap can be found at: https://github.com/edgexfoundry/edgex-go
+  services, as well as Consul, Kong, MongoDB, Vault, and device-virtual.
+  The packaging for this snap can be found at:
+    https://github.com/edgexfoundry/edgex-go
 
 icon: snap/local/assets/edgex-snap-icon.png
 
@@ -294,17 +294,6 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
-  support-rulesengine:
-    adapter: full
-    after:
-      - app-service-configurable
-      - edgex-mongo
-      - security-proxy-setup
-    command: bin/support-rulesengine-wrapper.sh
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    daemon: simple
-    plugs: [network, network-bind]
   sys-mgmt-agent:
     adapter: none
     after:
@@ -781,66 +770,6 @@ parts:
       - pkg-config
     stage-packages:
       - libzmq5
-
-  support-rulesengine:
-    source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-tag: v1.1.0
-    source-depth: 1
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-rulesengine files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-rulesengine docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine.jar \
-         "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine/support-rulesengine.jar
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE"
-      install -DT "./src/main/resources/rule-template.drl" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
-    stage-packages:
-      - openjdk-8-jre-headless
-    prime:
-      - -bin
-      - -etc/fonts
-      - -etc/gss
-      - -etc/init.d
-      - -etc/java-8-openjdk/management
-      - -etc/java-11-openjdk
-      - -etc/ucf.conf
-      - -etc/X11
-      - -sbin
-      - -usr/bin
-      - -usr/include
-      - -usr/lib/debug
-      - -usr/lib/.java-1.11.0-openjdk-amd64.jinfo
-      - -usr/lib/jvm/java-11-openjdk-amd64
-      - -usr/lib/jvm/java-1.11.0-openjdk-amd64
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/X11
-      - -usr/sbin
-      - -usr/share/X11
-      - -usr/share/alsa
-      - -usr/share/apport
-      - -usr/share/bash*
-      - -usr/share/fonts
-      - -usr/share/gdb
-      - -usr/share/man
-      - -usr/share/xml
-      - -var/lib
-      - -X11
 
   # KONG + OPENRESTY PARTS
   openresty-kong-patches:
