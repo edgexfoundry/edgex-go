@@ -59,6 +59,7 @@ const (
 var (
 	ErrNotFound            = errors.New("Item not found")
 	ErrUnsupportedDatabase = errors.New("Unsupported database type")
+	ErrUnsupportedReading  = errors.New("Unsupported reading type")
 	ErrInvalidObjectId     = errors.New("Invalid object ID")
 	ErrNotUnique           = errors.New("Resource already exists")
 	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")

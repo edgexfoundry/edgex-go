@@ -162,3 +162,14 @@ https://github.com/golang/crypto/blob/master/LICENSE
 github.com/go-redis/redis/v7 (BSD-2) https://github.com/go-redis/redis
 https://github.com/go-redis/redis/blob/master/LICENSE
 
+go-playground/locales (MIT) https://github.com/go-playground/locales
+https://github.com/go-playground/locales/blob/master/LICENSE
+
+go-playground/universal-translator (MIT) https://github.com/go-playground/universal-translator
+https://github.com/go-playground/universal-translator/blob/master/LICENSE
+
+github.com/go-playground/validator/v10 (MIT) https://github.com/go-playground/validator
+https://github.com/go-playground/validator/blob/master/LICENSE
+
+leodido/go-urn (MIT) https://github.com/leodido/go-urn
+https://github.com/leodido/go-urn
