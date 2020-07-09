@@ -3,12 +3,6 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/metadata/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/metadata/redisdb": {
           "capabilities": [
             "list",
@@ -22,12 +16,6 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/coredata/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/coredata/redisdb": {
           "capabilities": [
             "list",
@@ -41,26 +29,7 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/metadata/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/metadata/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
-  },
-  "edgex-mongo": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/mongo/*": {
           "capabilities": [
             "list",
             "read"
@@ -82,29 +51,10 @@
       }
     }
   },
-  "edgex-support-logging": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/logging/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
-  },
   "edgex-support-notifications": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/notifications/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/notifications/redisdb": {
           "capabilities": [
             "list",
@@ -118,12 +68,6 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/rulesengine/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/rulesengine/redisdb": {
           "capabilities": [
             "list",
@@ -137,12 +81,6 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/appservice/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/appservice/redisdb": {
           "capabilities": [
             "list",
@@ -159,12 +97,6 @@
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/scheduler/mongodb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        },
         "secret/edgex/scheduler/redisdb": {
           "capabilities": [
             "list",
@@ -179,15 +111,6 @@
     "custom_policy": {
       "path": {
         "secret/edgex/edgex-security-proxy-setup/kong-tls": {
-          "capabilities": [
-            "list",
-            "read",
-            "create",
-            "update",
-            "delete"
-          ]
-        },
-        "secret/edgex/mongo/*": {
           "capabilities": [
             "list",
             "read",
