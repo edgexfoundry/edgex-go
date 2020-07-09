@@ -25,7 +25,6 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-
 RUN make cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace
@@ -34,14 +33,16 @@ FROM alpine
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium'
 
+ENV APP_PORT=48080
+#expose core data port
+EXPOSE $APP_PORT
+
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
-
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk --no-cache add zeromq
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/Attribution.txt /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/core-data /
 COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml
-
 ENTRYPOINT ["/core-data","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]

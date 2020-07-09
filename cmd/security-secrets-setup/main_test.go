@@ -45,33 +45,6 @@ func TestMainWithNoOption(t *testing.T) {
 	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
 }
 
-func TestMainWithConfigFileOption(t *testing.T) {
-	defer (setupTest([]string{"cmd", "legacy", "-config", "./res/pkisetup-vault.json"}))()
-	ctx, cancel := context.WithCancel(context.Background())
-
-	configuration, exitStatusCode := secrets.Main(ctx, cancel)
-
-	removeTestDirectories(configuration)
-	assert.Equal(t, contract.StatusCodeExitNormal, exitStatusCode)
-
-	// verify ./config/pki/EdgeXFoundryCA directory exists
-	exists, err := doesDirectoryExist("./config/pki/EdgeXFoundryCA")
-	if !exists {
-		assert.NotNil(t, err)
-		assert.FailNow(t, "cannot find the directory for TLS assets", err)
-	}
-}
-
-func TestConfigFileOptionError(t *testing.T) {
-	defer (setupTest([]string{"cmd", "legacy", "-config", "./non-exist/cert.json"}))()
-	ctx, cancel := context.WithCancel(context.Background())
-
-	configuration, exitStatusCode := secrets.Main(ctx, cancel)
-
-	removeTestDirectories(configuration)
-	assert.Equal(t, contract.StatusCodeExitWithError, exitStatusCode)
-}
-
 func TestMainWithGenerateOption(t *testing.T) {
 	defer (setupTest([]string{"cmd", "--confdir=./testdata/res", "generate"}))()
 	// following dir must match SecretsSetup.DeployDir value in configuration.toml
@@ -98,17 +71,7 @@ func TestMainUnsupportedArgument(t *testing.T) {
 }
 
 func TestMainVerifyMultipleSubcommands(t *testing.T) {
-	defer (setupTest([]string{"cmd", "generate", "legacy"}))()
-	ctx, cancel := context.WithCancel(context.Background())
-
-	configuration, exitStatusCode := secrets.Main(ctx, cancel)
-
-	removeTestDirectories(configuration)
-	assert.Equal(t, contract.StatusCodeExitWithError, exitStatusCode)
-}
-
-func TestMainLegacySubcommandWithExtraArgs(t *testing.T) {
-	defer (setupTest([]string{"cmd", "legacy", "-c", "./res/pkisetup-vault.json", "extra"}))()
+	defer (setupTest([]string{"cmd", "generate", "cache"}))()
 	ctx, cancel := context.WithCancel(context.Background())
 
 	configuration, exitStatusCode := secrets.Main(ctx, cancel)

@@ -17,10 +17,9 @@ package getconfig
 import (
 	"context"
 	"fmt"
-	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
@@ -87,17 +86,7 @@ func (e executor) Do(ctx context.Context, serviceName string) (string, error) {
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(
-			urlclient.New(
-				ctx,
-				&sync.WaitGroup{},
-				e.registryClient,
-				ep.ServiceId,
-				"/",
-				internal.ClientMonitorDefault,
-				configClient.Url()+clients.ApiConfigRoute,
-			),
-		)
+		client = general.NewGeneralClient(local.New(configClient.Url() + clients.ApiConfigRoute))
 		e.genClients.Set(ep.ServiceId, client)
 	}
 

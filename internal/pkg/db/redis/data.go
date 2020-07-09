@@ -339,7 +339,7 @@ func (c *Client) EventsForDeviceLimit(id string, limit int) (events []contract.E
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	objects, err := getObjectsByRange(conn, db.EventsCollection+":device:"+id, 0, limit-1)
+	objects, err := getObjectsByRevRange(conn, db.EventsCollection+":device:"+id, 0, limit-1)
 	if err != nil {
 		if err != redis.ErrNil {
 			return events, err
@@ -1081,8 +1081,11 @@ func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
 		if err != nil {
 			return id, err
 		}
+
+		e.Readings[i].Id = id
 		rids[i*2+1] = 0
 		rids[i*2+2] = id
+
 	}
 	if len(rids) > 1 {
 		_ = conn.Send("ZADD", rids...)

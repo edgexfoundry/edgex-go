@@ -333,14 +333,14 @@ func createMockValueDescriptorClientError(addError, getError, updateError, delet
 
 func createMockDBClient() interfaces.DBClient {
 	mockDb := &mocks2.DBClient{}
-	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(TestExistingDeviceProfile, nil)
+	mockDb.On("GetDeviceProfileById", TestExistingDeviceProfile.Id).Return(TestExistingDeviceProfile, nil)
 	mockDb.On("GetDevicesByProfileId", TestExistingDeviceProfile.Id).Return([]contract.Device{}, nil)
 
 	return mockDb
 }
 func createMockDBClientDeviceProfileInUse() interfaces.DBClient {
 	mockDb := &mocks2.DBClient{}
-	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(TestExistingDeviceProfile, nil)
+	mockDb.On("GetDeviceProfileById", TestExistingDeviceProfile.Id).Return(TestExistingDeviceProfile, nil)
 	mockDb.On("GetDevicesByProfileId", TestExistingDeviceProfile.Id).Return(TestDevices, nil)
 
 	return mockDb
@@ -348,6 +348,7 @@ func createMockDBClientDeviceProfileInUse() interfaces.DBClient {
 
 func createMockErrorDBClient() interfaces.DBClient {
 	mockDb := &mocks2.DBClient{}
+	mockDb.On("GetDeviceProfileById", TestExistingDeviceProfile.Id).Return(contract.DeviceProfile{}, TestError)
 	mockDb.On("GetDeviceProfileByName", TestExistingDeviceProfile.Name).Return(contract.DeviceProfile{}, TestError)
 
 	return mockDb

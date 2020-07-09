@@ -7,9 +7,9 @@ description: |
   EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
   Foundation building a common open framework for IoT edge computing. This 
   snap contains all of the EdgeX core, security, and support reference 
-  services, as well as Consul, Kong, MongoDB, Vault, a JRE for the two 
-  remaining Java services, and a set of basic device services. The packaging 
-  for this snap can be found at: https://github.com/edgexfoundry/edgex-go
+  services, as well as Consul, Kong, MongoDB, Vault, and device-virtual.
+  The packaging for this snap can be found at:
+    https://github.com/edgexfoundry/edgex-go
 
 icon: snap/local/assets/edgex-snap-icon.png
 
@@ -294,17 +294,6 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
-  support-rulesengine:
-    adapter: full
-    after:
-      - app-service-configurable
-      - edgex-mongo
-      - security-proxy-setup
-    command: bin/support-rulesengine-wrapper.sh
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    daemon: simple
-    plugs: [network, network-bind]
   sys-mgmt-agent:
     adapter: none
     after:
@@ -476,7 +465,6 @@ parts:
       - apg
       - curl
       - jq
-      - openjdk-8-jdk
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -610,7 +598,7 @@ parts:
     after: [go113]
     plugin: make
     source: https://github.com/hashicorp/consul.git
-    source-tag: v1.7.2
+    source-tag: v1.7.3
     source-depth: 1
     stage:
       # duplicated file with the deps of vault, so just drop this one and use
@@ -777,56 +765,11 @@ parts:
         "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
     build-packages:
+      - libzmq3-dev
       - zip
       - pkg-config
     stage-packages:
-      - libzmq3-dev
-
-  support-rulesengine:
-    source: https://github.com/edgexfoundry/support-rulesengine.git
-    source-tag: v1.1.0
-    source-depth: 1
-    plugin: maven
-    maven-options: ["-Dmaven.test.skip=true"]
-    override-build: |
-      snapcraftctl build
-      echo "Installing support-rulesengine files"
-
-      # The logic following logic is all handled by DockerFile for
-      # the EdgeX support-rulesengine docker image.
-      install -d "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine"
-      mv "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine.jar \
-         "$SNAPCRAFT_PART_INSTALL"/jar/support-rulesengine/support-rulesengine.jar
-
-      # FIXME:
-      # copy service license into /usr/share/java/doc, because the
-      # jdk plugin has a bug which prevents any files from /usr/share/doc
-      # to be staged or primed.
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/java/doc/support-rulesengine/LICENSE"
-      install -DT "./src/main/resources/rule-template.drl" \
-         "$SNAPCRAFT_PART_INSTALL/jar/support-rulesengine/templates/rule-template.drl"
-    prime:
-      - -etc/fonts
-      - -etc/fonts/X11
-      - -usr/lib/jvm/*/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/THIRD_PARTY_README
-      - -usr/lib/jvm/*/jre/ASSEMBLY_EXCEPTION
-      - -usr/lib/jvm/*/jre/THIRD_PARTY_README
-      - -usr/lib/jvm/*/man
-      - -usr/lib/jvm/*/jre/man
-      - -usr/lib/jvm/*/jre/lib/images
-      - -usr/lib/jvm/*/include
-      - -usr/lib/jvm/*/bin
-      - -usr/lib/jvm/*/lib
-      - -usr/lib/jvm/*/docs
-      - -usr/lib/jvm/*/src.zip
-      - -usr/share/X11
-      - -usr/share/man
-      - -usr/share/fonts
-      - -usr/share/alsa
+      - libzmq5
 
   # KONG + OPENRESTY PARTS
   openresty-kong-patches:
@@ -983,7 +926,7 @@ parts:
       - perl
       - luarocks
       - lua5.1
-      - libyaml-dev
+      - libyaml-0-2
     override-build: |
       # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
       # it will be generated/configured during the install hook
@@ -1041,7 +984,7 @@ parts:
     after: [go112]
     plugin: make
     source: https://github.com/hashicorp/vault.git
-    source-tag: v1.3.1
+    source-tag: v1.3.6
     source-depth: 1
     override-build: |
       # see https://github.com/hashicorp/vault/issues/8927
@@ -1089,14 +1032,14 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-tag: v1.2.0
+    source-tag: v1.2.1
     plugin: make
     after: [go113]
     override-build: |
       export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       # create VERSION file (supposed to be created by jenkins pipeline...)
-      echo "1.2.0" > ./VERSION
+      echo "1.2.1" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
@@ -1115,7 +1058,7 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    source-tag: v1.1.0
+    source-tag: v1.2.0
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
@@ -1137,7 +1080,7 @@ parts:
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
-    source-tag: 0.3.2
+    source-tag: 0.4.1
     plugin: make
     after: [go113]
     override-build: |
@@ -1160,4 +1103,4 @@ parts:
     stage:
       - -etc/mqtt_source.yaml
     stage-packages:
-      - libzmq3-dev
+      - libzmq5

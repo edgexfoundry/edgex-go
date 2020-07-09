@@ -101,12 +101,11 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	interval.HandleFunc(
 		"/{"+ID+"}",
 		func(w http.ResponseWriter, r *http.Request) {
-			restDeleteIntervalByID(
-				w,
+			restDeleteIntervalByID(w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
-				schedulerContainer.QueueFrom(dic.Get))
+				schedulerContainer.QueueFrom(dic.Get),
+				container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	interval.HandleFunc(
 		"/"+NAME+"/{"+NAME+"}",
@@ -124,8 +123,8 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 				w,
 				r,
 				bootstrapContainer.LoggingClientFrom(dic.Get),
-				container.DBClientFrom(dic.Get),
-				schedulerContainer.QueueFrom(dic.Get))
+				schedulerContainer.QueueFrom(dic.Get),
+				container.DBClientFrom(dic.Get))
 		}).Methods(http.MethodDelete)
 	// Scrub "Intervals and IntervalActions"
 	interval.HandleFunc(

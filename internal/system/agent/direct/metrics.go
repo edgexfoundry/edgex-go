@@ -19,11 +19,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/urlclient"
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/concurrent"
@@ -107,17 +106,7 @@ func (m *metrics) metricsViaDirectService(ctx context.Context, serviceName strin
 		}
 
 		// Add the serviceName key to the map where the value is the respective GeneralClient
-		client = general.NewGeneralClient(
-			urlclient.New(
-				ctx,
-				&sync.WaitGroup{},
-				m.registryClient,
-				e.ServiceId,
-				"/",
-				internal.ClientMonitorDefault,
-				configClient.Url()+clients.ApiMetricsRoute,
-			),
-		)
+		client = general.NewGeneralClient(local.New(configClient.Url() + clients.ApiMetricsRoute))
 		m.genClients.Set(e.ServiceId, client)
 	}
 

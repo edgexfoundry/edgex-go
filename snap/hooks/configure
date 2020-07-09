@@ -18,7 +18,6 @@ ALL_SERVICES="$ALL_SERVICES core-command"
 ALL_SERVICES="$ALL_SERVICES support-notifications"
 ALL_SERVICES="$ALL_SERVICES support-logging"
 ALL_SERVICES="$ALL_SERVICES support-scheduler"
-ALL_SERVICES="$ALL_SERVICES support-rulesengine"
 
 # app-services
 ALL_SERVICES="$ALL_SERVICES app-service-configurable"
@@ -103,13 +102,8 @@ for key in $ALL_SERVICES; do
             # app-service-configurable is on too
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
-                handle_svc "support-rulesengine" "off"
 	    elif [ "$status" = "off" ]; then
-		# only disable if support-rulesengine is disabled too
-                status=$(snapctl get "support-rulesengine")
-                if [ "$status" = "off" ]; then
-                    handle_svc "app-service-configurable" "off"
-		fi
+                handle_svc "app-service-configurable" "off"
 	    fi
             # handle the service too
             handle_svc "$key" "$status"
@@ -153,22 +147,6 @@ for key in $ALL_SERVICES; do
             fi
             handle_svc "vault" "$status"
             handle_svc "security-secretstore-setup" "$status"
-            ;;
-        support-rulesengine)
-            # if we are turning rulesengine on, make sure
-            # app-service-configurable is on too
-            if [ "$status" = "on" ]; then
-                handle_svc "app-service-configurable" "on"
-                handle_svc "kuiper" "off"
-	    elif [ "$status" = "off" ]; then
-		# only disable if kuiper is disabled too
-                status=$(snapctl get "kuiper")
-                if [ "$status" = "off" ]; then
-                    handle_svc "app-service-configurable" "off"
-		fi
-	    fi
-            # handle the service too
-            handle_svc "$key" "$status"
             ;;
         *)
             # default case for all other services just enable/disable the service using
