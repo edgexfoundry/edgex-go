@@ -1036,10 +1036,6 @@ func (c *Client) ScrubAllValueDescriptors() error {
 
 // ************************** HELPER FUNCTIONS ***************************
 func addEvent(conn redis.Conn, e correlation.Event) (id string, err error) {
-	if e.Created == 0 {
-		e.Created = db.MakeTimestamp()
-	}
-
 	if e.ID == "" {
 		e.ID = uuid.New().String()
 	}

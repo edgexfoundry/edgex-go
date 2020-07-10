@@ -134,6 +134,9 @@ func addNewEvent(
 
 	// Add the event and readings to the database
 	if configuration.Writable.PersistData {
+		if e.Created == 0 {
+			e.Created = db.MakeTimestamp()
+		}
 		id, err := dbClient.AddEvent(e)
 		if err != nil {
 			return "", err
