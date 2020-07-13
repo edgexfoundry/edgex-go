@@ -24,9 +24,10 @@ architectures:
   - build-on: arm64
   - build-on: amd64
 
-# for start-timeout, we need snapd 2.38
-# we need command-chain for the hooks too
-assumes: [snapd2.42, command-chain]
+# we need snapd2.45 for setpriv policy allowing it's usage of
+# setgroups(0,<not NUL>)
+# see https://github.com/snapcore/snapd/pull/8220 for full details
+assumes: [snapd2.45]
 
 # Ideally snapcraft would generate this command-chain spec for the hooks
 # automatically, but that doesn't currently work, see
@@ -91,7 +92,7 @@ apps:
       CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
-      - bin/drop
+      - bin/drop-snap-daemon.sh
       - bin/snapcraft-preload
     plugs:
       - network
@@ -361,7 +362,7 @@ apps:
       - bin/perl5lib-launch.sh
       # psql should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/drop
+      - bin/drop-snap-daemon.sh
     plugs: [home, removable-media, network]
   psql-any:
     adapter: full
@@ -385,7 +386,7 @@ apps:
       - bin/perl5lib-launch.sh
       # createdb should be run as the snap_daemon user, which is the user
       # who is initially created as a role with postgres
-      - bin/drop
+      - bin/drop-snap-daemon.sh
     plugs: [home, removable-media, network]
   kuiper:
     adapter: full
@@ -438,6 +439,8 @@ parts:
       - apg
       - curl
       - jq
+      # setpriv with snapd 2.45 + can be used to drop privileges
+      - setpriv
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -468,13 +471,6 @@ parts:
     stage-packages:
       - to amd64:
           - lib32stdc++6
-  drop-user:
-    source: snap/local/parts/drop-user
-    plugin: make
-    build-packages:
-    - build-essential
-    organize:
-      drop: bin/drop
   postgres:
     plugin: nil
     source: snap/local/build-helpers

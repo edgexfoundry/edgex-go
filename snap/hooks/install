@@ -133,7 +133,7 @@ mkdir -p "$SNAP_DATA/postgresql"
 chown -R snap_daemon:snap_daemon "$SNAP_DATA/postgresql" 
 
 # setup the postgres data directory
-drop "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
+"$SNAP/bin/drop-snap-daemon.sh" "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
 
 # ensure the sockets dir exists and is properly owned
 mkdir -p "$SNAP_COMMON/sockets"
@@ -148,7 +148,7 @@ snapctl start "$SNAP_NAME.postgres"
 # trying to do this because we have to wait for postgres to start up
 iter_num=0
 MAX_POSTGRES_INIT_ITERATIONS=10
-until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
+until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
     if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
@@ -173,7 +173,7 @@ echo "$PGPASSWD" > "$SNAP_DATA/config/postgres/kongpw"
 # via environment variable.
 export PGDATABASE="kong"
 iter_num=0
-until drop "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
+until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
 	   "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
@@ -187,7 +187,7 @@ done
 snapctl stop "$SNAP_NAME.postgres"
 
 # modify postgres authentication config to use 'md5' (password)
-drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
+"$SNAP/bin/drop-snap-daemon.sh" sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 
 # finally, disable and turn off non-default services:
 #
