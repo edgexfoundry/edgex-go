@@ -3,9 +3,8 @@
 
 This folder contains snap packaging for the EdgeX Foundry reference implementation.
 
-The snap contains Consul, MongoDB, Redis, and all of the EdgeX Go-based micro services from
-this repository, device-virtual, as well as Vault, Kong, PostgreSQL. The snap also contains a
-single OpenJDK JRE used to run the legacy support-rulesengine (deprecated).
+The snap contains Consul, Redis, and all of the EdgeX Go-based micro services from
+this repository, device-virtual, as well as Vault, Kong, PostgreSQL.
 
 The project maintains a rolling release of the snap on the `edge` channel that is rebuilt and published at least once daily through the jenkins jobs setup for the EdgeX project.
 
@@ -60,12 +59,11 @@ Upon installation, the following EdgeX services are automatically and immediatel
 
 The following services are disabled by default:
 
-* app-service-configurable (required for Kuiper and support-rulesengine)
+* app-service-configurable (required for Kuiper)
 * device-virtual
 * kuiper
 * support-logging
 * support-notifications
-* support-rulesengine (deprecated)
 * support-scheduler
 * sys-mgmt-agent
 

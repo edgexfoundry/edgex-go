@@ -6,7 +6,6 @@ ALL_SERVICES=""
 
 # base services
 ALL_SERVICES="$ALL_SERVICES consul"
-ALL_SERVICES="$ALL_SERVICES mongod"
 ALL_SERVICES="$ALL_SERVICES redis"
 
 # core services
@@ -158,112 +157,14 @@ for key in $ALL_SERVICES; do
 done
 
 # handle usage of database provider
+#
+# FIXME (HANOI)
+#
+# The code to switch dbtype has been removed, however
+# I'm leaving the snapctl get to retrive the dbtype, as
+# this may be leveraged in the configure hook of Hanio
+# to block refresh from Geneva to Hanoi if the dbtype
+# is set to 'mongodb' and the project has not yet provided
+# a database migration script...
 dbProvider=$(snapctl get dbtype)
 PREV_DB_PROVIDER_FILE="$SNAP_DATA/prevdbtype"
-
-case "$dbProvider" in 
-    "")
-        # not set, don't do anything 
-        ;;
-    "redis")
-        prevDBtype=$(cat "$PREV_DB_PROVIDER_FILE")
-        if [ "$prevDBtype" != "redis" ]; then
-            # change provider to redis:
-            #
-            # first check for service config in consul, if found
-            # update directly, otherwise update configuration.toml
-            # (this should practically only ever happen for the
-            # two support-* services, as they're disabled by
-            # default in the snap).
-            #
-            # * core-command
-            # * core-data
-            # * core-metadata
-            # * support-notifications
-            # * support-scheduler
-            for svc in ${DB_SERVICES[*]}; do
-                updated="false"
-
-                exists=`curl -s http://localhost:8500/v1/kv/edgex/core/1.0/edgex-$svc/Databases/Primary/Type?raw`
-                if [ "$exists" = "mongodb" ]; then
-                    update_consul_db_type "$svc" "redisdb" "6379"
-                    updated="true"
-		fi
-
-                # if consul wasn't updated, then the service has never been started
-                # so just modify the service's local configuration.toml file
-                if [ "$updated" = "false" ]; then
-                    configFile=$SNAP_DATA/config/$svc/res/configuration.toml
-                    toml2json --preserve-key-order "$configFile" | \
-                        jq -r '.Databases.Primary.Type = "redisdb" | .Databases.Primary.Port = 6379' | \
-                        json2toml --preserve-key-order > "$configFile.tmp"
-                    mv "$configFile.tmp" "$configFile"
-                fi
-            done
-
-            # turn mongod and edgex-mongo off
-            handle_svc "edgex-mongo" "off"
-            handle_svc "mongod" "off"
-
-            # turn redis on
-            handle_svc "redis" "on"
-
-            restart_db_services
-        fi
-        # save the database provider as redis for next invocation
-        echo "redis" > "$PREV_DB_PROVIDER_FILE"
-        ;;
-    "mongodb")
-        prevDBtype=$(cat "$PREV_DB_PROVIDER_FILE")
-        if [ "$prevDBtype" != "mongodb" ]; then
-            # change provider to mongo:
-            #
-            # first check for service config in consul, if found
-            # update directly, otherwise update configuration.toml
-            # (this should practically only ever happen for the
-            # two support-* services, as they're disabled by
-            # default in the snap).
-            #
-            # * core-command
-            # * core-data
-            # * core-metadata
-            # * support-notifications
-            # * support-scheduler
-            for svc in ${DB_SERVICES[*]}; do
-                updated="false"
-
-                exists=`curl -s http://localhost:8500/v1/kv/edgex/core/1.0/edgex-$svc/Databases/Primary/Type?raw`
-                if [ "$exists" = "redisdb" ]; then
-                    update_consul_db_type "$svc" "mongodb" "27017"
-                    updated="true"
-                fi
-
-                # if consul wasn't updated, then the support-* service has never been started
-                # so just modify the service's local configuration.toml file
-                if [ "$updated" = "false" ]; then
-                    configFile=$SNAP_DATA/config/$svc/res/configuration.toml
-                    toml2json --preserve-key-order "$configFile" | \
-                        jq -r '.Databases.Primary.Type = "mongodb" | .Databases.Primary.Port = 27017' | \
-                        json2toml --preserve-key-order > "$configFile.tmp"
-                    mv "$configFile.tmp" "$configFile"
-                fi
-            done
-
-            # turn redis off
-            handle_svc "redis" "off"
-
-            # turn edgex-mongo and mongod on
-            handle_svc "mongod" "on"
-            handle_svc "edgex-mongo" "on"
-
-            restart_db_services
-        fi
-
-        # save the database provider as mongodb for next invocation
-        echo "mongodb" > "$PREV_DB_PROVIDER_FILE"
-        ;;
-    *)
-        echo "invalid setting for dbtype: $dbProvider"
-        exit 1
-        ;;
-esac

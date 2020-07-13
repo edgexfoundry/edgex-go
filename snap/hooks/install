@@ -10,15 +10,14 @@ SNAP_CURRENT=${SNAP/%$SNAP_REVISION/current}
 # into $SNAP_DATA/config
 # note that app-service-configurable is handled separately
 mkdir -p "$SNAP_DATA/config"
-for service in edgex-mongo security-file-token-provider security-proxy-setup security-secrets-setup security-secretstore-setup core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual security-secretstore-read; do
+for service in security-file-token-provider security-proxy-setup security-secrets-setup security-secretstore-setup core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent device-virtual security-secretstore-read; do
     if [ ! -f "$SNAP_DATA/config/$service/res/configuration.toml" ]; then
         mkdir -p "$SNAP_DATA/config/$service/res"
         cp "$SNAP/config/$service/res/configuration.toml" "$SNAP_DATA/config/$service/res/configuration.toml"
 
-        # replace $SNAP, $SNAP_DATA, $SNAP_COMMON env vars for edgex-mono, file-token-provider,
+        # replace $SNAP, $SNAP_DATA, $SNAP_COMMON env vars for file-token-provider,
         # and security-secretstore-setup, as they don't support env var overrides
-        if [ "$service" = "edgex-mongo" ] ||
-	    [ "$service" == "security-file-token-provider" ] ||
+        if [ "$service" == "security-file-token-provider" ] ||
             [ "$service" == "security-secretstore-read" ]; then
             sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
                 -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
@@ -77,9 +76,6 @@ cp "$SNAP/config/security-file-token-provider/res/token-config.json" "$SNAP_DATA
 # ensure consul dirs exist
 mkdir -p "$SNAP_DATA/consul/data"
 mkdir -p "$SNAP_DATA/consul/config"
-
-# ensure mongodb data dirs exist
-mkdir -p "$SNAP_DATA/mongo/db"
 
 # ensure secrets dir exists
 mkdir -p "$SNAP_DATA/secrets"
@@ -198,12 +194,10 @@ drop sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
 # - app-service-configurable (used for rules integration)
 # - device-virtual
 # - kuiper (replacement for support-rulesengine)
-# - mongo
 # - support-*
 # - sys-mgmt-agent (see https://github.com/edgexfoundry/edgex-go/issues/2486)
 #
-for svc in support-notifications support-scheduler support-logging app-service-configurable \
-    device-virtual edgex-mongo mongod sys-mgmt-agent kuiper; do
+for svc in support-notifications support-scheduler support-logging app-service-configurable device-virtual sys-mgmt-agent kuiper; do
     # set the service as off, so that the setting is persistent after a refresh
     # due to snapd bug: https://bugs.launchpad.net/snapd/+bug/1818306
     snapctl set $svc=off
