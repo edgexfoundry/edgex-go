@@ -1,0 +1,26 @@
+From fb533601025c921927928cff02039e4c6cce1f32 Mon Sep 17 00:00:00 2001
+From: Haresh Kainth <haresh.kainth@canonical.com>
+Date: Mon, 13 Jul 2020 09:31:02 +0100
+Subject: [PATCH] Use previous version of bootstrap (v0.0.32) due to the
+ 0.0.0.0 'bug' see https://github.com/edgexfoundry/device-sdk-go/issues/456
+
+---
+ go.mod | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/go.mod b/go.mod
+index 4eec4b11..21d6c1ec 100644
+--- a/go.mod
++++ b/go.mod
+@@ -6,7 +6,7 @@ require (
+ 	github.com/OneOfOne/xxhash v1.2.5
+ 	github.com/cloudflare/gokey v0.1.0
+ 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+-	github.com/edgexfoundry/go-mod-bootstrap v0.0.33
++	github.com/edgexfoundry/go-mod-bootstrap v0.0.32
+ 	github.com/edgexfoundry/go-mod-configuration v0.0.3
+ 	github.com/edgexfoundry/go-mod-core-contracts v0.1.58
+ 	github.com/edgexfoundry/go-mod-messaging v0.1.19
+-- 
+2.24.3
+
