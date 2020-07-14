@@ -7,7 +7,7 @@ description: |
   EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
   Foundation building a common open framework for IoT edge computing. This 
   snap contains all of the EdgeX core, security, and support reference 
-  services, as well as Consul, Kong, MongoDB, Vault, and device-virtual.
+  services, as well as Consul, Kong, Redis, Vault, and device-virtual.
   The packaging for this snap can be found at:
     https://github.com/edgexfoundry/edgex-go
 
@@ -83,16 +83,6 @@ apps:
     command: bin/redis-launch.sh
     daemon: simple
     plugs: [network, network-bind]
-  mongod:
-    adapter: full
-    after: [consul]
-    command: >-
-      bin/mongod
-      --dbpath $SNAP_DATA/mongo/db
-      --logpath $SNAP_COMMON/mongodb.log
-    daemon: simple
-    plugs: [hardware-observe, network, network-bind, system-observe]
-    stop-command: bin/mongod --shutdown --dbpath $SNAP_DATA/mongo/db
   postgres:
     adapter: full
     command: usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
@@ -200,19 +190,10 @@ apps:
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
-  edgex-mongo:
-    adapter: full
-    after: [mongod, security-secretstore-setup]
-    command: bin/edgex-mongo -confdir $SNAP_DATA/config/edgex-mongo/res
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    daemon: oneshot
-    start-timeout: 15m
-    plugs: [network]
   core-data:
     adapter: full
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
     command-chain:
@@ -228,7 +209,7 @@ apps:
   core-metadata:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
     command-chain:
@@ -241,7 +222,7 @@ apps:
   core-command:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
     command-chain:
@@ -254,7 +235,7 @@ apps:
   support-logging:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
     command-chain:
@@ -271,7 +252,7 @@ apps:
   support-notifications:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
     command-chain:
@@ -284,7 +265,7 @@ apps:
   support-scheduler:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
     command-chain:
@@ -297,7 +278,7 @@ apps:
   sys-mgmt-agent:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
     command-chain:
@@ -309,7 +290,7 @@ apps:
   device-virtual:
     adapter: none
     after:
-      - edgex-mongo
+      - redis
       - security-proxy-setup
       - core-data
       - core-metadata
@@ -345,18 +326,6 @@ apps:
     adapter: full
     command: bin/redis-cli
     plugs: [home, removable-media, network]
-  mongo:
-    adapter: full
-    command: bin/mongo
-    plugs: [home, removable-media, network]
-  mongostat:
-    adapter: full
-    command: bin/mongostat
-    plugs: [network]
-  mongodump:
-    adapter: full
-    command: bin/mongodump
-    plugs: [network]
   consul-cli:
     adapter: none
     command: bin/consul
@@ -649,65 +618,12 @@ parts:
       - make
       - zip
 
-  mongodb:
-    plugin: dump
-    source:
-      - on amd64: http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.6.tgz
-      - else:
-          - on arm64: http://downloads.mongodb.org/linux/mongodb-linux-aarch64-ubuntu1804-4.2.6.tgz
-      - else fail
-    organize:
-      MPL-2: usr/share/doc/mongodb/MPL-2
-      README: usr/share/doc/mongodb/README
-      THIRD-PARTY-NOTICES: usr/share/doc/mongodb/THIRD-PARTY-NOTICES
-      LICENSE-Community.txt: usr/share/doc/mongodb/LICENSE-Community.txt
-    stage-packages:
-      - libssl1.1
-    stage:
-      - -bin/bsondump
-      - -bin/mongoexport
-      - -bin/mongofiles
-      - -bin/mongoimport
-      - -bin/mongooplog
-      - -bin/mongoperf
-      - -bin/mongoreplay
-      - -bin/mongorestore
-      - -bin/mongos
-      - -bin/mongotop
-  remarshal:
-    plugin: python
-    source: https://github.com/dbohdan/remarshal.git
-    source-tag: v0.10.0
-    source-depth: 1
-    organize:
-      LICENSE: usr/share/doc/remarshal/LICENSE
   redis:
     source: https://github.com/antirez/redis.git
     source-tag: "5.0.8"
     source-depth: 1
     plugin: make
     make-install-var: PREFIX
-  edgex-mongo:
-    source: https://github.com/edgexfoundry/docker-edgex-mongo.git
-    # TODO (geneva): pin this to a commit or tag for release
-    source-branch: master
-    source-depth: 1
-    plugin: make
-    after: [go113]
-    override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
-      cd $SNAPCRAFT_PART_SRC
-      make build
-
-      install -DT "./cmd/edgex-mongo" "$SNAPCRAFT_PART_INSTALL/bin/edgex-mongo"
-
-      install -d "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/"
-
-      cat "./cmd/res/configuration.toml" | \
-        sed -e "s@TokenFile = \"/vault/config/assets/resp-init.json\"@TokenFile = \"\$SNAP_DATA/secrets/edgex-mongo/secrets-token.json\"@" \
-            -e "s@RootCaCertPath = \"/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem\"@RootCaCertPath = \"\$SNAP_DATA/secrets/ca/ca.pem\"@" \
-            > \
-       "$SNAPCRAFT_PART_INSTALL/config/edgex-mongo/res/configuration.toml"
 
   edgex-go:
     source: .
