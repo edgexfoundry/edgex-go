@@ -8,49 +8,6 @@ servers:
     description: URL for local development and testing
 components:
   schemas:
-    AddAddressableRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to add a new addressable."
-      type: object
-      properties:
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
-      required:
-        - name
-        - protocol
-        - address
-    AddAddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding an Addressable. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -128,8 +85,8 @@ components:
       properties:
         deviceServiceName:
           type: string
-        addressableName:
-          type: string
+        addressable:
+          $ref: '#/components/schemas/Addressable'
         operatingState:
           description: "Can only be set to ENABLED or DISABLED"
           type: string
@@ -142,7 +99,7 @@ components:
           type: string
       required:
         - deviceServiceName
-        - addressableName
+        - addressable
         - operatingState
         - adminState
     AddDeviceServiceResponse:
@@ -168,18 +125,7 @@ components:
     Addressable:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        created:
-          type: integer
-        modified:
-          type: integer
-        name:
-          type: string
         protocol:
-          type: string
-        method:
           type: string
         address:
           type: string
@@ -187,13 +133,9 @@ components:
           type: integer
         path:
           type: string
-        publisher:
-          type: string
         user:
           type: string
         password:
-          type: string
-        topic:
           type: string
     AutoEvent:
       type: object
@@ -273,10 +215,6 @@ components:
         adminState:
           type: string
         operatingState:
-          type: string
-        addressableId:
-          type: string
-        addressableName:
           type: string
         lastConnected:
           type: integer
@@ -606,49 +544,6 @@ components:
         - strategy
         - type
         - version
-    UpdateAddressableRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to update an existing addressable definition. 'id' and 'name' must be populated in order to identify the addressable. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
-      required:
-        - id
-        - name
-    UpdateAddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating an Addressable. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     UpdateDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -727,8 +622,8 @@ components:
       description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        addressableName:
-          type: string
+        addressable:
+          $ref: '#/components/schemas/Addressable'
         adminState:
           description: "Can only be set to LOCKED or UNLOCKED"
           type: string
@@ -818,304 +713,6 @@ components:
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
 paths:
-  /addressable:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      summary: "Allows definition of new addressables"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AddAddressableRequest'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddAddressableResponse'
-    patch:
-      summary: "Allows updates to an existing addressable"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UpdateAddressableRequest'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateAddressableResponse'
-  /addressable/all:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-    get:
-      summary: "Given the entire range of addressables sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AddressableResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
-  /addressable/host/{host}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: host
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The hostname or IP address of the addressable you wish to load."
-    get:
-      summary: "Returns an addressable by its host"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Addressable'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/id/{id}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns an addressable by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Delete an addressable by ID"
-      responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/name/{name}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The name of the addressable you wish to load, datatype string."
-    get:
-      summary: "Returns an addressable by name"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Delete an addressable by name"
-      responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/port/{port}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: port
-        in: path
-        required: true
-        schema:
-          type: integer
-        description: "The port of the addressable you wish to load."
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-    get:
-      summary: "Returns a list of all addressables listening on the specified port"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
   /batch:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2280,94 +1877,6 @@ paths:
               $ref: '#/components/headers/correlatedResponseHeader'
         '400':
           description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /deviceservice/addressable/id/{id}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "The unique ID of an addressable"
-    get:
-      summary: "Returns the device service associated with the specified addressable"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /deviceservice/addressable/name/{name}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique name of an addressable"
-    get:
-      summary: "Returns the device service associated with the specified addressable"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
-        '404':
-          description: "The requested resource does not exist"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
