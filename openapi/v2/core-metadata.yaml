@@ -356,8 +356,47 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
-        device:
-          $ref: '#/components/schemas/Device'
+        id:
+          type: string
+          format: uuid
+        created:
+          type: integer
+        modified:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        adminState:
+          type: string
+        operatingState:
+          type: string
+        lastConnected:
+          type: integer
+        lastReported:
+          type: integer
+        labels:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
+        serviceId:
+          type: string
+        serviceName:
+          type: string
+        profileId:
+          type: string
+        profileName:
+          type: string
+        autoEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoEvent'
+        protocols:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProtocolProperties'
     DeviceService:
       description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
       type: object
@@ -392,8 +431,31 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
-        service:
-          $ref: '#/components/schemas/DeviceService'
+        created:
+          type: integer
+        modified:
+          type: integer
+        description:
+          type: string
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        lastConnected:
+          type: integer
+        lastReported:
+          type: integer
+        operatingState:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        addressable:
+          $ref: '#/components/schemas/Addressable'
+        adminState:
+          type: string
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
