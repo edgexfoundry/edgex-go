@@ -62,8 +62,30 @@ components:
       description: "A request to add a new device profile. When making this request, the ID property should not be populated."
       type: object
       properties:
-        profile:
-          $ref: '#/components/schemas/DeviceProfile'
+        name:
+          type: string
+        description:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceResource'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileResource'
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Command'
     AddDeviceProfileResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -246,17 +268,17 @@ components:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
       properties:
-        created:
-          type: integer
-        modified:
-          type: integer
-        description:
-          type: string
         id:
           type: string
           format: uuid
         name:
           type: string
+        description:
+          type: string
+        created:
+          type: integer
+        modified:
+          type: integer
         manufacturer:
           type: string
         model:
@@ -282,8 +304,37 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
-        profile:
-          $ref: '#/components/schemas/DeviceProfile'
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        created:
+          type: integer
+        modified:
+          type: integer
+        manufacturer:
+          type: string
+        model:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceResource'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileResource'
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Command'
     DeviceResource:
       description: "DeviceResource represents a value on a device that can be read or written."
       type: object
@@ -603,8 +654,33 @@ components:
       description: "A request to update an existing device profile definition. 'id' and 'name' must be populated in order to identify the profile. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        profile:
-          $ref: '#/components/schemas/DeviceProfile'
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceResource'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileResource'
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Command'
     UpdateDeviceProfileResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
