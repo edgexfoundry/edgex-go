@@ -156,8 +156,18 @@ func TestInit(t *testing.T) {
 			expectNumRoutes:    9,
 		},
 		{
+			name:               "add one unique route with URL containing IP address",
+			proxyRouteEnvValue: "testService.http://127.0.0.1:12345",
+			expectNumRoutes:    9,
+		},
+		{
 			name:               "add two unique routes",
 			proxyRouteEnvValue: "testService1.http://edgex-testService1:12345, testService2.http://edgex-testService2:12346",
+			expectNumRoutes:    10,
+		},
+		{
+			name:               "add two unique routes:one with URL containing IP address; the other one with hostname",
+			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346",
 			expectNumRoutes:    10,
 		},
 		{
@@ -174,6 +184,11 @@ func TestInit(t *testing.T) {
 			name:               "add one unique, multiple duplicate routes",
 			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
 			expectNumRoutes:    9,
+		},
+		{
+			name:               "add two unique, multiple duplicate routes",
+			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
+			expectNumRoutes:    10,
 		},
 		// invalid syntax tests:
 		// the bad one is not added into kong route pool

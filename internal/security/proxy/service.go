@@ -218,7 +218,8 @@ func (s *Service) parseAdditionalProxyRoutes() (map[string]bootstrapConfig.Clien
 				"invalid syntax for defining additional kong route %s, it should contain dot . as separator", route)
 		}
 
-		routePair := strings.Split(route, ".")
+		// assume the routePair is in the format of serviceName.routeURL
+		routePair := strings.SplitN(route, ".", 2)
 		serviceName := strings.TrimSpace(routePair[0])
 		routeURL := strings.TrimSpace(routePair[1])
 
