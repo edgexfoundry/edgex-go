@@ -67,6 +67,12 @@ components:
           type: string
         operatingState:
           type: string
+        labels:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
         autoEvents:
           type: array
           items:
@@ -668,6 +674,12 @@ components:
           type: boolean
         operatingState:
           type: string
+        labels:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
         profileName:
           type: string
         protocols:
