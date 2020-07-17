@@ -102,13 +102,13 @@ components:
     AddDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to add a new DeviceService - name must be unique and the specified addressable must already exist"
+      description: "A request to add a new DeviceService - name must be unique"
       type: object
       properties:
         deviceServiceName:
           type: string
-        addressable:
-          $ref: '#/components/schemas/Addressable'
+        baseAddress:
+          type: string
         operatingState:
           description: "Can only be set to ENABLED or DISABLED"
           type: string
@@ -121,7 +121,7 @@ components:
           type: string
       required:
         - deviceServiceName
-        - addressable
+        - baseAddress
         - operatingState
         - adminState
     AddDeviceServiceResponse:
@@ -137,28 +137,6 @@ components:
           type: string
       required:
         - id
-    AddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        addressable:
-          $ref: '#/components/schemas/Addressable'
-    Addressable:
-      type: object
-      properties:
-        protocol:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
     AutoEvent:
       type: object
       properties:
@@ -422,8 +400,8 @@ components:
           type: array
           items:
             type: string
-        addressable:
-          $ref: '#/components/schemas/Addressable'
+        baseAddress:
+          type: string
         adminState:
           type: string
     DeviceServiceResponse:
@@ -452,8 +430,8 @@ components:
           type: array
           items:
             type: string
-        addressable:
-          $ref: '#/components/schemas/Addressable'
+        baseAddress:
+          type: string
         adminState:
           type: string
     ErrorResponse:
@@ -739,8 +717,8 @@ components:
       description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        addressable:
-          $ref: '#/components/schemas/Addressable'
+        baseAddress:
+          type: string
         adminState:
           description: "Can only be set to LOCKED or UNLOCKED"
           type: string
@@ -1785,7 +1763,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
-      summary: "Add a new DeviceService - name must be unique.  The Addressable must already exist and can be referenced by an included Addressable object containing the Addressable's id or name."
+      summary: "Add a new DeviceService - name must be unique."
       requestBody:
         required: true
         content:
