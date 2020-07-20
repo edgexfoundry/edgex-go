@@ -161,6 +161,9 @@ components:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         requestId:
           description: "Uniquely identifies the request that resulted in this response."
           type: string
@@ -201,6 +204,8 @@ components:
     Device:
       type: object
       properties:
+        apiVersion:
+          type: string
         id:
           type: string
           format: uuid
@@ -246,6 +251,8 @@ components:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
       properties:
+        apiVersion:
+          type: string
         id:
           type: string
           format: uuid
@@ -379,6 +386,8 @@ components:
       description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
       type: object
       properties:
+        apiVersion:
+          type: string
         created:
           type: integer
         modified:
