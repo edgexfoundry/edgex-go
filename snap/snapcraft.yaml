@@ -724,6 +724,11 @@ parts:
     source: .
     plugin: make
     after: [go113]
+    override-pull: |
+      snapcraftctl pull
+      cd $SNAPCRAFT_PART_SRC
+      patch -p1 < "$SNAPCRAFT_PROJECT_DIR/snap/local/patches/0001-Go-mod-bootstrap-fix.patch"
+
     override-build: |
       export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
