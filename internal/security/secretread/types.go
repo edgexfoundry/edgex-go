@@ -32,7 +32,7 @@ type SecretStoreInfo struct {
 }
 
 type ServiceInfo struct {
-	// BootTimeout indicates, in milliseconds, how long the service will retry connecting to the database
+	// BootTimeout indicates, in milliseconds, how long the service will retry connecting to mongo database
 	// before giving up. Default is 30,000.
 	BootTimeout int
 }

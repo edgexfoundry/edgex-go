@@ -259,11 +259,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// continue credential creation
 
 	// A little note on why there are two secrets paths. For each microservice, the
-	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/redisdb and
-	// /v1/secret/edgex/redisdb/%s). The go-mod-secrets client requires a Path property to prefix all
-	// secrets.
-	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
-	// edgex/%s), and edgex/redisdb/* is enumerated to initialize the database.
+	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/mongodb and
+	// /v1/secret/edgex/mongo/%s). The go-mod-secrets client requires a Path property to prefix all
+	// secrets. docker-edgex-mongo uses that
+	// (https://github.com/edgexfoundry/docker-edgex-mongo/blob/master/cmd/res/configuration.toml) in
+	// order to enumerate the users and passwords when setting up the initial database authentication.
+	// So edgex/%s/monodb is for the microservices (microservices are restricted to their specific
+	// edgex/%s), and edgex/mongo/* is enumerated to initialize the database.
 
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
@@ -278,16 +280,38 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		Password: redis5Password,
 	}
 
-	for _, info := range configuration.Databases {
+	for dbname, info := range configuration.Databases {
 		service := info.Service
+		// generate credentials
+		password, err := cred.GeneratePassword(dbname)
+		if err != nil {
+			lc.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
+			os.Exit(1)
+		}
+		pair := UserPasswordPair{
+			User:     info.Username,
+			Password: password,
+		}
 
 		// add credentials to service path if specified and they're not already there
 		if len(service) != 0 {
+			err = addServiceCredential(lc, "mongodb", cred, service, pair)
+			if err != nil {
+				lc.Error(err.Error())
+				os.Exit(1)
+			}
+
 			err = addServiceCredential(lc, "redisdb", cred, service, redis5Pair)
 			if err != nil {
 				lc.Error(err.Error())
 				os.Exit(1)
 			}
+		}
+
+		err = addDBCredential(lc, "mongo", cred, dbname, pair)
+		if err != nil {
+			lc.Error(err.Error())
+			os.Exit(1)
 		}
 	}
 
