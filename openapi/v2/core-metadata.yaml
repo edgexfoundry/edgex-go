@@ -191,16 +191,9 @@ components:
         name:
           type: string
         get:
-          $ref: '#/components/schemas/CommandAction'
+          type: boolean
         put:
-          $ref: '#/components/schemas/CommandAction'
-    CommandAction:
-      type: object
-      properties:
-        path:
-          type: string
-        url:
-          type: string
+          type: boolean
     Device:
       type: object
       properties:
