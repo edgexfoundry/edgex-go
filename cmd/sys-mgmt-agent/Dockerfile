@@ -5,18 +5,18 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-FROM golang:1.13-alpine AS builder
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
-ENV GO111MODULE=on
-WORKDIR /go/src/github.com/edgexfoundry/edgex-go
+WORKDIR /edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk update && apk add make bash git
+
 COPY go.mod .
-# COPY go.sum .
 
 RUN go mod download
 
@@ -42,11 +42,11 @@ ENV APP_PORT=48090
 EXPOSE $APP_PORT
 
 # Copy over the SMA executable bits.
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/sys-mgmt-agent/sys-mgmt-agent /
+COPY --from=builder /edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/configuration.toml
 
 # Copy over the golang "executor" executable.
-COPY --from=builder /go/src/github.com/edgexfoundry/edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
+COPY --from=builder /edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
 
 RUN apk --no-cache add py-pip
 RUN pip install docker-compose==1.23.2

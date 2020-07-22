@@ -25,17 +25,14 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for building EdgeX Foundry security-secrets-setup
-FROM golang:1.13-alpine AS build-env
-
-# environment variables
-ENV GO111MODULE=on
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS build-env
 
 # set the working directory
 WORKDIR /edgex-go
 
 RUN apk update && apk add make git
 
-# copy go source files
 COPY go.mod .
 
 RUN go mod download
