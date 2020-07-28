@@ -18,7 +18,8 @@ edgeXBuildGoParallel(
     project: 'edgex-go',
     goVersion: '1.13',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
-    testScript: 'make test raml_verify',
+    testScript: 'make test',
     buildScript: 'make build',
-    publishSwaggerDocs: true
+    publishSwaggerDocs: false, //leaving this false until PR-2644 is merged
+    swaggerApiFolders: ['openapi/v1', 'openapi/v2']
 )
