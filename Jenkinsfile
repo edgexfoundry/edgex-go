@@ -20,6 +20,6 @@ edgeXBuildGoParallel(
     dockerFileGlobPath: 'cmd/**/Dockerfile',
     testScript: 'make test',
     buildScript: 'make build',
-    publishSwaggerDocs: false, //leaving this false until PR-2644 is merged
+    publishSwaggerDocs: true,
     swaggerApiFolders: ['openapi/v1', 'openapi/v2']
 )
