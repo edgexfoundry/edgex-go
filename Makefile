@@ -23,7 +23,7 @@ MICROSERVICES=cmd/core-metadata/core-metadata cmd/core-data/core-data \
 
 .PHONY: $(MICROSERVICES)
 
-VERSION=$(shell cat ./VERSION)
+VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"

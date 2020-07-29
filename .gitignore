@@ -11,6 +11,7 @@ coverage.out
 debug
 *.dll
 .security-secrets-setup.complete
+VERSION
 
 # binary files
 cmd/core-command/core-command

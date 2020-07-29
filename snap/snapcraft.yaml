@@ -417,7 +417,11 @@ parts:
     source: snap/local/build-helpers
     override-pull: |
       cd $SNAPCRAFT_PROJECT_DIR
-      PROJECT_VERSION=$(cat VERSION)
+      if [ -f VERSION ]; then
+        PROJECT_VERSION=$(cat VERSION)
+      else
+        PROJECT_VERSION=local-dev
+      fi
       GIT_REVISION=$(git rev-parse --short HEAD)
       snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}
   static-packages:
