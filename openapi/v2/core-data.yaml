@@ -30,19 +30,6 @@ components:
       required:
         - deviceName
         - readings
-    AddEventResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a new Event. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     BaseReading:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
@@ -107,6 +94,18 @@ components:
       required:
         - apiVersion
         - statusCode
+    BaseWithIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        id:
+          description: "The unique identifier for the instance."
+          type: string
+          format: uuid
+      required:
+        - id
     BinaryReading:
       description: "An event reading for a binary data type"
       allOf:
@@ -528,7 +527,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddEventResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
               example:
                 - apiVersion: "v2"
                   statusCode: 201

@@ -43,19 +43,6 @@ components:
         - serviceName
         - profileName
         - protocols
-    AddDeviceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -86,19 +73,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Command'
-    AddDeviceProfileResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device Profile. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -124,19 +98,6 @@ components:
         - baseAddress
         - operatingState
         - adminState
-    AddDeviceServiceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device Service. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AutoEvent:
       type: object
       properties:
@@ -178,6 +139,18 @@ components:
       required:
         - requestId
         - statusCode
+    BaseWithIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        id:
+          description: "The unique identifier for the instance."
+          type: string
+          format: uuid
+      required:
+        - id
     Command:
       type: object
       properties:
@@ -599,7 +572,7 @@ components:
         content:
           type: string
           format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
+          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an BaseWithIdResponse."
         strategy:
           type: string
           description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
@@ -658,17 +631,6 @@ components:
       required:
         - id
         - deviceName
-    UpdateDeviceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating the state of a device. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     UpdateDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -702,17 +664,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Command'
-    UpdateDeviceProfileResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating a device profile. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     UpdateDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -739,17 +690,6 @@ components:
       required:
         - id
         - deviceServiceName
-    UpdateDeviceServiceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating a device service. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -856,7 +796,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     patch:
       summary: "Allows updates to an existing device"
       requestBody:
@@ -880,7 +820,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /device/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1328,7 +1268,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceProfileResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     put:
       summary: "Allows updates to an existing device profile"
       requestBody:
@@ -1352,7 +1292,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceProfileResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /deviceprofile/uploadfile:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1377,7 +1317,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  $ref: '#/components/schemas/BaseWithIdResponse'
         '400':
           description: "Invalid request."
           headers:
@@ -1787,7 +1727,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceServiceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     patch:
       summary: "Allows updates to an existing device service"
       requestBody:
@@ -1809,7 +1749,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceServiceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /deviceservice/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
