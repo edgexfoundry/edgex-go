@@ -193,8 +193,3 @@ docker_security_secretstore_setup:
 		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
-raml_verify:
-	docker run --rm --privileged \
-		-v $(WORKSPACE):/raml-verification -w /raml-verification \
-		nexus3.edgexfoundry.org:10003/edgex-devops/edgex-docs-builder:$(ARCH) \
-		/scripts/raml-verify.sh
