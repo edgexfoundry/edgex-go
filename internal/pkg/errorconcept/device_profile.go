@@ -31,6 +31,7 @@ type deviceProfileErrorConcept struct {
 	InvalidState_StatusBadRequest          deviceProfileInvalidState_StatusBadRequest
 	InvalidState_StatusConflict            deviceProfileInvalidState_StatusConflict
 	MarshalYaml                            deviceProfileMarshalYaml
+	MarshalJson                            deviceProfileMarshalJson
 	MissingFile                            deviceProfileMissingFile
 	NotFound                               deviceProfileNotFound
 	ReadFile                               deviceProfileReadFile
@@ -111,6 +112,21 @@ func (r deviceProfileInvalidState_StatusConflict) isA(err error) bool {
 }
 
 func (r deviceProfileInvalidState_StatusConflict) message(err error) string {
+	return err.Error()
+}
+
+type deviceProfileMarshalJson struct{}
+
+func (r deviceProfileMarshalJson) httpErrorCode() int {
+	return http.StatusInternalServerError
+}
+
+func (r deviceProfileMarshalJson) isA(err error) bool {
+	_, ok := err.(metadataErrors.ErrDeviceProfileMarshalJson)
+	return ok
+}
+
+func (r deviceProfileMarshalJson) message(err error) string {
 	return err.Error()
 }
 

@@ -931,8 +931,7 @@ paths:
         400:
           description: For malformed or unparsable requests
         409:
-          description: If an associated command's name is a duplicate for the profile
-            or if the name is determined to not be unique with regard to others.
+          description: If the profile's name matches an existing device profile.
         500:
           description: For unknown or unanticipated issues
   /v1/deviceprofile/id/{id}:
@@ -1114,8 +1113,7 @@ paths:
         400:
           description: If the YAML file is empty
         409:
-          description: If an associated command's name is a duplicate for the profile
-            or if the name is determined to not be unique with regard to others
+          description: If the profile's name matches an existing device profile.
         500:
           description: For unknown or unanticipated issues
   /v1/deviceprofile/uploadfile:
@@ -1128,8 +1126,7 @@ paths:
         400:
           description: If the YAML file is empty
         409:
-          description: If an associated command's name is a duplicate for the profile
-            or if the name is determined to not be unique with regard to others
+          description: If the profile's name matches an existing device profile.
         500:
           description: for unknown or unanticipated issues
   /v1/deviceprofile/yaml/name/{name}:

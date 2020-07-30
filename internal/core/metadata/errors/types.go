@@ -183,3 +183,15 @@ func NewErrNameCollision(name, fromID, toID string) ErrNameCollision {
 		toID:   toID,
 	}
 }
+
+type ErrDeviceProfileMarshalJson struct {
+	msg string
+}
+
+func (e ErrDeviceProfileMarshalJson) Error() string {
+	return e.msg
+}
+
+func NewErrDeviceProfileMarshalJson(message string) error {
+	return ErrDeviceProfileMarshalJson{msg: message}
+}
