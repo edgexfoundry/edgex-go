@@ -68,37 +68,13 @@ func restAddDeviceProfile(
 	vdc coredata.ValueDescriptorClient,
 	configuration *config.ConfigurationStruct) {
 
-	var dp models.DeviceProfile
-
-	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
-		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		errorHandler.Handle(w, err, errorconcept.DeviceProfile.ReadFile)
 		return
 	}
 
-	if configuration.Writable.EnableValueDescriptorManagement {
-		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
-		// will fail during the creation process later on.
-		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
-		_, err := nameOp.Execute()
-		// The operator will return an DuplicateName error if the DeviceProfile exist.
-		if err == nil {
-			errorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
-			return
-		}
-
-		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, lc, dp.DeviceResources...)
-		err = op.Execute()
-		if err != nil {
-			errorHandler.HandleOneVariant(
-				w,
-				err,
-				errorconcept.NewServiceClientHttpError(err),
-				errorconcept.Default.InternalServerError)
-			return
-		}
-	}
-
-	addDeviceProfile(dp, dbClient, w, errorHandler)
+	addDeviceProfile(data, lc, vdc, dbClient, r, w, errorHandler, configuration)
 }
 
 func restUpdateDeviceProfile(
@@ -281,52 +257,13 @@ func restAddProfileByYaml(
 		return
 	}
 
-	if configuration.Writable.EnableValueDescriptorManagement {
-		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
-		// will fail during the creation process later on.
-		nameOp := device_profile.NewGetProfileName(dp.Name, dbClient)
-		_, err := nameOp.Execute()
-		// The operator will return an DuplicateName error if the DeviceProfile exist.
-		if err == nil {
-			errorHandler.Handle(w, err, errorconcept.DeviceProfile.DuplicateName)
-			return
-		}
-
-		op := device_profile.NewAddValueDescriptorExecutor(r.Context(), vdc, lc, dp.DeviceResources...)
-		err = op.Execute()
-		if err != nil {
-			errorHandler.HandleOneVariant(
-				w,
-				err,
-				errorconcept.NewServiceClientHttpError(err),
-				errorconcept.Default.InternalServerError)
-			return
-		}
-	}
-
-	// Avoid using the 'addDeviceProfile' function because we need to be backwards compatibility for API response codes.
-	// The difference is the mapping of 'ErrContractInvalid' to a '409(Conflict)' rather than a '400(Bad request).
-	// Disregarding backwards compatibility, the 'addDeviceProfile' function is the correct implementation to use in the
-	// 'ErrContractInvalid' since a '400(Bad Request)' is the correct response.
-	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
-	id, err := op.Execute()
-
+	jsonBytes, err := json.Marshal(dp)
 	if err != nil {
-		errorHandler.HandleManyVariants(
-			w,
-			err,
-			[]errorconcept.ErrorConceptType{
-				errorconcept.DeviceProfile.InvalidState_StatusBadRequest,
-				errorconcept.DeviceProfile.ContractInvalid_StatusConflict,
-				errorconcept.Common.DuplicateName,
-				errorconcept.DeviceProfile.EmptyName,
-			},
-			errorconcept.Default.InternalServerError)
+		errorHandler.Handle(w, err, errorconcept.DeviceProfile.MarshalJson)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	addDeviceProfile(jsonBytes, lc, vdc, dbClient, r, w, errorHandler, configuration)
 }
 
 // Add a device profile with YAML content
@@ -355,6 +292,32 @@ func restAddProfileByYamlRaw(
 		return
 	}
 
+	jsonBytes, err := json.Marshal(dp)
+	if err != nil {
+		errorHandler.Handle(w, err, errorconcept.DeviceProfile.MarshalJson)
+		return
+	}
+
+	addDeviceProfile(jsonBytes, lc, vdc, dbClient, r, w, errorHandler, configuration)
+}
+
+// This function centralizes the common logic for adding a device profile to the database and dealing with the return
+func addDeviceProfile(
+	jsonBytes []byte,
+	lc logger.LoggingClient,
+	vdc coredata.ValueDescriptorClient,
+	dbClient interfaces.DBClient,
+	r *http.Request,
+	w http.ResponseWriter,
+	errorHandler errorconcept.ErrorHandler,
+	configuration *config.ConfigurationStruct) {
+
+	var dp models.DeviceProfile
+	if err := dp.UnmarshalJSON(jsonBytes); err != nil {
+		errorHandler.Handle(w, err, errorconcept.Common.InvalidRequest_StatusBadRequest)
+		return
+	}
+
 	if configuration.Writable.EnableValueDescriptorManagement {
 		// Check if the device profile name is unique so that we do not create ValueDescriptors for a DeviceProfile that
 		// will fail during the creation process later on.
@@ -377,16 +340,6 @@ func restAddProfileByYamlRaw(
 			return
 		}
 	}
-
-	addDeviceProfile(dp, dbClient, w, errorHandler)
-}
-
-// This function centralizes the common logic for adding a device profile to the database and dealing with the return
-func addDeviceProfile(
-	dp models.DeviceProfile,
-	dbClient interfaces.DBClient,
-	w http.ResponseWriter,
-	errorHandler errorconcept.ErrorHandler) {
 
 	op := device_profile.NewAddDeviceProfileExecutor(dp, dbClient)
 	id, err := op.Execute()

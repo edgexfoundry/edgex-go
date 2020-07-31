@@ -16,7 +16,7 @@ components:
       description: "A request for ingesting a new event/reading data"
       type: object
       properties:
-        device:
+        deviceName:
           description: "The name of the device from which the event originated"
           type: string
         origin:
@@ -28,8 +28,7 @@ components:
           items:
             $ref: '#/components/schemas/BaseReading'
       required:
-        - device
-        - origin
+        - deviceName
         - readings
     AddEventResponse:
       allOf:
@@ -48,10 +47,13 @@ components:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         created:
           description: "A Unix timestamp indicating when (if) the reading was initially persisted to a database."
           type: integer
-        device:
+        deviceName:
           description: "The name of the device from which the reading originated"
           type: string
         id:
@@ -72,6 +74,9 @@ components:
         pushed:
           description: "A Unix timestamp indicating when the reading was permanently pushed to a northside app/service"
           type: integer
+      required:
+        - deviceName
+        - labels
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
@@ -81,12 +86,13 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-      required:
-        - requestId
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         requestId:
           description: "Uniquely identifies the request that resulted in this response."
           type: string
@@ -99,7 +105,7 @@ components:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
       required:
-        - requestId
+        - apiVersion
         - statusCode
     BinaryReading:
       description: "An event reading for a binary data type"
@@ -107,6 +113,9 @@ components:
         - $ref: '#/components/schemas/BaseReading'
         - type: object
           properties:
+            valueType:
+              description: "Indicates the datatype of the value property"
+              type: string            
             binaryValue:
               description: "If the value of the reading is binary, it will be found in this property as a byte array"
               type: string
@@ -117,7 +126,7 @@ components:
     EventCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate event count. If the deviceId property is blank then the count is applicable to all events in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate event count in uint32 integer type. If the deviceId property is blank then the count is applicable to all events in the database. Otherwise, the count is applicable to the specified device."
       type: object
       properties:
         count:
@@ -130,10 +139,13 @@ components:
     Event:
       description: "A discrete event containing one or more readings"
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         created:
           description: "A Unix timestamp indicating when (if) the event was initially persisted to a database."
           type: integer
-        device:
+        deviceName:
           description: "The name of the device from which the event originated"
           type: string
         id:
@@ -154,6 +166,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BaseReading'
+      required:
+        - apiVersion
+        - deviceName
+        - id
+        - readings
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -167,11 +184,8 @@ components:
       properties:
         event:
           $ref: '#/components/schemas/Event'
-    ConfigRequest:
-      description: "A request associated with the /config endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
+      required:
+        - event
     ConfigResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -179,68 +193,78 @@ components:
       type: object
       properties:
         config:
-          description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
-          type: string
+          description: "An object containing the service's configuration. Please refer to Core Data's configuration documentation for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
+          type: object
       required:
       - config
-    MetricsRequest:
-      description: "A request associated with the /metrics endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     MetricsResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
-        memAlloc:
-          description: "Alloc is bytes of allocated heap objects."
-          type: integer
-        memFrees:
-          description: "Frees is the cumulative count of heap objects freed."
-          type: integer
-        memLiveObjects:
-          description: "The number of live objects is Mallocs - Frees."
-          type: integer
-        memMallocs:
-          description: "The cumulative count of heap objects allocated."
-          type: integer
-        memSys:
-          description: "The total bytes of memory obtained from the OS."
-          type: integer
-        memTotalAlloc:
-          description: "Cumulative bytes allocated for heap objects."
-          type: integer
-        cpuBusyAvg:
-          description: "Indicates the average level of CPU utilization"
-          type: number
+        metrics:
+          type: object
+          properties:
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
+              type: integer
+            memLiveObjects:
+              description: "The uint64 type integer of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated which is a uint64 type integer."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
+              type: integer
+            memTotalAlloc:
+             description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
+             type: integer
+            cpuBusyAvg:
+              description: "A uint8 type integer indicates the average level of CPU utilization"
+              type: number
       required:
-      - memAlloc
-      - memFrees
-      - memLiveObjects
-      - memMallocs
-      - memSys
-      - memTotalAlloc
-      - cpuBusyAvg
-    PingRequest:
-      description: "A request associated with the /ping endpoint."
+      - metrics
+    MultiEventsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseRequest'
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning Events to the caller."
       type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+      required:
+        - events
+    MultiReadingsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning Readings to the caller."
+      type: object
+      properties:
+        readings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BaseReading'
+      required:
+        - readings
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         timestamp:
-          description: "Outputs the current server timestamp in RFC1123 format"
-          example: "Mon, 02 Jan 2006 15:04:05 MST"
+          description: "Outputs the current server timestamp in Unix Time format"
           type: string
     ReadingCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate reading count. If the deviceId property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate reading count in uint32 integer type. If the deviceId property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
       type: object
       properties:
         count:
@@ -252,66 +276,12 @@ components:
         - count
     ReadingResponse:
       allOf:
-        - $ref: '#/components/schemas/ReadingResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a Reading to the caller. The Reading may be of either type BinaryReading or type SimpleReading."
       type: object
       properties:
         reading:
           $ref: '#/components/schemas/BaseReading'
-    RequestEnvelope:
-      description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled request type instance. This is the specific, semantically identifiable request -- such as an AddDeviceRequest."
-        strategy:
-          type: string
-          description: "Indicates the expectation of whether a response should be produced synchronously or asynchronously. If asynchronously, desire for either a polling or push/callback should be provided. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the request instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of request DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    ResponseEnvelope:
-      description: "A wrapper type for use when receiving a response from the /batch endpoint. Each individual response type in the HTTP response should be wrapped in an envelope to facilitate unmarshalling by the client. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped response. This should be recapitulated from the originating request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
-        strategy:
-          type: string
-          description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the response instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of response DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
     SimpleReading:
       description: "An event reading for a simple data type"
       allOf:
@@ -321,20 +291,26 @@ components:
             floatEncoding:
               description: "Indicates how a float value is encoded, if the value property contains a float."
               type: string
-            type:
+            valueType:
               description: "Indicates the datatype of the value property"
               type: string
             value:
               description: "A string representation of the reading's value"
               type: string
+      required:
+        - value
     SimpleReadingResponse:
       allOf:
-        - $ref: '#/components/schemas/ReadingResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a Reading to the caller. The Reading may only be of type SimpleReading."
       type: object
       properties:
-        reading:
-          $ref: '#/components/schemas/SimpleReading'
+        readings:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleReading'
+      required:
+        - readings
     UpdateEventPushedByChecksumRequest:
       description: "A request to facilitate updating the 'pushed' timestamp on an event according to its checksum."
       allOf:
@@ -355,53 +331,6 @@ components:
           type: string
       required:
       - checksum
-    ValueDescriptor:
-      description: "Defines constraints for ingested data via SimpleReadings"
-      properties:
-        created:
-          description: "A Unix timestamp indicating when (if) the value descriptor was initially persisted to a database."
-          type: integer
-        defaultValue:
-          description: "A default value for a value descriptor supporting a simple datatype"
-          type: object
-        description:
-          description: "A simple description supporting the value descriptor"
-          type: string
-        formatting:
-          description: "A format string, if required, for the reading value"
-          type: string
-        id:
-          description: "The unique identifier for the value descriptor"
-          type: string
-          format: uuid
-        labels:
-          description: "One or more custom labels that can be assigned to a value descriptor's reading"
-          type: array
-          items:
-            type: string
-        max:
-          description: "A maximum supported value for a numeric value descriptor"
-          type: object
-        min:
-          description: "A minimum supported value for a numeric value descriptor"
-          type: object
-        modified:
-          description: "A Unix timestamp indicating the most recent modification of the event data in a persistent database."
-          type: integer
-        name:
-          description: "A unique name identifying the value descriptor"
-          type: string
-        type:
-          description: "Indicates the datatype of readings associated with the value descriptor"
-          type: string
-        uomLabel:
-          description: "A custom unit-of-measure label"
-          type: string
-    VersionRequest:
-      description: "A request associated with the /version endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -449,34 +378,130 @@ components:
         format: uuid
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
+  examples:
+    400Example:
+      value:
+        apiVersion: "v2"
+        statusCode: 400
+        message: "Bad Request" 
+    404Example:
+      value:
+        apiVersion: "v2"
+        statusCode: 404
+        message: "Not Found"     
+    500Example:
+      value:
+        apiVersion: "v2"
+        statusCode: 500
+        message: "Interval Server Error" 
+    AllEventsExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        message: "OK"
+        events: 
+          - apiVersion: "v2"
+            created: 1594876281221
+            deviceName: "device-001"
+            id: "040bd523-ec33-440d-9d72-e5813a465f37"
+            modified: 1594975851631
+            origin: 1471806366619
+            pushed: 1594975851631
+            readings:
+              - apiVersion: "v2"
+                created: 1594876281221
+                deviceName: "device-001"
+                id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+                labels:                            
+                  - "power"
+                modified: 1594975851631
+                origin: 1471806366619
+                pushed: 1594975851631
+                floatEncoding: "IEEE-754"
+                valueType: "Float32"
+                value: "39.5"
+              - apiVersion: "v2"
+                create: 1594876281221
+                deviceName: "device-001"
+                id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+                labels:
+                  - "Fahrenheit"
+                  - "temperature"
+                value: "75"
+          - apiVersion: "v2"
+            created: 1594877691305
+            deviceName: "device-002"
+            id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
+            readings: 
+              - apiVersion: "v2"
+                created: 1594879337014
+                deviceName: "device-002"
+                id: "71c601d9-cb56-453a-8c75-54461e444713"
+                labels:
+                  - "image"
+                valueType: "Binary"
+                binaryValue: "83010203"
+                mediaType: "image"
+          - apiVersion: "v2"
+            created: 1594983105886
+            deviceName: "device-002"
+            id: "d5471d59-2810-419a-8744-18eb8fa03465"
+            readings:
+              - apiVersion: "v2"
+                created: 594983105886
+                deviceName: "device-002"
+                id: "7003cacc-0e00-4676-977c-4e58b9612abd"
+                labels:
+                  - "co2"
+                floatEncoding: "IEEE-754"
+                valueType: "Float32"
+                value: "12.2"
+    AllReadingsExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        message: "OK"
+        reading:
+          - apiVersion: "v2"
+            created: 1594876281221
+            deviceName: "device-001"
+            id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+            labels:
+              - "power"
+            modified: 1594975851631
+            origin: 1471806386919
+            pushed: 1594975851631
+            floatEncoding: "IEEE-754"
+            valueType: "Float32"
+            value: "39.5"
+          - apiVersion: "v2"
+            create: 1594876281221
+            deviceName: "device-001"
+            id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+            labels:
+              - "Fahrenheit"
+              - "temperature"
+            value: "75" 
+          - apiVersion: "v2"
+            created: 1594879337014
+            deviceName: "device-002"
+            id: "71c601d9-cb56-453a-8c75-54461e444713"
+            labels:
+              - "image"
+            valueType: "Binary"
+            binaryValue: "83010203"
+            mediaType: "image"
+          - apiVersion: "v2"
+            created: 594983105886
+            deviceName: "device-002"
+            id: "7003cacc-0e00-4676-977c-4e58b9612abd"
+            labels:
+              - "co2"
+            origin: 1471806386919
+            floatEncoding: "IEEE-754"
+            valueType: "Float32"
+            value: "12.2"
 paths:
-  /batch:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      servers:
-      - url:  http://localhost:48080/api
-      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service. Version is not denoted as part of the route since it is included as a property on each RequestEnvelope."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ResponseEnvelope'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ResponseEnvelope'
   /event:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -504,6 +529,17 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/AddEventResponse'
+              example:
+                - apiVersion: "v2"
+                  statusCode: 201
+                  message: "Created"
+                  id: "040bd523-ec33-440d-9d72-e5813a465f37"
+                - apiVersion: "v2"
+                  statusCode: 400
+                  message: "Bad Request"
+                - apiVersion: "v2"
+                  statusCode: 500
+                  message: "Interval Server Error"
   /event/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -520,9 +556,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EventResponse'
+                  $ref: '#/components/schemas/MultiEventsResponse'
+              examples:
+                MultiEventsExample:
+                  $ref: '#/components/examples/AllEventsExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -531,9 +568,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/id/{id}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -556,6 +594,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                event:
+                  apiVersion: "v2"
+                  created: 1594876281221
+                  deviceName: "device-001"
+                  id: "040bd523-ec33-440d-9d72-e5813a465f37"
+                  modified: 1594975851631
+                  origin: 1471806366619
+                  pushed: 1594975851631
+                  readings:
+                    - apiVersion: "v2"
+                      created: 1594876281221
+                      deviceName: "device-001"
+                      id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+                      labels:                            
+                        - "power"
+                      modified: 1594975851631
+                      origin: 1471806366619
+                      pushed: 1594975851631
+                      floatEncoding: "IEEE-754"
+                      valueType: "Float32"
+                      value: "39.5"
+                    - apiVersion: "v2"
+                      create: 1594876281221
+                      deviceName: "device-001"
+                      id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+                      labels:
+                        - "Fahrenheit"
+                        - "temperature"
+                      value: "75"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -565,6 +636,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -574,6 +648,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     delete:
       summary: "Deletes an event by ID"
       responses:
@@ -582,15 +659,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -600,6 +668,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'                
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -609,6 +680,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/pushed:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -636,6 +710,17 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/UpdateEventPushedByChecksumResponse'
+              example:
+                - apiVersion: "v2"
+                  statusCode: 200
+                  message: "OK"
+                  checksum: "4228c3215949e862"
+                - apiVersion: "v2"
+                  statusCode: 404
+                  message: "Not Found"
+                - apiVersion: "v2"
+                  statusCode: 500
+                  message: "Interval Server Error" 
   /event/count:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -651,6 +736,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventCountResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                count: 3
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -660,6 +750,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/count/device/{deviceId}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -682,15 +775,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventCountResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                count: 1 
+                deviceId: "ecfe3110-964f-4e35-bd00-4d2149271884"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -700,6 +790,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -709,6 +802,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/device/{deviceId}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -727,15 +823,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -745,6 +832,9 @@ paths:
             application/json:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -754,6 +844,9 @@ paths:
             application/json:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/device/{deviceId}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -767,7 +860,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given a range of events from the specified device sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given the entire range of events sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
       responses:
         '200':
           description: "OK"
@@ -777,20 +870,40 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/EventResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/MultiEventsResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                events: 
+                  - apiVersion: "v2"
+                    created: 1594877691305
+                    deviceName: "device-002"
+                    id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
+                    readings: 
+                      - apiVersion: "v2"
+                        created: 1594879337014
+                        deviceName: "device-002"
+                        id: "71c601d9-cb56-453a-8c75-54461e444713"
+                        labels:
+                          - "image"
+                        valueType: "Binary"
+                        binaryValue: "83010203"
+                        mediaType: "image"
+                  - apiVersion: "v2"
+                    created: 1594983105886
+                    deviceName: "device-002"
+                    id: "d5471d59-2810-419a-8744-18eb8fa03465"
+                    readings:
+                      - apiVersion: "v2"
+                        created: 594983105886
+                        deviceName: "device-002"
+                        id: "7003cacc-0e00-4676-977c-4e58b9612abd"
+                        labels:
+                          - "co2"
+                        floatEncoding: "IEEE-754"
+                        valueType: "Float32"
+                        value: "12.2"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -802,6 +915,9 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -813,6 +929,9 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/start/{start}/end/{end}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -841,11 +960,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/EventResponse'
+                $ref: '#/components/schemas/MultiEventsResponse'
+              examples:
+                MultiEventsExample:
+                  $ref: '#/components/examples/AllEventsExample'
         '400':
-          description: "Request is in an invalid state"
+          description: "\"{start}\" and \"{end}\" are unix time, and \"{end}\" should be greater than \"{start}\""
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -853,8 +973,11 @@ paths:
             application/json:
               schema:
                 type: array
-                items: 
+                items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -866,6 +989,9 @@ paths:
                 type: array
                 items: 
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example' 
   /event/age/{age}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -883,24 +1009,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -910,6 +1018,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example' 
   /event/scrub:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -930,6 +1041,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example' 
   /reading/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -952,9 +1066,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/ReadingResponse'
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/AllReadingsExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -966,6 +1081,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example' 
   /reading/count:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -981,6 +1099,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadingCountResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                count: 4
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -990,6 +1113,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /reading/count/device/{deviceId}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: deviceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: "Uniquely identifies a given device"
+    get:
+      summary: "Return a count of all of readings currently stored in the database, sourced from the specified device."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingCountResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                count: 2
+                deviceId: "ecfe3110-964f-4e35-bd00-4d2149271884"
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /reading/id/{id}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1012,6 +1190,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadingResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                reading:
+                  apiVersion: "v2"
+                  created: 1594876281221
+                  deviceName: "device-001"
+                  id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+                  labels:
+                    - "power"
+                  modified: 1594975851631
+                  origin: 1471806386919
+                  pushed: 1594975851631
+                  floatEncoding: "IEEE-754"
+                  valueType: "Float32"
+                  value: "39.5"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1021,6 +1216,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1030,6 +1228,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /reading/device/{deviceId}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1053,20 +1254,32 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/ReadingResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                readings: 
+                  - apiVersion: "v2"
+                    created: 1594876281221
+                    deviceName: "device-001"
+                    id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+                    labels:
+                      - "power"
+                    modified: 1594975851631
+                    origin: 1471806386919
+                    pushed: 1594975851631
+                    floatEncoding: "IEEE-754"
+                    valueType: "Float32"
+                    value: "39.5"
+                  - apiVersion: "v2"
+                    create: 1594876281221
+                    deviceName: "device-001"
+                    id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+                    labels:
+                      - "Fahrenheit"
+                      - "temperature"
+                    value: "75"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1078,6 +1291,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1089,10 +1305,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /reading/type/{type}:
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /reading/valueType/{valueType}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: type
+    - name: valueType
       in: path
       required: true
       schema:
@@ -1111,11 +1330,36 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/SimpleReadingResponse'
+                $ref: '#/components/schemas/SimpleReadingResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                reading: 
+                  - apiVersion: "v2"
+                    created: 1594876281221
+                    deviceName: "device-001"
+                    id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+                    labels:
+                      - "power"
+                    modified: 1594975851631
+                    origin: 1471806386919
+                    pushed: 1594975851631
+                    floatEncoding: "IEEE-754"
+                    valueType: "Float32"
+                    value: "39.5"
+                  - apiVersion: "v2"
+                    created: 594983105886
+                    deviceName: "device-002"
+                    id: "7003cacc-0e00-4676-977c-4e58b9612abd"
+                    labels:
+                      - "co2"
+                    origin: 1471806386919
+                    floatEncoding: "IEEE-754"
+                    valueType: "Float32"
+                    value: "12.2"
         '400':
-          description: "Request is in an invalid state"
+          description: "Request is in an invalid state. \"{valueType}\" is defined in [Reading ValueTypes](https://github.com/edgexfoundry/go-mod-core-contracts/blob/8df1bc237b3746b67ec2754785c71dc83ce5d0c1/models/reading.go#L22-L49)."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1125,17 +1369,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1147,6 +1383,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /reading/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1175,11 +1414,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/ReadingResponse'
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/AllReadingsExample'
         '400':
-          description: "Request is in an invalid state"
+          description: "\"{start}\" and \"{end}\" are unix time, and \"{end}\" should be greater than \"{start}\""
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1189,6 +1429,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1200,19 +1443,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /config:
-    post:
+    get:
       summary: "Returns the current configuration of the service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/ConfigRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/ConfigRequest'
       responses:
         '200':
           description: "OK"
@@ -1223,21 +1459,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/ConfigResponse'
-        '400':
-          description: "Bad request"
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                config:
+                  Writeable:
+                    DeviceUpdateLastConnected: false
+                    MetaDataCheck: false
+                    PersistData: true
+                    ServiceUpdateLastConnected: false
+                    ValidateCheck: false
+                    LogLevel: "INFO"
+                    ChecksumAlgo: "xxHash"
+                  MessageQueue:
+                    Host: "*"
+                    Port: 5563
+                    Protocol: "tcp"
+                    Type: "zero"
+                    Topic: "events"
+                    Optional:
+                      AutoReconnect: "true"
+                      ClientId: "core-data"
+                      ConnectTimeout: "5"
+                      KeepAlive: "10"
+                      Password: ""
+                      Qos: "0"
+                      Retained: "false"
+                      SkipCertVerify: "false"
+                      Username: ""
+                  Clients:
+                    Logging:
+                      Host: "localhost"
+                      Port: 48061
+                      Protocol: "http"
+                    Metadata:
+                      Host: "edgex-core-metadata"
+                      Port: 48081
+                      Protocol: "http"
+                  Databases:
+                    Primary:
+                      Username: "core"
+                      Password: "password"
+                      Type: "redisdb"
+                      Timeout: 5000
+                      Host: "edgex-redis"
+                      Port: 6379
+                      Name: "coredata"
+                  Logging:
+                    EnableRemote: false
+                    File: ""
+                  Registry:
+                    Host: "edgex-core-consul"
+                    Port: 8500
+                    Type: "consul"
+                  Service:
+                    BootTimeout: 30000
+                    CheckInterval: "10s"
+                    Host: "edgex-core-data"
+                    Port: 48080
+                    SeverBindAddr: ""
+                    Protocol: "http"
+                    StartupMsg: "This is the Core Data Microservice"
+                    MaxResultCount: 50000
+                    Timeout: 5000
+                  SecretStore:
+                    Host: "edgex-vault"
+                    Port: 8200
+                    Path: "v1/secret/edgex/coredata/"
+                    Protocol: "httpsxf"
+                    Namespace: ""
+                    RootCaCertPath: "/tmp/edgex/secrets/ca/ca.pem"
+                    ServerName: "edgex-vault" 
+                    Authentication:
+                      AuthType: "X-Vault-Token"  
+                      AuthToken: ""  
+                    AdditionalRetryAttempts: 10
+                    RetryWaitPeriod: "1s"
+                    TokenFile: "/tmp/edgex/secrets/edgex-core-data/secrets-token.json"
+                  Startup:
+                    Duration: 30
+                    Interval: 1
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1245,19 +1549,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /metrics:
-    post:
+    get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/MetricsRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/MetricsRequest'
       responses:
         '200':
           description: "OK"
@@ -1268,21 +1565,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/MetricsResponse'
-        '400':
-          description: "Bad request"
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                metrics:
+                  memAlloc: 877192
+                  memFrees: 2248915
+                  memLiveObjects: 6522
+                  memMallocs: 2255437
+                  memSys: 72876280
+                  memTotalAlloc: 203821192
+                  cpuBusyAvg: 2.2521221920656003
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1290,19 +1586,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'          
   /ping:
-    post:
+    get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/PingRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/PingRequest'
       responses:
         '200':
           description: "OK"
@@ -1313,21 +1602,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/PingResponse'
-        '400':
-          description: "Bad request"
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                timestamp: "1594900038"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1335,19 +1616,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /version:
-    post:
+    get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/VersionRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/VersionRequest'
       responses:
         '200':
           description: "OK"
@@ -1358,21 +1632,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/VersionResponse'
-        '400':
-          description: "Bad request"
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                message: "OK"
+                version: "master"                
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1380,3 +1646,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'

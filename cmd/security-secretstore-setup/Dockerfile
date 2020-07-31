@@ -1,6 +1,5 @@
-FROM golang:1.13-alpine AS builder
-
-ENV GO111MODULE=on
+ARG BUILDER_BASE=golang:1.13-alpine
+FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
@@ -32,7 +31,6 @@ COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/configuration.toml  /res-file-token-provider/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.toml /res/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-secretstore-read/res/configuration.toml /res-read/configuration.toml
-
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .

@@ -14,27 +14,12 @@
 // limitations under the License.
 //
 
-edgeXGeneric([
+edgeXBuildGoParallel(
     project: 'edgex-go',
-    mavenSettings: ['edgex-go-settings:SETTINGS_FILE', 'edgex-go-codecov-token:CODECOV_TOKEN', 'swaggerhub-api-key:APIKEY'],
-    env: [
-        GOPATH: '/opt/go-custom/go',
-        GO_VERSION: '1.13',
-        DEPLOY_TYPE: 'staging'
-    ],
-    path: [
-        '/opt/go-custom/go/bin'
-    ],
-    branches: [
-        '*': [
-            pre_build: ['shell/install_custom_golang.sh'],
-            build: [
-                'REPO_ROOT=${WORKSPACE} make test raml_verify && make build docker',
-                'shell/codecov-uploader.sh'
-            ]
-        ],
-        'master': [
-            post_build: [ 'shell/edgexfoundry-go-docker-push.sh', 'shell/edgex-publish-swagger.sh' ]
-        ]
-    ]
-])
+    goVersion: '1.13',
+    dockerFileGlobPath: 'cmd/**/Dockerfile',
+    testScript: 'make test',
+    buildScript: 'make build',
+    publishSwaggerDocs: true,
+    swaggerApiFolders: ['openapi/v1', 'openapi/v2']
+)

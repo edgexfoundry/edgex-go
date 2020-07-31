@@ -23,10 +23,11 @@ MICROSERVICES=cmd/core-metadata/core-metadata cmd/core-data/core-data \
 
 .PHONY: $(MICROSERVICES)
 
-VERSION=$(shell cat ./VERSION)
+VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
 
@@ -77,7 +78,7 @@ clean:
 	rm -f $(MICROSERVICES)
 
 test:
-	GO111MODULE=on go test -race -coverprofile=coverage.out ./...
+	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 	GO111MODULE=on go vet ./...
 	gofmt -l .
 	[ "`gofmt -l .`" = "" ]
@@ -192,8 +193,3 @@ docker_security_secretstore_setup:
 		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
-raml_verify:
-	docker run --rm --privileged \
-		-v $(PWD):/raml-verification -w /raml-verification \
-		nexus3.edgexfoundry.org:10003/edgex-docs-builder:$(ARCH) \
-		/scripts/raml-verify.sh

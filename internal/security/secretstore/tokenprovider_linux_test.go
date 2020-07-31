@@ -34,7 +34,7 @@ import (
 func TestCreatesFile(t *testing.T) {
 	const testfile = "/tmp/tokenprovider_linux_test.dat"
 	config := secretstoreclient.SecretServiceInfo{
-		TokenProvider:     "/usr/bin/touch",
+		TokenProvider:     "touch",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{testfile},
 	}

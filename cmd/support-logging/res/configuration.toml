@@ -6,6 +6,7 @@ LogLevel = 'INFO'
 BootTimeout = 30000
 CheckInterval = '10s'
 Host = 'localhost'
+ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
 Port = 48061
 Protocol = 'http'
 MaxResultCount = 50000
