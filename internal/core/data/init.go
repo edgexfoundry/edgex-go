@@ -50,7 +50,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
-func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
@@ -76,9 +76,18 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		return false
 	}
 
-	err = msgClient.Connect()
+	for startupTimer.HasNotElapsed() {
+		err = msgClient.Connect()
+		if err == nil {
+			break
+		}
+
+		lc.Warn(fmt.Sprintf("couldn't connect to message bus: %s", err.Error()))
+		startupTimer.SleepForInterval()
+	}
+
 	if err != nil {
-		lc.Error(fmt.Sprintf("failed to connect to message bus: %s", err.Error()))
+		lc.Error(fmt.Sprintf("failed to connect to message bus in allotted time"))
 		return false
 	}
 

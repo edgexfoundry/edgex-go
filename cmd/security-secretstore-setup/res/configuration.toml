@@ -41,10 +41,6 @@ TokenProviderType = "oneshot"
 TokenProviderAdminTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
 RevokeRootTokens = true
 
-[Startup]
-Duration = 30
-Interval = 1
-
 [Databases]
   [Databases.admin]
   Username = "admin"

@@ -15,7 +15,6 @@
 package config
 
 import (
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 )
 
@@ -28,7 +27,6 @@ type ConfigurationStruct struct {
 	Registry    bootstrapConfig.RegistryInfo
 	Service     bootstrapConfig.ServiceInfo
 	SecretStore bootstrapConfig.SecretStoreInfo
-	Startup     bootstrapConfig.StartupInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -69,15 +67,14 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
 // data is returned.  This is intended to be temporary -- since ConfigurationStruct drives the configuration.toml's
 // structure -- until we can make backwards-breaking configuration.toml changes (which would consolidate these fields
-// into an interfaces.BootstrapConfiguration struct contained within ConfigurationStruct).
-func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
-	return interfaces.BootstrapConfiguration{
+// into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
+func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
+	return bootstrapConfig.BootstrapConfiguration{
 		Clients:     c.Clients,
 		Service:     c.Service,
 		Registry:    c.Registry,
 		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
-		Startup:     c.Startup,
 	}
 }
 

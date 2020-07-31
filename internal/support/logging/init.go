@@ -102,6 +102,7 @@ func (s ServiceInit) BootstrapHandler(
 	}
 
 	if err != nil {
+		lc.Error(fmt.Sprintf("unable to create database client in allotted time"))
 		return false
 	}
 

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
 )
@@ -127,8 +126,8 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
 // data is returned.  This is intended to be temporary -- since ConfigurationStruct drives the configuration.toml's
 // structure -- until we can make backwards-breaking configuration.toml changes (which would consolidate these fields
-// into an interfaces.BootstrapConfiguration struct contained within ConfigurationStruct).
-func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
+// into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
+func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	//To keep config file for proxy unchanged in Geneva we need to create a temporary SecretStore struct so that bootstrapHandler can use it to create a secret client
 	//The config file may be changed in the future version and SecretStore can be used directly like other core services
 	ss := bootstrapConfig.SecretStoreInfo{
@@ -145,7 +144,7 @@ func (c *ConfigurationStruct) GetBootstrap() interfaces.BootstrapConfiguration {
 	}
 
 	// temporary until we can make backwards-breaking configuration.toml change
-	return interfaces.BootstrapConfiguration{
+	return bootstrapConfig.BootstrapConfiguration{
 		Clients:     c.Clients,
 		Logging:     c.Logging,
 		SecretStore: ss,

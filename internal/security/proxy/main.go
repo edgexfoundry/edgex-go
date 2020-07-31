@@ -37,7 +37,7 @@ import (
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
+	startupTimer := startup.NewStartUpTimer(clients.SecurityProxySetupServiceKey)
 
 	var initNeeded bool
 	var insecureSkipVerify bool

@@ -134,6 +134,7 @@ func (d Database) BootstrapHandler(
 	}
 
 	if dbClient == nil {
+		lc.Error(fmt.Sprintf("failed to create database client in allotted time"))
 		return false
 	}
 

@@ -32,7 +32,7 @@ import (
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) (*config.ConfigurationStruct, int) {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
+	startupTimer := startup.NewStartUpTimer(clients.SecuritySecretsSetupServiceKey)
 
 	// Common Command-line flags have been moved to command.CommonFlags, but this service doesn't use all
 	// the common flags so we are using our own implementation of the CommonFlags interface

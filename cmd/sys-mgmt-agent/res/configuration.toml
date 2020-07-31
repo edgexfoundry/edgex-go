@@ -67,7 +67,3 @@ File = ''
   Protocol = 'http'
   Host = 'localhost'
   Port = 48085
-
-[Startup]
-Duration = 30
-Interval = 1
