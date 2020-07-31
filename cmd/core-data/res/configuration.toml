@@ -83,7 +83,3 @@ AdditionalRetryAttempts = 10
 RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
-
-[Startup]
-Duration = 30
-Interval = 1

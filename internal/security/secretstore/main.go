@@ -39,7 +39,7 @@ import (
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
-	startupTimer := startup.NewStartUpTimer(internal.BootRetrySecondsDefault, internal.BootTimeoutSecondsDefault)
+	startupTimer := startup.NewStartUpTimer(clients.SecuritySecretStoreSetupServiceKey)
 
 	var insecureSkipVerify bool
 	var vaultInterval int

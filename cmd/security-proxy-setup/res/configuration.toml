@@ -91,7 +91,3 @@ SNIS = ["localhost"]
   Protocol = "http"
   Host = "localhost"
   Port = 49990
-
-[Startup]
-Duration = 30
-Interval = 1
