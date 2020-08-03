@@ -30,19 +30,6 @@ components:
       required:
         - deviceName
         - readings
-    AddEventResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a new Event. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     BaseReading:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
@@ -104,9 +91,16 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
-      required:
-        - apiVersion
-        - statusCode
+    BaseWithIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        id:
+          description: "The unique identifier for the instance."
+          type: string
+          format: uuid
     BinaryReading:
       description: "An event reading for a binary data type"
       allOf:
@@ -134,8 +128,6 @@ components:
         deviceId:
           type: string
           format: uuid
-      required:
-        - count
     Event:
       description: "A discrete event containing one or more readings"
       properties:
@@ -184,8 +176,6 @@ components:
       properties:
         event:
           $ref: '#/components/schemas/Event'
-      required:
-        - event
     ConfigResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -195,8 +185,6 @@ components:
         config:
           description: "An object containing the service's configuration. Please refer to Core Data's configuration documentation for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
-      required:
-      - config
     MetricsResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -227,8 +215,6 @@ components:
             cpuBusyAvg:
               description: "A uint8 type integer indicates the average level of CPU utilization"
               type: number
-      required:
-      - metrics
     MultiEventsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -239,8 +225,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
-      required:
-        - events
     MultiReadingsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -251,8 +235,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BaseReading'
-      required:
-        - readings
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -272,8 +254,6 @@ components:
         deviceId:
           type: string
           format: uuid
-      required:
-        - count
     ReadingResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -309,8 +289,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SimpleReading'
-      required:
-        - readings
     UpdateEventPushedByChecksumRequest:
       description: "A request to facilitate updating the 'pushed' timestamp on an event according to its checksum."
       allOf:
@@ -329,8 +307,6 @@ components:
       properties:
         checksum:
           type: string
-      required:
-      - checksum
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -340,8 +316,6 @@ components:
         version:
           description: "The latest version supported by the service."
           type: string
-      required:
-      - version
   parameters:
     offsetParam:
       in: query
@@ -528,7 +502,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddEventResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
               example:
                 - apiVersion: "v2"
                   statusCode: 201
@@ -560,6 +534,7 @@ paths:
               examples:
                 MultiEventsExample:
                   $ref: '#/components/examples/AllEventsExample'
+
         '500':
           description: "An unexpected error occurred on the server"
           headers:

@@ -8,91 +8,19 @@ servers:
     description: URL for local development and testing
 components:
   schemas:
-    AddAddressableRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to add a new addressable."
-      type: object
-      properties:
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
-      required:
-        - name
-        - protocol
-        - address
-    AddAddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding an Addressable. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new device associated with a specific device service and conforming to a specific device profile."
       type: object
       properties:
-        deviceName:
-          type: string
-        serviceName:
-          type: string
-        profileName:
-          type: string
-        adminState:
-          type: string
-        operatingState:
-          type: string
-        autoEvents:
-          type: array
-          items:
-            $ref: '#/components/schemas/AutoEvent'
-        protocols:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ProtocolProperties'
+        device:
+          $ref: '#/components/schemas/Device'
       required:
-        - deviceName
+        - name
         - serviceName
         - profileName
         - protocols
-    AddDeviceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -101,94 +29,19 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/DeviceProfile'
-    AddDeviceProfileResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device Profile. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
     AddDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to add a new DeviceService - name must be unique and the specified addressable must already exist"
+      description: "A request to add a new DeviceService - name must be unique"
       type: object
       properties:
-        deviceServiceName:
-          type: string
-        addressableName:
-          type: string
-        operatingState:
-          description: "Can only be set to ENABLED or DISABLED"
-          type: string
-        labels:
-          type: array
-          items:
-            type: string
-        adminState:
-          description: "Can only be set to LOCKED or UNLOCKED"
-          type: string
+        service:
+          $ref: '#/components/schemas/DeviceService'
       required:
-        - deviceServiceName
-        - addressableName
+        - name
+        - baseAddress
         - operatingState
         - adminState
-    AddDeviceServiceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in adding a Device Service. The ID of the new record will be returned to the caller. An optional message property allows for miscellaneous information to be returned."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        message:
-          type: string
-      required:
-        - id
-    AddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        addressable:
-          $ref: '#/components/schemas/Addressable'
-    Addressable:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        created:
-          type: integer
-        modified:
-          type: integer
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
     AutoEvent:
       type: object
       properties:
@@ -213,6 +66,9 @@ components:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         requestId:
           description: "Uniquely identifies the request that resulted in this response."
           type: string
@@ -224,9 +80,16 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
-      required:
-        - requestId
-        - statusCode
+    BaseWithIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        id:
+          description: "The unique identifier for the instance."
+          type: string
+          format: uuid
     Command:
       type: object
       properties:
@@ -240,19 +103,14 @@ components:
         name:
           type: string
         get:
-          $ref: '#/components/schemas/CommandAction'
+          type: boolean
         put:
-          $ref: '#/components/schemas/CommandAction'
-    CommandAction:
-      type: object
-      properties:
-        path:
-          type: string
-        url:
-          type: string
+          type: boolean
     Device:
       type: object
       properties:
+        apiVersion:
+          type: string
         id:
           type: string
           format: uuid
@@ -268,10 +126,6 @@ components:
           type: string
         operatingState:
           type: string
-        addressableId:
-          type: string
-        addressableName:
-          type: string
         lastConnected:
           type: integer
         lastReported:
@@ -282,11 +136,7 @@ components:
             type: string
         location:
           type: object
-        serviceId:
-          type: string
         serviceName:
-          type: string
-        profileId:
           type: string
         profileName:
           type: string
@@ -302,17 +152,19 @@ components:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
       properties:
-        created:
-          type: integer
-        modified:
-          type: integer
-        description:
+        apiVersion:
           type: string
         id:
           type: string
           format: uuid
         name:
           type: string
+        description:
+          type: string
+        created:
+          type: integer
+        modified:
+          type: integer
         manufacturer:
           type: string
         model:
@@ -367,6 +219,8 @@ components:
       description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
       type: object
       properties:
+        apiVersion:
+          type: string
         created:
           type: integer
         modified:
@@ -388,8 +242,8 @@ components:
           type: array
           items:
             type: string
-        addressable:
-          $ref: '#/components/schemas/Addressable'
+        baseAddress:
+          type: string
         adminState:
           type: string
     DeviceServiceResponse:
@@ -404,30 +258,14 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
-    ConfigRequest:
-      description: "A request associated with the /config endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     ConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       description: "Provides a response containing the configuration for the targeted service."
       type: object
       properties:
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: string
-      required:
-      - config
-    MetricsRequest:
-      description: "A request associated with the /metrics endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     MetricsResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
@@ -452,22 +290,7 @@ components:
         cpuBusyAvg:
           description: "Indicates the average level of CPU utilization"
           type: number
-      required:
-      - memAlloc
-      - memFrees
-      - memLiveObjects
-      - memMallocs
-      - memSys
-      - memTotalAlloc
-      - cpuBusyAvg
-    PingRequest:
-      description: "A request associated with the /ping endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     PingResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         timestamp:
@@ -536,12 +359,6 @@ components:
           type: string
         parameter:
           type: string
-        deviceCommand:
-          type: string
-        secondary:
-          type: array
-          items:
-            type: string
         mappings:
           type: object
           additionalProperties:
@@ -583,7 +400,7 @@ components:
         content:
           type: string
           format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
+          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an BaseWithIdResponse."
         strategy:
           type: string
           description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
@@ -600,49 +417,6 @@ components:
         - strategy
         - type
         - version
-    UpdateAddressableRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to update an existing addressable definition. 'id' and 'name' must be populated in order to identify the addressable. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        protocol:
-          type: string
-        method:
-          type: string
-        address:
-          type: string
-        port:
-          type: integer
-        path:
-          type: string
-        publisher:
-          type: string
-        user:
-          type: string
-        password:
-          type: string
-        topic:
-          type: string
-      required:
-        - id
-        - name
-    UpdateAddressableResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating an Addressable. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     UpdateDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -668,6 +442,12 @@ components:
           type: boolean
         operatingState:
           type: string
+        labels:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
         profileName:
           type: string
         protocols:
@@ -679,43 +459,46 @@ components:
       required:
         - id
         - deviceName
-    UpdateDeviceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating the state of a device. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
     UpdateDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device profile definition. 'id' and 'name' must be populated in order to identify the profile. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        profile:
-          $ref: '#/components/schemas/DeviceProfile'
-    UpdateDeviceProfileResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating a device profile. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
         id:
           type: string
           format: uuid
-      required:
-        - id
+        name:
+          type: string
+        description:
+          type: string
+        manufacturer:
+          type: string
+        model:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceResource'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileResource'
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Command'
     UpdateDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        addressableName:
+        baseAddress:
           type: string
         adminState:
           description: "Can only be set to LOCKED or UNLOCKED"
@@ -735,33 +518,13 @@ components:
       required:
         - id
         - deviceServiceName
-    UpdateDeviceServiceResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for use in updating a device service. The ID of the affected record will be returned to the caller."
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-      required:
-        - id
-    VersionRequest:
-      description: "A request associated with the /version endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         version:
           description: "The latest version supported by the service."
           type: string
-      required:
-      - version
   parameters:
     offsetParam:
       in: query
@@ -805,305 +568,73 @@ components:
         format: uuid
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
+  examples:
+    AddDeviceRequest:
+      value:
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        device:
+          - name: AWS IOT Button1
+            description: Home automation system
+            adminState: UNLOCKED
+            operatingState: ENABLED
+            labels:
+              - home
+              - hvac
+              - thermostat
+            location: "{lat:45.45,long:47.80}"
+            serviceName: Google Home device service
+            profileName: Google Home profile
+            autoEvents:
+              - frequency: 300ms
+                onChange: true
+                resource: CurrentHumidity
+            protocols:
+              modbus-tcp:
+                host: localhost
+                port: '1234'
+                unitID: '1'
+    AddDeviceServiceRequest:
+      value:
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        service:
+          - name: home thermostat device service
+            description: manage homethermostats
+            labels:
+              - hvac
+              - thermostat
+            adminState: UNLOCKED
+            operatingState: ENABLED
+            baseAddress: http://home-device-service:49990
+    AddDeviceProfileRequest:
+      value:
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        profile:
+          - name: "Simple-Device"
+            manufacturer: "Simple Corp."
+            model: "SP-01"
+            labels:
+              - "modbus"
+            description: "Example of Simple Device"
+
+            deviceResources:
+              - name: "SwitchButton"
+                description: "Switch On/Off."
+                properties:
+                  value:
+                    { type: "Bool", readWrite: "RW", defaultValue: "true" }
+                  units:
+                    { type: "String", readWrite: "R", defaultValue: "On/Off" }
+            deviceCommands:
+              - name: "Switch"
+                get:
+                  - { deviceResource: "SwitchButton" }
+                set:
+                  - { deviceResource: "SwitchButton", parameter: "false" }
+            coreCommands:
+              - name: "Switch"
+                get: true
+                put: true
 paths:
-  /addressable:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      summary: "Allows definition of new addressables"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AddAddressableRequest'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddAddressableResponse'
-    patch:
-      summary: "Allows updates to an existing addressable"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/UpdateAddressableRequest'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateAddressableResponse'
-  /addressable/all:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-    get:
-      summary: "Given the entire range of addressables sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AddressableResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
-  /addressable/host/{host}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: host
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The hostname or IP address of the addressable you wish to load."
-    get:
-      summary: "Returns an addressable by its host"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Addressable'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/id/{id}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns an addressable by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Delete an addressable by ID"
-      responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/name/{name}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The name of the addressable you wish to load, datatype string."
-    get:
-      summary: "Returns an addressable by name"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Delete an addressable by name"
-      responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /addressable/port/{port}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: port
-        in: path
-        required: true
-        schema:
-          type: integer
-        description: "The port of the addressable you wish to load."
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-    get:
-      summary: "Returns a list of all addressables listening on the specified port"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AddressableResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
   /batch:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1144,6 +675,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddDeviceRequest'
+            examples:
+              AddDeviceRequest:
+                $ref: '#/components/examples/AddDeviceRequest'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1157,7 +691,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     patch:
       summary: "Allows updates to an existing device"
       requestBody:
@@ -1181,7 +715,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /device/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1203,7 +737,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1241,7 +775,7 @@ paths:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1276,7 +810,7 @@ paths:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1316,7 +850,7 @@ paths:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1342,7 +876,7 @@ paths:
               schema:
                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1381,7 +915,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1407,7 +941,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1452,7 +986,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1499,7 +1033,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1546,7 +1080,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1593,7 +1127,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1616,6 +1150,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddDeviceProfileRequest'
+            examples:
+              AddDeviceRequest:
+                $ref: '#/components/examples/AddDeviceProfileRequest'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1629,7 +1166,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceProfileResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     put:
       summary: "Allows updates to an existing device profile"
       requestBody:
@@ -1653,7 +1190,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceProfileResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /deviceprofile/uploadfile:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1678,7 +1215,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/AddDeviceProfileResponse'
+                  $ref: '#/components/schemas/BaseWithIdResponse'
         '400':
           description: "Invalid request."
           headers:
@@ -1738,7 +1275,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1780,7 +1317,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1824,7 +1361,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1863,7 +1400,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1907,7 +1444,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1952,7 +1489,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2005,7 +1542,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2052,7 +1589,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2066,7 +1603,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
-      summary: "Add a new DeviceService - name must be unique.  The Addressable must already exist and can be referenced by an included Addressable object containing the Addressable's id or name."
+      summary: "Add a new DeviceService - name must be unique."
       requestBody:
         required: true
         content:
@@ -2075,6 +1612,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddDeviceServiceRequest'
+            examples:
+              AddDeviceRequest:
+                $ref: '#/components/examples/AddDeviceServiceRequest'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -2088,7 +1628,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddDeviceServiceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
     patch:
       summary: "Allows updates to an existing device service"
       requestBody:
@@ -2110,7 +1650,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateDeviceServiceResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
   /deviceservice/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2143,7 +1683,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2185,7 +1725,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2211,7 +1751,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2250,7 +1790,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2276,95 +1816,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /deviceservice/addressable/id/{id}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "The unique ID of an addressable"
-    get:
-      summary: "Returns the device service associated with the specified addressable"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /deviceservice/addressable/name/{name}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique name of an addressable"
-    get:
-      summary: "Returns the device service associated with the specified addressable"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2373,18 +1825,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /config:
-    post:
+    get:
       summary: "Returns the current configuration of the service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/ConfigRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/ConfigRequest'
       responses:
         '200':
           description: "OK"
@@ -2395,21 +1837,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/ConfigResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2418,18 +1847,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /metrics:
-    post:
+    get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/MetricsRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/MetricsRequest'
       responses:
         '200':
           description: "OK"
@@ -2440,21 +1859,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/MetricsResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2463,18 +1869,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /ping:
-    post:
+    get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/PingRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/PingRequest'
       responses:
         '200':
           description: "OK"
@@ -2485,21 +1881,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/PingResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -2508,18 +1891,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /version:
-    post:
+    get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/VersionRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/VersionRequest'
       responses:
         '200':
           description: "OK"
@@ -2530,21 +1903,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/VersionResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
