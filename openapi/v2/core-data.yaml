@@ -16,20 +16,10 @@ components:
       description: "A request for ingesting a new event/reading data"
       type: object
       properties:
-        deviceName:
-          description: "The name of the device from which the event originated"
-          type: string
-        origin:
-          description: "A Unix timestamp indicating when the event was originated at the source device (can support nanoseconds)"
-          type: integer
-        readings:
-          description: "One or more readings captured at the time of the event"
-          type: array
-          items:
-            $ref: '#/components/schemas/BaseReading'
+        event:
+          $ref: '#/components/schemas/Event'
       required:
-        - deviceName
-        - readings
+        - event
     BaseReading:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
@@ -47,23 +37,25 @@ components:
           description: "The unique identifier for the reading"
           type: string
           format: uuid
+        name:
+          description: "The name for the reading"
+          type: string
         labels:
           description: "One or more custom labels that can be assigned to a reading"
           type: array
           items:
             type: string
-        modified:
-          description: "A Unix timestamp indicating the most recent modification of the reading data in a persistent database."
-          type: integer
         origin:
           description: "A Unix timestamp indicating when the reading was originated at the source device (can support nanoseconds)"
           type: integer
-        pushed:
-          description: "A Unix timestamp indicating when the reading was permanently pushed to a northside app/service"
-          type: integer
+        valueType:
+          description: "Indicates the datatype of the value property"
+          type: string
       required:
         - deviceName
-        - labels
+        - name
+        - origin
+        - valueType
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
@@ -107,9 +99,6 @@ components:
         - $ref: '#/components/schemas/BaseReading'
         - type: object
           properties:
-            valueType:
-              description: "Indicates the datatype of the value property"
-              type: string            
             binaryValue:
               description: "If the value of the reading is binary, it will be found in this property as a byte array"
               type: string
@@ -117,6 +106,9 @@ components:
             mediaType:
               description: "E.g. MIME Type, indicates what the content type of the binaryValue property is if it's populated."
               type: string
+          required:
+            - binaryValue
+            - mediaType
     EventCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -144,9 +136,6 @@ components:
           description: "The unique identifier for the event"
           type: string
           format: uuid
-        modified:
-          description: "A Unix timestamp indicating the most recent modification of the event data in a persistent database."
-          type: integer
         origin:
           description: "A Unix timestamp indicating when the event was originated at the source device (can support nanoseconds)"
           type: integer
@@ -159,9 +148,8 @@ components:
           items:
             $ref: '#/components/schemas/BaseReading'
       required:
-        - apiVersion
         - deviceName
-        - id
+        - origin
         - readings
     ErrorResponse:
       allOf:
@@ -270,9 +258,6 @@ components:
           properties:
             floatEncoding:
               description: "Indicates how a float value is encoded, if the value property contains a float."
-              type: string
-            valueType:
-              description: "Indicates the datatype of the value property"
               type: string
             value:
               description: "A string representation of the reading's value"
