@@ -230,7 +230,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	//Step 4: Launch token handler
-	tokenProvider := NewTokenProvider(ctx, lc, ExecWrapper{})
+	tokenProvider := NewTokenProvider(ctx, lc, NewDefaultExecRunner())
 	if configuration.SecretService.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(configuration.SecretService); err != nil {
 			lc.Error(fmt.Sprintf("failed to configure token provider: %s", err.Error()))
@@ -252,9 +252,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// credential creation
-	gk := NewGokeyGenerator(rootToken)
-	lc.Warn("WARNING: The gokey generator is a reference implementation for credential generation and the underlying libraries not been reviewed for cryptographic security. The user is encouraged to perform their own security investigation before deployment.")
-	cred := NewCred(req, rootToken, gk, configuration.SecretService.GetSecretSvcBaseURL(), lc)
+	gen := NewPasswordGenerator(lc, configuration.SecretService.PasswordProvider, configuration.SecretService.PasswordProviderArgs)
+	cred := NewCred(req, rootToken, gen, configuration.SecretService.GetSecretSvcBaseURL(), lc)
 
 	// continue credential creation
 
@@ -270,7 +269,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
 
-	redis5Password, err := cred.GeneratePassword("redis5")
+	redis5Password, err := cred.GeneratePassword(ctx)
 	if err != nil {
 		lc.Error("failed to generate redis5 password")
 		os.Exit(1)
@@ -283,7 +282,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	for dbname, info := range configuration.Databases {
 		service := info.Service
 		// generate credentials
-		password, err := cred.GeneratePassword(dbname)
+		password, err := cred.GeneratePassword(ctx)
 		if err != nil {
 			lc.Error(fmt.Sprintf("failed to generate credential pair for service %s", service))
 			os.Exit(1)

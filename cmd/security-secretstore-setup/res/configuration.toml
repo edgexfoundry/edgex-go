@@ -39,6 +39,8 @@ TokenProvider = "/security-file-token-provider"
 TokenProviderArgs = [ "-confdir", "res-file-token-provider" ]
 TokenProviderType = "oneshot"
 TokenProviderAdminTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
+PasswordProvider = ""
+PasswordProviderArgs = [ ]
 RevokeRootTokens = true
 
 [Databases]

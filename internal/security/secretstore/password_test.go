@@ -16,6 +16,7 @@
 package secretstore
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -27,29 +28,24 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestGenerate(t *testing.T) {
+func TestGenerateWithDefaults(t *testing.T) {
 	rootToken := "s.Ga5jyNq6kNfRMVQk2LY1j9iu"
-	gk := NewGokeyGenerator(rootToken)
+	mockLogger := logger.MockLogger{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	gk := NewPasswordGenerator(mockLogger, "", []string{})
 	cr := NewCred(&http.Client{}, rootToken, gk, "", logger.MockLogger{})
 
-	realm1 := "service1"
-	realm2 := "service2"
-
-	p1, err := cr.GeneratePassword(realm1)
-	if err != nil {
-		t.Errorf("failed to create credential")
-		t.Errorf(err.Error())
-	}
-	p2, err := cr.GeneratePassword(realm2)
-	if err != nil {
-		t.Errorf("failed to create credential")
-		t.Errorf(err.Error())
-	}
-	if p1 == p2 {
-		t.Errorf("error: different master key and realm combination need to generate different passwords")
-	}
+	p1, err := cr.GeneratePassword(ctx)
+	require.NoError(t, err, "failed to create credential")
+	p2, err := cr.GeneratePassword(ctx)
+	require.NoError(t, err, "failed to create credential")
+	assert.NotEqual(t, p1, p2, "each call to GeneratePassword should return a new password")
 }
 
 func TestRetrieveCred(t *testing.T) {
@@ -95,7 +91,7 @@ func TestRetrieveCred(t *testing.T) {
 	cr := NewCred(
 		secretstoreclient.NewRequestor(mockLogger).Insecure(),
 		"token",
-		NewGokeyGenerator(""),
+		NewPasswordGenerator(mockLogger, "", []string{}),
 		configuration.SecretService.GetSecretSvcBaseURL(),
 		mockLogger)
 	pair, err := cr.retrieve(credPath)
