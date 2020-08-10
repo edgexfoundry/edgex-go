@@ -2161,6 +2161,18 @@ components:
           items:
             title: autoevent
             $ref: '#/components/schemas/autoevent'
+        service:
+          type: object
+          properties:
+            name:
+              title: name
+              type: string
+        profile:
+          type: object
+          properties:
+            name:
+              title: name
+              type: string
         created:
           title: created
           type: integer
