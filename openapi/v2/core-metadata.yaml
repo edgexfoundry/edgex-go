@@ -17,10 +17,7 @@ components:
         device:
           $ref: '#/components/schemas/Device'
       required:
-        - name
-        - serviceName
-        - profileName
-        - protocols
+        - device
     AddDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -29,6 +26,8 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/DeviceProfile'
+      required:
+        - profile
     AddDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -38,10 +37,7 @@ components:
         service:
           $ref: '#/components/schemas/DeviceService'
       required:
-        - name
-        - baseAddress
-        - operatingState
-        - adminState
+        - service
     AutoEvent:
       type: object
       properties:
@@ -148,12 +144,95 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ProtocolProperties'
+      required:
+        - name
+        - adminState
+        - operatingState
+        - serviceName
+        - profileName
+        - protocols
+    UpdateDevice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        adminState:
+          type: string
+        operatingState:
+          type: string
+        lastConnected:
+          type: integer
+        lastReported:
+          type: integer
+        labels:
+          type: array
+          items:
+            type: string
+        location:
+          type: object
+        serviceName:
+          type: string
+        profileName:
+          type: string
+        autoEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoEvent'
+        protocols:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ProtocolProperties'
+        notify:
+          type: boolean
     DeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
       properties:
         apiVersion:
           type: string
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        created:
+          type: integer
+        modified:
+          type: integer
+        manufacturer:
+          type: string
+        model:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        deviceResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceResource'
+        deviceCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileResource'
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Command'
+      required:
+        - name
+        - deviceResources
+    UpdateDeviceProfile:
+      description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
+      type: object
+      properties:
         id:
           type: string
           format: uuid
@@ -236,6 +315,30 @@ components:
           type: integer
         lastReported:
           type: integer
+        operatingState:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        baseAddress:
+          type: string
+        adminState:
+          type: string
+      required:
+        - name
+        - operatingState
+        - adminState
+        - baseAddress
+    UpdateDeviceService:
+      description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
         operatingState:
           type: string
         labels:
@@ -423,101 +526,30 @@ components:
       description: "A request to update an existing device definition. 'id' and 'deviceName' must be populated in order to identify the device. If the 'notify' property is set to true, the device service managing the device will receive a notification. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        adminState:
-          type: string
-        autoEvents:
-          type: array
-          items:
-            $ref: '#/components/schemas/AutoEvent'
-        deviceName:
-          type: string
-        id:
-          type: string
-          format: uuid
-        lastConnected:
-          type: integer
-        lastReported:
-          type: integer
-        notify:
-          type: boolean
-        operatingState:
-          type: string
-        labels:
-          type: array
-          items:
-            type: string
-        location:
-          type: object
-        profileName:
-          type: string
-        protocols:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ProtocolProperties'
-        serviceName:
-          type: string
+        device:
+          $ref: '#/components/schemas/UpdateDevice'
       required:
-        - id
-        - deviceName
+        - device
     UpdateDeviceProfileRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device profile definition. 'id' and 'name' must be populated in order to identify the profile. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
-        manufacturer:
-          type: string
-        model:
-          type: string
-        labels:
-          type: array
-          items:
-            type: string
-        deviceResources:
-          type: array
-          items:
-            $ref: '#/components/schemas/DeviceResource'
-        deviceCommands:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProfileResource'
-        coreCommands:
-          type: array
-          items:
-            $ref: '#/components/schemas/Command'
+        profile:
+          $ref: '#/components/schemas/UpdateDeviceProfile'
+      required:
+        - profile
     UpdateDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        baseAddress:
-          type: string
-        adminState:
-          description: "Can only be set to LOCKED or UNLOCKED"
-          type: string
-        deviceServiceName:
-          type: string
-        id:
-          type: string
-          format: uuid
-        labels:
-          type: array
-          items:
-            type: string
-        operatingState:
-          description: "Can only be set to ENABLED or DISABLED"
-          type: string
+        service:
+          $ref: '#/components/schemas/UpdateDeviceService'
       required:
-        - id
-        - deviceServiceName
+        - service
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -1167,7 +1199,7 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
-    put:
+    patch:
       summary: "Allows updates to an existing device profile"
       requestBody:
         required: true
@@ -1243,6 +1275,55 @@ paths:
             application/json:
               schema:
                   $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: "Allows updates to an existing device profile from file"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseWithIdResponse'
+        '400':
+          description: "Invalid request."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: "Conflict detected. Device name and command names must be universally unique."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "An unexpected error happened on the server."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /deviceprofile/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
