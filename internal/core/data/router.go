@@ -41,7 +41,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 
 	"github.com/gorilla/mux"

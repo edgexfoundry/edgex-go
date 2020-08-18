@@ -17,7 +17,7 @@ package container
 import "github.com/edgexfoundry/go-mod-bootstrap/di"
 
 // EventsChannelName contains the name of the Events channel instance in the DIC.
-var EventsChannelName = "CoreDataEventsChannel"
+const EventsChannelName = "CoreDataEventsChannel"
 
 // PublisherEventsChannelFrom helper function queries the DIC and returns the Events channel instance used for
 // publishing over the channel.

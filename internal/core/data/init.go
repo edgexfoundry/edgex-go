@@ -26,8 +26,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/v2"
+	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/error"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -52,6 +55,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
+	v2.LoadRestRoutes(b.router, dic)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
@@ -132,6 +136,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(lc)
+		},
+		v2DataContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+			return mdc
+		},
+		v2DataContainer.ErrorHandlerName: func(get di.Get) interface{} { // add v2 API error handler
+			return error.NewErrorHandler(lc)
 		},
 	})
 
