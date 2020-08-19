@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -553,7 +554,7 @@ func getHttpRequest(
 	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
 
 	if len(params) > 0 {
-		req.Header.Set(ContentLengthKey, string(len(params)))
+		req.Header.Set(ContentLengthKey, strconv.Itoa(len(params)))
 	}
 
 	return req, err
