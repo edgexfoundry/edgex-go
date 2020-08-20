@@ -37,4 +37,5 @@ EXPOSE $APP_PORT
 COPY --from=builder /edgex-go/cmd/support-scheduler/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/support-scheduler/support-scheduler /
 COPY --from=builder /edgex-go/cmd/support-scheduler/res/configuration.toml /res/configuration.toml
-ENTRYPOINT ["/support-scheduler","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]
+ENTRYPOINT ["/support-scheduler"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]

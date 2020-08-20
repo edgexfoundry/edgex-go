@@ -38,4 +38,5 @@ COPY --from=builder /bin/bash /bin/bash
 COPY --from=builder /edgex-go/cmd/support-logging/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/support-logging/support-logging /
 COPY --from=builder /edgex-go/cmd/support-logging/res/configuration.toml /res/configuration.toml
-ENTRYPOINT ["/support-logging","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]
+ENTRYPOINT ["/support-logging"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]

@@ -38,4 +38,5 @@ WORKDIR /
 COPY --from=builder /edgex-go/cmd/core-command/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-command/core-command /
 COPY --from=builder /edgex-go/cmd/core-command/res/configuration.toml /res/configuration.toml
-ENTRYPOINT ["/core-command","-cp=consul.http://edgex-core-consul:8500","--registry","--confdir=/res"]
+ENTRYPOINT ["/core-command"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
