@@ -15,7 +15,6 @@ ALL_SERVICES="$ALL_SERVICES core-command"
 
 # support services
 ALL_SERVICES="$ALL_SERVICES support-notifications"
-ALL_SERVICES="$ALL_SERVICES support-logging"
 ALL_SERVICES="$ALL_SERVICES support-scheduler"
 
 # app-services

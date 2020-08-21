@@ -62,7 +62,6 @@ The following services are disabled by default:
 * app-service-configurable (required for Kuiper)
 * device-virtual
 * kuiper
-* support-logging
 * support-notifications
 * support-scheduler
 * sys-mgmt-agent
