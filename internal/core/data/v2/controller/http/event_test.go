@@ -7,7 +7,7 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,12 +19,18 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,10 +60,30 @@ var testAddEvent = requests.AddEventRequest{
 	},
 }
 
+var persistedReading = models.SimpleReading{
+	BaseReading: models.BaseReading{
+		Id:         ExampleUUID,
+		Created:    TestCreatedTime,
+		Origin:     TestOriginTime,
+		DeviceName: TestDeviceName,
+		Name:       TestDeviceResourceName,
+		ValueType:  dtos.ValueTypeUint8,
+	},
+	Value: TestReadingValue,
+}
+
+var persistedEvent = models.Event{
+	Id:         expectedEventId,
+	Pushed:     TestPushedTime,
+	DeviceName: TestDeviceName,
+	Created:    TestCreatedTime,
+	Origin:     TestOriginTime,
+	Readings:   []models.Reading{persistedReading},
+}
+
 func TestAddEvent(t *testing.T) {
 	expectedResponseCode := http.StatusMultiStatus
 	expectedRequestId := "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
-	expectedMessage := "Add events successfully"
 
 	dbClientMock := &dbMock.DBClient{}
 
@@ -75,7 +101,6 @@ func TestAddEvent(t *testing.T) {
 		},
 	})
 	ec := NewEventController(dic)
-	assert.NotNil(t, ec)
 
 	validRequest := testAddEvent
 
@@ -186,20 +211,81 @@ func TestAddEvent(t *testing.T) {
 			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 
 			if testCase.ErrorExpected {
-				assert.NotEmpty(t, err, "Message is empty")
 				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				return // Test complete for error cases
-			} else {
-				require.NoError(t, err)
 			}
 
+			require.NoError(t, err)
 			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, contractsV2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
 			if actualResponse[0].RequestID != "" {
 				assert.Equal(t, expectedRequestId, actualResponse[0].RequestID, "RequestID not as expected")
 			}
-			assert.Equal(t, expectedMessage, actualResponse[0].Message, "Message not as expected")
+			assert.Empty(t, actualResponse[0].Message, "Message should be empty when it is successful")
+		})
+	}
+}
+
+func TestEventById(t *testing.T) {
+	validEventId := expectedEventId
+	emptyEventId := ""
+	invalidEventId := "bad"
+	notFoundEventId := NonexistentEventID
+
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventById", notFoundEventId).Return(models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
+	dbClientMock.On("EventById", validEventId).Return(persistedEvent, nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	tests := []struct {
+		Name               string
+		EventId            string
+		ErrorExpected      bool
+		ExpectedStatusCode int
+	}{
+		{"Valid - Find Event by Id", validEventId, false, http.StatusOK},
+		{"Invalid - Empty EventId", emptyEventId, true, http.StatusBadRequest},
+		{"Invalid - EventId is not an UUID", invalidEventId, true, http.StatusBadRequest},
+		{"Invalid - Event doesn't exist", notFoundEventId, true, http.StatusNotFound},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiEventRoute, contractsV2.Id, testCase.EventId)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.EventId})
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(ec.EventById)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.ErrorExpected {
+				var actualResponse common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, actualResponse.Message, "Response message doesn't contain the error message")
+			} else {
+				var actualResponse responseDTO.EventResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.EventId, actualResponse.Event.ID, "Event Id not as expected")
+				assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }
