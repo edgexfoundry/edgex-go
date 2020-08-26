@@ -21,7 +21,7 @@ set -e
 
 VAULT_TLS_PATH=${VAULT_TLS_PATH:-/tmp/edgex/secrets/edgex-vault}
 
-VAULT_LOCAL_CONFIG='
+DEFAULT_VAULT_LOCAL_CONFIG='
 listener "tcp" { 
               address = "edgex-vault:8200" 
               tls_disable = "0" 
@@ -42,6 +42,8 @@ listener "tcp" {
           default_lease_ttl = "168h" 
           max_lease_ttl = "720h"
 '
+
+VAULT_LOCAL_CONFIG=${VAULT_LOCAL_CONFIG:-$DEFAULT_VAULT_LOCAL_CONFIG}
 
 echo "VAULT_LOCAL_CONFIG:" ${VAULT_LOCAL_CONFIG}
 
