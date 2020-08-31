@@ -5,7 +5,7 @@
 
 EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Foundation building a common open framework for IoT edge computing.  At the heart of the project is an interoperability framework hosted within a full hardware- and OS-agnostic reference software platform to enable an ecosystem of plug-and-play components that unifies the marketplace and accelerates the deployment of IoT solutions.  This repository contains the Go implementation of EdgeX Foundry microservices.  It also includes files for building the services, containerizing the services, and initializing (bootstrapping) the services.
 
-# Get Started
+## Get Started
 
 EdgeX provides docker images in our organization's [DockerHub page](https://hub.docker.com/u/edgexfoundry/).
 They can be launched easily with **docker-compose**.
@@ -22,7 +22,7 @@ You can check the status of your running EdgeX services by going to http://local
 
 Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/Ch-Walkthrough.html) to learn how the different services work together to connect IoT devices to cloud services.
 
-# Running EdgeX with security components
+## Running EdgeX with security components
 
 Starting with the Fuji release, EdgeX includes enhanced security features that are enabled by default. There are 3 major components that are responsible for security
 features: 
@@ -38,27 +38,27 @@ When security features are enabled, additional steps are required to access the 
 
 Sample steps to create an access token and use the token to access EdgeX resources can be found here: [Security Components](SECURITY.md)
 
-# Other installation and deployment options
+## Other installation and deployment options
 
-## Snap Package
+### Snap Package
 
 EdgeX Foundry is also available as a snap package, for more details
 on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md)
 
-## Native binaries
+### Native binaries
 
-### Prerequisites
+#### Prerequisites
 
-#### Go
+##### Go
 
 - The current targeted version of the Go language runtime for release artifacts is v1.13.x
 - The minimum supported version of the Go language runtime is v1.13.x (currently v1.13)
 
-#### pkg-config
+##### pkg-config
 
 `go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
 
-#### ZeroMQ
+##### ZeroMQ
 
 Several EdgeX Foundry services depend on ZeroMQ for communications by default.
 
@@ -72,7 +72,7 @@ brew install zeromq
 
 For directions installing ZeroMQ on Windows, please see [the Windows documentation.](ZMQWindows.md)
 
-#### pkg-config
+##### pkg-config
 
 The necessary file will need to be added to the `PKG_CONFIG_PATH` environment variable.
 
@@ -88,7 +88,7 @@ For macOS, install the package with brew:
 brew install pkg-config
 ```
 
-### Installation and Execution
+#### Installation and Execution
 
 EdgeX is organized as Go Modules; there is no requirement to set the GOPATH or
 GO111MODULE envrionment variables nor is there a requirement to root all the components under ~/go
@@ -126,15 +126,15 @@ cd bin
 correctly. If you don't want to install a database locally, you can host one via Docker. You may
 also need to change the `configuration.toml` files for one or more of the services.
 
-## Build your own Docker Containers
+### Build your own Docker Containers
 
 In addition to running the services directly, Docker and Docker Compose can be used.
 
-### Prerequisites
+#### Prerequisites
 
 See [the install instructions](https://docs.docker.com/install/) to learn how to obtain and install Docker.
 
-### Installation and Execution
+#### Installation and Execution
 
 Follow the "Installation and Execution" steps above for obtaining and building the code, then
 
@@ -144,11 +144,19 @@ make docker run_docker
 
 **Note** The default behavior is to use Redis for the database, use the command `make EDGEX_DB=mongo run_docker` to start EdgeX with Mongo.
 
-# Community
+## Community
 
 - Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/enQtNDgyODM5ODUyODY0LWVhY2VmOTcyOWY2NjZhOWJjOGI1YzQ2NzYzZmIxYzAzN2IzYzY0NTVmMWZhZjNkMjVmODNiZGZmYTkzZDE3MTA)
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
 
-# License
+## License
 
 [Apache-2.0](LICENSE)
+
+## Versioning
+
+Please refer to the EdgeX Foundry [versioning policy](https://wiki.edgexfoundry.org/pages/viewpage.action?pageId=21823969) for information on how EdgeX services are released and how EdgeX services are compatible with one another.  Specifically, device services (and the associated SDK), application services (and the associated app functions SDK), and client tools (like the EdgeX CLI and UI) can have independent minor releases, but these services must be compatible with the latest major release of EdgeX.
+
+## Long Term Support
+
+Please refer to the EdgeX Foundry [LTS policy](https://wiki.edgexfoundry.org/display/FA/Long+Term+Support) for information on support of EdgeX releases. The EdgeX community does not offer support on any non-LTS release outside of the latest release.
