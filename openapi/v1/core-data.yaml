@@ -954,6 +954,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/reading'
+        tags:
+          title: tags
+          uniqueItems: false
+          type: array
+          items:
+            $ref: '#/components/schemas/tagsKeyValue'
       description: Core device/sensor event
     reading:
       title: reading
@@ -1030,6 +1036,18 @@ components:
           type: string
       description: Core and MetaData value descriptor that describes
         device/sensor data sent and received
+    tagsKeyValue:
+      description: Defines the key/value pair of the Tag
+      type: object
+      properties:
+        key:
+          description: The key to identify the Tag
+          type: string
+          example: "gateway-id"
+        value:
+          description: The value for the Tag
+          type: string
+          example: "HoustonStore-000123"
   requestBodies:
     event:
       content:

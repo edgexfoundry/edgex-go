@@ -147,10 +147,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BaseReading'
+        tags:
+          description: "Zero or more Tags attached to the Event which give more context to the Event"
+          title: tags
+          type: array
+          items:
+            $ref: '#/components/schemas/TagsKeyValue'
       required:
         - deviceName
         - origin
         - readings
+    TagsKeyValue:
+      description: Defines the key/value pair of the Tag
+      type: object
+      properties:
+        key:
+          description: The key to identify the Tag
+          type: string
+          example: "gateway-id"
+        value:
+          description: The value for the Tag
+          type: string
+          example: "HoustonStore-000123"
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
