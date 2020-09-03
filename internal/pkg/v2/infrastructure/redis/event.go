@@ -36,6 +36,7 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, err error
 		DeviceName:    e.DeviceName,
 		Created:       e.Created,
 		Origin:        e.Origin,
+		Tags:          e.Tags,
 	}
 
 	m, err := json.Marshal(event)

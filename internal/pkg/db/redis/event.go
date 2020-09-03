@@ -32,6 +32,7 @@ type redisEvent struct {
 	Created  int64
 	Modified int64
 	Origin   int64
+	Tags     map[string]string
 }
 
 func marshalEvent(event correlation.Event) (out []byte, err error) {
@@ -43,6 +44,7 @@ func marshalEvent(event correlation.Event) (out []byte, err error) {
 		Created:  event.Created,
 		Modified: event.Modified,
 		Origin:   event.Origin,
+		Tags:     event.Tags,
 	}
 
 	return marshalObject(s)
@@ -74,6 +76,7 @@ func unmarshalEvent(o []byte) (contract.Event, error) {
 		Created:  s.Created,
 		Modified: s.Modified,
 		Origin:   s.Origin,
+		Tags:     s.Tags,
 	}
 
 	conn, err := getConnection()
