@@ -2,7 +2,12 @@
 
 package mocks
 
-import context "context"
+import (
+	context "context"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/admin"
+	"github.com/edgexfoundry/go-mod-core-contracts/requests/states/operating"
+)
 
 import mock "github.com/stretchr/testify/mock"
 import models "github.com/edgexfoundry/go-mod-core-contracts/models"
@@ -277,11 +282,11 @@ func (_m *DeviceClient) Update(ctx context.Context, dev models.Device) error {
 }
 
 // UpdateAdminState provides a mock function with given fields: ctx, id, adminState
-func (_m *DeviceClient) UpdateAdminState(ctx context.Context, id string, adminState string) error {
+func (_m *DeviceClient) UpdateAdminState(ctx context.Context, id string, adminState admin.UpdateRequest) error {
 	ret := _m.Called(ctx, id, adminState)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, admin.UpdateRequest) error); ok {
 		r0 = rf(ctx, id, adminState)
 	} else {
 		r0 = ret.Error(0)
@@ -291,11 +296,11 @@ func (_m *DeviceClient) UpdateAdminState(ctx context.Context, id string, adminSt
 }
 
 // UpdateAdminStateByName provides a mock function with given fields: ctx, name, adminState
-func (_m *DeviceClient) UpdateAdminStateByName(ctx context.Context, name string, adminState string) error {
+func (_m *DeviceClient) UpdateAdminStateByName(ctx context.Context, name string, adminState admin.UpdateRequest) error {
 	ret := _m.Called(ctx, name, adminState)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, admin.UpdateRequest) error); ok {
 		r0 = rf(ctx, name, adminState)
 	} else {
 		r0 = ret.Error(0)
@@ -361,11 +366,11 @@ func (_m *DeviceClient) UpdateLastReportedByName(ctx context.Context, name strin
 }
 
 // UpdateOpState provides a mock function with given fields: ctx, id, opState
-func (_m *DeviceClient) UpdateOpState(ctx context.Context, id string, opState string) error {
+func (_m *DeviceClient) UpdateOpState(ctx context.Context, id string, opState operating.UpdateRequest) error {
 	ret := _m.Called(ctx, id, opState)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, operating.UpdateRequest) error); ok {
 		r0 = rf(ctx, id, opState)
 	} else {
 		r0 = ret.Error(0)
@@ -375,11 +380,11 @@ func (_m *DeviceClient) UpdateOpState(ctx context.Context, id string, opState st
 }
 
 // UpdateOpStateByName provides a mock function with given fields: ctx, name, opState
-func (_m *DeviceClient) UpdateOpStateByName(ctx context.Context, name string, opState string) error {
+func (_m *DeviceClient) UpdateOpStateByName(ctx context.Context, name string, opState operating.UpdateRequest) error {
 	ret := _m.Called(ctx, name, opState)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, operating.UpdateRequest) error); ok {
 		r0 = rf(ctx, name, opState)
 	} else {
 		r0 = ret.Error(0)
