@@ -147,6 +147,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BaseReading'
+        tags:
+          description: "List of zero or more Tags attached to the Event which give more context to the Event"
+          title: tags
+          type: object
+          example: {
+            "Gateway-id": "HoustonStore-000123",
+            "Latitude": "29.630771",
+            "Longitude": "-95.377603",
+          }
       required:
         - deviceName
         - origin
