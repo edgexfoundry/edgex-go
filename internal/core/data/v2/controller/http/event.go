@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
-	v2container "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/error"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -37,7 +35,6 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve all the service injections from bootstrap
-	httpErrorHandler := v2container.ErrorHandlerFrom(ec.dic.Get)
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
 	ctx := r.Context()
@@ -45,8 +42,9 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	reader := io.NewEventRequestReader()
 	addEventReqDTOs, err := reader.ReadAddEventRequest(r.Body, &ctx)
 	if err != nil {
-		errResp := httpErrorHandler.HandleWithDefault(err, error.NewErrContractInvalidError(err), error.Default.InternalServerError)
-		http.Error(w, errResp.ErrMessage, int(errResp.ErrorCode))
+		lc.Error(err.Error())
+		lc.Debug(err.DebugMessages())
+		http.Error(w, err.Message(), err.Code())
 		return
 	}
 	events := requestDTO.AddEventReqToEventModels(addEventReqDTOs)
@@ -66,14 +64,12 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 				http.StatusCreated,
 				newId)
 		} else {
-			errResp := httpErrorHandler.HandleWithDefault(
-				err,
-				error.NewServiceClientHttpError(err),
-				error.Default.InternalServerError)
+			lc.Error(err.Error())
+			lc.Debug(err.DebugMessages())
 			addEventResponse = commonDTO.NewBaseResponse(
 				reqId,
-				errResp.ErrMessage,
-				errResp.ErrorCode)
+				err.Message(),
+				err.Code())
 		}
 		addResponses = append(addResponses, addEventResponse)
 	}

@@ -30,7 +30,6 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/error"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
@@ -139,9 +138,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 		},
 		v2DataContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
 			return mdc
-		},
-		v2DataContainer.ErrorHandlerName: func(get di.Get) interface{} { // add v2 API error handler
-			return error.NewErrorHandler(lc)
 		},
 	})
 

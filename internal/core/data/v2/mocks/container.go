@@ -9,7 +9,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/error"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -38,9 +37,6 @@ func NewMockDIC() *di.Container {
 					PersistData: true,
 				},
 			}
-		},
-		v2DataContainer.ErrorHandlerName: func(get di.Get) interface{} {
-			return error.NewErrorHandler(logger.NewMockClient())
 		},
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()

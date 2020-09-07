@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -22,8 +22,9 @@ const ReadingsCollection = "v2:reading"
 var emptyBinaryValue = make([]byte, 0)
 
 // Add a reading to the database
-func addReading(conn redis.Conn, r model.Reading) (reading model.Reading, err error) {
+func addReading(conn redis.Conn, r model.Reading) (reading model.Reading, edgeXerr errors.EdgeX) {
 	var m []byte
+	var err error
 	var baseReading *model.BaseReading
 	switch newReading := r.(type) {
 	case model.BinaryReading:
@@ -32,23 +33,23 @@ func addReading(conn redis.Conn, r model.Reading) (reading model.Reading, err er
 
 		baseReading = &newReading.BaseReading
 		if err = checkReadingValue(baseReading); err != nil {
-			return nil, err
+			return nil, errors.NewCommonEdgeXWrapper(err)
 		}
 		m, err = json.Marshal(newReading)
 		reading = newReading
 	case model.SimpleReading:
 		baseReading = &newReading.BaseReading
 		if err = checkReadingValue(baseReading); err != nil {
-			return nil, err
+			return nil, errors.NewCommonEdgeXWrapper(err)
 		}
 		m, err = json.Marshal(newReading)
 		reading = newReading
 	default:
-		return nil, db.ErrUnsupportedReading
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unsupported reading type", nil)
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "reading parsing failed", err)
 	}
 	// use the SET command to save reading as blob
 	_ = conn.Send(SET, ReadingsCollection+":"+baseReading.Id, m)
@@ -60,7 +61,7 @@ func addReading(conn redis.Conn, r model.Reading) (reading model.Reading, err er
 	return reading, nil
 }
 
-func checkReadingValue(b *model.BaseReading) (err error) {
+func checkReadingValue(b *model.BaseReading) errors.EdgeX {
 	if b.Created == 0 {
 		b.Created = common.MakeTimestamp()
 	}
@@ -68,9 +69,9 @@ func checkReadingValue(b *model.BaseReading) (err error) {
 	if b.Id == "" {
 		b.Id = uuid.New().String()
 	} else {
-		_, err = uuid.Parse(b.Id)
+		_, err := uuid.Parse(b.Id)
 		if err != nil {
-			return db.ErrInvalidObjectId
+			return errors.NewCommonEdgeX(errors.KindInvalidId, "uuid parsing failed", err)
 		}
 	}
 	return nil
