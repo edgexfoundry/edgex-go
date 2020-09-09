@@ -16,7 +16,7 @@
 
 edgeXBuildGoParallel(
     project: 'edgex-go',
-    goVersion: '1.13',
+    goVersion: '1.15',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
     testScript: 'make test',
     buildScript: 'make build',
