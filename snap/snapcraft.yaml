@@ -843,6 +843,10 @@ parts:
       - luarocks
       - lua5.1
       - libyaml-0-2
+    override-pull : |
+      snapcraftctl pull
+      cd $SNAPCRAFT_PART_SRC
+      patch  < "$SNAPCRAFT_PROJECT_DIR/snap/local/patches/0002-lua-resty-openssl-fix.patch"
     override-build: |
       # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
       # it will be generated/configured during the install hook
