@@ -537,7 +537,7 @@ parts:
     # are large - see the TODO on the kong part
     after: [go-build-helper, kong]
 
-  go113:
+  go115:
     plugin: nil
     source: snap/local/build-helpers
     override-build: |
@@ -545,26 +545,26 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=go1.13.8.linux-amd64.tar.gz
-          FILE_HASH=0567734d558aef19112f2b2873caa0c600f1b4a5827930eb5a7f35235219e9d8
+          FILE_NAME=go1.15.2.linux-amd64.tar.gz
+          FILE_HASH=b49fda1ca29a1946d6bb2a5a6982cf07ccd2aba849289508ee0f9918f6bb4552
           ;;
         arm64)
-          FILE_NAME=go1.13.8.linux-arm64.tar.gz
-          FILE_HASH=b46c0235054d0eb69a295a2634aec8a11c7ae19b3dc53556a626b89dc1f8cdb0
+          FILE_NAME=go1.15.2.linux-arm64.tar.gz
+          FILE_HASH=c8ec460cc82d61604b048f9439c06bd591722efce5cd48f49e19b5f6226bd36d
           ;;
       esac
       # download the archive, failing on ssl cert problems
       curl https://dl.google.com/go/$FILE_NAME -O
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
-      mkdir -p $SNAPCRAFT_STAGE/go1.13
-      tar -C $SNAPCRAFT_STAGE/go1.13 -xf "$FILE_NAME" --strip-components=1
+      mkdir -p $SNAPCRAFT_STAGE/go1.15
+      tar -C $SNAPCRAFT_STAGE/go1.15 -xf "$FILE_NAME" --strip-components=1
     prime:
       - "-*"
     after: [go112]
 
   consul:
-    after: [go113]
+    after: [go115]
     plugin: make
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.7.3
@@ -585,7 +585,7 @@ parts:
       fi
 
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/consul 1.13
+      gopartbootstrap github.com/hashicorp/consul 1.15
       export GO111MODULES=off
       go get -u github.com/kardianos/govendor
       govendor install
@@ -628,9 +628,9 @@ parts:
   edgex-go:
     source: .
     plugin: make
-    after: [go113]
+    after: [go115]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
+      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
 
       make build
@@ -954,9 +954,9 @@ parts:
     source-depth: 1
     source-tag: v1.2.1
     plugin: make
-    after: [go113]
+    after: [go115]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
+      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       # create VERSION file (supposed to be created by jenkins pipeline...)
       echo "1.2.1" > ./VERSION
@@ -982,9 +982,9 @@ parts:
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
-    after: [go113]
+    after: [go115]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
+      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
       make build
 
@@ -1002,9 +1002,9 @@ parts:
     source: https://github.com/emqx/kuiper.git
     source-tag: 0.4.1
     plugin: make
-    after: [go113]
+    after: [go115]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.13/bin:$GOPATH/bin:$PATH"
+      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
 
       cd $SNAPCRAFT_PART_SRC
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD

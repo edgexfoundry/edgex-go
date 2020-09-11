@@ -4,7 +4,7 @@
 # $2 - maj/min version of go; must correspond to a go part in the snap
 #
 # example usage:
-# $ gopartbootstrap github.com/edgexfoundry/edgex-go 1.13
+# $ gopartbootstrap github.com/edgexfoundry/edgex-go 1.15
 gopartbootstrap() 
 {
     # first set the GOPATH to be in the current directory and in ".gopath"

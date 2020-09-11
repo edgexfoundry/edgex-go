@@ -25,7 +25,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for building EdgeX Foundry security-secrets-setup
-ARG BUILDER_BASE=golang:1.13-alpine
+ARG BUILDER_BASE=golang:1.15-alpine
 FROM ${BUILDER_BASE} AS build-env
 
 # set the working directory
