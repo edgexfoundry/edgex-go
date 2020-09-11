@@ -1,4 +1,4 @@
-ARG BUILDER_BASE=golang:1.13-alpine
+ARG BUILDER_BASE=golang:1.15-alpine
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go

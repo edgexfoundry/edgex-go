@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-ARG BASE=golang:1.13-alpine
+ARG BASE=golang:1.15.2-alpine
 FROM ${BASE}
 
 RUN apk add --update make git curl bash zeromq-dev libsodium-dev pkgconfig build-base \
