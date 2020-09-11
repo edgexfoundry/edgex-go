@@ -16,10 +16,9 @@ icon: snap/local/assets/edgex-snap-icon.png
 # Different epochs prevent refreshes between major versions of EdgeX due
 # to continued configuration changes.
 #
-# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3
-epoch: 3
+# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3, hanoi: 4
+epoch: 4
 
-# TODO: add armhf here when that's supported
 architectures:
   - build-on: arm64
   - build-on: amd64
@@ -233,23 +232,6 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
-  support-logging:
-    adapter: none
-    after:
-      - redis
-      - security-proxy-setup
-    command: bin/support-logging -confdir $SNAP_DATA/config/support-logging/res --registry
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-    environment:
-      # for support-logging we also want the default persistence to be on a
-      # file so that we can use redis (which isn't supported with support-logging)
-      # in the snap by default
-      Writable_Persistence: 'file'
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-support-logging/secrets-token.json
-    daemon: simple
-    plugs: [network, network-bind]
-    stop-timeout: 10s
   support-notifications:
     adapter: none
     after:
@@ -295,7 +277,6 @@ apps:
       - security-proxy-setup
       - core-data
       - core-metadata
-      - support-logging
     command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
     daemon: simple
     environment:
@@ -636,7 +617,7 @@ parts:
       make build
 
       # copy service binaries, configuration, and license files into the snap install
-      for service in core-command core-data core-metadata support-logging support-notifications support-scheduler sys-mgmt-agent \
+      for service in core-command core-data core-metadata support-notifications support-scheduler sys-mgmt-agent \
           security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider security-secretstore-read; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
