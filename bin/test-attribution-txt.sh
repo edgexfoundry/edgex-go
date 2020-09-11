@@ -47,7 +47,7 @@ for cmd in cmd/* ; do
         else
             # loop over every library in the modules.txt file in vendor
             while IFS= read -r lib; do
-                if ! grep -q "$lib" Attribution.txt; then 
+                if ! grep -q "$lib" Attribution.txt && [ "$lib" != "explicit" ]; then 
                     echo "An attribution for $lib is missing from in $cmd Attribution.txt, please add"
                     # need to do this in a bash subshell, see SC2031
                     (( EXIT_CODE=1 ))
