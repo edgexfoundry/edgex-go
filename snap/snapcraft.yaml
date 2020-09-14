@@ -288,7 +288,7 @@ apps:
   app-service-configurable:
     adapter: full
     command: >-
-      bin/app-service-configurable -cp -r
+      bin/app-service-configurable -cp -r -s
       -confdir $SNAP_DATA/config/app-service-configurable/res
       -profile rules-engine
     daemon: simple
@@ -959,7 +959,8 @@ parts:
 
   app-service-config:
     source: https://github.com/edgexfoundry/app-service-configurable.git
-    source-tag: v1.2.0
+    # TODO(Hanoi): update to source-tag for release
+    source-branch: master
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
