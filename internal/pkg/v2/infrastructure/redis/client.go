@@ -12,6 +12,7 @@ import (
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
@@ -24,15 +25,14 @@ type Client struct {
 	*redisClient.Client
 }
 
-func NewClient(config db.Configuration, logger logger.LoggingClient) (*Client, error) {
+func NewClient(config db.Configuration, logger logger.LoggingClient) (dc *Client, edgeXerr errors.EdgeX) {
 	var err error
-	dc := &Client{}
 	dc.Client, err = redisClient.NewClient(config, logger)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "redis client creation failed", err)
 	}
 
-	return dc, err
+	return
 }
 
 // CloseSession closes the connections to Redis
@@ -44,14 +44,14 @@ func (c *Client) CloseSession() {
 }
 
 // Add a new event
-func (c *Client) AddEvent(e model.Event) (addedEvent model.Event, err error) {
+func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
 	if e.Id != "" {
-		_, err = uuid.Parse(e.Id)
+		_, err := uuid.Parse(e.Id)
 		if err != nil {
-			return model.Event{}, db.ErrInvalidObjectId
+			return model.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "uuid parsing failed", err)
 		}
 	}
 

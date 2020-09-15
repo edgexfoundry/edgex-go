@@ -10,6 +10,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -19,7 +20,7 @@ import (
 const EventsCollection = "v2:event"
 
 // ************************** DB HELPER FUNCTIONS ***************************
-func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, err error) {
+func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr errors.EdgeX) {
 	if e.Created == 0 {
 		e.Created = common.MakeTimestamp()
 	}
@@ -40,6 +41,9 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, err error
 	}
 
 	m, err := json.Marshal(event)
+	if err != nil {
+		return addedEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
+	}
 
 	_ = conn.Send(MULTI)
 	// use the SET command to save event as blob
@@ -73,5 +77,9 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, err error
 	}
 
 	_, err = conn.Do("EXEC")
-	return e, err
+	if err != nil {
+		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "event creation failed", err)
+	}
+
+	return e, edgeXerr
 }

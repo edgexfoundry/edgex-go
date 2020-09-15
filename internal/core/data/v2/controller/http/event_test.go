@@ -79,6 +79,8 @@ func TestAddEvent(t *testing.T) {
 
 	noRequestId := validRequest
 	noRequestId.RequestID = ""
+	badRequestId := validRequest
+	badRequestId.RequestID = "niv3sl"
 	noEvent := validRequest
 	noEvent.Event = dtos.Event{}
 	noEventDevice := validRequest
@@ -141,7 +143,8 @@ func TestAddEvent(t *testing.T) {
 		ExpectedStatusCode int
 	}{
 		{"Valid - AddEventRequest", []requests.AddEventRequest{validRequest}, false, http.StatusCreated},
-		{"Invalid - No RequestId", []requests.AddEventRequest{noRequestId}, true, http.StatusBadRequest},
+		{"Valid - No RequestId", []requests.AddEventRequest{noRequestId}, false, http.StatusCreated},
+		{"Invalid - Bad RequestId", []requests.AddEventRequest{badRequestId}, true, http.StatusBadRequest},
 		{"Invalid - No Event", []requests.AddEventRequest{noEvent}, true, http.StatusBadRequest},
 		{"Invalid - No Event DeviceName", []requests.AddEventRequest{noEventDevice}, true, http.StatusBadRequest},
 		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, true, http.StatusBadRequest},
@@ -185,7 +188,9 @@ func TestAddEvent(t *testing.T) {
 			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, contractsV2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
-			assert.Equal(t, expectedRequestId, actualResponse[0].RequestID, "RequestID not as expected")
+			if actualResponse[0].RequestID != "" {
+				assert.Equal(t, expectedRequestId, actualResponse[0].RequestID, "RequestID not as expected")
+			}
 			assert.Equal(t, expectedMessage, actualResponse[0].Message, "Message not as expected")
 		})
 	}
