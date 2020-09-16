@@ -8,11 +8,10 @@ package application
 import (
 	"context"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 )
 
