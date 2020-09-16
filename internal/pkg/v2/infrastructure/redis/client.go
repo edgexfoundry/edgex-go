@@ -25,14 +25,15 @@ type Client struct {
 	*redisClient.Client
 }
 
-func NewClient(config db.Configuration, logger logger.LoggingClient) (dc *Client, edgeXerr errors.EdgeX) {
+func NewClient(config db.Configuration, logger logger.LoggingClient) (*Client, errors.EdgeX) {
 	var err error
+	dc := &Client{}
 	dc.Client, err = redisClient.NewClient(config, logger)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "redis client creation failed", err)
 	}
 
-	return
+	return dc, nil
 }
 
 // CloseSession closes the connections to Redis
