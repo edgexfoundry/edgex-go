@@ -14,7 +14,6 @@ import (
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/google/uuid"
 )
 
 const EventsCollection = "v2:event"
@@ -25,19 +24,13 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 		e.Created = common.MakeTimestamp()
 	}
 
-	if e.Id == "" {
-		e.Id = uuid.New().String()
-	}
-
 	event := model.Event{
-		CorrelationId: e.CorrelationId,
-		Checksum:      e.Checksum,
-		Id:            e.Id,
-		Pushed:        e.Pushed,
-		DeviceName:    e.DeviceName,
-		Created:       e.Created,
-		Origin:        e.Origin,
-		Tags:          e.Tags,
+		Id:         e.Id,
+		Pushed:     e.Pushed,
+		DeviceName: e.DeviceName,
+		Created:    e.Created,
+		Origin:     e.Origin,
+		Tags:       e.Tags,
 	}
 
 	m, err := json.Marshal(event)
@@ -52,9 +45,7 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 	_ = conn.Send(ZADD, EventsCollection+":created", e.Created, e.Id)
 	_ = conn.Send(ZADD, EventsCollection+":pushed", e.Pushed, e.Id)
 	_ = conn.Send(ZADD, EventsCollection+":deviceName:"+e.DeviceName, e.Created, e.Id)
-	if e.Checksum != "" {
-		_ = conn.Send(ZADD, EventsCollection+":checksum:"+e.Checksum, 0, e.Id)
-	}
+
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
 	rids := make([]interface{}, len(e.Readings)*2+1)

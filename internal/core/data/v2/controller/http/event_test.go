@@ -30,6 +30,7 @@ import (
 )
 
 var expectedCorrelationId = uuid.New().String()
+var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
 	DeviceName: TestDeviceName,
@@ -46,6 +47,7 @@ var testAddEvent = requests.AddEventRequest{
 		RequestID: ExampleUUID,
 	},
 	Event: dtos.Event{
+		ID:         expectedEventId,
 		DeviceName: TestDeviceName,
 		Origin:     TestOriginTime,
 		Readings:   []dtos.BaseReading{testReading},
@@ -83,6 +85,10 @@ func TestAddEvent(t *testing.T) {
 	badRequestId.RequestID = "niv3sl"
 	noEvent := validRequest
 	noEvent.Event = dtos.Event{}
+	noEventID := validRequest
+	noEventID.Event.ID = ""
+	badEventID := validRequest
+	badEventID.Event.ID = "DIWNI09320"
 	noEventDevice := validRequest
 	noEventDevice.Event.DeviceName = ""
 	noEventOrigin := validRequest
@@ -146,6 +152,8 @@ func TestAddEvent(t *testing.T) {
 		{"Valid - No RequestId", []requests.AddEventRequest{noRequestId}, false, http.StatusCreated},
 		{"Invalid - Bad RequestId", []requests.AddEventRequest{badRequestId}, true, http.StatusBadRequest},
 		{"Invalid - No Event", []requests.AddEventRequest{noEvent}, true, http.StatusBadRequest},
+		{"Invalid - No Event Id", []requests.AddEventRequest{noEventID}, true, http.StatusBadRequest},
+		{"Invalid - Bad Event Id", []requests.AddEventRequest{badEventID}, true, http.StatusBadRequest},
 		{"Invalid - No Event DeviceName", []requests.AddEventRequest{noEventDevice}, true, http.StatusBadRequest},
 		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, true, http.StatusBadRequest},
 		{"Invalid - No Reading", []requests.AddEventRequest{noReading}, true, http.StatusBadRequest},

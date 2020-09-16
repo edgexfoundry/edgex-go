@@ -40,7 +40,6 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (id string
 	// Add the event and readings to the database
 	if configuration.Writable.PersistData {
 		correlationId := correlation.FromContext(ctx)
-		e.CorrelationId = correlationId
 		addedEvent, err := dbClient.AddEvent(e)
 		if err != nil {
 			return "", errors.NewCommonEdgeXWrapper(err)
