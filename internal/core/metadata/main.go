@@ -22,8 +22,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
@@ -34,7 +36,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
@@ -74,6 +75,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabase(httpServer, configuration).BootstrapHandler,
+			handlers.NewDatabase(httpServer, configuration, v2MetadataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

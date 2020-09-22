@@ -77,3 +77,20 @@ func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX)
 
 	return
 }
+
+// Add a new device profle
+func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if dp.Id != "" {
+		_, err := uuid.Parse(dp.Id)
+		if err != nil {
+			return model.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindInvalidId, "ID failed UUID parsing", err)
+		}
+	} else {
+		dp.Id = uuid.New().String()
+	}
+
+	return addDeviceProfile(conn, dp)
+}

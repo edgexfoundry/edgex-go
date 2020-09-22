@@ -16,9 +16,15 @@ package metadata
 
 import (
 	"context"
+
 	"sync"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2"
+	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
@@ -26,11 +32,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
-	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+	"github.com/gorilla/mux"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -48,6 +51,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
+	v2.LoadRestRoutes(b.router, dic)
 
 	// TODO: there is an outstanding known issue (https://github.com/edgexfoundry/edgex-go/issues/2462)
 	// 		that could be seemingly be solved by moving from JIT initialization of these external clients to static
