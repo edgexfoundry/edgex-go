@@ -81,3 +81,26 @@ func (_m *DBClient) UpdateDeviceProfile(e models.DeviceProfile) errors.EdgeX {
 
 	return r0
 }
+
+// GetDeviceProfileByName provides a mock function with given fields: name
+func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.DeviceProfile
+	if rf, ok := ret.Get(0).(func(string) models.DeviceProfile); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.DeviceProfile)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
