@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
@@ -26,23 +27,22 @@ import (
 
 // The AddEvent function accepts the new event model from the controller functions
 // and invokes addEvent function in the infrastructure layer
-func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (string, error) {
+func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (id string, err errors.EdgeX) {
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	err := checkDevice(e.DeviceName, ctx, dic)
+	err = checkDevice(e.DeviceName, ctx, dic)
 	if err != nil {
-		return "", err
+		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// Add the event and readings to the database
 	if configuration.Writable.PersistData {
 		correlationId := correlation.FromContext(ctx)
-		e.CorrelationId = correlationId
 		addedEvent, err := dbClient.AddEvent(e)
 		if err != nil {
-			return "", err
+			return "", errors.NewCommonEdgeXWrapper(err)
 		}
 		e = addedEvent
 
