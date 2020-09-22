@@ -48,7 +48,7 @@ COPY --from=builder /edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/con
 # Copy over the golang "executor" executable.
 COPY --from=builder /edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
 
-RUN apk --no-cache add py-pip
+RUN apk --no-cache add py3-pip
 RUN pip install docker-compose==1.23.2
 RUN apk --no-cache add curl
 
