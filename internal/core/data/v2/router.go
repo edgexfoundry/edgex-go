@@ -19,6 +19,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	ec := httpController.NewEventController(dic)
 
 	r.HandleFunc(v2Constant.ApiEventRoute, ec.AddEvent).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.EventById).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

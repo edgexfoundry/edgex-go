@@ -14,4 +14,5 @@ type DBClient interface {
 	CloseSession()
 
 	AddEvent(e model.Event) (model.Event, errors.EdgeX)
+	EventById(id string) (model.Event, errors.EdgeX)
 }

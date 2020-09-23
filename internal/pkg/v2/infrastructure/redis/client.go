@@ -10,6 +10,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -23,12 +24,14 @@ var once sync.Once
 
 type Client struct {
 	*redisClient.Client
+	loggingClient logger.LoggingClient
 }
 
 func NewClient(config db.Configuration, logger logger.LoggingClient) (*Client, errors.EdgeX) {
 	var err error
 	dc := &Client{}
 	dc.Client, err = redisClient.NewClient(config, logger)
+	dc.loggingClient = logger
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "redis client creation failed", err)
 	}
@@ -57,4 +60,20 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	}
 
 	return addEvent(conn, e)
+}
+
+// Get an event by id
+func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	event, edgeXerr = eventByID(conn, id)
+	if edgeXerr != nil {
+		if edgeXerr == redis.ErrNil {
+			return event, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return
 }

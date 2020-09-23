@@ -42,3 +42,26 @@ func (_m *DBClient) AddEvent(e models.Event) (models.Event, errors.EdgeX) {
 func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
+
+// EventById provides a mock function with given fields: id
+func (_m *DBClient) EventById(id string) (models.Event, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Event
+	if rf, ok := ret.Get(0).(func(string) models.Event); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Event)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}

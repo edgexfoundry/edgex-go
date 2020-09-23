@@ -13,7 +13,6 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
@@ -23,6 +22,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+
+	"github.com/google/uuid"
 )
 
 // The AddEvent function accepts the new event model from the controller functions
@@ -90,4 +91,25 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 			msgEnvelope.CorrelationID,
 		))
 	}
+}
+
+func EventById(id string, dic *di.Container) (dtos.Event, errors.EdgeX) {
+	if id == "" {
+		return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "id is empty", nil)
+	} else {
+		_, err := uuid.Parse(id)
+		if err != nil {
+			return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "Failed to parse ID as an UUID", err)
+		}
+	}
+
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	event, err := dbClient.EventById(id)
+	if err != nil {
+		return dtos.Event{}, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	eventDTO := dtos.FromEventModelToDTO(event)
+	return eventDTO, nil
 }

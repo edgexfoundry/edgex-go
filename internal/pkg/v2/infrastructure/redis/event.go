@@ -64,7 +64,7 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 	}
 	e.Readings = newReadings
 	if len(rids) > 1 {
-		_ = conn.Send("ZADD", rids...)
+		_ = conn.Send(ZADD, rids...)
 	}
 
 	_, err = conn.Do("EXEC")
@@ -73,4 +73,21 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 	}
 
 	return e, edgeXerr
+}
+
+func eventByID(conn redis.Conn, id string) (event model.Event, edgeXerr errors.EdgeX) {
+	obj, err := redis.Bytes(conn.Do(GET, id))
+	if err == redis.ErrNil {
+		return event, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", err)
+	}
+	if err != nil {
+		return event, errors.NewCommonEdgeX(errors.KindDatabaseError, "query event by id from the database failed", err)
+	}
+
+	err = json.Unmarshal(obj, &event)
+	if err != nil {
+		return event, errors.NewCommonEdgeX(errors.KindDatabaseError, "event format parsing failed from the database", err)
+	}
+
+	return
 }
