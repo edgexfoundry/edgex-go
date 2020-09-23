@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	mail "net/smtp"
@@ -45,9 +46,9 @@ func sendViaChannel(
 	lc.Debug("Sending notification: " + n.Slug + ", via channel: " + c.String())
 	var tr models.TransmissionRecord
 	if c.Type == models.ChannelType(models.Email) {
-		tr = sendMail(n.Content, c.MailAddresses, lc, config.Smtp)
+		tr = sendMail(n.Content, c.MailAddresses, n.ContentType, lc, config.Smtp)
 	} else {
-		tr = restSend(n.Content, c.Url, lc)
+		tr = restSend(n.Content, c.Url, n.ContentType, lc)
 	}
 	t, err := persistTransmission(tr, n, c, receiver, lc, dbClient)
 	if err == nil {
@@ -63,9 +64,9 @@ func resendViaChannel(
 
 	var tr models.TransmissionRecord
 	if t.Channel.Type == models.ChannelType(models.Email) {
-		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, lc, config.Smtp)
+		tr = sendMail(t.Notification.Content, t.Channel.MailAddresses, t.Notification.ContentType, lc, config.Smtp)
 	} else {
-		tr = restSend(t.Notification.Content, t.Channel.Url, lc)
+		tr = restSend(t.Notification.Content, t.Channel.Url, t.Notification.ContentType, lc)
 	}
 	t.ResendCount = t.ResendCount + 1
 	t.Status = tr.Status
@@ -112,15 +113,15 @@ func persistTransmission(
 func sendMail(
 	message string,
 	addressees []string,
+	contentType string,
 	lc logger.LoggingClient,
 	smtp notificationsConfig.SmtpInfo) models.TransmissionRecord {
 
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
-	buf := bytes.NewBufferString("Subject: " + smtp.Subject + "\r\n")
-	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
-	buf.WriteString("\r\n")
-	buf.WriteString(message)
-	err := smtpSend(addressees, []byte(buf.String()), smtp)
+
+	smtpMessage := buildSmtpMessage(smtp.Subject, contentType, message)
+
+	err := smtpSend(addressees, smtpMessage, smtp)
 	if err != nil {
 		lc.Error("Problems sending message to: " + strings.Join(addressees, ",") + ", issue: " + err.Error())
 		tr.Status = models.Failed
@@ -130,9 +131,43 @@ func sendMail(
 	return tr
 }
 
-func restSend(message string, url string, lc logger.LoggingClient) models.TransmissionRecord {
+func buildSmtpMessage(subject string, contentType string, message string) []byte {
+	smtpNewline := "\r\n"
+
+	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
+	buf := bytes.NewBufferString("Subject: " + subject + smtpNewline)
+
+	// only add MIME header if notification content type was set
+	// maybe provide charset overrides as well?
+	if contentType != "" {
+		buf.WriteString(fmt.Sprintf("MIME-version: 1.0;\r\nContent-Type: %s; charset=\"UTF-8\";\r\n", contentType))
+	}
+
+	buf.WriteString(smtpNewline)
+
+	//maximum line size is 1000
+	//split on newline first then break further as needed
+	for _, line := range strings.Split(message, smtpNewline) {
+		ln := 998
+		idx := 0
+		for len(line) > idx+ln {
+			buf.WriteString(line[idx:idx+ln] + smtpNewline)
+			idx += ln
+		}
+		buf.WriteString(line[idx:] + smtpNewline)
+	}
+
+	return []byte(buf.String())
+}
+
+func restSend(message string, url string, contentType string, lc logger.LoggingClient) models.TransmissionRecord {
 	tr := getTransmissionRecord("", models.Sent)
-	rs, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte(message)))
+
+	if contentType == "" {
+		contentType = "text/plain"
+	}
+
+	rs, err := http.Post(url, contentType, bytes.NewBuffer([]byte(message)))
 	if err != nil {
 		lc.Error("Problems sending message to: " + url)
 		lc.Error("Error indication was:  " + err.Error())
