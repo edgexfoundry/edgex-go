@@ -37,6 +37,8 @@ type SecretServiceInfo struct {
 	TokenProviderArgs           []string
 	TokenProviderType           string
 	TokenProviderAdminTokenPath string
+	PasswordProvider            string
+	PasswordProviderArgs        []string
 	RevokeRootTokens            bool
 }
 

@@ -19,7 +19,6 @@ package secretstore
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -29,29 +28,6 @@ import (
 )
 
 const OneShotProvider = "oneshot"
-
-type ExecRunner interface {
-	LookPath(file string) (string, error)
-	CommandContext(ctx context.Context, name string, arg ...string) CmdRunner
-}
-
-type CmdRunner interface {
-	Start() error
-	Wait() error
-}
-
-type ExecWrapper struct{}
-
-func (w ExecWrapper) LookPath(file string) (string, error) {
-	return exec.LookPath(file)
-}
-
-func (w ExecWrapper) CommandContext(ctx context.Context, name string, arg ...string) CmdRunner {
-	cmd := exec.CommandContext(ctx, name, arg...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd
-}
 
 type TokenProvider struct {
 	loggingClient logger.LoggingClient

@@ -58,7 +58,7 @@ func TestInvalidProviderType(t *testing.T) {
 
 func TestNoConfig(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	p := NewTokenProvider(ctx, logger.MockLogger{}, ExecWrapper{})
+	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
 	// don't call SetConfiguration()
 	err := p.Launch()
 	defer cancel()
@@ -116,33 +116,4 @@ func testCommon(config secretstoreclient.SecretServiceInfo, mockExecRunner ExecR
 		return cancel, err
 	}
 	return cancel, p.Launch()
-}
-
-type mockExecRunner struct {
-	mock.Mock
-}
-
-func (m *mockExecRunner) LookPath(file string) (string, error) {
-	arguments := m.Called(file)
-	return arguments.String(0), arguments.Error(1)
-}
-
-func (m *mockExecRunner) CommandContext(ctx context.Context,
-	name string, arg ...string) CmdRunner {
-	arguments := m.Called(ctx, name, arg)
-	return arguments.Get(0).(CmdRunner)
-}
-
-type mockCmd struct {
-	mock.Mock
-}
-
-func (m *mockCmd) Start() error {
-	arguments := m.Called()
-	return arguments.Error(0)
-}
-
-func (m *mockCmd) Wait() error {
-	arguments := m.Called()
-	return arguments.Error(0)
 }

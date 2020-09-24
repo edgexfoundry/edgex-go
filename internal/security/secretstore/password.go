@@ -17,6 +17,7 @@ package secretstore
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,36 +27,34 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	"github.com/cloudflare/gokey"
 )
 
-// CredentialGenerator returns a credential generated with random algorithm for secret store
-type CredentialGenerator interface {
-	Generate(string) (string, error)
+type passwordGenerator struct {
+	generatorImplementation CredentialGenerator
 }
 
-// GokeyGenerator implements the CredentialGenerator interface using the gokey library
-// using tokenPath as the gokey master password and accepting the realm as the argument
-// to the Generate method
-type GokeyGenerator struct {
-	masterPassword string
-}
-
-func NewGokeyGenerator(masterPassword string) *GokeyGenerator {
-	return &GokeyGenerator{masterPassword: masterPassword}
-}
-
-func (gk GokeyGenerator) Generate(realm string) (string, error) {
-	passSpec := gokey.PasswordSpec{
-		Length:         16,
-		Upper:          3,
-		Lower:          3,
-		Digits:         2,
-		Special:        1,
-		AllowedSpecial: "",
+// NewPasswordGenerator wires up a pluggable password generator
+// or defaults to a built-in implementation if
+// the pluggable configuration is missing
+func NewPasswordGenerator(lc logger.LoggingClient, passwordProvider string, passwordProviderArgs []string) CredentialGenerator {
+	gk := &passwordGenerator{
+		generatorImplementation: NewDefaultCredentialGenerator(),
 	}
-	return gokey.GetPass(gk.masterPassword, realm, nil, &passSpec)
+	if passwordProvider != "" {
+		pp := NewPasswordProvider(lc, NewDefaultExecRunner())
+		err := pp.SetConfiguration(passwordProvider, passwordProviderArgs)
+		if err != nil {
+			lc.Warn(fmt.Sprintf("Could not configure password generator %s: error: %s", passwordProvider, err.Error()))
+			return gk // fall-back to builtin
+		}
+		gk.generatorImplementation = pp
+	}
+	return gk
+}
+
+// Generate delegates password generation to underlying implementation
+func (gk *passwordGenerator) Generate(ctx context.Context) (string, error) {
+	return gk.generatorImplementation.Generate(ctx)
 }
 
 type CredCollect struct {
@@ -174,8 +173,9 @@ func (cr *Cred) credPathURL(path string) (string, error) {
 	return fullURL.String(), nil
 }
 
-func (cr *Cred) GeneratePassword(service string) (string, error) {
-	return cr.generator.Generate(service)
+// GeneratePassword is a pass-through to the password generator
+func (cr *Cred) GeneratePassword(ctx context.Context) (string, error) {
+	return cr.generator.Generate(ctx)
 }
 
 func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {

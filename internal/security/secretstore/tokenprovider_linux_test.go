@@ -43,7 +43,7 @@ func TestCreatesFile(t *testing.T) {
 	err := os.RemoveAll(testfile)
 	defer os.RemoveAll(testfile) // cleanup
 
-	p := NewTokenProvider(ctx, logger.MockLogger{}, ExecWrapper{})
+	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
 	p.SetConfiguration(config)
 	assert.NoError(t, err)
 
