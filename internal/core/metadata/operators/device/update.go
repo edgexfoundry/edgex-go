@@ -143,6 +143,10 @@ func (op updateDevice) Execute() (err error) {
 	evt.HttpMethod = http.MethodPut
 	evt.ServiceId = op.device.Service.Id
 
+	if op.device.Service.Id != oldDevice.Service.Id {
+		evt.SecondaryServiceId = oldDevice.Service.Id
+	}
+
 	op.events <- evt
 
 	return nil
