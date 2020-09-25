@@ -164,12 +164,12 @@ paths:
           description: If the number of events exceeds the current max limit.
         500:
           description: For unknown or unanticipated issues.
-  /v1/event/ID/{ID}:
+  /v1/event/id/{id}:
     put:
       description: Update the event to be pushed out of EdgeX to an enterprise or
         cloud system.
       parameters:
-      - name: ID
+      - name: id
         in: path
         description: Database-generated ID
         required: true
@@ -187,7 +187,7 @@ paths:
     delete:
       description: Delete an event and all its readings.
       parameters:
-      - name: ID
+      - name: id
         in: path
         description: Database-generated ID
         required: true
@@ -230,12 +230,12 @@ paths:
           description: Count of the number of events scrubbed
         500:
           description: For unknown or unanticipated issues.
-  /v1/event/{ID}:
+  /v1/event/{id}:
     get:
       description: Fetch a specific event by database specified ID, returning null
         if none are found.
       parameters:
-      - name: ID
+      - name: id
         in: path
         description: Database-generated ID
         required: true
@@ -392,11 +392,11 @@ paths:
           description: If the number of readings exceeds the current max limit.
         500:
           description: Unknown or unanticipated issues
-  /v1/reading/ID/{ID}:
+  /v1/reading/id/{id}:
     delete:
       description: Delete the reading from persistent storage.
       parameters:
-      - name: ID
+      - name: id
         in: path
         description: The ID for which the reading is to be deleted
         required: true
@@ -595,11 +595,11 @@ paths:
           description: If the number of readings exceeds the current max limit.
         500:
           description: For unknown or unanticipated issues.
-  /v1/reading/{ID}:
+  /v1/reading/{id}:
     get:
       description: Retrieve a reading by its ID.
       parameters:
-      - name: ID
+      - name: id
         in: path
         description: Reading database-generated ID
         required: true
