@@ -548,13 +548,14 @@ parts:
     after: [go115]
     plugin: make
     source: https://github.com/hashicorp/consul.git
-    source-tag: v1.7.3
+    source-tag: v1.8.4
     source-depth: 1
     stage:
       # duplicated file with the deps of vault, so just drop this one and use
       # the file from the vault part instead
       - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
       - -usr/share/doc/github.com/miekg/dns/LICENSE
+      - -usr/share/doc/github.com/Azure/azure-sdk-for-go/LICENSE
 
     override-build: |
       # When the snap is built by Jenkins w/in a docker instance, the existence of
