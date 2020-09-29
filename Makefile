@@ -23,7 +23,8 @@ MICROSERVICES=cmd/core-metadata/core-metadata cmd/core-data/core-data \
 	cmd/security-secrets-setup/security-secrets-setup cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
-	cmd/security-bootstrap-redis/security-bootstrap-redis
+	cmd/security-bootstrap-redis/security-bootstrap-redis \
+	cmd/secrets-config/secrets-config
 
 .PHONY: $(MICROSERVICES)
 
@@ -77,6 +78,9 @@ cmd/security-file-token-provider/security-file-token-provider:
 
 cmd/security-bootstrap-redis/security-bootstrap-redis:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrap-redis/security-bootstrap-redis ./cmd/security-bootstrap-redis
+
+cmd/secrets-config/secrets-config:
+	$(GO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
 
 clean:
 	rm -f $(MICROSERVICES)

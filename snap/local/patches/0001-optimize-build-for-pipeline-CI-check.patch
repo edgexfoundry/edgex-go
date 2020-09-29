@@ -1,14 +1,31 @@
-From a9bd8c5b8ca0ac91b0300ab4e3abf75e1384a8b7 Mon Sep 17 00:00:00 2001
+From a8e6179902fe6bccada5d6ad9dd7e850ca774bef Mon Sep 17 00:00:00 2001
 From: Tony Espy <espy@canonical.com>
-Date: Wed, 28 Oct 2020 12:14:21 -0400
-Subject: [PATCH] [PATCH] optimize snap build for pipeline CI check
+Date: Wed, 2 Dec 2020 17:38:31 -0500
+Subject: [PATCH] optimize snap build for pipeline CI check
 
+This patch is used by the EdgeX CI pipeline builds to
+optimize the snap CI check run for pull requests. When
+applied, it essentially strips out everything (apps and
+parts) from the snapcraft.yaml file except those required
+to build edgex-go, as the whole idea of the CI check is to
+catch changes to edgex-go that break the snap build.
+
+In general, anyone updating snapcraft.yaml will also need
+to update this patch file, otherwise it may fail to apply,
+resulting in a failed snap build CI check in the associated
+pull request.
+
+Note - in addition to applying this patch, the pipeline also
+only primes the snap (e.g. `snapcraft prime`), as there's no
+need to build the finally binary .snap file (and it won't
+work with the patch applied). This further reduces the build
+time.
 ---
- snap/snapcraft.yaml | 465 +-------------------------------------------
- 1 file changed, 2 insertions(+), 463 deletions(-)
+ snap/snapcraft.yaml | 466 +-------------------------------------------
+ 1 file changed, 2 insertions(+), 464 deletions(-)
 
 diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
-index 7d1e8c7c..24aef30d 100644
+index b265277c..d7e1de37 100644
 --- a/snap/snapcraft.yaml
 +++ b/snap/snapcraft.yaml
 @@ -75,58 +75,6 @@ confinement: strict
@@ -99,7 +116,7 @@ index 7d1e8c7c..24aef30d 100644
    security-secretstore-setup:
      adapter: full
      after: [vault]
-@@ -293,48 +219,6 @@ apps:
+@@ -292,32 +218,6 @@ apps:
        ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
      daemon: simple
      plugs: [network, network-bind]
@@ -129,14 +146,13 @@ index 7d1e8c7c..24aef30d 100644
 -      Binding_PublishTopic: events
 -      EDGEX_SECURITY_SECRET_STORE: "false"
 -    plugs: [network, network-bind]
--  # helper commands the snap exposes
--  security-proxy-setup-cmd:
--    adapter: none
--    command: bin/security-proxy-setup
--    environment:
--      SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
--      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
--    plugs: [home, removable-media, network]
+   # helper commands the snap exposes
+   security-proxy-setup-cmd:
+     adapter: none
+@@ -333,14 +233,6 @@ apps:
+     environment:
+       SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
+     plugs: [home, removable-media, network]
 -  redis-cli:
 -    adapter: full
 -    command: bin/redis-cli
@@ -148,7 +164,7 @@ index 7d1e8c7c..24aef30d 100644
    curl:
      adapter: full
      command: usr/bin/curl
-@@ -343,76 +227,6 @@ apps:
+@@ -349,76 +241,6 @@ apps:
      adapter: full
      command: usr/bin/jq
      plugs: [home, removable-media]
@@ -225,7 +241,7 @@ index 7d1e8c7c..24aef30d 100644
  
  parts:
    version:
-@@ -420,6 +234,7 @@ parts:
+@@ -426,6 +248,7 @@ parts:
      # as with static-packages part, the source dir is unrelated to this part and is used
      # since it changes rarely and therefore will not trigger a new pull
      source: snap/local/build-helpers
@@ -233,7 +249,7 @@ index 7d1e8c7c..24aef30d 100644
      override-pull: |
        cd $SNAPCRAFT_PROJECT_DIR
        if [ -f VERSION ]; then
-@@ -446,59 +261,6 @@ parts:
+@@ -452,59 +275,6 @@ parts:
        # setpriv with snapd 2.45 + can be used to drop privileges
        - setpriv
  
@@ -293,7 +309,7 @@ index 7d1e8c7c..24aef30d 100644
    go-build-helper:
      plugin: dump
      # see comment for static-packages part about specifying a source part here
-@@ -533,70 +295,7 @@ parts:
+@@ -539,70 +309,7 @@ parts:
        tar -C $SNAPCRAFT_STAGE/go1.15 -xf "$FILE_NAME" --strip-components=1
      prime:
        - "-*"
@@ -365,7 +381,7 @@ index 7d1e8c7c..24aef30d 100644
  
    edgex-go:
      source: .
-@@ -643,163 +342,3 @@ parts:
+@@ -658,172 +365,3 @@ parts:
        - pkg-config
      stage-packages:
        - libzmq5
@@ -402,6 +418,15 @@ index 7d1e8c7c..24aef30d 100644
 -
 -      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
 -      cp $SNAPCRAFT_PART_INSTALL/etc/kong/kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
+-
+-      # by default the Kong deb contains an absolute symlink @ /usr/local/openresty/bin/openresty which points to /usr/local/openresty/nginx/sbin/nginx
+-      # because the review-tools for the snap store do not currently allow using absolute symlinks that point outside of the snap
+-      # (and are not smart enough to realize there is a layout involved in our usage here), we delete the absolute symlink
+-      # and re-create it as a relative symlink pointing to ../nginx/sbin/nginx instead
+-      cd $SNAPCRAFT_PART_INSTALL/usr/local/openresty/bin
+-      rm openresty
+-      ln -s ../nginx/sbin/nginx openresty
+-
 -    prime:
 -       - -lib/systemd/*
 -       - -usr/share/man/*
@@ -531,4 +556,3 @@ index 7d1e8c7c..24aef30d 100644
 -      - libzmq5
 -- 
 2.17.1
-
