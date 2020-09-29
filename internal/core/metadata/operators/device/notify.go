@@ -85,6 +85,19 @@ func (op deviceNotifier) Execute() {
 		if err := op.callback(service, deviceId, httpMethod, models.DEVICE); err != nil {
 			op.logger.Error(err.Error())
 		}
+
+		if msg.SecondaryServiceId != "" {
+			// Callback for secondary device service
+			service, err := op.database.GetDeviceServiceById(msg.SecondaryServiceId)
+			if err != nil {
+				op.logger.Error(err.Error())
+				return
+			}
+
+			if err := op.callback(service, deviceId, httpMethod, models.DEVICE); err != nil {
+				op.logger.Error(err.Error())
+			}
+		}
 	}
 }
 
