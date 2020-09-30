@@ -19,7 +19,7 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.2.8
 )
