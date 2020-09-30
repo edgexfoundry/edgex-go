@@ -7,11 +7,12 @@ package redis
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -19,12 +20,12 @@ import (
 const EventsCollection = "v2:event"
 
 // ************************** DB HELPER FUNCTIONS ***************************
-func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr errors.EdgeX) {
+func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXerr errors.EdgeX) {
 	if e.Created == 0 {
 		e.Created = common.MakeTimestamp()
 	}
 
-	event := model.Event{
+	event := models.Event{
 		Id:         e.Id,
 		Pushed:     e.Pushed,
 		DeviceName: e.DeviceName,
@@ -38,23 +39,24 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 		return addedEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
 	}
 
+	storedKey := fmt.Sprintf("%s:%s", EventsCollection, e.Id)
 	_ = conn.Send(MULTI)
 	// use the SET command to save event as blob
-	_ = conn.Send(SET, EventsCollection+":"+e.Id, m)
-	_ = conn.Send(ZADD, EventsCollection, 0, e.Id)
-	_ = conn.Send(ZADD, EventsCollection+":created", e.Created, e.Id)
-	_ = conn.Send(ZADD, EventsCollection+":pushed", e.Pushed, e.Id)
-	_ = conn.Send(ZADD, EventsCollection+":deviceName:"+e.DeviceName, e.Created, e.Id)
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(ZADD, EventsCollection, 0, storedKey)
+	_ = conn.Send(ZADD, EventsCollection+":created", e.Created, storedKey)
+	_ = conn.Send(ZADD, EventsCollection+":pushed", e.Pushed, storedKey)
+	_ = conn.Send(ZADD, EventsCollection+":deviceName:"+e.DeviceName, e.Created, storedKey)
 
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
 	rids := make([]interface{}, len(e.Readings)*2+1)
 	rids[0] = EventsCollection + ":readings:" + e.Id
-	var newReadings []model.Reading
+	var newReadings []models.Reading
 	for i, r := range e.Readings {
 		newReading, err := addReading(conn, r)
 		if err != nil {
-			return model.Event{}, err
+			return models.Event{}, err
 		}
 		newReadings = append(newReadings, newReading)
 
@@ -75,18 +77,15 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 	return e, edgeXerr
 }
 
-func eventByID(conn redis.Conn, id string) (event model.Event, edgeXerr errors.EdgeX) {
-	obj, err := redis.Bytes(conn.Do(GET, id))
-	if err == redis.ErrNil {
-		return event, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", err)
-	}
-	if err != nil {
-		return event, errors.NewCommonEdgeX(errors.KindDatabaseError, "query event by id from the database failed", err)
+func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectById(conn, EventsCollection+":"+id, &event)
+	if edgeXerr != nil {
+		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	err = json.Unmarshal(obj, &event)
-	if err != nil {
-		return event, errors.NewCommonEdgeX(errors.KindDatabaseError, "event format parsing failed from the database", err)
+	event.Readings, edgeXerr = readingsByEventId(conn, id)
+	if edgeXerr != nil {
+		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
 	return

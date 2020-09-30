@@ -67,7 +67,7 @@ func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX)
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	event, edgeXerr = eventByID(conn, id)
+	event, edgeXerr = eventById(conn, id)
 	if edgeXerr != nil {
 		if edgeXerr == redis.ErrNil {
 			return event, errors.NewCommonEdgeXWrapper(edgeXerr)
