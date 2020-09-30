@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
@@ -75,7 +76,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		[]interfaces.BootstrapHandler{
 			secret.NewSecret().BootstrapHandler,
 			database.NewDatabaseForCoreData(httpServer, configuration).BootstrapHandler,
-			handlers.NewDatabase(httpServer, configuration).BootstrapHandler, // add v2 db client bootstrap handler
+			handlers.NewDatabase(httpServer, configuration, v2DataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

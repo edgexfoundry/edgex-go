@@ -11,11 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
-	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/infrastructure/redis"
+	v2Interface "github.com/edgexfoundry/edgex-go/internal/pkg/v2/interfaces"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
@@ -32,22 +31,24 @@ type httpServer interface {
 
 // Database contains references to dependencies required by the database bootstrap implementation.
 type Database struct {
-	httpServer httpServer
-	database   interfaces.Database
+	httpServer            httpServer
+	database              interfaces.Database
+	dBClientInterfaceName string
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database interfaces.Database) Database {
+func NewDatabase(httpServer httpServer, database interfaces.Database, dBClientInterfaceName string) Database {
 	return Database{
-		httpServer: httpServer,
-		database:   database,
+		httpServer:            httpServer,
+		database:              database,
+		dBClientInterfaceName: dBClientInterfaceName,
 	}
 }
 
 // Return the dbClient interface
 func (d Database) newDBClient(
 	lc logger.LoggingClient,
-	credentials bootstrapConfig.Credentials) (dbInterfaces.DBClient, error) {
+	credentials bootstrapConfig.Credentials) (v2Interface.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
 	case "redisdb":
@@ -85,7 +86,7 @@ func (d Database) BootstrapHandler(
 	}
 
 	// initialize database.
-	var dbClient dbInterfaces.DBClient
+	var dbClient v2Interface.DBClient
 
 	for startupTimer.HasNotElapsed() {
 		var err error
@@ -103,7 +104,7 @@ func (d Database) BootstrapHandler(
 	}
 
 	dic.Update(di.ServiceConstructorMap{
-		container.DBClientInterfaceName: func(get di.Get) interface{} {
+		d.dBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClient
 		},
 	})

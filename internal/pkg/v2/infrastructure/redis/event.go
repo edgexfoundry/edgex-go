@@ -67,7 +67,7 @@ func addEvent(conn redis.Conn, e model.Event) (addedEvent model.Event, edgeXerr 
 		_ = conn.Send(ZADD, rids...)
 	}
 
-	_, err = conn.Do("EXEC")
+	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "event creation failed", err)
 	}
