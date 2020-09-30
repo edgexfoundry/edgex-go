@@ -30,6 +30,18 @@ func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
 	return nil
 }
 
+// getObjectByHash retrieves the id with associated field from the hash stored and then retrieves the object by id
+func getObjectByHash(conn redis.Conn, hash string, field string, out interface{}) errors.EdgeX {
+	id, err := redis.String(conn.Do(HGET, hash, field))
+	if err == redis.ErrNil {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", field), err)
+	} else if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query %s from the database failed", field), err)
+	}
+
+	return getObjectById(conn, id, out)
+}
+
 // getObjectsByRange retrieves the entries for keys enumerated in a sorted set.
 // The entries are retrieved in the sorted set order.
 func getObjectsByRange(conn redis.Conn, key string, start, end int) ([][]byte, errors.EdgeX) {

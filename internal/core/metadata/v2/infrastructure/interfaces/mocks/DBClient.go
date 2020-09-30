@@ -42,3 +42,19 @@ func (_m *DBClient) AddDeviceProfile(e models.DeviceProfile) (models.DeviceProfi
 func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
+
+// UpdateDeviceProfile provides a mock function with given fields: e
+func (_m *DBClient) UpdateDeviceProfile(e models.DeviceProfile) errors.EdgeX {
+	ret := _m.Called(e)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.DeviceProfile) errors.EdgeX); ok {
+		r0 = rf(e)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}

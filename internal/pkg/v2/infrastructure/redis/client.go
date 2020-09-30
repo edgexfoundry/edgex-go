@@ -94,3 +94,10 @@ func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, 
 
 	return addDeviceProfile(conn, dp)
 }
+
+// Update a new device profile
+func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateDeviceProfile(conn, dp)
+}

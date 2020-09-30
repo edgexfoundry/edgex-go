@@ -30,11 +30,30 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Info(fmt.Sprintf(
+	lc.Debug(fmt.Sprintf(
 		"DeviceProfile created on DB successfully. DeviceProfile-id: %s, Correlation-id: %s ",
 		addedDeviceProfile.Id,
 		correlationId,
 	))
 
 	return addedDeviceProfile.Id, nil
+}
+
+// The UpdateDeviceProfile function accepts the device profile model from the controller functions
+// and invokes updateDeviceProfile function in the infrastructure layer
+func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	err = dbClient.UpdateDeviceProfile(d)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debug(fmt.Sprintf(
+		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
+		correlation.FromContext(ctx),
+	))
+
+	return nil
 }
