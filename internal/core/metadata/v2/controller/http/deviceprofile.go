@@ -107,7 +107,7 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 		pkg.Encode(addDeviceProfileResponse, w, lc)
 		return
 	}
-	deviceProfile := dtos.ToDeviceProfileModels(deviceProfileDTO)
+	deviceProfile := dtos.ToDeviceProfileModel(deviceProfileDTO)
 
 	newId, err := application.AddDeviceProfile(deviceProfile, ctx, dc.dic)
 	if err != nil {

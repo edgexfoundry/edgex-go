@@ -40,7 +40,7 @@ var testAttributes = map[string]string{
 	"TestAttribute": "TestAttributeValue",
 }
 
-func mockDeviceProfileRequest() requests.AddDeviceProfileRequest {
+func buildTestDeviceProfileRequest() requests.AddDeviceProfileRequest {
 	var testDeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
@@ -71,6 +71,7 @@ func mockDeviceProfileRequest() requests.AddDeviceProfileRequest {
 			RequestID: ExampleUUID,
 		},
 		Profile: dtos.DeviceProfile{
+			Id:              ExampleUUID,
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,
 			Description:     TestDescription,
@@ -101,7 +102,7 @@ func mockDic() *di.Container {
 }
 
 func TestAddDeviceProfile_Created(t *testing.T) {
-	deviceProfileRequest := mockDeviceProfileRequest()
+	deviceProfileRequest := buildTestDeviceProfileRequest()
 	deviceProfileModel := requests.AddDeviceProfileReqToDeviceProfileModel(deviceProfileRequest)
 	expectedRequestId := ExampleUUID
 	expectedMessage := "Add device profiles successfully"
@@ -164,7 +165,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	controller := NewDeviceProfileController(dic)
 	assert.NotNil(t, controller)
 
-	deviceProfile := mockDeviceProfileRequest()
+	deviceProfile := buildTestDeviceProfileRequest()
 	badRequestId := deviceProfile
 	badRequestId.RequestID = "niv3sl"
 	noName := deviceProfile
@@ -242,14 +243,21 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 }
 
 func TestAddDeviceProfile_Duplicated(t *testing.T) {
-	deviceProfileRequest := mockDeviceProfileRequest()
-	deviceProfileModel := requests.AddDeviceProfileReqToDeviceProfileModel(deviceProfileRequest)
 	expectedRequestId := ExampleUUID
-	dbError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile %s already exists", TestDeviceProfileName), nil)
+
+	duplicateIdRequest := buildTestDeviceProfileRequest()
+	duplicateIdModel := requests.AddDeviceProfileReqToDeviceProfileModel(duplicateIdRequest)
+	duplicateIdDBError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile id %s exists", duplicateIdModel.Id), nil)
+
+	duplicateNameRequest := buildTestDeviceProfileRequest()
+	duplicateNameRequest.Profile.Id = "" // The infrastructure layer will generate id when the id field is empty
+	duplicateNameModel := requests.AddDeviceProfileReqToDeviceProfileModel(duplicateNameRequest)
+	duplicateNameDBError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile name %s exists", duplicateNameModel.Name), nil)
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("AddDeviceProfile", deviceProfileModel).Return(deviceProfileModel, dbError)
+	dbClientMock.On("AddDeviceProfile", duplicateNameModel).Return(duplicateNameModel, duplicateNameDBError)
+	dbClientMock.On("AddDeviceProfile", duplicateIdModel).Return(duplicateIdModel, duplicateIdDBError)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -259,34 +267,45 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 	controller := NewDeviceProfileController(dic)
 	assert.NotNil(t, controller)
 
-	jsonData, err := json.Marshal([]requests.AddDeviceProfileRequest{deviceProfileRequest})
-	require.NoError(t, err)
-
-	reader := strings.NewReader(string(jsonData))
-	req, err := http.NewRequest(http.MethodPost, contractsV2.ApiDeviceProfileRoute, reader)
-	require.NoError(t, err)
-
-	// Act
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.AddDeviceProfile)
-	handler.ServeHTTP(recorder, req)
-	var res []common.BaseWithIdResponse
-	err = json.Unmarshal(recorder.Body.Bytes(), &res)
-
-	// Assert
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
-	assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-	if res[0].RequestID != "" {
-		assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+	tests := []struct {
+		name          string
+		request       []requests.AddDeviceProfileRequest
+		expectedError errors.CommonEdgeX
+	}{
+		{"duplicate id", []requests.AddDeviceProfileRequest{duplicateIdRequest}, duplicateIdDBError},
+		{"duplicate name", []requests.AddDeviceProfileRequest{duplicateNameRequest}, duplicateNameDBError},
 	}
-	assert.Equal(t, http.StatusConflict, res[0].StatusCode, "BaseResponse status code not as expected")
-	assert.Contains(t, res[0].Message, dbError.Message(), "Message not as expected")
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, contractsV2.ApiDeviceProfileRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AddDeviceProfile)
+			handler.ServeHTTP(recorder, req)
+			var res []common.BaseWithIdResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+			assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+			assert.Equal(t, http.StatusConflict, res[0].StatusCode, "BaseResponse status code not as expected")
+			assert.Contains(t, res[0].Message, testCase.expectedError.Message(), "Message not as expected")
+		})
+	}
 }
 
 func TestAddDeviceProfileByYaml_Created(t *testing.T) {
-	deviceProfileDTO := mockDeviceProfileRequest().Profile
-	deviceProfileModel := dtos.ToDeviceProfileModels(deviceProfileDTO)
+	deviceProfileDTO := buildTestDeviceProfileRequest().Profile
+	deviceProfileModel := dtos.ToDeviceProfileModel(deviceProfileDTO)
 	expectedMessage := "Add device profiles successfully"
 
 	dic := mockDic()
@@ -327,7 +346,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	controller := NewDeviceProfileController(dic)
 	assert.NotNil(t, controller)
 
-	deviceProfile := mockDeviceProfileRequest().Profile
+	deviceProfile := buildTestDeviceProfileRequest().Profile
 	noName := deviceProfile
 	noName.Name = ""
 	noDeviceResource := deviceProfile
@@ -403,8 +422,8 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYaml_Duplicated(t *testing.T) {
-	deviceProfileDTO := mockDeviceProfileRequest().Profile
-	deviceProfileModel := dtos.ToDeviceProfileModels(deviceProfileDTO)
+	deviceProfileDTO := buildTestDeviceProfileRequest().Profile
+	deviceProfileModel := dtos.ToDeviceProfileModel(deviceProfileDTO)
 	dbError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile %s already exists", TestDeviceProfileName), nil)
 
 	dic := mockDic()
@@ -440,7 +459,7 @@ func TestAddDeviceProfileByYaml_Duplicated(t *testing.T) {
 }
 
 func TestAddDeviceProfileByYaml_MissingFile(t *testing.T) {
-	deviceProfileDTO := mockDeviceProfileRequest().Profile
+	deviceProfileDTO := buildTestDeviceProfileRequest().Profile
 	dic := mockDic()
 
 	controller := NewDeviceProfileController(dic)

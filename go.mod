@@ -7,14 +7,14 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap v0.0.41
 	github.com/edgexfoundry/go-mod-configuration v0.0.5
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.85
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.90
 	github.com/edgexfoundry/go-mod-messaging v0.1.19
 	github.com/edgexfoundry/go-mod-registry v0.1.22
 	github.com/edgexfoundry/go-mod-secrets v0.0.22
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/uuid v1.1.0
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.1
 	github.com/imdario/mergo v0.3.11
 	github.com/pkg/errors v0.8.1
