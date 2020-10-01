@@ -28,6 +28,10 @@ architectures:
 # see https://github.com/snapcore/snapd/pull/8220 for full details
 assumes: [snapd2.45]
 
+# postgres needs to run as the snap_daemon user
+system-usernames:
+  snap_daemon: shared
+
 # Ideally snapcraft would generate this command-chain spec for the hooks
 # automatically, but that doesn't currently work, see
 # https://bugs.launchpad.net/snapd/+bug/1824255
@@ -40,8 +44,6 @@ assumes: [snapd2.45]
 # See also https://bugs.launchpad.net/snapcraft/+bug/1848381 for specifying
 # environment for hooks
 passthrough:
-  system-usernames:
-    snap_daemon: shared
   hooks:
     configure:
       command-chain:
