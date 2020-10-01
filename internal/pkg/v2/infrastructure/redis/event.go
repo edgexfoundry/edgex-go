@@ -21,6 +21,12 @@ const EventsCollection = "v2:event"
 
 // ************************** DB HELPER FUNCTIONS ***************************
 func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXerr errors.EdgeX) {
+	// query Event by Id first to avoid the Id conflict
+	_, edgeXerr = eventById(conn, e.Id)
+	if errors.Kind(edgeXerr) != errors.KindEntityDoesNotExist {
+		return addedEvent, errors.NewCommonEdgeX(errors.KindDuplicateName, "Event Id exists", nil)
+	}
+
 	if e.Created == 0 {
 		e.Created = common.MakeTimestamp()
 	}

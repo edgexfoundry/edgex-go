@@ -3,21 +3,20 @@ package http
 import (
 	"net/http"
 
-	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/io"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+
+	"github.com/gorilla/mux"
 )
 
 type EventController struct {
@@ -78,8 +77,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 		addResponses = append(addResponses, addEventResponse)
 	}
 
-	w.Header().Set(clients.CorrelationHeader, correlation.FromContext(ctx))
-	w.WriteHeader(http.StatusMultiStatus)
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(addResponses, w, lc) // encode and send out the response
 }
 
@@ -94,6 +92,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	id := vars[v2.Id]
 
 	var eventResponse interface{}
+	var statusCode int
 
 	// Get the event
 	e, err := application.EventById(id, ec.dic)
@@ -101,12 +100,12 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 		lc.Error(err.Error())
 		lc.Debug(err.DebugMessages())
 		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		w.WriteHeader(err.Code())
+		statusCode = err.Code()
 	} else {
 		eventResponse = responseDTO.NewEventResponse("", "", http.StatusOK, e)
-		w.WriteHeader(http.StatusOK)
+		statusCode = http.StatusOK
 	}
 
-	w.Header().Set(clients.CorrelationHeader, correlation.FromContext(ctx))
+	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(eventResponse, w, lc) // encode and send out the response
 }
