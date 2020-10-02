@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017
+// Copyright (c) 2020
 // Cavium
 // Mainflux
 //
@@ -9,4 +9,4 @@
 package edgex
 
 // Global version for edgex-go
-var Version string = "1.1.0"
+var Version string = "1.3.0"
