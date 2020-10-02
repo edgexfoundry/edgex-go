@@ -10,6 +10,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
@@ -43,11 +44,12 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	lc := container.LoggingClientFrom(dc.dic.Get)
 
 	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
 
 	addDeviceProfileDTOs, err := dc.reader.ReadAddDeviceProfileRequest(r.Body, &ctx)
 	if err != nil {
-		lc.Error(err.Error())
-		lc.Debug(err.DebugMessages())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		http.Error(w, err.Message(), err.Code())
 		return
 	}
@@ -60,8 +62,8 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 		reqId := addDeviceProfileDTOs[i].RequestID
 		newId, err := application.AddDeviceProfile(d, ctx, dc.dic)
 		if err != nil {
-			lc.Error(err.Error())
-			lc.Debug(err.DebugMessages())
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 			addDeviceProfileResponse = commonDTO.NewBaseResponse(
 				reqId,
 				err.Message(),
@@ -90,6 +92,7 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
 	var addDeviceProfileResponse interface{}
 
 	deviceProfileDTO, err := dc.reader.ReadDeviceProfileYaml(r)
@@ -98,8 +101,8 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 			"",
 			err.Message(),
 			err.Code())
-		lc.Error(err.Error())
-		lc.Debug(err.DebugMessages())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		w.WriteHeader(err.Code())
 		pkg.Encode(addDeviceProfileResponse, w, lc)
 		return
@@ -112,8 +115,8 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 			"",
 			err.Message(),
 			err.Code())
-		lc.Error(err.Error())
-		lc.Debug(err.DebugMessages())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		w.WriteHeader(err.Code())
 		pkg.Encode(addDeviceProfileResponse, w, lc)
 		return
