@@ -11,6 +11,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -97,7 +98,10 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	// Get the event
 	e, err := application.EventById(id, ec.dic)
 	if err != nil {
-		lc.Error(err.Error())
+		// Event not found is not a real error, so the error message should not be printed out
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error())
+		}
 		lc.Debug(err.DebugMessages())
 		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
