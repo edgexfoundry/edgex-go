@@ -26,8 +26,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	// Device Profile
 	dc := dpController.NewDeviceProfileController(dic)
 	r.HandleFunc(v2Constant.ApiDeviceProfileRoute, dc.AddDeviceProfile).Methods(http.MethodPost)
-	dp := r.PathPrefix(v2Constant.ApiDeviceProfileRoute).Subrouter()
-	dp.HandleFunc(dpController.UploadFile, dc.AddDeviceProfileByYaml).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiDeviceProfileUploadFileRoute, dc.AddDeviceProfileByYaml).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiDeviceProfileUploadFileRoute, dc.UpdateDeviceProfileByYaml).Methods(http.MethodPut)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

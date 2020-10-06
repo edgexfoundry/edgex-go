@@ -7,20 +7,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-)
-
-const (
-	// URL PATH
-	UploadFile = "/uploadfile"
-	Name       = "name"
 )
 
 type DeviceProfileController struct {
@@ -133,4 +127,50 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 	w.WriteHeader(http.StatusCreated)
 	// Encode and send the resp body as JSON format
 	pkg.Encode(addDeviceProfileResponse, w, lc)
+}
+
+func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	var response interface{}
+	var statusCode int
+
+	deviceProfileDTO, err := dc.reader.ReadDeviceProfileYaml(r)
+	if err != nil {
+		response = commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(response, w, lc)
+		return
+	}
+
+	deviceProfile := dtos.ToDeviceProfileModel(deviceProfileDTO)
+	err = application.UpdateDeviceProfile(deviceProfile, ctx, dc.dic)
+	if err != nil {
+		response = commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse(
+			"",
+			"Update device profile successfully",
+			http.StatusOK)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
 }
