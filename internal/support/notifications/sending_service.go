@@ -119,7 +119,7 @@ func sendMail(
 
 	tr := getTransmissionRecord("SMTP server received", models.Sent)
 
-	smtpMessage := buildSmtpMessage(smtp.Subject, contentType, message)
+	smtpMessage := buildSmtpMessage(smtp.Sender, smtp.Subject, addressees, contentType, message)
 
 	err := smtpSend(addressees, smtpMessage, smtp)
 	if err != nil {
@@ -131,11 +131,15 @@ func sendMail(
 	return tr
 }
 
-func buildSmtpMessage(subject string, contentType string, message string) []byte {
+func buildSmtpMessage(sender string, subject string, toAddresses []string, contentType string, message string) []byte {
 	smtpNewline := "\r\n"
 
 	// required CRLF at ends of lines and CRLF between header and body for SMTP RFC 822 style email
 	buf := bytes.NewBufferString("Subject: " + subject + smtpNewline)
+
+	buf.WriteString("From: " + sender + smtpNewline)
+
+	buf.WriteString("To: " + strings.Join(toAddresses, ",") + smtpNewline)
 
 	// only add MIME header if notification content type was set
 	// maybe provide charset overrides as well?
