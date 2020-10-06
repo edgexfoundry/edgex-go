@@ -5,7 +5,9 @@ package redis
 const (
 	MULTI     = "MULTI"
 	SET       = "SET"
+	EXISTS    = "EXISTS"
 	HSET      = "HSET"
+	HEXISTS   = "HEXISTS"
 	SADD      = "SADD"
 	ZADD      = "ZADD"
 	GET       = "GET"
