@@ -66,13 +66,29 @@ func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
 
-// UpdateDeviceProfile provides a mock function with given fields: e
-func (_m *DBClient) UpdateDeviceProfile(e models.DeviceProfile) errors.EdgeX {
-	ret := _m.Called(e)
+// DeleteDeviceProfileById provides a mock function with given fields: id
+func (_m *DBClient) DeleteDeviceProfileById(id string) errors.EdgeX {
+	ret := _m.Called(id)
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(models.DeviceProfile) errors.EdgeX); ok {
-		r0 = rf(e)
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
+// DeleteDeviceProfileByName provides a mock function with given fields: name
+func (_m *DBClient) DeleteDeviceProfileByName(name string) errors.EdgeX {
+	ret := _m.Called(name)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(name)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -103,4 +119,20 @@ func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, e
 	}
 
 	return r0, r1
+}
+
+// UpdateDeviceProfile provides a mock function with given fields: e
+func (_m *DBClient) UpdateDeviceProfile(e models.DeviceProfile) errors.EdgeX {
+	ret := _m.Called(e)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.DeviceProfile) errors.EdgeX); ok {
+		r0 = rf(e)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
 }

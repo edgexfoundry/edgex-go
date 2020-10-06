@@ -72,3 +72,29 @@ func GetDeviceProfileByName(name string, ctx context.Context, dic *di.Container)
 	deviceProfile = dtos.FromDeviceProfileModelToDTO(dp)
 	return deviceProfile, nil
 }
+
+// DeleteDeviceProfileById delete the device profile by Id
+func DeleteDeviceProfileById(id string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if id == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceProfileById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// DeleteDeviceProfileByName delete the device profile by name
+func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceProfileByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

@@ -88,6 +88,15 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 	return dp, edgeXerr
 }
 
+// deviceProfileById query device profile by id from DB
+func deviceProfileById(conn redis.Conn, id string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectById(conn, deviceProfileStoredKey(id), &deviceProfile)
+	if edgeXerr != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
 // deviceProfileByName query device profile by name from DB
 func deviceProfileByName(conn redis.Conn, name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, DeviceProfileCollection+":name", name, &deviceProfile)
@@ -141,4 +150,44 @@ func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr erro
 	}
 
 	return edgeXerr
+}
+
+// deleteDeviceProfileById deletes the device profile by id
+func deleteDeviceProfileById(conn redis.Conn, id string) errors.EdgeX {
+	exists, edgeXerr := deviceProfileExistById(conn, id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", id), edgeXerr)
+	}
+
+	deviceProfile, err := deviceProfileById(conn, id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = deleteDeviceProfile(conn, deviceProfile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// deleteDeviceProfileByName deletes the device profile by name
+func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
+	exists, edgeXerr := deviceProfileExistByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", name), edgeXerr)
+	}
+
+	deviceProfile, err := deviceProfileByName(conn, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = deleteDeviceProfile(conn, deviceProfile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
 }

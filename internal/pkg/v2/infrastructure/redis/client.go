@@ -129,3 +129,35 @@ func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.Device
 
 	return
 }
+
+// Delete a device profile by id
+func (c *Client) DeleteDeviceProfileById(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceProfileById(conn, id)
+	if edgeXerr != nil {
+		if edgeXerr == redis.ErrNil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
+}
+
+// Delete a device profile by name
+func (c *Client) DeleteDeviceProfileByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceProfileByName(conn, name)
+	if edgeXerr != nil {
+		if edgeXerr == redis.ErrNil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
+}
