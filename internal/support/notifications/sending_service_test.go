@@ -24,35 +24,44 @@ import (
 
 func TestBuildSmtpMessageNoContentType(t *testing.T) {
 	subject := uuid.New().String()
+	from := uuid.New().String()
+	to1 := uuid.New().String()
+	to2 := uuid.New().String()
+
 	message := uuid.New().String()
 
-	result := buildSmtpMessage(subject, "", message)
+	result := buildSmtpMessage(from, subject, []string{to1, to2}, "", message)
 
 	require.NotNil(t, result)
 
 	stringResult := string(result)
 
-	expected := fmt.Sprintf("Subject: %s\r\n\r\n%s\r\n", subject, message)
+	expected := fmt.Sprintf("Subject: %s\r\nFrom: %s\r\nTo: %s,%s\r\n\r\n%s\r\n", subject, from, to1, to2, message)
 	assert.Equal(t, expected, stringResult)
 }
 
 func TestBuildSmtpMessageContentType(t *testing.T) {
 	subject := uuid.New().String()
+	from := uuid.New().String()
+	to := uuid.New().String()
 	contentType := uuid.New().String()
 	message := uuid.New().String()
 
-	result := buildSmtpMessage(subject, contentType, message)
+	result := buildSmtpMessage(from, subject, []string{to}, contentType, message)
 
 	require.NotNil(t, result)
 
 	stringResult := string(result)
 
-	expected := fmt.Sprintf("Subject: %s\r\nMIME-version: 1.0;\r\nContent-Type: %s; charset=\"UTF-8\";\r\n\r\n%s\r\n", subject, contentType, message)
+	expected := fmt.Sprintf("Subject: %s\r\nFrom: %s\r\nTo: %s\r\nMIME-version: 1.0;\r\nContent-Type: %s; charset=\"UTF-8\";\r\n\r\n%s\r\n", subject, from, to, contentType, message)
 	assert.Equal(t, expected, stringResult)
 }
 
 func TestBuildSmtpMessageLongMessageIsChunkedIfNeeded(t *testing.T) {
 	subject := uuid.New().String()
+	from := uuid.New().String()
+	to := uuid.New().String()
+
 	message := uuid.New().String()
 
 	for i := 0; i < 5; i++ {
@@ -62,18 +71,21 @@ func TestBuildSmtpMessageLongMessageIsChunkedIfNeeded(t *testing.T) {
 	require.Greater(t, len(message), 998)
 	require.Less(t, len(message), 1896)
 
-	result := buildSmtpMessage(subject, "", message)
+	result := buildSmtpMessage(from, subject, []string{to}, "", message)
 
 	require.NotNil(t, result)
 
 	stringResult := string(result)
 
-	expected := fmt.Sprintf("Subject: %s\r\n\r\n%s\r\n%s\r\n", subject, message[0:998], message[998:])
+	expected := fmt.Sprintf("Subject: %s\r\nFrom: %s\r\nTo: %s\r\n\r\n%s\r\n%s\r\n", subject, from, to, message[0:998], message[998:])
 	assert.Equal(t, expected, stringResult)
 }
 
 func TestBuildSmtpMessageLongMessageIsPreChunked(t *testing.T) {
 	subject := uuid.New().String()
+	from := uuid.New().String()
+	to := uuid.New().String()
+
 	longLine := uuid.New().String()
 
 	for i := 0; i < 5; i++ {
@@ -85,18 +97,21 @@ func TestBuildSmtpMessageLongMessageIsPreChunked(t *testing.T) {
 
 	formattedMessage := fmt.Sprintf("%s\r\n%s", longLine[0:998], longLine[998:])
 
-	result := buildSmtpMessage(subject, "", formattedMessage)
+	result := buildSmtpMessage(from, subject, []string{to}, "", formattedMessage)
 
 	require.NotNil(t, result)
 
 	stringResult := string(result)
 
-	expected := fmt.Sprintf("Subject: %s\r\n\r\n%s\r\n", subject, formattedMessage)
+	expected := fmt.Sprintf("Subject: %s\r\nFrom: %s\r\nTo: %s\r\n\r\n%s\r\n", subject, from, to, formattedMessage)
 	assert.Equal(t, expected, stringResult)
 }
 
 func TestBuildSmtpMessageLongMessageIsPartlyChunked(t *testing.T) {
 	subject := uuid.New().String()
+	from := uuid.New().String()
+	to := uuid.New().String()
+
 	longLine := uuid.New().String()
 
 	for i := 0; i < 5; i++ {
@@ -110,12 +125,12 @@ func TestBuildSmtpMessageLongMessageIsPartlyChunked(t *testing.T) {
 
 	formattedMessage := fmt.Sprintf("%s\r\n%s", longLine[0:998], longLine[998:])
 
-	result := buildSmtpMessage(subject, "", goodLine+formattedMessage)
+	result := buildSmtpMessage(from, subject, []string{to}, "", goodLine+formattedMessage)
 
 	require.NotNil(t, result)
 
 	stringResult := string(result)
 
-	expected := fmt.Sprintf("Subject: %s\r\n\r\n%s%s\r\n%s\r\n", subject, goodLine, longLine[0:998], longLine[998:])
+	expected := fmt.Sprintf("Subject: %s\r\nFrom: %s\r\nTo: %s\r\n\r\n%s%s\r\n%s\r\n", subject, from, to, goodLine, longLine[0:998], longLine[998:])
 	assert.Equal(t, expected, stringResult)
 }
