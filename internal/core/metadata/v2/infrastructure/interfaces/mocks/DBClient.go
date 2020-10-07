@@ -38,6 +38,29 @@ func (_m *DBClient) AddDeviceProfile(e models.DeviceProfile) (models.DeviceProfi
 	return r0, r1
 }
 
+// AddDeviceService provides a mock function with given fields: e
+func (_m *DBClient) AddDeviceService(e models.DeviceService) (models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(e)
+
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(models.DeviceService) models.DeviceService); ok {
+		r0 = rf(e)
+	} else {
+		r0 = ret.Get(0).(models.DeviceService)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(models.DeviceService) errors.EdgeX); ok {
+		r1 = rf(e)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()

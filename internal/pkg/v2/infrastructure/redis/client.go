@@ -101,3 +101,15 @@ func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
 	defer conn.Close()
 	return updateDeviceProfile(conn, dp)
 }
+
+// Add a new device service
+func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(ds.Id) == 0 {
+		ds.Id = uuid.New().String()
+	}
+
+	return addDeviceService(conn, ds)
+}
