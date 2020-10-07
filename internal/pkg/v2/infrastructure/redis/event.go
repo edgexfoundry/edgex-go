@@ -26,6 +26,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	if errors.Kind(edgeXerr) != errors.KindEntityDoesNotExist {
 		return addedEvent, errors.NewCommonEdgeX(errors.KindDuplicateName, "Event Id exists", nil)
 	}
+	edgeXerr = nil
 
 	if e.Created == 0 {
 		e.Created = common.MakeTimestamp()

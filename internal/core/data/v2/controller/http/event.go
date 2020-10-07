@@ -6,11 +6,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -41,12 +44,13 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
 	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
 
 	reader := io.NewEventRequestReader()
 	addEventReqDTOs, err := reader.ReadAddEventRequest(r.Body, &ctx)
 	if err != nil {
-		lc.Error(err.Error())
-		lc.Debug(err.DebugMessages())
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		http.Error(w, err.Message(), err.Code())
 		return
 	}
@@ -61,8 +65,8 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 		reqId := addEventReqDTOs[i].RequestID
 
 		if err != nil {
-			lc.Error(err.Error())
-			lc.Debug(err.DebugMessages())
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 			addEventResponse = commonDTO.NewBaseResponse(
 				reqId,
 				err.Message(),
@@ -86,6 +90,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
 	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
@@ -97,8 +102,11 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	// Get the event
 	e, err := application.EventById(id, ec.dic)
 	if err != nil {
-		lc.Error(err.Error())
-		lc.Debug(err.DebugMessages())
+		// Event not found is not a real error, so the error message should not be printed out
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {

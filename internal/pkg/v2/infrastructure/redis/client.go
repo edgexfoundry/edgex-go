@@ -94,3 +94,38 @@ func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, 
 
 	return addDeviceProfile(conn, dp)
 }
+
+// Update a new device profile
+func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateDeviceProfile(conn, dp)
+}
+
+// Add a new device service
+func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(ds.Id) == 0 {
+		ds.Id = uuid.New().String()
+	}
+
+	return addDeviceService(conn, ds)
+}
+
+// Get a device profile by name
+func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceProfile, edgeXerr = deviceProfileByName(conn, name)
+	if edgeXerr != nil {
+		if edgeXerr == redis.ErrNil {
+			return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return
+}

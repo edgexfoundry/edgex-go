@@ -14,4 +14,8 @@ type DBClient interface {
 	CloseSession()
 
 	AddDeviceProfile(e model.DeviceProfile) (model.DeviceProfile, errors.EdgeX)
+	UpdateDeviceProfile(e model.DeviceProfile) errors.EdgeX
+	GetDeviceProfileByName(name string) (model.DeviceProfile, errors.EdgeX)
+
+	AddDeviceService(e model.DeviceService) (model.DeviceService, errors.EdgeX)
 }
