@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
@@ -56,4 +57,18 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 	))
 
 	return nil
+}
+
+// GetDeviceProfileByName query the device profile by name
+func GetDeviceProfileByName(name string, ctx context.Context, dic *di.Container) (deviceProfile dtos.DeviceProfile, err errors.EdgeX) {
+	if name == "" {
+		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dp, err := dbClient.GetDeviceProfileByName(name)
+	if err != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfile = dtos.FromDeviceProfileModelToDTO(dp)
+	return deviceProfile, nil
 }

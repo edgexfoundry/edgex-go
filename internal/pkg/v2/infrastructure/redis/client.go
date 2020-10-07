@@ -113,3 +113,19 @@ func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, 
 
 	return addDeviceService(conn, ds)
 }
+
+// Get a device profile by name
+func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceProfile, edgeXerr = deviceProfileByName(conn, name)
+	if edgeXerr != nil {
+		if edgeXerr == redis.ErrNil {
+			return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return
+}
