@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
@@ -30,11 +31,44 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Info(fmt.Sprintf(
+	lc.Debug(fmt.Sprintf(
 		"DeviceProfile created on DB successfully. DeviceProfile-id: %s, Correlation-id: %s ",
 		addedDeviceProfile.Id,
 		correlationId,
 	))
 
 	return addedDeviceProfile.Id, nil
+}
+
+// The UpdateDeviceProfile function accepts the device profile model from the controller functions
+// and invokes updateDeviceProfile function in the infrastructure layer
+func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	err = dbClient.UpdateDeviceProfile(d)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debug(fmt.Sprintf(
+		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
+		correlation.FromContext(ctx),
+	))
+
+	return nil
+}
+
+// GetDeviceProfileByName query the device profile by name
+func GetDeviceProfileByName(name string, ctx context.Context, dic *di.Container) (deviceProfile dtos.DeviceProfile, err errors.EdgeX) {
+	if name == "" {
+		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dp, err := dbClient.GetDeviceProfileByName(name)
+	if err != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfile = dtos.FromDeviceProfileModelToDTO(dp)
+	return deviceProfile, nil
 }

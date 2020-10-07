@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
@@ -85,4 +86,59 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 	}
 
 	return dp, edgeXerr
+}
+
+// deviceProfileByName query device profile by name from DB
+func deviceProfileByName(conn redis.Conn, name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, DeviceProfileCollection+":name", name, &deviceProfile)
+	if edgeXerr != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
+func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
+	storedKey := deviceProfileStoredKey(dp.Id)
+	_ = conn.Send(MULTI)
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, DeviceProfileCollection, storedKey)
+	_ = conn.Send(HDEL, DeviceProfileCollection+":name", dp.Name)
+	_ = conn.Send(SREM, DeviceProfileCollection+":manufacturer:"+dp.Manufacturer, storedKey)
+	_ = conn.Send(SREM, DeviceProfileCollection+":model:"+dp.Model, storedKey)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile deletion failed", err)
+	}
+	return nil
+}
+
+// updateDeviceProfile updates a device profile to DB
+func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr errors.EdgeX) {
+	exists, edgeXerr := deviceProfileExistByName(conn, dp.Name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", dp.Name), edgeXerr)
+	}
+
+	// Remove old
+	oldDeviceProfile, err := deviceProfileByName(conn, dp.Name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = deleteDeviceProfile(conn, oldDeviceProfile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// Add new one
+	dp.Id = oldDeviceProfile.Id
+	dp.Created = oldDeviceProfile.Created
+	dp.Modified = common.MakeTimestamp()
+	_, err = addDeviceProfile(conn, dp)
+	if err != nil {
+		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile updating failed", err)
+	}
+
+	return edgeXerr
 }

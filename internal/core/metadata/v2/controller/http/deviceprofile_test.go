@@ -30,7 +30,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -99,6 +102,29 @@ func mockDic() *di.Container {
 			return logger.NewMockClient()
 		},
 	})
+}
+
+func createDeviceProfileRequestWithFile(fileContents []byte) (*http.Request, error) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "deviceProfile.yaml")
+	if err != nil {
+		return nil, err
+	}
+	_, err = part.Write(fileContents)
+	if err != nil {
+		return nil, err
+	}
+	boundary := writer.Boundary()
+
+	err = writer.Close()
+	if err != err {
+		return nil, err
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, contractsV2.ApiDeviceProfileRoute+"/uploadfile", body)
+	req.Header.Set(clients.ContentType, "multipart/form-data; boundary="+boundary)
+	return req, nil
 }
 
 func TestAddDeviceProfile_Created(t *testing.T) {
@@ -488,25 +514,165 @@ func TestAddDeviceProfileByYaml_MissingFile(t *testing.T) {
 	assert.Contains(t, res.Message, "missing yaml file")
 }
 
-func createDeviceProfileRequestWithFile(fileContents []byte) (*http.Request, error) {
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", "deviceProfile.yaml")
-	if err != nil {
-		return nil, err
-	}
-	_, err = part.Write(fileContents)
-	if err != nil {
-		return nil, err
-	}
-	boundary := writer.Boundary()
+func TestUpdateDeviceProfileByYaml(t *testing.T) {
+	deviceProfile := buildTestDeviceProfileRequest().Profile
 
-	err = writer.Close()
-	if err != err {
-		return nil, err
-	}
+	valid := deviceProfile
+	validDeviceProfileModel := dtos.ToDeviceProfileModel(valid)
+	noName := deviceProfile
+	noName.Name = ""
+	noDeviceResource := deviceProfile
+	noDeviceResource.DeviceResources = []dtos.DeviceResource{}
+	noDeviceResourceName := deviceProfile
+	noDeviceResourceName.DeviceResources = []dtos.DeviceResource{{
+		Description: TestDescription,
+		Tag:         TestTag,
+		Attributes:  testAttributes,
+		Properties: dtos.PropertyValue{
+			Type:      "INT16",
+			ReadWrite: "RW",
+		},
+	}}
+	noDeviceResourcePropertyType := deviceProfile
+	noDeviceResourcePropertyType.DeviceResources = []dtos.DeviceResource{{
+		Name:        TestDeviceResourceName,
+		Description: TestDescription,
+		Tag:         TestTag,
+		Attributes:  testAttributes,
+		Properties: dtos.PropertyValue{
+			ReadWrite: "RW",
+		},
+	}}
+	noCommandName := deviceProfile
+	noCommandName.CoreCommands = []dtos.Command{{
+		Get: true,
+		Put: true,
+	}}
+	noCommandGet := deviceProfile
+	noCommandGet.CoreCommands = []dtos.Command{{
+		Name: TestProfileResourceName,
+		Get:  false,
+	}}
+	noCommandPut := deviceProfile
+	noCommandPut.CoreCommands = []dtos.Command{{
+		Name: TestProfileResourceName,
+		Put:  false,
+	}}
+	notFound := deviceProfile
+	notFound.Name = "testDevice"
+	notFoundDeviceProfileModel := dtos.ToDeviceProfileModel(notFound)
+	notFoundDBError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exists", notFoundDeviceProfileModel.Name), nil)
 
-	req, _ := http.NewRequest(http.MethodPost, contractsV2.ApiDeviceProfileRoute+"/uploadfile", body)
-	req.Header.Set(clients.ContentType, "multipart/form-data; boundary="+boundary)
-	return req, nil
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
+	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		request            dtos.DeviceProfile
+		expectedStatusCode int
+	}{
+		{"Valid", valid, http.StatusOK},
+		{"Invalid - No name", noName, http.StatusBadRequest},
+		{"Invalid - No deviceResource", noDeviceResource, http.StatusBadRequest},
+		{"Invalid - No deviceResource name", noDeviceResourceName, http.StatusBadRequest},
+		{"Invalid - No deviceResource property type", noDeviceResourcePropertyType, http.StatusBadRequest},
+		{"Invalid - No command name", noCommandName, http.StatusBadRequest},
+		{"Invalid - No command Get", noCommandGet, http.StatusBadRequest},
+		{"Invalid - No command Put", noCommandPut, http.StatusBadRequest},
+		{"Not found", notFound, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			valid, err := yaml.Marshal(testCase.request)
+			require.NoError(t, err)
+			req, err := createDeviceProfileRequestWithFile(valid)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.UpdateDeviceProfileByYaml)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseWithIdResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+
+			// Assert
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "HTTP status code not as expected")
+			assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+		})
+	}
+}
+
+func TestGetDeviceProfileByName(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	emptyName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("GetDeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
+	dbClientMock.On("GetDeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceProfileName  string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find device profile by name", deviceProfile.Name, false, http.StatusOK},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - device profile not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiDeviceProfileRoute, contractsV2.Name, testCase.deviceProfileName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Name: testCase.deviceProfileName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.GetDeviceProfileByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.DeviceProfileResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.deviceProfileName, res.Profile.Name, "Event Id not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
 }
