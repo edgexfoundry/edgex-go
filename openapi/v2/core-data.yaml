@@ -112,14 +112,13 @@ components:
     EventCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate event count in uint32 integer type. If the deviceId property is blank then the count is applicable to all events in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate event count in uint32 integer type. If the deviceName property is blank then the count is applicable to all events in the database. Otherwise, the count is applicable to the specified device."
       type: object
       properties:
         count:
           type: integer
-        deviceId:
+        deviceName:
           type: string
-          format: uuid
     Event:
       description: "A discrete event containing one or more readings"
       properties:
@@ -238,19 +237,19 @@ components:
       type: object
       properties:
         timestamp:
-          description: "Outputs the current server timestamp in Unix Time format"
+          description: "Outputs the current server timestamp in RFC1123 format"
+          example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
     ReadingCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate reading count in uint32 integer type. If the deviceId property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate reading count in uint32 integer type. If the deviceName property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
       type: object
       properties:
         count:
           type: integer
-        deviceId:
+        deviceName:
           type: string
-          format: uuid
     ReadingResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -347,23 +346,33 @@ components:
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
+    200Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 200
+        message: ""
     400Example:
       value:
+        requestId: ""
         apiVersion: "v2"
         statusCode: 400
         message: "Bad Request" 
     404Example:
       value:
+        requestId: ""
         apiVersion: "v2"
         statusCode: 404
         message: "Not Found"     
     500Example:
       value:
+        requestId: ""
         apiVersion: "v2"
         statusCode: 500
         message: "Interval Server Error" 
     AllEventsExample:
       value:
+        requestId: ""
         apiVersion: "v2"
         statusCode: 200
         message: ""
@@ -373,40 +382,41 @@ components:
             deviceName: "device-001"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
             modified: 1594975851631
-            origin: 1471806366619
+            origin: 1602168089665565300
             pushed: 1594975851631
             readings:
-              - apiVersion: "v2"
-                created: 1594876281221
+              - created: 1594876281221
                 deviceName: "device-001"
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                 labels:                            
                   - "power"
                 modified: 1594975851631
-                origin: 1471806366619
+                origin: 1602168089665565300
                 pushed: 1594975851631
                 floatEncoding: "IEEE-754"
                 valueType: "Float32"
                 value: "39.5"
-              - apiVersion: "v2"
-                create: 1594876281221
+              - create: 1594876281221
                 deviceName: "device-001"
                 id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                 labels:
                   - "Fahrenheit"
                   - "temperature"
+                origin: 1602168089665565300
+                valueType: "Int8"
                 value: "75"
           - apiVersion: "v2"
             created: 1594877691305
             deviceName: "device-002"
             id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
+            origin: 1602168089665565300
             readings: 
-              - apiVersion: "v2"
-                created: 1594879337014
+              - created: 1594879337014
                 deviceName: "device-002"
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
                 labels:
                   - "image"
+                origin: 1602168089665565300
                 valueType: "Binary"
                 binaryValue: "83010203"
                 mediaType: "image"
@@ -414,6 +424,7 @@ components:
             created: 1594983105886
             deviceName: "device-002"
             id: "d5471d59-2810-419a-8744-18eb8fa03465"
+            origin: 1602168089665565300
             readings:
               - apiVersion: "v2"
                 created: 594983105886
@@ -421,11 +432,13 @@ components:
                 id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                 labels:
                   - "co2"
+                origin: 1602168089665565300
                 floatEncoding: "IEEE-754"
                 valueType: "Float32"
                 value: "12.2"
     AllReadingsExample:
       value:
+        requestId: ""
         apiVersion: "v2"
         statusCode: 200
         message: ""
@@ -437,7 +450,7 @@ components:
             labels:
               - "power"
             modified: 1594975851631
-            origin: 1471806386919
+            origin: 1602168089665565300
             pushed: 1594975851631
             floatEncoding: "IEEE-754"
             valueType: "Float32"
@@ -449,6 +462,8 @@ components:
             labels:
               - "Fahrenheit"
               - "temperature"
+            origin: 1602168089665565300
+            valueType: "Int8"
             value: "75" 
           - apiVersion: "v2"
             created: 1594879337014
@@ -456,6 +471,7 @@ components:
             id: "71c601d9-cb56-453a-8c75-54461e444713"
             labels:
               - "image"
+            origin: 1602168089665565300
             valueType: "Binary"
             binaryValue: "83010203"
             mediaType: "image"
@@ -465,7 +481,7 @@ components:
             id: "7003cacc-0e00-4676-977c-4e58b9612abd"
             labels:
               - "co2"
-            origin: 1471806386919
+            origin: 1602168089665565300
             floatEncoding: "IEEE-754"
             valueType: "Float32"
             value: "12.2"
@@ -483,6 +499,48 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddEventRequest'
+            example:
+              - event:
+                  deviceName: device-002
+                  id: d5471d59-2810-419a-8744-18eb8fa03465
+                  origin: 1602168089665565300
+                  readings:
+                    - deviceName: device-002
+                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
+                      labels:
+                        - co2
+                      origin: 1602168089665565300
+                      floatEncoding: IEEE-754
+                      valueType: Float32
+                      value: '12.2'
+              - event:
+                  deviceName: device-002
+                  id: d5471d59-2810-419a-8744-18eb8fa03465
+                  origin: 1602168089665565300
+                  readings:
+                    - deviceName: device-002
+                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
+                      labels:
+                        - co2
+                      origin: 1602168089665565300
+                      floatEncoding: IEEE-754
+                      valueType: Float32
+                      value: '12.2'
+              - event:
+                  deviceName: device-002
+                  id: 73fc4f9c-2d64-4920-addb-b1f33a8f8514
+                  origin: 1602168089665565300
+                  readings:
+                    - apiVersion: v2
+                      created: 1594879337014
+                      deviceName: device-002
+                      id: 71c601d9-cb56-453a-8c75-54461e444713
+                      labels:
+                        - image
+                      origin: 1602168089665565300
+                      valueType: Binary
+                      binaryValue: '83010203'
+                      mediaType: image
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -498,15 +556,43 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                - apiVersion: "v2"
+                - requestId: ""
+                  apiVersion: "v2"
                   statusCode: 201
+                  message: ""
                   id: "040bd523-ec33-440d-9d72-e5813a465f37"
-                - apiVersion: "v2"
-                  statusCode: 400
-                  message: "Bad Request"
-                - apiVersion: "v2"
+                - requestId: ""
+                  apiVersion: "v2"
+                  statusCode: 409
+                  message: "Event Id exists"
+                - requestId: ""
+                  apiVersion: "v2"
                   statusCode: 500
                   message: "Interval Server Error"
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /event/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -563,6 +649,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/EventResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -572,28 +659,28 @@ paths:
                   deviceName: "device-001"
                   id: "040bd523-ec33-440d-9d72-e5813a465f37"
                   modified: 1594975851631
-                  origin: 1471806366619
+                  origin: 1602168089665565300
                   pushed: 1594975851631
                   readings:
-                    - apiVersion: "v2"
-                      created: 1594876281221
+                    - created: 1594876281221
                       deviceName: "device-001"
                       id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                       labels:                            
                         - "power"
                       modified: 1594975851631
-                      origin: 1471806366619
+                      origin: 1602168089665565300
                       pushed: 1594975851631
                       floatEncoding: "IEEE-754"
                       valueType: "Float32"
                       value: "39.5"
-                    - apiVersion: "v2"
-                      create: 1594876281221
+                    - create: 1594876281221
                       deviceName: "device-001"
                       id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                       labels:
                         - "Fahrenheit"
                         - "temperature"
+                      origin: 1602168089665565300
+                      valueType: "Int8"
                       value: "75"
         '404':
           description: "The requested resource does not exist"
@@ -622,11 +709,18 @@ paths:
     delete:
       summary: "Deletes an event by ID"
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -664,6 +758,13 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/UpdateEventPushedByChecksumRequest'
+            example:
+              - requestId: e6e8a2f4-eb14-4649-9e2b-175247911369
+                checksum: 4228c3215949e862
+              - requestId: e6e8a2f4-eb14-4649-9e2b-175247911111
+                checksum: 1111c3215949e862
+              - requestId: e6e8a2f4-eb14-4649-9e2b-175247912222
+                checksum: 2222c3215949e862
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -679,14 +780,17 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/UpdateEventPushedByChecksumResponse'
               example:
-                - apiVersion: "v2"
+                - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+                  apiVersion: "v2"
                   statusCode: 200
                   message: ""
                   checksum: "4228c3215949e862"
-                - apiVersion: "v2"
+                - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911111"
+                  apiVersion: "v2"
                   statusCode: 404
                   message: "Not Found"
-                - apiVersion: "v2"
+                - requestId: "e6e8a2f4-eb14-4649-9e2b-175247912222"
+                  apiVersion: "v2"
                   statusCode: 500
                   message: "Interval Server Error" 
   /event/count:
@@ -705,6 +809,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/EventCountResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -721,15 +826,14 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/count/device/{deviceId}:
+  /event/count/device/{deviceName}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceId
+    - name: deviceName
       in: path
       required: true
       schema:
         type: string
-        format: uuid
       description: "Uniquely identifies a given device"
     get:
       summary: "Return a count of all of events currently stored in the database, sourced from the specified device."
@@ -744,11 +848,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/EventCountResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
                 count: 1 
-                deviceId: "ecfe3110-964f-4e35-bd00-4d2149271884"
+                deviceId: "device-001"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -786,11 +891,18 @@ paths:
     delete:
       summary: "Deletes all events for the specified device"
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -815,15 +927,14 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/device/{deviceId}/all:
+  /event/device/{deviceName}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceId
+    - name: deviceName
       in: path
       required: true
       schema:
         type: string
-        format: uuid
       description: "Uniquely identifies a given device"
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
@@ -840,6 +951,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MultiEventsResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -848,13 +960,14 @@ paths:
                     created: 1594877691305
                     deviceName: "device-002"
                     id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
+                    origin: 1602168089665565300
                     readings: 
-                      - apiVersion: "v2"
-                        created: 1594879337014
+                      - created: 1594879337014
                         deviceName: "device-002"
                         id: "71c601d9-cb56-453a-8c75-54461e444713"
                         labels:
                           - "image"
+                        origin: 1602168089665565300
                         valueType: "Binary"
                         binaryValue: "83010203"
                         mediaType: "image"
@@ -862,6 +975,7 @@ paths:
                     created: 1594983105886
                     deviceName: "device-002"
                     id: "d5471d59-2810-419a-8744-18eb8fa03465"
+                    origin: 1602168089665565300
                     readings:
                       - apiVersion: "v2"
                         created: 594983105886
@@ -869,6 +983,7 @@ paths:
                         id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                         labels:
                           - "co2"
+                        origin: 1602168089665565300
                         floatEncoding: "IEEE-754"
                         valueType: "Float32"
                         value: "12.2"
@@ -972,11 +1087,18 @@ paths:
     delete:
       summary: "Remove all old events (and associated readings) based on delimiting age"
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -995,11 +1117,18 @@ paths:
     delete:
       summary: "Remove all pushed events and their associated readings."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1068,6 +1197,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingCountResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1084,15 +1214,14 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /reading/count/device/{deviceId}:
+  /reading/count/device/{deviceName}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: deviceId
+      - name: deviceName
         in: path
         required: true
         schema:
           type: string
-          format: uuid
         description: "Uniquely identifies a given device"
     get:
       summary: "Return a count of all of readings currently stored in the database, sourced from the specified device."
@@ -1107,11 +1236,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingCountResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
                 count: 2
-                deviceId: "ecfe3110-964f-4e35-bd00-4d2149271884"
+                deviceName: "device-001"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1159,6 +1289,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1170,7 +1301,7 @@ paths:
                   labels:
                     - "power"
                   modified: 1594975851631
-                  origin: 1471806386919
+                  origin: 1602168089665565300
                   pushed: 1594975851631
                   floatEncoding: "IEEE-754"
                   valueType: "Float32"
@@ -1199,15 +1330,14 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /reading/device/{deviceId}/all:
+  /reading/device/{deviceName}/all:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceId
+    - name: deviceName
       in: path
       required: true
       schema:
         type: string
-        format: uuid
       description: "Uniquely identifies a given device"
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
@@ -1224,6 +1354,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MultiReadingsResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1235,7 +1366,7 @@ paths:
                     labels:
                       - "power"
                     modified: 1594975851631
-                    origin: 1471806386919
+                    origin: 1602168089665565300
                     pushed: 1594975851631
                     floatEncoding: "IEEE-754"
                     valueType: "Float32"
@@ -1244,9 +1375,11 @@ paths:
                     create: 1594876281221
                     deviceName: "device-001"
                     id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+                    origin: 1602168089665565300
                     labels:
                       - "Fahrenheit"
                       - "temperature"
+                    valueType: "Int8"
                     value: "75"
         '404':
           description: "The requested resource does not exist"
@@ -1300,6 +1433,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SimpleReadingResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1311,7 +1445,7 @@ paths:
                     labels:
                       - "power"
                     modified: 1594975851631
-                    origin: 1471806386919
+                    origin: 1602168089665565300
                     pushed: 1594975851631
                     floatEncoding: "IEEE-754"
                     valueType: "Float32"
@@ -1322,7 +1456,7 @@ paths:
                     id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                     labels:
                       - "co2"
-                    origin: 1471806386919
+                    origin: 1602168089665565300
                     floatEncoding: "IEEE-754"
                     valueType: "Float32"
                     value: "12.2"
@@ -1428,6 +1562,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1534,6 +1669,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
@@ -1571,10 +1707,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
-                timestamp: "1594900038"
+                timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
         '500':
           description: "Interval Server Error"
           headers:
@@ -1601,6 +1738,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
+                requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
