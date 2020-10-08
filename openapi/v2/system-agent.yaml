@@ -19,12 +19,14 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-      required:
-        - requestId
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         requestId:
           description: "Uniquely identifies the request that resulted in this response."
           type: string
@@ -36,9 +38,6 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
-      required:
-        - requestId
-        - statusCode
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -63,7 +62,8 @@ components:
           type: object
           title: service
           description: "Map of service(key) and configuration(value)"
-      example: { "edgex-core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
+      example: { "apiVersion":"v2", "requestId": "e6e8a2f4-eb14-4649-9e2b-175247911369","statusCode": 200, "message": "",
+                 "edgex-core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
       required:
         - config
     HealthRequest:
@@ -153,11 +153,6 @@ components:
           description: "The type of executor which processed the operation"
           type: string
           example: "docker"
-    PingRequest:
-      description: "A request associated with the /ping endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     PingResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -256,11 +251,6 @@ components:
           example: "edgex-core-command"
       required:
         - service
-    VersionRequest:
-      description: "A request associated with the /version endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -290,6 +280,13 @@ components:
         format: uuid
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
+  examples:
+    500Example:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        statusCode: 500
+        message: "Internal Server Error"
 paths:
   /batch:
     parameters:
@@ -410,6 +407,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /health:
     post:
       summary: "Obtain health information from the targeted service."
@@ -448,6 +454,15 @@ paths:
                     - $ref: '#/components/schemas/HealthResponse'
         '400':
           description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -500,6 +515,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /operation:
     post:
       summary: "Issue a start, stop or restart action to the targeted service."
@@ -545,19 +569,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /ping:
-    post:
+    get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/PingRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/PingRequest'
       responses:
         '200':
           description: "OK"
@@ -568,21 +591,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/PingResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -590,19 +600,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /version:
-    post:
+    get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/VersionRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/VersionRequest'
       responses:
         '200':
           description: "OK"
@@ -613,21 +616,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/VersionResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -635,3 +625,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
