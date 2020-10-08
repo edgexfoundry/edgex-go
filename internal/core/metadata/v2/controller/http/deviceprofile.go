@@ -45,20 +45,19 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceProfileDTOs, err := dc.reader.ReadAddDeviceProfileRequest(r.Body, &ctx)
+	addDeviceProfileDTOs, err := dc.reader.ReadDeviceProfileRequest(r.Body, &ctx)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
+		response := commonDTO.NewBaseResponse(
 			"",
 			err.Message(),
 			err.Code())
 		utils.WriteHttpHeader(w, ctx, err.Code())
-		// Encode and send the resp body as JSON format
-		pkg.Encode(errResponses, w, lc)
+		pkg.Encode(response, w, lc)
 		return
 	}
-	deviceProfiles := requestDTO.AddDeviceProfileReqToDeviceProfileModels(addDeviceProfileDTOs)
+	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(addDeviceProfileDTOs)
 
 	var addResponses []interface{}
 	for i, d := range deviceProfiles {
@@ -84,8 +83,56 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	// Encode and send the resp body as JSON format
 	pkg.Encode(addResponses, w, lc)
+}
+
+func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	updateDeviceProfileReq, err := dc.reader.ReadDeviceProfileRequest(r.Body, &ctx)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(response, w, lc)
+		return
+	}
+	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(updateDeviceProfileReq)
+
+	var responses []interface{}
+	for i, d := range deviceProfiles {
+		var response interface{}
+		reqId := updateDeviceProfileReq[i].RequestID
+		err := application.UpdateDeviceProfile(d, ctx, dc.dic)
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"Update device profile successfully",
+				http.StatusOK)
+		}
+		responses = append(responses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.Encode(responses, w, lc)
 }
 
 func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
