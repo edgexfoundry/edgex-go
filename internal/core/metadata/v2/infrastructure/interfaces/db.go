@@ -16,6 +16,8 @@ type DBClient interface {
 	AddDeviceProfile(e model.DeviceProfile) (model.DeviceProfile, errors.EdgeX)
 	UpdateDeviceProfile(e model.DeviceProfile) errors.EdgeX
 	GetDeviceProfileByName(name string) (model.DeviceProfile, errors.EdgeX)
+	DeleteDeviceProfileById(id string) errors.EdgeX
+	DeleteDeviceProfileByName(name string) errors.EdgeX
 
 	AddDeviceService(e model.DeviceService) (model.DeviceService, errors.EdgeX)
 }
