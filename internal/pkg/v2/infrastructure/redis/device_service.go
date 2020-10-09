@@ -60,3 +60,12 @@ func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceServi
 
 	return ds, edgeXerr
 }
+
+// deviceServiceByName query device service by name from DB
+func deviceServiceByName(conn redis.Conn, name string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, DeviceServiceCollection+":name", name, &deviceService)
+	if edgeXerr != nil {
+		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}

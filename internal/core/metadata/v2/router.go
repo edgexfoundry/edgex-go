@@ -8,7 +8,6 @@ import (
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/v2/controller/http"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	v2Constant "github.com/edgexfoundry/go-mod-core-contracts/v2"
 
 	"github.com/gorilla/mux"
@@ -35,6 +34,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	// Device Service
 	ds := metadataController.NewDeviceServiceController(dic)
 	r.HandleFunc(v2Constant.ApiDeviceServiceRoute, ds.AddDeviceService).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiDeviceServiceByNameRoute, ds.GetDeviceServiceByName).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
