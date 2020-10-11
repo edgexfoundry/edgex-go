@@ -55,10 +55,10 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	storedKey := fmt.Sprintf("%s:%s", ReadingsCollection, baseReading.Id)
 	// use the SET command to save reading as blob
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, ReadingsCollection, 0, baseReading.Id)
-	_ = conn.Send(ZADD, ReadingsCollection+":created", baseReading.Created, ReadingsCollection)
-	_ = conn.Send(ZADD, ReadingsCollection+":deviceName:"+baseReading.DeviceName, baseReading.Created, ReadingsCollection)
-	_ = conn.Send(ZADD, ReadingsCollection+":name:"+baseReading.Name, baseReading.Created, ReadingsCollection)
+	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
+	_ = conn.Send(ZADD, ReadingsCollection+":created", baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, ReadingsCollection+":deviceName:"+baseReading.DeviceName, baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, ReadingsCollection+":name:"+baseReading.Name, baseReading.Created, storedKey)
 
 	return reading, nil
 }
