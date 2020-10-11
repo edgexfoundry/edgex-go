@@ -113,3 +113,14 @@ func EventById(id string, dic *di.Container) (dtos.Event, errors.EdgeX) {
 	eventDTO := dtos.FromEventModelToDTO(event)
 	return eventDTO, nil
 }
+
+func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	count, err := dbClient.EventTotalCount()
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return count, nil
+}
