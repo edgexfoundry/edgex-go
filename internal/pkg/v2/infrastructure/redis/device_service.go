@@ -113,3 +113,16 @@ func deleteDeviceServiceById(conn redis.Conn, id string) errors.EdgeX {
 	}
 	return nil
 }
+
+// deleteDeviceServiceByName deletes the device service by name
+func deleteDeviceServiceByName(conn redis.Conn, name string) errors.EdgeX {
+	deviceService, err := deviceServiceByName(conn, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = deleteDeviceService(conn, deviceService)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

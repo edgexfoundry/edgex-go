@@ -97,3 +97,29 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 
 	return nil
 }
+
+// DeleteDeviceServiceById delete the device service by Id
+func DeleteDeviceServiceById(id string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if id == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceServiceById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// DeleteDeviceServiceByName delete the device service by name
+func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceServiceByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

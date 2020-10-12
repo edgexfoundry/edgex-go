@@ -114,6 +114,22 @@ func (_m *DBClient) DeleteDeviceServiceById(id string) errors.EdgeX {
 	return r0
 }
 
+// DeleteDeviceServiceByName provides a mock function with given fields: name
+func (_m *DBClient) DeleteDeviceServiceByName(name string) errors.EdgeX {
+	ret := _m.Called(name)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // GetDeviceProfileByName provides a mock function with given fields: name
 func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, errors.EdgeX) {
 	ret := _m.Called(name)
