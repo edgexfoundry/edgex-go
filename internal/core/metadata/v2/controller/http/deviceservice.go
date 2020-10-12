@@ -54,7 +54,13 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		http.Error(w, err.Message(), err.Code())
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		// Encode and send the resp body as JSON format
+		pkg.Encode(errResponses, w, lc)
 		return
 	}
 	deviceServices := requestDTO.AddDeviceServiceReqToDeviceServiceModels(addDeviceServiceDTOs)

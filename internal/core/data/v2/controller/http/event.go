@@ -51,7 +51,13 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		http.Error(w, err.Message(), err.Code())
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		// encode and send out the response
+		pkg.Encode(errResponses, w, lc)
 		return
 	}
 	events := requestDTO.AddEventReqToEventModels(addEventReqDTOs)
@@ -82,7 +88,8 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc) // encode and send out the response
+	// encode and send out the response
+	pkg.Encode(addResponses, w, lc)
 }
 
 func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
@@ -115,5 +122,6 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(eventResponse, w, lc) // encode and send out the response
+	// encode and send out the response
+	pkg.Encode(eventResponse, w, lc)
 }
