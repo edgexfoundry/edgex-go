@@ -14,6 +14,22 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+func objectExistById(conn redis.Conn, id string) (bool, errors.EdgeX) {
+	exists, err := redis.Bool(conn.Do(EXISTS, id))
+	if err != nil {
+		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query id %s from the database failed", id), err)
+	}
+	return exists, nil
+}
+
+func objectExistByHash(conn redis.Conn, hash string, field string) (bool, errors.EdgeX) {
+	exists, err := redis.Bool(conn.Do(HEXISTS, hash, field))
+	if err != nil {
+		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query field %s from the database failed", field), err)
+	}
+	return exists, nil
+}
+
 func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
 	obj, err := redis.Bytes(conn.Do(GET, id))
 	if err == redis.ErrNil {

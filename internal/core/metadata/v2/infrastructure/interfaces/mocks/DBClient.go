@@ -98,6 +98,22 @@ func (_m *DBClient) DeleteDeviceProfileByName(name string) errors.EdgeX {
 	return r0
 }
 
+// DeleteDeviceServiceById provides a mock function with given fields: id
+func (_m *DBClient) DeleteDeviceServiceById(id string) errors.EdgeX {
+	ret := _m.Called(id)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // GetDeviceProfileByName provides a mock function with given fields: name
 func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -112,6 +128,29 @@ func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, e
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
 		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// GetDeviceServiceById provides a mock function with given fields: id
+func (_m *DBClient) GetDeviceServiceById(id string) (models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.DeviceService)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

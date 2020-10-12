@@ -122,3 +122,51 @@ func (dc *DeviceServiceController) GetDeviceServiceByName(w http.ResponseWriter,
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	updateDeviceServiceDTOs, err := dc.reader.ReadUpdateDeviceServiceRequest(r.Body, &ctx)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
+
+	var updateResponses []interface{}
+	for _, dto := range updateDeviceServiceDTOs {
+		var response interface{}
+		reqId := dto.RequestID
+		err := application.PatchDeviceService(dto.Service, ctx, dc.dic)
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"",
+				http.StatusOK)
+		}
+		updateResponses = append(updateResponses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.Encode(updateResponses, w, lc)
+}

@@ -18,6 +18,7 @@ import (
 // DeviceServiceReader unmarshals a request body into an array of DeviceService type
 type DeviceServiceReader interface {
 	ReadAddDeviceServiceRequest(reader io.Reader, ctx *context.Context) ([]dtoRequest.AddDeviceServiceRequest, errors.EdgeX)
+	ReadUpdateDeviceServiceRequest(reader io.Reader, ctx *context.Context) ([]dtoRequest.UpdateDeviceServiceRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -40,7 +41,19 @@ func (jsonDeviceServiceReader) ReadAddDeviceServiceRequest(reader io.Reader, ctx
 	var addDeviceServices []dtoRequest.AddDeviceServiceRequest
 	err := json.NewDecoder(reader).Decode(&addDeviceServices)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile json decoding failed", err)
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device service json decoding failed", err)
 	}
 	return addDeviceServices, nil
+}
+
+// ReadUpdateDeviceServiceRequest reads a request and then converts its JSON data into an array of UpdateDeviceServiceRequest struct
+func (jsonDeviceServiceReader) ReadUpdateDeviceServiceRequest(reader io.Reader, ctx *context.Context) ([]dtoRequest.UpdateDeviceServiceRequest, errors.EdgeX) {
+	c := context.WithValue(*ctx, clients.ContentType, clients.ContentTypeJSON)
+	*ctx = c
+	var updateDeviceServices []dtoRequest.UpdateDeviceServiceRequest
+	err := json.NewDecoder(reader).Decode(&updateDeviceServices)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device service json decoding failed", err)
+	}
+	return updateDeviceServices, nil
 }
