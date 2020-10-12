@@ -17,6 +17,7 @@ package secretstore
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,8 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/kdf"
+	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
@@ -80,12 +83,29 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
 	vc := secretstoreclient.NewSecretStoreClient(lc, req, vaultScheme, vaultHost)
+	pipedHexReader := pipedhexreader.NewPipedHexReader()
+	kdf := kdf.NewKdf(fileOpener, configuration.SecretService.TokenFolderPath, sha256.New)
+	vmkEncryption := NewVMKEncryption(fileOpener, pipedHexReader, kdf)
+
+	hook := os.Getenv("IKM_HOOK")
+	if len(hook) > 0 {
+		err := vmkEncryption.LoadIKM(hook)
+		defer vmkEncryption.WipeIKM() // Ensure IKM is wiped from memory
+		if err != nil {
+			lc.Error(fmt.Sprintf("failed to setup vault master key encryption: %s", err.Error()))
+			return false
+		}
+		lc.Info("Enabled encryption of Vault master key")
+	} else {
+		lc.Info("vault master key encryption not enabled. IKM_HOOK not set.")
+	}
+
 	var initResponse secretstoreclient.InitResponse // reused many places in below flow
 
 	//step 3: initialize and unseal Vault
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
-		func() {
+		successful := func() bool {
 			sCode, _ := vc.HealthCheck()
 
 			switch sCode {
@@ -93,7 +113,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				// Load the init response from disk since we need it to regenerate root token later
 				if err := loadInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
 					lc.Error(fmt.Sprintf("unable to load init response: %s", err.Error()))
-					os.Exit(1)
+					return false
 				}
 				lc.Info(fmt.Sprintf("vault is initialized and unsealed (status code: %d)", sCode))
 				shouldContinue = false
@@ -109,19 +129,36 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					initResponse.RootToken = ""
 					lc.Info("Root token stripped from init response for security reasons")
 				}
-				if err := saveInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
-					lc.Error(fmt.Sprintf("unable to save init response: %s", err.Error()))
-					os.Exit(1)
-				}
 				_, err = vc.Unseal(&initResponse)
 				if err == nil {
 					shouldContinue = false
+				}
+				// We need the unencrypted initResponse in order to generate a temporary root token later
+				// Make a copy and save the copy, possibly encrypted
+				encryptedInitResponse := initResponse
+				// Optionally encrypt the vault init response based on whether encryption was enabled
+				if vmkEncryption.IsEncrypting() {
+					if err := vmkEncryption.EncryptInitResponse(&encryptedInitResponse); err != nil {
+						lc.Error(fmt.Sprintf("failed to encrypt init response from secret store: %s", err.Error()))
+						return false
+					}
+				}
+				if err := saveInitResponse(lc, fileOpener, configuration.SecretService, &encryptedInitResponse); err != nil {
+					lc.Error(fmt.Sprintf("unable to save init response: %s", err.Error()))
+					return false
 				}
 			case http.StatusServiceUnavailable:
 				lc.Info(fmt.Sprintf("vault is sealed (status code: %d). Starting unseal phase", sCode))
 				if err := loadInitResponse(lc, fileOpener, configuration.SecretService, &initResponse); err != nil {
 					lc.Error(fmt.Sprintf("unable to load init response: %s", err.Error()))
-					os.Exit(1)
+					return false
+				}
+				// Optionally decrypt the vault init response based on whether encryption was enabled
+				if vmkEncryption.IsEncrypting() {
+					if err := vmkEncryption.DecryptInitResponse(&initResponse); err != nil {
+						lc.Error(fmt.Sprintf("failed to decrypt key shares for sercret store unsealing: %s", err.Error()))
+						return false
+					}
 				}
 				_, err := vc.Unseal(&initResponse)
 				if err == nil {
@@ -134,7 +171,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					lc.Error(fmt.Sprintf("vault is in an unknown state. Status code: %d", sCode))
 				}
 			}
+			return true
 		}()
+		if !successful {
+			return false
+		}
 
 		if shouldContinue {
 			lc.Info(fmt.Sprintf("trying Vault init/unseal again in %d seconds", b.vaultInterval))
@@ -175,8 +216,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// Create a transient root token from the key shares
 	var rootToken string
-	err := vc.RegenRootToken(&initResponse, &rootToken)
-	if err != nil {
+	if err := vc.RegenRootToken(&initResponse, &rootToken); err != nil {
 		lc.Error(fmt.Sprintf("could not regenerate root token %s", err.Error()))
 		os.Exit(1)
 	}
@@ -200,7 +240,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			}
 			lc.Info("Root token stripped from init response (on disk) for security reasons")
 		}
-		if err = tokenMaintenance.RevokeRootTokens(rootToken); err != nil {
+		if err := tokenMaintenance.RevokeRootTokens(rootToken); err != nil {
 			lc.Warn(fmt.Sprintf("failed to revoke non-transient root tokens %s", err.Error()))
 		}
 		lc.Info("completed cleanup of old root tokens")
@@ -209,8 +249,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Revoke non-root tokens from previous runs
-	err = tokenMaintenance.RevokeNonRootTokens(rootToken)
-	if err != nil {
+	if err := tokenMaintenance.RevokeNonRootTokens(rootToken); err != nil {
 		lc.Warn("failed to revoke non-root tokens")
 	}
 	lc.Info("completed cleanup of old admin/service tokens")
@@ -245,8 +284,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Enable KV secret engine
-	err = enableKVSecretsEngine(lc, vc, rootToken)
-	if err != nil {
+	if err := enableKVSecretsEngine(lc, vc, rootToken); err != nil {
 		lc.Error(fmt.Sprintf("failed to enable KV secrets engine: %s", err.Error()))
 		os.Exit(1)
 	}
