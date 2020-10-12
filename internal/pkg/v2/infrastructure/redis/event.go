@@ -69,7 +69,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 
 		// set the sorted set score to the index of the reading
 		rids[i*2+1] = i
-		rids[i*2+2] = newReading.GetBaseReading().Id
+		rids[i*2+2] = fmt.Sprintf("%s:%s", ReadingsCollection, newReading.GetBaseReading().Id)
 	}
 	e.Readings = newReadings
 	if len(rids) > 1 {
@@ -85,7 +85,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 }
 
 func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.EdgeX) {
-	edgeXerr = getObjectById(conn, EventsCollection+":"+id, &event)
+	edgeXerr = getObjectById(conn, fmt.Sprintf("%s:%s", EventsCollection, id), &event)
 	if edgeXerr != nil {
 		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
