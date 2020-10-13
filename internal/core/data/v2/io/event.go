@@ -6,18 +6,16 @@
 package io
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 )
 
 // EventReader unmarshals a request body into an Event type
 type EventReader interface {
-	ReadAddEventRequest(reader io.Reader, ctx *context.Context) ([]dto.AddEventRequest, errors.EdgeX)
+	ReadAddEventRequest(reader io.Reader) ([]dto.AddEventRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -34,9 +32,7 @@ func NewJsonReader() jsonEventReader {
 }
 
 // Read reads and converts the request's JSON event data into an Event struct
-func (jsonEventReader) ReadAddEventRequest(reader io.Reader, ctx *context.Context) ([]dto.AddEventRequest, errors.EdgeX) {
-	c := context.WithValue(*ctx, clients.ContentType, clients.ContentTypeJSON)
-	*ctx = c
+func (jsonEventReader) ReadAddEventRequest(reader io.Reader) ([]dto.AddEventRequest, errors.EdgeX) {
 	var addEvents []dto.AddEventRequest
 	err := json.NewDecoder(reader).Decode(&addEvents)
 	if err != nil {

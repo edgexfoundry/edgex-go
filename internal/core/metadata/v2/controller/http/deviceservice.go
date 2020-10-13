@@ -50,7 +50,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceServiceDTOs, err := dc.reader.ReadAddDeviceServiceRequest(r.Body, &ctx)
+	addDeviceServiceDTOs, err := dc.reader.ReadAddDeviceServiceRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -133,7 +133,7 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateDeviceServiceDTOs, err := dc.reader.ReadUpdateDeviceServiceRequest(r.Body, &ctx)
+	updateDeviceServiceDTOs, err := dc.reader.ReadUpdateDeviceServiceRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

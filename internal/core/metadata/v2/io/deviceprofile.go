@@ -6,7 +6,6 @@
 package io
 
 import (
-	"context"
 	"encoding/json"
 	"gopkg.in/yaml.v2"
 	"io"
@@ -14,7 +13,6 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -23,7 +21,7 @@ import (
 
 // DeviceProfileReader unmarshals a request body into an DeviceProfile type
 type DeviceProfileReader interface {
-	ReadDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.DeviceProfileRequest, errors.EdgeX)
+	ReadDeviceProfileRequest(reader io.Reader) ([]dto.DeviceProfileRequest, errors.EdgeX)
 	ReadDeviceProfileYaml(r *http.Request) (dtos.DeviceProfile, errors.EdgeX)
 }
 
@@ -41,9 +39,7 @@ func NewJsonReader() jsonDeviceProfileReader {
 }
 
 // ReadDeviceProfileRequest reads and converts the request's JSON data into an DeviceProfile struct
-func (jsonDeviceProfileReader) ReadDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.DeviceProfileRequest, errors.EdgeX) {
-	c := context.WithValue(*ctx, clients.ContentType, clients.ContentTypeJSON)
-	*ctx = c
+func (jsonDeviceProfileReader) ReadDeviceProfileRequest(reader io.Reader) ([]dto.DeviceProfileRequest, errors.EdgeX) {
 	var addDeviceProfiles []dto.DeviceProfileRequest
 	err := json.NewDecoder(reader).Decode(&addDeviceProfiles)
 	if err != nil {

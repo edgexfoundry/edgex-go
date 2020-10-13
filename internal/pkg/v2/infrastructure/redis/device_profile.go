@@ -24,20 +24,20 @@ func deviceProfileStoredKey(id string) string {
 	return fmt.Sprintf("%s:%s", DeviceProfileCollection, id)
 }
 
-// deviceProfileExistByName whether the device profile exists by name
-func deviceProfileExistByName(conn redis.Conn, name string) (bool, errors.EdgeX) {
-	exists, err := redis.Bool(conn.Do(HEXISTS, DeviceProfileCollection+":name", name))
+// deviceProfileNameExists whether the device profile exists by name
+func deviceProfileNameExists(conn redis.Conn, name string) (bool, errors.EdgeX) {
+	exists, err := objectNameExists(conn, DeviceProfileCollection+":name", name)
 	if err != nil {
-		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check by name failed", err)
+		return false, errors.NewCommonEdgeXWrapper(err)
 	}
 	return exists, nil
 }
 
-// deviceProfileExistById checks whether the device profile exists by id
-func deviceProfileExistById(conn redis.Conn, id string) (bool, errors.EdgeX) {
-	exists, err := redis.Bool(conn.Do(EXISTS, deviceProfileStoredKey(id)))
+// deviceProfileIdExists checks whether the device profile exists by id
+func deviceProfileIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
+	exists, err := objectIdExists(conn, deviceProfileStoredKey(id))
 	if err != nil {
-		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check by id failed", err)
+		return false, errors.NewCommonEdgeXWrapper(err)
 	}
 	return exists, nil
 }
@@ -45,14 +45,14 @@ func deviceProfileExistById(conn redis.Conn, id string) (bool, errors.EdgeX) {
 // addDeviceProfile adds a device profile to DB
 func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	// query device profile name and id to avoid the conflict
-	exists, edgeXerr := deviceProfileExistById(conn, dp.Id)
+	exists, edgeXerr := deviceProfileIdExists(conn, dp.Id)
 	if edgeXerr != nil {
 		return addedDeviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
 		return addedDeviceProfile, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile id %s exists", dp.Id), edgeXerr)
 	}
 
-	exists, edgeXerr = deviceProfileExistByName(conn, dp.Name)
+	exists, edgeXerr = deviceProfileNameExists(conn, dp.Name)
 	if edgeXerr != nil {
 		return addedDeviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -112,7 +112,7 @@ func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
 	_ = conn.Send(SREM, DeviceProfileCollection+":model:"+dp.Model, storedKey)
 	_, err := conn.Do(EXEC)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile deletion failed", err)
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile deletion failed", err)
 	}
 	return nil
 }
@@ -151,13 +151,6 @@ func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr erro
 
 // deleteDeviceProfileById deletes the device profile by id
 func deleteDeviceProfileById(conn redis.Conn, id string) errors.EdgeX {
-	exists, edgeXerr := deviceProfileExistById(conn, id)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", id), edgeXerr)
-	}
-
 	deviceProfile, err := deviceProfileById(conn, id)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -171,13 +164,6 @@ func deleteDeviceProfileById(conn redis.Conn, id string) errors.EdgeX {
 
 // deleteDeviceProfileByName deletes the device profile by name
 func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
-	exists, edgeXerr := deviceProfileExistByName(conn, name)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", name), edgeXerr)
-	}
-
 	deviceProfile, err := deviceProfileByName(conn, name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
