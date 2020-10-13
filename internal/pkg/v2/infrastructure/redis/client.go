@@ -47,7 +47,7 @@ func (c *Client) CloseSession() {
 	once = sync.Once{}
 }
 
-// Add a new event
+// AddEvent adds a new event
 func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -62,7 +62,7 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	return addEvent(conn, e)
 }
 
-// Get an event by id
+// EventById gets an event by id
 func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -95,14 +95,14 @@ func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, 
 	return addDeviceProfile(conn, dp)
 }
 
-// Update a new device profile
+// UpdateDeviceProfile updates a new device profile
 func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
 	return updateDeviceProfile(conn, dp)
 }
 
-// Add a new device service
+// AddDeviceService adds a new device service
 func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -114,7 +114,7 @@ func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, 
 	return addDeviceService(conn, ds)
 }
 
-// Get a device service by name
+// GetDeviceServiceByName gets a device service by name
 func (c *Client) GetDeviceServiceByName(name string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -130,7 +130,7 @@ func (c *Client) GetDeviceServiceByName(name string) (deviceService model.Device
 	return
 }
 
-// Get a device profile by name
+// GetDeviceProfileByName gets a device profile by name
 func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -146,7 +146,7 @@ func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.Device
 	return
 }
 
-// Delete a device profile by id
+// DeleteDeviceProfileById deletes a device profile by id
 func (c *Client) DeleteDeviceProfileById(id string) errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -162,18 +162,28 @@ func (c *Client) DeleteDeviceProfileById(id string) errors.EdgeX {
 	return nil
 }
 
-// Delete a device profile by name
+// DeleteDeviceProfileByName deletes a device profile by name
 func (c *Client) DeleteDeviceProfileByName(name string) errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
 	edgeXerr := deleteDeviceProfileByName(conn, name)
 	if edgeXerr != nil {
-		if edgeXerr == redis.ErrNil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
 	return nil
+}
+
+// EventTotalCount returns the total count of Event from the database
+func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := c.eventTotalCount(conn)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
 }
