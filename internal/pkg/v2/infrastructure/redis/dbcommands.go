@@ -20,4 +20,5 @@ const (
 	ZRANGE    = "ZRANGE"
 	ZREVRANGE = "ZREVRANGE"
 	MGET      = "MGET"
+	ZCARD     = "ZCARD"
 )
