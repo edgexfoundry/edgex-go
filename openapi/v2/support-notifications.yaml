@@ -111,12 +111,13 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-      required:
-        - requestId
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         requestId:
           description: "Uniquely identifies the request that resulted in this response."
           type: string
@@ -128,9 +129,6 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
-      required:
-        - requestId
-        - statusCode
     Channel:
       description: "Defines the transport supported for a given notification."
       type: object
@@ -154,11 +152,6 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
-    ConfigRequest:
-      description: "A request associated with the /config endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     ConfigResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -168,48 +161,36 @@ components:
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: string
-      required:
-      - config
-    MetricsRequest:
-      description: "A request associated with the /metrics endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     MetricsResponse:
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
-        memAlloc:
-          description: "Alloc is bytes of allocated heap objects."
-          type: integer
-        memFrees:
-          description: "Frees is the cumulative count of heap objects freed."
-          type: integer
-        memLiveObjects:
-          description: "The number of live objects is Mallocs - Frees."
-          type: integer
-        memMallocs:
-          description: "The cumulative count of heap objects allocated."
-          type: integer
-        memSys:
-          description: "The total bytes of memory obtained from the OS."
-          type: integer
-        memTotalAlloc:
-          description: "Cumulative bytes allocated for heap objects."
-          type: integer
-        cpuBusyAvg:
-          description: "Indicates the average level of CPU utilization"
-          type: number
-      required:
-      - memAlloc
-      - memFrees
-      - memLiveObjects
-      - memMallocs
-      - memSys
-      - memTotalAlloc
-      - cpuBusyAvg
+        metrics:
+          type: object
+          properties:
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
+              type: integer
+            memLiveObjects:
+              description: "The uint64 type integer of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated which is a uint64 type integer."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
+              type: integer
+            memTotalAlloc:
+              description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
+              type: integer
+            cpuBusyAvg:
+              description: "A uint8 type integer indicates the average level of CPU utilization"
+              type: number
     Notification:
       description: "Defines the content included in a notification"
       type: object
@@ -259,11 +240,6 @@ components:
       properties:
         notification:
           $ref: '#/components/schemas/Notification'
-    PingRequest:
-      description: "A request associated with the /ping endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -470,11 +446,6 @@ components:
         id:
           type: string
           format: uuid
-    VersionRequest:
-      description: "A request associated with the /version endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -484,8 +455,6 @@ components:
         version:
           description: "The latest version supported by the service."
           type: string
-      required:
-      - version
   parameters:
     offsetParam:
       in: query
@@ -522,6 +491,19 @@ components:
         format: uuid
       required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
+  examples:
+    400Example:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        statusCode: 400
+        message: "Bad Request"
+    500Example:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        statusCode: 500
+        message: "Internal Server Error"
 paths:
   /batch:
     parameters:
@@ -625,6 +607,30 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/AddNotificationResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -965,6 +971,30 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/AddSubscriptionResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     patch:
       summary: "Update one or more existing Subscriptions. You might do this in order to add an additional channel if you want another endpoint/person to receive the notification."
       requestBody:
@@ -989,6 +1019,30 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/UpdateSubscriptionResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1520,18 +1574,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /config:
-    post:
+    get:
       summary: "Returns the current configuration of the service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/ConfigRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/ConfigRequest'
       responses:
         '200':
           description: "OK"
@@ -1542,21 +1586,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/ConfigResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1564,19 +1595,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /metrics:
-    post:
+    get:
       summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/MetricsRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/MetricsRequest'
       responses:
         '200':
           description: "OK"
@@ -1587,21 +1611,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/MetricsResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1609,19 +1620,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /ping:
-    post:
+    get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/PingRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/PingRequest'
       responses:
         '200':
           description: "OK"
@@ -1632,21 +1636,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/PingResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1654,19 +1645,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /version:
-    post:
+    get:
       summary: "A simple 'version' endpoint that will return the current version of the service"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/VersionRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/VersionRequest'
       responses:
         '200':
           description: "OK"
@@ -1677,21 +1661,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/VersionResponse'
-        '400':
-          description: "Bad request"
+        '500':
+          description: "Interval Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1699,3 +1670,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'

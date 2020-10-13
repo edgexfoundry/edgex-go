@@ -820,6 +820,12 @@ components:
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "Data Duplicate"
+    423Example:
+      value:
+        apiVersion: "v2"
+        requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
+        statusCode: 423
+        message: "Locked"
     500Example:
       value:
         apiVersion: "v2"
@@ -1136,6 +1142,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     patch:
       summary: "Allows updates to an existing device"
       requestBody:
@@ -1190,6 +1208,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /device/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1876,6 +1906,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     put:
       summary: "Allows updates to an existing device profile"
       requestBody:
@@ -1918,6 +1960,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /deviceprofile/uploadfile:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2232,6 +2286,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '423':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2382,6 +2448,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '423':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2595,6 +2673,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     patch:
       summary: "Allows updates to an existing device service"
       requestBody:
@@ -2648,6 +2738,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /deviceservice/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2825,6 +2927,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '423':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2952,6 +3066,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '423':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
