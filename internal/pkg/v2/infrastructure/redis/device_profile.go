@@ -29,10 +29,8 @@ func deviceProfileExistByName(conn redis.Conn, name string) (bool, errors.EdgeX)
 	exists, err := redis.Bool(conn.Do(HEXISTS, DeviceProfileCollection+":name", name))
 	if err != nil {
 		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check by name failed", err)
-	} else if exists {
-		return true, nil
 	}
-	return false, nil
+	return exists, nil
 }
 
 // deviceProfileExistById checks whether the device profile exists by id
@@ -40,10 +38,8 @@ func deviceProfileExistById(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	exists, err := redis.Bool(conn.Do(EXISTS, deviceProfileStoredKey(id)))
 	if err != nil {
 		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check by id failed", err)
-	} else if exists {
-		return true, nil
 	}
-	return false, nil
+	return exists, nil
 }
 
 // addDeviceProfile adds a device profile to DB
@@ -123,30 +119,31 @@ func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
 
 // updateDeviceProfile updates a device profile to DB
 func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr errors.EdgeX) {
-	exists, edgeXerr := deviceProfileExistByName(conn, dp.Name)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", dp.Name), edgeXerr)
+	var oldDeviceProfile model.DeviceProfile
+	oldDeviceProfile, edgeXerr = deviceProfileById(conn, dp.Id)
+	if edgeXerr == nil {
+		if dp.Name != oldDeviceProfile.Name {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device profile name '%s' not match the exsting '%s' ", dp.Name, oldDeviceProfile.Name), nil)
+		}
+	} else {
+		oldDeviceProfile, edgeXerr = deviceProfileByName(conn, dp.Name)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
 	}
 
-	// Remove old
-	oldDeviceProfile, err := deviceProfileByName(conn, dp.Name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	err = deleteDeviceProfile(conn, oldDeviceProfile)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+	edgeXerr = deleteDeviceProfile(conn, oldDeviceProfile)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
 	// Add new one
 	dp.Id = oldDeviceProfile.Id
 	dp.Created = oldDeviceProfile.Created
 	dp.Modified = common.MakeTimestamp()
-	_, err = addDeviceProfile(conn, dp)
-	if err != nil {
-		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile updating failed", err)
+	_, edgeXerr = addDeviceProfile(conn, dp)
+	if edgeXerr != nil {
+		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile updating failed", edgeXerr)
 	}
 
 	return edgeXerr
@@ -156,7 +153,7 @@ func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr erro
 func deleteDeviceProfileById(conn redis.Conn, id string) errors.EdgeX {
 	exists, edgeXerr := deviceProfileExistById(conn, id)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if !exists {
 		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", id), edgeXerr)
 	}
@@ -176,7 +173,7 @@ func deleteDeviceProfileById(conn redis.Conn, id string) errors.EdgeX {
 func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
 	exists, edgeXerr := deviceProfileExistByName(conn, name)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile existence check failed", edgeXerr)
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if !exists {
 		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exist", name), edgeXerr)
 	}

@@ -23,7 +23,7 @@ import (
 
 // DeviceProfileReader unmarshals a request body into an DeviceProfile type
 type DeviceProfileReader interface {
-	ReadAddDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.AddDeviceProfileRequest, errors.EdgeX)
+	ReadDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.DeviceProfileRequest, errors.EdgeX)
 	ReadDeviceProfileYaml(r *http.Request) (dtos.DeviceProfile, errors.EdgeX)
 }
 
@@ -40,11 +40,11 @@ func NewJsonReader() jsonDeviceProfileReader {
 	return jsonDeviceProfileReader{}
 }
 
-// Read reads and converts the request's JSON data into an DeviceProfile struct
-func (jsonDeviceProfileReader) ReadAddDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.AddDeviceProfileRequest, errors.EdgeX) {
+// ReadDeviceProfileRequest reads and converts the request's JSON data into an DeviceProfile struct
+func (jsonDeviceProfileReader) ReadDeviceProfileRequest(reader io.Reader, ctx *context.Context) ([]dto.DeviceProfileRequest, errors.EdgeX) {
 	c := context.WithValue(*ctx, clients.ContentType, clients.ContentTypeJSON)
 	*ctx = c
-	var addDeviceProfiles []dto.AddDeviceProfileRequest
+	var addDeviceProfiles []dto.DeviceProfileRequest
 	err := json.NewDecoder(reader).Decode(&addDeviceProfiles)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile json decoding failed", err)
