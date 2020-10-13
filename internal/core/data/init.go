@@ -62,6 +62,19 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	mdc := metadata.NewDeviceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
 	msc := metadata.NewDeviceServiceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
 
+	// For Redis Streams MessageBus, we reuse the Redis instance running for the DB, which may have a password,
+	// so we need to get and use the DB credentials for the MessageBus connection.
+	if configuration.MessageQueue.Type == "redisstreams" {
+		credentials, err := container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(configuration.Databases["Primary"])
+		if err != nil {
+			lc.Error(fmt.Sprintf("Error getting DB creds for RedisStreams: %s", err.Error()))
+			return false
+		}
+
+		lc.Info("DB Credentials set for using Redis Streams")
+		configuration.MessageQueue.Optional["Password"] = credentials.Password
+	}
+
 	// Create the messaging client
 	msgClient, err := messaging.NewMessageClient(
 		msgTypes.MessageBusConfig{
