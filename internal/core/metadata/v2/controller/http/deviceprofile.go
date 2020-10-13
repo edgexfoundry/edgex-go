@@ -13,7 +13,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -63,7 +63,7 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	for i, d := range deviceProfiles {
 		var addDeviceProfileResponse interface{}
 		// get the requestID from AddDeviceProfileDTO
-		reqId := addDeviceProfileDTOs[i].RequestID
+		reqId := addDeviceProfileDTOs[i].RequestId
 		newId, err := application.AddDeviceProfile(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -113,7 +113,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	var responses []interface{}
 	for i, d := range deviceProfiles {
 		var response interface{}
-		reqId := updateDeviceProfileReq[i].RequestID
+		reqId := updateDeviceProfileReq[i].RequestId
 		err := application.UpdateDeviceProfile(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -236,7 +236,7 @@ func (dc *DeviceProfileController) GetDeviceProfileByName(w http.ResponseWriter,
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[v2.Name]
+	name := vars[contractsV2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -265,7 +265,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileById(w http.ResponseWriter
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[v2.Id]
+	id := vars[contractsV2.Id]
 
 	var response interface{}
 	var statusCode int
@@ -297,7 +297,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[v2.Name]
+	name := vars[contractsV2.Name]
 
 	var response interface{}
 	var statusCode int

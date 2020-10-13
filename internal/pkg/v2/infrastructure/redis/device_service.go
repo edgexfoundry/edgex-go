@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -24,9 +24,9 @@ func deviceServiceStoredKey(id string) string {
 }
 
 // addDeviceService adds a new device service into DB
-func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceService model.DeviceService, edgeXerr errors.EdgeX) {
+func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	// retrieve Device Service by Id first to ensure there is no Id conflict; when Id exists, return duplicate error
-	exists, edgeXerr := objectExistById(conn, deviceServiceStoredKey(ds.Id))
+	exists, edgeXerr := objectIdExists(conn, deviceServiceStoredKey(ds.Id))
 	if edgeXerr != nil {
 		return addedDeviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -34,7 +34,7 @@ func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceServi
 	}
 
 	// verify if device service name is unique or not
-	exists, edgeXerr = objectExistByHash(conn, fmt.Sprintf("%s:name", DeviceServiceCollection), ds.Name)
+	exists, edgeXerr = objectNameExists(conn, fmt.Sprintf("%s:name", DeviceServiceCollection), ds.Name)
 	if edgeXerr != nil {
 		return addedDeviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -47,7 +47,8 @@ func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceServi
 	if ds.Created == 0 {
 		ds.Created = ts
 	}
-	ds.Modified = ts
+	// query API will sort the result based on Modified, so even newly created device service shall specify Modified as Created
+	ds.Modified = ds.Created
 
 	dsJSONBytes, err := json.Marshal(ds)
 	if err != nil {
@@ -57,11 +58,17 @@ func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceServi
 	// redisKey represents the key stored in the redis, use the format of #{DeviceServiceCollection}:#{ds.Id}
 	// as the redisKey to avoid data being accidentally deleted when other objects, e.g. device profiles, also
 	// coincidentally have the same Id.
-	redisKey := fmt.Sprintf("%s:%s", DeviceServiceCollection, ds.Id)
+	redisKey := deviceServiceStoredKey(ds.Id)
 	_ = conn.Send(MULTI)
+	// Set the redisKey to associate with object byte array for later retrieval
 	_ = conn.Send(SET, redisKey, dsJSONBytes)
-	_ = conn.Send(ZADD, DeviceServiceCollection, 0, redisKey)
+	// Store the redisKey into a Sorted Set with Modified as the score for order
+	_ = conn.Send(ZADD, DeviceServiceCollection, ds.Modified, redisKey)
+	// Store the ds.Name into a Hash for later Name existence check
 	_ = conn.Send(HSET, fmt.Sprintf("%s:name", DeviceServiceCollection), ds.Name, redisKey)
+	for _, label := range ds.Labels { // Store the redisKey into Sorted Set of labels with Modified as the score for order
+		_ = conn.Send(ZADD, fmt.Sprintf("%s:label:%s", DeviceServiceCollection, label), ds.Modified, redisKey)
+	}
 	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device service creation failed", err)
@@ -71,7 +78,7 @@ func addDeviceService(conn redis.Conn, ds model.DeviceService) (addedDeviceServi
 }
 
 // deviceServiceById query device service by id from DB
-func deviceServiceById(conn redis.Conn, id string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+func deviceServiceById(conn redis.Conn, id string) (deviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, deviceServiceStoredKey(id), &deviceService)
 	if edgeXerr != nil {
 		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -80,7 +87,7 @@ func deviceServiceById(conn redis.Conn, id string) (deviceService model.DeviceSe
 }
 
 // deviceServiceByName query device service by name from DB
-func deviceServiceByName(conn redis.Conn, name string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+func deviceServiceByName(conn redis.Conn, name string) (deviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, DeviceServiceCollection+":name", name, &deviceService)
 	if edgeXerr != nil {
 		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -88,7 +95,7 @@ func deviceServiceByName(conn redis.Conn, name string) (deviceService model.Devi
 	return
 }
 
-func deleteDeviceService(conn redis.Conn, deviceService model.DeviceService) errors.EdgeX {
+func deleteDeviceService(conn redis.Conn, deviceService models.DeviceService) errors.EdgeX {
 	storedKey := deviceServiceStoredKey(deviceService.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(DEL, storedKey)
@@ -125,4 +132,23 @@ func deleteDeviceServiceByName(conn redis.Conn, name string) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
+}
+
+// deviceServicesByLabels query multiple device services from DB per labels
+func deviceServicesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceServices []models.DeviceService, edgeXerr errors.EdgeX) {
+	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceServiceCollection, labels, offset, offset+limit-1)
+	if err != nil {
+		return deviceServices, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	deviceServices = make([]models.DeviceService, len(objects))
+	for i, in := range objects {
+		s := models.DeviceService{}
+		err := json.Unmarshal(in, &s)
+		if err != nil {
+			return deviceServices, errors.NewCommonEdgeX(errors.KindContractInvalid, "device service parsing failed", err)
+		}
+		deviceServices[i] = s
+	}
+	return deviceServices, nil
 }

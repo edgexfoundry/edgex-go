@@ -14,7 +14,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
@@ -68,7 +68,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 		newId, err := application.AddEvent(e, ctx, ec.dic)
 		var addEventResponse interface{}
 		// get the requestID from AddEventRequestDTO
-		reqId := addEventReqDTOs[i].RequestID
+		reqId := addEventReqDTOs[i].RequestId
 
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -101,7 +101,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[v2.Id]
+	id := vars[contractsV2.Id]
 
 	var eventResponse interface{}
 	var statusCode int

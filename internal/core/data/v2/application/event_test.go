@@ -175,7 +175,7 @@ func TestEventById(t *testing.T) {
 				assert.Equal(t, testCase.ExpectedStatusCode, err.Code(), "Error code not as expected")
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, testCase.EventId, evt.ID, "Event Id not as expected")
+				assert.Equal(t, testCase.EventId, evt.Id, "Event Id not as expected")
 			}
 		})
 	}

@@ -9,12 +9,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -71,7 +72,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 
 	var testDeviceProfileReq = requests.DeviceProfileRequest{
 		BaseRequest: common.BaseRequest{
-			RequestID: ExampleUUID,
+			RequestId: ExampleUUID,
 		},
 		Profile: dtos.DeviceProfile{
 			Id:              ExampleUUID,
@@ -147,7 +148,7 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 
 	valid := deviceProfileRequest
 	noRequestId := deviceProfileRequest
-	noRequestId.RequestID = ""
+	noRequestId.RequestId = ""
 
 	tests := []struct {
 		name    string
@@ -176,8 +177,8 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-			if res[0].RequestID != "" {
-				assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+			if res[0].RequestId != "" {
+				assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 			}
 			assert.Equal(t, http.StatusCreated, res[0].StatusCode, "BaseResponse status code not as expected")
 			assert.Equal(t, expectedMessage, res[0].Message, "Message not as expected")
@@ -193,7 +194,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 
 	deviceProfile := buildTestDeviceProfileRequest()
 	badRequestId := deviceProfile
-	badRequestId.RequestID = "niv3sl"
+	badRequestId.RequestId = "niv3sl"
 	noName := deviceProfile
 	noName.Profile.Name = ""
 	noDeviceResource := deviceProfile
@@ -322,7 +323,7 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-			assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+			assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 			assert.Equal(t, http.StatusConflict, res[0].StatusCode, "BaseResponse status code not as expected")
 			assert.Contains(t, res[0].Message, testCase.expectedError.Message(), "Message not as expected")
 		})
@@ -336,7 +337,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 
 	valid := deviceProfileRequest
 	noRequestId := deviceProfileRequest
-	noRequestId.RequestID = ""
+	noRequestId.RequestId = ""
 	noName := deviceProfileRequest
 	noName.Profile.Name = ""
 	noDeviceResource := deviceProfileRequest
@@ -441,8 +442,8 @@ func TestUpdateDeviceProfile(t *testing.T) {
 				// Assert
 				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-				if res[0].RequestID != "" {
-					assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 				assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")

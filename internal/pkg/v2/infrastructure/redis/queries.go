@@ -9,26 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 
 	"github.com/gomodule/redigo/redis"
 )
-
-func objectExistById(conn redis.Conn, id string) (bool, errors.EdgeX) {
-	exists, err := redis.Bool(conn.Do(EXISTS, id))
-	if err != nil {
-		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query id %s from the database failed", id), err)
-	}
-	return exists, nil
-}
-
-func objectExistByHash(conn redis.Conn, hash string, field string) (bool, errors.EdgeX) {
-	exists, err := redis.Bool(conn.Do(HEXISTS, hash, field))
-	if err != nil {
-		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query field %s from the database failed", field), err)
-	}
-	return exists, nil
-}
 
 func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
 	obj, err := redis.Bytes(conn.Do(GET, id))
@@ -80,7 +65,47 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "query object ids from database failed", err)
 	}
 
+	return getObjectsByIds(conn, ids)
+}
+
+// getObjectsByLabelsAndSomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
+// command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
+func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string, labels []string, start int, end int) ([][]byte, errors.EdgeX) {
+	if labels == nil || len(labels) == 0 { //if no labels specified, simply return getObjectsBySomeRange
+		return getObjectsBySomeRange(conn, command, key, start, end)
+	}
+
+	idsSlice := make([][]string, len(labels))
+	for i, label := range labels { //iterate each labels to retrieve Ids associated with labels
+		idsWithLabel, err := redis.Strings(conn.Do(command, fmt.Sprintf("%s:label:%s", key, label), 0, -1))
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by label %s from database failed", label), err)
+		}
+		idSlice := make([]string, len(idsWithLabel))
+		for i, v := range idsWithLabel {
+			idSlice[i] = fmt.Sprint(v)
+		}
+		idsSlice[i] = idSlice
+	}
+
+	//find common Ids among two-dimension Ids slice associated with labels
+	commonIds := common.FindCommonStrings(idsSlice...)
+	if start > len(commonIds) {
+		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
+	}
+	if end > len(commonIds) {
+		commonIds = commonIds[start:]
+	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
+		commonIds = commonIds[start : end+1]
+	}
+
+	return getObjectsByIds(conn, common.ConvertStringsToInterfaces(commonIds))
+}
+
+// getObjectsByIds retrieves the entries with Ids
+func getObjectsByIds(conn redis.Conn, ids []interface{}) ([][]byte, errors.EdgeX) {
 	var result [][]byte
+	var err error
 	if len(ids) > 0 {
 		result, err = redis.ByteSlices(conn.Do(MGET, ids...))
 		if err != nil {
@@ -96,4 +121,22 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 	}
 
 	return objects, nil
+}
+
+// objectNameExists checks whether the object name exists or not in the specified hashKey
+func objectNameExists(conn redis.Conn, hashKey string, name string) (bool, errors.EdgeX) {
+	exists, err := redis.Bool(conn.Do(HEXISTS, hashKey, name))
+	if err != nil {
+		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "object name existence check failed", err)
+	}
+	return exists, nil
+}
+
+// objectIdExists checks whether the object id exists or not
+func objectIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
+	exists, err := redis.Bool(conn.Do(EXISTS, id))
+	if err != nil {
+		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "object Id existence check failed", err)
+	}
+	return exists, nil
 }

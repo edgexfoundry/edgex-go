@@ -24,4 +24,5 @@ type DBClient interface {
 	GetDeviceServiceByName(name string) (model.DeviceService, errors.EdgeX)
 	DeleteDeviceServiceById(id string) errors.EdgeX
 	DeleteDeviceServiceByName(name string) errors.EdgeX
+	GetDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
 }

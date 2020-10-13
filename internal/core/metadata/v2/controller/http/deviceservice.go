@@ -19,7 +19,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
@@ -70,7 +70,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 		newId, err := application.AddDeviceService(d, ctx, dc.dic)
 		var addDeviceServiceResponse interface{}
 		// get the requestID from addDeviceServiceDTOs
-		reqId := addDeviceServiceDTOs[i].RequestID
+		reqId := addDeviceServiceDTOs[i].RequestId
 
 		if err == nil {
 			addDeviceServiceResponse = commonDTO.NewBaseWithIdResponse(
@@ -101,7 +101,7 @@ func (dc *DeviceServiceController) GetDeviceServiceByName(w http.ResponseWriter,
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[v2.Name]
+	name := vars[contractsV2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -149,7 +149,7 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	var updateResponses []interface{}
 	for _, dto := range updateDeviceServiceDTOs {
 		var response interface{}
-		reqId := dto.RequestID
+		reqId := dto.RequestId
 		err := application.PatchDeviceService(dto.Service, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -178,7 +178,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceById(w http.ResponseWriter
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[v2.Id]
+	id := vars[contractsV2.Id]
 
 	var response interface{}
 	var statusCode int
@@ -210,7 +210,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWrit
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[v2.Name]
+	name := vars[contractsV2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -232,5 +232,51 @@ func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWrit
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceServiceController) GetAllDeviceServices(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	var labels = []string{}
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string
+	offset, err := utils.ParseQueryStringToInt(r, contractsV2.Offset, contractsV2.DefaultOffset)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	}
+
+	limit, err := utils.ParseQueryStringToInt(r, contractsV2.Limit, contractsV2.DefaultLimit)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	}
+
+	labels = utils.ParseQueryStringToStrings(r, contractsV2.Labels, contractsV2.CommaSeparator)
+
+	deviceServices, err := application.GetDeviceServices(offset, limit, labels, ctx, dc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }
