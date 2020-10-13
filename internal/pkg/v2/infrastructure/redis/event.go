@@ -97,3 +97,12 @@ func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.
 
 	return
 }
+
+func (c *Client) eventTotalCount(conn redis.Conn) (uint32, errors.EdgeX) {
+	count, err := redis.Int(conn.Do(ZCARD, EventsCollection))
+	if err != nil {
+		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, "count event failed", err)
+	}
+
+	return uint32(count), nil
+}

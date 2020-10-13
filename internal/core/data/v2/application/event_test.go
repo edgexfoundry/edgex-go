@@ -32,6 +32,7 @@ const (
 	testCreatedTime           = 1600666214495
 	testOriginTime            = 1600666185705354000
 	nonexistentEventID        = "8ad33474-fbc5-11ea-adc1-0242ac120002"
+	testEventCount            = uint32(7778)
 )
 
 var persistedEvent = models.Event{
@@ -84,6 +85,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("AddEvent", mock.Anything).Return(persistedEvent, nil)
 		myMock.On("EventById", nonexistentEventID).Return(models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
 		myMock.On("EventById", testUUIDString).Return(persistedEvent, nil)
+		myMock.On("EventTotalCount").Return(testEventCount, nil)
 	}
 
 	return myMock
@@ -177,4 +179,19 @@ func TestEventById(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEventTotalCount(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	count, err := EventTotalCount(dic)
+	require.NoError(t, err)
+	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }
