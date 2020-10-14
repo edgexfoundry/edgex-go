@@ -7,7 +7,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap v0.0.47
 	github.com/edgexfoundry/go-mod-configuration v0.0.7
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.94
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.97
 	github.com/edgexfoundry/go-mod-messaging v0.1.26
 	github.com/edgexfoundry/go-mod-registry v0.1.25
 	github.com/edgexfoundry/go-mod-secrets v0.0.23
