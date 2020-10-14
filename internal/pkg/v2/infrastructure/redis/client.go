@@ -10,7 +10,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-	"github.com/gomodule/redigo/redis"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -69,9 +68,6 @@ func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX)
 
 	event, edgeXerr = eventById(conn, id)
 	if edgeXerr != nil {
-		if edgeXerr == redis.ErrNil {
-			return event, errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
 		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
@@ -121,13 +117,36 @@ func (c *Client) GetDeviceServiceByName(name string) (deviceService model.Device
 
 	deviceService, edgeXerr = deviceServiceByName(conn, name)
 	if edgeXerr != nil {
-		if edgeXerr == redis.ErrNil {
-			return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
 		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
 	return
+}
+
+// GetDeviceServiceById gets a device service by id
+func (c *Client) GetDeviceServiceById(id string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceService, edgeXerr = deviceServiceById(conn, id)
+	if edgeXerr != nil {
+		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return
+}
+
+// DeleteDeviceServiceById deletes a device service by id
+func (c *Client) DeleteDeviceServiceById(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceServiceById(conn, id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
 }
 
 // GetDeviceProfileByName gets a device profile by name
@@ -137,9 +156,6 @@ func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.Device
 
 	deviceProfile, edgeXerr = deviceProfileByName(conn, name)
 	if edgeXerr != nil {
-		if edgeXerr == redis.ErrNil {
-			return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
 		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
@@ -153,9 +169,6 @@ func (c *Client) DeleteDeviceProfileById(id string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceProfileById(conn, id)
 	if edgeXerr != nil {
-		if edgeXerr == redis.ErrNil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
