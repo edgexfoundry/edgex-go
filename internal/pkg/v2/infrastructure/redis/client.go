@@ -149,6 +149,19 @@ func (c *Client) DeleteDeviceServiceById(id string) errors.EdgeX {
 	return nil
 }
 
+// DeleteDeviceServiceByName deletes a device service by name
+func (c *Client) DeleteDeviceServiceByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceServiceByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
+}
+
 // GetDeviceProfileByName gets a device profile by name
 func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()

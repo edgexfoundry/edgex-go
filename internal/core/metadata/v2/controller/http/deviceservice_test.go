@@ -15,6 +15,7 @@ import (
 
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
@@ -40,6 +41,7 @@ func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 			RequestID: ExampleUUID,
 		},
 		Service: dtos.DeviceService{
+			Id:             ExampleUUID,
 			Name:           testDeviceServiceName,
 			Description:    TestDescription,
 			Labels:         testDeviceServiceLabels,
@@ -222,7 +224,7 @@ func TestGetDeviceServiceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiDeviceProfileRoute, contractsV2.Name, testCase.deviceServiceName)
+			reqPath := fmt.Sprintf("%s/%s", contractsV2.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{contractsV2.Name: testCase.deviceServiceName})
 			require.NoError(t, err)
@@ -363,6 +365,110 @@ func TestPatchDeviceService(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 			}
 
+		})
+	}
+}
+
+func TestDeleteDeviceServiceById(t *testing.T) {
+	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
+	noId := ""
+	notFoundId := "notFoundId"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteDeviceServiceById", deviceService.Id).Return(nil)
+	dbClientMock.On("DeleteDeviceServiceById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceServiceController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceServiceId    string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - delete device service by id", deviceService.Id, false, http.StatusOK},
+		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
+		{"Invalid - device srvice not found by id", notFoundId, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", contractsV2.ApiDeviceServiceByIdRoute, testCase.deviceServiceId)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.deviceServiceId})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteDeviceServiceById)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			assert.NotEmpty(t, res.Message, "Message is empty")
+		})
+	}
+}
+
+func TestDeleteDeviceServiceByName(t *testing.T) {
+	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
+	noName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteDeviceServiceByName", deviceService.Name).Return(nil)
+	dbClientMock.On("DeleteDeviceServiceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceServiceController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceServiceName  string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - delete device service by name", deviceService.Name, false, http.StatusOK},
+		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
+		{"Invalid - device service not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", contractsV2.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Name: testCase.deviceServiceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteDeviceServiceByName)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			assert.NotEmpty(t, res.Message, "Message is empty")
 		})
 	}
 }

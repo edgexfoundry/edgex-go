@@ -170,3 +170,67 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(updateResponses, w, lc)
 }
+
+func (dc *DeviceServiceController) DeleteDeviceServiceById(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars[v2.Id]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteDeviceServiceById(id, ctx, dc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse(
+			"",
+			"Delete device service successfully",
+			http.StatusOK)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteDeviceServiceByName(name, ctx, dc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse(
+			"",
+			"Delete device service successfully",
+			http.StatusOK)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
