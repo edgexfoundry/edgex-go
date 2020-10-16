@@ -265,14 +265,14 @@ components:
         - type: object
           properties:
             floatEncoding:
-              description: "Indicates how a float value is encoded, if the value property contains a float."
+              description: "Indicates how a float value is encoded, if the value property contains a float. It should be 'Base64' or 'eNotation'"
               type: string
             value:
               description: "A string representation of the reading's value"
               type: string
       required:
         - value
-    SimpleReadingResponse:
+    MultiSimpleReadingsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a Reading to the caller. The Reading may only be of type SimpleReading."
@@ -385,7 +385,8 @@ components:
             origin: 1602168089665565300
             pushed: 1594975851631
             readings:
-              - created: 1594876281221
+              - apiVersion: "v2"
+                created: 1594876281221
                 deviceName: "device-001"
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                 labels:                            
@@ -393,10 +394,11 @@ components:
                 modified: 1594975851631
                 origin: 1602168089665565300
                 pushed: 1594975851631
-                floatEncoding: "IEEE-754"
+                floatEncoding: "eNotation"
                 valueType: "Float32"
                 value: "39.5"
-              - create: 1594876281221
+              - apiVersion: "v2"
+                create: 1594876281221
                 deviceName: "device-001"
                 id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                 labels:
@@ -410,8 +412,9 @@ components:
             deviceName: "device-002"
             id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
             origin: 1602168089665565300
-            readings: 
-              - created: 1594879337014
+            readings:
+              - apiVersion: "v2"
+                created: 1594879337014
                 deviceName: "device-002"
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
                 labels:
@@ -433,7 +436,7 @@ components:
                 labels:
                   - "co2"
                 origin: 1602168089665565300
-                floatEncoding: "IEEE-754"
+                floatEncoding: "eNotation"
                 valueType: "Float32"
                 value: "12.2"
     AllReadingsExample:
@@ -442,7 +445,7 @@ components:
         apiVersion: "v2"
         statusCode: 200
         message: ""
-        reading:
+        readings:
           - apiVersion: "v2"
             created: 1594876281221
             deviceName: "device-001"
@@ -452,7 +455,7 @@ components:
             modified: 1594975851631
             origin: 1602168089665565300
             pushed: 1594975851631
-            floatEncoding: "IEEE-754"
+            floatEncoding: "eNotation"
             valueType: "Float32"
             value: "39.5"
           - apiVersion: "v2"
@@ -482,7 +485,7 @@ components:
             labels:
               - "co2"
             origin: 1602168089665565300
-            floatEncoding: "IEEE-754"
+            floatEncoding: "eNotation"
             valueType: "Float32"
             value: "12.2"
 paths:
@@ -510,7 +513,7 @@ paths:
                       labels:
                         - co2
                       origin: 1602168089665565300
-                      floatEncoding: IEEE-754
+                      floatEncoding: eNotation
                       valueType: Float32
                       value: '12.2'
               - event:
@@ -523,7 +526,7 @@ paths:
                       labels:
                         - co2
                       origin: 1602168089665565300
-                      floatEncoding: IEEE-754
+                      floatEncoding: eNotation
                       valueType: Float32
                       value: '12.2'
               - event:
@@ -670,7 +673,7 @@ paths:
                       modified: 1594975851631
                       origin: 1602168089665565300
                       pushed: 1594975851631
-                      floatEncoding: "IEEE-754"
+                      floatEncoding: "eNotation"
                       valueType: "Float32"
                       value: "39.5"
                     - create: 1594876281221
@@ -842,6 +845,7 @@ paths:
                 statusCode: 200
                 message: ""
                 count: 3
+                deviceName: ""
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -881,7 +885,7 @@ paths:
                 statusCode: 200
                 message: ""
                 count: 1 
-                deviceId: "device-001"
+                deviceName: "device-001"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1012,7 +1016,7 @@ paths:
                         labels:
                           - "co2"
                         origin: 1602168089665565300
-                        floatEncoding: "IEEE-754"
+                        floatEncoding: "eNotation"
                         valueType: "Float32"
                         value: "12.2"
         '404':
@@ -1331,7 +1335,7 @@ paths:
                   modified: 1594975851631
                   origin: 1602168089665565300
                   pushed: 1594975851631
-                  floatEncoding: "IEEE-754"
+                  floatEncoding: "eNotation"
                   valueType: "Float32"
                   value: "39.5"
         '404':
@@ -1396,7 +1400,7 @@ paths:
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
-                    floatEncoding: "IEEE-754"
+                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "39.5"
                   - apiVersion: "v2"
@@ -1459,13 +1463,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SimpleReadingResponse'
+                $ref: '#/components/schemas/MultiSimpleReadingsResponse'
               example:
                 requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
-                reading: 
+                readings:
                   - apiVersion: "v2"
                     created: 1594876281221
                     deviceName: "device-001"
@@ -1475,7 +1479,7 @@ paths:
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
-                    floatEncoding: "IEEE-754"
+                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "39.5"
                   - apiVersion: "v2"
@@ -1485,7 +1489,7 @@ paths:
                     labels:
                       - "co2"
                     origin: 1602168089665565300
-                    floatEncoding: "IEEE-754"
+                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "12.2"
         '400':
