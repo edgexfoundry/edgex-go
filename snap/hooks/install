@@ -51,9 +51,12 @@ done
 if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
     mkdir -p "$SNAP_DATA/kuiper/data"
     mkdir -p "$SNAP_DATA/kuiper/etc/sources"
+    mkdir -p "$SNAP_DATA/kuiper/log"
+    mkdir -p "$SNAP_DATA/kuiper/plugins"
 
     cp "$SNAP/etc/"*.yaml "$SNAP_DATA/kuiper/etc"
     cp "$SNAP/etc/sources/"*.yaml "$SNAP_DATA/kuiper/etc/sources"
+    cp -a "$SNAP/plugins/." "$SNAP_DATA/kuiper/plugins"
 fi
 
 # for the kong pki setup file, we need to set the hostname as localhost

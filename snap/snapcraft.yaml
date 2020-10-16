@@ -375,22 +375,23 @@ apps:
     plugs: [home, removable-media, network]
   kuiper:
     adapter: full
-    command: bin/kuiper-server
+    command: bin/kuiperd
     daemon: simple
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
-      # KUIPER_DEBUG: "true"
-      KUIPER_CONSOLE_LOG: "true"
-      KUIPER_REST_PORT: 48075
-      EDGEX_SERVER: localhost
-      EDGEX_SERVICE_SERVER: http://localhost:48080
-      EDGEX_TOPIC: events
-      EDGEX_PROTOCOL: tcp
-      EDGEX_PORT: 5566
+      # NOTE: the environment variables were taken from
+      # https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus.yml
+      EDGEX__DEFAULT__PORT: 5566
+      EDGEX__DEFAULT__PROTOCOL: tcp
+      EDGEX__DEFAULT__SERVER: localhost
+      EDGEX__DEFAULT__SERVICESERVER: http://localhost:48080
+      EDGEX__DEFAULT__TOPIC: events
+      KUIPER__BASIC__CONSOLELOG: "true"
+      KUIPER__BASIC__RESTPORT: 48075
     plugs: [network, network-bind]
   kuiper-cli:
     adapter: full
-    command: bin/kuiper-cli
+    command: bin/kuiper
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
     plugs: [home, network, network-bind]
@@ -776,7 +777,7 @@ parts:
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
-    source-tag: 0.4.1
+    source-tag: 1.0.0
     plugin: make
     after: [go115]
     override-build: |
@@ -790,12 +791,13 @@ parts:
       cd $SNAPCRAFT_PART_INSTALL
       tar -xvf kuiper*.tar.gz --strip-components=1
       rm *.zip *.gz
+      cp -a $SNAPCRAFT_PART_SRC/plugins/. $SNAPCRAFT_PART_INSTALL/plugins
 
       install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
     organize:
-      bin/cli: bin/kuiper-cli
-      bin/server: bin/kuiper-server
+      bin/cli: bin/kuiper
+      bin/server: bin/kuiperd
     stage:
       - -etc/mqtt_source.yaml
     stage-packages:
