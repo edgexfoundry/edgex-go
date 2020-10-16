@@ -21,4 +21,10 @@ const (
 	ZREVRANGE = "ZREVRANGE"
 	MGET      = "MGET"
 	ZCARD     = "ZCARD"
+	ZCOUNT    = "ZCOUNT"
+)
+
+const (
+	InfiniteMin = "-inf"
+	InfiniteMax = "+inf"
 )
