@@ -62,8 +62,6 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-      required:
-        - requestId
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -395,6 +393,15 @@ components:
       properties:
         profile:
           $ref: '#/components/schemas/DeviceProfile'
+    MultiDeviceProfilesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceProfile'
     DeviceResource:
       description: "DeviceResource represents a value on a device that can be read or written."
       type: object
@@ -421,6 +428,15 @@ components:
       properties:
         device:
           $ref: '#/components/schemas/Device'
+    MultiDevicesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
     DeviceService:
       description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
       type: object
@@ -527,6 +543,15 @@ components:
       properties:
         service:
           $ref: '#/components/schemas/DeviceService'
+    MultiDeviceServicesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceService'
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -937,7 +962,7 @@ components:
         requestId: "479439fa-0148-11eb-adc1-0242ac120002"
         statusCode: 200
         message: ""
-        device:
+        devices:
           - apiVersion: "v2"
             id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
             name: "Random-Boolean-Device"
@@ -993,7 +1018,7 @@ components:
         requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
         statusCode: 200
         message: ""
-        profile:
+        profiles:
         - apiVersion: "v2"
           id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
           name: "Device-Virtual-Profile"
@@ -1237,7 +1262,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/MultiDevicesResponse'
               examples:
                 GetAllDevicesResponse:
                   $ref: '#/components/examples/GetAllDevicesResponse'
@@ -1683,7 +1708,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/MultiDevicesResponse'
               examples:
                 GetAllDevicesResponse:
                   $ref: '#/components/examples/GetAllDevicesResponse'
@@ -1733,7 +1758,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/MultiDevicesResponse'
               examples:
                 GetAllDevicesResponse:
                   $ref: '#/components/examples/GetAllDevicesResponse'
@@ -1783,7 +1808,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/MultiDevicesResponse'
               examples:
                 GetAllDevicesResponse:
                   $ref: '#/components/examples/GetAllDevicesResponse'
@@ -1833,7 +1858,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceResponse'
+                $ref: '#/components/schemas/MultiDevicesResponse'
               examples:
                 GetAllDevicesResponse:
                   $ref: '#/components/examples/GetAllDevicesResponse'
@@ -2119,7 +2144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/MultiDeviceProfilesResponse'
               examples:
                 GetAllDeviceProfilesResponse:
                   $ref: '#/components/examples/GetAllDeviceProfilesResponse'
@@ -2494,7 +2519,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/MultiDeviceProfilesResponse'
               examples:
                 GetAllDeviceProfilesResponse:
                   $ref: '#/components/examples/GetAllDeviceProfilesResponse'
@@ -2550,7 +2575,7 @@ paths:
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/DeviceProfileResponse'
+               $ref: '#/components/schemas/MultiDeviceProfilesResponse'
               examples:
                 GetAllDeviceProfilesResponse:
                   $ref: '#/components/examples/GetAllDeviceProfilesResponse'
@@ -2600,7 +2625,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
+                $ref: '#/components/schemas/MultiDeviceProfilesResponse'
               examples:
                 GetAllDeviceProfilesResponse:
                   $ref: '#/components/examples/GetAllDeviceProfilesResponse'
@@ -2767,13 +2792,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
+                $ref: '#/components/schemas/MultiDeviceServicesResponse'
               example:
                 apiVersion: "v2"
                 requestId: "4c7c47a7-10e0-4489-99c5-f639b7d7eb5c"
                 statusCode: 200
                 message: ""
-                service:
+                services:
                   - apiVersion: "v2"
                     id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                     name: "device-virtual"
