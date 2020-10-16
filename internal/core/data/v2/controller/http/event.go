@@ -47,7 +47,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	correlationId := correlation.FromContext(ctx)
 
 	reader := io.NewEventRequestReader()
-	addEventReqDTOs, err := reader.ReadAddEventRequest(r.Body, &ctx)
+	addEventReqDTOs, err := reader.ReadAddEventRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

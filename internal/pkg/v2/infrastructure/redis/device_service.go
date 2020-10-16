@@ -23,6 +23,15 @@ func deviceServiceStoredKey(id string) string {
 	return fmt.Sprintf("%s:%s", DeviceServiceCollection, id)
 }
 
+// deviceServiceNameExist whether the device service exists by name
+func deviceServiceNameExist(conn redis.Conn, name string) (bool, errors.EdgeX) {
+	exists, err := objectNameExists(conn, DeviceServiceCollection+":name", name)
+	if err != nil {
+		return false, errors.NewCommonEdgeXWrapper(err)
+	}
+	return exists, nil
+}
+
 // addDeviceService adds a new device service into DB
 func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	// retrieve Device Service by Id first to ensure there is no Id conflict; when Id exists, return duplicate error

@@ -45,7 +45,7 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceProfileDTOs, err := dc.reader.ReadDeviceProfileRequest(r.Body, &ctx)
+	addDeviceProfileDTOs, err := dc.reader.ReadDeviceProfileRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -96,7 +96,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateDeviceProfileReq, err := dc.reader.ReadDeviceProfileRequest(r.Body, &ctx)
+	updateDeviceProfileReq, err := dc.reader.ReadDeviceProfileRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

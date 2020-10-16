@@ -15,6 +15,29 @@ type DBClient struct {
 	mock.Mock
 }
 
+// AddDevice provides a mock function with given fields: d
+func (_m *DBClient) AddDevice(d models.Device) (models.Device, errors.EdgeX) {
+	ret := _m.Called(d)
+
+	var r0 models.Device
+	if rf, ok := ret.Get(0).(func(models.Device) models.Device); ok {
+		r0 = rf(d)
+	} else {
+		r0 = ret.Get(0).(models.Device)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(models.Device) errors.EdgeX); ok {
+		r1 = rf(d)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // AddDeviceProfile provides a mock function with given fields: e
 func (_m *DBClient) AddDeviceProfile(e models.DeviceProfile) (models.DeviceProfile, errors.EdgeX) {
 	ret := _m.Called(e)
@@ -128,6 +151,52 @@ func (_m *DBClient) DeleteDeviceServiceByName(name string) errors.EdgeX {
 	}
 
 	return r0
+}
+
+// DeviceProfileExistByName provides a mock function with given fields: name
+func (_m *DBClient) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// DeviceServiceExistByName provides a mock function with given fields: name
+func (_m *DBClient) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
 }
 
 // GetDeviceProfileByName provides a mock function with given fields: name

@@ -14,4 +14,6 @@ const (
 	TestDeviceResourceName  = "TestDeviceResourceName"
 	TestTag                 = "TestTag"
 	TestProfileResourceName = "TestProfileResource"
+	TestDeviceName          = "TestDevice"
+	TestDeviceServiceName   = "TestDeviceServiceName"
 )

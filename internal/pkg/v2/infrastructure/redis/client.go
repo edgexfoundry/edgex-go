@@ -98,6 +98,13 @@ func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
 	return updateDeviceProfile(conn, dp)
 }
 
+// DeviceProfileNameExists checks the device profile exists by name
+func (c *Client) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return deviceProfileNameExists(conn, name)
+}
+
 // AddDeviceService adds a new device service
 func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -160,6 +167,13 @@ func (c *Client) DeleteDeviceServiceByName(name string) errors.EdgeX {
 	}
 
 	return nil
+}
+
+// DeviceServiceNameExists checks the device service exists by name
+func (c *Client) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return deviceServiceNameExist(conn, name)
 }
 
 // GetDeviceProfileByName gets a device profile by name
@@ -227,4 +241,16 @@ func (c *Client) GetDeviceServices(offset int, limit int, labels []string) (devi
 		return deviceServices, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return deviceServices, nil
+}
+
+// Add a new device
+func (c *Client) AddDevice(d model.Device) (model.Device, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(d.Id) == 0 {
+		d.Id = uuid.New().String()
+	}
+
+	return addDevice(conn, d)
 }
