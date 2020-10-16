@@ -98,3 +98,17 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 	}
 	return nil
 }
+
+// GetDeviceProfiles query the device profiles with offset, and limit
+func GetDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, err errors.EdgeX) {
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dps, err := dbClient.GetDeviceProfiles(offset, limit, labels)
+	if err != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
+	for i, dp := range dps {
+		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+	}
+	return deviceProfiles, nil
+}

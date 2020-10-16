@@ -1,8 +1,10 @@
 package http
 
 import (
+	"math"
 	"net/http"
 
+	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -316,6 +318,41 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 			"Delete device profile successfully",
 			http.StatusOK)
 		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceProfileController) GetAllDeviceProfiles(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit, and labels
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		deviceProfiles, err := application.GetDeviceProfiles(offset, limit, labels, dc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+			statusCode = http.StatusOK
+		}
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)

@@ -40,7 +40,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testLabels = []string{"MODBUS", "TEMP"}
+var testDeviceProfileLabels = []string{"MODBUS", "TEMP"}
 var testAttributes = map[string]string{
 	"TestAttribute": "TestAttributeValue",
 }
@@ -81,7 +81,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			Manufacturer:    TestManufacturer,
 			Description:     TestDescription,
 			Model:           TestModel,
-			Labels:          testLabels,
+			Labels:          testDeviceProfileLabels,
 			DeviceResources: testDeviceResources,
 			DeviceCommands:  testDeviceCommands,
 			CoreCommands:    testCoreCommands,
@@ -904,6 +904,78 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 			assert.NotEmpty(t, res.Message, "Message is empty")
+		})
+	}
+}
+
+func TestGetDeviceProfiles(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("GetDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
+	dbClientMock.On("GetDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
+	dbClientMock.On("GetDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
+	dbClientMock.On("GetDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		labels             string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get device profiles without labels", "0", "10", "", false, 3, http.StatusOK},
+		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, http.StatusOK},
+		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, contractsV2.ApiAllDeviceProfileRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(contractsV2.Offset, testCase.offset)
+			query.Add(contractsV2.Limit, testCase.limit)
+			if len(testCase.labels) > 0 {
+				query.Add(contractsV2.Labels, testCase.labels)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.GetAllDeviceProfiles)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDeviceProfilesResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }
