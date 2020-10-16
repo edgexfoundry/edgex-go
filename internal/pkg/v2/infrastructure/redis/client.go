@@ -213,3 +213,18 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 
 	return count, nil
 }
+
+// GetDeviceServices returns multiple device services per query criteria, including
+// offset: the number of items to skip before starting to collect the result set
+// limit: The numbers of items to return
+// labels: allows for querying a given object by associated user-defined labels
+func (c *Client) GetDeviceServices(offset int, limit int, labels []string) (deviceServices []model.DeviceService, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceServices, edgeXerr = deviceServicesByLabels(conn, offset, limit, labels)
+	if edgeXerr != nil {
+		return deviceServices, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return deviceServices, nil
+}

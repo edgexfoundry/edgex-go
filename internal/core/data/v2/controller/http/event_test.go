@@ -50,10 +50,10 @@ var testReading = dtos.BaseReading{
 
 var testAddEvent = requests.AddEventRequest{
 	BaseRequest: common.BaseRequest{
-		RequestID: ExampleUUID,
+		RequestId: ExampleUUID,
 	},
 	Event: dtos.Event{
-		ID:         expectedEventId,
+		Id:         expectedEventId,
 		DeviceName: TestDeviceName,
 		Origin:     TestOriginTime,
 		Readings:   []dtos.BaseReading{testReading},
@@ -105,15 +105,15 @@ func TestAddEvent(t *testing.T) {
 	validRequest := testAddEvent
 
 	noRequestId := validRequest
-	noRequestId.RequestID = ""
+	noRequestId.RequestId = ""
 	badRequestId := validRequest
-	badRequestId.RequestID = "niv3sl"
+	badRequestId.RequestId = "niv3sl"
 	noEvent := validRequest
 	noEvent.Event = dtos.Event{}
 	noEventID := validRequest
-	noEventID.Event.ID = ""
+	noEventID.Event.Id = ""
 	badEventID := validRequest
-	badEventID.Event.ID = "DIWNI09320"
+	badEventID.Event.Id = "DIWNI09320"
 	noEventDevice := validRequest
 	noEventDevice.Event.DeviceName = ""
 	noEventOrigin := validRequest
@@ -219,8 +219,8 @@ func TestAddEvent(t *testing.T) {
 			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, contractsV2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
-			if actualResponse[0].RequestID != "" {
-				assert.Equal(t, expectedRequestId, actualResponse[0].RequestID, "RequestID not as expected")
+			if actualResponse[0].RequestId != "" {
+				assert.Equal(t, expectedRequestId, actualResponse[0].RequestId, "RequestID not as expected")
 			}
 			assert.Empty(t, actualResponse[0].Message, "Message should be empty when it is successful")
 		})
@@ -283,7 +283,7 @@ func TestEventById(t *testing.T) {
 				assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
-				assert.Equal(t, testCase.EventId, actualResponse.Event.ID, "Event Id not as expected")
+				assert.Equal(t, testCase.EventId, actualResponse.Event.Id, "Event Id not as expected")
 				assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -316,7 +316,7 @@ func TestEventTotalCount(t *testing.T) {
 	assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
-	assert.Empty(t, actualResponse.DeviceID, "Device name should be empty when counting all the events")
+	assert.Empty(t, actualResponse.DeviceName, "Device name should be empty when counting all the events")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }

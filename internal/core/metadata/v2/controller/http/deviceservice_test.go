@@ -38,7 +38,7 @@ var testBaseAddress = "http://home-device-service:49990"
 func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 	var testAddDeviceServiceReq = requests.AddDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestID: ExampleUUID,
+			RequestId: ExampleUUID,
 		},
 		Service: dtos.DeviceService{
 			Id:             ExampleUUID,
@@ -60,7 +60,7 @@ func buildTestUpdateDeviceServiceRequest() requests.UpdateDeviceServiceRequest {
 	testOperatingState := models.Enabled
 	var testUpdateDeviceServiceReq = requests.UpdateDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestID: ExampleUUID,
+			RequestId: ExampleUUID,
 		},
 		Service: dtos.UpdateDeviceService{
 			Id:             &testUUID,
@@ -94,9 +94,9 @@ func TestAddDeviceService(t *testing.T) {
 	duplicateServiceNameMessage := fmt.Sprintf("device service %s already exists", testDeviceServiceName)
 
 	reqWithNoID := validReq
-	reqWithNoID.RequestID = ""
+	reqWithNoID.RequestId = ""
 	reqWithInvalidId := validReq
-	reqWithInvalidId.RequestID = "InvalidUUID"
+	reqWithInvalidId.RequestId = "InvalidUUID"
 	reqWithNoName := validReq
 	reqWithNoName.Service.Name = ""
 
@@ -181,8 +181,8 @@ func TestAddDeviceService(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-				if res[0].RequestID != "" {
-					assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedHttpStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 				assert.Contains(t, res[0].Message, testCase.expectedMessage, "Message not as expected")
@@ -276,7 +276,7 @@ func TestPatchDeviceService(t *testing.T) {
 	dbClientMock.On("DeleteDeviceServiceById", *valid.Service.Id).Return(nil)
 	dbClientMock.On("AddDeviceService", mock.Anything).Return(dsModels, nil)
 	validWithNoReqID := testReq
-	validWithNoReqID.RequestID = ""
+	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
 	validWithNoId.Service.Id = nil
 	dbClientMock.On("GetDeviceServiceByName", *validWithNoId.Service.Name).Return(dsModels, nil)
@@ -359,12 +359,96 @@ func TestPatchDeviceService(t *testing.T) {
 				// Assert
 				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-				if res[0].RequestID != "" {
-					assert.Equal(t, expectedRequestId, res[0].RequestID, "RequestID not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 			}
 
+		})
+	}
+
+}
+
+func TestGetDeviceServices(t *testing.T) {
+	deviceServices := []models.DeviceService{
+		{
+			Name:   "ds1",
+			Labels: testDeviceServiceLabels,
+		},
+		{
+			Name:   "ds2",
+			Labels: testDeviceServiceLabels,
+		},
+		{
+			Name: "ds3",
+		},
+	}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("GetDeviceServices", 0, 10, []string(nil)).Return(deviceServices, nil)
+	dbClientMock.On("GetDeviceServices", 0, 5, testDeviceServiceLabels).Return([]models.DeviceService{deviceServices[0], deviceServices[1]}, nil)
+	dbClientMock.On("GetDeviceServices", 1, 2, []string(nil)).Return([]models.DeviceService{deviceServices[1], deviceServices[2]}, nil)
+	dbClientMock.On("GetDeviceServices", 4, 1, testDeviceServiceLabels).Return([]models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceServiceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		labels             string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get device services without labels", "0", "10", "", false, 3, http.StatusOK},
+		{"Valid - get device services with labels", "0", "5", strings.Join(testDeviceServiceLabels, ","), false, 2, http.StatusOK},
+		{"Valid - get device services with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceServiceLabels, ","), true, 0, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, contractsV2.ApiAllDeviceServiceRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(contractsV2.Offset, testCase.offset)
+			query.Add(contractsV2.Limit, testCase.limit)
+			if len(testCase.labels) > 0 {
+				query.Add(contractsV2.Labels, testCase.labels)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.GetAllDeviceServices)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDeviceServicesResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Services), "Service count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }
