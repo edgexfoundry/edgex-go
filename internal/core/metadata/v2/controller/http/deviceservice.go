@@ -7,8 +7,10 @@ package http
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 
+	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -239,41 +241,32 @@ func (dc *DeviceServiceController) GetAllDeviceServices(w http.ResponseWriter, r
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
+	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
 	var labels = []string{}
 	var response interface{}
 	var statusCode int
 
-	// parse URL query string
-	offset, err := utils.ParseQueryStringToInt(r, contractsV2.Offset, contractsV2.DefaultOffset)
+	// parse URL query string for offset, limit, and labels
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	}
-
-	limit, err := utils.ParseQueryStringToInt(r, contractsV2.Limit, contractsV2.DefaultLimit)
-	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	}
-
-	labels = utils.ParseQueryStringToStrings(r, contractsV2.Labels, contractsV2.CommaSeparator)
-
-	deviceServices, err := application.GetDeviceServices(offset, limit, labels, ctx, dc.dic)
-	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		response = responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
-		statusCode = http.StatusOK
+		deviceServices, err := application.GetDeviceServices(offset, limit, labels, ctx, dc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
+			statusCode = http.StatusOK
+		}
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)

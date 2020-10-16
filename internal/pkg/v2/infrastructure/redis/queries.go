@@ -58,6 +58,12 @@ func getObjectsByRevRange(conn redis.Conn, key string, start int, end int) ([][]
 // getObjectsBySomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
 // command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
 func getObjectsBySomeRange(conn redis.Conn, command string, key string, start int, end int) ([][]byte, errors.EdgeX) {
+	count, err := redis.Int(conn.Do(ZCOUNT, key, InfiniteMin, InfiniteMax))
+	if count == 0 { // return nil slice when there is no records in the DB
+		return nil, nil
+	} else if count > 0 && start > count { // return RangeNotSatisfiable error when start is out of range
+		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", count), nil)
+	}
 	ids, err := redis.Values(conn.Do(command, key, start, end))
 	if err == redis.ErrNil {
 		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("objects under %s do not exist", key), err)
@@ -91,7 +97,7 @@ func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string,
 	//find common Ids among two-dimension Ids slice associated with labels
 	commonIds := common.FindCommonStrings(idsSlice...)
 	if start > len(commonIds) {
-		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
+		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
 	}
 	if end > len(commonIds) {
 		commonIds = commonIds[start:]

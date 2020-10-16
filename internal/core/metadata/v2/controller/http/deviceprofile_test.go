@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 	"gopkg.in/yaml.v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
@@ -96,6 +97,9 @@ func mockDic() *di.Container {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					LogLevel: "DEBUG",
+				},
+				Service: bootstrapConfig.ServiceInfo{
+					MaxResultCount: 30,
 				},
 			}
 		},
