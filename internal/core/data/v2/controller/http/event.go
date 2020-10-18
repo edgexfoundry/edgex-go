@@ -151,3 +151,33 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(eventResponse, w, lc) // encode and send out the response
 }
+
+func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Request) {
+	// retrieve all the service injections from bootstrap
+	lc := container.LoggingClientFrom(ec.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	deviceName := vars[contractsV2.DeviceIdParam]
+
+	var eventResponse interface{}
+	var statusCode int
+
+	// Count the event by device
+	count, err := application.EventCountByDevice(deviceName, ec.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		eventResponse = responseDTO.NewEventCountResponse("", "", http.StatusOK, count, deviceName)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(eventResponse, w, lc) // encode and send out the response
+}

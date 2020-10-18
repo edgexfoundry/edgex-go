@@ -8,7 +8,6 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -100,6 +99,15 @@ func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.
 
 func (c *Client) eventTotalCount(conn redis.Conn) (uint32, errors.EdgeX) {
 	count, err := redis.Int(conn.Do(ZCARD, EventsCollection))
+	if err != nil {
+		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, "count event failed", err)
+	}
+
+	return uint32(count), nil
+}
+
+func (c *Client) eventCountByDevice(deviceName string, conn redis.Conn) (uint32, errors.EdgeX) {
+	count, err := redis.Int(conn.Do(ZCARD, EventsCollection+":deviceName:"+deviceName))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, "count event failed", err)
 	}

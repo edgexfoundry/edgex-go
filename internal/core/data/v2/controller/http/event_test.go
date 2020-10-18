@@ -320,3 +320,36 @@ func TestEventTotalCount(t *testing.T) {
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }
+
+func TestEventCountByDevice(t *testing.T) {
+	expectedEventCount := uint32(656672)
+	deviceName := "deviceA"
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCountByDevice", deviceName).Return(expectedEventCount, nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	req, err := http.NewRequest(http.MethodGet, contractsV2.ApiEventCountByDeviceRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{contractsV2.DeviceIdParam: deviceName})
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(ec.EventCountByDevice)
+	handler.ServeHTTP(recorder, req)
+
+	var actualResponse responseDTO.EventCountResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+	require.NoError(t, err)
+	assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
+	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
+	assert.Equal(t, deviceName, actualResponse.DeviceName, "Device name in the response body is not expected")
+}

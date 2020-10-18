@@ -16,4 +16,5 @@ type DBClient interface {
 	AddEvent(e model.Event) (model.Event, errors.EdgeX)
 	EventById(id string) (model.Event, errors.EdgeX)
 	EventTotalCount() (uint32, errors.EdgeX)
+	EventCountByDevice(deviceName string) (uint32, errors.EdgeX)
 }
