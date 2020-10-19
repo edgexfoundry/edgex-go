@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testDeviceLabels = []string{"MODBUS", "TEMP"}
+
 func buildTestDeviceRequest() requests.AddDeviceRequest {
 	var testAutoEvents = []dtos.AutoEvent{
 		{Resource: "TestResource", Frequency: "300ms", OnChange: true},
@@ -53,7 +55,7 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 			ProfileName:    TestDeviceProfileName,
 			AdminState:     models.Locked,
 			OperatingState: models.Enabled,
-			Labels:         []string{"MODBUS", "TEMP"},
+			Labels:         testDeviceLabels,
 			Location:       "{40lat;45long}",
 			AutoEvents:     testAutoEvents,
 			Protocols:      testProtocols,
@@ -650,4 +652,76 @@ func TestPatchDevice(t *testing.T) {
 		})
 	}
 
+}
+
+func TestGetDevices(t *testing.T) {
+	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
+	devices := []models.Device{device, device, device}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllDevices", 0, 10, []string(nil)).Return(devices, nil)
+	dbClientMock.On("AllDevices", 0, 5, testDeviceLabels).Return([]models.Device{devices[0], devices[1]}, nil)
+	dbClientMock.On("AllDevices", 1, 2, []string(nil)).Return([]models.Device{devices[1], devices[2]}, nil)
+	dbClientMock.On("AllDevices", 4, 1, testDeviceLabels).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		labels             string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get devices without labels", "0", "10", "", false, 3, http.StatusOK},
+		{"Valid - get devices with labels", "0", "5", strings.Join(testDeviceLabels, ","), false, 2, http.StatusOK},
+		{"Valid - get devices with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceLabels, ","), true, 0, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllDeviceRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(v2.Offset, testCase.offset)
+			query.Add(v2.Limit, testCase.limit)
+			if len(testCase.labels) > 0 {
+				query.Add(v2.Labels, testCase.labels)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AllDevices)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDevicesResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Devices), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
 }

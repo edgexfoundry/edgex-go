@@ -401,3 +401,15 @@ func (c *Client) AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX) 
 	}
 	return events, nil
 }
+
+// AllDevices query the devices with offset, limit, and labels
+func (c *Client) AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	devices, edgeXerr := devicesByLabels(conn, offset, limit, labels)
+	if edgeXerr != nil {
+		return devices, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return devices, nil
+}

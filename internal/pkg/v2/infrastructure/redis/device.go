@@ -170,9 +170,32 @@ func allDeviceByServiceName(conn redis.Conn, offset int, limit int, name string)
 		s := models.Device{}
 		err := json.Unmarshal(in, &s)
 		if err != nil {
-			return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "device parsing failed", err)
+			return []models.Device{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device format parsing failed from the database", err)
 		}
 		devices[i] = s
+	}
+	return devices, nil
+}
+
+// devicesByLabels query devices with offset, limit and labels
+func devicesByLabels(conn redis.Conn, offset int, limit int, labels []string) (devices []models.Device, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceCollection, labels, offset, end)
+	if edgeXerr != nil {
+		return devices, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	devices = make([]models.Device, len(objects))
+	for i, in := range objects {
+		dp := models.Device{}
+		err := json.Unmarshal(in, &dp)
+		if err != nil {
+			return []models.Device{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device format parsing failed from the database", err)
+		}
+		devices[i] = dp
 	}
 	return devices, nil
 }

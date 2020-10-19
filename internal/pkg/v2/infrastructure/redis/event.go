@@ -214,7 +214,7 @@ func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []mod
 		e := models.Event{}
 		err := json.Unmarshal(in, &e)
 		if err != nil {
-			return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
+			return []models.Event{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "event format parsing failed from the database", err)
 		}
 		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
 		if edgeXerr != nil {

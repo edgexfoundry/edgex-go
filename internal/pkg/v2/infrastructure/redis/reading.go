@@ -126,7 +126,7 @@ func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Readi
 		sr := models.SimpleReading{}
 		err := json.Unmarshal(in, &sr)
 		if err != nil {
-			return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "reading parsing failed", err)
+			return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "reading format parsing failed from the database", err)
 		}
 		readings[i] = sr
 	}
