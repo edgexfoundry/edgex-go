@@ -109,6 +109,56 @@ func (_m *DBClient) AllDeviceByServiceName(offset int, limit int, name string) (
 	return r0, r1
 }
 
+// AllDeviceProfiles provides a mock function with given fields: offset, limit, labels
+func (_m *DBClient) AllDeviceProfiles(offset int, limit int, labels []string) ([]models.DeviceProfile, errors.EdgeX) {
+	ret := _m.Called(offset, limit, labels)
+
+	var r0 []models.DeviceProfile
+	if rf, ok := ret.Get(0).(func(int, int, []string) []models.DeviceProfile); ok {
+		r0 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceProfile)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// AllDeviceServices provides a mock function with given fields: offset, limit, labels
+func (_m *DBClient) AllDeviceServices(offset int, limit int, labels []string) ([]models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(offset, limit, labels)
+
+	var r0 []models.DeviceService
+	if rf, ok := ret.Get(0).(func(int, int, []string) []models.DeviceService); ok {
+		r0 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceService)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // AllDevices provides a mock function with given fields: offset, limit, labels
 func (_m *DBClient) AllDevices(offset int, limit int, labels []string) ([]models.Device, errors.EdgeX) {
 	ret := _m.Called(offset, limit, labels)
@@ -327,6 +377,29 @@ func (_m *DBClient) DeviceNameExists(id string) (bool, errors.EdgeX) {
 	return r0, r1
 }
 
+// DeviceProfileByName provides a mock function with given fields: name
+func (_m *DBClient) DeviceProfileByName(name string) (models.DeviceProfile, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.DeviceProfile
+	if rf, ok := ret.Get(0).(func(string) models.DeviceProfile); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.DeviceProfile)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceProfileNameExists provides a mock function with given fields: name
 func (_m *DBClient) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -336,6 +409,52 @@ func (_m *DBClient) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
 		r0 = rf(name)
 	} else {
 		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// DeviceServiceById provides a mock function with given fields: id
+func (_m *DBClient) DeviceServiceById(id string) (models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.DeviceService)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// DeviceServiceByName provides a mock function with given fields: name
+func (_m *DBClient) DeviceServiceByName(name string) (models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.DeviceService
+	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.DeviceService)
 	}
 
 	var r1 errors.EdgeX
@@ -364,125 +483,6 @@ func (_m *DBClient) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
 		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// GetDeviceProfileByName provides a mock function with given fields: name
-func (_m *DBClient) GetDeviceProfileByName(name string) (models.DeviceProfile, errors.EdgeX) {
-	ret := _m.Called(name)
-
-	var r0 models.DeviceProfile
-	if rf, ok := ret.Get(0).(func(string) models.DeviceProfile); ok {
-		r0 = rf(name)
-	} else {
-		r0 = ret.Get(0).(models.DeviceProfile)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// GetDeviceProfiles provides a mock function with given fields: offset, limit, labels
-func (_m *DBClient) GetDeviceProfiles(offset int, limit int, labels []string) ([]models.DeviceProfile, errors.EdgeX) {
-	ret := _m.Called(offset, limit, labels)
-
-	var r0 []models.DeviceProfile
-	if rf, ok := ret.Get(0).(func(int, int, []string) []models.DeviceProfile); ok {
-		r0 = rf(offset, limit, labels)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.DeviceProfile)
-		}
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
-		r1 = rf(offset, limit, labels)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// GetDeviceServiceById provides a mock function with given fields: id
-func (_m *DBClient) GetDeviceServiceById(id string) (models.DeviceService, errors.EdgeX) {
-	ret := _m.Called(id)
-
-	var r0 models.DeviceService
-	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
-		r0 = rf(id)
-	} else {
-		r0 = ret.Get(0).(models.DeviceService)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(id)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// GetDeviceServiceByName provides a mock function with given fields: name
-func (_m *DBClient) GetDeviceServiceByName(name string) (models.DeviceService, errors.EdgeX) {
-	ret := _m.Called(name)
-
-	var r0 models.DeviceService
-	if rf, ok := ret.Get(0).(func(string) models.DeviceService); ok {
-		r0 = rf(name)
-	} else {
-		r0 = ret.Get(0).(models.DeviceService)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// GetDeviceServices provides a mock function with given fields: offset, limit, labels
-func (_m *DBClient) GetDeviceServices(offset int, limit int, labels []string) ([]models.DeviceService, errors.EdgeX) {
-	ret := _m.Called(offset, limit, labels)
-
-	var r0 []models.DeviceService
-	if rf, ok := ret.Get(0).(func(int, int, []string) []models.DeviceService); ok {
-		r0 = rf(offset, limit, labels)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.DeviceService)
-		}
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
-		r1 = rf(offset, limit, labels)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

@@ -334,3 +334,32 @@ func (dc *DeviceController) AllDevices(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (dc *DeviceController) DeviceByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	device, err := application.DeviceByName(name, dc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = responseDTO.NewDeviceResponse("", "", http.StatusOK, device)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

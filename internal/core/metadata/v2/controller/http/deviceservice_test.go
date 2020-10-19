@@ -193,15 +193,15 @@ func TestAddDeviceService(t *testing.T) {
 	}
 }
 
-func TestGetDeviceServiceByName(t *testing.T) {
+func TestDeviceServiceByName(t *testing.T) {
 	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
 	emptyName := ""
 	notFoundName := "notFoundName"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("GetDeviceServiceByName", deviceService.Name).Return(deviceService, nil)
-	dbClientMock.On("GetDeviceServiceByName", notFoundName).Return(models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+	dbClientMock.On("DeviceServiceByName", deviceService.Name).Return(deviceService, nil)
+	dbClientMock.On("DeviceServiceByName", notFoundName).Return(models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -230,7 +230,7 @@ func TestGetDeviceServiceByName(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.GetDeviceServiceByName)
+			handler := http.HandlerFunc(controller.DeviceServiceByName)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert
@@ -271,14 +271,14 @@ func TestPatchDeviceService(t *testing.T) {
 	}
 
 	valid := testReq
-	dbClientMock.On("GetDeviceServiceById", *valid.Service.Id).Return(dsModels, nil)
+	dbClientMock.On("DeviceServiceById", *valid.Service.Id).Return(dsModels, nil)
 	dbClientMock.On("DeleteDeviceServiceById", *valid.Service.Id).Return(nil)
 	dbClientMock.On("AddDeviceService", mock.Anything).Return(dsModels, nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
 	validWithNoId.Service.Id = nil
-	dbClientMock.On("GetDeviceServiceByName", *validWithNoId.Service.Name).Return(dsModels, nil)
+	dbClientMock.On("DeviceServiceByName", *validWithNoId.Service.Name).Return(dsModels, nil)
 	validWithNoName := testReq
 	validWithNoName.Service.Name = nil
 
@@ -291,14 +291,14 @@ func TestPatchDeviceService(t *testing.T) {
 	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
 	invalidNotFoundId.Service.Id = &notFoundId
 	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
-	dbClientMock.On("GetDeviceServiceById", *invalidNotFoundId.Service.Id).Return(dsModels, notFoundIdError)
+	dbClientMock.On("DeviceServiceById", *invalidNotFoundId.Service.Id).Return(dsModels, notFoundIdError)
 
 	invalidNotFoundName := testReq
 	invalidNotFoundName.Service.Id = nil
 	notFoundName := "notFoundName"
 	invalidNotFoundName.Service.Name = &notFoundName
 	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
-	dbClientMock.On("GetDeviceServiceByName", *invalidNotFoundName.Service.Name).Return(dsModels, notFoundNameError)
+	dbClientMock.On("DeviceServiceByName", *invalidNotFoundName.Service.Name).Return(dsModels, notFoundNameError)
 
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -363,7 +363,7 @@ func TestPatchDeviceService(t *testing.T) {
 
 }
 
-func TestGetDeviceServices(t *testing.T) {
+func TestAllDeviceServices(t *testing.T) {
 	deviceServices := []models.DeviceService{
 		{
 			Name:   "ds1",
@@ -380,10 +380,10 @@ func TestGetDeviceServices(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("GetDeviceServices", 0, 10, []string(nil)).Return(deviceServices, nil)
-	dbClientMock.On("GetDeviceServices", 0, 5, testDeviceServiceLabels).Return([]models.DeviceService{deviceServices[0], deviceServices[1]}, nil)
-	dbClientMock.On("GetDeviceServices", 1, 2, []string(nil)).Return([]models.DeviceService{deviceServices[1], deviceServices[2]}, nil)
-	dbClientMock.On("GetDeviceServices", 4, 1, testDeviceServiceLabels).Return([]models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllDeviceServices", 0, 10, []string(nil)).Return(deviceServices, nil)
+	dbClientMock.On("AllDeviceServices", 0, 5, testDeviceServiceLabels).Return([]models.DeviceService{deviceServices[0], deviceServices[1]}, nil)
+	dbClientMock.On("AllDeviceServices", 1, 2, []string(nil)).Return([]models.DeviceService{deviceServices[1], deviceServices[2]}, nil)
+	dbClientMock.On("AllDeviceServices", 4, 1, testDeviceServiceLabels).Return([]models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -420,7 +420,7 @@ func TestGetDeviceServices(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.GetAllDeviceServices)
+			handler := http.HandlerFunc(controller.AllDeviceServices)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert

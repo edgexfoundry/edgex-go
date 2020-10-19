@@ -61,13 +61,13 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 	return nil
 }
 
-// GetDeviceProfileByName query the device profile by name
-func GetDeviceProfileByName(name string, ctx context.Context, dic *di.Container) (deviceProfile dtos.DeviceProfile, err errors.EdgeX) {
+// DeviceProfileByName query the device profile by name
+func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (deviceProfile dtos.DeviceProfile, err errors.EdgeX) {
 	if name == "" {
 		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	dp, err := dbClient.GetDeviceProfileByName(name)
+	dp, err := dbClient.DeviceProfileByName(name)
 	if err != nil {
 		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -105,10 +105,10 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 	return nil
 }
 
-// GetDeviceProfiles query the device profiles with offset, and limit
-func GetDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, err errors.EdgeX) {
+// AllDeviceProfiles query the device profiles with offset, and limit
+func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, err errors.EdgeX) {
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	dps, err := dbClient.GetDeviceProfiles(offset, limit, labels)
+	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}

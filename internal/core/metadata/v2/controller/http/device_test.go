@@ -369,7 +369,7 @@ func TestAllDeviceByServiceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, v2.ApiAllDeviceByServiceNameRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, v2.ApiDeviceByServiceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(v2.Offset, testCase.offset)
 			query.Add(v2.Limit, testCase.limit)
@@ -437,7 +437,7 @@ func TestDeviceIdExists(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceExistsByIdRoute, testCase.deviceId)
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceIdExistsRoute, testCase.deviceId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.deviceId})
 			require.NoError(t, err)
@@ -493,7 +493,7 @@ func TestDeviceNameExists(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceExistsByNameRoute, testCase.deviceName)
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceNameExistsRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName})
 			require.NoError(t, err)
@@ -654,7 +654,7 @@ func TestPatchDevice(t *testing.T) {
 
 }
 
-func TestGetDevices(t *testing.T) {
+func TestAllDevices(t *testing.T) {
 	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
 	devices := []models.Device{device, device, device}
 
@@ -720,6 +720,69 @@ func TestGetDevices(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Devices), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestDeviceByName(t *testing.T) {
+	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
+	emptyName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceByName", device.Name).Return(device, nil)
+	dbClientMock.On("DeviceByName", notFoundName).Return(models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find device by name", device.Name, false, http.StatusOK},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - device not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceByNameRoute, testCase.deviceName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeviceByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.DeviceResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.deviceName, res.Device.Name, "Name not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
