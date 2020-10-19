@@ -161,7 +161,7 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 
 	// URL parameters
 	vars := mux.Vars(r)
-	deviceName := vars[contractsV2.DeviceIdParam]
+	deviceName := vars[contractsV2.DeviceName]
 
 	var eventResponse interface{}
 	var statusCode int

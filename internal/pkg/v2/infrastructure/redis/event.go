@@ -11,6 +11,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -50,9 +51,9 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	// use the SET command to save event as blob
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, EventsCollection, 0, storedKey)
-	_ = conn.Send(ZADD, EventsCollection+":created", e.Created, storedKey)
-	_ = conn.Send(ZADD, EventsCollection+":pushed", e.Pushed, storedKey)
-	_ = conn.Send(ZADD, EventsCollection+":deviceName:"+e.DeviceName, e.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollection, v2.Created), e.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollection, v2.Pushed), e.Pushed, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", EventsCollection, v2.DeviceName, e.DeviceName), e.Created, storedKey)
 
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
@@ -107,7 +108,7 @@ func (c *Client) eventTotalCount(conn redis.Conn) (uint32, errors.EdgeX) {
 }
 
 func (c *Client) eventCountByDevice(deviceName string, conn redis.Conn) (uint32, errors.EdgeX) {
-	count, err := redis.Int(conn.Do(ZCARD, EventsCollection+":deviceName:"+deviceName))
+	count, err := redis.Int(conn.Do(ZCARD, fmt.Sprintf("%s:%s:%s", EventsCollection, v2.DeviceName, deviceName)))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, "count event failed", err)
 	}

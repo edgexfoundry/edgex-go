@@ -13,7 +13,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -44,7 +44,7 @@ func deviceProfileIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 }
 
 // addDeviceProfile adds a device profile to DB
-func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (addedDeviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
 	// query device profile name and id to avoid the conflict
 	exists, edgeXerr := deviceProfileIdExists(conn, dp.Id)
 	if edgeXerr != nil {
@@ -76,13 +76,14 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 	storedKey := deviceProfileStoredKey(dp.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, DeviceProfileCollection, dp.Modified, storedKey)
-	_ = conn.Send(HSET, DeviceProfileCollection+":name", dp.Name, storedKey)
-	_ = conn.Send(SADD, DeviceProfileCollection+":manufacturer:"+dp.Manufacturer, storedKey)
-	_ = conn.Send(SADD, DeviceProfileCollection+":model:"+dp.Model, storedKey)
+	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
+	_ = conn.Send(HSET, fmt.Sprintf("%s:%s", DeviceProfileCollection, v2.Name), dp.Name, storedKey)
+	_ = conn.Send(SADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Manufacturer, dp.Manufacturer), storedKey)
+	_ = conn.Send(SADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Model, dp.Model), storedKey)
 	for _, label := range dp.Labels {
 		_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Label, label), dp.Modified, storedKey)
 	}
+
 	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile creation failed", err)
@@ -92,7 +93,7 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 }
 
 // deviceProfileById query device profile by id from DB
-func deviceProfileById(conn redis.Conn, id string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+func deviceProfileById(conn redis.Conn, id string) (deviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, deviceProfileStoredKey(id), &deviceProfile)
 	if edgeXerr != nil {
 		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -101,25 +102,26 @@ func deviceProfileById(conn redis.Conn, id string) (deviceProfile model.DevicePr
 }
 
 // deviceProfileByName query device profile by name from DB
-func deviceProfileByName(conn redis.Conn, name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
-	edgeXerr = getObjectByHash(conn, DeviceProfileCollection+":name", name, &deviceProfile)
+func deviceProfileByName(conn redis.Conn, name string) (deviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, fmt.Sprintf("%s:%s", DeviceProfileCollection, v2.Name), name, &deviceProfile)
 	if edgeXerr != nil {
 		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return
 }
 
-func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
+func deleteDeviceProfile(conn redis.Conn, dp models.DeviceProfile) errors.EdgeX {
 	storedKey := deviceProfileStoredKey(dp.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceProfileCollection, storedKey)
-	_ = conn.Send(HDEL, DeviceProfileCollection+":name", dp.Name)
-	_ = conn.Send(SREM, DeviceProfileCollection+":manufacturer:"+dp.Manufacturer, storedKey)
-	_ = conn.Send(SREM, DeviceProfileCollection+":model:"+dp.Model, storedKey)
+	_ = conn.Send(HDEL, fmt.Sprintf("%s:%s", DeviceProfileCollection, v2.Name), dp.Name)
+	_ = conn.Send(SREM, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Manufacturer, dp.Manufacturer), storedKey)
+	_ = conn.Send(SREM, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Model, dp.Model), storedKey)
 	for _, label := range dp.Labels {
 		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Label, label), storedKey)
 	}
+
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile deletion failed", err)
@@ -128,8 +130,8 @@ func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
 }
 
 // updateDeviceProfile updates a device profile to DB
-func updateDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (edgeXerr errors.EdgeX) {
-	var oldDeviceProfile model.DeviceProfile
+func updateDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (edgeXerr errors.EdgeX) {
+	var oldDeviceProfile models.DeviceProfile
 	oldDeviceProfile, edgeXerr = deviceProfileById(conn, dp.Id)
 	if edgeXerr == nil {
 		if dp.Name != oldDeviceProfile.Name {
@@ -186,7 +188,7 @@ func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
 }
 
 // deviceProfilesByLabels query device profile with offset and limit
-func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceProfiles []model.DeviceProfile, edgeXerr errors.EdgeX) {
+func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
 	end := offset + limit - 1
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
@@ -196,9 +198,9 @@ func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []str
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	deviceProfiles = make([]model.DeviceProfile, len(objects))
+	deviceProfiles = make([]models.DeviceProfile, len(objects))
 	for i, in := range objects {
-		dp := model.DeviceProfile{}
+		dp := models.DeviceProfile{}
 		err := json.Unmarshal(in, &dp)
 		if err != nil {
 			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
