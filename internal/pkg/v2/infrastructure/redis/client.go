@@ -10,6 +10,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -285,4 +286,30 @@ func (c *Client) UpdateEventPushedById(id string) errors.EdgeX {
 	defer conn.Close()
 
 	return updateEventPushedById(conn, id)
+}
+
+// DeleteDeviceById deletes a device by id
+func (c *Client) DeleteDeviceById(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceById(conn, id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
+}
+
+// DeleteDeviceByName deletes a device by name
+func (c *Client) DeleteDeviceByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteDeviceByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return nil
 }

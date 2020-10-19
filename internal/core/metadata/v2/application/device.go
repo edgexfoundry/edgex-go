@@ -49,3 +49,29 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 
 	return addedDevice.Id, nil
 }
+
+// DeleteDeviceById deletes the device by Id
+func DeleteDeviceById(id string, dic *di.Container) errors.EdgeX {
+	if id == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// DeleteDeviceByName deletes the device by name
+func DeleteDeviceByName(name string, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteDeviceByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

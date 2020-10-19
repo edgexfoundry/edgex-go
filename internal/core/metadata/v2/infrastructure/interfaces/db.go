@@ -30,4 +30,6 @@ type DBClient interface {
 	GetDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
 
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
+	DeleteDeviceById(id string) errors.EdgeX
+	DeleteDeviceByName(name string) errors.EdgeX
 }
