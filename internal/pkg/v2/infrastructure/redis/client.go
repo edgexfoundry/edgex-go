@@ -215,6 +215,18 @@ func (c *Client) DeleteDeviceProfileByName(name string) errors.EdgeX {
 	return nil
 }
 
+// GetDeviceProfiles query device profiles with offset and limit
+func (c *Client) GetDeviceProfiles(offset int, limit int, labels []string) ([]model.DeviceProfile, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceProfiles, edgeXerr := deviceProfilesByLabels(conn, offset, limit, labels)
+	if edgeXerr != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return deviceProfiles, nil
+}
+
 // EventTotalCount returns the total count of Event from the database
 func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
