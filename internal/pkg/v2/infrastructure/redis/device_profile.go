@@ -12,6 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -59,9 +60,13 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 		return addedDeviceProfile, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile name %s exists", dp.Name), edgeXerr)
 	}
 
+	ts := common.MakeTimestamp()
+	// For Redis DB, the PUT or PATCH operation will removes the old object and add the modified one,
+	// so the Created is not zero value and we shouldn't set the timestamp again.
 	if dp.Created == 0 {
-		dp.Created = common.MakeTimestamp()
+		dp.Created = ts
 	}
+	dp.Modified = ts
 
 	m, err := json.Marshal(dp)
 	if err != nil {
@@ -71,11 +76,13 @@ func addDeviceProfile(conn redis.Conn, dp model.DeviceProfile) (addedDeviceProfi
 	storedKey := deviceProfileStoredKey(dp.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
+	_ = conn.Send(ZADD, DeviceProfileCollection, dp.Modified, storedKey)
 	_ = conn.Send(HSET, DeviceProfileCollection+":name", dp.Name, storedKey)
 	_ = conn.Send(SADD, DeviceProfileCollection+":manufacturer:"+dp.Manufacturer, storedKey)
 	_ = conn.Send(SADD, DeviceProfileCollection+":model:"+dp.Model, storedKey)
-
+	for _, label := range dp.Labels {
+		_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Label, label), dp.Modified, storedKey)
+	}
 	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile creation failed", err)
@@ -110,6 +117,9 @@ func deleteDeviceProfile(conn redis.Conn, dp model.DeviceProfile) errors.EdgeX {
 	_ = conn.Send(HDEL, DeviceProfileCollection+":name", dp.Name)
 	_ = conn.Send(SREM, DeviceProfileCollection+":manufacturer:"+dp.Manufacturer, storedKey)
 	_ = conn.Send(SREM, DeviceProfileCollection+":model:"+dp.Model, storedKey)
+	for _, label := range dp.Labels {
+		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Label, label), storedKey)
+	}
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile deletion failed", err)
@@ -173,4 +183,27 @@ func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
+}
+
+// deviceProfilesByLabels query device profile with offset and limit
+func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceProfiles []model.DeviceProfile, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceProfileCollection, labels, offset, end)
+	if edgeXerr != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	deviceProfiles = make([]model.DeviceProfile, len(objects))
+	for i, in := range objects {
+		dp := model.DeviceProfile{}
+		err := json.Unmarshal(in, &dp)
+		if err != nil {
+			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
+		}
+		deviceProfiles[i] = dp
+	}
+	return deviceProfiles, nil
 }

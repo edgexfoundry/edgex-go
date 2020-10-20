@@ -8,9 +8,10 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -76,7 +77,7 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 	// Store the ds.Name into a Hash for later Name existence check
 	_ = conn.Send(HSET, fmt.Sprintf("%s:name", DeviceServiceCollection), ds.Name, redisKey)
 	for _, label := range ds.Labels { // Store the redisKey into Sorted Set of labels with Modified as the score for order
-		_ = conn.Send(ZADD, fmt.Sprintf("%s:label:%s", DeviceServiceCollection, label), ds.Modified, redisKey)
+		_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", DeviceServiceCollection, v2.Label, label), ds.Modified, redisKey)
 	}
 	_, err = conn.Do(EXEC)
 	if err != nil {
@@ -110,6 +111,9 @@ func deleteDeviceService(conn redis.Conn, deviceService models.DeviceService) er
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceServiceCollection, storedKey)
 	_ = conn.Send(HDEL, DeviceServiceCollection+":name", deviceService.Name)
+	for _, label := range deviceService.Labels {
+		_ = conn.Send(ZREM, fmt.Sprintf("%s:label:%s", DeviceServiceCollection, label), storedKey)
+	}
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device service deletion failed", err)
