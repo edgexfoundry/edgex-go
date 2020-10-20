@@ -19,9 +19,19 @@ import (
 	"github.com/google/uuid"
 )
 
-const ReadingsCollection = "v2:reading"
+const (
+	ReadingsCollection           = "v2:reading"
+	ReadingsCollectionCreated    = ReadingsCollection + ":" + v2.Created
+	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.DeviceName
+	ReadingsCollectionName       = ReadingsCollection + ":" + v2.Name
+)
 
 var emptyBinaryValue = make([]byte, 0)
+
+// readingStoredKey return the reading's stored key which combines the collection name and object id
+func readingStoredKey(id string) string {
+	return fmt.Sprintf("%s:%s", ReadingsCollection, id)
+}
 
 // Add a reading to the database
 func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edgeXerr errors.EdgeX) {
@@ -53,15 +63,38 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "reading parsing failed", err)
 	}
-	storedKey := fmt.Sprintf("%s:%s", ReadingsCollection, baseReading.Id)
+	storedKey := readingStoredKey(baseReading.Id)
 	// use the SET command to save reading as blob
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollection, v2.Created), baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", ReadingsCollection, v2.DeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", ReadingsCollection, v2.Name, baseReading.Name), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, ReadingsCollectionCreated, baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollectionName, baseReading.Name), baseReading.Created, storedKey)
 
 	return reading, nil
+}
+
+// Remove a reading out of the database
+func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
+	r := models.BaseReading{}
+	storedKey := readingStoredKey(id)
+	edgeXerr = getObjectById(conn, storedKey, &r)
+	if edgeXerr != nil {
+		return edgeXerr
+	}
+
+	_ = conn.Send(MULTI)
+	_ = conn.Send(UNLINK, storedKey)
+	_ = conn.Send(ZREM, ReadingsCollection, storedKey)
+	_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
+	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
+	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionName, r.Name), storedKey)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("reading[id:%s] delete failed", id), err)
+	}
+
+	return nil
 }
 
 func checkReadingValue(b *models.BaseReading) errors.EdgeX {
@@ -81,7 +114,7 @@ func checkReadingValue(b *models.BaseReading) errors.EdgeX {
 }
 
 func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRange(conn, EventsCollection+":readings:"+eventId, 0, -1)
+	objects, err := getObjectsByRange(conn, fmt.Sprintf("%s:%s", EventsCollectionReadings, eventId), 0, -1)
 	if errors.Kind(err) == errors.KindEntityDoesNotExist {
 		return // Empty Readings in an Event is not an error
 	} else if err != nil {

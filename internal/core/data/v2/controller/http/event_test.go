@@ -18,11 +18,11 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -200,7 +200,7 @@ func TestAddEvent(t *testing.T) {
 
 			reader := strings.NewReader(string(jsonData))
 
-			req, err := http.NewRequest(http.MethodPost, contractsV2.ApiEventRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, v2.ApiEventRoute, reader)
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
@@ -217,7 +217,7 @@ func TestAddEvent(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.Equal(t, contractsV2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
+			assert.Equal(t, v2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
 			if actualResponse[0].RequestId != "" {
 				assert.Equal(t, expectedRequestId, actualResponse[0].RequestId, "RequestID not as expected")
@@ -259,9 +259,9 @@ func TestEventById(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiEventRoute, contractsV2.Id, testCase.EventId)
+			reqPath := fmt.Sprintf("%s/%s/%s", v2.ApiEventRoute, v2.Id, testCase.EventId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.EventId})
+			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.EventId})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
@@ -272,7 +272,7 @@ func TestEventById(t *testing.T) {
 				var actualResponse common.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
-				assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+				assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
 				assert.NotEmpty(t, actualResponse.Message, "Response message doesn't contain the error message")
@@ -280,7 +280,7 @@ func TestEventById(t *testing.T) {
 				var actualResponse responseDTO.EventResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
-				assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+				assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.EventId, actualResponse.Event.Id, "Event Id not as expected")
@@ -303,7 +303,7 @@ func TestEventTotalCount(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
-	req, err := http.NewRequest(http.MethodGet, contractsV2.ApiEventCountRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, v2.ApiEventCountRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -313,7 +313,7 @@ func TestEventTotalCount(t *testing.T) {
 	var actualResponse responseDTO.EventCountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
-	assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
 	assert.Empty(t, actualResponse.DeviceName, "Device name should be empty when counting all the events")
@@ -335,8 +335,8 @@ func TestEventCountByDevice(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
-	req, err := http.NewRequest(http.MethodGet, contractsV2.ApiEventCountByDeviceRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{contractsV2.DeviceName: deviceName})
+	req, err := http.NewRequest(http.MethodGet, v2.ApiEventCountByDeviceRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{v2.DeviceName: deviceName})
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -346,10 +346,80 @@ func TestEventCountByDevice(t *testing.T) {
 	var actualResponse responseDTO.EventCountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
-	assert.Equal(t, contractsV2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 	assert.Equal(t, deviceName, actualResponse.DeviceName, "Device name in the response body is not expected")
+}
+
+func TestUpdateEventPushedById(t *testing.T) {
+	expectedResponseCode := http.StatusMultiStatus
+
+	var testUpdateEventPushedByIdEvent = requests.UpdateEventPushedByIdRequest{
+		BaseRequest: common.BaseRequest{
+			RequestId: ExampleUUID,
+		},
+		Id: expectedEventId,
+	}
+
+	notFoundEventId := testUpdateEventPushedByIdEvent
+	notFoundEventId.Id = uuid.New().String()
+
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("UpdateEventPushedById", expectedEventId).Return(nil)
+	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), redis.ErrNil))
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	tests := []struct {
+		Name               string
+		Request            []requests.UpdateEventPushedByIdRequest
+		ErrorExpected      bool
+		ExpectedStatusCode int
+	}{
+		{"Valid - UpdateEventPushedByIdRequest", []requests.UpdateEventPushedByIdRequest{testUpdateEventPushedByIdEvent}, false, http.StatusOK},
+		{"Invalid - Event Id not found", []requests.UpdateEventPushedByIdRequest{notFoundEventId}, true, http.StatusNotFound},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+
+			req, err := http.NewRequest(http.MethodPut, v2.ApiEventPushRoute, reader)
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(ec.UpdateEventPushedById)
+			handler.ServeHTTP(recorder, req)
+
+			var actualResponse []responseDTO.UpdateEventPushedByIdResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+
+			if testCase.ErrorExpected {
+				assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
+				return // Test complete for error cases
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, v2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
+			if actualResponse[0].RequestId != "" {
+				assert.Equal(t, ExampleUUID, actualResponse[0].RequestId, "RequestID not as expected")
+			}
+			assert.Empty(t, actualResponse[0].Message, "Message should be empty when it is successful")
+		})
+	}
 }

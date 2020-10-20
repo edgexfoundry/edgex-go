@@ -8,8 +8,8 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -17,7 +17,18 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-const EventsCollection = "v2:event"
+const (
+	EventsCollection           = "v2:event"
+	EventsCollectionCreated    = EventsCollection + ":" + v2.Created
+	EventsCollectionPushed     = EventsCollection + ":" + v2.Pushed
+	EventsCollectionDeviceName = EventsCollection + ":" + v2.DeviceName
+	EventsCollectionReadings   = EventsCollection + ":readings"
+)
+
+// eventStoredKey return the event's stored key which combines the collection name and object id
+func eventStoredKey(id string) string {
+	return fmt.Sprintf("%s:%s", EventsCollection, id)
+}
 
 // ************************** DB HELPER FUNCTIONS ***************************
 func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXerr errors.EdgeX) {
@@ -46,19 +57,19 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 		return addedEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
 	}
 
-	storedKey := fmt.Sprintf("%s:%s", EventsCollection, e.Id)
+	storedKey := eventStoredKey(e.Id)
 	_ = conn.Send(MULTI)
 	// use the SET command to save event as blob
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, EventsCollection, 0, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollection, v2.Created), e.Created, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollection, v2.Pushed), e.Pushed, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", EventsCollection, v2.DeviceName, e.DeviceName), e.Created, storedKey)
+	_ = conn.Send(ZADD, EventsCollectionCreated, e.Created, storedKey)
+	_ = conn.Send(ZADD, EventsCollectionPushed, e.Pushed, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), e.Created, storedKey)
 
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
 	rids := make([]interface{}, len(e.Readings)*2+1)
-	rids[0] = EventsCollection + ":readings:" + e.Id
+	rids[0] = fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id)
 	var newReadings []models.Reading
 	for i, r := range e.Readings {
 		newReading, err := addReading(conn, r)
@@ -84,8 +95,43 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	return e, edgeXerr
 }
 
+func deleteEvent(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
+	// query Event by Id first to ensure there is an corresponding event
+	e, edgeXerr := eventById(conn, id)
+	if edgeXerr != nil {
+		return edgeXerr
+	}
+
+	for _, reading := range e.Readings {
+		edgeXerr = deleteReadingById(conn, reading.GetBaseReading().Id)
+		if edgeXerr != nil {
+			return edgeXerr
+		}
+	}
+
+	storedKey := eventStoredKey(e.Id)
+	_ = conn.Send(MULTI)
+	_ = conn.Send(UNLINK, storedKey)
+	_ = conn.Send(UNLINK, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id))
+	_ = conn.Send(ZREM, EventsCollection, storedKey)
+	_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
+	_ = conn.Send(ZREM, EventsCollectionPushed, storedKey)
+	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), storedKey)
+
+	res, err := redis.Values(conn.Do(EXEC))
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "event delete failed", err)
+	}
+	exists, _ := redis.Bool(res[0], nil)
+	if !exists {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "event delete failed", redis.ErrNil)
+	}
+
+	return edgeXerr
+}
+
 func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.EdgeX) {
-	edgeXerr = getObjectById(conn, fmt.Sprintf("%s:%s", EventsCollection, id), &event)
+	edgeXerr = getObjectById(conn, eventStoredKey(id), &event)
 	if edgeXerr != nil {
 		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -108,10 +154,46 @@ func (c *Client) eventTotalCount(conn redis.Conn) (uint32, errors.EdgeX) {
 }
 
 func (c *Client) eventCountByDevice(deviceName string, conn redis.Conn) (uint32, errors.EdgeX) {
-	count, err := redis.Int(conn.Do(ZCARD, fmt.Sprintf("%s:%s:%s", EventsCollection, v2.DeviceName, deviceName)))
+	count, err := redis.Int(conn.Do(ZCARD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName)))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, "count event failed", err)
 	}
 
 	return uint32(count), nil
+}
+
+func updateEventPushedById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
+	// query Event by Id first to retrieve corresponding event
+	e, edgeXerr := eventById(conn, id)
+	if edgeXerr != nil {
+		return edgeXerr
+	}
+
+	// update the pushed timestamp
+	event := models.Event{
+		Id:         e.Id,
+		Pushed:     common.MakeTimestamp(),
+		DeviceName: e.DeviceName,
+		Created:    e.Created,
+		Origin:     e.Origin,
+		Tags:       e.Tags,
+	}
+	m, err := json.Marshal(event)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
+	}
+
+	storedKey := eventStoredKey(event.Id)
+	_ = conn.Send(MULTI)
+	// use the SET command to overwrite the updated event as blob
+	_ = conn.Send(SET, storedKey, m)
+	// EventsCollectionPushed sorted set uses pushed as the score, and ZADD command will update the score of the event
+	_ = conn.Send(ZADD, EventsCollectionPushed, event.Pushed, storedKey)
+
+	_, err = conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "event pushed update failed", err)
+	}
+
+	return nil
 }

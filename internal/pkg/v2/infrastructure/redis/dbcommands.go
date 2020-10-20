@@ -22,6 +22,7 @@ const (
 	MGET      = "MGET"
 	ZCARD     = "ZCARD"
 	ZCOUNT    = "ZCOUNT"
+	UNLINK    = "UNLINK"
 )
 
 const (
