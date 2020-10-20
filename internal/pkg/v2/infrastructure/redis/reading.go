@@ -12,6 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -56,9 +57,9 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	// use the SET command to save reading as blob
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
-	_ = conn.Send(ZADD, ReadingsCollection+":created", baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, ReadingsCollection+":deviceName:"+baseReading.DeviceName, baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, ReadingsCollection+":name:"+baseReading.Name, baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollection, v2.Created), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", ReadingsCollection, v2.DeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", ReadingsCollection, v2.Name, baseReading.Name), baseReading.Created, storedKey)
 
 	return reading, nil
 }

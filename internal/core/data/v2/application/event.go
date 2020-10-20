@@ -124,3 +124,14 @@ func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 
 	return count, nil
 }
+
+func EventCountByDevice(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	count, err := dbClient.EventCountByDevice(deviceName)
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return count, nil
+}

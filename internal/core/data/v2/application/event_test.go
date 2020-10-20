@@ -86,6 +86,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("EventById", nonexistentEventID).Return(models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
 		myMock.On("EventById", testUUIDString).Return(persistedEvent, nil)
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
+		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
 	}
 
 	return myMock
@@ -192,6 +193,21 @@ func TestEventTotalCount(t *testing.T) {
 	})
 
 	count, err := EventTotalCount(dic)
+	require.NoError(t, err)
+	assert.Equal(t, testEventCount, count, "Event total count is not expected")
+}
+
+func TestEventCountByDevice(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	count, err := EventCountByDevice(testDeviceName, dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }

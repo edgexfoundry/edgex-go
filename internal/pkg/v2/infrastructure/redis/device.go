@@ -11,7 +11,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -25,7 +26,7 @@ func deviceStoredKey(id string) string {
 
 // deviceNameExists whether the device exists by name
 func deviceNameExists(conn redis.Conn, name string) (bool, errors.EdgeX) {
-	exists, err := objectNameExists(conn, DeviceCollection+":name", name)
+	exists, err := objectNameExists(conn, fmt.Sprintf("%s:%s", DeviceCollection, v2.Name), name)
 	if err != nil {
 		return false, errors.NewCommonEdgeX(errors.KindDatabaseError, "device existence check by name failed", err)
 	}
@@ -42,7 +43,7 @@ func deviceIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 }
 
 // addDevice adds a new device into DB
-func addDevice(conn redis.Conn, d model.Device) (model.Device, errors.EdgeX) {
+func addDevice(conn redis.Conn, d models.Device) (models.Device, errors.EdgeX) {
 	exists, edgeXerr := deviceIdExists(conn, d.Id)
 	if edgeXerr != nil {
 		return d, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -72,7 +73,7 @@ func addDevice(conn redis.Conn, d model.Device) (model.Device, errors.EdgeX) {
 	_ = conn.Send(MULTI)
 	_ = conn.Send(SET, storedKey, dsJSONBytes)
 	_ = conn.Send(ZADD, DeviceCollection, 0, storedKey)
-	_ = conn.Send(HSET, fmt.Sprintf("%s:name", DeviceCollection), d.Name, storedKey)
+	_ = conn.Send(HSET, fmt.Sprintf("%s:%s", DeviceCollection, v2.Name), d.Name, storedKey)
 	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device creation failed", err)
