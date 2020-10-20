@@ -281,11 +281,6 @@ func TestPatchDeviceService(t *testing.T) {
 	dbClientMock.On("GetDeviceServiceByName", *validWithNoId.Service.Name).Return(dsModels, nil)
 	validWithNoName := testReq
 	validWithNoName.Service.Name = nil
-	validNotFoundId := testReq
-	notFoundId := "12345678-0000-1234-5678-de9dac3fb9bc"
-	validNotFoundId.Service.Id = &notFoundId
-	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
-	dbClientMock.On("GetDeviceServiceById", *validNotFoundId.Service.Id).Return(dsModels, notFoundIdError)
 
 	invalidNoIdAndName := testReq
 	invalidNoIdAndName.Service.Id = nil
@@ -293,9 +288,9 @@ func TestPatchDeviceService(t *testing.T) {
 
 	invalidNotFoundId := testReq
 	invalidNotFoundId.Service.Name = nil
-	notFoundId = "12345678-1111-1234-5678-de9dac3fb9bc"
+	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
 	invalidNotFoundId.Service.Id = &notFoundId
-	notFoundIdError = errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
 	dbClientMock.On("GetDeviceServiceById", *invalidNotFoundId.Service.Id).Return(dsModels, notFoundIdError)
 
 	invalidNotFoundName := testReq
@@ -321,7 +316,6 @@ func TestPatchDeviceService(t *testing.T) {
 		{"Valid - no requestId", []requests.UpdateDeviceServiceRequest{validWithNoReqID}, http.StatusOK},
 		{"Valid - no id", []requests.UpdateDeviceServiceRequest{validWithNoId}, http.StatusOK},
 		{"Valid - no name", []requests.UpdateDeviceServiceRequest{validWithNoName}, http.StatusOK},
-		{"Valid - not found id", []requests.UpdateDeviceServiceRequest{validNotFoundId}, http.StatusOK},
 		{"Invalid - no id and name", []requests.UpdateDeviceServiceRequest{invalidNoIdAndName}, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateDeviceServiceRequest{invalidNotFoundId}, http.StatusNotFound},
 		{"Invalid - not found name", []requests.UpdateDeviceServiceRequest{invalidNotFoundName}, http.StatusNotFound},

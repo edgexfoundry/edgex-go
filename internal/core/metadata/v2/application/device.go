@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
@@ -129,4 +130,56 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 		return exists, errors.NewCommonEdgeXWrapper(err)
 	}
 	return exists, nil
+}
+
+// PatchDevice executes the PATCH operation with the device DTO to replace the old data
+func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	var device models.Device
+	var edgeXerr errors.EdgeX
+	if dto.Id != nil {
+		if *dto.Id == "" {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+		}
+		_, err := uuid.Parse(*dto.Id)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
+		}
+		device, edgeXerr = dbClient.DeviceById(*dto.Id)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	} else {
+		if *dto.Name == "" {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		}
+		device, edgeXerr = dbClient.DeviceByName(*dto.Name)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != device.Name {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device name '%s' not match the exsting '%s' ", *dto.Name, device.Name), nil)
+	}
+
+	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
+
+	edgeXerr = dbClient.DeleteDeviceById(device.Id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	_, edgeXerr = dbClient.AddDevice(device)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	lc.Debug(fmt.Sprintf(
+		"Device patched on DB successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	))
+
+	return nil
 }

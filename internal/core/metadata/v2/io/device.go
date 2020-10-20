@@ -16,6 +16,7 @@ import (
 // DeviceReader unmarshals a request body into an array of Device type
 type DeviceReader interface {
 	ReadAddDeviceRequest(reader io.Reader) ([]dtoRequest.AddDeviceRequest, errors.EdgeX)
+	ReadUpdateDeviceRequest(reader io.Reader) ([]dtoRequest.UpdateDeviceRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -39,4 +40,14 @@ func (jsonDeviceReader) ReadAddDeviceRequest(reader io.Reader) ([]dtoRequest.Add
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device json decoding failed", err)
 	}
 	return addDevices, nil
+}
+
+// ReadUpdateDeviceRequest reads a request and then converts its JSON data into an array of UpdateDeviceRequest struct
+func (jsonDeviceReader) ReadUpdateDeviceRequest(reader io.Reader) ([]dtoRequest.UpdateDeviceRequest, errors.EdgeX) {
+	var updateDevices []dtoRequest.UpdateDeviceRequest
+	err := json.NewDecoder(reader).Decode(&updateDevices)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "device json decoding failed", err)
+	}
+	return updateDevices, nil
 }

@@ -27,6 +27,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,7 +42,7 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 			"UnitID":  "1",
 		},
 	}
-	var testAddDeviceServiceReq = requests.AddDeviceRequest{
+	var testAddDeviceReq = requests.AddDeviceRequest{
 		BaseRequest: common.BaseRequest{
 			RequestId: ExampleUUID,
 		},
@@ -59,7 +60,53 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 		},
 	}
 
-	return testAddDeviceServiceReq
+	return testAddDeviceReq
+}
+
+func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
+	testUUID := ExampleUUID
+	testName := TestDeviceName
+	testDescription := TestDescription
+	testServiceName := TestDeviceServiceName
+	testProfileName := TestDeviceProfileName
+	testAdminState := models.Unlocked
+	testOperatingState := models.Enabled
+	testLastReported := int64(123546789)
+	testLastConnected := int64(123546789)
+	testNotify := false
+	var testAutoEvents = []dtos.AutoEvent{
+		{Resource: "TestResource", Frequency: "300ms", OnChange: true},
+	}
+	var testProtocols = map[string]dtos.ProtocolProperties{
+		"modbus-ip": {
+			"Address": "localhost",
+			"Port":    "1502",
+			"UnitID":  "1",
+		},
+	}
+	var testUpdateDeviceReq = requests.UpdateDeviceRequest{
+		BaseRequest: common.BaseRequest{
+			RequestId: ExampleUUID,
+		},
+		Device: dtos.UpdateDevice{
+			Id:             &testUUID,
+			Name:           &testName,
+			Description:    &testDescription,
+			ServiceName:    &testServiceName,
+			ProfileName:    &testProfileName,
+			AdminState:     &testAdminState,
+			OperatingState: &testOperatingState,
+			LastReported:   &testLastReported,
+			LastConnected:  &testLastConnected,
+			Labels:         []string{"MODBUS", "TEMP"},
+			Location:       "{40lat;45long}",
+			AutoEvents:     testAutoEvents,
+			Protocols:      testProtocols,
+			Notify:         &testNotify,
+		},
+	}
+
+	return testUpdateDeviceReq
 }
 
 func TestAddDevice(t *testing.T) {
@@ -468,4 +515,139 @@ func TestDeviceNameExists(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPatchDevice(t *testing.T) {
+	expectedRequestId := ExampleUUID
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	testReq := buildTestUpdateDeviceRequest()
+	dsModels := models.Device{
+		Id:             *testReq.Device.Id,
+		Name:           *testReq.Device.Name,
+		Description:    *testReq.Device.Description,
+		Labels:         testReq.Device.Labels,
+		AdminState:     models.AdminState(*testReq.Device.AdminState),
+		OperatingState: models.OperatingState(*testReq.Device.OperatingState),
+		LastConnected:  *testReq.Device.LastConnected,
+		LastReported:   *testReq.Device.LastReported,
+		Location:       testReq.Device.Location,
+		ServiceName:    *testReq.Device.ServiceName,
+		ProfileName:    *testReq.Device.ProfileName,
+		AutoEvents:     dtos.ToAutoEventModels(testReq.Device.AutoEvents),
+		Protocols:      dtos.ToProtocolModels(testReq.Device.Protocols),
+		Notify:         *testReq.Device.Notify,
+	}
+
+	valid := testReq
+	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
+	dbClientMock.On("DeleteDeviceById", *valid.Device.Id).Return(nil)
+	dbClientMock.On("AddDevice", mock.Anything).Return(dsModels, nil)
+	validWithNoReqID := testReq
+	validWithNoReqID.RequestId = ""
+	validWithNoId := testReq
+	validWithNoId.Device.Id = nil
+	dbClientMock.On("DeviceByName", *validWithNoId.Device.Name).Return(dsModels, nil)
+	validWithNoName := testReq
+	validWithNoName.Device.Name = nil
+
+	invalidId := testReq
+	invalidUUID := "invalidUUID"
+	invalidId.Device.Id = &invalidUUID
+
+	emptyString := ""
+	emptyId := testReq
+	emptyId.Device.Id = &emptyString
+	emptyName := testReq
+	emptyName.Device.Id = nil
+	emptyName.Device.Name = &emptyString
+
+	invalidNoIdAndName := testReq
+	invalidNoIdAndName.Device.Id = nil
+	invalidNoIdAndName.Device.Name = nil
+
+	invalidNotFoundId := testReq
+	invalidNotFoundId.Device.Name = nil
+	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
+	invalidNotFoundId.Device.Id = &notFoundId
+	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	dbClientMock.On("DeviceById", *invalidNotFoundId.Device.Id).Return(dsModels, notFoundIdError)
+
+	invalidNotFoundName := testReq
+	invalidNotFoundName.Device.Id = nil
+	notFoundName := "notFoundName"
+	invalidNotFoundName.Device.Name = &notFoundName
+	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
+	dbClientMock.On("DeviceByName", *invalidNotFoundName.Device.Name).Return(dsModels, notFoundNameError)
+
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceController(dic)
+	require.NotNil(t, controller)
+	tests := []struct {
+		name                 string
+		request              []requests.UpdateDeviceRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+	}{
+		{"Valid", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no requestId", []requests.UpdateDeviceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no id", []requests.UpdateDeviceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no name", []requests.UpdateDeviceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - invalid id", []requests.UpdateDeviceRequest{invalidId}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - empty name", []requests.UpdateDeviceRequest{emptyName}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, v2.ApiDeviceRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchDevice)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+
+		})
+	}
+
 }

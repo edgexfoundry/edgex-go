@@ -35,4 +35,6 @@ type DBClient interface {
 	AllDeviceByServiceName(offset int, limit int, name string) ([]model.Device, errors.EdgeX)
 	DeviceIdExists(id string) (bool, errors.EdgeX)
 	DeviceNameExists(id string) (bool, errors.EdgeX)
+	DeviceById(id string) (model.Device, errors.EdgeX)
+	DeviceByName(name string) (model.Device, errors.EdgeX)
 }

@@ -362,3 +362,29 @@ func (c *Client) DeviceNameExists(name string) (bool, errors.EdgeX) {
 	}
 	return exists, nil
 }
+
+// DeviceById gets a device by id
+func (c *Client) DeviceById(id string) (device model.Device, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	device, edgeXerr = deviceById(conn, id)
+	if edgeXerr != nil {
+		return device, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device by id %s", id), edgeXerr)
+	}
+
+	return
+}
+
+// DeviceByName gets a device by name
+func (c *Client) DeviceByName(name string) (device model.Device, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	device, edgeXerr = deviceByName(conn, name)
+	if edgeXerr != nil {
+		return device, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device by name %s", name), edgeXerr)
+	}
+
+	return
+}
