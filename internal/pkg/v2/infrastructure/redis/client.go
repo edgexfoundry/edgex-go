@@ -240,6 +240,19 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 	return count, nil
 }
 
+// EventCountByDevice returns the count of Event associated a specific Device from the database
+func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := c.eventCountByDevice(deviceName, conn)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
 // GetDeviceServices returns multiple device services per query criteria, including
 // offset: the number of items to skip before starting to collect the result set
 // limit: The numbers of items to return
