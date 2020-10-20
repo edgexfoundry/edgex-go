@@ -6,6 +6,7 @@
 package redis
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
@@ -150,7 +151,7 @@ func (c *Client) DeleteDeviceServiceById(id string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceServiceById(conn, id)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device service with id %s", id), edgeXerr)
 	}
 
 	return nil
@@ -163,7 +164,7 @@ func (c *Client) DeleteDeviceServiceByName(name string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceServiceByName(conn, name)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device service with name %s", name), edgeXerr)
 	}
 
 	return nil
@@ -196,7 +197,7 @@ func (c *Client) DeleteDeviceProfileById(id string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceProfileById(conn, id)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device profile with id %s", id), edgeXerr)
 	}
 
 	return nil
@@ -209,7 +210,7 @@ func (c *Client) DeleteDeviceProfileByName(name string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceProfileByName(conn, name)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device profile with name %s", name), edgeXerr)
 	}
 
 	return nil
@@ -295,7 +296,7 @@ func (c *Client) DeleteDeviceById(id string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceById(conn, id)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device with id %s", id), edgeXerr)
 	}
 
 	return nil
@@ -308,7 +309,7 @@ func (c *Client) DeleteDeviceByName(name string) errors.EdgeX {
 
 	edgeXerr := deleteDeviceByName(conn, name)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the device with name %s", name), edgeXerr)
 	}
 
 	return nil

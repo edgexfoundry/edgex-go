@@ -96,11 +96,10 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 func EventById(id string, dic *di.Container) (dtos.Event, errors.EdgeX) {
 	if id == "" {
 		return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "id is empty", nil)
-	} else {
-		_, err := uuid.Parse(id)
-		if err != nil {
-			return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "Failed to parse ID as an UUID", err)
-		}
+	}
+	_, err := uuid.Parse(id)
+	if err != nil {
+		return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
 	}
 
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)

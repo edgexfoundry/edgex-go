@@ -807,7 +807,8 @@ func TestGetDeviceProfileByName(t *testing.T) {
 func TestDeleteDeviceProfileById(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	noId := ""
-	notFoundId := "notFoundId"
+	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
+	invalidId := "invalidId"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -831,6 +832,7 @@ func TestDeleteDeviceProfileById(t *testing.T) {
 		{"Valid - delete device profile by id", deviceProfile.Id, false, http.StatusOK},
 		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
 		{"Invalid - device profile not found by id", notFoundId, true, http.StatusNotFound},
+		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -456,7 +456,8 @@ func TestGetDeviceServices(t *testing.T) {
 func TestDeleteDeviceServiceById(t *testing.T) {
 	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
 	noId := ""
-	notFoundId := "notFoundId"
+	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
+	invalidId := "invalidId"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -480,6 +481,7 @@ func TestDeleteDeviceServiceById(t *testing.T) {
 		{"Valid - delete device service by id", deviceService.Id, false, http.StatusOK},
 		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
 		{"Invalid - device srvice not found by id", notFoundId, true, http.StatusNotFound},
+		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

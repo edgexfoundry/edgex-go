@@ -167,7 +167,8 @@ func TestAddDevice(t *testing.T) {
 func TestDeleteDeviceById(t *testing.T) {
 	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
 	noId := ""
-	notFoundId := "notFoundId"
+	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
+	invalidId := "invalidId"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -190,6 +191,7 @@ func TestDeleteDeviceById(t *testing.T) {
 		{"Valid - delete device by id", device.Id, http.StatusOK},
 		{"Invalid - id parameter is empty", noId, http.StatusBadRequest},
 		{"Invalid - device not found by id", notFoundId, http.StatusNotFound},
+		{"Invalid - invalid uuid", invalidId, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

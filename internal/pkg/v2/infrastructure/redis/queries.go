@@ -18,7 +18,7 @@ import (
 func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
 	obj, err := redis.Bytes(conn.Do(GET, id))
 	if err == redis.ErrNil {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object %T doesn't exist in the database", out), err)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("fail to query object %T, because id: %s doesn't exist in the database", out, id), err)
 	} else if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object %T by id from the database failed", out), err)
 	}
@@ -35,7 +35,7 @@ func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
 func getObjectByHash(conn redis.Conn, hash string, field string, out interface{}) errors.EdgeX {
 	id, err := redis.String(conn.Do(HGET, hash, field))
 	if err == redis.ErrNil {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", field), err)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("fail to query object %T, because %s: %s doesn't exist in the database", out, field, hash), err)
 	} else if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query %s from the database failed", field), err)
 	}

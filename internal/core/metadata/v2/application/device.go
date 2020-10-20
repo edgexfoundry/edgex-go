@@ -15,6 +15,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
+	"github.com/google/uuid"
 )
 
 // The AddDevice function accepts the new device model from the controller function
@@ -55,8 +57,12 @@ func DeleteDeviceById(id string, dic *di.Container) errors.EdgeX {
 	if id == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
 	}
+	_, err := uuid.Parse(id)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
+	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceById(id)
+	err = dbClient.DeleteDeviceById(id)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
