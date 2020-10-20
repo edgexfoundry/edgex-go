@@ -1,0 +1,706 @@
+From 4046e6ea8bfc10bf259d1eb48c39e9634a671d3d Mon Sep 17 00:00:00 2001
+From: Tony Espy <espy@canonical.com>
+Date: Fri, 9 Oct 2020 18:29:56 -0400
+Subject: [PATCH] optimize build for pipeline CI check
+
+---
+ snap/snapcraft.yaml | 638 +-------------------------------------------
+ 1 file changed, 2 insertions(+), 636 deletions(-)
+
+diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
+index 30e451b5..3a676d86 100644
+--- a/snap/snapcraft.yaml
++++ b/snap/snapcraft.yaml
+@@ -73,56 +73,6 @@ confinement: strict
+ environment:
+   SecretStore_RootCaCertPath: $SNAP_DATA/secrets/ca/ca.pem
+ apps:
+-  # edgex microservices
+-  consul:
+-    adapter: full
+-    command: bin/start-consul.sh
+-    daemon: forking
+-    plugs: [network, network-bind]
+-  redis:
+-    adapter: full
+-    after: [security-secretstore-setup]
+-    command: bin/redis-launch.sh
+-    daemon: simple
+-    plugs: [network, network-bind]
+-  postgres:
+-    adapter: full
+-    command: usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
+-    daemon: simple
+-    environment:
+-      CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
+-      SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
+-    command-chain:
+-      - bin/drop-snap-daemon.sh
+-      - bin/snapcraft-preload
+-    plugs:
+-      - network
+-      - network-bind
+-  kong-daemon:
+-    adapter: full
+-    after:
+-      - postgres
+-      - security-secrets-setup
+-    command: bin/kong-daemon.sh
+-    command-chain:
+-      - bin/perl5lib-launch.sh
+-      - bin/kong-launch.sh
+-    daemon: forking
+-    environment:
+-      KONG_CONF: $SNAP_DATA/config/security-proxy-setup/kong.conf
+-      KONG_LOGS_DIR: $SNAP_COMMON/logs
+-      KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
+-      KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
+-      KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
+-      KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
+-      KONG_ADMIN_LISTEN: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+-      LC_ALL: C.UTF-8
+-      LANG: C.UTF-8
+-    start-timeout: 15m
+-    plugs:
+-      - network
+-      - network-bind
+-    stop-command: bin/kong-stop.sh
+   security-secrets-setup:
+     adapter: full
+     command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
+@@ -132,28 +82,6 @@ apps:
+       SecretsSetup_CertConfigDir: $SNAP_DATA/config/security-secrets-setup/res
+       XDG_RUNTIME_DIR: /tmp
+     start-timeout: 15m
+-  vault:
+-    adapter: none
+-    after:
+-      - consul
+-      - security-secrets-setup
+-    command: bin/vault server --config $VAULT_CONFIG
+-    daemon: simple
+-    environment:
+-      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
+-      VAULT_ADDR: "https://localhost:8200"
+-    plugs:
+-      - network
+-      - network-bind
+-  vault-cli:
+-    adapter: none
+-    command: bin/vault
+-    environment:
+-      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
+-      VAULT_ADDR: "https://localhost:8200"
+-    plugs:
+-      - network
+-      - network-bind
+   security-secretstore-setup:
+     adapter: full
+     after: [vault]
+@@ -272,48 +200,6 @@ apps:
+       ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
+     daemon: simple
+     plugs: [network, network-bind]
+-  device-virtual:
+-    adapter: none
+-    after:
+-      - redis
+-      - security-proxy-setup
+-      - core-data
+-      - core-metadata
+-    command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
+-    daemon: simple
+-    environment:
+-      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
+-      PROFILE_ARG: "--profile=res"
+-      REGISTRY_ARG: "--registry=consul://localhost:8500"
+-      Device_ProfilesDir: $SNAP_DATA/config/device-virtual/res
+-    plugs: [network, network-bind]
+-  app-service-configurable:
+-    adapter: full
+-    command: >-
+-      bin/app-service-configurable -cp -r -s
+-      -confdir $SNAP_DATA/config/app-service-configurable/res
+-      -profile rules-engine
+-    daemon: simple
+-    environment:
+-      Binding_PublishTopic: events
+-      EDGEX_SECURITY_SECRET_STORE: "false"
+-    plugs: [network, network-bind]
+-  # helper commands the snap exposes
+-  security-proxy-setup-cmd:
+-    adapter: none
+-    command: bin/security-proxy-setup
+-    environment:
+-      SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+-      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
+-    plugs: [home, removable-media, network]
+-  redis-cli:
+-    adapter: full
+-    command: bin/redis-cli
+-    plugs: [home, removable-media, network]
+-  consul-cli:
+-    adapter: none
+-    command: bin/consul
+-    plugs: [network, network-bind]
+   curl:
+     adapter: full
+     command: usr/bin/curl
+@@ -322,83 +208,13 @@ apps:
+     adapter: full
+     command: usr/bin/jq
+     plugs: [home, removable-media]
+-  kong:
+-    adapter: full
+-    command: bin/kong
+-    command-chain:
+-      - bin/perl5lib-launch.sh
+-      - bin/kong-launch.sh
+-    environment:
+-      KONG_LOGS_DIR: $SNAP_COMMON/logs
+-      LC_ALL: C.UTF-8
+-      LANG: C.UTF-8
+-    plugs: [home, removable-media, network, network-bind]
+-  psql:
+-    adapter: full
+-    command: usr/bin/psql
+-    environment:
+-      LC_ALL: C.UTF-8
+-      LANG: C.UTF-8
+-      PGHOST: $SNAP_COMMON/sockets
+-      PGDATABASE: kong
+-    command-chain:
+-      - bin/perl5lib-launch.sh
+-      # psql should be run as the snap_daemon user, which is the user
+-      # who is initially created as a role with postgres
+-      - bin/drop-snap-daemon.sh
+-    plugs: [home, removable-media, network]
+-  psql-any:
+-    adapter: full
+-    command: usr/bin/psql
+-    environment:
+-      LC_ALL: C.UTF-8
+-      LANG: C.UTF-8
+-      PGHOST: $SNAP_COMMON/sockets
+-      PSQLRC: $SNAP_USER_COMMON/.psqlrc
+-    command-chain:
+-      - bin/perl5lib-launch.sh
+-    plugs: [home, removable-media, network]
+-  createdb:
+-    adapter: full
+-    command: usr/bin/createdb
+-    environment:
+-      LC_ALL: C.UTF-8
+-      LANG: C.UTF-8
+-      PGHOST: $SNAP_COMMON/sockets
+-    command-chain:
+-      - bin/perl5lib-launch.sh
+-      # createdb should be run as the snap_daemon user, which is the user
+-      # who is initially created as a role with postgres
+-      - bin/drop-snap-daemon.sh
+-    plugs: [home, removable-media, network]
+-  kuiper:
+-    adapter: full
+-    command: bin/kuiper-server
+-    daemon: simple
+-    environment:
+-      KuiperBaseKey: $SNAP_DATA/kuiper
+-      # KUIPER_DEBUG: "true"
+-      KUIPER_CONSOLE_LOG: "true"
+-      KUIPER_REST_PORT: 48075
+-      EDGEX_SERVER: localhost
+-      EDGEX_SERVICE_SERVER: http://localhost:48080
+-      EDGEX_TOPIC: events
+-      EDGEX_PROTOCOL: tcp
+-      EDGEX_PORT: 5566
+-    plugs: [network, network-bind]
+-  kuiper-cli:
+-    adapter: full
+-    command: bin/kuiper-cli
+-    environment:
+-      KuiperBaseKey: $SNAP_DATA/kuiper
+-    plugs: [home, network, network-bind]
+-
+ parts:
+   version:
+     plugin: nil
+     # as with static-packages part, the source dir is unrelated to this part and is used
+     # since it changes rarely and therefore will not trigger a new pull
+     source: snap/local/build-helpers
++    build-packages: [git]
+     override-pull: |
+       cd $SNAPCRAFT_PROJECT_DIR
+       if [ -f VERSION ]; then
+@@ -425,57 +241,6 @@ parts:
+       # setpriv with snapd 2.45 + can be used to drop privileges
+       - setpriv
+ 
+-  # snapcraft-preload is necessary to make postgres just use a different
+-  # lockfile location in /dev/shm
+-  # snapcraft-preload defines LD_PRELOAD to be a dynamic library compiled here
+-  # which will redirect things like open() that are being called with absolute
+-  # paths such as /dev/shm/some-dir to snap-specific, confinement supported
+-  # paths like /dev/shm/$SNAP_INSTANCE_NAME.some-dir before being passed to the
+-  # actual open() implementation
+-  # this prevents re-compiling or patching certain applications like postgres
+-  # to use snap security confinement friendly paths
+-  # NOTE: if this ever breaks in really scary ways when compiling with lots of
+-  # warnings, see the comment on the kong part, tldr probably some other C/C++
+-  # part in the build broke snapcraft-preload by running before
+-  # snapcraft-preload
+-  snapcraft-preload:
+-    source: https://github.com/sergiusens/snapcraft-preload.git
+-    # unfortunately no tags or releases we can rely on, so just hard-code
+-    # master at the time of writing for this
+-    source-commit: d654bbe8a5add5a4bea14d96342b656990c5c818
+-    plugin: cmake
+-    build-packages:
+-      - to arm64:
+-          - g++-multilib-arm-linux-gnueabihf
+-          - gcc-multilib-arm-linux-gnueabihf
+-      - else:
+-          - gcc-multilib
+-          - g++-multilib
+-    stage-packages:
+-      - to amd64:
+-          - lib32stdc++6
+-  postgres:
+-    plugin: nil
+-    source: snap/local/build-helpers
+-    override-build: |
+-      snapcraftctl build
+-      # the perl package for postgres hard-codes the bin dir as /usr/lib/postgresql
+-      # so we need to prepend that with /snap/$SNAP_NAME/current/ before it will
+-      # work
+-      if [ -z "$SNAPCRAFT_PROJECT_NAME" ]; then
+-        echo "SNAPCRAFT_PROJECT_NAME is undefined, snapcraft upstream change?"
+-        exit 1
+-      fi
+-      sed -i -e \
+-        's@our $binroot = \"/usr/lib/postgresql/\"@our $binroot = \"/snap/'$SNAPCRAFT_PROJECT_NAME'/current/usr/lib/postgresql/\";@' \
+-        $SNAPCRAFT_PART_INSTALL/usr/share/perl5/PgCommon.pm
+-    stage-packages:
+-      # note: version of postgres in core18 that this resolves to is version 10
+-      - postgresql
+-      - postgresql-contrib
+-      - postgresql-client
+-      - perl
+-
+   go-build-helper:
+     plugin: dump
+     # see comment for static-packages part about specifying a source part here
+@@ -512,70 +277,7 @@ parts:
+       - "-*"
+     # build after kong to prevent staging go binaries into the snap as they
+     # are large - see the TODO on the kong part
+-    after: [go-build-helper, kong]
+-
+-  consul:
+-    after: [go115]
+-    plugin: make
+-    source: https://github.com/hashicorp/consul.git
+-    source-tag: v1.8.4
+-    source-depth: 1
+-    stage:
+-      # duplicated file with the deps of vault, so just drop this one and use
+-      # the file from the vault part instead
+-      - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
+-      - -usr/share/doc/github.com/miekg/dns/LICENSE
+-      - -usr/share/doc/github.com/Azure/azure-sdk-for-go/LICENSE
+-
+-    override-build: |
+-      # When the snap is built by Jenkins w/in a docker instance, the existence of
+-      # the top level go.mod file causes the consul build to fail when using go 1.13.
+-      # This workaround can probably be removed if/when consul is updated to a more
+-      # recent version.
+-      if [ -f /build/go.mod ]; then
+-        mv /build/go.mod /build/go.mod.bk
+-      fi
+-
+-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+-      gopartbootstrap github.com/hashicorp/consul 1.15
+-      export GO111MODULES=off
+-      go get -u github.com/kardianos/govendor
+-      govendor install
+-      CONSUL_DEV=1 make
+-
+-      # install the consul binary
+-      install -DT bin/consul "$SNAPCRAFT_PART_INSTALL/bin/consul"
+-
+-      # handle consul LICENSE
+-      # TODO: do PATENT files need copying?
+-      install -DT "$GOIMPORTPATH/LICENSE" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/consul/LICENSE"
+-
+-      # handle vendor LICENSE files
+-      cd $GOIMPORTPATH/vendor
+-      for i in `find . -type f -name "LICENSE"`; do
+-        install -DT "$i" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+-
+-      # TODO: some LICENSE files fall under .gopath too
+-      cd $GOPATH/src
+-      for i in `find . -type f -name "LICENSE"`; do
+-        install -DT "$i" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+-
+-      if [ -f /build/go.mod.bk ]; then
+-        mv /build/go.mod.bk /build/go.mod
+-      fi
+-    build-packages:
+-      - make
+-      - zip
+-
+-  redis:
+-    source: https://github.com/antirez/redis.git
+-    source-tag: "6.0.8"
+-    source-depth: 1
+-    plugin: make
+-    make-install-var: PREFIX
++    after: [go-build-helper, static-packages]
+ 
+   edgex-go:
+     source: .
+@@ -638,339 +340,3 @@ parts:
+       - pkg-config
+     stage-packages:
+       - libzmq5
+-
+-  # KONG + OPENRESTY PARTS
+-  openresty-kong-patches:
+-    plugin: dump
+-    # this used to be in https://github.com/Kong/openresty-patches but was
+-    # moved recently to live in-tree with the build-tools
+-    source: nil
+-    source-type: local
+-    override-pull:
+-      # we have to manually git clone this because the repo is stupid and has a
+-      # non-public submodule, which we cannot clone, and snapcraft always uses
+-      # --recursive when cloning which will prompt for authentication
+-      # see https://bugs.launchpad.net/snapcraft/+bug/1640675
+-      # so we manually clone it without --recursive
+-      git clone https://github.com/Kong/kong-build-tools.git $SNAPCRAFT_PART_SRC
+-    organize:
+-      openresty-patches/patches: openresty-kong-patches
+-    stage: [openresty-kong-patches]
+-    prime: [-*]
+-  lua-kong-nginx-module:
+-    source: https://github.com/Kong/lua-kong-nginx-module.git
+-    # TODO: is this the right tag for this? it's just the newest, so ???
+-    source-tag: 0.0.6
+-    plugin: nil
+-    override-build: |
+-      # install the static lualib dir into the final snap, the compiled parts
+-      # will be installed into the snap as part of the OpenResty part build
+-      mkdir -p $SNAPCRAFT_PART_INSTALL/lualib/resty/kong
+-      cp -r $SNAPCRAFT_PART_SRC/lualib/resty/kong/tls.lua $SNAPCRAFT_PART_INSTALL/lualib/resty/kong/tls.lua
+-
+-      # copy the necessary soruce files from here into a module specific dir in
+-      # $SNAPCRAFT_STAGE because some of these files such as config conflict 
+-      # with files that Kong generates/needs, so we want these to be in their
+-      # own dir for OpenResty to compile with
+-      mkdir -p $SNAPCRAFT_STAGE/lua-kong-nginx-module
+-      for f in lualib src config Makefile; do
+-        cp -r "$SNAPCRAFT_PART_SRC/$f" "$SNAPCRAFT_STAGE/lua-kong-nginx-module/$f"
+-      done
+-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/lua-kong-nginx-module
+-      cp LICENSE $SNAPCRAFT_PART_INSTALL/usr/share/doc/lua-kong-nginx-module/LICENSE
+-  openresty:
+-    # see comment on kong's after spec for why we order after snapcraft-preload
+-    # here
+-    after: [openresty-kong-patches, snapcraft-preload, lua-kong-nginx-module]
+-    plugin: autotools
+-    source: https://openresty.org/download/openresty-1.15.8.2.tar.gz
+-    install-via: prefix
+-    # configure options here from https://getkong.org/install/source/
+-    configflags:
+-      - --with-pcre-jit
+-      - --with-ipv6
+-      - --with-http_realip_module
+-      - --with-http_ssl_module
+-      - --with-http_stub_status_module
+-      - --with-http_v2_module
+-      - --add-module=$SNAPCRAFT_STAGE/lua-kong-nginx-module
+-    build-packages:
+-      - build-essential
+-      - libpcre3-dev
+-      - perl
+-      - curl
+-      - libssl-dev
+-      - zlib1g-dev
+-    stage-packages:
+-      - perl
+-    override-pull: |
+-      snapcraftctl pull
+-      cd $SNAPCRAFT_PART_SRC/bundle
+-      # apply patches from openresty-kong-patches
+-      for i in $SNAPCRAFT_STAGE/openresty-kong-patches/1.15.8.2/*.patch; do
+-        patch -p1 < $i
+-      done
+-    override-build: |
+-      snapcraftctl build
+-      # openresty will make an absolute symbolic link of openresty to the
+-      # nginx binary, so we need to delete that and replace it with a relative
+-      # symlink
+-      cd $SNAPCRAFT_PART_INSTALL/bin
+-      rm -rf openresty
+-      ln -s ../nginx/sbin/nginx openresty
+-      ln -s ../nginx/sbin/nginx nginx
+-      # the openresty build system also hard-codes the path to nginx inside
+-      # the "resty" binary so we need to change that
+-      if [ -z "$SNAPCRAFT_PROJECT_NAME" ]; then
+-        echo "SNAPCRAFT_PROJECT_NAME is undefined, snapcraft upstream change?"
+-        exit 1
+-      fi
+-      sed -i \
+-        -e s@$SNAPCRAFT_PART_INSTALL/nginx/sbin/nginx@/snap/$SNAPCRAFT_PROJECT_NAME/current/nginx/sbin/nginx@ \
+-        resty
+-  lua:
+-    # this dependency is somewhat artificial, because
+-    # when iterating on the openresty parts if you just rebuild openresty,
+-    # without also rebuilding lua, then kong will fail because it can't find
+-    # luarocks.cfg somewhere...
+-    # not sure why re-building openresty causes the luarocks config file to be
+-    # messed up, but if we order it like so then rebuilding any one of them will
+-    # always work
+-    # openresty -> lua -> luarocks -> kong
+-    # this may have to do with installing lua and luarocks into $SNAPCRAFT_STAGE
+-    after: [openresty]
+-    source: https://www.lua.org/ftp/lua-5.1.5.tar.gz
+-    source-type: tar
+-    plugin: make
+-    make-parameters: [linux]
+-    build-packages:
+-      - libreadline-dev
+-      - libncurses5-dev
+-    override-build: |
+-      # patch the Makefile to use $SNAPCRAFT_STAGE for the INSTALL_TOP variable
+-      # which unfortunately is not settable using an environment variable and thus needs
+-      # this manual patch
+-      sed -i "s@INSTALL_TOP= /usr/local@INSTALL_TOP=$SNAPCRAFT_STAGE@" Makefile
+-      snapcraftctl build
+-  luarocks:
+-    after: [lua]
+-    plugin: autotools
+-    source: https://github.com/luarocks/luarocks.git
+-    source-branch: v3.2.1
+-    source-depth: 1
+-    override-build: |
+-      ./configure \
+-        --prefix=$SNAPCRAFT_STAGE \
+-        --with-lua=$SNAPCRAFT_STAGE \
+-        --with-lua-include=$SNAPCRAFT_STAGE/luajit/include/luajit-2.1 \
+-        --lua-version=5.1
+-      make build
+-      make install
+-  kong:
+-    # order this part after snapcraft-preload because there are include paths
+-    # that snapcraft will generate for this parts to auto-include in the
+-    # compile options for later parts if the part is C-based (i.e. some deps of
+-    # kong), but these include paths will break compiling snapcraft-preload in
+-    # very nasty ways
+-    # note that it seems only kong breaks snapcraft-preload, but do openresty
+-    # too just for good measure until we have a better resolution for this
+-    # see also https://github.com/sergiusens/snapcraft-preload/issues/38
+-    # ideally this would just be a "before: " on the snapcraft-preload part, but
+-    # snapcraft doesn't support that, see
+-    # https://bugs.launchpad.net/snapcraft/+bug/1848493
+-    after: [snapcraft-preload, luarocks]
+-    source: https://github.com/kong/kong.git
+-    plugin: nil
+-    source-tag: 2.0.4
+-    source-depth: 1
+-    build-packages:
+-      - unzip
+-      - libssl-dev
+-      - libpcre3-dev
+-      - libyaml-dev
+-      - luarocks
+-      - lua5.1
+-    stage-packages:
+-      - perl
+-      - luarocks
+-      - lua5.1
+-      - libyaml-0-2
+-    override-pull : |
+-      snapcraftctl pull
+-      cd $SNAPCRAFT_PART_SRC
+-      patch  < "$SNAPCRAFT_PROJECT_DIR/snap/local/patches/0002-lua-resty-openssl-fix.patch"
+-    override-build: |
+-      # first copy the default config file provided and install it into $SNAPCRAFT_PART_INSTALL
+-      # it will be generated/configured during the install hook
+-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
+-      cp kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
+-
+-      # handle the location of openssl + libcrypto by architecture
+-      # cause luarocks is silly and hardcodes /usr/lib/x86_64-linux-gnu as the lib search path
+-      case "$(dpkg --print-architecture)" in
+-        amd64)
+-          # x64 is the only arch that luarocks can properly find libs for :-/
+-          luarocks make --tree=$SNAPCRAFT_PART_INSTALL
+-          ;;
+-        arm64)
+-          luarocks make --tree=$SNAPCRAFT_PART_INSTALL \
+-            CRYPTO_LIBDIR=/usr/lib/aarch64-linux-gnu \
+-            CRYPTO_INCDIR=/usr/include \
+-            OPENSSL_LIBDIR=/usr/lib/aarch64-linux-gnu \
+-            OPENSSL_INCDIR=/usr/include
+-          ;;
+-        armhf)
+-          luarocks make --tree=$SNAPCRAFT_PART_INSTALL \
+-            CRYPTO_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+-            CRYPTO_INCDIR=/usr/include \
+-            OPENSSL_LIBDIR=/usr/lib/arm-linux-gnueabihf \
+-            OPENSSL_INCDIR=/usr/include
+-          ;;
+-        i386)
+-          luarocks make --tree=$SNAPCRAFT_PART_INSTALL \
+-            CRYPTO_LIBDIR=/usr/lib/i386-linux-gnu \
+-            CRYPTO_INCDIR=/usr/include \
+-            OPENSSL_LIBDIR=/usr/lib/i386-linux-gnu \
+-            OPENSSL_INCDIR=/usr/include
+-          ;;
+-        *)
+-          echo "Unsupported arch $(dpkg --print-architecture)"
+-          exit 1
+-          ;;
+-      esac
+-
+-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+-      cp bin/kong $SNAPCRAFT_PART_INSTALL/bin/kong
+-      # make all the things inside the cmd directory executable because they for some reason aren't executable by default...
+-      cd $SNAPCRAFT_PART_INSTALL/share/lua/5.1/kong/cmd
+-      for cmd in $(ls *.lua); do
+-        chmod +x $cmd
+-      done
+-
+-      # TODO: the json2lua script references $SNAPCRAFT_PART_INSTALL in some
+-      # paths it tries to load things from, probably worth fixing that to use
+-      # $SNAP, etc. but currently json2lua seems unused so not changing it now
+-
+-  # SECURITY SERVICES PARTS
+-  vault:
+-    after: [go115]
+-    plugin: make
+-    source: https://github.com/hashicorp/vault.git
+-    source-tag: v1.5.4
+-    source-depth: 1
+-    override-build: |
+-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
+-      gopartbootstrap github.com/hashicorp/vault 1.15
+-      export GO111MODULES=off
+-      make bootstrap
+-      make dev
+-
+-      # install the vault binary
+-      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
+-
+-      # handle vault LICENSE
+-      # TODO: do PATENT files need copying?
+-      install -DT "$GOIMPORTPATH/LICENSE" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
+-
+-      # handle vendor LICENSE files
+-      cd $GOIMPORTPATH/vendor
+-      for i in `find . -type f -name "LICENSE"`; do
+-        install -DT "$i" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+-
+-      # TODO: some LICENSE files fall under .gopath too
+-      cd $GOPATH/src
+-      for i in `find . -type f -name "LICENSE"`; do
+-        install -DT "$i" \
+-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
+-
+-      # delete duplicated license files between vault + consul
+-      # as snapcraft will fail we attempt to install duplicated files into the snap
+-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
+-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
+-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
+-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
+-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
+-
+-      if [ -f /build/go.mod.bk ]; then
+-        mv /build/go.mod.bk /build/go.mod
+-      fi
+-
+-  # DEVICE SERVICES parts
+-  device-virtual-go:
+-    source: https://github.com/edgexfoundry/device-virtual-go.git
+-    source-depth: 1
+-    source-tag: v1.2.1
+-    plugin: make
+-    after: [go115]
+-    override-build: |
+-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
+-      cd $SNAPCRAFT_PART_SRC
+-      # create VERSION file (supposed to be created by jenkins pipeline...)
+-      echo "1.2.1" > ./VERSION
+-      make build
+-
+-      install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
+-      install -DT "./cmd/res/configuration.toml" \
+-        "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/configuration.toml"
+-
+-      for profileType in bool float int uint binary; do
+-        install -T "./cmd/res/device.virtual.$profileType.yaml" \
+-          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/device.virtual.$profileType.yaml"
+-      done
+-
+-      install -DT "./Attribution.txt" \
+-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
+-      install -DT "./LICENSE" \
+-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
+-
+-  app-service-config:
+-    source: https://github.com/edgexfoundry/app-service-configurable.git
+-    # TODO(Hanoi): update to source-tag for release
+-    source-branch: master
+-    plugin: make
+-    build-packages: [gcc, git, libzmq3-dev, pkg-config]
+-    stage-packages: [libzmq5]
+-    after: [go115]
+-    override-build: |
+-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
+-      cd $SNAPCRAFT_PART_SRC
+-      make build
+-
+-      # install the service binary, configuration, and license files
+-      install -DT "./app-service-configurable" \
+-         "$SNAPCRAFT_PART_INSTALL/bin/app-service-configurable"
+-      install -DT "./res/rules-engine/configuration.toml" \
+-         "$SNAPCRAFT_PART_INSTALL/config/app-service-configurable/res/rules-engine/configuration.toml"
+-      install -DT "./Attribution.txt" \
+-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/Attribution.txt"
+-      install -DT "./LICENSE" \
+-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/LICENSE"
+-
+-  kuiper:
+-    source: https://github.com/emqx/kuiper.git
+-    source-tag: 0.4.1
+-    plugin: make
+-    after: [go115]
+-    override-build: |
+-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
+-
+-      cd $SNAPCRAFT_PART_SRC
+-      export BUILD_PATH=$SNAPCRAFT_PART_BUILD
+-      export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
+-      make build_with_edgex
+-      make real_pkg
+-      cd $SNAPCRAFT_PART_INSTALL
+-      tar -xvf kuiper*.tar.gz --strip-components=1
+-      rm *.zip *.gz
+-
+-      install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
+-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
+-    organize:
+-      bin/cli: bin/kuiper-cli
+-      bin/server: bin/kuiper-server
+-    stage:
+-      - -etc/mqtt_source.yaml
+-    stage-packages:
+-      - libzmq5
+-- 
+2.17.1
+
