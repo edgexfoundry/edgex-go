@@ -100,3 +100,33 @@ func AllDeviceByServiceName(offset int, limit int, name string, ctx context.Cont
 	}
 	return devices, nil
 }
+
+// DeviceIdExists checks the device existence by id
+func DeviceIdExists(id string, dic *di.Container) (exists bool, edgeXerr errors.EdgeX) {
+	if id == "" {
+		return exists, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	_, err := uuid.Parse(id)
+	if err != nil {
+		return exists, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	exists, edgeXerr = dbClient.DeviceIdExists(id)
+	if edgeXerr != nil {
+		return exists, errors.NewCommonEdgeXWrapper(err)
+	}
+	return exists, nil
+}
+
+// DeviceNameExists checks the device existence by name
+func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.EdgeX) {
+	if name == "" {
+		return exists, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	exists, err = dbClient.DeviceNameExists(name)
+	if err != nil {
+		return exists, errors.NewCommonEdgeXWrapper(err)
+	}
+	return exists, nil
+}

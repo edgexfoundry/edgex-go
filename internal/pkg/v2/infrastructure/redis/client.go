@@ -327,3 +327,25 @@ func (c *Client) AllDeviceByServiceName(offset int, limit int, name string) (dev
 	}
 	return devices, nil
 }
+
+// DeviceIdExists checks the device existence by id
+func (c *Client) DeviceIdExists(id string) (bool, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	exists, err := deviceIdExists(conn, id)
+	if err != nil {
+		return exists, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("fail to check the device existence by id %s", id), err)
+	}
+	return exists, nil
+}
+
+// DeviceNameExists checks the device existence by name
+func (c *Client) DeviceNameExists(name string) (bool, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	exists, err := deviceNameExists(conn, name)
+	if err != nil {
+		return exists, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("fail to check the device existence by name %s", name), err)
+	}
+	return exists, nil
+}

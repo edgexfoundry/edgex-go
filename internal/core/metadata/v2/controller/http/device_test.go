@@ -355,3 +355,117 @@ func TestAllDeviceByServiceName(t *testing.T) {
 		})
 	}
 }
+
+func TestDeviceIdExists(t *testing.T) {
+	testId := ExampleUUID
+	notFoundId := "82eb2e26-1111-0000-ae4c-de9dac3fb9bc"
+	emptyId := ""
+	invalidId := "invalidId"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceIdExists", testId).Return(true, nil)
+	dbClientMock.On("DeviceIdExists", notFoundId).Return(false, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceId           string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - check device by id", testId, false, http.StatusOK},
+		{"Invalid - id parameter is empty", emptyId, true, http.StatusBadRequest},
+		{"Invalid - device not found by id", notFoundId, false, http.StatusNotFound},
+		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceExistsByIdRoute, testCase.deviceId)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.deviceId})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeviceIdExists)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestDeviceNameExists(t *testing.T) {
+	testName := TestDeviceName
+	notFoundName := "notFoundName"
+	emptyName := ""
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceNameExists", testName).Return(true, nil)
+	dbClientMock.On("DeviceNameExists", notFoundName).Return(false, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - check device by name", testName, false, http.StatusOK},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - device not found by name", notFoundName, false, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiDeviceExistsByNameRoute, testCase.deviceName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeviceNameExists)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
