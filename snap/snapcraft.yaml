@@ -477,6 +477,8 @@ parts:
       - postgresql-contrib
       - postgresql-client
       - perl
+    prime:
+       - -usr/share/man/*
 
   go-build-helper:
     plugin: dump
