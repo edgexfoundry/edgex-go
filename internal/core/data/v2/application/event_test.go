@@ -85,6 +85,8 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("AddEvent", mock.Anything).Return(persistedEvent, nil)
 		myMock.On("EventById", nonexistentEventID).Return(models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
 		myMock.On("EventById", testUUIDString).Return(persistedEvent, nil)
+		myMock.On("DeleteEventById", nonexistentEventID).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
+		myMock.On("DeleteEventById", testUUIDString).Return(nil)
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
 		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
 	}
@@ -177,6 +179,50 @@ func TestEventById(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.EventId, evt.Id, "Event Id not as expected")
+			}
+		})
+	}
+}
+
+func TestDeleteEventById(t *testing.T) {
+	validEventId := testUUIDString
+	emptyEventId := ""
+	invalidEventId := "bad"
+	notFoundEventId := nonexistentEventID
+
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	tests := []struct {
+		Name               string
+		EventId            string
+		ErrorExpected      bool
+		ExpectedErrKind    errors.ErrKind
+		ExpectedStatusCode int
+	}{
+		{"Valid - Delete Event by Id", validEventId, false, errors.KindUnknown, http.StatusOK},
+		{"Invalid - Empty EventId", emptyEventId, true, errors.KindInvalidId, http.StatusBadRequest},
+		{"Invalid - EventId is not an UUID", invalidEventId, true, errors.KindInvalidId, http.StatusBadRequest},
+		{"Invalid - Event doesn't exist", notFoundEventId, true, errors.KindEntityDoesNotExist, http.StatusNotFound},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			err := DeleteEventById(testCase.EventId, dic)
+
+			if testCase.ErrorExpected {
+				require.Error(t, err)
+				assert.NotEmpty(t, err.Error(), "Error message is empty")
+				assert.Equal(t, testCase.ExpectedErrKind, errors.Kind(err), "Error kind not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, err.Code(), "Error code not as expected")
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

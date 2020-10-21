@@ -95,13 +95,14 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	return e, edgeXerr
 }
 
-func deleteEvent(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
+func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	// query Event by Id first to ensure there is an corresponding event
 	e, edgeXerr := eventById(conn, id)
 	if edgeXerr != nil {
 		return edgeXerr
 	}
 
+	// deletes all readings associated with target event
 	for _, reading := range e.Readings {
 		edgeXerr = deleteReadingById(conn, reading.GetBaseReading().Id)
 		if edgeXerr != nil {

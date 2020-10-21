@@ -290,6 +290,62 @@ func TestEventById(t *testing.T) {
 	}
 }
 
+func TestDeleteEventById(t *testing.T) {
+	validEventId := expectedEventId
+	emptyEventId := ""
+	invalidEventId := "bad"
+	notFoundEventId := NonexistentEventID
+
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteEventById", notFoundEventId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
+	dbClientMock.On("DeleteEventById", validEventId).Return(nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	tests := []struct {
+		Name               string
+		EventId            string
+		ErrorExpected      bool
+		ExpectedStatusCode int
+	}{
+		{"Valid - Delete Event by Id", validEventId, false, http.StatusOK},
+		{"Invalid - Empty EventId", emptyEventId, true, http.StatusBadRequest},
+		{"Invalid - EventId is not an UUID", invalidEventId, true, http.StatusBadRequest},
+		{"Invalid - Event doesn't exist", notFoundEventId, true, http.StatusNotFound},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s/%s", v2.ApiEventRoute, v2.Id, testCase.EventId)
+			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.EventId})
+			require.NoError(t, err)
+
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(ec.DeleteEventById)
+			handler.ServeHTTP(recorder, req)
+
+			var actualResponse common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+			require.NoError(t, err)
+			assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "Response status code not as expected")
+			if testCase.ErrorExpected {
+				assert.NotEmpty(t, actualResponse.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, actualResponse.Message, "Response message should be empty when it is successful")
+			}
+		})
+	}
+}
+
 func TestEventTotalCount(t *testing.T) {
 	expectedEventCount := uint32(656672)
 	dbClientMock := &dbMock.DBClient{}
