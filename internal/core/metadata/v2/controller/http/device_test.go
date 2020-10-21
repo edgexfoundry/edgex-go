@@ -8,8 +8,6 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,12 +17,15 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -272,6 +273,84 @@ func TestDeleteDeviceByName(t *testing.T) {
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			} else {
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
+
+func TestAllDeviceByServiceName(t *testing.T) {
+	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
+	testServiceA := "testServiceA"
+	testServiceB := "testServiceB"
+	device1WithServiceA := device
+	device1WithServiceA.ServiceName = testServiceA
+	device2WithServiceA := device
+	device2WithServiceA.ServiceName = testServiceA
+	device3WithServiceB := device
+	device3WithServiceB.ServiceName = testServiceB
+
+	devices := []models.Device{device1WithServiceA, device2WithServiceA, device3WithServiceB}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllDeviceByServiceName", 0, 5, testServiceA).Return([]models.Device{devices[0], devices[1]}, nil)
+	dbClientMock.On("AllDeviceByServiceName", 1, 1, testServiceA).Return([]models.Device{devices[1]}, nil)
+	dbClientMock.On("AllDeviceByServiceName", 4, 1, testServiceB).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		serviceName        string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get devices with serviceName", "0", "5", testServiceA, false, 2, http.StatusOK},
+		{"Valid - get devices with offset and no labels", "1", "1", testServiceA, false, 1, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", testServiceB, true, 0, http.StatusNotFound},
+		{"Invalid - get devices without serviceName", "0", "10", "", true, 0, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllDeviceByServiceNameRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(v2.Offset, testCase.offset)
+			query.Add(v2.Limit, testCase.limit)
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.serviceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AllDeviceByServiceName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDevicesResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Devices), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
 	}
