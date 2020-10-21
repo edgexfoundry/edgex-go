@@ -409,7 +409,7 @@ parts:
         PROJECT_VERSION=local-dev
       fi
       GIT_REVISION=$(git rev-parse --short HEAD)
-      snapcraftctl set-version ${PROJECT_VERSION}-$(date +%Y%m%d)+${GIT_REVISION}
+      snapcraftctl set-version ${PROJECT_VERSION}
   static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
