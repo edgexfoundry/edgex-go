@@ -284,7 +284,7 @@ func putEventOnQueue(
 	msgClient messaging.MessageClient,
 	configuration *config.ConfigurationStruct) {
 
-	lc.Info("Putting event on message queue")
+	lc.Debug("Putting event on message queue")
 
 	evt.CorrelationId = correlation.FromContext(ctx)
 	// Re-marshal JSON content into bytes.
@@ -302,7 +302,7 @@ func putEventOnQueue(
 	if err != nil {
 		lc.Error(fmt.Sprintf("Unable to send message for event: %s %v", evt.String(), err))
 	} else {
-		lc.Info(fmt.Sprintf(
+		lc.Debug(fmt.Sprintf(
 			"Event Published on message queue. Topic: %s, Correlation-id: %s ",
 			configuration.MessageQueue.Topic,
 			msgEnvelope.CorrelationID,

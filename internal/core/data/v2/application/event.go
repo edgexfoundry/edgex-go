@@ -47,7 +47,7 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (id string
 		}
 		e = addedEvent
 
-		lc.Info(fmt.Sprintf(
+		lc.Debug(fmt.Sprintf(
 			"Event created on DB successfully. Event-id: %s, Correlation-id: %s ",
 			e.Id,
 			correlationId,
@@ -66,8 +66,9 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 	lc := container.LoggingClientFrom(dic.Get)
 	msgClient := dataContainer.MessagingClientFrom(dic.Get)
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
-	lc.Info("Putting V2 API event on message queue")
+	lc.Debug("Putting V2 API event on message queue", clients.CorrelationHeader, correlationId)
 
 	var data []byte
 	var err error
@@ -75,7 +76,7 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 	if clients.FromContext(ctx, clients.ContentType) == clients.ContentTypeJSON {
 		data, err = json.Marshal(evt)
 		if err != nil {
-			lc.Error(fmt.Sprintf("error marshaling event: %+v", evt))
+			lc.Error(fmt.Sprintf("error marshaling event: %+v", evt), clients.CorrelationHeader, correlationId)
 			return
 		}
 	}
@@ -83,13 +84,12 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
 	err = msgClient.Publish(msgEnvelope, configuration.MessageQueue.Topic)
 	if err != nil {
-		lc.Error(fmt.Sprintf("Unable to send message for V2 API event. Correlation-id: %s, Device Name: %s, Error: %v", correlation.FromContext(ctx), evt.DeviceName, err))
+		lc.Error(fmt.Sprintf("Unable to send message for V2 API event. Correlation-id: %s, Device Name: %s, Error: %v",
+			correlationId, evt.DeviceName, err))
 	} else {
-		lc.Info(fmt.Sprintf(
+		lc.Debug(fmt.Sprintf(
 			"Event Published on message queue. Topic: %s, Correlation-id: %s ",
-			configuration.MessageQueue.Topic,
-			msgEnvelope.CorrelationID,
-		))
+			configuration.MessageQueue.Topic, correlationId))
 	}
 }
 
