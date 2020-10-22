@@ -181,3 +181,43 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(eventResponse, w, lc) // encode and send out the response
 }
+
+func (ec *EventController) UpdateEventPushedById(w http.ResponseWriter, r *http.Request) {
+	// retrieve all the service injections from bootstrap
+	lc := container.LoggingClientFrom(ec.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	updateEventPushedReqs, err := ec.reader.ReadUpdateEventPushedByIdRequest(r.Body)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		// encode and send out the response
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
+
+	var updatedResponses []interface{}
+	for _, req := range updateEventPushedReqs {
+		err := application.UpdateEventPushedById(req.Id, ec.dic)
+		var updateEventPushedResponse interface{}
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			updateEventPushedResponse = responseDTO.NewUpdateEventPushedByIdResponse(req.RequestId, err.Message(), err.Code(), req.Id)
+		} else {
+			updateEventPushedResponse = responseDTO.NewUpdateEventPushedByIdResponseNoMessage(req.RequestId, http.StatusOK, req.Id)
+		}
+		updatedResponses = append(updatedResponses, updateEventPushedResponse)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	// encode and send out the response
+	pkg.Encode(updatedResponses, w, lc)
+}

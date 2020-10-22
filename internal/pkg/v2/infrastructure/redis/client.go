@@ -10,7 +10,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -278,4 +277,12 @@ func (c *Client) AddDevice(d model.Device) (model.Device, errors.EdgeX) {
 	}
 
 	return addDevice(conn, d)
+}
+
+// Update the pushed timestamp of an event
+func (c *Client) UpdateEventPushedById(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return updateEventPushedById(conn, id)
 }

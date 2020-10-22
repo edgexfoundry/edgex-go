@@ -135,3 +135,14 @@ func EventCountByDevice(deviceName string, dic *di.Container) (uint32, errors.Ed
 
 	return count, nil
 }
+
+// UpdateEventPushedById updates event pushed timestamp per incoming event id
+func UpdateEventPushedById(id string, dic *di.Container) errors.EdgeX {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	err := dbClient.UpdateEventPushedById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	} else {
+		return nil
+	}
+}
