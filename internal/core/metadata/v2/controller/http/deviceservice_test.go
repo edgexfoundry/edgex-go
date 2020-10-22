@@ -90,8 +90,6 @@ func TestAddDeviceService(t *testing.T) {
 	validReq := buildTestDeviceServiceRequest()
 	dsModels := requests.AddDeviceServiceReqToDeviceServiceModels([]requests.AddDeviceServiceRequest{validReq})
 	expectedRequestId := ExampleUUID
-	normalMessage := fmt.Sprintf("Add device service %s successfully", testDeviceServiceName)
-	duplicateServiceNameMessage := fmt.Sprintf("device service %s already exists", testDeviceServiceName)
 
 	reqWithNoID := validReq
 	reqWithNoID.RequestId = ""
@@ -106,7 +104,6 @@ func TestAddDeviceService(t *testing.T) {
 		dbClientMock           *dbMock.DBClient
 		Request                []requests.AddDeviceServiceRequest
 		expectedHttpStatusCode int
-		expectedMessage        string
 	}{
 		{
 			"Request Normal",
@@ -114,7 +111,6 @@ func TestAddDeviceService(t *testing.T) {
 			buildTestDBClient(dsModels[0], "", ""),
 			[]requests.AddDeviceServiceRequest{validReq},
 			http.StatusCreated,
-			normalMessage,
 		},
 		{
 			"Request without requestId",
@@ -122,15 +118,13 @@ func TestAddDeviceService(t *testing.T) {
 			buildTestDBClient(dsModels[0], "", ""),
 			[]requests.AddDeviceServiceRequest{reqWithNoID},
 			http.StatusCreated,
-			normalMessage,
 		},
 		{
 			"Request with duplicate service name",
 			true,
-			buildTestDBClient(dsModels[0], errors.KindDuplicateName, duplicateServiceNameMessage),
+			buildTestDBClient(dsModels[0], errors.KindDuplicateName, ""),
 			[]requests.AddDeviceServiceRequest{validReq},
 			http.StatusConflict,
-			duplicateServiceNameMessage,
 		},
 		{
 			"Request with invalid requestId",
@@ -138,7 +132,6 @@ func TestAddDeviceService(t *testing.T) {
 			buildTestDBClient(dsModels[0], "", ""),
 			[]requests.AddDeviceServiceRequest{reqWithInvalidId},
 			http.StatusBadRequest,
-			"",
 		},
 		{
 			"Request without service name",
@@ -146,7 +139,6 @@ func TestAddDeviceService(t *testing.T) {
 			buildTestDBClient(dsModels[0], "", ""),
 			[]requests.AddDeviceServiceRequest{reqWithNoName},
 			http.StatusBadRequest,
-			"",
 		},
 	}
 	for _, testCase := range tests {
@@ -185,10 +177,17 @@ func TestAddDeviceService(t *testing.T) {
 					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedHttpStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
-				assert.Contains(t, res[0].Message, testCase.expectedMessage, "Message not as expected")
+				if testCase.expectedHttpStatusCode == http.StatusCreated {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
 			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
 				assert.Equal(t, testCase.expectedHttpStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-				assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+				assert.Equal(t, testCase.expectedHttpStatusCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
 		})
 	}
@@ -502,7 +501,11 @@ func TestDeleteDeviceServiceById(t *testing.T) {
 			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			assert.NotEmpty(t, res.Message, "Message is empty")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }
@@ -554,7 +557,11 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			assert.NotEmpty(t, res.Message, "Message is empty")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }

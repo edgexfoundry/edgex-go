@@ -77,7 +77,7 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 		} else {
 			addDeviceProfileResponse = commonDTO.NewBaseWithIdResponse(
 				reqId,
-				"Add device profiles successfully",
+				"",
 				http.StatusCreated,
 				newId)
 		}
@@ -127,7 +127,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 		} else {
 			response = commonDTO.NewBaseResponse(
 				reqId,
-				"Update device profile successfully",
+				"",
 				http.StatusOK)
 		}
 		responses = append(responses, response)
@@ -174,7 +174,7 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 	} else {
 		addDeviceProfileResponse = commonDTO.NewBaseWithIdResponse(
 			"",
-			"Add device profiles successfully",
+			"",
 			http.StatusCreated,
 			newId)
 		statusCode = http.StatusCreated
@@ -222,7 +222,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 	} else {
 		response = commonDTO.NewBaseResponse(
 			"",
-			"Update device profile successfully",
+			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
 	}
@@ -281,7 +281,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileById(w http.ResponseWriter
 	} else {
 		response = commonDTO.NewBaseResponse(
 			"",
-			"Delete device profile successfully",
+			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
 	}
@@ -311,7 +311,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 	} else {
 		response = commonDTO.NewBaseResponse(
 			"",
-			"Delete device profile successfully",
+			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
 	}

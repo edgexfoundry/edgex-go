@@ -6,8 +6,10 @@
 package http
 
 import (
+	"math"
 	"net/http"
 
+	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -17,9 +19,12 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 
 	"github.com/gorilla/mux"
 )
@@ -144,6 +149,44 @@ func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Re
 			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceController) AllDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
+
+	vars := mux.Vars(r)
+	name := vars[contractsV2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		devices, err := application.AllDeviceByServiceName(offset, limit, name, ctx, dc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
+			statusCode = http.StatusOK
+		}
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)

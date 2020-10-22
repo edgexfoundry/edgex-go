@@ -136,7 +136,6 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 	deviceProfileRequest := buildTestDeviceProfileRequest()
 	deviceProfileModel := requests.DeviceProfileReqToDeviceProfileModel(deviceProfileRequest)
 	expectedRequestId := ExampleUUID
-	expectedMessage := "Add device profiles successfully"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -185,7 +184,7 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 				assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 			}
 			assert.Equal(t, http.StatusCreated, res[0].StatusCode, "BaseResponse status code not as expected")
-			assert.Equal(t, expectedMessage, res[0].Message, "Message not as expected")
+			assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
 		})
 	}
 }
@@ -459,7 +458,6 @@ func TestUpdateDeviceProfile(t *testing.T) {
 func TestAddDeviceProfileByYaml_Created(t *testing.T) {
 	deviceProfileDTO := buildTestDeviceProfileRequest().Profile
 	deviceProfileModel := dtos.ToDeviceProfileModel(deviceProfileDTO)
-	expectedMessage := "Add device profiles successfully"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -490,7 +488,7 @@ func TestAddDeviceProfileByYaml_Created(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusCreated, res.StatusCode, "BaseResponse status code not as expected")
-	assert.Equal(t, expectedMessage, res.Message, "Message not as expected")
+	assert.Empty(t, res.Message, "Message should be empty when it is successful")
 }
 
 func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
@@ -853,7 +851,11 @@ func TestDeleteDeviceProfileById(t *testing.T) {
 			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			assert.NotEmpty(t, res.Message, "Message is empty")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }
@@ -905,7 +907,11 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			assert.NotEmpty(t, res.Message, "Message is empty")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
 		})
 	}
 }

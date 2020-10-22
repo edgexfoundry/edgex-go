@@ -84,6 +84,31 @@ func (_m *DBClient) AddDeviceService(e models.DeviceService) (models.DeviceServi
 	return r0, r1
 }
 
+// AllDeviceByServiceName provides a mock function with given fields: offset, limit, name
+func (_m *DBClient) AllDeviceByServiceName(offset int, limit int, name string) ([]models.Device, errors.EdgeX) {
+	ret := _m.Called(offset, limit, name)
+
+	var r0 []models.Device
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Device); ok {
+		r0 = rf(offset, limit, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Device)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()

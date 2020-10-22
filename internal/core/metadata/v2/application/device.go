@@ -11,9 +11,11 @@ import (
 
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
@@ -80,4 +82,21 @@ func DeleteDeviceByName(name string, dic *di.Container) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
+}
+
+// AllDeviceByServiceName query devices with offset, limit and name
+func AllDeviceByServiceName(offset int, limit int, name string, ctx context.Context, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+	if name == "" {
+		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	deviceModels, err := dbClient.AllDeviceByServiceName(offset, limit, name)
+	if err != nil {
+		return devices, errors.NewCommonEdgeXWrapper(err)
+	}
+	devices = make([]dtos.Device, len(deviceModels))
+	for i, d := range deviceModels {
+		devices[i] = dtos.FromDeviceModelToDTO(d)
+	}
+	return devices, nil
 }

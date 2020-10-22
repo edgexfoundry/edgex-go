@@ -6,7 +6,6 @@
 package http
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 
@@ -77,7 +76,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 		if err == nil {
 			addDeviceServiceResponse = commonDTO.NewBaseWithIdResponse(
 				reqId,
-				fmt.Sprintf("Add device service %s successfully", d.Name),
+				"",
 				http.StatusCreated,
 				newId)
 		} else {
@@ -194,7 +193,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceById(w http.ResponseWriter
 	} else {
 		response = commonDTO.NewBaseResponse(
 			"",
-			"Delete device service successfully",
+			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
 	}
@@ -224,7 +223,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWrit
 	} else {
 		response = commonDTO.NewBaseResponse(
 			"",
-			"Delete device service successfully",
+			"",
 			http.StatusOK)
 		statusCode = http.StatusOK
 	}
