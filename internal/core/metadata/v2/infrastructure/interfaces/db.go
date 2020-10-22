@@ -33,4 +33,6 @@ type DBClient interface {
 	DeleteDeviceById(id string) errors.EdgeX
 	DeleteDeviceByName(name string) errors.EdgeX
 	AllDeviceByServiceName(offset int, limit int, name string) ([]model.Device, errors.EdgeX)
+	DeviceIdExists(id string) (bool, errors.EdgeX)
+	DeviceNameExists(id string) (bool, errors.EdgeX)
 }

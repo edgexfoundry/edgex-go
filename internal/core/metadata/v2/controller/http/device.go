@@ -21,7 +21,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
@@ -162,7 +161,7 @@ func (dc *DeviceController) AllDeviceByServiceName(w http.ResponseWriter, r *htt
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -187,6 +186,66 @@ func (dc *DeviceController) AllDeviceByServiceName(w http.ResponseWriter, r *htt
 			response = responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
 			statusCode = http.StatusOK
 		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceController) DeviceIdExists(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars[v2.Id]
+
+	var response interface{}
+	var statusCode int
+
+	exists, err := application.DeviceIdExists(id, dc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else if exists {
+		response = commonDTO.NewBaseResponse("", "", http.StatusOK)
+		statusCode = http.StatusOK
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusNotFound)
+		statusCode = http.StatusNotFound
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceController) DeviceNameExists(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	exists, err := application.DeviceNameExists(name, dc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else if exists {
+		response = commonDTO.NewBaseResponse("", "", http.StatusOK)
+		statusCode = http.StatusOK
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusNotFound)
+		statusCode = http.StatusNotFound
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
