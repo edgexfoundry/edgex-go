@@ -1149,8 +1149,8 @@ paths:
     delete:
       summary: "Remove all pushed events and their associated readings."
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Delete request accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
