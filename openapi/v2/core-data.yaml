@@ -602,7 +602,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given the entire range of events sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given the entire range of events sorted by created descending, returns a portion of that range according to the offset and limit parameters."
       responses:
         '200':
           description: "OK"

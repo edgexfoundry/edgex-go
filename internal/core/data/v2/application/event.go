@@ -13,9 +13,9 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -167,4 +167,18 @@ func UpdateEventPushedById(id string, dic *di.Container) errors.EdgeX {
 	} else {
 		return nil
 	}
+}
+
+// AllEvents query events by offset and limit
+func AllEvents(offset int, limit int, dic *di.Container) (events []dtos.Event, err errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	eventModels, err := dbClient.AllEvents(offset, limit)
+	if err != nil {
+		return events, errors.NewCommonEdgeXWrapper(err)
+	}
+	events = make([]dtos.Event, len(eventModels))
+	for i, e := range eventModels {
+		events[i] = dtos.FromEventModelToDTO(e)
+	}
+	return events, nil
 }

@@ -61,7 +61,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	_ = conn.Send(MULTI)
 	// use the SET command to save event as blob
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, EventsCollection, 0, storedKey)
+	_ = conn.Send(ZADD, EventsCollection, e.Created, storedKey)
 	_ = conn.Send(ZADD, EventsCollectionCreated, e.Created, storedKey)
 	_ = conn.Send(ZADD, EventsCollectionPushed, e.Pushed, storedKey)
 	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), e.Created, storedKey)
@@ -197,4 +197,30 @@ func updateEventPushedById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	}
 
 	return nil
+}
+
+func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, EventsCollection, offset, end)
+	if err != nil {
+		return events, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	events = make([]models.Event, len(objects))
+	for i, in := range objects {
+		e := models.Event{}
+		err := json.Unmarshal(in, &e)
+		if err != nil {
+			return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
+		}
+		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
+		if edgeXerr != nil {
+			return events, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		events[i] = e
+	}
+	return events, nil
 }
