@@ -89,6 +89,38 @@ func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
 
+// DeleteDeviceById provides a mock function with given fields: id
+func (_m *DBClient) DeleteDeviceById(id string) errors.EdgeX {
+	ret := _m.Called(id)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
+// DeleteDeviceByName provides a mock function with given fields: name
+func (_m *DBClient) DeleteDeviceByName(name string) errors.EdgeX {
+	ret := _m.Called(name)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // DeleteDeviceProfileById provides a mock function with given fields: id
 func (_m *DBClient) DeleteDeviceProfileById(id string) errors.EdgeX {
 	ret := _m.Called(id)

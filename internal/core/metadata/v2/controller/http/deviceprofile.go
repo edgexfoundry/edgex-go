@@ -274,9 +274,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileById(w http.ResponseWriter
 
 	err := application.DeleteDeviceProfileById(id, ctx, dc.dic)
 	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
@@ -306,9 +304,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 
 	err := application.DeleteDeviceProfileByName(name, ctx, dc.dic)
 	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
