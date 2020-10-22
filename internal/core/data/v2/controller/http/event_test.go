@@ -410,6 +410,33 @@ func TestEventCountByDevice(t *testing.T) {
 	assert.Equal(t, deviceName, actualResponse.DeviceName, "Device name in the response body is not expected")
 }
 
+func TestDeletePushedEvents(t *testing.T) {
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeletePushedEvents").Return(nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	req, err := http.NewRequest(http.MethodDelete, v2.ApiEventScrubRoute, http.NoBody)
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(ec.DeletePushedEvents)
+	handler.ServeHTTP(recorder, req)
+
+	var actualResponse common.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusAccepted, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+}
+
 func TestUpdateEventPushedById(t *testing.T) {
 	expectedResponseCode := http.StatusMultiStatus
 

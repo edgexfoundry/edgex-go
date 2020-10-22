@@ -8,9 +8,9 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -25,6 +25,9 @@ const (
 	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.DeviceName
 	ReadingsCollectionName       = ReadingsCollection + ":" + v2.Name
 )
+
+// deleteReadingsByIdChannel channel used to delete readings asynchronously
+var deleteReadingsByIdChannel = make(chan []string, 50)
 
 var emptyBinaryValue = make([]byte, 0)
 
@@ -94,6 +97,77 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("reading[id:%s] delete failed", id), err)
 	}
 
+	return nil
+}
+
+// AsyncDeleteReadings Handles the deletion of device readings asynchronously. This function is expected to be running
+// in a go-routine and works with the "deleteReadingsByIds" function for better performance.
+func (c *Client) AsyncDeleteReadings() {
+	c.loggingClient.Debug("Starting background reading deletion process")
+	for {
+		select {
+		case readingIds, ok := <-deleteReadingsByIdChannel:
+			if ok {
+				c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v reading data", len(readingIds)))
+				startTime := time.Now()
+				conn := c.Pool.Get()
+				err := deleteReadingsByIds(conn, readingIds, c.BatchSize)
+				if err != nil {
+					c.loggingClient.Error(fmt.Sprintf("Deleted readings failed.  Err: %s", err.Error()))
+				} else {
+					c.loggingClient.Debug(fmt.Sprintf("Deleted readings successfully. elapsed time: %s", time.Since(startTime)))
+				}
+				conn.Close()
+			}
+		}
+	}
+}
+
+// deleteReadingsByIds deletes all readings with given reading Id
+func deleteReadingsByIds(conn redis.Conn, readingIds []string, batchSize int) (edgeXerr errors.EdgeX) {
+	var readings [][]byte
+	//start a transaction to get all readings
+	readings, edgeXerr = getObjectsByIds(conn, common.ConvertStringsToInterfaces(readingIds))
+	if edgeXerr != nil {
+		return edgeXerr
+	}
+
+	// iterate each readings for deletion in batch
+	queriesInQueue := 0
+	r := models.BaseReading{}
+	_ = conn.Send(MULTI)
+	for i, reading := range readings {
+		err := json.Unmarshal(reading, &r)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal reading", err)
+		}
+		storedKey := readingStoredKey(r.Id)
+		_ = conn.Send(UNLINK, storedKey)
+		_ = conn.Send(ZREM, ReadingsCollection, storedKey)
+		_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionName, r.Name), storedKey)
+		queriesInQueue++
+
+		if queriesInQueue >= batchSize {
+			_, err = conn.Do(EXEC)
+			queriesInQueue = 0
+			if err != nil {
+				return errors.NewCommonEdgeX(errors.KindDatabaseError, "unable to execute batch reading deletion", err)
+			}
+			// rerun another transaction when reading iteration is not finished
+			if i < len(readings)-1 {
+				_ = conn.Send(MULTI)
+			}
+		}
+	}
+
+	if queriesInQueue > 0 {
+		_, err := conn.Do("EXEC")
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindDatabaseError, "unable to execute batch reading deletion", err)
+		}
+	}
 	return nil
 }
 

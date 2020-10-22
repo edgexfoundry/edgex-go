@@ -84,6 +84,22 @@ func (_m *DBClient) DeleteEventById(id string) errors.EdgeX {
 	return r0
 }
 
+// DeletePushedEvents provides a mock function with given fields:
+func (_m *DBClient) DeletePushedEvents() errors.EdgeX {
+	ret := _m.Called()
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func() errors.EdgeX); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // EventById provides a mock function with given fields: id
 func (_m *DBClient) EventById(id string) (models.Event, errors.EdgeX) {
 	ret := _m.Called(id)

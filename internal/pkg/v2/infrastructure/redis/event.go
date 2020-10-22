@@ -8,6 +8,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -24,6 +25,9 @@ const (
 	EventsCollectionDeviceName = EventsCollection + ":" + v2.DeviceName
 	EventsCollectionReadings   = EventsCollection + ":readings"
 )
+
+// deleteEventsByIdChannel channel used to delete events asynchronously
+var deleteEventsByIdChannel = make(chan []string, 50)
 
 // eventStoredKey return the event's stored key which combines the collection name and object id
 func eventStoredKey(id string) string {
@@ -131,6 +135,101 @@ func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	return edgeXerr
 }
 
+// AsyncDeleteEvents Handles the deletion of device readings asynchronously. This function is expected to be running
+// in a go-routine and works with the "deleteReadingsByIds" function for better performance.
+func (c *Client) AsyncDeleteEvents() {
+	c.loggingClient.Debug("Starting background event deletion process")
+	for {
+		select {
+		case eventIds, ok := <-deleteEventsByIdChannel:
+			if ok {
+				c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v reading data", len(eventIds)))
+				startTime := time.Now()
+				conn := c.Pool.Get()
+				err := deleteEventsByIds(conn, eventIds, c.BatchSize)
+				if err != nil {
+					c.loggingClient.Error(fmt.Sprintf("Deleted events failed.  Err: %s", err.Error()))
+				} else {
+					c.loggingClient.Debug(fmt.Sprintf("Deleted events successfully. elapsed time: %s", time.Since(startTime)))
+				}
+				conn.Close()
+			}
+		}
+	}
+}
+
+// deleteEventsByIds deletes all readings with given event Ids
+func deleteEventsByIds(conn redis.Conn, eventIds []string, batchSize int) (edgeXerr errors.EdgeX) {
+	var events [][]byte
+	//start a transaction to get all events
+	events, edgeXerr = getObjectsByIds(conn, common.ConvertStringsToInterfaces(eventIds))
+	if edgeXerr != nil {
+		return edgeXerr
+	}
+
+	// iterate each events for deletion in batch
+	queriesInQueue := 0
+	e := models.Event{}
+	_ = conn.Send(MULTI)
+	for i, event := range events {
+		err := json.Unmarshal(event, &e)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
+		}
+		storedKey := eventStoredKey(e.Id)
+		_ = conn.Send(UNLINK, storedKey)
+		_ = conn.Send(UNLINK, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id))
+		_ = conn.Send(ZREM, EventsCollection, storedKey)
+		_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
+		_ = conn.Send(ZREM, EventsCollectionPushed, storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), storedKey)
+		queriesInQueue++
+
+		if queriesInQueue >= batchSize {
+			_, err = conn.Do(EXEC)
+			queriesInQueue = 0
+			if err != nil {
+				return errors.NewCommonEdgeX(errors.KindDatabaseError, "unable to execute batch event deletion", err)
+			}
+			// rerun another transaction when event iteration is not finished
+			if i < len(events)-1 {
+				_ = conn.Send(MULTI)
+			}
+		}
+	}
+
+	if queriesInQueue > 0 {
+		_, err := conn.Do("EXEC")
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindDatabaseError, "unable to execute batch event deletion", err)
+		}
+	}
+	return nil
+}
+
+// delete all readings and events
+func deleteAllEvents(conn redis.Conn) errors.EdgeX {
+	err := deleteRecordsByKey(conn, ReadingsCollection)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "scrub all readings failed", err)
+	}
+	err = deleteRecordsByKey(conn, EventsCollection)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "scrub all events failed", err)
+	}
+	return nil
+}
+
+func deleteRecordsByKey(conn redis.Conn, key string) error {
+	_ = conn.Send(MULTI)
+	s := redisScripts[unlinkZSETMembers]
+	_ = s.Send(conn, key)
+	s = redisScripts[unlinkCollection]
+	_ = s.Send(conn, key)
+	_, err := conn.Do(EXEC)
+	return err
+}
+
 func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, eventStoredKey(id), &event)
 	if edgeXerr != nil {
@@ -223,4 +322,28 @@ func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []mod
 		events[i] = e
 	}
 	return events, nil
+}
+
+func getPushedEventReadingIds(conn redis.Conn) (eventIds []string, readingIds []string, edgeXerr errors.EdgeX) {
+	pushedEventIds, err := redis.Strings(conn.Do(ZRANGEBYSCORE, EventsCollectionPushed, GreaterThanZero, InfiniteMax))
+	if err != nil {
+		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "retrieve all pushed event ids failed", err)
+	}
+	pushedEvents, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(pushedEventIds))
+	if edgeXerr != nil {
+		return nil, nil, edgeXerr
+	}
+	e := models.Event{}
+	for _, pushedEvent := range pushedEvents {
+		err = json.Unmarshal(pushedEvent, &e)
+		if err != nil {
+			return nil, nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
+		}
+		rIds, err := redis.Strings(conn.Do(ZRANGE, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id), 0, -1))
+		if err != nil {
+			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of pushed event %s failed", e.Id), err)
+		}
+		readingIds = append(readingIds, rIds...)
+	}
+	return pushedEventIds, readingIds, nil
 }

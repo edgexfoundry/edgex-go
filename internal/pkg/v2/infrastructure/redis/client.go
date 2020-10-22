@@ -35,6 +35,8 @@ func NewClient(config db.Configuration, logger logger.LoggingClient) (*Client, e
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "redis client creation failed", err)
 	}
+	go dc.AsyncDeleteReadings()
+	go dc.AsyncDeleteEvents()
 
 	return dc, nil
 }
@@ -292,6 +294,20 @@ func (c *Client) AddDevice(d model.Device) (model.Device, errors.EdgeX) {
 	}
 
 	return addDevice(conn, d)
+}
+
+// Delete all readings and events that have been pushed (pushed timestamp is greater than zero)
+func (c *Client) DeletePushedEvents() errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	pushedEventIds, readingIds, err := getPushedEventReadingIds(conn)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	deleteReadingsByIdChannel <- readingIds
+	deleteEventsByIdChannel <- pushedEventIds
+	return nil
 }
 
 // Update the pushed timestamp of an event
