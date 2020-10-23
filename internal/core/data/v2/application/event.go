@@ -113,6 +113,29 @@ func EventById(id string, dic *di.Container) (dtos.Event, errors.EdgeX) {
 	return eventDTO, nil
 }
 
+// The DeleteEventById function accepts event id from the controller functions
+// and invokes DeleteEventById function in the infrastructure layer to remove
+// event
+func DeleteEventById(id string, dic *di.Container) errors.EdgeX {
+	if id == "" {
+		return errors.NewCommonEdgeX(errors.KindInvalidId, "id is empty", nil)
+	} else {
+		_, err := uuid.Parse(id)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindInvalidId, "Failed to parse ID as an UUID", err)
+		}
+	}
+
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteEventById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}
+
 func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)
 

@@ -75,6 +75,19 @@ func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX)
 	return
 }
 
+// DeleteEventById removes an event by id
+func (c *Client) DeleteEventById(id string) (edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr = deleteEventById(conn, id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return
+}
+
 // Add a new device profle
 func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, errors.EdgeX) {
 	conn := c.Pool.Get()
