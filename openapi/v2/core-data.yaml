@@ -959,10 +959,10 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/device/{deviceName}/all:
+  /event/device/name/{name}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceName
+    - name: name
       in: path
       required: true
       schema:
@@ -971,7 +971,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given the entire range of events sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given the entire range of events sorted by created descending, returns a portion of that range according to the device name, offset and limit parameters."
       responses:
         '200':
           description: "OK"
@@ -1362,10 +1362,10 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /reading/device/{deviceName}/all:
+  /reading/device/name/{name}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceName
+    - name: name
       in: path
       required: true
       schema:
@@ -1374,7 +1374,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given a range of readings from the specified device sorted by last modified descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given a range of readings from the specified device sorted by created descending, returns a portion of that range according to the device name, offset and limit parameters."
       responses:
         '200':
           description: "OK"

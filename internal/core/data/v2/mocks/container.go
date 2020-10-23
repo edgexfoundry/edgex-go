@@ -9,6 +9,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -35,6 +36,9 @@ func NewMockDIC() *di.Container {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					PersistData: true,
+				},
+				Service: bootstrapConfig.ServiceInfo{
+					MaxResultCount: 20,
 				},
 			}
 		},

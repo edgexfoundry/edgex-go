@@ -349,3 +349,16 @@ func (c *Client) DeviceNameExists(name string) (bool, errors.EdgeX) {
 	}
 	return exists, nil
 }
+
+// AllEventsByDeviceName query events by offset, limit and device name
+func (c *Client) AllEventsByDeviceName(offset int, limit int, name string) (events []model.Event, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	events, edgeXerr = allEventsByDeviceName(conn, offset, limit, name)
+	if edgeXerr != nil {
+		return events, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query events by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
+	}
+	return events, nil
+}

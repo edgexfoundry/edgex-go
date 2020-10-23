@@ -145,3 +145,20 @@ func UpdateEventPushedById(id string, dic *di.Container) errors.EdgeX {
 		return nil
 	}
 }
+
+// AllEventsByDeviceName query events with offset, limit and name
+func AllEventsByDeviceName(offset int, limit int, name string, dic *di.Container) (events []dtos.Event, err errors.EdgeX) {
+	if name == "" {
+		return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	eventModels, err := dbClient.AllEventsByDeviceName(offset, limit, name)
+	if err != nil {
+		return events, errors.NewCommonEdgeXWrapper(err)
+	}
+	events = make([]dtos.Event, len(eventModels))
+	for i, e := range eventModels {
+		events[i] = dtos.FromEventModelToDTO(e)
+	}
+	return events, nil
+}
