@@ -210,6 +210,52 @@ func (_m *DBClient) DeleteDeviceServiceByName(name string) errors.EdgeX {
 	return r0
 }
 
+// DeviceById provides a mock function with given fields: id
+func (_m *DBClient) DeviceById(id string) (models.Device, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Device
+	if rf, ok := ret.Get(0).(func(string) models.Device); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Device)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// DeviceByName provides a mock function with given fields: name
+func (_m *DBClient) DeviceByName(name string) (models.Device, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.Device
+	if rf, ok := ret.Get(0).(func(string) models.Device); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.Device)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceIdExists provides a mock function with given fields: id
 func (_m *DBClient) DeviceIdExists(id string) (bool, errors.EdgeX) {
 	ret := _m.Called(id)

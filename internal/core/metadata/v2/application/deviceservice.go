@@ -66,18 +66,17 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 	var edgeXerr errors.EdgeX
 	if dto.Id != nil {
 		deviceService, edgeXerr = dbClient.GetDeviceServiceById(*dto.Id)
-		if edgeXerr != nil && dto.Name == nil {
+		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		} else if edgeXerr == nil && dto.Name != nil && *dto.Name != deviceService.Name {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service name '%s' not match the exsting '%s' ", *dto.Name, deviceService.Name), nil)
 		}
-	}
-	// Since the DTO requires one of Id or Name, so we don't need to check whether the name is nil
-	if dto.Id == nil || edgeXerr != nil {
+	} else {
 		deviceService, edgeXerr = dbClient.GetDeviceServiceByName(*dto.Name)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
+	}
+	if dto.Name != nil && *dto.Name != deviceService.Name {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service name '%s' not match the exsting '%s' ", *dto.Name, deviceService.Name), nil)
 	}
 
 	requests.ReplaceDeviceServiceModelFieldsWithDTO(&deviceService, dto)
