@@ -910,21 +910,20 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/device/{deviceId}:
+  /event/device/name/{name}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceId
+    - name: deviceName
       in: path
       required: true
       schema:
         type: string
-        format: uuid
       description: "Uniquely identifies a given device"
     delete:
       summary: "Deletes all events for the specified device"
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Delete request accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1149,8 +1148,8 @@ paths:
     delete:
       summary: "Remove all pushed events and their associated readings."
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Delete request accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'

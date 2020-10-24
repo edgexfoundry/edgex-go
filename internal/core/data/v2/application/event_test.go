@@ -90,6 +90,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
 		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
 		myMock.On("DeletePushedEvents").Return(nil)
+		myMock.On("DeleteEventsByDeviceName", testDeviceName).Return(nil)
 	}
 
 	return myMock
@@ -270,5 +271,19 @@ func TestDeletePushedEvents(t *testing.T) {
 	})
 
 	err := DeletePushedEvents(dic)
+	require.NoError(t, err)
+}
+
+func TestDeleteEventsByDeviceName(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	err := DeleteEventsByDeviceName(testDeviceName, dic)
 	require.NoError(t, err)
 }

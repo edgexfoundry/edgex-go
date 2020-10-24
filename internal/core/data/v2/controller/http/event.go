@@ -225,7 +225,7 @@ func (ec *EventController) DeletePushedEvents(w http.ResponseWriter, r *http.Req
 	var response interface{}
 	var statusCode int
 
-	// Delete all events
+	// Delete all pushed events
 	err := application.DeletePushedEvents(ec.dic)
 	if err != nil {
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -313,5 +313,35 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *http.Request) {
+	// retrieve all the service injections from bootstrap
+	lc := container.LoggingClientFrom(ec.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	deviceName := vars[contractsV2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	// Delete events with associated Device name
+	err := application.DeleteEventsByDeviceName(deviceName, ec.dic)
+	if err != nil {
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+		statusCode = http.StatusAccepted
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }

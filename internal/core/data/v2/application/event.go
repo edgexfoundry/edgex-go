@@ -196,3 +196,17 @@ func AllEvents(offset int, limit int, dic *di.Container) (events []dtos.Event, e
 	}
 	return events, nil
 }
+
+// The DeleteEventsByDeviceName function will be invoked by controller functions
+// and then invokes DeletePushedEvents function in the infrastructure layer to remove
+// all events that are associated with the given deviceName
+func DeleteEventsByDeviceName(deviceName string, dic *di.Container) errors.EdgeX {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteEventsByDeviceName(deviceName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}

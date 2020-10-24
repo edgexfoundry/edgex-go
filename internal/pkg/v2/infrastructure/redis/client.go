@@ -301,7 +301,7 @@ func (c *Client) DeletePushedEvents() errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	pushedEventIds, readingIds, err := getPushedEventReadingIds(conn)
+	pushedEventIds, readingIds, err := getEventReadingIdsByKey(conn, EventsCollectionPushed)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -428,4 +428,18 @@ func (c *Client) AllDevices(offset int, limit int, labels []string) ([]model.Dev
 		return devices, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return devices, nil
+}
+
+// Delete all readings and events that are associated with the given device
+func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	eventIds, readingIds, err := getEventReadingIdsByKey(conn, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName))
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	deleteReadingsByIdChannel <- readingIds
+	deleteEventsByIdChannel <- eventIds
+	return nil
 }
