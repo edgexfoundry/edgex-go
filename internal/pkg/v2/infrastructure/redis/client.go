@@ -388,3 +388,16 @@ func (c *Client) DeviceByName(name string) (device model.Device, edgeXerr errors
 
 	return
 }
+
+// AllEvents query events by offset and limit
+func (c *Client) AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	events, edgeXerr := c.allEvents(conn, offset, limit)
+	if edgeXerr != nil {
+		return events, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query events by offset %d and limit %d", offset, limit), edgeXerr)
+	}
+	return events, nil
+}

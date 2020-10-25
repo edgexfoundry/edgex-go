@@ -1,8 +1,10 @@
 package http
 
 import (
+	"math"
 	"net/http"
 
+	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
@@ -251,4 +253,39 @@ func (ec *EventController) UpdateEventPushedById(w http.ResponseWriter, r *http.
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	// encode and send out the response
 	pkg.Encode(updatedResponses, w, lc)
+}
+
+func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(ec.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := dataContainer.ConfigurationFrom(ec.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		events, err := application.AllEvents(offset, limit, ec.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
 }
