@@ -16,7 +16,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
@@ -103,7 +103,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[contractsV2.Id]
+	id := vars[v2.Id]
 
 	var eventResponse interface{}
 	var statusCode int
@@ -137,7 +137,7 @@ func (ec *EventController) DeleteEventById(w http.ResponseWriter, r *http.Reques
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[contractsV2.Id]
+	id := vars[v2.Id]
 
 	var response interface{}
 	var statusCode int
@@ -194,7 +194,7 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 
 	// URL parameters
 	vars := mux.Vars(r)
-	deviceName := vars[contractsV2.DeviceName]
+	deviceName := vars[v2.DeviceName]
 
 	var eventResponse interface{}
 	var statusCode int
@@ -273,6 +273,44 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 		statusCode = err.Code()
 	} else {
 		events, err := application.AllEvents(offset, limit, ec.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(ec.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := dataContainer.ConfigurationFrom(ec.dic.Get)
+
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		events, err := application.EventsByDeviceName(offset, limit, name, ec.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
