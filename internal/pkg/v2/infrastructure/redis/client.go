@@ -328,12 +328,12 @@ func (c *Client) DeleteDeviceByName(name string) errors.EdgeX {
 	return nil
 }
 
-// AllDeviceByServiceName query devices by offset, limit and name
-func (c *Client) AllDeviceByServiceName(offset int, limit int, name string) (devices []model.Device, edgeXerr errors.EdgeX) {
+// DevicesByServiceName query devices by offset, limit and name
+func (c *Client) DevicesByServiceName(offset int, limit int, name string) (devices []model.Device, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	devices, edgeXerr = allDeviceByServiceName(conn, offset, limit, name)
+	devices, edgeXerr = devicesByServiceName(conn, offset, limit, name)
 	if edgeXerr != nil {
 		return devices, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
 			fmt.Sprintf("fail to query devices by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
@@ -412,4 +412,17 @@ func (c *Client) AllDevices(offset int, limit int, labels []string) ([]model.Dev
 		return devices, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return devices, nil
+}
+
+// EventsByDeviceName query events by offset, limit and device name
+func (c *Client) EventsByDeviceName(offset int, limit int, name string) (events []model.Event, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	events, edgeXerr = eventsByDeviceName(conn, offset, limit, name)
+	if edgeXerr != nil {
+		return events, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query events by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
+	}
+	return events, nil
 }

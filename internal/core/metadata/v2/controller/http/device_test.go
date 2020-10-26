@@ -342,9 +342,9 @@ func TestAllDeviceByServiceName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("AllDeviceByServiceName", 0, 5, testServiceA).Return([]models.Device{devices[0], devices[1]}, nil)
-	dbClientMock.On("AllDeviceByServiceName", 1, 1, testServiceA).Return([]models.Device{devices[1]}, nil)
-	dbClientMock.On("AllDeviceByServiceName", 4, 1, testServiceB).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DevicesByServiceName", 0, 5, testServiceA).Return([]models.Device{devices[0], devices[1]}, nil)
+	dbClientMock.On("DevicesByServiceName", 1, 1, testServiceA).Return([]models.Device{devices[1]}, nil)
+	dbClientMock.On("DevicesByServiceName", 4, 1, testServiceB).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -379,7 +379,7 @@ func TestAllDeviceByServiceName(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllDeviceByServiceName)
+			handler := http.HandlerFunc(controller.DevicesByServiceName)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert
