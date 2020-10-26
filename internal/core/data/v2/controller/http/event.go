@@ -245,7 +245,7 @@ func (ec *EventController) UpdateEventPushedById(w http.ResponseWriter, r *http.
 			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 			updateEventPushedResponse = responseDTO.NewUpdateEventPushedByIdResponse(req.RequestId, err.Message(), err.Code(), req.Id)
 		} else {
-			updateEventPushedResponse = responseDTO.NewUpdateEventPushedByIdResponseNoMessage(req.RequestId, http.StatusOK, req.Id)
+			updateEventPushedResponse = responseDTO.NewUpdateEventPushedByIdResponse(req.RequestId, "", http.StatusOK, req.Id)
 		}
 		updatedResponses = append(updatedResponses, updateEventPushedResponse)
 	}

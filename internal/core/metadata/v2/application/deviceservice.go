@@ -43,13 +43,13 @@ func AddDeviceService(d models.DeviceService, ctx context.Context, dic *di.Conta
 	return addedDeviceService.Id, nil
 }
 
-// GetDeviceServiceByName query the device service by name
-func GetDeviceServiceByName(name string, ctx context.Context, dic *di.Container) (deviceService dtos.DeviceService, err errors.EdgeX) {
+// DeviceServiceByName query the device service by name
+func DeviceServiceByName(name string, ctx context.Context, dic *di.Container) (deviceService dtos.DeviceService, err errors.EdgeX) {
 	if name == "" {
 		return deviceService, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	ds, err := dbClient.GetDeviceServiceByName(name)
+	ds, err := dbClient.DeviceServiceByName(name)
 	if err != nil {
 		return deviceService, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -65,12 +65,12 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 	var deviceService models.DeviceService
 	var edgeXerr errors.EdgeX
 	if dto.Id != nil {
-		deviceService, edgeXerr = dbClient.GetDeviceServiceById(*dto.Id)
+		deviceService, edgeXerr = dbClient.DeviceServiceById(*dto.Id)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
 	} else {
-		deviceService, edgeXerr = dbClient.GetDeviceServiceByName(*dto.Name)
+		deviceService, edgeXerr = dbClient.DeviceServiceByName(*dto.Name)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
@@ -129,10 +129,10 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 	return nil
 }
 
-// GetDeviceServices query the device services with labels, offset, and limit
-func GetDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, err errors.EdgeX) {
+// AllDeviceServices query the device services with labels, offset, and limit
+func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, err errors.EdgeX) {
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	services, err := dbClient.GetDeviceServices(offset, limit, labels)
+	services, err := dbClient.AllDeviceServices(offset, limit, labels)
 	if err != nil {
 		return deviceServices, errors.NewCommonEdgeXWrapper(err)
 	}

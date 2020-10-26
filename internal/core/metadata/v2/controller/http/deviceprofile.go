@@ -231,7 +231,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 	pkg.Encode(response, w, lc)
 }
 
-func (dc *DeviceProfileController) GetDeviceProfileByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
@@ -243,7 +243,7 @@ func (dc *DeviceProfileController) GetDeviceProfileByName(w http.ResponseWriter,
 	var response interface{}
 	var statusCode int
 
-	deviceProfile, err := application.GetDeviceProfileByName(name, ctx, dc.dic)
+	deviceProfile, err := application.DeviceProfileByName(name, ctx, dc.dic)
 	if err != nil {
 		if errors.Kind(err) != errors.KindEntityDoesNotExist {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -320,7 +320,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 	pkg.Encode(response, w, lc)
 }
 
-func (dc *DeviceProfileController) GetAllDeviceProfiles(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
@@ -337,7 +337,7 @@ func (dc *DeviceProfileController) GetAllDeviceProfiles(w http.ResponseWriter, r
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		deviceProfiles, err := application.GetDeviceProfiles(offset, limit, labels, dc.dic)
+		deviceProfiles, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)

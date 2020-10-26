@@ -95,7 +95,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	pkg.Encode(addResponses, w, lc)
 }
 
-func (dc *DeviceServiceController) GetDeviceServiceByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) DeviceServiceByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
@@ -107,7 +107,7 @@ func (dc *DeviceServiceController) GetDeviceServiceByName(w http.ResponseWriter,
 	var response interface{}
 	var statusCode int
 
-	deviceService, err := application.GetDeviceServiceByName(name, ctx, dc.dic)
+	deviceService, err := application.DeviceServiceByName(name, ctx, dc.dic)
 	if err != nil {
 		if errors.Kind(err) != errors.KindEntityDoesNotExist {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
@@ -116,7 +116,7 @@ func (dc *DeviceServiceController) GetDeviceServiceByName(w http.ResponseWriter,
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		response = responseDTO.NewDeviceServiceResponseNoMessage("", http.StatusOK, deviceService)
+		response = responseDTO.NewDeviceServiceResponse("", "", http.StatusOK, deviceService)
 		statusCode = http.StatusOK
 	}
 
@@ -232,7 +232,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWrit
 	pkg.Encode(response, w, lc)
 }
 
-func (dc *DeviceServiceController) GetAllDeviceServices(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
@@ -250,7 +250,7 @@ func (dc *DeviceServiceController) GetAllDeviceServices(w http.ResponseWriter, r
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		deviceServices, err := application.GetDeviceServices(offset, limit, labels, ctx, dc.dic)
+		deviceServices, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)

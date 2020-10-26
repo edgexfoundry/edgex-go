@@ -739,15 +739,15 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	}
 }
 
-func TestGetDeviceProfileByName(t *testing.T) {
+func TestDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	emptyName := ""
 	notFoundName := "notFoundName"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("GetDeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
-	dbClientMock.On("GetDeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
+	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -776,7 +776,7 @@ func TestGetDeviceProfileByName(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.GetDeviceProfileByName)
+			handler := http.HandlerFunc(controller.DeviceProfileByName)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert
@@ -916,16 +916,16 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	}
 }
 
-func TestGetDeviceProfiles(t *testing.T) {
+func TestAllDeviceProfiles(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("GetDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
-	dbClientMock.On("GetDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
-	dbClientMock.On("GetDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("GetDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
+	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
+	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
+	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -962,7 +962,7 @@ func TestGetDeviceProfiles(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.GetAllDeviceProfiles)
+			handler := http.HandlerFunc(controller.AllDeviceProfiles)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert

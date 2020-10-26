@@ -197,3 +197,17 @@ func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devi
 	}
 	return devices, nil
 }
+
+// DeviceByName query the device by name
+func DeviceByName(name string, dic *di.Container) (device dtos.Device, err errors.EdgeX) {
+	if name == "" {
+		return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	d, err := dbClient.DeviceByName(name)
+	if err != nil {
+		return device, errors.NewCommonEdgeXWrapper(err)
+	}
+	device = dtos.FromDeviceModelToDTO(d)
+	return device, nil
+}

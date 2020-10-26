@@ -131,8 +131,8 @@ func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, 
 	return addDeviceService(conn, ds)
 }
 
-// GetDeviceServiceByName gets a device service by name
-func (c *Client) GetDeviceServiceByName(name string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+// DeviceServiceByName gets a device service by name
+func (c *Client) DeviceServiceByName(name string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -144,8 +144,8 @@ func (c *Client) GetDeviceServiceByName(name string) (deviceService model.Device
 	return
 }
 
-// GetDeviceServiceById gets a device service by id
-func (c *Client) GetDeviceServiceById(id string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
+// DeviceServiceById gets a device service by id
+func (c *Client) DeviceServiceById(id string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -190,8 +190,8 @@ func (c *Client) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	return deviceServiceNameExist(conn, name)
 }
 
-// GetDeviceProfileByName gets a device profile by name
-func (c *Client) GetDeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
+// DeviceProfileByName gets a device profile by name
+func (c *Client) DeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -229,8 +229,8 @@ func (c *Client) DeleteDeviceProfileByName(name string) errors.EdgeX {
 	return nil
 }
 
-// GetDeviceProfiles query device profiles with offset and limit
-func (c *Client) GetDeviceProfiles(offset int, limit int, labels []string) ([]model.DeviceProfile, errors.EdgeX) {
+// AllDeviceProfiles query device profiles with offset and limit
+func (c *Client) AllDeviceProfiles(offset int, limit int, labels []string) ([]model.DeviceProfile, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -267,11 +267,11 @@ func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
 	return count, nil
 }
 
-// GetDeviceServices returns multiple device services per query criteria, including
+// AllDeviceServices returns multiple device services per query criteria, including
 // offset: the number of items to skip before starting to collect the result set
 // limit: The numbers of items to return
 // labels: allows for querying a given object by associated user-defined labels
-func (c *Client) GetDeviceServices(offset int, limit int, labels []string) (deviceServices []model.DeviceService, edgeXerr errors.EdgeX) {
+func (c *Client) AllDeviceServices(offset int, limit int, labels []string) (deviceServices []model.DeviceService, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
