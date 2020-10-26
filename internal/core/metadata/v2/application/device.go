@@ -85,13 +85,13 @@ func DeleteDeviceByName(name string, dic *di.Container) errors.EdgeX {
 	return nil
 }
 
-// AllDeviceByServiceName query devices with offset, limit and name
-func AllDeviceByServiceName(offset int, limit int, name string, ctx context.Context, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+// DevicesByServiceName query devices with offset, limit and name
+func DevicesByServiceName(offset int, limit int, name string, ctx context.Context, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
 	if name == "" {
 		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	deviceModels, err := dbClient.AllDeviceByServiceName(offset, limit, name)
+	deviceModels, err := dbClient.DevicesByServiceName(offset, limit, name)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)
 	}

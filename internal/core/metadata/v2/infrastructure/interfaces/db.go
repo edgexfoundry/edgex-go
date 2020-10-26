@@ -32,7 +32,7 @@ type DBClient interface {
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
 	DeleteDeviceById(id string) errors.EdgeX
 	DeleteDeviceByName(name string) errors.EdgeX
-	AllDeviceByServiceName(offset int, limit int, name string) ([]model.Device, errors.EdgeX)
+	DevicesByServiceName(offset int, limit int, name string) ([]model.Device, errors.EdgeX)
 	DeviceIdExists(id string) (bool, errors.EdgeX)
 	DeviceNameExists(id string) (bool, errors.EdgeX)
 	DeviceById(id string) (model.Device, errors.EdgeX)

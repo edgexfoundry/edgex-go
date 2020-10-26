@@ -154,8 +154,8 @@ func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
 	return nil
 }
 
-// allDeviceByServiceName query devices by offset, limit and name
-func allDeviceByServiceName(conn redis.Conn, offset int, limit int, name string) (devices []models.Device, edgeXerr errors.EdgeX) {
+// devicesByServiceName query devices by offset, limit and name
+func devicesByServiceName(conn redis.Conn, offset int, limit int, name string) (devices []models.Device, edgeXerr errors.EdgeX) {
 	end := offset + limit - 1
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
