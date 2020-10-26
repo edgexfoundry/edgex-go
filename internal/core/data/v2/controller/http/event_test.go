@@ -549,3 +549,80 @@ func TestAllEvents(t *testing.T) {
 		})
 	}
 }
+
+func TestAllEventsByDeviceName(t *testing.T) {
+	testDeviceA := "testDeviceA"
+	testDeviceB := "testDeviceB"
+	event1WithDeviceA := persistedEvent
+	event1WithDeviceA.DeviceName = testDeviceA
+	event2WithDeviceA := persistedEvent
+	event2WithDeviceA.DeviceName = testDeviceA
+	event3WithDeviceB := persistedEvent
+	event3WithDeviceB.DeviceName = testDeviceB
+
+	events := []models.Event{event1WithDeviceA, event2WithDeviceA, event3WithDeviceB}
+
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsByDeviceName", 0, 5, testDeviceA).Return([]models.Event{events[0], events[1]}, nil)
+	dbClientMock.On("EventsByDeviceName", 1, 1, testDeviceA).Return([]models.Event{events[1]}, nil)
+	dbClientMock.On("EventsByDeviceName", 4, 1, testDeviceB).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+	assert.NotNil(t, ec)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		deviceName         string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get events with deviceName", "0", "5", testDeviceA, false, 2, http.StatusOK},
+		{"Valid - get events with offset and no labels", "1", "1", testDeviceA, false, 1, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", testDeviceB, true, 0, http.StatusNotFound},
+		{"Invalid - get events without deviceName", "0", "10", "", true, 0, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiEventByDeviceNameRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(v2.Offset, testCase.offset)
+			query.Add(v2.Limit, testCase.limit)
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(ec.EventsByDeviceName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiEventsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Events), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
