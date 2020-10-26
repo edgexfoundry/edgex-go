@@ -21,7 +21,7 @@ const (
 	EventsCollection           = "v2:event"
 	EventsCollectionCreated    = EventsCollection + ":" + v2.Created
 	EventsCollectionPushed     = EventsCollection + ":" + v2.Pushed
-	EventsCollectionDeviceName = EventsCollection + ":" + v2.DeviceName
+	EventsCollectionDeviceName = EventsCollection + ":" + v2.Device + ":" + v2.Name
 	EventsCollectionReadings   = EventsCollection + ":readings"
 )
 
@@ -215,6 +215,33 @@ func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []mod
 		err := json.Unmarshal(in, &e)
 		if err != nil {
 			return []models.Event{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "event format parsing failed from the database", err)
+		}
+		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
+		if edgeXerr != nil {
+			return events, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+		events[i] = e
+	}
+	return events, nil
+}
+
+// eventsByDeviceName query events by offset, limit and device name
+func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (events []models.Event, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, name), offset, end)
+	if err != nil {
+		return events, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	events = make([]models.Event, len(objects))
+	for i, in := range objects {
+		e := models.Event{}
+		err := json.Unmarshal(in, &e)
+		if err != nil {
+			return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
 		}
 		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
 		if edgeXerr != nil {

@@ -153,6 +153,31 @@ func (_m *DBClient) EventTotalCount() (uint32, errors.EdgeX) {
 	return r0, r1
 }
 
+// EventsByDeviceName provides a mock function with given fields: offset, limit, name
+func (_m *DBClient) EventsByDeviceName(offset int, limit int, name string) ([]models.Event, errors.EdgeX) {
+	ret := _m.Called(offset, limit, name)
+
+	var r0 []models.Event
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Event); ok {
+		r0 = rf(offset, limit, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Event)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // UpdateEventPushedById provides a mock function with given fields: id
 func (_m *DBClient) UpdateEventPushedById(id string) errors.EdgeX {
 	ret := _m.Called(id)

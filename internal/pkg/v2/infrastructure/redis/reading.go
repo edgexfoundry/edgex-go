@@ -22,7 +22,7 @@ import (
 const (
 	ReadingsCollection           = "v2:reading"
 	ReadingsCollectionCreated    = ReadingsCollection + ":" + v2.Created
-	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.DeviceName
+	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.Device + ":" + v2.Name
 	ReadingsCollectionName       = ReadingsCollection + ":" + v2.Name
 )
 

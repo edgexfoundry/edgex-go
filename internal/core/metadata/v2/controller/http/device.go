@@ -154,7 +154,7 @@ func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Re
 	pkg.Encode(response, w, lc)
 }
 
-func (dc *DeviceController) AllDeviceByServiceName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceController) DevicesByServiceName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
@@ -174,7 +174,7 @@ func (dc *DeviceController) AllDeviceByServiceName(w http.ResponseWriter, r *htt
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		devices, err := application.AllDeviceByServiceName(offset, limit, name, ctx, dc.dic)
+		devices, err := application.DevicesByServiceName(offset, limit, name, ctx, dc.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
