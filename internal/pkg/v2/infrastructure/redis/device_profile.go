@@ -203,7 +203,7 @@ func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []str
 		dp := models.DeviceProfile{}
 		err := json.Unmarshal(in, &dp)
 		if err != nil {
-			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
+			return []models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile format parsing failed from the database", err)
 		}
 		deviceProfiles[i] = dp
 	}

@@ -164,7 +164,7 @@ func deviceServicesByLabels(conn redis.Conn, offset int, limit int, labels []str
 		s := models.DeviceService{}
 		err := json.Unmarshal(in, &s)
 		if err != nil {
-			return deviceServices, errors.NewCommonEdgeX(errors.KindContractInvalid, "device service parsing failed", err)
+			return []models.DeviceService{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device service format parsing failed from the database", err)
 		}
 		deviceServices[i] = s
 	}

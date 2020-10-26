@@ -183,3 +183,17 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	return nil
 }
+
+// AllDevices query the devices with offset, limit, and labels
+func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dps, err := dbClient.AllDevices(offset, limit, labels)
+	if err != nil {
+		return devices, errors.NewCommonEdgeXWrapper(err)
+	}
+	devices = make([]dtos.Device, len(dps))
+	for i, dp := range dps {
+		devices[i] = dtos.FromDeviceModelToDTO(dp)
+	}
+	return devices, nil
+}
