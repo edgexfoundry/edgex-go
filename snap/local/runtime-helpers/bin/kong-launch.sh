@@ -1,12 +1,16 @@
 #!/bin/sh -e
 
+OPENRESTY_PATH="/usr/local/openresty/"
+
 # need to add luajit/lib folder so that luajit will load properly
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/luajit/lib"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$OPENRESTY_PATH/luajit/lib"
 
 # lua paths so that luarocks can work
 export LUA_VERSION=5.1
-export LUA_PATH="$SNAP/lualib/?.lua;$SNAP/lualib/?/init.lua;$SNAP/usr/share/lua/$LUA_VERSION/?.lua;$SNAP/usr/share/lua/$LUA_VERSION/?/init.lua;$SNAP/lib/lua/$LUA_VERSION/?.lua;$SNAP/lib/lua/$LUA_VERSION/?/init.lua;$SNAP/share/lua/$LUA_VERSION/?.lua;$SNAP/share/lua/$LUA_VERSION/?/init.lua;;"
-export LUA_CPATH="$SNAP/lualib/?.so;$SNAP/lib/lua/$LUA_VERSION/?.so;$SNAP/lib/$ARCH_LIB_NAME/lua/$LUA_VERSION/?.so;;"
+# lua paths so that luarocks can work
+export LUA_VERSION=5.1
+export LUA_PATH="$OPENRESTY_PATH/lualib/?.lua;$OPENRESTY_PATH/lualib/?/init.lua;/usr/share/lua/$LUA_VERSION/?.lua;/usr/share/lua/$LUA_VERSION/?/init.lua;/usr/local/lib/lua/$LUA_VERSION/?.lua;/usr/local/lib/lua/$LUA_VERSION/?/init.lua;/usr/local/share/lua/$LUA_VERSION/?.lua;/usr/local/share/lua/$LUA_VERSION/?/init.lua;;"
+export LUA_CPATH="$OPENRESTY_PATH/lualib/?.so;/usr/local/lib/lua/$LUA_VERSION/?.so;;"
 
 # set postgresql password
 export KONG_PG_PASSWORD=`cat "$SNAP_DATA/config/postgres/kongpw"`

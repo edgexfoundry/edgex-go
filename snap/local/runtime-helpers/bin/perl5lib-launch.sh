@@ -5,14 +5,8 @@ case $SNAP_ARCH in
     amd64)
         ARCH_LIB_NAME="x86_64-linux-gnu"
         ;;
-    armhf)
-        ARCH_LIB_NAME="arm-linux-gnueabihf"
-        ;;
     arm64)
         ARCH_LIB_NAME="aarch64-linux-gnu"
-        ;;
-    i386)
-        ARCH_LIB_NAME="i386-linux-gnu"
         ;;
     *)
         # unsupported or unknown architecture
