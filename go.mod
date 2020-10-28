@@ -5,12 +5,12 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.53
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.56
 	github.com/edgexfoundry/go-mod-configuration v0.0.8
 	github.com/edgexfoundry/go-mod-core-contracts v0.1.112
 	github.com/edgexfoundry/go-mod-messaging v0.1.28
-	github.com/edgexfoundry/go-mod-registry v0.1.25
-	github.com/edgexfoundry/go-mod-secrets v0.0.25
+	github.com/edgexfoundry/go-mod-registry v0.1.26
+	github.com/edgexfoundry/go-mod-secrets v0.0.26
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gomodule/redigo v2.0.0+incompatible
