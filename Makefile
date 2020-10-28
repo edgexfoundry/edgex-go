@@ -10,7 +10,10 @@
 GO=CGO_ENABLED=0 GO111MODULE=on go
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
-DOCKERS=docker_core_data docker_core_metadata docker_core_command docker_support_logging docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler docker_security_secrets_setup docker_security_proxy_setup docker_security_secretstore_setup
+DOCKERS=docker_core_data docker_core_metadata docker_core_command docker_support_logging \
+  docker_support_notifications docker_sys_mgmt_agent docker_support_scheduler \
+	docker_security_secrets_setup docker_security_proxy_setup docker_security_secretstore_setup \
+	docker_security_bootstrap_redis
 .PHONY: $(DOCKERS)
 
 MICROSERVICES=cmd/core-metadata/core-metadata cmd/core-data/core-data \
@@ -19,7 +22,8 @@ MICROSERVICES=cmd/core-metadata/core-metadata cmd/core-data/core-data \
 	cmd/sys-mgmt-agent/sys-mgmt-agent cmd/support-scheduler/support-scheduler \
 	cmd/security-secrets-setup/security-secrets-setup cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
-	cmd/security-file-token-provider/security-file-token-provider cmd/security-secretstore-read/security-secretstore-read
+	cmd/security-file-token-provider/security-file-token-provider \
+	cmd/security-bootstrap-redis/security-bootstrap-redis
 
 .PHONY: $(MICROSERVICES)
 
@@ -71,8 +75,8 @@ cmd/security-secretstore-setup/security-secretstore-setup:
 cmd/security-file-token-provider/security-file-token-provider:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
-cmd/security-secretstore-read/security-secretstore-read:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/security-secretstore-read
+cmd/security-bootstrap-redis/security-bootstrap-redis:
+	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrap-redis/security-bootstrap-redis ./cmd/security-bootstrap-redis
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -193,3 +197,10 @@ docker_security_secretstore_setup:
 		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
+docker_security_bootstrap_redis:
+		docker build \
+		-f cmd/security-bootstrap-redis/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(DOCKER_TAG) \
+		.

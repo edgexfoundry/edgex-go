@@ -14,24 +14,32 @@
 #################################################################################
 
 [Writable]
-  LogLevel = "ERROR"
+LogLevel = 'INFO'
 
-[Service]
-  BootTimeout = 30000
+[Logging]
+EnableRemote = false
+File = ''
 
 [SecretStore]
-  Host = "edgex-vault"
-  Port = 8200
-  Path = "/v1/secret/edgex/redis"
-  RootCaCertPath = "/tmp/edgex/secrets/ca/ca.pem"
-  TokenFile = "/tmp/edgex/secrets/edgex-redis/secrets-token.json"
-  PasswordFile = "/tmp/edgex/secrets/edgex-redis/redis5-password"
-  ServerName = "edgex-vault"
-  AdditionalRetryAttempts = 10
-  RetryWaitPeriod = "1s"
+Host = 'localhost'          ## Override in environment variables, if necessary
+ServerName = 'edgex-vault'  ## Needed for TLS CN
+Port = 8200
+Protocol = 'https'
+AdditionalRetryAttempts = 10
+RetryWaitPeriod = '1s'
+Path = '/v1/secret/edgex/bootstrap-redis/'
+RootCaCertPath = '/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem'
+TokenFile = '/vault/config/assets/resp-init.json'
+  [SecretStore.Authentication]
+  AuthType = 'X-Vault-Token'
 
 [Databases]
-    [Databases.redis5]
-    Username = "redis"
-    Password = "password"
+  [Databases.Primary]
+  Host = 'localhost'
+  Name = ''           ## Unused
+  Password = ''       ## Will be set from value in Vault
+  Username = ''       ## Will be set from value in Vault
+  Port = 6379
+  Timeout = 5000
+  Type = 'redisdb'
 

@@ -2,7 +2,7 @@
 
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Go implementation of EdgeX security-secretstore-setup service (aka edgex-vault-worker). The container relies on the `security-secrets-setup` container to create the PKI, fork/execs security-file-token-provider to create the tokens, adds shared secrets to Vault itself, and then uses security-secretstore-read to share the Redis password with Redis.
+Go implementation of EdgeX security-secretstore-setup service (aka edgex-vault-worker). The container relies on the `security-secrets-setup` container to create the PKI, fork/execs security-file-token-provider to create the tokens, and adds shared secrets to Vault itself.
 
 ## Build
 
@@ -42,12 +42,18 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
 
 ## Debugging Tips
 
-* The _RevokeRootTokens_ in `cmd/security-secretstore-setup/res/configuration.toml` controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. Set this to _false_ if you use edgex-vault-worker to populate the system and then want to debug either security-secretstore-setup or security-secrets-setup.
+* The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.toml`](res/configuration.toml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug either security-secretstore-setup or security-secrets-setup, set this to _false_:
 
-* The edgex-vault-worker uses _composefiles_vault-config_ volume to store its token. To copy the root token from edgex-vault-worker, use
+    ```toml
+    [SecretService]
+    ...
+    RevokeRootTokens = false
+    ```
+
+* The edgex-vault-worker uses _compose-files_vault-config_ volume to store its token. To copy the root token from edgex-vault-worker, use
 
     ```sh
-    docker run --rm -v composefiles_vault-config:/vault/config alpine:latest cat /vault/config/assets/resp-init.json > resp-init.json
+    docker run --rm -v compose-files_vault-config:/vault/config alpine:latest cat /vault/config/assets/resp-init.json > resp-init.json
     ```
 
 * To verify the root token

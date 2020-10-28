@@ -295,15 +295,18 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// continue credential creation
 
-	// A little note on why there are two secrets paths. For each microservice, the
-	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/mongodb and
-	// /v1/secret/edgex/mongo/%s). The go-mod-secrets client requires a Path property to prefix all
-	// secrets. docker-edgex-mongo uses that
+	// A little note on why there are two secrets paths. For each microservice, the username/password
+	// is uploaded to the vault on both /v1/secret/edgex/%s/mongodb and /v1/secret/edgex/mongo/%s).
+	// The go-mod-secrets client requires a Path property to prefix all secrets. docker-edgex-mongo
+	// uses that
 	// (https://github.com/edgexfoundry/docker-edgex-mongo/blob/master/cmd/res/configuration.toml) in
 	// order to enumerate the users and passwords when setting up the initial database authentication.
-	// So edgex/%s/monodb is for the microservices (microservices are restricted to their specific
-	// edgex/%s), and edgex/mongo/* is enumerated to initialize the database.
-
+	// So edgex/%s/mongodb is for the microservices (microservices are restricted to their specific
+	// edgex/%s), and edgex/mongo/* is enumerated by docker-edgex-mongo to initialize the database.
+	//
+	// The Redis implementation parallels the existing Mongo code but until the update for Redis 6,
+	// there is only a single Redis password.
+	//
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
 
@@ -352,9 +355,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
-	// XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
-	// variadic functions
-	err = addDBCredential(lc, "redis", cred, "redis5", redis5Pair)
+	// security-bootstrap-redis uses the path /v1/secret/edgex/bootstrap-redis/ and go-mod-bootstrap
+	// with append the DB type (redisdb)
+	err = addDBCredential(lc, "bootstrap-redis", cred, "redisdb", redis5Pair)
 	if err != nil {
 		lc.Error(err.Error())
 		os.Exit(1)
@@ -391,6 +394,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	lc.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
 	return false
 }
+
+// XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
+// variadic functions
 
 func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
 	path := fmt.Sprintf("/v1/secret/edgex/%s/%s", service, db)
