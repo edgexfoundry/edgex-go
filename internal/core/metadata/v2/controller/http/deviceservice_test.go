@@ -282,6 +282,17 @@ func TestPatchDeviceService(t *testing.T) {
 	validWithNoName := testReq
 	validWithNoName.Service.Name = nil
 
+	invalidId := testReq
+	invalidUUID := "invalidUUID"
+	invalidId.Service.Id = &invalidUUID
+
+	emptyString := ""
+	emptyId := testReq
+	emptyId.Service.Id = &emptyString
+	emptyName := testReq
+	emptyName.Service.Id = nil
+	emptyName.Service.Name = &emptyString
+
 	invalidNoIdAndName := testReq
 	invalidNoIdAndName.Service.Id = nil
 	invalidNoIdAndName.Service.Name = nil
@@ -308,17 +319,21 @@ func TestPatchDeviceService(t *testing.T) {
 	controller := NewDeviceServiceController(dic)
 	require.NotNil(t, controller)
 	tests := []struct {
-		name               string
-		request            []requests.UpdateDeviceServiceRequest
-		expectedStatusCode int
+		name                 string
+		request              []requests.UpdateDeviceServiceRequest
+		expectedStatusCode   int
+		expectedResponseCode int
 	}{
-		{"Valid", []requests.UpdateDeviceServiceRequest{valid}, http.StatusOK},
-		{"Valid - no requestId", []requests.UpdateDeviceServiceRequest{validWithNoReqID}, http.StatusOK},
-		{"Valid - no id", []requests.UpdateDeviceServiceRequest{validWithNoId}, http.StatusOK},
-		{"Valid - no name", []requests.UpdateDeviceServiceRequest{validWithNoName}, http.StatusOK},
-		{"Invalid - no id and name", []requests.UpdateDeviceServiceRequest{invalidNoIdAndName}, http.StatusBadRequest},
-		{"Invalid - not found id", []requests.UpdateDeviceServiceRequest{invalidNotFoundId}, http.StatusNotFound},
-		{"Invalid - not found name", []requests.UpdateDeviceServiceRequest{invalidNotFoundName}, http.StatusNotFound},
+		{"Valid", []requests.UpdateDeviceServiceRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no requestId", []requests.UpdateDeviceServiceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no id", []requests.UpdateDeviceServiceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no name", []requests.UpdateDeviceServiceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - invalid id", []requests.UpdateDeviceServiceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateDeviceServiceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty name", []requests.UpdateDeviceServiceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - no id and name", []requests.UpdateDeviceServiceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found id", []requests.UpdateDeviceServiceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found name", []requests.UpdateDeviceServiceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -334,17 +349,7 @@ func TestPatchDeviceService(t *testing.T) {
 			handler := http.HandlerFunc(controller.PatchDeviceService)
 			handler.ServeHTTP(recorder, req)
 
-			if testCase.expectedStatusCode == http.StatusBadRequest {
-				var res common.BaseResponse
-				err = json.Unmarshal(recorder.Body.Bytes(), &res)
-				require.NoError(t, err)
-
-				// Assert
-				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
-				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
-				assert.NotEmpty(t, res.Message, "Message is empty")
-			} else {
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []common.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
@@ -355,7 +360,22 @@ func TestPatchDeviceService(t *testing.T) {
 				if res[0].RequestId != "" {
 					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
-				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
 
 		})
