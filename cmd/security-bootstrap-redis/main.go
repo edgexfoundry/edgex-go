@@ -10,8 +10,18 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- *
- * @author: Diana Atanasova
- * @author: Andre Srinivasan
  *******************************************************************************/
-package secretread
+
+package main
+
+import (
+	"context"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/redis"
+	"github.com/gorilla/mux"
+)
+
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	redis.Main(ctx, cancel, mux.NewRouter(), nil)
+}

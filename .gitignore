@@ -12,6 +12,7 @@ debug
 *.dll
 .security-secrets-setup.complete
 VERSION
+__debug_bin
 
 # binary files
 cmd/core-command/core-command
@@ -28,7 +29,8 @@ cmd/support-scheduler/support-scheduler
 cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/sys-mgmt-executor/sys-mgmt-executor
 cmd/security-file-token-provider/security-file-token-provider
-cmd/security-secretstore-read/security-secretstore-read
+cmd/security-bootstrap-redis/security-bootstrap-redis
+
 docs/_build/
 
 # log dirs
@@ -44,3 +46,4 @@ stage/*
 snap/.snapcraft/*
 go.sum
 squashfs-root/
+
