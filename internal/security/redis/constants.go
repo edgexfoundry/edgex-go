@@ -11,13 +11,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @author: Diana Atanasova
  * @author: Andre Srinivasan
  *******************************************************************************/
 
-package secretread
+package redis
 
-const ServiceKey = "edgex-redis"
 const SecretStore = "EDGEX_SECURITY_SECRET_STORE"
 const Confdir = "res"
 const ConfigFileName = "configuration.toml"

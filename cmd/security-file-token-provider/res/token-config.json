@@ -69,11 +69,11 @@
       }
     }
   },
-  "edgex-redis": {
+  "edgex-security-bootstrap-redis": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/redis/*": {
+        "secret/edgex/bootstrap-redis/redisdb": {
           "capabilities": [
             "list",
             "read"

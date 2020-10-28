@@ -47,13 +47,6 @@ echo "Initializing secret store"
 echo "Executing custom command: $@"
 "$@"
 
-# Maybe share Redis v5 password via ${REDIS5_PASSWORD_PATHNAME} pathname (usually
-# /tmp/edgex/secrets/edgex-redis/redis5-password)
-if [ -n "${REDIS5_PASSWORD_PATHNAME}" ]; then
-  echo "Reading Redis5 password"
-  /security-secretstore-read -confdir /res-read
-fi
-
 # write a sentinel file when we're done because consul is not
 # secure and we don't trust it it access to the EdgeX secret store
 if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
