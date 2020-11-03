@@ -166,6 +166,19 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
+	exists, edgeXerr := dbClient.DeviceServiceNameExists(device.ServiceName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", device.ServiceName), edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", device.ServiceName), nil)
+	}
+	exists, edgeXerr = dbClient.DeviceProfileNameExists(device.ProfileName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", device.ProfileName), edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", device.ProfileName), nil)
+	}
+
 	edgeXerr = dbClient.DeleteDeviceById(device.Id)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
