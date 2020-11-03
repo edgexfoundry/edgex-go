@@ -542,6 +542,8 @@ func TestPatchDevice(t *testing.T) {
 	}
 
 	valid := testReq
+	dbClientMock.On("DeviceServiceNameExists", *valid.Device.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("DeleteDeviceById", *valid.Device.Id).Return(nil)
 	dbClientMock.On("AddDevice", mock.Anything).Return(dsModels, nil)
@@ -582,6 +584,15 @@ func TestPatchDevice(t *testing.T) {
 	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
 	dbClientMock.On("DeviceByName", *invalidNotFoundName.Device.Name).Return(dsModels, notFoundNameError)
 
+	notFountServiceName := "notFoundService"
+	notFoundService := testReq
+	notFoundService.Device.ServiceName = &notFountServiceName
+	dbClientMock.On("DeviceServiceNameExists", *notFoundService.Device.ServiceName).Return(false, nil)
+	notFountProfileName := "notFoundProfile"
+	notFoundProfile := testReq
+	notFoundProfile.Device.ProfileName = &notFountProfileName
+	dbClientMock.On("DeviceProfileNameExists", *notFoundProfile.Device.ProfileName).Return(false, nil)
+
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -605,6 +616,8 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
