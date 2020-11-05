@@ -675,6 +675,15 @@ parts:
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
       cp $SNAPCRAFT_PART_INSTALL/etc/kong/kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
+
+      # by default the Kong deb contains an absolute symlink @ /usr/local/openresty/bin/openresty which points to /usr/local/openresty/nginx/sbin/nginx
+      # because the review-tools for the snap store do not currently allow using absolute symlinks that point outside of the snap
+      # (and are not smart enough to realize there is a layout involved in our usage here), we delete the absolute symlink
+      # and re-create it as a relative symlink pointing to ../nginx/sbin/nginx instead
+      cd $SNAPCRAFT_PART_INSTALL/usr/local/openresty/bin
+      rm openresty
+      ln -s ../nginx/sbin/nginx openresty
+
     prime:
        - -lib/systemd/*
        - -usr/share/man/*
