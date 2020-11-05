@@ -265,7 +265,7 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 	var statusCode int
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -303,7 +303,7 @@ func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Req
 	var statusCode int
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxUint32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
