@@ -76,6 +76,7 @@ type KongAclInfo struct {
 }
 
 type SecretServiceInfo struct {
+	Scheme          string
 	Server          string
 	Port            int
 	HealthcheckPath string
@@ -130,11 +131,18 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	//To keep config file for proxy unchanged in Geneva we need to create a temporary SecretStore struct so that bootstrapHandler can use it to create a secret client
 	//The config file may be changed in the future version and SecretStore can be used directly like other core services
+
+	// Note - see issue #2873 for details on why this default value is set here
+	scheme := c.SecretService.Scheme
+	if scheme == "" {
+		scheme = "https"
+	}
+	
 	ss := bootstrapConfig.SecretStoreInfo{
 		Host:                    c.SecretService.Server,
 		Port:                    c.SecretService.Port,
 		Path:                    c.SecretService.CertPath,
-		Protocol:                "https",
+		Protocol:                scheme,
 		RootCaCertPath:          c.SecretService.CACertPath,
 		ServerName:              c.SecretService.Server,
 		Authentication:          vault.AuthenticationInfo{AuthType: "X-Vault-Token"},
