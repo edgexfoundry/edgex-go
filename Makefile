@@ -173,8 +173,8 @@ docker_security_secrets_setup:
 	    --build-arg https_proxy \
 		-f cmd/security-secrets-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-secrets-setup-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-secrets-setup-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-secrets-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-secrets-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_proxy_setup:
@@ -183,8 +183,8 @@ docker_security_proxy_setup:
 	    --build-arg https_proxy \
 		-f cmd/security-proxy-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-security-proxy-setup-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-security-proxy-setup-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-proxy-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-proxy-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_secretstore_setup:
@@ -193,14 +193,14 @@ docker_security_secretstore_setup:
 	    --build-arg https_proxy \
 		-f cmd/security-secretstore-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-security-secretstore-setup-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-secretstore-setup-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_bootstrap_redis:
 		docker build \
 		-f cmd/security-bootstrap-redis/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-bootstrap-redis-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-bootstrap-redis-go:$(DOCKER_TAG) \
 		.
