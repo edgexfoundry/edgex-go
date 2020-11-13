@@ -33,6 +33,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiAllEventRoute, ec.AllEvents).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.EventsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventScrubRoute, ec.DeletePushedEvents).Methods(http.MethodDelete)
+	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.DeleteEventsByDeviceName).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

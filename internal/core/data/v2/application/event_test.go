@@ -90,6 +90,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
 		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
 		myMock.On("DeletePushedEvents").Return(nil)
+		myMock.On("DeleteEventsByDeviceName", testDeviceName).Return(nil)
 	}
 
 	return myMock
@@ -271,4 +272,42 @@ func TestDeletePushedEvents(t *testing.T) {
 
 	err := DeletePushedEvents(dic)
 	require.NoError(t, err)
+}
+
+func TestDeleteEventsByDeviceName(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	tests := []struct {
+		Name               string
+		deviceName         string
+		ErrorExpected      bool
+		ExpectedErrKind    errors.ErrKind
+		ExpectedStatusCode int
+	}{
+		{"Valid - Delete Event by Id", testDeviceName, false, errors.KindInvalidId, http.StatusOK},
+		{"Invalid - Empty device name", "", true, errors.KindInvalidId, http.StatusBadRequest},
+		{"Invalid - Empty device name with spaces", " \n\t\r ", true, errors.KindInvalidId, http.StatusBadRequest},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			err := DeleteEventsByDeviceName(testCase.deviceName, dic)
+
+			if testCase.ErrorExpected {
+				require.Error(t, err)
+				assert.NotEmpty(t, err.Error(), "Error message is empty")
+				assert.Equal(t, testCase.ExpectedErrKind, errors.Kind(err), "Error kind not as expected")
+				assert.Equal(t, testCase.ExpectedStatusCode, err.Code(), "Error code not as expected")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
