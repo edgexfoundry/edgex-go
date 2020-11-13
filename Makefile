@@ -201,6 +201,6 @@ docker_security_bootstrap_redis:
 		docker build \
 		-f cmd/security-bootstrap-redis/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-edgex-security-bootstrap-redis-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-bootstrap-redis-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-bootstrap-redis-go:$(DOCKER_TAG) \
 		.
