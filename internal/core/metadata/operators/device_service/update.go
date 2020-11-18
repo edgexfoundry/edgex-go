@@ -171,7 +171,7 @@ func adminStateCallback(
 		return
 	}
 
-	req, err := createCallbackRequest(service)
+	req, err := createCallbackRequest(http.MethodPut, service)
 	if err != nil {
 		lc.Error(fmt.Sprintf("fail to create callback request for %s", service.Name))
 	}
@@ -190,12 +190,12 @@ func adminStateCallback(
 	resp.Close = true
 }
 
-func createCallbackRequest(service contract.DeviceService) (*http.Request, error) {
+func createCallbackRequest(httpMethod string, service contract.DeviceService) (*http.Request, error) {
 	body, err := json.Marshal(contract.CallbackAlert{ActionType: contract.SERVICE, Id: service.Id})
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPut, service.Addressable.GetCallbackURL(), bytes.NewReader(body))
+	req, err := http.NewRequest(httpMethod, service.Addressable.GetCallbackURL(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
