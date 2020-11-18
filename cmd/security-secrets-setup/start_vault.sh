@@ -32,12 +32,8 @@ listener "tcp" {
               tls_key_file = "'${VAULT_TLS_PATH}'/server.key" 
               tls_perfer_server_cipher_suites = "true"
           } 
-          backend "consul" { 
-              path = "vault/" 
-              address = "edgex-core-consul:8500" 
-              scheme = "http" 
-              redirect_addr = "https://edgex-vault:8200" 
-              cluster_addr = "https://edgex-vault:8201" 
+          backend "file" {
+              path = "vault/file"
           } 
           default_lease_ttl = "168h" 
           max_lease_ttl = "720h"
