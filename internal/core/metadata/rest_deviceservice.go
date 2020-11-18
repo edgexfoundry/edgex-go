@@ -619,6 +619,7 @@ func restUpdateServiceOpStateByName(
 func restUpdateServiceAdminStateById(
 	w http.ResponseWriter,
 	r *http.Request,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -634,7 +635,7 @@ func restUpdateServiceAdminStateById(
 		return
 	}
 
-	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient)
+	op := device_service.NewUpdateAdminStateByIdExecutor(id, newAs, dbClient, lc)
 	if err := op.Execute(); err != nil {
 		errorHandler.HandleOneVariant(
 			w,
@@ -651,6 +652,7 @@ func restUpdateServiceAdminStateById(
 func restUpdateServiceAdminStateByName(
 	w http.ResponseWriter,
 	r *http.Request,
+	lc logger.LoggingClient,
 	dbClient interfaces.DBClient,
 	errorHandler errorconcept.ErrorHandler) {
 
@@ -670,7 +672,7 @@ func restUpdateServiceAdminStateByName(
 		return
 	}
 
-	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient)
+	op := device_service.NewUpdateAdminStateByNameExecutor(n, newAs, dbClient, lc)
 	if err := op.Execute(); err != nil {
 		errorHandler.HandleOneVariant(
 			w,

@@ -694,6 +694,7 @@ func loadDeviceServiceRoutes(b *mux.Router, dic *di.Container) {
 			restUpdateServiceAdminStateByName(
 				w,
 				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodPut)
@@ -766,6 +767,7 @@ func loadDeviceServiceRoutes(b *mux.Router, dic *di.Container) {
 			restUpdateServiceAdminStateById(
 				w,
 				r,
+				bootstrapContainer.LoggingClientFrom(dic.Get),
 				container.DBClientFrom(dic.Get),
 				errorContainer.ErrorHandlerFrom(dic.Get))
 		}).Methods(http.MethodPut)

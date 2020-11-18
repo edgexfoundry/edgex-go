@@ -463,6 +463,7 @@ func TestUpdateOpStateByName(t *testing.T) {
 func TestUpdateAdminStateById(t *testing.T) {
 	adminStateEnabled := testDeviceService
 	adminStateEnabled.AdminState = testAdminState
+	lc := logger.MockLogger{}
 
 	tests := []struct {
 		name           string
@@ -512,6 +513,7 @@ func TestUpdateAdminStateById(t *testing.T) {
 			restUpdateServiceAdminStateById(
 				rr,
 				tt.request,
+				lc,
 				tt.dbMock,
 				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
@@ -526,6 +528,7 @@ func TestUpdateAdminStateById(t *testing.T) {
 func TestUpdateAdminStateByName(t *testing.T) {
 	adminStateEnabled := testDeviceService
 	adminStateEnabled.AdminState = testAdminState
+	lc := logger.MockLogger{}
 
 	tests := []struct {
 		name           string
@@ -580,6 +583,7 @@ func TestUpdateAdminStateByName(t *testing.T) {
 			restUpdateServiceAdminStateByName(
 				rr,
 				tt.request,
+				lc,
 				tt.dbMock,
 				errorconcept.NewErrorHandler(logger.NewMockClient()))
 			response := rr.Result()
