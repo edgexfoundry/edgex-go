@@ -910,68 +910,19 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/device/{deviceId}:
-    parameters:
-    - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: "Uniquely identifies a given device"
-    delete:
-      summary: "Deletes all events for the specified device"
-      responses:
-        '200':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
   /event/device/name/{name}:
-    parameters:
-    - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: "Uniquely identifies a given device"
-    - $ref: '#/components/parameters/offsetParam'
-    - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Given the entire range of events sorted by created descending, returns a portion of that range according to the device name, offset and limit parameters."
+      parameters:
+        - $ref: '#/components/parameters/correlatedRequestHeader'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Uniquely identifies a given device"
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
       responses:
         '200':
           description: "OK"
@@ -987,13 +938,13 @@ paths:
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
-                events: 
+                events:
                   - apiVersion: "v2"
                     created: 1594877691305
                     deviceName: "device-002"
                     id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
                     origin: 1602168089665565300
-                    readings: 
+                    readings:
                       - created: 1594879337014
                         deviceName: "device-002"
                         id: "71c601d9-cb56-453a-8c75-54461e444713"
@@ -1028,7 +979,7 @@ paths:
             application/json:
               schema:
                 type: array
-                items: 
+                items:
                   $ref: '#/components/schemas/ErrorResponse'
               examples:
                 404Example:
@@ -1042,8 +993,43 @@ paths:
             application/json:
               schema:
                 type: array
-                items: 
+                items:
                   $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+    delete:
+      summary: "Deletes all events for the specified device"
+      parameters:
+        - $ref: '#/components/parameters/correlatedRequestHeader'
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Uniquely identifies a given device"
+      responses:
+        '202':
+          description: "Delete request accepted"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'

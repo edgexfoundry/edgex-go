@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
@@ -164,6 +165,22 @@ func DeletePushedEvents(dic *di.Container) errors.EdgeX {
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)
 
 	err := dbClient.DeletePushedEvents()
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// The DeleteEventsByDeviceName function will be invoked by controller functions
+// and then invokes DeleteEventsByDeviceName function in the infrastructure layer to remove
+// all events/readings that are associated with the given deviceName
+func DeleteEventsByDeviceName(deviceName string, dic *di.Container) errors.EdgeX {
+	if len(strings.TrimSpace(deviceName)) <= 0 {
+		return errors.NewCommonEdgeX(errors.KindInvalidId, "blank device name is not allowed", nil)
+	}
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteEventsByDeviceName(deviceName)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

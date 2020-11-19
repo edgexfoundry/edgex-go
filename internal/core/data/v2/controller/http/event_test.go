@@ -437,6 +437,35 @@ func TestDeletePushedEvents(t *testing.T) {
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 }
 
+func TestDeleteEventsByDeviceName(t *testing.T) {
+	deviceName := "deviceA"
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteEventsByDeviceName", deviceName).Return(nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	req, err := http.NewRequest(http.MethodDelete, v2.ApiEventByDeviceNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{v2.Name: deviceName})
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(ec.DeleteEventsByDeviceName)
+	handler.ServeHTTP(recorder, req)
+
+	var actualResponse common.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusAccepted, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+}
+
 func TestUpdateEventPushedById(t *testing.T) {
 	expectedResponseCode := http.StatusMultiStatus
 
