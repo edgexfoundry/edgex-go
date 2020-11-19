@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device_service/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 )
 
@@ -157,6 +158,7 @@ func TestUpdateOperatingStateByNameExecutor(t *testing.T) {
 func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 	adminStateUnlocked := testDeviceService
 	adminStateUnlocked.AdminState = testAdminState
+	lc := logger.MockLogger{}
 
 	tests := []struct {
 		name             string
@@ -198,7 +200,7 @@ func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			op := NewUpdateAdminStateByIdExecutor(testDeviceServiceId, testAdminState, test.mockUpdater)
+			op := NewUpdateAdminStateByIdExecutor(testDeviceServiceId, testAdminState, test.mockUpdater, lc)
 			err := op.Execute()
 			if test.expectedError && err == nil {
 				t.Error("Expected an error")
@@ -222,6 +224,7 @@ func TestUpdateAdminStateByIdExecutor(t *testing.T) {
 func TestUpdateAdminStateByNameExecutor(t *testing.T) {
 	adminStateUnlocked := testDeviceService
 	adminStateUnlocked.AdminState = testAdminState
+	lc := logger.MockLogger{}
 
 	tests := []struct {
 		name             string
@@ -263,7 +266,7 @@ func TestUpdateAdminStateByNameExecutor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(tt *testing.T) {
-			op := NewUpdateAdminStateByNameExecutor(testDeviceServiceName, testAdminState, test.mockUpdater)
+			op := NewUpdateAdminStateByNameExecutor(testDeviceServiceName, testAdminState, test.mockUpdater, lc)
 			err := op.Execute()
 			if test.expectedError && err == nil {
 				t.Error("Expected an error")
