@@ -87,7 +87,25 @@ func (c *Client) DeletePushedEvents() (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	eventIds, readingIds, err := getPushedEventReadingIds(conn)
+	eventIds, readingIds, err := getEventReadingIdsByKey(conn, EventsCollectionPushed)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v readings", len(readingIds)))
+	go c.asyncDeleteReadingsByIds(readingIds)
+	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v events", len(eventIds)))
+	go c.asyncDeleteEventsByIds(eventIds)
+
+	return nil
+}
+
+// DeleteEventsByDeviceName deletes all pushed events and corresponding readings.  This function is implemented to starts up
+// two goroutines to delete readings and events in the bckground to achieve better performance.
+func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	eventIds, readingIds, err := getEventReadingIdsByKey(conn, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName))
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -205,28 +223,28 @@ func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	return edgeXerr
 }
 
-func getPushedEventReadingIds(conn redis.Conn) (eventIds []string, readingIds []string, edgeXerr errors.EdgeX) {
-	pushedEventIds, err := redis.Strings(conn.Do(ZRANGEBYSCORE, EventsCollectionPushed, GreaterThanZero, InfiniteMax))
+func getEventReadingIdsByKey(conn redis.Conn, key string) (eventIds []string, readingIds []string, edgeXerr errors.EdgeX) {
+	eventIds, err := redis.Strings(conn.Do(ZRANGEBYSCORE, key, GreaterThanZero, InfiniteMax))
 	if err != nil {
-		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "retrieve all pushed event ids failed", err)
+		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve event ids by key %s failed", key), err)
 	}
-	pushedEvents, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(pushedEventIds))
+	events, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(eventIds))
 	if edgeXerr != nil {
 		return nil, nil, edgeXerr
 	}
 	e := models.Event{}
-	for _, pushedEvent := range pushedEvents {
-		err = json.Unmarshal(pushedEvent, &e)
+	for _, event := range events {
+		err = json.Unmarshal(event, &e)
 		if err != nil {
 			return nil, nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
 		}
 		rIds, err := redis.Strings(conn.Do(ZRANGE, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id), 0, -1))
 		if err != nil {
-			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of pushed event %s failed", e.Id), err)
+			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of event %s failed", e.Id), err)
 		}
 		readingIds = append(readingIds, rIds...)
 	}
-	return pushedEventIds, readingIds, nil
+	return eventIds, readingIds, nil
 }
 
 func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.EdgeX) {
