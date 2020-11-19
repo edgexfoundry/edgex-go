@@ -215,6 +215,31 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 	pkg.Encode(eventResponse, w, lc) // encode and send out the response
 }
 
+func (ec *EventController) DeletePushedEvents(w http.ResponseWriter, r *http.Request) {
+	// retrieve all the service injections from bootstrap
+	lc := container.LoggingClientFrom(ec.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeletePushedEvents(ec.dic)
+	if err != nil {
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+		statusCode = http.StatusAccepted
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
+	pkg.Encode(response, w, lc)
+}
+
 func (ec *EventController) UpdateEventPushedById(w http.ResponseWriter, r *http.Request) {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)

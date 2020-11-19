@@ -13,7 +13,6 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -156,6 +155,19 @@ func EventCountByDevice(deviceName string, dic *di.Container) (uint32, errors.Ed
 	}
 
 	return count, nil
+}
+
+// The DeletePushedEvents function will be invoked by controller functions
+// and then invokes DeletePushedEvents function in the infrastructure layer to remove
+// all events that have been pushed (pushed timestamp is greater than zero)
+func DeletePushedEvents(dic *di.Container) errors.EdgeX {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeletePushedEvents()
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
 }
 
 // UpdateEventPushedById updates event pushed timestamp per incoming event id

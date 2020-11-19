@@ -89,6 +89,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("DeleteEventById", testUUIDString).Return(nil)
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
 		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
+		myMock.On("DeletePushedEvents").Return(nil)
 	}
 
 	return myMock
@@ -256,4 +257,18 @@ func TestEventCountByDevice(t *testing.T) {
 	count, err := EventCountByDevice(testDeviceName, dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
+}
+
+func TestDeletePushedEvents(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	err := DeletePushedEvents(dic)
+	require.NoError(t, err)
 }
