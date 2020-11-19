@@ -43,7 +43,7 @@ Port = 8200
 HealthCheckPath = "v1/sys/health"
 CertPath = "/v1/secret/edgex/edgex-security-proxy-setup/"
 TokenPath = "res/resp-init.json"
-CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
+CACertPath = ""
 SNIS = ["localhost"]
 
 [Clients]

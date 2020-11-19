@@ -132,7 +132,6 @@ func TestInit(t *testing.T) {
 		AdminPort: port,
 	}
 
-	mockCertPair := bootstrapConfig.CertKeyPair{Cert: "test-certificate", Key: "test-private-key"}
 	mockLogger := logger.MockLogger{}
 
 	origProxyRoutEnv := os.Getenv(AddProxyRoutesEnv)
@@ -214,7 +213,7 @@ func TestInit(t *testing.T) {
 			os.Setenv(AddProxyRoutesEnv, currentTest.proxyRouteEnvValue)
 			service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
 
-			err = service.Init(mockCertPair)
+			err = service.Init()
 
 			require.NoError(t, err)
 
