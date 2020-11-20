@@ -340,8 +340,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
-	// With Vault moving to non-TLS mode, the cert related logic is obsolete
-	if configuration.SecretService.CertPath != "" {
+	// With Vault moving to non-TLS mode, if cert is not present then no need to upload
+	if len(configuration.SecretService.CertPath) > 0 {
 		cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
 		existing, err := cert.AlreadyinStore()
 		if err != nil {

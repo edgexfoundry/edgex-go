@@ -76,7 +76,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	var req internal.HttpCaller
-	if configuration.SecretService.CACertPath != "" {
+	if len(configuration.SecretService.CACertPath) > 0 {
 		req = NewRequestor(
 			b.insecureSkipVerify,
 			configuration.Writable.RequestTimeout,
@@ -103,14 +103,6 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		}
 
 		// Based on the ADR: No certificate pair internally any more
-		// certificateProvider := bootstrapContainer.CertificateProviderFrom(dic.Get)
-		// var cp bootstrapConfig.CertKeyPair
-
-		// cp, err := certificateProvider.GetCertificateKeyPair("kong-tls")
-		// if err != nil {
-		// 	b.haltIfError(lc, err)
-		// }
-
 		b.haltIfError(lc, s.Init()) // Where the Service init is called
 	} else if b.resetNeeded {
 		b.haltIfError(lc, s.ResetProxy())
