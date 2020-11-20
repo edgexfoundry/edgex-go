@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/gorilla/mux"
 )
 
 func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int) {
@@ -76,4 +77,43 @@ func ParseQueryStringToStrings(r *http.Request, queryStringKey string, separator
 		stringArray = strings.Split(strings.TrimSpace(values[0]), separator)
 	}
 	return stringArray
+}
+
+func ParseTimeRangeOffsetLimit(r *http.Request, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
+	start, edgexErr = ParsePathParamToInt(r, contractsV2.Start)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	end, edgexErr = ParsePathParamToInt(r, contractsV2.End)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	if end < start {
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+	}
+	offset, edgexErr = ParseQueryStringToInt(r, contractsV2.Offset, contractsV2.DefaultOffset, minOffset, maxOffset)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	limit, edgexErr = ParseQueryStringToInt(r, contractsV2.Limit, contractsV2.DefaultLimit, minLimit, maxLimit)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+
+	return start, end, offset, limit, nil
+}
+
+// Parse the specified path parameter to an integer.  EdgeX error will be returned if any parsing error occurs or
+// specified path parameter is empty.
+func ParsePathParamToInt(r *http.Request, pathKey string) (int, errors.EdgeX) {
+	vars := mux.Vars(r)
+	val := vars[pathKey]
+	if len(val) == 0 {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("empty path param %s is not allowed", pathKey), nil)
+	}
+	result, parsingErr := strconv.Atoi(val)
+	if parsingErr != nil {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse path param %s's value %s into integer. Error:%s", pathKey, val, parsingErr.Error()), nil)
+	}
+	return result, nil
 }

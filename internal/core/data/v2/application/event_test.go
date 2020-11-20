@@ -11,7 +11,6 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -308,6 +307,51 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestEventsByTimeRange(t *testing.T) {
+	event1 := persistedEvent
+	event2 := persistedEvent
+	event2.Created = event2.Created + 20
+	event3 := persistedEvent
+	event3.Created = event3.Created + 30
+	event4 := persistedEvent
+	event4.Created = event4.Created + 40
+	event5 := persistedEvent
+	event5.Created = event5.Created + 50
+
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventsByTimeRange", int(event1.Created), int(event5.Created), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 1, 2).Return([]models.Event{event3, event2}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	tests := []struct {
+		name               string
+		start              int
+		end                int
+		offset             int
+		limit              int
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - all events", int(event1.Created), int(event5.Created), 0, 10, false, 5, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest", int(event2.Created), int(event4.Created), 0, 10, false, 3, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Created), int(event4.Created), 1, 2, false, 2, http.StatusOK},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			events, err := EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expectedCount, len(events), "Event total count is not expected")
 		})
 	}
 }

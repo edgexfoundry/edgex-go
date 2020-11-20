@@ -210,6 +210,31 @@ func (_m *DBClient) EventsByDeviceName(offset int, limit int, name string) ([]mo
 	return r0, r1
 }
 
+// EventsByTimeRange provides a mock function with given fields: start, end, offset, limit
+func (_m *DBClient) EventsByTimeRange(start int, end int, offset int, limit int) ([]models.Event, errors.EdgeX) {
+	ret := _m.Called(start, end, offset, limit)
+
+	var r0 []models.Event
+	if rf, ok := ret.Get(0).(func(int, int, int, int) []models.Event); ok {
+		r0 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Event)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, int, int) errors.EdgeX); ok {
+		r1 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // UpdateEventPushedById provides a mock function with given fields: id
 func (_m *DBClient) UpdateEventPushedById(id string) errors.EdgeX {
 	ret := _m.Called(id)

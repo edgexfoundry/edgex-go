@@ -228,3 +228,17 @@ func EventsByDeviceName(offset int, limit int, name string, dic *di.Container) (
 	}
 	return events, nil
 }
+
+// EventsByTimeRange query events with offset, limit and time range
+func EventsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (events []dtos.Event, err errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	eventModels, err := dbClient.EventsByTimeRange(start, end, offset, limit)
+	if err != nil {
+		return events, errors.NewCommonEdgeXWrapper(err)
+	}
+	events = make([]dtos.Event, len(eventModels))
+	for i, e := range eventModels {
+		events[i] = dtos.FromEventModelToDTO(e)
+	}
+	return events, nil
+}
