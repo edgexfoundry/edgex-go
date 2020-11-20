@@ -79,10 +79,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		req = secretstoreclient.NewRequestor(lc).Insecure()
 	}
 
-	vaultScheme := configuration.SecretService.Protocol
+	vaultProtocol := configuration.SecretService.Protocol
 	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
-	vc := secretstoreclient.NewSecretStoreClient(lc, req, vaultScheme, vaultHost)
+	vc := secretstoreclient.NewSecretStoreClient(lc, req, vaultProtocol, vaultHost)
 	pipedHexReader := pipedhexreader.NewPipedHexReader()
 	kdf := kdf.NewKdf(fileOpener, configuration.SecretService.TokenFolderPath, sha256.New)
 	vmkEncryption := NewVMKEncryption(fileOpener, pipedHexReader, kdf)
@@ -340,7 +340,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
-	// With Vault moving to non-TLS mode, if cert is not present then no need to upload
+	// Uploading Kong's TLS certificate is optional if cert's path is not present
 	if len(configuration.SecretService.CertPath) > 0 {
 		cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
 		existing, err := cert.AlreadyinStore()
