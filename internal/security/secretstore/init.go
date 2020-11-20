@@ -79,7 +79,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		req = secretstoreclient.NewRequestor(lc).Insecure()
 	}
 
-	vaultScheme := configuration.SecretService.Scheme
+	vaultScheme := configuration.SecretService.Protocol
 	vaultHost := fmt.Sprintf("%s:%v", configuration.SecretService.Server, configuration.SecretService.Port)
 	intervalDuration := time.Duration(b.vaultInterval) * time.Second
 	vc := secretstoreclient.NewSecretStoreClient(lc, req, vaultScheme, vaultHost)

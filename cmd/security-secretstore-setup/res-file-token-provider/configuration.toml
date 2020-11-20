@@ -2,7 +2,7 @@
 LogLevel = 'DEBUG'
 
 [SecretService]
-Scheme = "http"
+Protocol = "http"
 Server = "edgex-vault"
 ServerName = "edgex-vault"
 Port = 8200

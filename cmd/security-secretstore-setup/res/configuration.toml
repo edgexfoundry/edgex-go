@@ -20,10 +20,10 @@
 LogLevel = 'DEBUG'
 
 [SecretService]
-Scheme = "http"
+Protocol = "http"
 Server = "edgex-vault"
 Port = 8200
-CertPath = ""      # v1/secret/edgex/edgex-security-proxy-setup/kong-tls if BYO
+CertPath = ""
 CaFilePath = ""
 CertFilePath = ""
 KeyFilePath = ""

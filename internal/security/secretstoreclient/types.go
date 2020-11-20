@@ -21,7 +21,7 @@ import (
 )
 
 type SecretServiceInfo struct {
-	Scheme                      string
+	Protocol                    string
 	Server                      string
 	ServerName                  string
 	Port                        int
@@ -44,7 +44,7 @@ type SecretServiceInfo struct {
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
 	url := &url.URL{
-		Scheme: s.Scheme,
+		Scheme: s.Protocol,
 		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
 		Path:   "/",
 	}

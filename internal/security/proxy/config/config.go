@@ -75,6 +75,7 @@ type KongAclInfo struct {
 }
 
 type SecretServiceInfo struct {
+	Protocol        string
 	Server          string
 	Port            int
 	HealthcheckPath string
@@ -86,7 +87,7 @@ type SecretServiceInfo struct {
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
 	url := &url.URL{
-		Scheme: "http",
+		Scheme: s.Protocol,
 		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
 	}
 	return url.String()
@@ -133,7 +134,7 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Host:                    c.SecretService.Server,
 		Port:                    c.SecretService.Port,
 		Path:                    c.SecretService.CertPath,
-		Protocol:                "http",
+		Protocol:                c.SecretService.Protocol,
 		RootCaCertPath:          c.SecretService.CACertPath,
 		ServerName:              c.SecretService.Server,
 		Authentication:          vault.AuthenticationInfo{AuthType: "X-Vault-Token"},
