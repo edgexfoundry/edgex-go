@@ -33,7 +33,7 @@ listener "tcp" {
               tls_perfer_server_cipher_suites = "true"
           } 
           backend "file" {
-              path = "vault/file"
+              path = "/vault/file"
           } 
           default_lease_ttl = "168h" 
           max_lease_ttl = "720h"
