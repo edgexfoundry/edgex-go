@@ -5,9 +5,9 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.57
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.58
 	github.com/edgexfoundry/go-mod-configuration v0.0.8
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.112
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.114
 	github.com/edgexfoundry/go-mod-messaging v0.1.28
 	github.com/edgexfoundry/go-mod-registry v0.1.26
 	github.com/edgexfoundry/go-mod-secrets v0.0.26
