@@ -1051,7 +1051,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Return a paginated range of events with a create date inside the specified start/end values."
+      summary: "Return a paginated range of events sorted by created descending with a create date inside the specified start/end values."
       responses:
         '200':
           description: "OK"

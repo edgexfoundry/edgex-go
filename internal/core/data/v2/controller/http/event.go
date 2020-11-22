@@ -381,3 +381,38 @@ func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *ht
 	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }
+
+func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(ec.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := dataContainer.ConfigurationFrom(ec.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse time range (start, end), offset, and limit from incoming request
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		events, err := application.EventsByTimeRange(start, end, offset, limit, ec.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
