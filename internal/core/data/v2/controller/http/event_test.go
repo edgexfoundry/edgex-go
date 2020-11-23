@@ -19,8 +19,6 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/gomodule/redigo/redis"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -28,7 +26,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
+	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -746,6 +744,77 @@ func TestAllEventsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Events), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestAllReadings(t *testing.T) {
+	testLabels := []string{"label1", "label2"}
+
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllReadings", 0, 20, []string(nil)).Return([]models.Reading{}, nil)
+	dbClientMock.On("AllReadings", 0, 1, testLabels).Return([]models.Reading{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewEventController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		labels             string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - get readings without offset, limit, and labels", "", "", "", false, http.StatusOK},
+		{"Valid - get readings with offset, limit, and labels", "0", "1", strings.Join(testLabels, ","), false, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", strings.Join(testLabels, ","), true, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", strings.Join(testLabels, ","), true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllEventRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			if testCase.labels != "" {
+				query.Add(v2.Labels, testCase.labels)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AllReadings)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiReadingsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

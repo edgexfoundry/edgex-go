@@ -355,3 +355,46 @@ func TestEventsByTimeRange(t *testing.T) {
 		})
 	}
 }
+
+func TestAllReadings(t *testing.T) {
+	readings := buildReadings()
+	testLabels := []string{readings[0].GetBaseReading().Labels[0], readings[1].GetBaseReading().Labels[0]}
+
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllReadings", 0, 20, testLabels).Return(readings, nil)
+	dbClientMock.On("AllReadings", 3, 10, testLabels).Return([]models.Reading{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	tests := []struct {
+		name               string
+		offset             int
+		limit              int
+		labels             []string
+		errorExpected      bool
+		ExpectedErrKind    errors.ErrKind
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - all readings", 0, 20, testLabels, false, "", 2, http.StatusOK},
+		{"Invalid - bounds out of range", 3, 10, testLabels, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			readings, err := AllReadings(testCase.offset, testCase.limit, testCase.labels, dic)
+			if testCase.errorExpected {
+				require.Error(t, err)
+				assert.NotEmpty(t, err.Error(), "Error message is empty")
+				assert.Equal(t, testCase.ExpectedErrKind, errors.Kind(err), "Error kind not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, err.Code(), "Status code not as expected")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expectedCount, len(readings), "Reading total count is not expected")
+			}
+		})
+	}
+}

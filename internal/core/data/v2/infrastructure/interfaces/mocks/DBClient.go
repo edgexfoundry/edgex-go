@@ -63,6 +63,31 @@ func (_m *DBClient) AllEvents(offset int, limit int) ([]models.Event, errors.Edg
 	return r0, r1
 }
 
+// AllReadings provides a mock function with given fields: offset, limit, labels
+func (_m *DBClient) AllReadings(offset int, limit int, labels []string) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(offset, limit, labels)
+
+	var r0 []models.Reading
+	if rf, ok := ret.Get(0).(func(int, int, []string) []models.Reading); ok {
+		r0 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Reading)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()

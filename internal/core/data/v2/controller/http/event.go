@@ -416,3 +416,38 @@ func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Requ
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (ec *EventController) AllReadings(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(ec.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := dataContainer.ConfigurationFrom(ec.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit, and labels
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		readings, err := application.AllReadings(offset, limit, labels, ec.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, readings)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

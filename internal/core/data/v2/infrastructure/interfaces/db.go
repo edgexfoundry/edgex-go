@@ -24,4 +24,5 @@ type DBClient interface {
 	DeletePushedEvents() errors.EdgeX
 	DeleteEventsByDeviceName(deviceName string) errors.EdgeX
 	EventsByTimeRange(start int, end int, offset int, limit int) ([]model.Event, errors.EdgeX)
+	AllReadings(offset int, limit int, labels []string) ([]model.Reading, errors.EdgeX)
 }

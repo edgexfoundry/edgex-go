@@ -242,3 +242,17 @@ func EventsByTimeRange(start int, end int, offset int, limit int, dic *di.Contai
 	}
 	return events, nil
 }
+
+// AllReadings query events by offset, limit, and labels
+func AllReadings(offset int, limit int, labels []string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	readingModels, err := dbClient.AllReadings(offset, limit, labels)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings = make([]dtos.BaseReading, len(readingModels))
+	for i, r := range readingModels {
+		readings[i] = dtos.FromReadingModelToDTO(r)
+	}
+	return readings, nil
+}

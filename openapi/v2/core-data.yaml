@@ -363,7 +363,13 @@ components:
         requestId: ""
         apiVersion: "v2"
         statusCode: 404
-        message: "Not Found"     
+        message: "Not Found"
+    416Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         requestId: ""
@@ -616,7 +622,30 @@ paths:
               examples:
                 MultiEventsExample:
                   $ref: '#/components/examples/AllEventsExample'
-
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1185,6 +1214,30 @@ paths:
               examples:
                 MultiReadingsExample:
                   $ref: '#/components/examples/AllReadingsExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

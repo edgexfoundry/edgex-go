@@ -439,3 +439,16 @@ func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) (e
 	}
 	return events, nil
 }
+
+// AllReadings query events by offset, limit, and labels
+func (c *Client) AllReadings(offset int, limit int, labels []string) ([]model.Reading, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, edgeXerr := allReadings(conn, offset, limit, labels)
+	if edgeXerr != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query readings by offset %d, limit %d, and labels %v", offset, limit, labels), edgeXerr)
+	}
+	return readings, nil
+}
