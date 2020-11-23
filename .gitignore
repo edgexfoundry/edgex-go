@@ -28,8 +28,8 @@ cmd/support-notifications/support-notifications
 cmd/support-scheduler/support-scheduler
 cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/sys-mgmt-executor/sys-mgmt-executor
-cmd/security-file-token-provider/security-file-token-provider
 cmd/security-bootstrap-redis/security-bootstrap-redis
+cmd/secrets-config/secrets-config
 
 docs/_build/
 

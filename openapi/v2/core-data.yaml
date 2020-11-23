@@ -43,11 +43,6 @@ components:
         profileName:
           description: "The device profile name for the reading"
           type: string
-        labels:
-          description: "One or more custom labels that can be assigned to a reading"
-          type: array
-          items:
-            type: string
         origin:
           description: "A Unix timestamp indicating when the reading was originated at the source device (can support nanoseconds)"
           type: integer
@@ -352,7 +347,13 @@ components:
         requestId: ""
         apiVersion: "v2"
         statusCode: 404
-        message: "Not Found"     
+        message: "Not Found"
+    416Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         requestId: ""
@@ -380,8 +381,6 @@ components:
                 resourceName: "resource-001"
                 profileName: "profile-001"
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                labels:                            
-                  - "power"
                 modified: 1594975851631
                 origin: 1602168089665565300
                 pushed: 1594975851631
@@ -393,9 +392,6 @@ components:
                 resourceName: "resource-001"
                 profileName: "profile-001"
                 id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
-                labels:
-                  - "Fahrenheit"
-                  - "temperature"
                 origin: 1602168089665565300
                 valueType: "Int8"
                 value: "75"
@@ -411,8 +407,6 @@ components:
                 resourceName: "resource-002"
                 profileName: "profile-002"
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
-                labels:
-                  - "image"
                 origin: 1602168089665565300
                 valueType: "Binary"
                 binaryValue: "83010203"
@@ -429,8 +423,6 @@ components:
                 resourceName: "resource-002"
                 profileName: "profile-002"
                 id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-                labels:
-                  - "co2"
                 origin: 1602168089665565300
                 valueType: "Float32"
                 value: "12.2"
@@ -447,8 +439,6 @@ components:
             resourceName: "resource-001"
             profileName: "profile-001"
             id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-            labels:
-              - "power"
             modified: 1594975851631
             origin: 1602168089665565300
             pushed: 1594975851631
@@ -460,9 +450,6 @@ components:
             resourceName: "resource-001"
             profileName: "profile-001"
             id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
-            labels:
-              - "Fahrenheit"
-              - "temperature"
             origin: 1602168089665565300
             valueType: "Int8"
             value: "75" 
@@ -472,8 +459,6 @@ components:
             resourceName: "resource-002"
             profileName: "profile-002"
             id: "71c601d9-cb56-453a-8c75-54461e444713"
-            labels:
-              - "image"
             origin: 1602168089665565300
             valueType: "Binary"
             binaryValue: "83010203"
@@ -484,8 +469,6 @@ components:
             resourceName: "resource-002"
             profileName: "profile-002"
             id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-            labels:
-              - "co2"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
@@ -513,8 +496,6 @@ paths:
                       resourceName: resource-002
                       profileName: profile-002
                       id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      labels:
-                        - co2
                       origin: 1602168089665565300
                       valueType: Float32
                       value: '12.2'
@@ -527,8 +508,6 @@ paths:
                       resourceName: resource-002
                       profileName: profile-002
                       id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      labels:
-                        - co2
                       origin: 1602168089665565300
                       valueType: Float32
                       value: '12.2'
@@ -543,8 +522,6 @@ paths:
                       resourceName: resource-002
                       profileName: profile-002
                       id: 71c601d9-cb56-453a-8c75-54461e444713
-                      labels:
-                        - image
                       origin: 1602168089665565300
                       valueType: Binary
                       binaryValue: '83010203'
@@ -621,7 +598,30 @@ paths:
               examples:
                 MultiEventsExample:
                   $ref: '#/components/examples/AllEventsExample'
-
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -675,8 +675,6 @@ paths:
                       resourceName: "resource-001"
                       profileName: "profile-001"
                       id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                      labels:                            
-                        - "power"
                       modified: 1594975851631
                       origin: 1602168089665565300
                       pushed: 1594975851631
@@ -687,9 +685,6 @@ paths:
                       resourceName: "resource-001"
                       profileName: "profile-001"
                       id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
-                      labels:
-                        - "Fahrenheit"
-                        - "temperature"
                       origin: 1602168089665565300
                       valueType: "Int8"
                       value: "75"
@@ -956,8 +951,6 @@ paths:
                         resourceName: "resource-002"
                         profileName: "profile-002"
                         id: "71c601d9-cb56-453a-8c75-54461e444713"
-                        labels:
-                          - "image"
                         origin: 1602168089665565300
                         valueType: "Binary"
                         binaryValue: "83010203"
@@ -974,8 +967,6 @@ paths:
                         resourceName: "resource-002"
                         profileName: "profile-002"
                         id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-                        labels:
-                          - "co2"
                         origin: 1602168089665565300
                         valueType: "Float32"
                         value: "12.2"
@@ -1173,14 +1164,8 @@ paths:
       - $ref: '#/components/parameters/correlatedRequestHeader'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
-      - in: query
-        name: labels
-        required: false
-        schema:
-          type: string
-        description: "Allows for querying readings by associated user-defined label. More than one label may be specified via a comma-delimited list."
     get:
-      summary: "Given the entire range of readings sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved. Readings may be filtered by label."
+      summary: "Given the entire range of readings sorted by created descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved."
       responses:
         '200':
           description: "OK"
@@ -1194,6 +1179,30 @@ paths:
               examples:
                 MultiReadingsExample:
                   $ref: '#/components/examples/AllReadingsExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1326,8 +1335,6 @@ paths:
                   resourceName: "resource-001"
                   profileName: "profile-001"
                   id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                  labels:
-                    - "power"
                   modified: 1594975851631
                   origin: 1602168089665565300
                   pushed: 1594975851631
@@ -1392,8 +1399,6 @@ paths:
                     resourceName: "resource-001"
                     profileName: "profile-001"
                     id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                    labels:
-                      - "power"
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
@@ -1406,9 +1411,6 @@ paths:
                     profileName: "profile-001"
                     id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                     origin: 1602168089665565300
-                    labels:
-                      - "Fahrenheit"
-                      - "temperature"
                     valueType: "Int8"
                     value: "75"
         '404':
@@ -1474,8 +1476,6 @@ paths:
                     resourceName: "resource-001"
                     profileName: "profile-001"
                     id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                    labels:
-                      - "power"
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
@@ -1487,8 +1487,6 @@ paths:
                     resourceName: "resource-002"
                     profileName: "profile-002"
                     id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-                    labels:
-                      - "co2"
                     origin: 1602168089665565300
                     valueType: "Float32"
                     value: "12.2"

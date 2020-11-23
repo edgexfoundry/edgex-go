@@ -136,12 +136,13 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	}
 
 	event := models.Event{
-		Id:         e.Id,
-		Pushed:     e.Pushed,
-		DeviceName: e.DeviceName,
-		Created:    e.Created,
-		Origin:     e.Origin,
-		Tags:       e.Tags,
+		Id:          e.Id,
+		Pushed:      e.Pushed,
+		DeviceName:  e.DeviceName,
+		ProfileName: e.ProfileName,
+		Created:     e.Created,
+		Origin:      e.Origin,
+		Tags:        e.Tags,
 	}
 
 	m, err := json.Marshal(event)
