@@ -1,0 +1,27 @@
+[Writable]
+LogLevel = 'INFO'
+
+[StageGate]
+  [StageGate.BootStrapper]
+    Host = "edgex-security-bootstrapper"
+    StartPort = 54321
+  [StageGate.Ready]
+    ToRunPort = 54329
+  [StageGate.SecretStoreSetup]
+    Host = "edgex-secretstore-setup"
+    [StageGate.SecretStoreSetup.Tokens]
+      ReadyPort = 54322
+  [StageGate.Database]
+    # this is intended to be the same as Database.Primary.Host/.Port for other services
+    Host = "edgex-redis"
+    Port = 6379
+    ReadyPort = 54323
+  [StageGate.Registry]
+    # this is intended to be the same as Registry.Host/.Port for other services
+    Host = "edgex-core-consul"
+    Port = 8500
+    ReadyPort = 54324
+  [StageGate.KongDb]
+    Host = "kong-db"
+    Port = 5432
+    ReadyPort = 54325

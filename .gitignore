@@ -27,6 +27,7 @@ cmd/sys-mgmt-agent/sys-mgmt-agent
 cmd/sys-mgmt-executor/sys-mgmt-executor
 cmd/security-bootstrap-redis/security-bootstrap-redis
 cmd/secrets-config/secrets-config
+cmd/security-bootstrapper/security-bootstrapper
 
 docs/_build/
 
