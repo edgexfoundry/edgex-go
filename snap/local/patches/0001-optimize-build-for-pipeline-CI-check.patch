@@ -1,14 +1,14 @@
-From a9bd8c5b8ca0ac91b0300ab4e3abf75e1384a8b7 Mon Sep 17 00:00:00 2001
+From 1d251e60e5dfd3025b5917bacc42bbe9a00ddaee Mon Sep 17 00:00:00 2001
 From: Tony Espy <espy@canonical.com>
-Date: Wed, 28 Oct 2020 12:14:21 -0400
-Subject: [PATCH] [PATCH] optimize snap build for pipeline CI check
+Date: Wed, 25 Nov 2020 16:03:28 -0500
+Subject: [PATCH] optimize snap build for pipeline CI check
 
 ---
- snap/snapcraft.yaml | 465 +-------------------------------------------
- 1 file changed, 2 insertions(+), 463 deletions(-)
+ snap/snapcraft.yaml | 474 +-------------------------------------------
+ 1 file changed, 2 insertions(+), 472 deletions(-)
 
 diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
-index 7d1e8c7c..24aef30d 100644
+index 4f322fc4..a1dfb449 100644
 --- a/snap/snapcraft.yaml
 +++ b/snap/snapcraft.yaml
 @@ -75,58 +75,6 @@ confinement: strict
@@ -99,7 +99,7 @@ index 7d1e8c7c..24aef30d 100644
    security-secretstore-setup:
      adapter: full
      after: [vault]
-@@ -293,48 +219,6 @@ apps:
+@@ -292,48 +218,6 @@ apps:
        ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
      daemon: simple
      plugs: [network, network-bind]
@@ -148,7 +148,7 @@ index 7d1e8c7c..24aef30d 100644
    curl:
      adapter: full
      command: usr/bin/curl
-@@ -343,76 +227,6 @@ apps:
+@@ -342,76 +226,6 @@ apps:
      adapter: full
      command: usr/bin/jq
      plugs: [home, removable-media]
@@ -225,7 +225,7 @@ index 7d1e8c7c..24aef30d 100644
  
  parts:
    version:
-@@ -420,6 +234,7 @@ parts:
+@@ -419,6 +233,7 @@ parts:
      # as with static-packages part, the source dir is unrelated to this part and is used
      # since it changes rarely and therefore will not trigger a new pull
      source: snap/local/build-helpers
@@ -233,7 +233,7 @@ index 7d1e8c7c..24aef30d 100644
      override-pull: |
        cd $SNAPCRAFT_PROJECT_DIR
        if [ -f VERSION ]; then
-@@ -446,59 +261,6 @@ parts:
+@@ -445,59 +260,6 @@ parts:
        # setpriv with snapd 2.45 + can be used to drop privileges
        - setpriv
  
@@ -293,7 +293,7 @@ index 7d1e8c7c..24aef30d 100644
    go-build-helper:
      plugin: dump
      # see comment for static-packages part about specifying a source part here
-@@ -533,70 +295,7 @@ parts:
+@@ -532,70 +294,7 @@ parts:
        tar -C $SNAPCRAFT_STAGE/go1.15 -xf "$FILE_NAME" --strip-components=1
      prime:
        - "-*"
@@ -365,7 +365,7 @@ index 7d1e8c7c..24aef30d 100644
  
    edgex-go:
      source: .
-@@ -643,163 +342,3 @@ parts:
+@@ -642,172 +341,3 @@ parts:
        - pkg-config
      stage-packages:
        - libzmq5
@@ -402,6 +402,15 @@ index 7d1e8c7c..24aef30d 100644
 -
 -      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
 -      cp $SNAPCRAFT_PART_INSTALL/etc/kong/kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
+-
+-      # by default the Kong deb contains an absolute symlink @ /usr/local/openresty/bin/openresty which points to /usr/local/openresty/nginx/sbin/nginx
+-      # because the review-tools for the snap store do not currently allow using absolute symlinks that point outside of the snap
+-      # (and are not smart enough to realize there is a layout involved in our usage here), we delete the absolute symlink
+-      # and re-create it as a relative symlink pointing to ../nginx/sbin/nginx instead
+-      cd $SNAPCRAFT_PART_INSTALL/usr/local/openresty/bin
+-      rm openresty
+-      ln -s ../nginx/sbin/nginx openresty
+-
 -    prime:
 -       - -lib/systemd/*
 -       - -usr/share/man/*
