@@ -15,7 +15,7 @@ require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.2
-	github.com/gorilla/mux v1.7.1
+	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
