@@ -45,7 +45,7 @@ HealthCheckPath = "v1/sys/health"
 CertPath = "/v1/secret/edgex/edgex-security-proxy-setup/"
 TokenPath = "res/resp-init.json"
 CACertPath = ""
-SNIS = ["localhost"]
+SNIS = [""]
 
 [Clients]
   [Clients.CoreData]
