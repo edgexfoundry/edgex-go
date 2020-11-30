@@ -256,3 +256,15 @@ func AllReadings(offset int, limit int, labels []string, dic *di.Container) (rea
 	}
 	return readings, nil
 }
+
+// ReadingTotalCount return the count of all of readings currently stored in the database and error if any
+func ReadingTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	count, err := dbClient.ReadingTotalCount()
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return count, nil
+}

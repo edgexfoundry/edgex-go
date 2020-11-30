@@ -146,3 +146,12 @@ func objectIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	}
 	return exists, nil
 }
+
+func getMemberNumber(conn redis.Conn, command string, key string) (uint32, errors.EdgeX) {
+	count, err := redis.Int(conn.Do(command, key))
+	if err != nil {
+		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to get member number with command %s from %s", command, key), err)
+	}
+
+	return uint32(count), nil
+}

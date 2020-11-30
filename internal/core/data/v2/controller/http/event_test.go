@@ -364,13 +364,12 @@ func TestEventTotalCount(t *testing.T) {
 	handler := http.HandlerFunc(ec.EventTotalCount)
 	handler.ServeHTTP(recorder, req)
 
-	var actualResponse responseDTO.EventCountResponse
+	var actualResponse common.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
 	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
-	assert.Empty(t, actualResponse.DeviceName, "Device name should be empty when counting all the events")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }
@@ -397,7 +396,7 @@ func TestEventCountByDevice(t *testing.T) {
 	handler := http.HandlerFunc(ec.EventCountByDevice)
 	handler.ServeHTTP(recorder, req)
 
-	var actualResponse responseDTO.EventCountResponse
+	var actualResponse common.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
 	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
@@ -405,7 +404,6 @@ func TestEventCountByDevice(t *testing.T) {
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
-	assert.Equal(t, deviceName, actualResponse.DeviceName, "Device name in the response body is not expected")
 }
 
 func TestDeletePushedEvents(t *testing.T) {
@@ -819,4 +817,34 @@ func TestAllReadings(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReadingTotalCount(t *testing.T) {
+	expectedReadingCount := uint32(656672)
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingTotalCount").Return(expectedReadingCount, nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	ec := NewEventController(dic)
+
+	req, err := http.NewRequest(http.MethodGet, v2.ApiReadingCountRoute, http.NoBody)
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(ec.ReadingTotalCount)
+	handler.ServeHTTP(recorder, req)
+
+	var actualResponse common.CountResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+	require.NoError(t, err)
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
+	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+	assert.Equal(t, expectedReadingCount, actualResponse.Count, "Event count in the response body is not expected")
 }
