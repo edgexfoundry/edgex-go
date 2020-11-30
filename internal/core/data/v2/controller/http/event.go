@@ -166,7 +166,7 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	var eventResponse interface{}
+	var countResponse interface{}
 	var statusCode int
 
 	// Count the event
@@ -174,15 +174,15 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		countResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		eventResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
+		countResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
 		statusCode = http.StatusOK
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(eventResponse, w, lc) // encode and send out the response
+	pkg.Encode(countResponse, w, lc) // encode and send out the response
 }
 
 func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +196,7 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 	vars := mux.Vars(r)
 	deviceName := vars[v2.DeviceName]
 
-	var eventResponse interface{}
+	var countResponse interface{}
 	var statusCode int
 
 	// Count the event by device
@@ -204,15 +204,15 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		countResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		eventResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
+		countResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
 		statusCode = http.StatusOK
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(eventResponse, w, lc) // encode and send out the response
+	pkg.Encode(countResponse, w, lc) // encode and send out the response
 }
 
 func (ec *EventController) DeletePushedEvents(w http.ResponseWriter, r *http.Request) {

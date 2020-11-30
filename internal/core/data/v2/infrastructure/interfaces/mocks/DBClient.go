@@ -235,6 +235,29 @@ func (_m *DBClient) EventsByTimeRange(start int, end int, offset int, limit int)
 	return r0, r1
 }
 
+// ReadingTotalCount provides a mock function with given fields:
+func (_m *DBClient) ReadingTotalCount() (uint32, errors.EdgeX) {
+	ret := _m.Called()
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func() uint32); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
+		r1 = rf()
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // UpdateEventPushedById provides a mock function with given fields: id
 func (_m *DBClient) UpdateEventPushedById(id string) errors.EdgeX {
 	ret := _m.Called(id)
