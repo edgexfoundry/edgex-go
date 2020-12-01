@@ -48,25 +48,27 @@ func buildReadings() []models.Reading {
 
 	r1 := models.SimpleReading{
 		BaseReading: models.BaseReading{
-			Id:         uuid.New().String(),
-			Created:    ticks,
-			Origin:     testOriginTime,
-			DeviceName: testDeviceName,
-			Name:       "Temperature",
-			Labels:     []string{"Fahrenheit"},
-			ValueType:  dtos.ValueTypeUint16,
+			Id:           uuid.New().String(),
+			Created:      ticks,
+			Origin:       testOriginTime,
+			DeviceName:   testDeviceName,
+			ResourceName: "Temperature",
+			ProfileName:  "TempProfile",
+			Labels:       []string{"Fahrenheit"},
+			ValueType:    dtos.ValueTypeUint16,
 		},
 		Value: "45",
 	}
 
 	r2 := models.BinaryReading{
 		BaseReading: models.BaseReading{
-			Id:         uuid.New().String(),
-			Created:    ticks,
-			Origin:     testOriginTime,
-			DeviceName: testDeviceName,
-			Name:       "FileData",
-			Labels:     []string{"text"},
+			Id:           uuid.New().String(),
+			Created:      ticks,
+			Origin:       testOriginTime,
+			DeviceName:   testDeviceName,
+			ResourceName: "FileData",
+			ProfileName:  "FileDataProfile",
+			Labels:       []string{"text"},
 		},
 		BinaryValue: []byte("1010"),
 		MediaType:   "file",
