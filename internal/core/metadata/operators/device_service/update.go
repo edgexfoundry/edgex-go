@@ -179,6 +179,7 @@ func adminStateCallback(
 	resp, err := client.Do(req)
 	if err != nil {
 		lc.Error(fmt.Sprintf("fail to invoke callback for %s, %v", service.Name, err))
+		return
 	} else if resp.StatusCode != http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
