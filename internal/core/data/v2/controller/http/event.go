@@ -177,7 +177,7 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		eventResponse = responseDTO.NewEventCountResponse("", "", http.StatusOK, count, "")
+		eventResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
 		statusCode = http.StatusOK
 	}
 
@@ -207,7 +207,7 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 		eventResponse = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		eventResponse = responseDTO.NewEventCountResponse("", "", http.StatusOK, count, deviceName)
+		eventResponse = commonDTO.NewCountResponse("", "", http.StatusOK, count)
 		statusCode = http.StatusOK
 	}
 

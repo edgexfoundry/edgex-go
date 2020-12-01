@@ -37,8 +37,11 @@ components:
           description: "The unique identifier for the reading"
           type: string
           format: uuid
-        name:
-          description: "The name for the reading"
+        resourceName:
+          description: "The device resource name for the reading"
+          type: string
+        profileName:
+          description: "The device profile name for the reading"
           type: string
         labels:
           description: "One or more custom labels that can be assigned to a reading"
@@ -388,6 +391,8 @@ components:
               - apiVersion: "v2"
                 created: 1594876281221
                 deviceName: "device-001"
+                resourceName: "resource-001"
+                profileName: "profile-001"
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                 labels:                            
                   - "power"
@@ -400,6 +405,8 @@ components:
               - apiVersion: "v2"
                 create: 1594876281221
                 deviceName: "device-001"
+                resourceName: "resource-001"
+                profileName: "profile-001"
                 id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                 labels:
                   - "Fahrenheit"
@@ -416,6 +423,8 @@ components:
               - apiVersion: "v2"
                 created: 1594879337014
                 deviceName: "device-002"
+                resourceName: "resource-002"
+                profileName: "profile-002"
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
                 labels:
                   - "image"
@@ -432,6 +441,8 @@ components:
               - apiVersion: "v2"
                 created: 594983105886
                 deviceName: "device-002"
+                resourceName: "resource-002"
+                profileName: "profile-002"
                 id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                 labels:
                   - "co2"
@@ -449,6 +460,8 @@ components:
           - apiVersion: "v2"
             created: 1594876281221
             deviceName: "device-001"
+            resourceName: "resource-001"
+            profileName: "profile-001"
             id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
             labels:
               - "power"
@@ -461,6 +474,8 @@ components:
           - apiVersion: "v2"
             create: 1594876281221
             deviceName: "device-001"
+            resourceName: "resource-001"
+            profileName: "profile-001"
             id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
             labels:
               - "Fahrenheit"
@@ -471,6 +486,8 @@ components:
           - apiVersion: "v2"
             created: 1594879337014
             deviceName: "device-002"
+            resourceName: "resource-002"
+            profileName: "profile-002"
             id: "71c601d9-cb56-453a-8c75-54461e444713"
             labels:
               - "image"
@@ -481,6 +498,8 @@ components:
           - apiVersion: "v2"
             created: 594983105886
             deviceName: "device-002"
+            resourceName: "resource-002"
+            profileName: "profile-002"
             id: "7003cacc-0e00-4676-977c-4e58b9612abd"
             labels:
               - "co2"
@@ -509,6 +528,8 @@ paths:
                   origin: 1602168089665565300
                   readings:
                     - deviceName: device-002
+                      resourceName: resource-002
+                      profileName: profile-002
                       id: 7003cacc-0e00-4676-977c-4e58b9612abd
                       labels:
                         - co2
@@ -522,6 +543,8 @@ paths:
                   origin: 1602168089665565300
                   readings:
                     - deviceName: device-002
+                      resourceName: resource-002
+                      profileName: profile-002
                       id: 7003cacc-0e00-4676-977c-4e58b9612abd
                       labels:
                         - co2
@@ -537,6 +560,8 @@ paths:
                     - apiVersion: v2
                       created: 1594879337014
                       deviceName: device-002
+                      resourceName: resource-002
+                      profileName: profile-002
                       id: 71c601d9-cb56-453a-8c75-54461e444713
                       labels:
                         - image
@@ -667,6 +692,8 @@ paths:
                   readings:
                     - created: 1594876281221
                       deviceName: "device-001"
+                      resourceName: "resource-001"
+                      profileName: "profile-001"
                       id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                       labels:                            
                         - "power"
@@ -678,6 +705,8 @@ paths:
                       value: "39.5"
                     - create: 1594876281221
                       deviceName: "device-001"
+                      resourceName: "resource-001"
+                      profileName: "profile-001"
                       id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                       labels:
                         - "Fahrenheit"
@@ -884,7 +913,7 @@ paths:
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
-                count: 1 
+                count: 1
                 deviceName: "device-001"
         '404':
           description: "The requested resource does not exist"
@@ -947,6 +976,8 @@ paths:
                     readings:
                       - created: 1594879337014
                         deviceName: "device-002"
+                        resourceName: "resource-002"
+                        profileName: "profile-002"
                         id: "71c601d9-cb56-453a-8c75-54461e444713"
                         labels:
                           - "image"
@@ -963,6 +994,8 @@ paths:
                       - apiVersion: "v2"
                         created: 594983105886
                         deviceName: "device-002"
+                        resourceName: "resource-002"
+                        profileName: "profile-002"
                         id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                         labels:
                           - "co2"
@@ -1315,6 +1348,8 @@ paths:
                   apiVersion: "v2"
                   created: 1594876281221
                   deviceName: "device-001"
+                  resourceName: "resource-001"
+                  profileName: "profile-001"
                   id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                   labels:
                     - "power"
@@ -1380,6 +1415,8 @@ paths:
                   - apiVersion: "v2"
                     created: 1594876281221
                     deviceName: "device-001"
+                    resourceName: "resource-001"
+                    profileName: "profile-001"
                     id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                     labels:
                       - "power"
@@ -1392,6 +1429,8 @@ paths:
                   - apiVersion: "v2"
                     create: 1594876281221
                     deviceName: "device-001"
+                    resourceName: "resource-001"
+                    profileName: "profile-001"
                     id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                     origin: 1602168089665565300
                     labels:
@@ -1459,6 +1498,8 @@ paths:
                   - apiVersion: "v2"
                     created: 1594876281221
                     deviceName: "device-001"
+                    resourceName: "resource-001"
+                    profileName: "profile-001"
                     id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                     labels:
                       - "power"
@@ -1471,6 +1512,8 @@ paths:
                   - apiVersion: "v2"
                     created: 594983105886
                     deviceName: "device-002"
+                    resourceName: "resource-002"
+                    profileName: "profile-002"
                     id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                     labels:
                       - "co2"

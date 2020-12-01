@@ -39,10 +39,11 @@ var expectedCorrelationId = uuid.New().String()
 var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
-	DeviceName: TestDeviceName,
-	Name:       TestDeviceResourceName,
-	Origin:     TestOriginTime,
-	ValueType:  dtos.ValueTypeUint8,
+	DeviceName:   TestDeviceName,
+	ResourceName: TestDeviceResourceName,
+	ProfileName:  TestDeviceProfileName,
+	Origin:       TestOriginTime,
+	ValueType:    dtos.ValueTypeUint8,
 	SimpleReading: dtos.SimpleReading{
 		Value: TestReadingValue,
 	},
@@ -62,12 +63,13 @@ var testAddEvent = requests.AddEventRequest{
 
 var persistedReading = models.SimpleReading{
 	BaseReading: models.BaseReading{
-		Id:         ExampleUUID,
-		Created:    TestCreatedTime,
-		Origin:     TestOriginTime,
-		DeviceName: TestDeviceName,
-		Name:       TestDeviceResourceName,
-		ValueType:  dtos.ValueTypeUint8,
+		Id:           ExampleUUID,
+		Created:      TestCreatedTime,
+		Origin:       TestOriginTime,
+		DeviceName:   TestDeviceName,
+		ResourceName: TestDeviceResourceName,
+		ProfileName:  TestDeviceProfileName,
+		ValueType:    dtos.ValueTypeUint8,
 	},
 	Value: TestReadingValue,
 }
@@ -124,9 +126,12 @@ func TestAddEvent(t *testing.T) {
 	noReadingDevice := validRequest
 	noReadingDevice.Event.Readings = []dtos.BaseReading{testReading}
 	noReadingDevice.Event.Readings[0].DeviceName = ""
-	noReadingName := validRequest
-	noReadingName.Event.Readings = []dtos.BaseReading{testReading}
-	noReadingName.Event.Readings[0].Name = ""
+	noReadingResourceName := validRequest
+	noReadingResourceName.Event.Readings = []dtos.BaseReading{testReading}
+	noReadingResourceName.Event.Readings[0].ResourceName = ""
+	noReadingProfileName := validRequest
+	noReadingProfileName.Event.Readings = []dtos.BaseReading{testReading}
+	noReadingProfileName.Event.Readings[0].ProfileName = ""
 	noReadingOrigin := validRequest
 	noReadingOrigin.Event.Readings = []dtos.BaseReading{testReading}
 	noReadingOrigin.Event.Readings[0].Origin = 0
@@ -146,10 +151,11 @@ func TestAddEvent(t *testing.T) {
 	noSimpleFloatEnconding.Event.Readings[0].FloatEncoding = ""
 	noBinaryValue := validRequest
 	noBinaryValue.Event.Readings = []dtos.BaseReading{{
-		DeviceName: TestDeviceName,
-		Name:       TestDeviceResourceName,
-		Origin:     TestOriginTime,
-		ValueType:  dtos.ValueTypeBinary,
+		DeviceName:   TestDeviceName,
+		ResourceName: TestDeviceResourceName,
+		ProfileName:  TestDeviceProfileName,
+		Origin:       TestOriginTime,
+		ValueType:    dtos.ValueTypeBinary,
 		BinaryReading: dtos.BinaryReading{
 			BinaryValue: []byte{},
 			MediaType:   TestBinaryReadingMediaType,
@@ -157,10 +163,11 @@ func TestAddEvent(t *testing.T) {
 	}}
 	noBinaryMediaType := validRequest
 	noBinaryMediaType.Event.Readings = []dtos.BaseReading{{
-		DeviceName: TestDeviceName,
-		Name:       TestDeviceResourceName,
-		Origin:     TestOriginTime,
-		ValueType:  dtos.ValueTypeBinary,
+		DeviceName:   TestDeviceName,
+		ResourceName: TestDeviceResourceName,
+		ProfileName:  TestDeviceProfileName,
+		Origin:       TestOriginTime,
+		ValueType:    dtos.ValueTypeBinary,
 		BinaryReading: dtos.BinaryReading{
 			BinaryValue: []byte(TestReadingBinaryValue),
 			MediaType:   "",
@@ -183,7 +190,8 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, true, http.StatusBadRequest},
 		{"Invalid - No Reading", []requests.AddEventRequest{noReading}, true, http.StatusBadRequest},
 		{"Invalid - No Reading DeviceName", []requests.AddEventRequest{noReadingDevice}, true, http.StatusBadRequest},
-		{"Invalid - No Reading Name", []requests.AddEventRequest{noReadingName}, true, http.StatusBadRequest},
+		{"Invalid - No Reading ResourceName", []requests.AddEventRequest{noReadingResourceName}, true, http.StatusBadRequest},
+		{"Invalid - No Reading ProfileName", []requests.AddEventRequest{noReadingProfileName}, true, http.StatusBadRequest},
 		{"Invalid - No Reading Origin", []requests.AddEventRequest{noReadingOrigin}, true, http.StatusBadRequest},
 		{"Invalid - No Reading ValueType", []requests.AddEventRequest{noReadingValueType}, true, http.StatusBadRequest},
 		{"Invalid - Invalid Reading ValueType", []requests.AddEventRequest{invalidReadingInvalidValueType}, true, http.StatusBadRequest},
@@ -366,13 +374,12 @@ func TestEventTotalCount(t *testing.T) {
 	handler := http.HandlerFunc(ec.EventTotalCount)
 	handler.ServeHTTP(recorder, req)
 
-	var actualResponse responseDTO.EventCountResponse
+	var actualResponse common.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
 	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
-	assert.Empty(t, actualResponse.DeviceName, "Device name should be empty when counting all the events")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }
@@ -399,7 +406,7 @@ func TestEventCountByDevice(t *testing.T) {
 	handler := http.HandlerFunc(ec.EventCountByDevice)
 	handler.ServeHTTP(recorder, req)
 
-	var actualResponse responseDTO.EventCountResponse
+	var actualResponse common.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 	require.NoError(t, err)
 	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
@@ -407,7 +414,6 @@ func TestEventCountByDevice(t *testing.T) {
 	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
-	assert.Equal(t, deviceName, actualResponse.DeviceName, "Device name in the response body is not expected")
 }
 
 func TestDeletePushedEvents(t *testing.T) {

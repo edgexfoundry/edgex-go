@@ -22,7 +22,6 @@ const (
 	ReadingsCollection           = "v2:reading"
 	ReadingsCollectionCreated    = ReadingsCollection + ":" + v2.Created
 	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.Device + ":" + v2.Name
-	ReadingsCollectionName       = ReadingsCollection + ":" + v2.Name
 )
 
 var emptyBinaryValue = make([]byte, 0)
@@ -57,7 +56,6 @@ func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 		_ = conn.Send(ZREM, ReadingsCollection, storedKey)
 		_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
 		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
-		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionName, r.Name), storedKey)
 		queriesInQueue++
 
 		if queriesInQueue >= c.BatchSize {
@@ -124,7 +122,6 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
 	_ = conn.Send(ZADD, ReadingsCollectionCreated, baseReading.Created, storedKey)
 	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollectionName, baseReading.Name), baseReading.Created, storedKey)
 
 	return reading, nil
 }
@@ -143,7 +140,6 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	_ = conn.Send(ZREM, ReadingsCollection, storedKey)
 	_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
 	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
-	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionName, r.Name), storedKey)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("reading[id:%s] delete failed", id), err)
