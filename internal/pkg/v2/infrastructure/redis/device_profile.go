@@ -18,7 +18,10 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-const DeviceProfileCollection = "v2:deviceProfile"
+const (
+	DeviceProfileCollection      = "v2:deviceProfile"
+	DeviceProfileCollectionModel = DeviceProfileCollection + ":" + v2.Model
+)
 
 // deviceProfileStoredKey return the device profile's stored key which combines the collection name and object id
 func deviceProfileStoredKey(id string) string {
@@ -79,7 +82,7 @@ func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (addedDeviceProf
 	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
 	_ = conn.Send(HSET, fmt.Sprintf("%s:%s", DeviceProfileCollection, v2.Name), dp.Name, storedKey)
 	_ = conn.Send(SADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Manufacturer, dp.Manufacturer), storedKey)
-	_ = conn.Send(SADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Model, dp.Model), storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", DeviceProfileCollectionModel, dp.Model), dp.Modified, storedKey)
 	for _, label := range dp.Labels {
 		_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", DeviceProfileCollection, v2.Label, label), dp.Modified, storedKey)
 	}
@@ -204,6 +207,29 @@ func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []str
 		err := json.Unmarshal(in, &dp)
 		if err != nil {
 			return []models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile format parsing failed from the database", err)
+		}
+		deviceProfiles[i] = dp
+	}
+	return deviceProfiles, nil
+}
+
+// deviceProfilesByModel query device profiles by offset, limit and model
+func deviceProfilesByModel(conn redis.Conn, offset int, limit int, model string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s:%s", DeviceProfileCollectionModel, model), offset, end)
+	if err != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	deviceProfiles = make([]models.DeviceProfile, len(objects))
+	for i, in := range objects {
+		dp := models.DeviceProfile{}
+		err := json.Unmarshal(in, &dp)
+		if err != nil {
+			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
 		}
 		deviceProfiles[i] = dp
 	}
