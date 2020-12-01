@@ -256,9 +256,6 @@ components:
         - $ref: '#/components/schemas/BaseReading'
         - type: object
           properties:
-            floatEncoding:
-              description: "Indicates how a float value is encoded, if the value property contains a float. It should be 'Base64' or 'eNotation'"
-              type: string
             value:
               description: "A string representation of the reading's value"
               type: string
@@ -388,7 +385,6 @@ components:
                 modified: 1594975851631
                 origin: 1602168089665565300
                 pushed: 1594975851631
-                floatEncoding: "eNotation"
                 valueType: "Float32"
                 value: "39.5"
               - apiVersion: "v2"
@@ -436,7 +432,6 @@ components:
                 labels:
                   - "co2"
                 origin: 1602168089665565300
-                floatEncoding: "eNotation"
                 valueType: "Float32"
                 value: "12.2"
     AllReadingsExample:
@@ -457,7 +452,6 @@ components:
             modified: 1594975851631
             origin: 1602168089665565300
             pushed: 1594975851631
-            floatEncoding: "eNotation"
             valueType: "Float32"
             value: "39.5"
           - apiVersion: "v2"
@@ -493,7 +487,6 @@ components:
             labels:
               - "co2"
             origin: 1602168089665565300
-            floatEncoding: "eNotation"
             valueType: "Float32"
             value: "12.2"
 paths:
@@ -523,7 +516,6 @@ paths:
                       labels:
                         - co2
                       origin: 1602168089665565300
-                      floatEncoding: eNotation
                       valueType: Float32
                       value: '12.2'
               - event:
@@ -538,7 +530,6 @@ paths:
                       labels:
                         - co2
                       origin: 1602168089665565300
-                      floatEncoding: eNotation
                       valueType: Float32
                       value: '12.2'
               - event:
@@ -689,7 +680,6 @@ paths:
                       modified: 1594975851631
                       origin: 1602168089665565300
                       pushed: 1594975851631
-                      floatEncoding: "eNotation"
                       valueType: "Float32"
                       value: "39.5"
                     - create: 1594876281221
@@ -987,7 +977,6 @@ paths:
                         labels:
                           - "co2"
                         origin: 1602168089665565300
-                        floatEncoding: "eNotation"
                         valueType: "Float32"
                         value: "12.2"
         '404':
@@ -1342,7 +1331,6 @@ paths:
                   modified: 1594975851631
                   origin: 1602168089665565300
                   pushed: 1594975851631
-                  floatEncoding: "eNotation"
                   valueType: "Float32"
                   value: "39.5"
         '404':
@@ -1409,7 +1397,6 @@ paths:
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
-                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "39.5"
                   - apiVersion: "v2"
@@ -1492,7 +1479,6 @@ paths:
                     modified: 1594975851631
                     origin: 1602168089665565300
                     pushed: 1594975851631
-                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "39.5"
                   - apiVersion: "v2"
@@ -1504,7 +1490,6 @@ paths:
                     labels:
                       - "co2"
                     origin: 1602168089665565300
-                    floatEncoding: "eNotation"
                     valueType: "Float32"
                     value: "12.2"
         '400':
