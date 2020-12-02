@@ -135,3 +135,20 @@ func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Containe
 	}
 	return deviceProfiles, nil
 }
+
+// DeviceProfilesByManufacturer query the device profiles with offset, limit and manufacturer
+func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, err errors.EdgeX) {
+	if manufacturer == "" {
+		return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "manufacturer is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dps, err := dbClient.DeviceProfilesByManufacturer(offset, limit, manufacturer)
+	if err != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
+	for i, dp := range dps {
+		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+	}
+	return deviceProfiles, nil
+}

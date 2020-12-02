@@ -21,6 +21,7 @@ type DBClient interface {
 	DeviceProfileNameExists(name string) (bool, errors.EdgeX)
 	AllDeviceProfiles(offset int, limit int, labels []string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByModel(offset int, limit int, model string) ([]model.DeviceProfile, errors.EdgeX)
+	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
 
 	AddDeviceService(e model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)

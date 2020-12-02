@@ -1056,3 +1056,72 @@ func TestDeviceProfilesByModel(t *testing.T) {
 		})
 	}
 }
+
+func TestDeviceProfilesByManufacturer(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfilesByManufacturer", 0, 10, TestManufacturer).Return(deviceProfiles, nil)
+	dbClientMock.On("DeviceProfilesByManufacturer", 1, 2, TestManufacturer).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
+	dbClientMock.On("DeviceProfilesByManufacturer", 4, 1, TestManufacturer).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		manufacturer       string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get device profiles by manufacturer", "0", "10", TestManufacturer, false, 3, http.StatusOK},
+		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", TestManufacturer, true, 0, http.StatusNotFound},
+		{"Invalid - manufacturer is empty", "0", "10", "", true, 0, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, contractsV2.ApiDeviceProfileByManufacturerRoute, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Manufacturer: testCase.manufacturer})
+			query := req.URL.Query()
+			query.Add(contractsV2.Offset, testCase.offset)
+			query.Add(contractsV2.Limit, testCase.limit)
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeviceProfilesByManufacturer)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDeviceProfilesResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
