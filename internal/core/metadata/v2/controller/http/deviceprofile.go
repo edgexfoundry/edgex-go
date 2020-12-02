@@ -16,7 +16,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -239,7 +238,7 @@ func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r 
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -268,7 +267,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileById(w http.ResponseWriter
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[contractsV2.Id]
+	id := vars[v2.Id]
 
 	var response interface{}
 	var statusCode int
@@ -298,7 +297,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
