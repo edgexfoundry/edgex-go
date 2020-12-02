@@ -15,7 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -238,7 +238,7 @@ func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r 
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -267,7 +267,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileById(w http.ResponseWriter
 
 	// URL parameters
 	vars := mux.Vars(r)
-	id := vars[contractsV2.Id]
+	id := vars[v2.Id]
 
 	var response interface{}
 	var statusCode int
@@ -297,7 +297,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -338,6 +338,44 @@ func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *h
 		statusCode = err.Code()
 	} else {
 		deviceProfiles, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *DeviceProfileController) DeviceProfilesByModel(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
+
+	vars := mux.Vars(r)
+	model := vars[v2.Model]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		deviceProfiles, err := application.DeviceProfilesByModel(offset, limit, model, dc.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)

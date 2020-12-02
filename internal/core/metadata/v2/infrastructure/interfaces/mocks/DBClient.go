@@ -398,6 +398,31 @@ func (_m *DBClient) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
 	return r0, r1
 }
 
+// DeviceProfilesByModel provides a mock function with given fields: offset, limit, model
+func (_m *DBClient) DeviceProfilesByModel(offset int, limit int, model string) ([]models.DeviceProfile, errors.EdgeX) {
+	ret := _m.Called(offset, limit, model)
+
+	var r0 []models.DeviceProfile
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.DeviceProfile); ok {
+		r0 = rf(offset, limit, model)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.DeviceProfile)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, model)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceServiceById provides a mock function with given fields: id
 func (_m *DBClient) DeviceServiceById(id string) (models.DeviceService, errors.EdgeX) {
 	ret := _m.Called(id)

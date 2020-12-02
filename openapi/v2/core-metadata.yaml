@@ -652,9 +652,6 @@ components:
         assertion:
           type: string
           description: Required value of the property, set for checking error state.  Failing an assertion condition will mark the device with an error state
-        floatEncoding:
-          type: string
-          description: FloatEncoding indicates the representation of floating value of reading.  It should be 'Base64' or 'eNotation'
         mediaType:
           type: string
           description: A string value used to indicate the type of binary data if Type=binary
@@ -1036,7 +1033,6 @@ components:
                 type: "Float32"
                 readWrite: "RW"
                 defaultValue: "0"
-                floatEncoding: "Base64"
           deviceCommands:
             - name: "Float32"
               get:
@@ -1072,7 +1068,6 @@ components:
                 type: "Float32"
                 readWrite: "RW"
                 defaultValue: "0"
-                floatEncoding: "Base64"
           deviceCommands:
             - name: "Float32"
               get:
@@ -2217,7 +2212,6 @@ paths:
                       type: "Float32"
                       readWrite: "RW"
                       defaultValue: "0"
-                      floatEncoding: "Base64"
                 deviceCommands:
                   - name: "Float32"
                     get:
@@ -2379,7 +2373,6 @@ paths:
                       type: "Float32"
                       readWrite: "RW"
                       defaultValue: "0"
-                      floatEncoding: "Base64"
                 deviceCommands:
                   - name: "Float32"
                     get:

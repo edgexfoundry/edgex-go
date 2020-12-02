@@ -145,10 +145,6 @@ func TestAddEvent(t *testing.T) {
 	noSimpleValue := validRequest
 	noSimpleValue.Event.Readings = []dtos.BaseReading{testReading}
 	noSimpleValue.Event.Readings[0].Value = ""
-	noSimpleFloatEnconding := validRequest
-	noSimpleFloatEnconding.Event.Readings = []dtos.BaseReading{testReading}
-	noSimpleFloatEnconding.Event.Readings[0].ValueType = dtos.ValueTypeFloat32
-	noSimpleFloatEnconding.Event.Readings[0].FloatEncoding = ""
 	noBinaryValue := validRequest
 	noBinaryValue.Event.Readings = []dtos.BaseReading{{
 		DeviceName:   TestDeviceName,
@@ -196,7 +192,6 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - No Reading ValueType", []requests.AddEventRequest{noReadingValueType}, true, http.StatusBadRequest},
 		{"Invalid - Invalid Reading ValueType", []requests.AddEventRequest{invalidReadingInvalidValueType}, true, http.StatusBadRequest},
 		{"Invalid - No SimpleReading Value", []requests.AddEventRequest{noSimpleValue}, true, http.StatusBadRequest},
-		{"Invalid - No SimpleReading FloatEncoding", []requests.AddEventRequest{noSimpleFloatEnconding}, true, http.StatusBadRequest},
 		{"Invalid - No BinaryReading BinaryValue", []requests.AddEventRequest{noBinaryValue}, true, http.StatusBadRequest},
 		{"Invalid - No BinaryReading MediaType", []requests.AddEventRequest{noBinaryMediaType}, true, http.StatusBadRequest},
 	}
