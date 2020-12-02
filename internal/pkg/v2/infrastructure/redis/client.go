@@ -246,7 +246,7 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := c.eventTotalCount(conn)
+	count, edgeXerr := getMemberNumber(conn, ZCARD, EventsCollection)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -259,7 +259,7 @@ func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := c.eventCountByDevice(deviceName, conn)
+	count, edgeXerr := getMemberNumber(conn, ZCARD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName))
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -438,4 +438,17 @@ func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) (e
 			fmt.Sprintf("fail to query events by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), edgeXerr)
 	}
 	return events, nil
+}
+
+// ReadingTotalCount returns the total count of Event from the database
+func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, ReadingsCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
 }

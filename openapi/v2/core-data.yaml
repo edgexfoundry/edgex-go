@@ -56,7 +56,8 @@ components:
           type: string
       required:
         - deviceName
-        - name
+        - resourceName
+        - profileName
         - origin
         - valueType
     BaseRequest:
@@ -112,16 +113,14 @@ components:
           required:
             - binaryValue
             - mediaType
-    EventCountResponse:
+    CountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate event count in uint32 integer type. If the deviceName property is blank then the count is applicable to all events in the database. Otherwise, the count is applicable to the specified device."
+      description: "Returns an aggregate count of specified objects, e.g. events or readings, in uint32 integer type."
       type: object
       properties:
         count:
           type: integer
-        deviceName:
-          type: string
     Event:
       description: "A discrete event containing one or more readings"
       properties:
@@ -242,16 +241,6 @@ components:
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
-          type: string
-    ReadingCountResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "Returns an aggregate reading count in uint32 integer type. If the deviceName property is blank then the count is applicable to all readings in the database. Otherwise, the count is applicable to the specified device."
-      type: object
-      properties:
-        count:
-          type: integer
-        deviceName:
           type: string
     ReadingResponse:
       allOf:
@@ -867,14 +856,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/CountResponse'
               example:
                 requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
                 count: 3
-                deviceName: ""
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -907,14 +895,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventCountResponse'
+                $ref: '#/components/schemas/CountResponse'
               example:
                 requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
                 count: 1
-                deviceName: "device-001"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1246,7 +1233,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadingCountResponse'
+                $ref: '#/components/schemas/CountResponse'
               example:
                 requestId: ""
                 apiVersion: "v2"
@@ -1285,14 +1272,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReadingCountResponse'
+                $ref: '#/components/schemas/CountResponse'
               example:
                 requestId: ""
                 apiVersion: "v2"
                 statusCode: 200
                 message: ""
                 count: 2
-                deviceName: "device-001"
         '404':
           description: "The requested resource does not exist"
           headers:
