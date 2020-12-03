@@ -253,6 +253,18 @@ func (c *Client) DeviceProfilesByModel(offset int, limit int, model string) ([]m
 	return deviceProfiles, nil
 }
 
+// DeviceProfilesByManufacturer query device profiles with offset, limit and manufacturer
+func (c *Client) DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceProfiles, edgeXerr := deviceProfilesByManufacturer(conn, offset, limit, manufacturer)
+	if edgeXerr != nil {
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return deviceProfiles, nil
+}
+
 // EventTotalCount returns the total count of Event from the database
 func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
