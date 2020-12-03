@@ -158,7 +158,6 @@ func removeTestDirectories(configuration *config.ConfigurationStruct) {
 		}
 	}
 	if configuration != nil {
-		remove(configuration.Logging.File)
 		remove(configuration.SecretsSetup.WorkDir)
 		remove(configuration.SecretsSetup.DeployDir)
 		remove(configuration.SecretsSetup.CacheDir)

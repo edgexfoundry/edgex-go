@@ -28,8 +28,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
 	"github.com/stretchr/testify/assert"
@@ -106,10 +104,6 @@ func getConfiguration() *config.ConfigurationStruct {
 	return &config.ConfigurationStruct{
 		Writable: config.WritableInfo{
 			LogLevel: "DEBUG",
-		},
-		Logging: bootstrapConfig.LoggingInfo{
-			EnableRemote: false,
-			File:         "./logs/security-secrets-setup.log",
 		},
 		SecretsSetup: config.SecretsSetupInfo{
 			WorkDir:       "./workingtest",

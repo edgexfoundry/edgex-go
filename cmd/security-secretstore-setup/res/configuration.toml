@@ -18,11 +18,6 @@
 [Writable]
 LogLevel = 'DEBUG'
 
-# Remote and file logging disabled so only stdout logging is used
-[Logging]
-EnableRemote = false
-File = ""
-
 [SecretService]
 Scheme = "https"
 Server = "edgex-vault"
@@ -75,10 +70,6 @@ RevokeRootTokens = true
   [Databases.scheduler]
   Service = "scheduler"
   Username = "scheduler"
-
-  [Databases.logging]
-  Service = "logging"
-  Username = "logging"
 
   [Databases.application-service]
   Service = "appservice"

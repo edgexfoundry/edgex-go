@@ -20,10 +20,6 @@
 LogLevel = 'DEBUG'
 RequestTimeout = 10
 
-[Logging]
-EnableRemote = false
-File = './logs/security-proxy-setup.log'
-
 [KongURL]
 Server = "127.0.0.1"
 AdminPort = 8001
@@ -70,11 +66,6 @@ SNIS = ["edgex-kong"]
   Protocol = "http"
   Host = "edgex-support-notifications"
   Port = 48060
-		
-  [Clients.Logging]
-  Protocol = "http"
-  Host = "edgex-support-logging"
-  Port = 48061
 
   [Clients.Scheduler]
   Protocol = 'http'

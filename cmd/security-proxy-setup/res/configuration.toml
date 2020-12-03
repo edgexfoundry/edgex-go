@@ -20,11 +20,6 @@
 LogLevel = "ERROR"
 RequestTimeout = 10
 
-# Remote and file logging disabled so only stdout logging is used
-[Logging]
-EnableRemote = false
-File = ""
-
 [KongURL]
 Server = "127.0.0.1"
 AdminPort = 8001
@@ -71,11 +66,6 @@ SNIS = ["localhost"]
   Protocol = "http"
   Host = "localhost"
   Port = 48060
-		
-  [Clients.Logging]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 48061
 
   [Clients.Scheduler]
   Protocol = "http"

@@ -1,3 +1,6 @@
+[Writable]
+LogLevel = 'DEBUG'
+
 [SecretService]
 Scheme = "https"
 Server = "edgex-vault"
@@ -10,10 +13,3 @@ PrivilegedTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.json"
 ConfigFile = "res-file-token-provider/token-config.json"
 OutputDir = "/tmp/edgex/secrets"
 OutputFilename = "secrets-token.json"
-
-[Writable]
-LogLevel = 'DEBUG'
-
-[Logging]
-EnableRemote = false
-File = ''
