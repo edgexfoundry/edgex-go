@@ -136,7 +136,6 @@ apps:
   vault:
     adapter: none
     after:
-      - consul
       - security-secrets-setup
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
