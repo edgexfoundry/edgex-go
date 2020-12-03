@@ -18,7 +18,7 @@ LogLevel = 'INFO'
 
 [SecretStore]
 Host = 'localhost'          ## Override in environment variables, if necessary
-ServerName = ''  ## Needed for TLS CN
+ServerName = ''
 Port = 8200
 Protocol = 'http'
 AdditionalRetryAttempts = 10
