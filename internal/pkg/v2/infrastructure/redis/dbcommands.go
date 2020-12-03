@@ -32,4 +32,5 @@ const (
 	InfiniteMin     = "-inf"
 	InfiniteMax     = "+inf"
 	GreaterThanZero = "(0"
+	DBKeySeparator  = ":"
 )

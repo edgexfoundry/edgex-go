@@ -17,16 +17,20 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-const DeviceServiceCollection = "v2:deviceService"
+const (
+	DeviceServiceCollection      = "md|ds"
+	DeviceServiceCollectionName  = DeviceServiceCollection + DBKeySeparator + v2.Name
+	DeviceServiceCollectionLabel = DeviceServiceCollection + DBKeySeparator + v2.Label
+)
 
 // deviceServiceStoredKey return the device service's stored key which combines the collection name and object id
 func deviceServiceStoredKey(id string) string {
-	return fmt.Sprintf("%s:%s", DeviceServiceCollection, id)
+	return fmt.Sprintf("%s%s%s", DeviceServiceCollection, DBKeySeparator, id)
 }
 
 // deviceServiceNameExist whether the device service exists by name
 func deviceServiceNameExist(conn redis.Conn, name string) (bool, errors.EdgeX) {
-	exists, err := objectNameExists(conn, fmt.Sprintf("%s:%s", DeviceServiceCollection, v2.Name), name)
+	exists, err := objectNameExists(conn, DeviceServiceCollectionName, name)
 	if err != nil {
 		return false, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -44,7 +48,7 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 	}
 
 	// verify if device service name is unique or not
-	exists, edgeXerr = objectNameExists(conn, fmt.Sprintf("%s:%s", DeviceServiceCollection, v2.Name), ds.Name)
+	exists, edgeXerr = objectNameExists(conn, DeviceServiceCollectionName, ds.Name)
 	if edgeXerr != nil {
 		return addedDeviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -75,9 +79,9 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 	// Store the redisKey into a Sorted Set with Modified as the score for order
 	_ = conn.Send(ZADD, DeviceServiceCollection, ds.Modified, redisKey)
 	// Store the ds.Name into a Hash for later Name existence check
-	_ = conn.Send(HSET, fmt.Sprintf("%s:%s", DeviceServiceCollection, v2.Name), ds.Name, redisKey)
+	_ = conn.Send(HSET, DeviceServiceCollectionName, ds.Name, redisKey)
 	for _, label := range ds.Labels { // Store the redisKey into Sorted Set of labels with Modified as the score for order
-		_ = conn.Send(ZADD, fmt.Sprintf("%s:%s:%s", DeviceServiceCollection, v2.Label, label), ds.Modified, redisKey)
+		_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", DeviceServiceCollectionLabel, DBKeySeparator, label), ds.Modified, redisKey)
 	}
 	_, err = conn.Do(EXEC)
 	if err != nil {
@@ -98,7 +102,7 @@ func deviceServiceById(conn redis.Conn, id string) (deviceService models.DeviceS
 
 // deviceServiceByName query device service by name from DB
 func deviceServiceByName(conn redis.Conn, name string) (deviceService models.DeviceService, edgeXerr errors.EdgeX) {
-	edgeXerr = getObjectByHash(conn, fmt.Sprintf("%s:%s", DeviceServiceCollection, v2.Name), name, &deviceService)
+	edgeXerr = getObjectByHash(conn, DeviceServiceCollectionName, name, &deviceService)
 	if edgeXerr != nil {
 		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -110,9 +114,9 @@ func deleteDeviceService(conn redis.Conn, deviceService models.DeviceService) er
 	_ = conn.Send(MULTI)
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceServiceCollection, storedKey)
-	_ = conn.Send(HDEL, fmt.Sprintf("%s:%s", DeviceServiceCollection, v2.Name), deviceService.Name)
+	_ = conn.Send(HDEL, DeviceServiceCollectionName, deviceService.Name)
 	for _, label := range deviceService.Labels {
-		_ = conn.Send(ZREM, fmt.Sprintf("%s:label:%s", DeviceServiceCollection, label), storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", DeviceServiceCollectionLabel, DBKeySeparator, label), storedKey)
 	}
 
 	_, err := conn.Do(EXEC)

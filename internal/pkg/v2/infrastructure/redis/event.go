@@ -18,11 +18,11 @@ import (
 )
 
 const (
-	EventsCollection           = "v2:event"
-	EventsCollectionCreated    = EventsCollection + ":" + v2.Created
-	EventsCollectionPushed     = EventsCollection + ":" + v2.Pushed
-	EventsCollectionDeviceName = EventsCollection + ":" + v2.Device + ":" + v2.Name
-	EventsCollectionReadings   = EventsCollection + ":readings"
+	EventsCollection           = "cd|evt"
+	EventsCollectionCreated    = EventsCollection + DBKeySeparator + v2.Created
+	EventsCollectionPushed     = EventsCollection + DBKeySeparator + v2.Pushed
+	EventsCollectionDeviceName = EventsCollection + DBKeySeparator + v2.Device + DBKeySeparator + v2.Name
+	EventsCollectionReadings   = EventsCollection + DBKeySeparator + "readings"
 )
 
 // asyncDeleteEventsByIds deletes all events with given event Ids.  This function is implemented to be run as a separate
@@ -51,11 +51,11 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 		}
 		storedKey := eventStoredKey(e.Id)
 		_ = conn.Send(UNLINK, storedKey)
-		_ = conn.Send(UNLINK, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id))
+		_ = conn.Send(UNLINK, fmt.Sprintf("%s%s%s", EventsCollectionReadings, DBKeySeparator, e.Id))
 		_ = conn.Send(ZREM, EventsCollection, storedKey)
 		_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
 		_ = conn.Send(ZREM, EventsCollectionPushed, storedKey)
-		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", EventsCollectionDeviceName, DBKeySeparator, e.DeviceName), storedKey)
 		queriesInQueue++
 
 		if queriesInQueue >= c.BatchSize {
@@ -105,7 +105,7 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.Ed
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	eventIds, readingIds, err := getEventReadingIdsByKey(conn, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName))
+	eventIds, readingIds, err := getEventReadingIdsByKey(conn, fmt.Sprintf("%s%s%s", EventsCollectionDeviceName, DBKeySeparator, deviceName))
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -120,7 +120,7 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.Ed
 // ************************** DB HELPER FUNCTIONS ***************************
 // eventStoredKey return the event's stored key which combines the collection name and object id
 func eventStoredKey(id string) string {
-	return fmt.Sprintf("%s:%s", EventsCollection, id)
+	return fmt.Sprintf("%s%s%s", EventsCollection, DBKeySeparator, id)
 }
 
 func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXerr errors.EdgeX) {
@@ -156,12 +156,12 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	_ = conn.Send(ZADD, EventsCollection, e.Created, storedKey)
 	_ = conn.Send(ZADD, EventsCollectionCreated, e.Created, storedKey)
 	_ = conn.Send(ZADD, EventsCollectionPushed, e.Pushed, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), e.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", EventsCollectionDeviceName, DBKeySeparator, e.DeviceName), e.Created, storedKey)
 
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
 	rids := make([]interface{}, len(e.Readings)*2+1)
-	rids[0] = fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id)
+	rids[0] = fmt.Sprintf("%s%s%s", EventsCollectionReadings, DBKeySeparator, e.Id)
 	var newReadings []models.Reading
 	for i, r := range e.Readings {
 		newReading, err := addReading(conn, r)
@@ -172,7 +172,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 
 		// set the sorted set score to the index of the reading
 		rids[i*2+1] = i
-		rids[i*2+2] = fmt.Sprintf("%s:%s", ReadingsCollection, newReading.GetBaseReading().Id)
+		rids[i*2+2] = fmt.Sprintf("%s%s%s", ReadingsCollection, DBKeySeparator, newReading.GetBaseReading().Id)
 	}
 	e.Readings = newReadings
 	if len(rids) > 1 {
@@ -205,11 +205,11 @@ func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	storedKey := eventStoredKey(e.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(UNLINK, storedKey)
-	_ = conn.Send(UNLINK, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id))
+	_ = conn.Send(UNLINK, fmt.Sprintf("%s%s%s", EventsCollectionReadings, DBKeySeparator, e.Id))
 	_ = conn.Send(ZREM, EventsCollection, storedKey)
 	_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
 	_ = conn.Send(ZREM, EventsCollectionPushed, storedKey)
-	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, e.DeviceName), storedKey)
+	_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", EventsCollectionDeviceName, DBKeySeparator, e.DeviceName), storedKey)
 
 	res, err := redis.Values(conn.Do(EXEC))
 	if err != nil {
@@ -238,7 +238,7 @@ func getEventReadingIdsByKey(conn redis.Conn, key string) (eventIds []string, re
 		if err != nil {
 			return nil, nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
 		}
-		rIds, err := redis.Strings(conn.Do(ZRANGE, fmt.Sprintf("%s:%s", EventsCollectionReadings, e.Id), 0, -1))
+		rIds, err := redis.Strings(conn.Do(ZRANGE, fmt.Sprintf("%s%s%s", EventsCollectionReadings, DBKeySeparator, e.Id), 0, -1))
 		if err != nil {
 			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of event %s failed", e.Id), err)
 		}
@@ -329,7 +329,7 @@ func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (ev
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
 	}
-	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s%s%s", EventsCollectionDeviceName, DBKeySeparator, name), offset, end)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
 	}

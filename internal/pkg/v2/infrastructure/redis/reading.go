@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	ReadingsCollection           = "v2:reading"
-	ReadingsCollectionCreated    = ReadingsCollection + ":" + v2.Created
-	ReadingsCollectionDeviceName = ReadingsCollection + ":" + v2.Device + ":" + v2.Name
+	ReadingsCollection           = "cd|rd"
+	ReadingsCollectionCreated    = ReadingsCollection + DBKeySeparator + v2.Created
+	ReadingsCollectionDeviceName = ReadingsCollection + DBKeySeparator + v2.Device + DBKeySeparator + v2.Name
 )
 
 var emptyBinaryValue = make([]byte, 0)
@@ -55,7 +55,7 @@ func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 		_ = conn.Send(UNLINK, storedKey)
 		_ = conn.Send(ZREM, ReadingsCollection, storedKey)
 		_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
-		_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
+		_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", ReadingsCollectionDeviceName, DBKeySeparator, r.DeviceName), storedKey)
 		queriesInQueue++
 
 		if queriesInQueue >= c.BatchSize {
@@ -83,7 +83,7 @@ func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 
 // readingStoredKey return the reading's stored key which combines the collection name and object id
 func readingStoredKey(id string) string {
-	return fmt.Sprintf("%s:%s", ReadingsCollection, id)
+	return fmt.Sprintf("%s%s%s", ReadingsCollection, DBKeySeparator, id)
 }
 
 // Add a reading to the database
@@ -121,7 +121,7 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
 	_ = conn.Send(ZADD, ReadingsCollectionCreated, baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", ReadingsCollectionDeviceName, DBKeySeparator, baseReading.DeviceName), baseReading.Created, storedKey)
 
 	return reading, nil
 }
@@ -139,7 +139,7 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	_ = conn.Send(UNLINK, storedKey)
 	_ = conn.Send(ZREM, ReadingsCollection, storedKey)
 	_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
-	_ = conn.Send(ZREM, fmt.Sprintf("%s:%s", ReadingsCollectionDeviceName, r.DeviceName), storedKey)
+	_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", ReadingsCollectionDeviceName, DBKeySeparator, r.DeviceName), storedKey)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("reading[id:%s] delete failed", id), err)
@@ -165,7 +165,7 @@ func checkReadingValue(b *models.BaseReading) errors.EdgeX {
 }
 
 func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRange(conn, fmt.Sprintf("%s:%s", EventsCollectionReadings, eventId), 0, -1)
+	objects, err := getObjectsByRange(conn, fmt.Sprintf("%s%s%s", EventsCollectionReadings, DBKeySeparator, eventId), 0, -1)
 	if errors.Kind(err) == errors.KindEntityDoesNotExist {
 		return // Empty Readings in an Event is not an error
 	} else if err != nil {
