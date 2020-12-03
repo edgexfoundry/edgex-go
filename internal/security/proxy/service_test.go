@@ -148,64 +148,64 @@ func TestInit(t *testing.T) {
 		{ // the original number of routes is from configuration file
 			name:               "empty env",
 			proxyRouteEnvValue: "",
-			expectNumRoutes:    8,
+			expectNumRoutes:    7,
 		},
 		{
 			name:               "add one unique route",
 			proxyRouteEnvValue: "testService.http://edgex-testService:12345",
-			expectNumRoutes:    9,
+			expectNumRoutes:    8,
 		},
 		{
 			name:               "add one unique route with URL containing IP address",
 			proxyRouteEnvValue: "testService.http://127.0.0.1:12345",
-			expectNumRoutes:    9,
+			expectNumRoutes:    8,
 		},
 		{
 			name:               "add two unique routes",
 			proxyRouteEnvValue: "testService1.http://edgex-testService1:12345, testService2.http://edgex-testService2:12346",
-			expectNumRoutes:    10,
+			expectNumRoutes:    9,
 		},
 		{
 			name:               "add two unique routes:one with URL containing IP address; the other one with hostname",
 			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346",
-			expectNumRoutes:    10,
+			expectNumRoutes:    9,
 		},
 		{
 			name:               "add one duplicate route",
 			proxyRouteEnvValue: "CoreData.http://edgex-core-data:48080",
-			expectNumRoutes:    8,
+			expectNumRoutes:    7,
 		},
 		{
 			name:               "add one unique, one duplicate route",
 			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080",
-			expectNumRoutes:    9,
+			expectNumRoutes:    8,
 		},
 		{
 			name:               "add one unique, multiple duplicate routes",
 			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
-			expectNumRoutes:    9,
+			expectNumRoutes:    8,
 		},
 		{
 			name:               "add two unique, multiple duplicate routes",
 			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
-			expectNumRoutes:    10,
+			expectNumRoutes:    9,
 		},
 		// invalid syntax tests:
 		// the bad one is not added into kong route pool
 		{
 			name:               "bad spec without dot . in the definition for route",
 			proxyRouteEnvValue: "testServcie=https://edgex-test-servcie1:12345",
-			expectNumRoutes:    8,
+			expectNumRoutes:    7,
 		},
 		{
 			name:               "bad URL without full quallified URL",
 			proxyRouteEnvValue: "testServcie.edgex-test-servcie1:12345",
-			expectNumRoutes:    8,
+			expectNumRoutes:    7,
 		},
 		{
 			name:               "empty service name",
 			proxyRouteEnvValue: ".https://edgex-test-servcie1:12345",
-			expectNumRoutes:    8,
+			expectNumRoutes:    7,
 		},
 	}
 	for _, tt := range tests {
