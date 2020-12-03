@@ -13,7 +13,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/security-proxy-setup/security-proxy-setup
+RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
 
 FROM alpine
 
@@ -26,6 +26,9 @@ WORKDIR /edgex
 
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/configuration.toml res/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
+# Note that secrets-config shares the same configuration file as security-proxy-setup
+# as we are splitting security-proxy-setup into two different utilities for ease-of-use.
+COPY --from=builder /edgex-go/cmd/secrets-config/secrets-config .
 
 ENTRYPOINT ["/edgex/security-proxy-setup"]
 CMD ["--init=true"]

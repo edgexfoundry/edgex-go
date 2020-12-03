@@ -326,6 +326,13 @@ apps:
       SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
       SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     plugs: [home, removable-media, network]
+  secrets-config:
+    adapter: none
+    # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
+    command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
+    environment:
+      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
+    plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
     command: bin/redis-cli
@@ -609,16 +616,25 @@ parts:
 
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-notifications support-scheduler sys-mgmt-agent \
-          security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider security-bootstrap-redis; do
+          security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider \
+          security-bootstrap-redis secrets-config; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
 
-          if [ "$service" != "security-file-token-provider" ]; then
-              install -DT "./cmd/$service/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.toml"
-          else
+          case "$service" in
+          "security-file-token-provider")
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
-          fi
+          ;;
+          # The security-secrets-config doesn't have a default configuration.toml, but since it shares
+          # the same config as proxy-setup, just use that one.
+          "secrets-config")
+              install -DT "./cmd/security-proxy-setup/res/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/secrets-config/res/configuration.toml"
+          ;;
+          *)
+              install -DT "./cmd/$service/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.toml"
+          esac
 
           install -DT "./cmd/$service/Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/$service/Attribution.txt"
           install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/$service/LICENSE"
