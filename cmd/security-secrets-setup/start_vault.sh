@@ -27,9 +27,13 @@ listener "tcp" {
               tls_disable = "1" 
               cluster_address = "edgex-vault:8201" 
           } 
-          backend "file" {
-              path = "/vault/file"
-          } 
+          backend "consul" { 
+              path = "vault/" 
+              address = "edgex-core-consul:8500" 
+              scheme = "http" 
+              redirect_addr = "http://edgex-vault:8200"
+              cluster_addr = "http://edgex-vault:8201"
+          }
           default_lease_ttl = "168h" 
           max_lease_ttl = "720h"
 '

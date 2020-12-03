@@ -18,7 +18,7 @@ LogLevel = 'INFO'
 
 [SecretStore]
 Host = 'localhost'          ## Override in environment variables, if necessary
-ServerName = 'edgex-vault'  ## Needed for TLS CN
+ServerName = ''  ## Needed for TLS CN
 Port = 8200
 Protocol = 'http'
 AdditionalRetryAttempts = 10

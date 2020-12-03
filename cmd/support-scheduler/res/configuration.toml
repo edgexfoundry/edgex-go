@@ -61,7 +61,7 @@ Port = 8200
 Path = '/v1/secret/edgex/scheduler/'
 Protocol = 'http'
 RootCaCertPath = ''
-ServerName = 'localhost'
+ServerName = ''
 TokenFile = '/vault/config/assets/resp-init.json'
 # Number of attempts to retry retrieving secrets before failing to start the service.
 AdditionalRetryAttempts = 10

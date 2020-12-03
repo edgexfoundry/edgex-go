@@ -4,7 +4,7 @@ LogLevel = 'DEBUG'
 [SecretService]
 Protocol = "http"
 Server = "edgex-vault"
-ServerName = "edgex-vault"
+ServerName = ""
 Port = 8200
 CaFilePath = ''
 
