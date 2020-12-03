@@ -23,7 +23,6 @@ type ConfigurationStruct struct {
 	Writable      WritableInfo
 	Clients       map[string]bootstrapConfig.ClientInfo
 	Databases     map[string]bootstrapConfig.Database
-	Logging       bootstrapConfig.LoggingInfo
 	Notifications NotificationInfo
 	Registry      bootstrapConfig.RegistryInfo
 	Service       bootstrapConfig.ServiceInfo
@@ -85,7 +84,6 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Clients:     c.Clients,
 		Service:     c.Service,
 		Registry:    c.Registry,
-		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
 	}
 }

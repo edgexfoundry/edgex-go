@@ -16,10 +16,6 @@
 [Writable]
 LogLevel = 'INFO'
 
-[Logging]
-EnableRemote = false
-File = ''
-
 [SecretStore]
 Host = 'localhost'          ## Override in environment variables, if necessary
 ServerName = 'edgex-vault'  ## Needed for TLS CN

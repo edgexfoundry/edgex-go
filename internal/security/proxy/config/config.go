@@ -25,7 +25,6 @@ import (
 
 type ConfigurationStruct struct {
 	Writable      WritableInfo
-	Logging       bootstrapConfig.LoggingInfo
 	KongURL       KongUrlInfo
 	KongAuth      KongAuthInfo
 	KongACL       KongAclInfo
@@ -146,7 +145,6 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
 		Clients:     c.Clients,
-		Logging:     c.Logging,
 		SecretStore: ss,
 	}
 }

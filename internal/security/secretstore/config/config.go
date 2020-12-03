@@ -23,7 +23,6 @@ import (
 
 type ConfigurationStruct struct {
 	Writable      WritableInfo
-	Logging       bootstrapConfig.LoggingInfo
 	SecretService secretstoreclient.SecretServiceInfo
 	Databases     map[string]Database
 }
@@ -74,9 +73,7 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
-	return bootstrapConfig.BootstrapConfiguration{
-		Logging: c.Logging,
-	}
+	return bootstrapConfig.BootstrapConfiguration{}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.

@@ -27,7 +27,6 @@ type ConfigurationStruct struct {
 	ExecutorPath     string
 	MetricsMechanism string
 	Registry         bootstrapConfig.RegistryInfo
-	Logging          bootstrapConfig.LoggingInfo
 	FormatSpecifier  string
 	SecretStore      bootstrapConfig.SecretStoreInfo
 }
@@ -77,7 +76,6 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Clients:     c.Clients,
 		Service:     c.Service,
 		Registry:    c.Registry,
-		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
 	}
 }

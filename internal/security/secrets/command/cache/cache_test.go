@@ -26,8 +26,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/secrets/test"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 
 	"github.com/stretchr/testify/assert"
@@ -161,10 +159,6 @@ func setupCacheTest(t *testing.T, vaultJSONPkiSetupExist bool, kongJSONPkiSetupE
 	configuration := &secretsConfig.ConfigurationStruct{
 		Writable: secretsConfig.WritableInfo{
 			LogLevel: "DEBUG",
-		},
-		Logging: bootstrapConfig.LoggingInfo{
-			EnableRemote: false,
-			File:         "./logs/security-secrets-setup.log",
 		},
 		SecretsSetup: secretsConfig.SecretsSetupInfo{
 			WorkDir:       "./workingtest",

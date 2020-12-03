@@ -23,7 +23,6 @@ import (
 // the runtime extension of the static configuraiton.
 type ConfigurationStruct struct {
 	Writable    WritableInfo
-	Logging     bootstrapConfig.LoggingInfo
 	SecretStore bootstrapConfig.SecretStoreInfo
 	Databases   map[string]bootstrapConfig.Database
 }
@@ -75,7 +74,6 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Logging:     c.Logging,
 		SecretStore: c.SecretStore,
 	}
 }
