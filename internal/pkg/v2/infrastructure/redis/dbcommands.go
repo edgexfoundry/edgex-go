@@ -1,5 +1,7 @@
 package redis
 
+import "strings"
+
 // Redis commmands used in this project
 // Reference: https://redis.io/commands
 const (
@@ -34,3 +36,8 @@ const (
 	GreaterThanZero = "(0"
 	DBKeySeparator  = ":"
 )
+
+// CreateKey creates Redis key by connecting the target key with DBKeySeparator
+func CreateKey(targets ...string) string {
+	return strings.Join(targets, DBKeySeparator)
+}

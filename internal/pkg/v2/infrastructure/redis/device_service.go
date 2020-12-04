@@ -25,7 +25,7 @@ const (
 
 // deviceServiceStoredKey return the device service's stored key which combines the collection name and object id
 func deviceServiceStoredKey(id string) string {
-	return fmt.Sprintf("%s%s%s", DeviceServiceCollection, DBKeySeparator, id)
+	return CreateKey(DeviceServiceCollection, id)
 }
 
 // deviceServiceNameExist whether the device service exists by name
@@ -81,7 +81,7 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 	// Store the ds.Name into a Hash for later Name existence check
 	_ = conn.Send(HSET, DeviceServiceCollectionName, ds.Name, redisKey)
 	for _, label := range ds.Labels { // Store the redisKey into Sorted Set of labels with Modified as the score for order
-		_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", DeviceServiceCollectionLabel, DBKeySeparator, label), ds.Modified, redisKey)
+		_ = conn.Send(ZADD, CreateKey(DeviceServiceCollectionLabel, label), ds.Modified, redisKey)
 	}
 	_, err = conn.Do(EXEC)
 	if err != nil {
@@ -116,7 +116,7 @@ func deleteDeviceService(conn redis.Conn, deviceService models.DeviceService) er
 	_ = conn.Send(ZREM, DeviceServiceCollection, storedKey)
 	_ = conn.Send(HDEL, DeviceServiceCollectionName, deviceService.Name)
 	for _, label := range deviceService.Labels {
-		_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", DeviceServiceCollectionLabel, DBKeySeparator, label), storedKey)
+		_ = conn.Send(ZREM, CreateKey(DeviceServiceCollectionLabel, label), storedKey)
 	}
 
 	_, err := conn.Do(EXEC)

@@ -84,7 +84,7 @@ func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string,
 
 	idsSlice := make([][]string, len(labels))
 	for i, label := range labels { //iterate each labels to retrieve Ids associated with labels
-		idsWithLabel, err := redis.Strings(conn.Do(command, fmt.Sprintf("%s%s%s%s%s", key, DBKeySeparator, v2.Label, DBKeySeparator, label), 0, -1))
+		idsWithLabel, err := redis.Strings(conn.Do(command, CreateKey(key, v2.Label, label), 0, -1))
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by label %s from database failed", label), err)
 		}

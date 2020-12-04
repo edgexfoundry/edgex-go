@@ -28,12 +28,12 @@ const (
 
 // deviceProfileStoredKey return the device profile's stored key which combines the collection name and object id
 func deviceProfileStoredKey(id string) string {
-	return fmt.Sprintf("%s%s%s", DeviceProfileCollection, DBKeySeparator, id)
+	return CreateKey(DeviceProfileCollection, id)
 }
 
 // deviceProfileNameExists whether the device profile exists by name
 func deviceProfileNameExists(conn redis.Conn, name string) (bool, errors.EdgeX) {
-	exists, err := objectNameExists(conn, DeviceProfileCollection+":name", name)
+	exists, err := objectNameExists(conn, DeviceProfileCollectionName, name)
 	if err != nil {
 		return false, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -84,10 +84,10 @@ func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (addedDeviceProf
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
 	_ = conn.Send(HSET, DeviceProfileCollectionName, dp.Name, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", DeviceProfileCollectionManufacturer, DBKeySeparator, dp.Manufacturer), dp.Modified, storedKey)
-	_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", DeviceProfileCollectionModel, DBKeySeparator, dp.Model), dp.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionManufacturer, dp.Manufacturer), dp.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionModel, dp.Model), dp.Modified, storedKey)
 	for _, label := range dp.Labels {
-		_ = conn.Send(ZADD, fmt.Sprintf("%s%s%s", DeviceProfileCollectionLabel, DBKeySeparator, label), dp.Modified, storedKey)
+		_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionLabel, label), dp.Modified, storedKey)
 	}
 
 	_, err = conn.Do(EXEC)
@@ -122,10 +122,10 @@ func deleteDeviceProfile(conn redis.Conn, dp models.DeviceProfile) errors.EdgeX 
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceProfileCollection, storedKey)
 	_ = conn.Send(HDEL, DeviceProfileCollectionName, dp.Name)
-	_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", DeviceProfileCollectionManufacturer, DBKeySeparator, dp.Manufacturer), storedKey)
-	_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", DeviceProfileCollectionModel, DBKeySeparator, dp.Model), storedKey)
+	_ = conn.Send(ZREM, CreateKey(DeviceProfileCollectionManufacturer, dp.Manufacturer), storedKey)
+	_ = conn.Send(ZREM, CreateKey(DeviceProfileCollectionModel, dp.Model), storedKey)
 	for _, label := range dp.Labels {
-		_ = conn.Send(ZREM, fmt.Sprintf("%s%s%s", DeviceProfileCollectionLabel, DBKeySeparator, label), storedKey)
+		_ = conn.Send(ZREM, CreateKey(DeviceProfileCollectionLabel, label), storedKey)
 	}
 
 	_, err := conn.Do(EXEC)
@@ -222,7 +222,7 @@ func deviceProfilesByModel(conn redis.Conn, offset int, limit int, model string)
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
 	}
-	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s%s%s", DeviceProfileCollectionModel, DBKeySeparator, model), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionModel, model), offset, end)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -245,7 +245,7 @@ func deviceProfilesByManufacturer(conn redis.Conn, offset int, limit int, manufa
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
 	}
-	objects, err := getObjectsByRevRange(conn, fmt.Sprintf("%s%s%s", DeviceProfileCollectionManufacturer, DBKeySeparator, manufacturer), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionManufacturer, manufacturer), offset, end)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}
