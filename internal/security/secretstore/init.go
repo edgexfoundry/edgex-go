@@ -340,40 +340,35 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
-	// Uploading Kong's TLS certificate is optional if cert's path is not present
-	if len(configuration.SecretService.CertPath) > 0 {
-		cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
-		existing, err := cert.AlreadyinStore()
-		if err != nil {
-			lc.Error(err.Error())
-			os.Exit(1)
-		}
-
-		if existing {
-			lc.Info("proxy certificate pair are in the secret store already, skip uploading")
-			return false
-		}
-
-		lc.Info("proxy certificate pair are not in the secret store yet, uploading them")
-		cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
-		if err != nil {
-			lc.Error("failed to get certificate pair from volume")
-			os.Exit(1)
-		}
-
-		lc.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
-
-		err = cert.UploadToStore(cp)
-		if err != nil {
-			lc.Error("failed to upload the proxy cert pair into the secret store")
-			lc.Error(err.Error())
-			os.Exit(1)
-		}
-
-		lc.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
-	} else {
-		lc.Info("No proxy certificate pair to upload, Vault init done successfully")
+	cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
+	existing, err := cert.AlreadyinStore()
+	if err != nil {
+		lc.Error(err.Error())
+		os.Exit(1)
 	}
+
+	if existing == true {
+		lc.Info("proxy certificate pair are in the secret store already, skip uploading")
+		return false
+	}
+
+	lc.Info("proxy certificate pair are not in the secret store yet, uploading them")
+	cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
+	if err != nil {
+		lc.Error("failed to get certificate pair from volume")
+		os.Exit(1)
+	}
+
+	lc.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
+
+	err = cert.UploadToStore(cp)
+	if err != nil {
+		lc.Error("failed to upload the proxy cert pair into the secret store")
+		lc.Error(err.Error())
+		os.Exit(1)
+	}
+
+	lc.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
 	return false
 }
 
