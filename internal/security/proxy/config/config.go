@@ -75,6 +75,7 @@ type KongAclInfo struct {
 }
 
 type SecretServiceInfo struct {
+	Protocol        string
 	Server          string
 	Port            int
 	HealthcheckPath string
@@ -85,11 +86,7 @@ type SecretServiceInfo struct {
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
-	url := &url.URL{
-		Scheme: "https",
-		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
-	}
-	return url.String()
+	return fmt.Sprintf("%s://%s:%d", s.Protocol, s.Server, s.Port)
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -133,7 +130,7 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Host:                    c.SecretService.Server,
 		Port:                    c.SecretService.Port,
 		Path:                    c.SecretService.CertPath,
-		Protocol:                "https",
+		Protocol:                c.SecretService.Protocol,
 		RootCaCertPath:          c.SecretService.CACertPath,
 		ServerName:              c.SecretService.Server,
 		Authentication:          vault.AuthenticationInfo{AuthType: "X-Vault-Token"},

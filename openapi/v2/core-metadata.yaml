@@ -3180,9 +3180,9 @@ paths:
                     Host: "edgex-vault"
                     Port: 8200
                     Path: "v1/secret/edgex/metadata/"
-                    Protocol: "https"
+                    Protocol: "http"
                     Namespace: ""
-                    RootCaCertPath: "/vault/config/pki/EdgeXFoundryCA/EdgeXFoundryCA.pem"
+                    RootCaCertPath: ""
                     ServerName: "edgex-vault"
                     Authentication:
                       AuthType: "X-Vault-Token"

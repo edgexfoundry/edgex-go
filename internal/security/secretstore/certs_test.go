@@ -64,9 +64,9 @@ func TestRetrieve(t *testing.T) {
 
 	configuration := &config.ConfigurationStruct{}
 	configuration.SecretService = secretstoreclient.SecretServiceInfo{
-		Server: parsed.Hostname(),
-		Port:   port,
-		Scheme: "https",
+		Server:   parsed.Hostname(),
+		Port:     port,
+		Protocol: "https",
 	}
 
 	mockLogger := logger.MockLogger{}

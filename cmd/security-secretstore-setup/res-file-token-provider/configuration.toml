@@ -2,11 +2,11 @@
 LogLevel = 'DEBUG'
 
 [SecretService]
-Scheme = "https"
+Protocol = "http"
 Server = "edgex-vault"
-ServerName = "edgex-vault"
+ServerName = ""
 Port = 8200
-CaFilePath = '/tmp/edgex/secrets/ca/ca.pem'
+CaFilePath = ''
 
 [TokenFileProvider]
 PrivilegedTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.json"

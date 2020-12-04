@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2020 Intel Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -21,11 +22,11 @@ import (
 	"os"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
@@ -74,11 +75,21 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
-	req := NewRequestor(
-		b.insecureSkipVerify,
-		configuration.Writable.RequestTimeout,
-		configuration.SecretService.CACertPath,
-		lc)
+	var req internal.HttpCaller
+	if len(configuration.SecretService.CACertPath) > 0 {
+		req = NewRequestor(
+			b.insecureSkipVerify,
+			configuration.Writable.RequestTimeout,
+			configuration.SecretService.CACertPath,
+			lc)
+	} else {
+		req = NewRequestor(
+			true, // non-TLS mode internally
+			configuration.Writable.RequestTimeout,
+			"", // irrelevant
+			lc)
+	}
+
 	if req == nil {
 		os.Exit(1)
 	}
@@ -91,15 +102,8 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 			b.errorAndHalt(lc, "can't run initialization and reset at the same time for security service")
 		}
 
-		certificateProvider := bootstrapContainer.CertificateProviderFrom(dic.Get)
-		var cp bootstrapConfig.CertKeyPair
-
-		cp, err := certificateProvider.GetCertificateKeyPair("kong-tls")
-		if err != nil {
-			b.haltIfError(lc, err)
-		}
-
-		b.haltIfError(lc, s.Init(cp)) // Where the Service init is called
+		// Based on the ADR: No certificate pair internally any more
+		b.haltIfError(lc, s.Init()) // Where the Service init is called
 	} else if b.resetNeeded {
 		b.haltIfError(lc, s.ResetProxy())
 	}

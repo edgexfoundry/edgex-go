@@ -70,9 +70,9 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		lc.Info("bypassing certificate verification for secret store connection")
 		req = secretstoreclient.NewRequestor(lc).Insecure()
 	}
-	vaultScheme := cfg.SecretService.Scheme
+	vaultProtocol := cfg.SecretService.Protocol
 	vaultHost := fmt.Sprintf("%s:%v", cfg.SecretService.Server, cfg.SecretService.Port)
-	vaultClient := secretstoreclient.NewSecretStoreClient(lc, req, vaultScheme, vaultHost)
+	vaultClient := secretstoreclient.NewSecretStoreClient(lc, req, vaultProtocol, vaultHost)
 
 	fileProvider := NewTokenProvider(lc, fileOpener, tokenProvider, vaultClient)
 

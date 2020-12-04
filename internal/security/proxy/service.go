@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2020 Intel Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -128,19 +129,8 @@ func (s *Service) ResetProxy() error {
 	return nil
 }
 
-func (s *Service) Init(cp bootstrapConfig.CertKeyPair) error {
-	postErr := s.postCert(cp)
-	if postErr != nil {
-		switch postErr.reason {
-		case CertExisting:
-			s.loggingClient.Info("skipping as the initialization has been done successfully")
-			return nil
-		case InternalError:
-			return errors.New(postErr.Error())
-		default:
-			return errors.New(postErr.Error())
-		}
-	}
+func (s *Service) Init() error {
+	// no cert pair to post internally any more
 
 	addRoutesFromEnv, parseErr := s.parseAdditionalProxyRoutes()
 

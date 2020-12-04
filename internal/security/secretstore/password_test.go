@@ -81,9 +81,9 @@ func TestRetrieveCred(t *testing.T) {
 
 	configuration := &config.ConfigurationStruct{
 		SecretService: secretstoreclient.SecretServiceInfo{
-			Server: parsed.Hostname(),
-			Port:   port,
-			Scheme: "https",
+			Server:   parsed.Hostname(),
+			Port:     port,
+			Protocol: "https",
 		},
 	}
 
