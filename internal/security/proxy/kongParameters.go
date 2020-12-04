@@ -15,8 +15,6 @@
  *******************************************************************************/
 package proxy
 
-import jwt "github.com/dgrijalva/jwt-go"
-
 type KongService struct {
 	Name     string `url:"name,omitempty"`
 	Host     string `url:"host,omitempty"`
@@ -54,54 +52,15 @@ type KongOAuth2Plugin struct {
 	TokenTTL                int    `url:"config.refresh_token_ttl"`
 }
 
-type KongConsumerOauth2 struct {
-	Name         string `url:"name,omitempty"`
-	ClientID     string `url:"client_id,omitempty"`
-	ClientSecret string `url:"client_secret,omitempty"`
-	RedirectURIS string `url:"redirect_uris,omitempty"`
-}
-
-type KongOuath2TokenRequest struct {
-	ClientID     string `url:"client_id,omitempty"`
-	ClientSecret string `url:"client_secret,omitempty"`
-	GrantType    string `url:"grant_type,omitempty"`
-	Scope        string `url:"scope,omitempty"`
-}
-
-type KongOauth2Token struct {
-	TokenType   string `json:"token_type"`
-	AccessToken string `json:"access_token"`
-	Expires     int    `json:"expires_in"`
-}
-
 type KongACLPlugin struct {
 	Name      string `url:"name"`
 	WhiteList string `url:"config.whitelist"`
-}
-
-type KongBasicAuthPlugin struct {
-	Name            string `url:"name,omitempty"`
-	HideCredentials string `url:"config.hide_credentials,omitempty"`
 }
 
 type CertInfo struct {
 	Cert string   `json:"cert,omitempty"`
 	Key  string   `json:"key,omitempty"`
 	Snis []string `json:"snis,omitempty"`
-}
-
-type JWTCred struct {
-	ConsumerID string `json:"consumer_id,omitempty"`
-	CreatedAt  int    `json:"created_at,omitempty"`
-	ID         string `json:"id,omitempty"`
-	Key        string `json:"key,omitempty"`
-	Secret     string `json:"secret,omitempty"`
-}
-
-type KongJWTClaims struct {
-	ISS  string `json:"iss"`
-	Acct string `json:"account"`
-	jwt.StandardClaims
 }
 
 type Item struct {

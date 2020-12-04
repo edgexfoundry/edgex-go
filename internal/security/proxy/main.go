@@ -41,18 +41,12 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	var initNeeded bool
 	var insecureSkipVerify bool
 	var resetNeeded bool
-	var userTobeCreated string
-	var userOfGroup string
-	var userToBeDeleted string
 
 	// All common command-line flags have been moved to bootstrap. Service specific flags are added below.
 	f := flags.NewWithUsage(
 		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
 			"    --init=true/false               Indicates if security service should be initialized\n" +
-			"    --reset=true/false              Indicate if security service should be reset to initialization status\n" +
-			"    --useradd=<username>            Create an account and return JWT\n" +
-			"    --group=<groupname>             Group name the user belongs to\n" +
-			"    --userdel=<username>            Delete an account",
+			"    --reset=true/false              Indicate if security service should be reset to initialization status\n",
 	)
 
 	if len(os.Args) < 2 {
@@ -62,9 +56,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
 	f.FlagSet.BoolVar(&initNeeded, "init", false, "")
 	f.FlagSet.BoolVar(&resetNeeded, "reset", false, "")
-	f.FlagSet.StringVar(&userTobeCreated, "useradd", "", "")
-	f.FlagSet.StringVar(&userOfGroup, "group", "user", "")
-	f.FlagSet.StringVar(&userToBeDeleted, "userdel", "", "")
 	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
@@ -88,10 +79,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 			NewBootstrap(
 				insecureSkipVerify,
 				initNeeded,
-				resetNeeded,
-				userTobeCreated,
-				userOfGroup,
-				userToBeDeleted).BootstrapHandler,
+				resetNeeded).BootstrapHandler,
 		},
 	)
 }
