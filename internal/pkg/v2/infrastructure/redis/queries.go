@@ -88,11 +88,7 @@ func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string,
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by label %s from database failed", label), err)
 		}
-		idSlice := make([]string, len(idsWithLabel))
-		for i, v := range idsWithLabel {
-			idSlice[i] = fmt.Sprint(v)
-		}
-		idsSlice[i] = idSlice
+		idsSlice[i] = idsWithLabel
 	}
 
 	//find common Ids among two-dimension Ids slice associated with labels
@@ -100,7 +96,7 @@ func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string,
 	if start > len(commonIds) {
 		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
 	}
-	if end > len(commonIds) {
+	if end >= len(commonIds) {
 		commonIds = commonIds[start:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		commonIds = commonIds[start : end+1]
