@@ -71,9 +71,6 @@ layout:
 grade: stable
 confinement: strict
 
-# This applies to all apps
-environment:
-  SecretStore_RootCaCertPath: $SNAP_DATA/secrets/ca/ca.pem
 apps:
   # edgex microservices
   consul:
@@ -167,8 +164,6 @@ apps:
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
       SecretService_Server: localhost
-      SecretService_ServerName: localhost
-      SecretService_CaFilePath: $SNAP_DATA/secrets/ca/ca.pem
       SecretService_CertFilePath: $SNAP_DATA/secrets/edgex-kong/server.crt
       SecretService_KeyFilePath: $SNAP_DATA/secrets/edgex-kong/server.key
       SecretService_TokenFolderPath: $SNAP_DATA/config/security-secrets-setup/res
@@ -192,7 +187,6 @@ apps:
     environment:
       INIT_ARG: "--init=true"
       SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
-      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -209,7 +203,6 @@ apps:
       # TODO: determine the correct cmd-line args & env var overrides...
       SecretStore_ServerName: localhost
       SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
-      SecretStore_RooCaCertPath: $SNAP_DATA/secrets/ca/ca.pem
     daemon: oneshot
     plugs: [network]
   core-data:

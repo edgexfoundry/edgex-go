@@ -17,7 +17,7 @@
 # This is a TOML config file for edgexsecurity service.
 
 [Writable]
-LogLevel = "ERROR"
+LogLevel = "DEBUG"
 RequestTimeout = 10
 
 [KongURL]
@@ -38,13 +38,14 @@ Name = "acl"
 WhiteList = "admin"
 
 [SecretService]
+Protocol = "http"
 Server = "localhost"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
-CertPath = "/v1/secret/edgex/edgex-security-proxy-setup/"
+CertPath = ""
 TokenPath = "res/resp-init.json"
-CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
-SNIS = ["localhost"]
+CACertPath = ""
+SNIS = [""]
 
 [Clients]
   [Clients.CoreData]

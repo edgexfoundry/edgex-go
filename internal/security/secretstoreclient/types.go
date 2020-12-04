@@ -17,11 +17,10 @@ package secretstoreclient
 
 import (
 	"fmt"
-	"net/url"
 )
 
 type SecretServiceInfo struct {
-	Scheme                      string
+	Protocol                    string
 	Server                      string
 	ServerName                  string
 	Port                        int
@@ -43,10 +42,5 @@ type SecretServiceInfo struct {
 }
 
 func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
-	url := &url.URL{
-		Scheme: s.Scheme,
-		Host:   fmt.Sprintf("%s:%v", s.Server, s.Port),
-		Path:   "/",
-	}
-	return url.String()
+	return fmt.Sprintf("%s://%s:%d/", s.Protocol, s.Server, s.Port)
 }

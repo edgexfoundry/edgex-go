@@ -1662,9 +1662,9 @@ paths:
                     Host: "edgex-vault"
                     Port: 8200
                     Path: "v1/secret/edgex/coredata/"
-                    Protocol: "httpsxf"
+                    Protocol: "http"
                     Namespace: ""
-                    RootCaCertPath: "/tmp/edgex/secrets/ca/ca.pem"
+                    RootCaCertPath: ""
                     ServerName: "edgex-vault" 
                     Authentication:
                       AuthType: "X-Vault-Token"  

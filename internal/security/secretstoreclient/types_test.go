@@ -23,9 +23,9 @@ import (
 
 func TestGetBaseURL(t *testing.T) {
 	theURL := SecretServiceInfo{
-		Scheme: "http",
-		Server: "my-server",
-		Port:   1234,
+		Protocol: "http",
+		Server:   "my-server",
+		Port:     1234,
 	}.GetSecretSvcBaseURL()
 
 	assert.Equal(t, "http://my-server:1234/", theURL)

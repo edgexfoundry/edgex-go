@@ -24,21 +24,16 @@ VAULT_TLS_PATH=${VAULT_TLS_PATH:-/tmp/edgex/secrets/edgex-vault}
 DEFAULT_VAULT_LOCAL_CONFIG='
 listener "tcp" { 
               address = "edgex-vault:8200" 
-              tls_disable = "0" 
+              tls_disable = "1" 
               cluster_address = "edgex-vault:8201" 
-              tls_min_version = "tls12" 
-              tls_client_ca_file ="'${VAULT_TLS_PATH}'/ca.pem" 
-              tls_cert_file ="'${VAULT_TLS_PATH}'/server.crt" 
-              tls_key_file = "'${VAULT_TLS_PATH}'/server.key" 
-              tls_perfer_server_cipher_suites = "true"
           } 
           backend "consul" { 
               path = "vault/" 
               address = "edgex-core-consul:8500" 
               scheme = "http" 
-              redirect_addr = "https://edgex-vault:8200" 
-              cluster_addr = "https://edgex-vault:8201" 
-          } 
+              redirect_addr = "http://edgex-vault:8200"
+              cluster_addr = "http://edgex-vault:8201"
+          }
           default_lease_ttl = "168h" 
           max_lease_ttl = "720h"
 '

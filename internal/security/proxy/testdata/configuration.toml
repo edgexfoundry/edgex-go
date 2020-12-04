@@ -38,6 +38,7 @@ Name = "acl"
 WhiteList = "admin"
 
 [SecretService]
+Protocol = "https"
 Server = "localhost"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
