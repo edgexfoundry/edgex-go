@@ -11,6 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -83,7 +84,7 @@ func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string,
 
 	idsSlice := make([][]string, len(labels))
 	for i, label := range labels { //iterate each labels to retrieve Ids associated with labels
-		idsWithLabel, err := redis.Strings(conn.Do(command, fmt.Sprintf("%s:label:%s", key, label), 0, -1))
+		idsWithLabel, err := redis.Strings(conn.Do(command, CreateKey(key, v2.Label, label), 0, -1))
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by label %s from database failed", label), err)
 		}

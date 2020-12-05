@@ -283,7 +283,7 @@ func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, fmt.Sprintf("%s:%s", EventsCollectionDeviceName, deviceName))
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(EventsCollectionDeviceName, deviceName))
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}

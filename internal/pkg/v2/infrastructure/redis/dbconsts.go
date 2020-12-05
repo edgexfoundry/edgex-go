@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2020 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package redis
 
 // Redis commmands used in this project
@@ -32,4 +37,5 @@ const (
 	InfiniteMin     = "-inf"
 	InfiniteMax     = "+inf"
 	GreaterThanZero = "(0"
+	DBKeySeparator  = ":"
 )
