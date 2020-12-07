@@ -26,7 +26,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -485,7 +484,7 @@ func TestUpdateEventPushedById(t *testing.T) {
 
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateEventPushedById", expectedEventId).Return(nil)
-	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), redis.ErrNil))
+	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), nil))
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
