@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
@@ -27,8 +28,7 @@ import (
 )
 
 const (
-	CommandName    string = "adduser"
-	urlEncodedForm string = "application/x-www-form-urlencoded"
+	CommandName string = "adduser"
 )
 
 type cmd struct {
@@ -134,7 +134,7 @@ func (c *cmd) createConsumer() error {
 	if err != nil {
 		return fmt.Errorf("Failed to prepare new consumer request %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, urlEncodedForm)
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to send new consumer request %s: %w", c.username, err)
@@ -174,7 +174,7 @@ func (c *cmd) addUserToGroup() error {
 	if err != nil {
 		return fmt.Errorf("Failed to build request to associate consumer %s to group %s: %w", c.username, c.group, err)
 	}
-	req.Header.Add(clients.ContentType, urlEncodedForm)
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to submit request to associate consumer %s to group %s: %w", c.username, c.group, err)
@@ -234,7 +234,7 @@ func (c *cmd) ExecuteAddJwt() (int, error) {
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to prepare request to associate JWT to user %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, urlEncodedForm)
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to send request to associate JWT to user %s: %w", c.username, err)
@@ -298,7 +298,7 @@ func (c *cmd) ExecuteAddOAuth2() (statusCode int, err error) {
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to prepare request to create oauth application %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, urlEncodedForm)
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to send request to create oauth application %s: %w", c.username, err)

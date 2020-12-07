@@ -7,14 +7,24 @@
 package tls
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
@@ -24,6 +34,7 @@ const (
 
 type cmd struct {
 	loggingClient   logger.LoggingClient
+	client          internal.HttpCaller
 	configuration   *config.ConfigurationStruct
 	certificatePath string
 	privateKeyPath  string
@@ -36,6 +47,7 @@ func NewCommand(
 
 	cmd := cmd{
 		loggingClient: lc,
+		client:        secretstoreclient.NewRequestor(lc).Insecure(),
 		configuration: configuration,
 	}
 	var dummy string
@@ -61,9 +73,172 @@ func NewCommand(
 }
 
 func (c *cmd) Execute() (statusCode int, err error) {
-	fmt.Println("TODO: Configure inbound TLS certificate.")
+	fmt.Println("Configure inbound proxy TLS certificate.")
 	fmt.Printf("--incert %s\n", c.certificatePath)
 	fmt.Printf("--inkey %s\n", c.privateKeyPath)
-	err = fmt.Errorf("tls command is unimplemented")
-	return interfaces.StatusCodeExitWithError, err
+
+	if err := c.uploadProxyTlsCert(); err != nil {
+		return interfaces.StatusCodeExitWithError, err
+	}
+
+	return
+}
+
+func (c *cmd) readCertKeyPairFromFiles() (*bootstrapConfig.CertKeyPair, error) {
+	certPem, err := ioutil.ReadFile(c.certificatePath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read TLS certificate from file %s: %w", c.certificatePath, err)
+	}
+	prvKey, err := ioutil.ReadFile(c.privateKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read private key from file %s: %w", c.privateKeyPath, err)
+	}
+	return &bootstrapConfig.CertKeyPair{Cert: string(certPem), Key: string(prvKey)}, nil
+}
+
+func (c *cmd) uploadProxyTlsCert() error {
+	// try to read both files and make sure they are existing
+	certKeyPair, err := c.readCertKeyPairFromFiles()
+	if err != nil {
+		return err
+	}
+
+	// to see if any proxy certificates already exists
+	// if yes, then delete them all first
+	// and then upload the new TLS certificate
+	parsedCertData, err := c.listKongTLSCertificates()
+	if err != nil {
+		return err
+	}
+
+	c.loggingClient.Debug(fmt.Sprintf("number of existing Kong tls certs = %d", len(parsedCertData)))
+
+	if len(parsedCertData) > 0 {
+		// delete the existing certs first
+		// ideally, it should only have one certificate to be deleted
+		// Disclaimer: Kong TLS certificate should only be uploaded via secret-config utility
+		for _, certMap := range parsedCertData {
+			certId := fmt.Sprintf("%s", certMap["id"])
+			if err := c.deleteKongTLSCertificateById(certId); err != nil {
+				return err
+			}
+		}
+	}
+
+	// post the certKeyPair as the new one
+	if err := c.postKongTLSCertificate(certKeyPair); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *cmd) listKongTLSCertificates() ([]map[string]interface{}, error) {
+	// list certificates first to see if any already exists
+	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "certificates"}, "/")
+	c.loggingClient.Info(fmt.Sprintf("list tls certificates on the endpoint of %s", certKongURL))
+	req, err := http.NewRequest(http.MethodGet, certKongURL, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare request to list Kong tls certs: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to send request to list Kong tls certs: %w", err)
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read response body to list Kong tls certs: %w", err)
+	}
+
+	var parsedResponse map[string]interface{}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&parsedResponse); err != nil {
+			return nil, fmt.Errorf("Unable to parse response from list certificate: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("List Kong tls certificates request failed with code: %d", resp.StatusCode)
+	}
+
+	var jsonData []byte
+	jsonData, err = json.Marshal(parsedResponse["data"])
+	if err != nil {
+		return nil, fmt.Errorf("Failed to json marshal parsed response data: %w", err)
+	}
+
+	outputData := fmt.Sprintf("%s", jsonData)
+
+	// the list certificate get API returns the array of certificates
+	var parsedCertData []map[string]interface{}
+	if err := json.NewDecoder(bytes.NewReader([]byte(outputData))).Decode(&parsedCertData); err != nil {
+		return nil, fmt.Errorf("Unable to parse response for parsed cert data: %w", err)
+	}
+
+	return parsedCertData, nil
+}
+
+func (c *cmd) deleteKongTLSCertificateById(certId string) error {
+	delCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+		"certificates", certId}, "/")
+	c.loggingClient.Info(fmt.Sprintf("deleting tls certificate on the endpoint of %s", delCertKongURL))
+	req, err := http.NewRequest(http.MethodDelete, delCertKongURL, http.NoBody)
+	if err != nil {
+		return fmt.Errorf("Failed to prepare request to delete Kong tls cert: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Failed to send request to delete Kong tls cert: %w", err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		c.loggingClient.Info("Successfully deleted Kong tls cert")
+	case http.StatusNotFound:
+		// not able to find this certId but should be ok to proceed and post a new certificate
+		c.loggingClient.Warn(fmt.Sprintf("Unable to delete Kong tls cert because the certificate Id %s not found", certId))
+	default:
+		return fmt.Errorf("Delete Kong tls certificate request failed with code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) error {
+	postCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+		"certificates"}, "/")
+	c.loggingClient.Info(fmt.Sprintf("posting tls certificate on the endpoint of %s", postCertKongURL))
+
+	form := url.Values{
+		"cert": []string{certKeyPair.Cert},
+		"key":  []string{certKeyPair.Key},
+	}
+	formVal := form.Encode()
+	req, err := http.NewRequest(http.MethodPost, postCertKongURL, strings.NewReader(formVal))
+	if err != nil {
+		return fmt.Errorf("Failed to prepare request to post Kong tls cert: %w", err)
+	}
+
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Failed to send request to post Kong tls cert: %w", err)
+	}
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("Failed to read response body: %v", err)
+	}
+
+	switch resp.StatusCode {
+	case http.StatusCreated:
+		c.loggingClient.Info("Successfully posted Kong tls cert")
+	case http.StatusBadRequest:
+		return fmt.Errorf("BadRequest as unable to post Kong tls cert due to error: %v", responseBody)
+	default:
+		return fmt.Errorf("Post Kong tls certificate request failed with code: %d", resp.StatusCode)
+	}
+	return nil
 }
