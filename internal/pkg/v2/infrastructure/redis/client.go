@@ -488,3 +488,16 @@ func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
 
 	return count, nil
 }
+
+// AllReadings query events by offset, limit, and labels
+func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, edgeXerr := allReadings(conn, offset, limit)
+	if edgeXerr != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query readings by offset %d, and limit %d", offset, limit), edgeXerr)
+	}
+	return readings, nil
+}

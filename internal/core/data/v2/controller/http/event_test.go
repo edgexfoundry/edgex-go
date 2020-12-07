@@ -19,8 +19,6 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/gomodule/redigo/redis"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -28,7 +26,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -54,10 +51,11 @@ var testAddEvent = requests.AddEventRequest{
 		RequestId: ExampleUUID,
 	},
 	Event: dtos.Event{
-		Id:         expectedEventId,
-		DeviceName: TestDeviceName,
-		Origin:     TestOriginTime,
-		Readings:   []dtos.BaseReading{testReading},
+		Id:          expectedEventId,
+		DeviceName:  TestDeviceName,
+		ProfileName: TestDeviceProfileName,
+		Origin:      TestOriginTime,
+		Readings:    []dtos.BaseReading{testReading},
 	},
 }
 
@@ -75,12 +73,13 @@ var persistedReading = models.SimpleReading{
 }
 
 var persistedEvent = models.Event{
-	Id:         expectedEventId,
-	Pushed:     TestPushedTime,
-	DeviceName: TestDeviceName,
-	Created:    TestCreatedTime,
-	Origin:     TestOriginTime,
-	Readings:   []models.Reading{persistedReading},
+	Id:          expectedEventId,
+	Pushed:      TestPushedTime,
+	DeviceName:  TestDeviceName,
+	ProfileName: TestDeviceProfileName,
+	Created:     TestCreatedTime,
+	Origin:      TestOriginTime,
+	Readings:    []models.Reading{persistedReading},
 }
 
 func TestAddEvent(t *testing.T) {
@@ -118,6 +117,8 @@ func TestAddEvent(t *testing.T) {
 	badEventID.Event.Id = "DIWNI09320"
 	noEventDevice := validRequest
 	noEventDevice.Event.DeviceName = ""
+	noEventProfile := validRequest
+	noEventProfile.Event.ProfileName = ""
 	noEventOrigin := validRequest
 	noEventOrigin.Event.Origin = 0
 
@@ -183,6 +184,7 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - No Event Id", []requests.AddEventRequest{noEventID}, true, http.StatusBadRequest},
 		{"Invalid - Bad Event Id", []requests.AddEventRequest{badEventID}, true, http.StatusBadRequest},
 		{"Invalid - No Event DeviceName", []requests.AddEventRequest{noEventDevice}, true, http.StatusBadRequest},
+		{"Invalid - No Event ProfileName", []requests.AddEventRequest{noEventProfile}, true, http.StatusBadRequest},
 		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, true, http.StatusBadRequest},
 		{"Invalid - No Reading", []requests.AddEventRequest{noReading}, true, http.StatusBadRequest},
 		{"Invalid - No Reading DeviceName", []requests.AddEventRequest{noReadingDevice}, true, http.StatusBadRequest},
@@ -482,7 +484,7 @@ func TestUpdateEventPushedById(t *testing.T) {
 
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateEventPushedById", expectedEventId).Return(nil)
-	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), redis.ErrNil))
+	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), nil))
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
