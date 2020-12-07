@@ -184,3 +184,27 @@ func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Readi
 
 	return
 }
+
+func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsBySomeRange(conn, ZREVRANGE, ReadingsCollectionCreated, offset, end)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	readings = make([]models.Reading, len(objects))
+	for i, in := range objects {
+		// as V2 APi doesn't deal with BinaryReading at this moment, convert to SimpleReading here
+		// Shall update the logic here when working on BinaryReading in the future
+		sr := models.SimpleReading{}
+		err := json.Unmarshal(in, &sr)
+		if err != nil {
+			return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "reading format parsing failed from the database", err)
+		}
+		readings[i] = sr
+	}
+	return readings, nil
+}
