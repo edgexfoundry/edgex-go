@@ -30,14 +30,17 @@ import (
 
 const (
 	CommandName = "tls"
+
+	builtinSNISList = "localhost,kong"
 )
 
 type cmd struct {
-	loggingClient   logger.LoggingClient
-	client          internal.HttpCaller
-	configuration   *config.ConfigurationStruct
-	certificatePath string
-	privateKeyPath  string
+	loggingClient           logger.LoggingClient
+	client                  internal.HttpCaller
+	configuration           *config.ConfigurationStruct
+	certificatePath         string
+	privateKeyPath          string
+	serveNameIndictionsList string
 }
 
 func NewCommand(
@@ -57,6 +60,8 @@ func NewCommand(
 
 	flagSet.StringVar(&cmd.certificatePath, "incert", "", "Path to PEM-encoded leaf certificate")
 	flagSet.StringVar(&cmd.privateKeyPath, "inkey", "", "Path to PEM-encoded private key")
+	flagSet.StringVar(&cmd.serveNameIndictionsList, "snis", "",
+		"[Optional] comma-separated extra server name indications list to associate with this certificate")
 
 	err := flagSet.Parse(args)
 	if err != nil {
@@ -73,9 +78,6 @@ func NewCommand(
 }
 
 func (c *cmd) Execute() (statusCode int, err error) {
-	fmt.Println("Configure inbound proxy TLS certificate.")
-	fmt.Printf("--incert %s\n", c.certificatePath)
-	fmt.Printf("--inkey %s\n", c.privateKeyPath)
 
 	if err := c.uploadProxyTlsCert(); err != nil {
 		return interfaces.StatusCodeExitWithError, err
@@ -106,20 +108,19 @@ func (c *cmd) uploadProxyTlsCert() error {
 	// to see if any proxy certificates already exists
 	// if yes, then delete them all first
 	// and then upload the new TLS certificate
-	parsedCertData, err := c.listKongTLSCertificates()
+	existingCertIDs, err := c.listKongTLSCertificates()
 	if err != nil {
 		return err
 	}
 
-	c.loggingClient.Debug(fmt.Sprintf("number of existing Kong tls certs = %d", len(parsedCertData)))
+	c.loggingClient.Debug(fmt.Sprintf("number of existing Kong tls certs = %d", len(existingCertIDs)))
 
-	if len(parsedCertData) > 0 {
+	if len(existingCertIDs) > 0 {
 		// delete the existing certs first
 		// ideally, it should only have one certificate to be deleted
 		// Disclaimer: Kong TLS certificate should only be uploaded via secret-config utility
-		for _, certMap := range parsedCertData {
-			certId := fmt.Sprintf("%s", certMap["id"])
-			if err := c.deleteKongTLSCertificateById(certId); err != nil {
+		for _, certID := range existingCertIDs {
+			if err := c.deleteKongTLSCertificateById(certID); err != nil {
 				return err
 			}
 		}
@@ -133,7 +134,7 @@ func (c *cmd) uploadProxyTlsCert() error {
 	return nil
 }
 
-func (c *cmd) listKongTLSCertificates() ([]map[string]interface{}, error) {
+func (c *cmd) listKongTLSCertificates() ([]string, error) {
 	// list certificates first to see if any already exists
 	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "certificates"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("list tls certificates on the endpoint of %s", certKongURL))
@@ -177,7 +178,12 @@ func (c *cmd) listKongTLSCertificates() ([]map[string]interface{}, error) {
 		return nil, fmt.Errorf("Unable to parse response for parsed cert data: %w", err)
 	}
 
-	return parsedCertData, nil
+	certIDs := make([]string, len(parsedCertData))
+	for i, certMap := range parsedCertData {
+		certIDs[i] = fmt.Sprintf("%s", certMap["id"])
+	}
+
+	return certIDs, nil
 }
 
 func (c *cmd) deleteKongTLSCertificateById(certId string) error {
@@ -214,7 +220,9 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 	form := url.Values{
 		"cert": []string{certKeyPair.Cert},
 		"key":  []string{certKeyPair.Key},
+		"snis": getServerNameIndications(c.serveNameIndictionsList),
 	}
+
 	formVal := form.Encode()
 	req, err := http.NewRequest(http.MethodPost, postCertKongURL, strings.NewReader(formVal))
 	if err != nil {
@@ -236,9 +244,42 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 	case http.StatusCreated:
 		c.loggingClient.Info("Successfully posted Kong tls cert")
 	case http.StatusBadRequest:
-		return fmt.Errorf("BadRequest as unable to post Kong tls cert due to error: %v", responseBody)
+		return fmt.Errorf("BadRequest as unable to post Kong tls cert due to error: %s", string(responseBody))
 	default:
 		return fmt.Errorf("Post Kong tls certificate request failed with code: %d", resp.StatusCode)
 	}
 	return nil
+}
+
+func getServerNameIndications(snisList string) []string {
+	// this will parse out the internal default server name indications and extra ones from input if given
+	var snis []string
+	snis = append(snis, parseAndTrimSpaces(builtinSNISList)...)
+
+	uniqueSnisMap := make(map[string]bool)
+	for _, s := range snis {
+		uniqueSnisMap[s] = true
+	}
+
+	if len(snisList) > 0 {
+		splitSnis := parseAndTrimSpaces(snisList)
+		for _, sni := range splitSnis {
+			if _, exists := uniqueSnisMap[sni]; !exists {
+				uniqueSnisMap[sni] = true
+				snis = append(snis, sni)
+			}
+		}
+	}
+	return snis
+}
+
+func parseAndTrimSpaces(commaSep string) (ret []string) {
+	splitStrs := strings.Split(commaSep, ",")
+	for _, s := range splitStrs {
+		trimmed := strings.TrimSpace(s)
+		if len(trimmed) > 0 { // effective only it is non-empty string
+			ret = append(ret, trimmed)
+		}
+	}
+	return
 }

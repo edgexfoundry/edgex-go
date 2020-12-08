@@ -60,7 +60,7 @@ func TestTLSErrorFileNotFound(t *testing.T) {
 	fileNotFoundTestcases := [][]string{
 		{"--incert", "missingcertificate", "--inkey", "missingprivatekey"},       // both files missing
 		{"--incert", "testdata/testCert.pem", "--inkey", "missingprivatekey"},    // key file missing
-		{"--incert", "missingcertificate", "--inkey", "testdata/testCert.prkey"}, // both files missing
+		{"--incert", "missingcertificate", "--inkey", "testdata/testCert.prkey"}, // cert file missing
 	}
 
 	for _, args := range fileNotFoundTestcases {
@@ -129,8 +129,35 @@ func TestTLSAddNewCertificate(t *testing.T) {
 	}
 }
 
+func TestGetServerNameIndications(t *testing.T) {
+	builtinSnis := []string{"localhost", "kong"}
+	tests := []struct {
+		name         string
+		snisInputStr string
+		expectedSnis []string
+	}{
+		{"Empty SNIS input", "", builtinSnis},
+		{"One SNIS input", "test1.com", append(builtinSnis, "test1.com")},
+		{"Two SNIS input", "test1.com,test2.com", append(builtinSnis, []string{"test1.com", "test2.com"}...)},
+		{"Two or more SNIS with spaces", "test1.com, test2.com, test3.com",
+			append(builtinSnis, []string{"test1.com", "test2.com", "test3.com"}...)},
+		{"Mixed with empty entries", ", test1.com, ", append(builtinSnis, "test1.com")},
+		{"Equivalent empty entries", ",,", builtinSnis},
+		{"Duplicate with internal entries", "kong, localhost", builtinSnis},
+		{"Mixed with some duplicating internal entries", "kong, test1.com, test2.com,localhost,kong",
+			append(builtinSnis, []string{"test1.com", "test2.com"}...)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expectedSnis, getServerNameIndications(tt.snisInputStr))
+		})
+	}
+}
+
 func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk bool, postCertOk bool,
 	t *testing.T) *httptest.Server {
+	builtinSnis := []string{"localhost", "kong"}
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.URL.EscapedPath()
 		switch r.Method {
@@ -157,7 +184,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"createdAt": 1425366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
@@ -170,14 +197,14 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"createdAt": 1425366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 							{
 								"id":        "fake-cert-id-02",
 								"createdAt": 1438366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...j5GO0XQ=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...XtEiYK==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
@@ -206,7 +233,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"createdAt": 1425366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
@@ -219,14 +246,14 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"createdAt": 1425366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 							{
 								"id":        "fake-cert-id-02",
 								"createdAt": 1438366534,
 								"cert":      "-----BEGIN CERTIFICATE-----...j5GO0XQ=-----END CERTIFICATE-----",
 								"key":       "-----BEGIN PRIVATE KEY-----...XtEiYK==-----END PRIVATE KEY-----",
-								"snis":      []string{},
+								"snis":      builtinSnis,
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",

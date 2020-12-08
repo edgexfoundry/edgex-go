@@ -7,5 +7,6 @@
 package common
 
 const (
+	// UrlEncodedForm is the content type for web form data being encoded
 	UrlEncodedForm = "application/x-www-form-urlencoded"
 )
