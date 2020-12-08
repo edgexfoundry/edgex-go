@@ -224,3 +224,20 @@ func DeviceByName(name string, dic *di.Container) (device dtos.Device, err error
 	device = dtos.FromDeviceModelToDTO(d)
 	return device, nil
 }
+
+// DevicesByProfileName query the devices with offset, limit, and profile name
+func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+	if profileName == "" {
+		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "profileName is empty", nil)
+	}
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	deviceModels, err := dbClient.DevicesByProfileName(offset, limit, profileName)
+	if err != nil {
+		return devices, errors.NewCommonEdgeXWrapper(err)
+	}
+	devices = make([]dtos.Device, len(deviceModels))
+	for i, d := range deviceModels {
+		devices[i] = dtos.FromDeviceModelToDTO(d)
+	}
+	return devices, nil
+}

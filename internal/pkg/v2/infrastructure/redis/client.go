@@ -425,6 +425,19 @@ func (c *Client) DeviceByName(name string) (device model.Device, edgeXerr errors
 	return
 }
 
+// DevicesByProfileName query devices by offset, limit and profile name
+func (c *Client) DevicesByProfileName(offset int, limit int, profileName string) (devices []model.Device, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	devices, edgeXerr = devicesByProfileName(conn, offset, limit, profileName)
+	if edgeXerr != nil {
+		return devices, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query devices by offset %d, limit %d and name %s", offset, limit, profileName), edgeXerr)
+	}
+	return devices, nil
+}
+
 // AllEvents query events by offset and limit
 func (c *Client) AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX) {
 	conn := c.Pool.Get()
