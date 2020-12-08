@@ -41,4 +41,5 @@ type DBClient interface {
 	DeviceById(id string) (model.Device, errors.EdgeX)
 	DeviceByName(name string) (model.Device, errors.EdgeX)
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
+	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
 }
