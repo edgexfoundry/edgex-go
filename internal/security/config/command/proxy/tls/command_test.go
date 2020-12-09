@@ -129,7 +129,7 @@ func TestTLSAddNewCertificate(t *testing.T) {
 	}
 }
 
-func TestGetServerNameIndicatros(t *testing.T) {
+func TestGetServerNameIndicators(t *testing.T) {
 	builtinSnis := []string{"localhost", "kong"}
 	tests := []struct {
 		name         string

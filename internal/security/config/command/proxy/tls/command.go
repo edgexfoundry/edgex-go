@@ -43,9 +43,6 @@ type cmd struct {
 	certificatePath         string
 	privateKeyPath          string
 	serverNameIndicatorList string
-
-	// states related to certificates and snis
-	serverNameToCertIDs map[string]certificateIDs
 }
 
 func NewCommand(
@@ -122,7 +119,6 @@ func (c *cmd) uploadProxyTlsCert() error {
 
 	if len(existingCertIDs) > 0 {
 		// delete the existing certs first
-		// ideally, it should only have one certificate to be deleted
 		// Disclaimer: Kong TLS certificate should only be uploaded via secret-config utility
 		for _, certID := range existingCertIDs {
 			if err := c.deleteKongTLSCertificateById(certID); err != nil {
@@ -139,7 +135,24 @@ func (c *cmd) uploadProxyTlsCert() error {
 	return nil
 }
 
-func (c *cmd) listKongTLSCertificates() ([]string, error) {
+func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
+	// definition of Kong snis related objects
+	// KongCertObj is the structure for part of certificate object returned from Kong's API /snis
+	type KongCertObj struct {
+		CertId string `json:"id"`
+	}
+
+	// SniCertObj is the structure for part of snis object returned from Kong's API /snis
+	type SniCertObj struct {
+		SnisName string      `json:"name"`
+		KongCert KongCertObj `json:"certificate"`
+	}
+
+	// KongSnisObj is the top level structure for part of json data object returned from Kong's API /snis
+	type KongSnisObj struct {
+		Entries []SniCertObj `json:"data,omitempty"`
+	}
+
 	// list snis certificates association to see if any already exists
 	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "snis"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("list snis tls certificates on the endpoint of %s", certKongURL))
@@ -158,63 +171,31 @@ func (c *cmd) listKongTLSCertificates() ([]string, error) {
 		return nil, fmt.Errorf("Failed to read response body to list Kong snis tls certs: %w", err)
 	}
 
-	var parsedResponse map[string]interface{}
+	snisCerts := KongSnisObj{}
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&parsedResponse); err != nil {
+		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&snisCerts); err != nil {
 			return nil, fmt.Errorf("Unable to parse response from list snis certificate: %w", err)
 		}
 	default:
 		return nil, fmt.Errorf("List Kong tls snis certificates request failed with code: %d", resp.StatusCode)
 	}
 
-	var jsonData []byte
-	jsonData, err = json.Marshal(parsedResponse["data"])
-	if err != nil {
-		return nil, fmt.Errorf("Failed to json marshal parsed response data: %w", err)
-	}
-
-	// the list snis get API returns an array of snis-certs association
-	var parsedSnisCertData []map[string]interface{}
-	if err := json.NewDecoder(bytes.NewReader(jsonData)).Decode(&parsedSnisCertData); err != nil {
-		return nil, fmt.Errorf("Unable to parse response for parsed SNIS cert data: %w", err)
-	}
-
-	c.serverNameToCertIDs = make(map[string]certificateIDs)
-	for _, sniCerts := range parsedSnisCertData {
-		// extract sni name and certificate id from parsed json data
-		sni := fmt.Sprintf("%s", sniCerts["name"])
-		certID := fmt.Sprintf("%s", sniCerts["certificate"].(map[string]interface{})["id"])
-
-		if certIDs, exists := c.serverNameToCertIDs[sni]; !exists {
+	serverNameToCertIDs := make(map[string]certificateIDs)
+	for _, entry := range snisCerts.Entries {
+		if certIDs, exists := serverNameToCertIDs[entry.SnisName]; !exists {
 			// initialize for a new sni name
-			c.serverNameToCertIDs[sni] = []string{certID}
+			serverNameToCertIDs[entry.SnisName] = []string{entry.KongCert.CertId}
 		} else {
 			// update the existing certificateID array
-			certIDs = append(certIDs, certID)
-			c.serverNameToCertIDs[sni] = certIDs
+			certIDs = append(certIDs, entry.KongCert.CertId)
+			serverNameToCertIDs[entry.SnisName] = certIDs
 		}
 	}
 
-	uniqueSnisFromInput := getServerNameIndicators(c.serverNameIndicatorList)
-	// collect the unique certificate ids that match the given snis from the input to be deleted
-	uniqueCertIDs := make(map[string]bool)
-	for _, sniFromInput := range uniqueSnisFromInput {
-		if certIDs, exists := c.serverNameToCertIDs[sniFromInput]; exists {
-			for _, certID := range certIDs {
-				uniqueCertIDs[certID] = true
-			}
-		}
-	}
-
-	// get the unique certificate ids
-	certIDs := make([]string, 0, len(uniqueCertIDs))
-	for certID := range uniqueCertIDs {
-		certIDs = append(certIDs, certID)
-	}
-
-	return certIDs, nil
+	// only get to-be-deleted certificates with which unique certIDs that match the server name indicators
+	return c.getUniqueCertIDsMatchServerNames(serverNameToCertIDs), nil
 }
 
 func (c *cmd) deleteKongTLSCertificateById(certId string) error {
@@ -280,6 +261,26 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 		return fmt.Errorf("Post Kong tls certificate request failed with code: %d", resp.StatusCode)
 	}
 	return nil
+}
+
+func (c *cmd) getUniqueCertIDsMatchServerNames(snisToCertIDs map[string]certificateIDs) certificateIDs {
+	uniqueSnisFromInput := getServerNameIndicators(c.serverNameIndicatorList)
+	// collect the unique certificate ids that match the given snis from the input to be deleted
+	uniqueCertIDs := make(map[string]bool)
+	for _, sniFromInput := range uniqueSnisFromInput {
+		if certIDs, exists := snisToCertIDs[sniFromInput]; exists {
+			for _, certID := range certIDs {
+				uniqueCertIDs[certID] = true
+			}
+		}
+	}
+
+	// get the unique certificate ids
+	certIDs := make([]string, 0, len(uniqueCertIDs))
+	for certID := range uniqueCertIDs {
+		certIDs = append(certIDs, certID)
+	}
+	return certIDs
 }
 
 func getServerNameIndicators(snisList string) []string {
