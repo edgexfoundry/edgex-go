@@ -34,13 +34,18 @@ const (
 	builtinSNISList = "localhost,kong"
 )
 
+type certificateIDs []string
+
 type cmd struct {
 	loggingClient           logger.LoggingClient
 	client                  internal.HttpCaller
 	configuration           *config.ConfigurationStruct
 	certificatePath         string
 	privateKeyPath          string
-	serveNameIndictionsList string
+	serverNameIndicatorList string
+
+	// states related to certificates and snis
+	serverNameToCertIDs map[string]certificateIDs
 }
 
 func NewCommand(
@@ -60,7 +65,7 @@ func NewCommand(
 
 	flagSet.StringVar(&cmd.certificatePath, "incert", "", "Path to PEM-encoded leaf certificate")
 	flagSet.StringVar(&cmd.privateKeyPath, "inkey", "", "Path to PEM-encoded private key")
-	flagSet.StringVar(&cmd.serveNameIndictionsList, "snis", "",
+	flagSet.StringVar(&cmd.serverNameIndicatorList, "snis", "",
 		"[Optional] comma-separated extra server name indications list to associate with this certificate")
 
 	err := flagSet.Parse(args)
@@ -135,22 +140,22 @@ func (c *cmd) uploadProxyTlsCert() error {
 }
 
 func (c *cmd) listKongTLSCertificates() ([]string, error) {
-	// list certificates first to see if any already exists
-	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "certificates"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("list tls certificates on the endpoint of %s", certKongURL))
+	// list snis certificates association to see if any already exists
+	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "snis"}, "/")
+	c.loggingClient.Info(fmt.Sprintf("list snis tls certificates on the endpoint of %s", certKongURL))
 	req, err := http.NewRequest(http.MethodGet, certKongURL, http.NoBody)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to prepare request to list Kong tls certs: %w", err)
+		return nil, fmt.Errorf("Failed to prepare request to list Kong snis tls certs: %w", err)
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to send request to list Kong tls certs: %w", err)
+		return nil, fmt.Errorf("Failed to send request to list Kong snis tls certs: %w", err)
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read response body to list Kong tls certs: %w", err)
+		return nil, fmt.Errorf("Failed to read response body to list Kong snis tls certs: %w", err)
 	}
 
 	var parsedResponse map[string]interface{}
@@ -158,10 +163,10 @@ func (c *cmd) listKongTLSCertificates() ([]string, error) {
 	switch resp.StatusCode {
 	case http.StatusOK:
 		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&parsedResponse); err != nil {
-			return nil, fmt.Errorf("Unable to parse response from list certificate: %w", err)
+			return nil, fmt.Errorf("Unable to parse response from list snis certificate: %w", err)
 		}
 	default:
-		return nil, fmt.Errorf("List Kong tls certificates request failed with code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("List Kong tls snis certificates request failed with code: %d", resp.StatusCode)
 	}
 
 	var jsonData []byte
@@ -170,17 +175,43 @@ func (c *cmd) listKongTLSCertificates() ([]string, error) {
 		return nil, fmt.Errorf("Failed to json marshal parsed response data: %w", err)
 	}
 
-	outputData := fmt.Sprintf("%s", jsonData)
-
-	// the list certificate get API returns the array of certificates
-	var parsedCertData []map[string]interface{}
-	if err := json.NewDecoder(bytes.NewReader([]byte(outputData))).Decode(&parsedCertData); err != nil {
-		return nil, fmt.Errorf("Unable to parse response for parsed cert data: %w", err)
+	// the list snis get API returns an array of snis-certs association
+	var parsedSnisCertData []map[string]interface{}
+	if err := json.NewDecoder(bytes.NewReader(jsonData)).Decode(&parsedSnisCertData); err != nil {
+		return nil, fmt.Errorf("Unable to parse response for parsed SNIS cert data: %w", err)
 	}
 
-	certIDs := make([]string, len(parsedCertData))
-	for i, certMap := range parsedCertData {
-		certIDs[i] = fmt.Sprintf("%s", certMap["id"])
+	c.serverNameToCertIDs = make(map[string]certificateIDs)
+	for _, sniCerts := range parsedSnisCertData {
+		// extract sni name and certificate id from parsed json data
+		sni := fmt.Sprintf("%s", sniCerts["name"])
+		certID := fmt.Sprintf("%s", sniCerts["certificate"].(map[string]interface{})["id"])
+
+		if certIDs, exists := c.serverNameToCertIDs[sni]; !exists {
+			// initialize for a new sni name
+			c.serverNameToCertIDs[sni] = []string{certID}
+		} else {
+			// update the existing certificateID array
+			certIDs = append(certIDs, certID)
+			c.serverNameToCertIDs[sni] = certIDs
+		}
+	}
+
+	uniqueSnisFromInput := getServerNameIndicators(c.serverNameIndicatorList)
+	// collect the unique certificate ids that match the given snis from the input to be deleted
+	uniqueCertIDs := make(map[string]bool)
+	for _, sniFromInput := range uniqueSnisFromInput {
+		if certIDs, exists := c.serverNameToCertIDs[sniFromInput]; exists {
+			for _, certID := range certIDs {
+				uniqueCertIDs[certID] = true
+			}
+		}
+	}
+
+	// get the unique certificate ids
+	certIDs := make([]string, 0, len(uniqueCertIDs))
+	for certID := range uniqueCertIDs {
+		certIDs = append(certIDs, certID)
 	}
 
 	return certIDs, nil
@@ -220,7 +251,7 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 	form := url.Values{
 		"cert": []string{certKeyPair.Cert},
 		"key":  []string{certKeyPair.Key},
-		"snis": getServerNameIndications(c.serveNameIndictionsList),
+		"snis": getServerNameIndicators(c.serverNameIndicatorList),
 	}
 
 	formVal := form.Encode()
@@ -251,7 +282,7 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 	return nil
 }
 
-func getServerNameIndications(snisList string) []string {
+func getServerNameIndicators(snisList string) []string {
 	// this will parse out the internal default server name indications and extra ones from input if given
 	var snis []string
 	snis = append(snis, parseAndTrimSpaces(builtinSNISList)...)
@@ -261,6 +292,7 @@ func getServerNameIndications(snisList string) []string {
 		uniqueSnisMap[s] = true
 	}
 
+	// sanitize the user given list
 	if len(snisList) > 0 {
 		splitSnis := parseAndTrimSpaces(snisList)
 		for _, sni := range splitSnis {

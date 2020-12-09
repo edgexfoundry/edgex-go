@@ -52,7 +52,7 @@ func TestTLSBagArguments(t *testing.T) {
 	}
 }
 
-// TestTLSErrorStub tests the tls error stub
+// TestTLSErrorFileNotFound tests the tls error regarding file not found issues
 func TestTLSErrorFileNotFound(t *testing.T) {
 	// Arrange
 	lc := logger.MockLogger{}
@@ -129,7 +129,7 @@ func TestTLSAddNewCertificate(t *testing.T) {
 	}
 }
 
-func TestGetServerNameIndications(t *testing.T) {
+func TestGetServerNameIndicatros(t *testing.T) {
 	builtinSnis := []string{"localhost", "kong"}
 	tests := []struct {
 		name         string
@@ -150,7 +150,7 @@ func TestGetServerNameIndications(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expectedSnis, getServerNameIndications(tt.snisInputStr))
+			require.Equal(t, tt.expectedSnis, getServerNameIndicators(tt.snisInputStr))
 		})
 	}
 }
@@ -162,7 +162,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 		urlPath := r.URL.EscapedPath()
 		switch r.Method {
 		case http.MethodGet:
-			if urlPath == "/certificates" {
+			if urlPath == "/snis" {
 				if listCertOk {
 					w.WriteHeader(http.StatusOK)
 				} else {
@@ -180,11 +180,20 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 					jsonResponse = map[string]interface{}{
 						"data": []map[string]interface{}{
 							{
-								"id":        "fake-cert-id-01",
+								"id":        "fake-snis-id-01",
 								"createdAt": 1425366534,
-								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
-								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      builtinSnis,
+								"name":      builtinSnis[0],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-01",
+								},
+							},
+							{
+								"id":        "fake-snis-id-02",
+								"createdAt": 1425366534,
+								"name":      builtinSnis[1],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-01",
+								},
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
@@ -193,18 +202,45 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 					jsonResponse = map[string]interface{}{
 						"data": []map[string]interface{}{
 							{
-								"id":        "fake-cert-id-01",
+								"id":        "fake-snis-id-01",
 								"createdAt": 1425366534,
-								"cert":      "-----BEGIN CERTIFICATE-----...1E0MEFE=-----END CERTIFICATE-----",
-								"key":       "-----BEGIN PRIVATE KEY-----...xmS8qXA==-----END PRIVATE KEY-----",
-								"snis":      builtinSnis,
+								"name":      builtinSnis[0],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-01",
+								},
 							},
 							{
-								"id":        "fake-cert-id-02",
+								"id":        "fake-snis-id-02",
 								"createdAt": 1438366534,
-								"cert":      "-----BEGIN CERTIFICATE-----...j5GO0XQ=-----END CERTIFICATE-----",
-								"key":       "-----BEGIN PRIVATE KEY-----...XtEiYK==-----END PRIVATE KEY-----",
-								"snis":      builtinSnis,
+								"name":      builtinSnis[0],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-02",
+								},
+							},
+							{
+								"id":        "fake-snis-id-03",
+								"createdAt": 1425366534,
+								"name":      builtinSnis[1],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-01",
+								},
+							},
+							{
+								"id":        "fake-snis-id-04",
+								"createdAt": 1438366534,
+								"name":      builtinSnis[1],
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-02",
+								},
+							},
+							// to make tests interesting, add another public cert somehow uploaded with different snis name
+							{
+								"id":        "fake-snis-id-05",
+								"createdAt": 1438369534,
+								"name":      "test.domain.com",
+								"certificate": map[string]interface{}{
+									"id": "fake-cert-id-03",
+								},
 							},
 						},
 						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
