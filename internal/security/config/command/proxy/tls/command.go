@@ -7,26 +7,42 @@
 package tls
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 )
 
 const (
 	CommandName = "tls"
+
+	builtinSNISList = "localhost,kong"
 )
 
+type certificateIDs []string
+
 type cmd struct {
-	loggingClient   logger.LoggingClient
-	configuration   *config.ConfigurationStruct
-	certificatePath string
-	privateKeyPath  string
+	loggingClient           logger.LoggingClient
+	client                  internal.HttpCaller
+	configuration           *config.ConfigurationStruct
+	certificatePath         string
+	privateKeyPath          string
+	serverNameIndicatorList string
 }
 
 func NewCommand(
@@ -36,6 +52,7 @@ func NewCommand(
 
 	cmd := cmd{
 		loggingClient: lc,
+		client:        secretstoreclient.NewRequestor(lc).Insecure(),
 		configuration: configuration,
 	}
 	var dummy string
@@ -45,6 +62,8 @@ func NewCommand(
 
 	flagSet.StringVar(&cmd.certificatePath, "incert", "", "Path to PEM-encoded leaf certificate")
 	flagSet.StringVar(&cmd.privateKeyPath, "inkey", "", "Path to PEM-encoded private key")
+	flagSet.StringVar(&cmd.serverNameIndicatorList, "snis", "",
+		"[Optional] comma-separated extra server name indications list to associate with this certificate")
 
 	err := flagSet.Parse(args)
 	if err != nil {
@@ -61,9 +80,239 @@ func NewCommand(
 }
 
 func (c *cmd) Execute() (statusCode int, err error) {
-	fmt.Println("TODO: Configure inbound TLS certificate.")
-	fmt.Printf("--incert %s\n", c.certificatePath)
-	fmt.Printf("--inkey %s\n", c.privateKeyPath)
-	err = fmt.Errorf("tls command is unimplemented")
-	return interfaces.StatusCodeExitWithError, err
+
+	if err := c.uploadProxyTlsCert(); err != nil {
+		return interfaces.StatusCodeExitWithError, err
+	}
+
+	return
+}
+
+func (c *cmd) readCertKeyPairFromFiles() (*bootstrapConfig.CertKeyPair, error) {
+	certPem, err := ioutil.ReadFile(c.certificatePath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read TLS certificate from file %s: %w", c.certificatePath, err)
+	}
+	prvKey, err := ioutil.ReadFile(c.privateKeyPath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read private key from file %s: %w", c.privateKeyPath, err)
+	}
+	return &bootstrapConfig.CertKeyPair{Cert: string(certPem), Key: string(prvKey)}, nil
+}
+
+func (c *cmd) uploadProxyTlsCert() error {
+	// try to read both files and make sure they are existing
+	certKeyPair, err := c.readCertKeyPairFromFiles()
+	if err != nil {
+		return err
+	}
+
+	// to see if any proxy certificates already exists
+	// if yes, then delete them all first
+	// and then upload the new TLS certificate
+	existingCertIDs, err := c.listKongTLSCertificates()
+	if err != nil {
+		return err
+	}
+
+	c.loggingClient.Debug(fmt.Sprintf("number of existing Kong tls certs = %d", len(existingCertIDs)))
+
+	if len(existingCertIDs) > 0 {
+		// delete the existing certs first
+		// Disclaimer: Kong TLS certificate should only be uploaded via secret-config utility
+		for _, certID := range existingCertIDs {
+			if err := c.deleteKongTLSCertificateById(certID); err != nil {
+				return err
+			}
+		}
+	}
+
+	// post the certKeyPair as the new one
+	if err := c.postKongTLSCertificate(certKeyPair); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
+	// definition of Kong snis related objects
+	// KongCertObj is the structure for part of certificate object returned from Kong's API /snis
+	type KongCertObj struct {
+		CertId string `json:"id"`
+	}
+
+	// SniCertObj is the structure for part of snis object returned from Kong's API /snis
+	type SniCertObj struct {
+		SnisName string      `json:"name"`
+		KongCert KongCertObj `json:"certificate"`
+	}
+
+	// KongSnisObj is the top level structure for part of json data object returned from Kong's API /snis
+	type KongSnisObj struct {
+		Entries []SniCertObj `json:"data,omitempty"`
+	}
+
+	// list snis certificates association to see if any already exists
+	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "snis"}, "/")
+	c.loggingClient.Info(fmt.Sprintf("list snis tls certificates on the endpoint of %s", certKongURL))
+	req, err := http.NewRequest(http.MethodGet, certKongURL, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare request to list Kong snis tls certs: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to send request to list Kong snis tls certs: %w", err)
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read response body to list Kong snis tls certs: %w", err)
+	}
+
+	snisCerts := KongSnisObj{}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&snisCerts); err != nil {
+			return nil, fmt.Errorf("Unable to parse response from list snis certificate: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("List Kong tls snis certificates request failed with code: %d", resp.StatusCode)
+	}
+
+	serverNameToCertIDs := make(map[string]certificateIDs)
+	for _, entry := range snisCerts.Entries {
+		if certIDs, exists := serverNameToCertIDs[entry.SnisName]; !exists {
+			// initialize for a new sni name
+			serverNameToCertIDs[entry.SnisName] = []string{entry.KongCert.CertId}
+		} else {
+			// update the existing certificateID array
+			certIDs = append(certIDs, entry.KongCert.CertId)
+			serverNameToCertIDs[entry.SnisName] = certIDs
+		}
+	}
+
+	// only get to-be-deleted certificates with which unique certIDs that match the server name indicators
+	return c.getUniqueCertIDsMatchServerNames(serverNameToCertIDs), nil
+}
+
+func (c *cmd) deleteKongTLSCertificateById(certId string) error {
+	delCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+		"certificates", certId}, "/")
+	c.loggingClient.Info(fmt.Sprintf("deleting tls certificate on the endpoint of %s", delCertKongURL))
+	req, err := http.NewRequest(http.MethodDelete, delCertKongURL, http.NoBody)
+	if err != nil {
+		return fmt.Errorf("Failed to prepare request to delete Kong tls cert: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Failed to send request to delete Kong tls cert: %w", err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		c.loggingClient.Info("Successfully deleted Kong tls cert")
+	case http.StatusNotFound:
+		// not able to find this certId but should be ok to proceed and post a new certificate
+		c.loggingClient.Warn(fmt.Sprintf("Unable to delete Kong tls cert because the certificate Id %s not found", certId))
+	default:
+		return fmt.Errorf("Delete Kong tls certificate request failed with code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) error {
+	postCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+		"certificates"}, "/")
+	c.loggingClient.Info(fmt.Sprintf("posting tls certificate on the endpoint of %s", postCertKongURL))
+
+	form := url.Values{
+		"cert": []string{certKeyPair.Cert},
+		"key":  []string{certKeyPair.Key},
+		"snis": getServerNameIndicators(c.serverNameIndicatorList),
+	}
+
+	formVal := form.Encode()
+	req, err := http.NewRequest(http.MethodPost, postCertKongURL, strings.NewReader(formVal))
+	if err != nil {
+		return fmt.Errorf("Failed to prepare request to post Kong tls cert: %w", err)
+	}
+
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Failed to send request to post Kong tls cert: %w", err)
+	}
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("Failed to read response body: %v", err)
+	}
+
+	switch resp.StatusCode {
+	case http.StatusCreated:
+		c.loggingClient.Info("Successfully posted Kong tls cert")
+	case http.StatusBadRequest:
+		return fmt.Errorf("BadRequest as unable to post Kong tls cert due to error: %s", string(responseBody))
+	default:
+		return fmt.Errorf("Post Kong tls certificate request failed with code: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func (c *cmd) getUniqueCertIDsMatchServerNames(snisToCertIDs map[string]certificateIDs) certificateIDs {
+	uniqueSnisFromInput := getServerNameIndicators(c.serverNameIndicatorList)
+	// collect the unique certificate ids that match the given snis from the input to be deleted
+	uniqueCertIDs := make(map[string]bool)
+	for _, sniFromInput := range uniqueSnisFromInput {
+		if certIDs, exists := snisToCertIDs[sniFromInput]; exists {
+			for _, certID := range certIDs {
+				uniqueCertIDs[certID] = true
+			}
+		}
+	}
+
+	// get the unique certificate ids
+	certIDs := make([]string, 0, len(uniqueCertIDs))
+	for certID := range uniqueCertIDs {
+		certIDs = append(certIDs, certID)
+	}
+	return certIDs
+}
+
+func getServerNameIndicators(snisList string) []string {
+	// this will parse out the internal default server name indications and extra ones from input if given
+	var snis []string
+	snis = append(snis, parseAndTrimSpaces(builtinSNISList)...)
+
+	uniqueSnisMap := make(map[string]bool)
+	for _, s := range snis {
+		uniqueSnisMap[s] = true
+	}
+
+	// sanitize the user given list
+	if len(snisList) > 0 {
+		splitSnis := parseAndTrimSpaces(snisList)
+		for _, sni := range splitSnis {
+			if _, exists := uniqueSnisMap[sni]; !exists {
+				uniqueSnisMap[sni] = true
+				snis = append(snis, sni)
+			}
+		}
+	}
+	return snis
+}
+
+func parseAndTrimSpaces(commaSep string) (ret []string) {
+	splitStrs := strings.Split(commaSep, ",")
+	for _, s := range splitStrs {
+		trimmed := strings.TrimSpace(s)
+		if len(trimmed) > 0 { // effective only it is non-empty string
+			ret = append(ret, trimmed)
+		}
+	}
+	return
 }
