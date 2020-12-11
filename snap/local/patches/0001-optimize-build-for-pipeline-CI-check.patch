@@ -87,20 +87,19 @@ index b265277c..d7e1de37 100644
    security-secrets-setup:
      adapter: full
      command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
-@@ -136,28 +84,6 @@ apps:
+@@ -136,27 +84,6 @@ apps:
        SecretsSetup_CertConfigDir: $SNAP_DATA/config/security-secrets-setup/res
        XDG_RUNTIME_DIR: /tmp
      start-timeout: 15m
 -  vault:
 -    adapter: none
 -    after:
--      - consul
 -      - security-secrets-setup
 -    command: bin/vault server --config $VAULT_CONFIG
 -    daemon: simple
 -    environment:
 -      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
--      VAULT_ADDR: "https://localhost:8200"
+-      VAULT_ADDR: "http://localhost:8200"
 -    plugs:
 -      - network
 -      - network-bind
@@ -109,7 +108,7 @@ index b265277c..d7e1de37 100644
 -    command: bin/vault
 -    environment:
 -      VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
--      VAULT_ADDR: "https://localhost:8200"
+-      VAULT_ADDR: "http://localhost:8200"
 -    plugs:
 -      - network
 -      - network-bind
