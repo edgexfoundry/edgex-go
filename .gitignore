@@ -18,6 +18,7 @@ cmd/core-command/core-command
 cmd/core-data/core-data
 cmd/core-metadata/core-metadata
 cmd/security-proxy-setup/security-proxy-setup
+cmd/security-file-token-provider/security-file-token-provider
 cmd/security-secretstore-setup/security-secretstore-setup
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
@@ -31,6 +32,7 @@ docs/_build/
 
 # log dirs
 **/logs
+cmd/secrets-config/res/
 
 # snap files
 *.snap
