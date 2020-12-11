@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -340,36 +341,52 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
-	cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
-	existing, err := cert.AlreadyinStore()
-	if err != nil {
-		lc.Error(err.Error())
-		os.Exit(1)
+	// Concat all cert path config vals together to check for empty vals
+	certPathCheck := configuration.SecretService.CertPath +
+		configuration.SecretService.CertFilePath +
+		configuration.SecretService.KeyFilePath
+
+	// If any of the previous three proxy cert path values are present (len > 0), attempt to upload to secret store
+	if len(strings.TrimSpace(certPathCheck)) != 0 {
+
+		// Grab the certificate & check to see if it's already in the secret store
+		cert := NewCerts(req, configuration.SecretService.CertPath, rootToken, configuration.SecretService.GetSecretSvcBaseURL(), lc)
+		existing, err := cert.AlreadyinStore()
+		if err != nil {
+			lc.Error(err.Error())
+			os.Exit(1)
+		}
+
+		if existing {
+			lc.Info("proxy certificate pair are in the secret store already, skip uploading")
+			return false
+		}
+
+		lc.Info("proxy certificate pair are not in the secret store yet, uploading them")
+		cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
+		if err != nil {
+			lc.Error("failed to get certificate pair from volume")
+			os.Exit(1)
+		}
+
+		lc.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
+
+		err = cert.UploadToStore(cp)
+		if err != nil {
+			lc.Error("failed to upload the proxy cert pair into the secret store")
+			lc.Error(err.Error())
+			os.Exit(1)
+		}
+
+		lc.Info("proxy certificate pair are uploaded to secret store successfully")
+
+	} else {
+		lc.Info("proxy certificate pair upload was skipped because cert config value(s) were blank")
 	}
 
-	if existing == true {
-		lc.Info("proxy certificate pair are in the secret store already, skip uploading")
-		return false
-	}
-
-	lc.Info("proxy certificate pair are not in the secret store yet, uploading them")
-	cp, err := cert.ReadFrom(configuration.SecretService.CertFilePath, configuration.SecretService.KeyFilePath)
-	if err != nil {
-		lc.Error("failed to get certificate pair from volume")
-		os.Exit(1)
-	}
-
-	lc.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
-
-	err = cert.UploadToStore(cp)
-	if err != nil {
-		lc.Error("failed to upload the proxy cert pair into the secret store")
-		lc.Error(err.Error())
-		os.Exit(1)
-	}
-
-	lc.Info("proxy certificate pair are uploaded to secret store successfully, Vault init done successfully")
+	lc.Info("Vault init done successfully")
 	return false
+
 }
 
 // XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
