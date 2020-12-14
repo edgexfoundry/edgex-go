@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -82,7 +83,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 }
 
 // DeletePushedEvents deletes all pushed events and corresponding readings.  This function is implemented to starts up
-// two goroutines to delete readings and events in the bckground to achieve better performance.
+// two goroutines to delete readings and events in the background to achieve better performance.
 func (c *Client) DeletePushedEvents() (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -100,12 +101,32 @@ func (c *Client) DeletePushedEvents() (edgeXerr errors.EdgeX) {
 }
 
 // DeleteEventsByDeviceName deletes all pushed events and corresponding readings.  This function is implemented to starts up
-// two goroutines to delete readings and events in the bckground to achieve better performance.
+// two goroutines to delete readings and events in the background to achieve better performance.
 func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
 	eventIds, readingIds, err := getEventReadingIdsByKey(conn, CreateKey(EventsCollectionDeviceName, deviceName))
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v readings", len(readingIds)))
+	go c.asyncDeleteReadingsByIds(readingIds)
+	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v events", len(eventIds)))
+	go c.asyncDeleteEventsByIds(eventIds)
+
+	return nil
+}
+
+// DeleteEventsByAge deletes events and their corresponding readings that are older than age.  This function is implemented to starts up
+// two goroutines to delete readings and events in the background to achieve better performance.
+func (c *Client) DeleteEventsByAge(age int64) (edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	expireTimestamp := utils.MakeTimestamp() - age
+
+	eventIds, readingIds, err := getEventReadingIdsByScore(conn, EventsCollectionCreated, 0, expireTimestamp)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -226,6 +247,30 @@ func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 
 func getEventReadingIdsByKey(conn redis.Conn, key string) (eventIds []string, readingIds []string, edgeXerr errors.EdgeX) {
 	eventIds, err := redis.Strings(conn.Do(ZRANGEBYSCORE, key, GreaterThanZero, InfiniteMax))
+	if err != nil {
+		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve event ids by key %s failed", key), err)
+	}
+	events, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(eventIds))
+	if edgeXerr != nil {
+		return nil, nil, edgeXerr
+	}
+	e := models.Event{}
+	for _, event := range events {
+		err = json.Unmarshal(event, &e)
+		if err != nil {
+			return nil, nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
+		}
+		rIds, err := redis.Strings(conn.Do(ZRANGE, CreateKey(EventsCollectionReadings, e.Id), 0, -1))
+		if err != nil {
+			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of event %s failed", e.Id), err)
+		}
+		readingIds = append(readingIds, rIds...)
+	}
+	return eventIds, readingIds, nil
+}
+
+func getEventReadingIdsByScore(conn redis.Conn, key string, min int64, max int64) (eventIds []string, readingIds []string, edgeXerr errors.EdgeX) {
+	eventIds, err := redis.Strings(conn.Do(ZRANGEBYSCORE, key, min, max))
 	if err != nil {
 		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve event ids by key %s failed", key), err)
 	}

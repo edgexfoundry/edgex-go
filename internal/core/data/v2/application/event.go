@@ -242,3 +242,16 @@ func EventsByTimeRange(start int, end int, offset int, limit int, dic *di.Contai
 	}
 	return events, nil
 }
+
+// The DeleteEventsByAge function will be invoked by controller functions
+// and then invokes DeleteEventsByAge function in the infrastructure layer to remove
+// events that are older than age.  Age is supposed in milliseconds since created timestamp.
+func DeleteEventsByAge(age int64, dic *di.Container) errors.EdgeX {
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteEventsByAge(age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
