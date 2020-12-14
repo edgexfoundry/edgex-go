@@ -55,20 +55,6 @@ if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
     cp "$SNAP/etc/sources/"*.yaml "$SNAP_DATA/kuiper/etc/sources"
 fi
 
-# # for the kong pki setup file, we need to set the hostname as localhost
-# # and then set the directory to store the cert files as $SNAP_DATA/kong/ssl
-# mkdir -p "$SNAP_DATA/config/security-secrets-setup/res"
-# for svc in kong vault; do 
-#     CONFIG_FILE_PATH="config/security-secrets-setup/res/pkisetup-$svc.json"
-#     if [ ! -f "$SNAP_DATA/$CONFIG_FILE_PATH" ]; then
-#         # replace the hostname with localhost using jq
-#         jq '.x509_tls_server_parameters.tls_host = "localhost"' \
-#            "$SNAP/$CONFIG_FILE_PATH" > "$SNAP_DATA/$CONFIG_FILE_PATH.tmp"
-#         mv "$SNAP_DATA/$CONFIG_FILE_PATH.tmp" "$SNAP_DATA/$CONFIG_FILE_PATH"
-#         chmod 600 "$SNAP_DATA/$CONFIG_FILE_PATH"
-#     fi
-# done
-
 # copy the security-file-token-provider config into place
 cp "$SNAP/config/security-file-token-provider/res/token-config.json" "$SNAP_DATA/config/security-file-token-provider/res/token-config.json"
 

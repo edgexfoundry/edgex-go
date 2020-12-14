@@ -151,6 +151,7 @@ apps:
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
       SecretService_Server: localhost
+      # environment vars for security-secretstore-setup (aka vault-worker)
       SecretService_TokenFolderPath: $SNAP_DATA/config/security-secretstore-setup/res
       SecretService_TokenProvider: $SNAP/bin/security-file-token-provider
       SecretService_TokenProviderArgs: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
