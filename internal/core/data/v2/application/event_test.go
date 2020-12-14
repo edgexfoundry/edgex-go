@@ -10,7 +10,7 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
@@ -44,7 +44,7 @@ var persistedEvent = models.Event{
 }
 
 func buildReadings() []models.Reading {
-	ticks := db.MakeTimestamp()
+	ticks := utils.MakeTimestamp()
 
 	r1 := models.SimpleReading{
 		BaseReading: models.BaseReading{
@@ -90,6 +90,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
 		myMock.On("DeletePushedEvents").Return(nil)
 		myMock.On("DeleteEventsByDeviceName", testDeviceName).Return(nil)
+		myMock.On("DeleteEventsByAge", int64(0)).Return(nil)
 	}
 
 	return myMock
@@ -354,4 +355,18 @@ func TestEventsByTimeRange(t *testing.T) {
 			assert.Equal(t, testCase.expectedCount, len(events), "Event total count is not expected")
 		})
 	}
+}
+
+func TestDeleteEventsByAge(t *testing.T) {
+	dbClientMock := newMockDB(true)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	err := DeleteEventsByAge(0, dic)
+	require.NoError(t, err)
 }

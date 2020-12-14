@@ -336,6 +336,12 @@ components:
         apiVersion: "v2"
         statusCode: 200
         message: ""
+    202Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 202
+        message: ""
     400Example:
       value:
         requestId: ""
@@ -1020,7 +1026,7 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
-                  $ref: '#/components/examples/200Example'
+                  $ref: '#/components/examples/202Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1105,8 +1111,8 @@ paths:
     delete:
       summary: "Remove all old events (and associated readings) based on delimiting age"
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Delete request accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1116,7 +1122,21 @@ paths:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
-                  $ref: '#/components/examples/200Example'
+                  $ref: '#/components/examples/202Example'
+        '400':
+          description: "\"{age}\" must be a parsable unix timestamp"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

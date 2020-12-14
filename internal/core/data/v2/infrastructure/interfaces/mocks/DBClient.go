@@ -109,6 +109,22 @@ func (_m *DBClient) DeleteEventById(id string) errors.EdgeX {
 	return r0
 }
 
+// DeleteEventsByAge provides a mock function with given fields: age
+func (_m *DBClient) DeleteEventsByAge(age int64) errors.EdgeX {
+	ret := _m.Called(age)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(int64) errors.EdgeX); ok {
+		r0 = rf(age)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // DeleteEventsByDeviceName provides a mock function with given fields: deviceName
 func (_m *DBClient) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 	ret := _m.Called(deviceName)

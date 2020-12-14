@@ -3,6 +3,7 @@ package http
 import (
 	"math"
 	"net/http"
+	"strconv"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
@@ -414,5 +415,40 @@ func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Requ
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (ec *EventController) DeleteEventsByAge(w http.ResponseWriter, r *http.Request) {
+	// retrieve all the service injections from bootstrap
+	lc := container.LoggingClientFrom(ec.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	var response interface{}
+	var statusCode int
+
+	vars := mux.Vars(r)
+	age, parsingErr := strconv.ParseInt(vars[v2.Age], 10, 64)
+
+	if parsingErr != nil {
+		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "age format parsing failed", parsingErr)
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		err := application.DeleteEventsByAge(age, ec.dic)
+		if err != nil {
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+			statusCode = http.StatusAccepted
+		}
+	}
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }
