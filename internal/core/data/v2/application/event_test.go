@@ -27,7 +27,6 @@ import (
 const (
 	testDeviceName     string = "Test Device"
 	testUUIDString     string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
-	testPushedTime            = 1600666231295
 	testCreatedTime           = 1600666214495
 	testOriginTime            = 1600666185705354000
 	nonexistentEventID        = "8ad33474-fbc5-11ea-adc1-0242ac120002"
@@ -36,7 +35,6 @@ const (
 
 var persistedEvent = models.Event{
 	Id:         testUUIDString,
-	Pushed:     testPushedTime,
 	DeviceName: testDeviceName,
 	Created:    testCreatedTime,
 	Origin:     testOriginTime,

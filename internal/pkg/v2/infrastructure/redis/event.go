@@ -81,7 +81,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 	}
 }
 
-// DeleteEventsByDeviceName deletes all pushed events and corresponding readings.  This function is implemented to starts up
+// DeleteEventsByDeviceName deletes specific device's events and corresponding readings.  This function is implemented to starts up
 // two goroutines to delete readings and events in the background to achieve better performance.
 func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -139,7 +139,6 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 
 	event := models.Event{
 		Id:          e.Id,
-		Pushed:      e.Pushed,
 		DeviceName:  e.DeviceName,
 		ProfileName: e.ProfileName,
 		Created:     e.Created,
