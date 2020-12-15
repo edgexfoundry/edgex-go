@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-ARG BUILDER_BASE=golang:1.15-alpine
+ARG BUILDER_BASE=golang:1.15-alpine3.12
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -14,7 +14,7 @@ WORKDIR /edgex-go
 # So we can try these.
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk update && apk add make bash git
+RUN apk add --update --no-cache make bash git
 
 COPY go.mod .
 
@@ -29,10 +29,9 @@ RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
 RUN make cmd/sys-mgmt-executor/sys-mgmt-executor
 
 # Get the Docker-in-Docker image layered-in now.
-FROM docker:latest
+FROM docker:20.10.0
 
 RUN apk add --no-cache bash
-RUN rm -rf /var/cache/apk/*
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell'

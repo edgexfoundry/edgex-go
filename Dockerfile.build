@@ -14,17 +14,14 @@
 # limitations under the License.
 #
 
-ARG BASE=golang:1.15-alpine
+ARG BASE=golang:1.15-alpine3.12
 FROM ${BASE}
 
-RUN apk add --update make git curl bash zeromq-dev libsodium-dev pkgconfig build-base \
+RUN apk add --update --no-cache make git curl bash zeromq-dev libsodium-dev pkgconfig build-base \
     # workaround for internal/security/secretstore/tokenprovider_linux_test.go hard coded touch command
   && ln -s /bin/touch /usr/bin/touch
 
 WORKDIR /edgex-go
-
-# This will be needed to run `make raml_verify`
-COPY --from=docker:latest /usr/local/bin/docker /usr/local/bin/docker
 
 COPY go.mod .
 RUN go mod download
