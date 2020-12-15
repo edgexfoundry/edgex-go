@@ -158,19 +158,6 @@ func EventCountByDevice(deviceName string, dic *di.Container) (uint32, errors.Ed
 	return count, nil
 }
 
-// The DeletePushedEvents function will be invoked by controller functions
-// and then invokes DeletePushedEvents function in the infrastructure layer to remove
-// all events that have been pushed (pushed timestamp is greater than zero)
-func DeletePushedEvents(dic *di.Container) errors.EdgeX {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
-
-	err := dbClient.DeletePushedEvents()
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	return nil
-}
-
 // The DeleteEventsByDeviceName function will be invoked by controller functions
 // and then invokes DeleteEventsByDeviceName function in the infrastructure layer to remove
 // all events/readings that are associated with the given deviceName
@@ -185,17 +172,6 @@ func DeleteEventsByDeviceName(deviceName string, dic *di.Container) errors.EdgeX
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	return nil
-}
-
-// UpdateEventPushedById updates event pushed timestamp per incoming event id
-func UpdateEventPushedById(id string, dic *di.Container) errors.EdgeX {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
-	err := dbClient.UpdateEventPushedById(id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return nil
-	}
 }
 
 // AllEvents query events by offset and limit
