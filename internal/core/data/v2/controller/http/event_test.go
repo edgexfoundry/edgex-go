@@ -74,7 +74,6 @@ var persistedReading = models.SimpleReading{
 
 var persistedEvent = models.Event{
 	Id:          expectedEventId,
-	Pushed:      TestPushedTime,
 	DeviceName:  TestDeviceName,
 	ProfileName: TestDeviceProfileName,
 	Created:     TestCreatedTime,

@@ -9,7 +9,6 @@ const (
 	ExampleUUID            = "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
 	TestDeviceName         = "TestDevice"
 	TestProfileName        = "TestProfileName"
-	TestPushedTime         = 1600666231295
 	TestCreatedTime        = 1600666214495
 	TestOriginTime         = 1600666185705354000
 	TestDeviceResourceName = "TestDeviceResourceName"
