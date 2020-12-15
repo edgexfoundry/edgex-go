@@ -413,33 +413,6 @@ func TestEventCountByDevice(t *testing.T) {
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }
 
-func TestDeletePushedEvents(t *testing.T) {
-	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeletePushedEvents").Return(nil)
-
-	dic := mocks.NewMockDIC()
-	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
-			return dbClientMock
-		},
-	})
-	ec := NewEventController(dic)
-
-	req, err := http.NewRequest(http.MethodDelete, v2.ApiEventScrubRoute, http.NoBody)
-	require.NoError(t, err)
-
-	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ec.DeletePushedEvents)
-	handler.ServeHTTP(recorder, req)
-
-	var actualResponse common.BaseResponse
-	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
-
-	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
-	assert.Equal(t, http.StatusAccepted, recorder.Result().StatusCode, "HTTP status code not as expected")
-	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
-}
-
 func TestDeleteEventsByDeviceName(t *testing.T) {
 	deviceName := "deviceA"
 	dbClientMock := &dbMock.DBClient{}
@@ -467,76 +440,6 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusAccepted, recorder.Result().StatusCode, "HTTP status code not as expected")
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
-}
-
-func TestUpdateEventPushedById(t *testing.T) {
-	expectedResponseCode := http.StatusMultiStatus
-
-	var testUpdateEventPushedByIdEvent = requests.UpdateEventPushedByIdRequest{
-		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
-		},
-		Id: expectedEventId,
-	}
-
-	notFoundEventId := testUpdateEventPushedByIdEvent
-	notFoundEventId.Id = uuid.New().String()
-
-	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("UpdateEventPushedById", expectedEventId).Return(nil)
-	dbClientMock.On("UpdateEventPushedById", notFoundEventId.Id).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("object doesn't exist in the database"), nil))
-
-	dic := mocks.NewMockDIC()
-	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
-			return dbClientMock
-		},
-	})
-	ec := NewEventController(dic)
-
-	tests := []struct {
-		Name               string
-		Request            []requests.UpdateEventPushedByIdRequest
-		ErrorExpected      bool
-		ExpectedStatusCode int
-	}{
-		{"Valid - UpdateEventPushedByIdRequest", []requests.UpdateEventPushedByIdRequest{testUpdateEventPushedByIdEvent}, false, http.StatusOK},
-		{"Invalid - Event Id not found", []requests.UpdateEventPushedByIdRequest{notFoundEventId}, true, http.StatusNotFound},
-	}
-
-	for _, testCase := range tests {
-		t.Run(testCase.Name, func(t *testing.T) {
-			jsonData, err := json.Marshal(testCase.Request)
-			require.NoError(t, err)
-
-			reader := strings.NewReader(string(jsonData))
-
-			req, err := http.NewRequest(http.MethodPut, v2.ApiEventPushRoute, reader)
-			require.NoError(t, err)
-
-			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.UpdateEventPushedById)
-			handler.ServeHTTP(recorder, req)
-
-			var actualResponse []responseDTO.UpdateEventPushedByIdResponse
-			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
-
-			if testCase.ErrorExpected {
-				assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-				assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
-				return // Test complete for error cases
-			}
-
-			require.NoError(t, err)
-			assert.Equal(t, expectedResponseCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.Equal(t, v2.ApiVersion, actualResponse[0].ApiVersion, "API Version not as expected")
-			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse[0].StatusCode), "BaseResponse status code not as expected")
-			if actualResponse[0].RequestId != "" {
-				assert.Equal(t, ExampleUUID, actualResponse[0].RequestId, "RequestID not as expected")
-			}
-			assert.Empty(t, actualResponse[0].Message, "Message should be empty when it is successful")
-		})
-	}
 }
 
 func TestAllEvents(t *testing.T) {

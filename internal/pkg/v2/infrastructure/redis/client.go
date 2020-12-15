@@ -330,14 +330,6 @@ func (c *Client) AddDevice(d model.Device) (model.Device, errors.EdgeX) {
 	return addDevice(conn, d)
 }
 
-// Update the pushed timestamp of an event
-func (c *Client) UpdateEventPushedById(id string) errors.EdgeX {
-	conn := c.Pool.Get()
-	defer conn.Close()
-
-	return updateEventPushedById(conn, id)
-}
-
 // DeleteDeviceById deletes a device by id
 func (c *Client) DeleteDeviceById(id string) errors.EdgeX {
 	conn := c.Pool.Get()
