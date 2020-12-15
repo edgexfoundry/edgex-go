@@ -54,7 +54,7 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 			ServiceName:    TestDeviceServiceName,
 			ProfileName:    TestDeviceProfileName,
 			AdminState:     models.Locked,
-			OperatingState: models.Enabled,
+			OperatingState: models.Up,
 			Labels:         testDeviceLabels,
 			Location:       "{40lat;45long}",
 			AutoEvents:     testAutoEvents,
@@ -72,7 +72,7 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	testServiceName := TestDeviceServiceName
 	testProfileName := TestDeviceProfileName
 	testAdminState := models.Unlocked
-	testOperatingState := models.Enabled
+	testOperatingState := models.Up
 	testLastReported := int64(123546789)
 	testLastConnected := int64(123546789)
 	testNotify := false

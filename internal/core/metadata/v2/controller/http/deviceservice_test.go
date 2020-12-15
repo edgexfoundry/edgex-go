@@ -41,13 +41,12 @@ func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 			RequestId: ExampleUUID,
 		},
 		Service: dtos.DeviceService{
-			Id:             ExampleUUID,
-			Name:           testDeviceServiceName,
-			Description:    TestDescription,
-			Labels:         testDeviceServiceLabels,
-			AdminState:     models.Unlocked,
-			OperatingState: models.Enabled,
-			BaseAddress:    testBaseAddress,
+			Id:          ExampleUUID,
+			Name:        testDeviceServiceName,
+			Description: TestDescription,
+			Labels:      testDeviceServiceLabels,
+			AdminState:  models.Unlocked,
+			BaseAddress: testBaseAddress,
 		},
 	}
 
@@ -57,18 +56,16 @@ func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 func buildTestUpdateDeviceServiceRequest() requests.UpdateDeviceServiceRequest {
 	testUUID := ExampleUUID
 	testAdminState := models.Unlocked
-	testOperatingState := models.Enabled
 	var testUpdateDeviceServiceReq = requests.UpdateDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
 			RequestId: ExampleUUID,
 		},
 		Service: dtos.UpdateDeviceService{
-			Id:             &testUUID,
-			Name:           &testDeviceServiceName,
-			Labels:         testDeviceServiceLabels,
-			AdminState:     &testAdminState,
-			OperatingState: &testOperatingState,
-			BaseAddress:    &testBaseAddress,
+			Id:          &testUUID,
+			Name:        &testDeviceServiceName,
+			Labels:      testDeviceServiceLabels,
+			AdminState:  &testAdminState,
+			BaseAddress: &testBaseAddress,
 		},
 	}
 
@@ -262,12 +259,11 @@ func TestPatchDeviceService(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	testReq := buildTestUpdateDeviceServiceRequest()
 	dsModels := models.DeviceService{
-		Id:             *testReq.Service.Id,
-		Name:           *testReq.Service.Name,
-		Labels:         testReq.Service.Labels,
-		AdminState:     models.AdminState(*testReq.Service.AdminState),
-		OperatingState: models.OperatingState(*testReq.Service.OperatingState),
-		BaseAddress:    *testReq.Service.BaseAddress,
+		Id:          *testReq.Service.Id,
+		Name:        *testReq.Service.Name,
+		Labels:      testReq.Service.Labels,
+		AdminState:  models.AdminState(*testReq.Service.AdminState),
+		BaseAddress: *testReq.Service.BaseAddress,
 	}
 
 	valid := testReq
