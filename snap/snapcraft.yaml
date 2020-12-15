@@ -164,8 +164,6 @@ apps:
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
       SecretService_Server: localhost
-      SecretService_CertFilePath: $SNAP_DATA/secrets/edgex-kong/server.crt
-      SecretService_KeyFilePath: $SNAP_DATA/secrets/edgex-kong/server.key
       SecretService_TokenFolderPath: $SNAP_DATA/config/security-secrets-setup/res
       SecretService_TokenProvider: $SNAP/bin/security-file-token-provider
       SecretService_TokenProviderArgs: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
