@@ -32,7 +32,6 @@ docs/_build/
 
 # log dirs
 **/logs
-cmd/secrets-config/res/
 
 # snap files
 *.snap
