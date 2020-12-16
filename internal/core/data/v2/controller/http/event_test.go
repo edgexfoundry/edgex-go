@@ -394,8 +394,8 @@ func TestEventCountByDevice(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
-	req, err := http.NewRequest(http.MethodGet, v2.ApiEventCountByDeviceRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{v2.DeviceName: deviceName})
+	req, err := http.NewRequest(http.MethodGet, v2.ApiEventCountByDeviceNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{v2.Name: deviceName})
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
