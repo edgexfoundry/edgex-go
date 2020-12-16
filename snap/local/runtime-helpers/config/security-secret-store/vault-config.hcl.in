@@ -15,12 +15,8 @@ listener "tcp" {
   tls_disable = "1"
 }
 
-backend "consul" {
-  path = "vault/"
-  address = "localhost:8500"
-  scheme = "http"
-  redirect_addr = "http://localhost:8200"
-  cluster_addr = "http://localhost:8201"
+backend "file" {
+  path = "vault/file"
 }
 
 default_lease_ttl = "168h"

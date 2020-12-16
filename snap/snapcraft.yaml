@@ -136,13 +136,12 @@ apps:
   vault:
     adapter: none
     after:
-      - consul
       - security-secrets-setup
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
     environment:
       VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
-      VAULT_ADDR: "https://localhost:8200"
+      VAULT_ADDR: "http://localhost:8200"
     plugs:
       - network
       - network-bind
@@ -151,7 +150,7 @@ apps:
     command: bin/vault
     environment:
       VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
-      VAULT_ADDR: "https://localhost:8200"
+      VAULT_ADDR: "http://localhost:8200"
     plugs:
       - network
       - network-bind
