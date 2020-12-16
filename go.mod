@@ -12,7 +12,6 @@ require (
 	github.com/edgexfoundry/go-mod-registry v0.1.26
 	github.com/edgexfoundry/go-mod-secrets v0.0.26
 	github.com/fxamacker/cbor/v2 v2.2.0
-	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0

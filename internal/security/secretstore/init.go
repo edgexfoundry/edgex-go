@@ -303,9 +303,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
 	// edgex/%s), and edgex/redisdb/* is enumerated to initialize the database.
 	//
-	// The Redis implementation parallels the existing Mongo code but until the update for Redis 6,
-	// there is only a single Redis password.
-	//
 
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.

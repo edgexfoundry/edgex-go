@@ -122,7 +122,7 @@ cd bin
 ./edge-launch.sh
 ```
 
-**Note** You must have a database (Mongo or Redis) running before the services will operate
+**Note** You must have a database (Redis) running before the services will operate
 correctly. If you don't want to install a database locally, you can host one via Docker. You may
 also need to change the `configuration.toml` files for one or more of the services.
 
@@ -142,7 +142,7 @@ Follow the "Installation and Execution" steps above for obtaining and building t
 make docker run_docker
 ```
 
-**Note** The default behavior is to use Redis for the database, use the command `make EDGEX_DB=mongo run_docker` to start EdgeX with Mongo.
+**Note** The default behavior is to use Redis for the database.
 
 ## Community
 

@@ -27,13 +27,13 @@ import (
 	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/google/uuid"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 	"github.com/edgexfoundry/go-mod-messaging/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
 
-	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -275,7 +275,7 @@ func TestAddEventNoPersistence(t *testing.T) {
 	wg.Add(1)
 	go handleDomainEvents(bitEvents, chEvents, &wg, t)
 
-	newId, err := addNewEvent(
+	_, err := addNewEvent(
 		correlation.Event{Event: evt},
 		context.Background(),
 		logger.NewMockClient(),
@@ -291,9 +291,6 @@ func TestAddEventNoPersistence(t *testing.T) {
 
 	if err != nil {
 		t.Errorf(err.Error())
-	}
-	if bson.IsObjectIdHex(newId) {
-		t.Errorf("unexpected bson id %s received", newId)
 	}
 
 	wg.Wait()
@@ -311,7 +308,8 @@ func TestUpdateEventNotFound(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventById", mock.Anything).Return(contract.Event{}, fmt.Errorf("Event not found"))
 
-	evt := contract.Event{ID: bson.NewObjectId().Hex(), Device: "Not Found", Origin: testOrigin}
+	id, _ := uuid.NewUUID()
+	evt := contract.Event{ID: id.String(), Device: "Not Found", Origin: testOrigin}
 	err := updateEvent(
 		correlation.Event{Event: evt},
 		context.Background(),

@@ -9,7 +9,7 @@
 ###
 # Launches all EdgeX Go binaries (must be previously built).
 #
-# Expects that Consul and MongoDB are already installed and running.
+# Expects that Consul and Redis are already installed and running.
 #
 ###
 
