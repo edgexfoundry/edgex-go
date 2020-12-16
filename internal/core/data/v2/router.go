@@ -28,7 +28,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.EventById).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.DeleteEventById).Methods(http.MethodDelete)
 	r.HandleFunc(v2Constant.ApiEventCountRoute, ec.EventTotalCount).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiEventCountByDeviceRoute, ec.EventCountByDevice).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiEventCountByDeviceNameRoute, ec.EventCountByDevice).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiAllEventRoute, ec.AllEvents).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.EventsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.DeleteEventsByDeviceName).Methods(http.MethodDelete)

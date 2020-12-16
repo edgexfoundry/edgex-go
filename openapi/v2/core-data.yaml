@@ -266,6 +266,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SimpleReading'
+    VersionResponse:
+      description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        version:
+          description: "The latest version supported by the service."
+          type: string
   parameters:
     offsetParam:
       in: query
@@ -763,10 +772,10 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /event/count/device/{deviceName}:
+  /event/count/device/name/{name}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: deviceName
+    - name: name
       in: path
       required: true
       schema:
@@ -1137,10 +1146,10 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /reading/count/device/{deviceName}:
+  /reading/count/device/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: deviceName
+      - name: name
         in: path
         required: true
         schema:
@@ -1164,69 +1173,6 @@ paths:
                 statusCode: 200
                 message: ""
                 count: 2
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-  /reading/id/{id}:
-    parameters:
-    - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns a reading by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReadingResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                reading:
-                  apiVersion: "v2"
-                  created: 1594876281221
-                  deviceName: "device-001"
-                  resourceName: "resource-001"
-                  profileName: "profile-001"
-                  id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                  modified: 1594975851631
-                  origin: 1602168089665565300
-                  pushed: 1594975851631
-                  valueType: "Float32"
-                  value: "39.5"
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1328,19 +1274,19 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /reading/valueType/{valueType}:
+  /reading/resourceName/{resourceName}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
-    - name: valueType
+    - name: resourceName
       in: path
       required: true
       schema:
         type: string
-      description: The datatype of a SimpleReading's value property.
+      description: The device resource name of readings.
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: Returns a paginated list of SimpleReadings whose value property is of the specified type.
+      summary: Returns a paginated list of SimpleReadings whose resource name is of the specified one.
       responses:
         '200':
           description: "OK"
@@ -1378,7 +1324,7 @@ paths:
                     valueType: "Float32"
                     value: "12.2"
         '400':
-          description: "Request is in an invalid state. \"{valueType}\" is defined in [Reading ValueTypes](https://github.com/edgexfoundry/go-mod-core-contracts/blob/8df1bc237b3746b67ec2754785c71dc83ce5d0c1/models/reading.go#L22-L49)."
+          description: "Request is in an invalid state. \"{resourceName}\" could only contain reserved characters as defined in https://tools.ietf.org/html/rfc3986#section-2.3"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
