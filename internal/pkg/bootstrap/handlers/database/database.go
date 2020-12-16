@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/mongo"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
@@ -72,17 +71,6 @@ func (d Database) newDBClient(
 
 	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
 	switch databaseInfo.Type {
-	// Deprecated: Mongo functionality is deprecated as of the Geneva release.
-	case db.MongoDB:
-		return mongo.NewClient(
-			db.Configuration{
-				Host:         databaseInfo.Host,
-				Port:         databaseInfo.Port,
-				Timeout:      databaseInfo.Timeout,
-				DatabaseName: databaseInfo.Name,
-				Username:     credentials.Username,
-				Password:     credentials.Password,
-			})
 	case db.RedisDB:
 		conf := db.Configuration{
 			Host:     databaseInfo.Host,

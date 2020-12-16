@@ -12,10 +12,9 @@
 # or implied. See the License for the specific language governing permissions and limitations under
 # the License.
 
-# Usage: bin/edgex-docker-launch.sh [mongo]
+# Usage: bin/edgex-docker-launch.sh
 #
-# By default download the Redis based Docker Compose file and attempt to start EdgeX. If the mongo
-# option is used, download the Mongo based Docker Compose file and attempt to start EdgeX.
+# By default download the Redis based Docker Compose file and attempt to start EdgeX.
 #
 # To override the compose file entirely set the COMPOSE_FILE_PATH environment variable to the full
 # pathname of the compose file you want to use.

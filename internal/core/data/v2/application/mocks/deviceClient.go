@@ -15,7 +15,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
 
-	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,7 +29,7 @@ func NewMockDeviceClient() *mocks.DeviceClient {
 	protocols := getProtocols()
 
 	mockDeviceResultFn := func(ctx context.Context, id string) contract.Device {
-		if bson.IsObjectIdHex(id) {
+		if len(id) > 0 {
 			return contract.Device{Id: id, Name: testDeviceName, Protocols: protocols}
 		}
 		return contract.Device{}

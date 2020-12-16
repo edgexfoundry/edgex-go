@@ -1,9 +1,6 @@
 # Configuring Microservices to use Redis
 
-As of EdgeX 1.0 (Edinburgh), all the microservices with the exception of logging are enabled for
-Redis. At this time there is no plan to add support for logging. When deploying EdgeX via Snap, the default behavior may still be Mongo (its moving to Redis). Please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md) for more information.
-
-When deploying EdgeX via Docker (or native), the default behavior is to use Mongo and you'll need to explicitly configure Redis.
+As of EdgeX 2.0 (Ireland), all the microservices use Redis, which is the only supported database.
 
 ## Requirements
 

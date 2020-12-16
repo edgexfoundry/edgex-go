@@ -8,11 +8,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/google/uuid"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-
-	"github.com/globalsign/mgo/bson"
 )
 
 var testEvent contract.Event
@@ -59,7 +58,9 @@ func reset() {
 
 func buildReadings() []contract.Reading {
 	ticks := db.MakeTimestamp()
-	r1 := contract.Reading{Id: bson.NewObjectId().Hex(),
+
+	id, _ := uuid.NewUUID()
+	r1 := contract.Reading{Id: id.String(),
 		Name:     "Temperature",
 		Value:    "45",
 		Origin:   testOrigin,
@@ -68,7 +69,8 @@ func buildReadings() []contract.Reading {
 		Pushed:   ticks,
 		Device:   testDeviceName}
 
-	r2 := contract.Reading{Id: bson.NewObjectId().Hex(),
+	id, _ = uuid.NewUUID()
+	r2 := contract.Reading{Id: id.String(),
 		Name:     "Pressure",
 		Value:    "1.01325",
 		Origin:   testOrigin,

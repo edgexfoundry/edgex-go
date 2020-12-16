@@ -16,13 +16,7 @@
 package interfaces
 
 import (
-	"errors"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-)
-
-type DatabaseType int8 // Database type enum
-const (
-	MONGO DatabaseType = iota
 )
 
 type DBClient interface {
@@ -75,22 +69,3 @@ type DBClient interface {
 	Cleanup() error
 	CleanupOld(age int) error
 }
-
-type DBConfiguration struct {
-	DbType            DatabaseType
-	Host              string
-	Port              int
-	Timeout           int
-	DatabaseName      string
-	Username          string
-	Password          string
-	ReadMax           int
-	ResendLimit       int
-	CleanupDefaultAge int
-}
-
-var ErrNotFound error = errors.New("Item not found")
-var ErrUnsupportedDatabase error = errors.New("Unsuppored database type")
-var ErrInvalidObjectId error = errors.New("Invalid object ID")
-var ErrNotUnique error = errors.New("Resource already exists")
-var ErrSlugEmpty error = errors.New("Slug is nil or empty")
