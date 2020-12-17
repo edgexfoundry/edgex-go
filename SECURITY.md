@@ -3,17 +3,15 @@
 For the most up to date information related to the EdgeX security disclosure, vulnerabilities, and hardening guide refer to the [EdgeX Security Wiki Page](https://wiki.edgexfoundry.org/display/FA/Security)
 
 Starting with the Fuji release, EdgeX includes enhanced security features that are enabled by default.
-There are 3 major components that are responsible for security features:
+There are 2 major components that are responsible for security features:
 
 | Component  | Description  |
 |---|---|
-| [Security-secrets-setup](cmd/security-secrets-setup/README.md)  | Security-secrets-setup is responsible for creating necessary certificates.  | 
 |  [Security-secretstore-setup](cmd/security-secretstore-setup/README.md) | Security-secretstore-setup is responsible for initializing the secret store to hold various credentials for EdgeX.  |
 | [Security-proxy-setup](cmd/security-proxy-setup/README.md)  | Security-proxy-setup is responsible for initializating the EdgeX proxy environment, which includes setting up related permissions and authentication methods. The proxy will protect all the REST API resources.  |
 
 When starting a secure EdgeX deployment, the sequence is [see docker-compose-nexus-redis.yml for reference](https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml))
 
-1. Start the `edgex-secrets-setup` container from the `docker-edgex-secrets-setup-go` image to create the PKI.
 1. Start [Vault by HashiCorp](https://www.vaultproject.io/)
 1. Start the `edgex-vault-worker` container from the `docker-edgex-security-secretstore-setup-go` image to create the shared secrets needed by the microservices.
 1. Finally, the start the `edgex-proxy` container from the `docker-edgex-security-proxy-setup-go` image once [Kong](https://konghq.com/) is up.
@@ -65,7 +63,7 @@ Instead, all the REST requests need to go through the proxy, and the proxy will 
 As an example, let's say you want to start core-metadata outside a container so you can debug it. You will need a non-expired token to authenticate and authorize the service and you will need to tell core-metadata about its environment. Be aware that
 
 * Tokens expire after 60 minutes if not renewed. If you are starting/stopping a microservice and the service token has expired, stop and start security-secretstore-setup (aka vault-worker).
-* `/tmp/edgex/secrets/...` where the tokens live is only root readable. You can run the microservice as root or use the following to open up the tree. Note you will need to repeat the chmod each time you restart `security-secrets-setup`
+* `/tmp/edgex/secrets/...` where the tokens live is only root readable. You can run the microservice as root or use the following to open up the tree. Note you will need to repeat the chmod each time you restart `security-secretstore-setup`
 
     ```sh
     pushd /tmp/edgex
@@ -80,13 +78,11 @@ Fortunately, between go-mod-boostrap and [microservice self seeding](https://git
 sudo bash
 
 cd cmd/core-metadata
-SecretStore_ServerName=edgex-vault SecretStore_RootCaCertPath=/tmp/edgex/secrets/ca/ca.pem SecretStore_TokenFile=/tmp/edgex/secrets/edgex-core-metadata/secrets-token.json Logging_EnableRemote="false" ./core-metadata
+SecretStore_TokenFile=/tmp/edgex/secrets/edgex-core-metadata/secrets-token.json Logging_EnableRemote="false" ./core-metadata
 ```
 
 | Environment Override  | Description  |
 |---|---|
-| SecretStore_ServerName=edgex-vault | Name of secret store to compare against X.509 DN |
-| SecretStore_RootCaCertPath=/tmp/edgex/secrets/ca/ca.pem | Root CA for validating TLS certificate chain |
 | SecretStore_TokenFile=/tmp/edgex/secrets/edgex-core-metadata/secrets-token.json | Authorization token |
 | Logging_EnableRemote="false" | There can only one (logger) |
 

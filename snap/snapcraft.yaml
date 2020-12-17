@@ -103,7 +103,6 @@ apps:
     adapter: full
     after:
       - postgres
-      - security-secrets-setup
     command: bin/kong-daemon.sh
     command-chain:
       - bin/perl5lib-launch.sh
@@ -124,19 +123,8 @@ apps:
       - network
       - network-bind
     stop-command: bin/kong-stop.sh
-  security-secrets-setup:
-    adapter: full
-    command: bin/security-secrets-setup -confdir $SNAP_DATA/config/security-secrets-setup/res generate
-    daemon: oneshot
-    environment:
-      SecretsSetup_DeployDir: $SNAP_DATA/secrets/
-      SecretsSetup_CertConfigDir: $SNAP_DATA/config/security-secrets-setup/res
-      XDG_RUNTIME_DIR: /tmp
-    start-timeout: 15m
   vault:
     adapter: none
-    after:
-      - security-secrets-setup
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
     environment:
@@ -163,7 +151,8 @@ apps:
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
       SecretService_Server: localhost
-      SecretService_TokenFolderPath: $SNAP_DATA/config/security-secrets-setup/res
+      # environment vars for security-secretstore-setup (aka vault-worker)
+      SecretService_TokenFolderPath: $SNAP_DATA/config/security-secretstore-setup/res
       SecretService_TokenProvider: $SNAP/bin/security-file-token-provider
       SecretService_TokenProviderArgs: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
       SecretService_TokenProviderAdminTokenPath: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
@@ -314,14 +303,11 @@ apps:
     command: bin/security-proxy-setup
     environment:
       SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
-      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
     command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
-    environment:
-      SecretService_CACertPath: $SNAP_DATA/secrets/ca/ca.pem
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
@@ -606,7 +592,7 @@ parts:
 
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-notifications support-scheduler sys-mgmt-agent \
-          security-proxy-setup security-secrets-setup security-secretstore-setup security-file-token-provider \
+          security-proxy-setup security-secretstore-setup security-file-token-provider \
           security-bootstrap-redis secrets-config; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
@@ -630,15 +616,10 @@ parts:
           install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/$service/LICENSE"
       done
 
-      # install the json config files for security-secrets-setup (for kong
-      # and vault PKI) and security-file-token-provider
+      # install the json config files for security-file-token-provider
       #
       # note that the file contents are processed using the real
       # value of $SNAP_DATA using jq in the install hook
-      cp "./cmd/security-secrets-setup/res/pkisetup-vault.json" \
-        "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/pkisetup-vault.json"
-      cp "./cmd/security-secrets-setup/res/pkisetup-kong.json" \
-        "$SNAPCRAFT_PART_INSTALL/config/security-secrets-setup/res/pkisetup-kong.json"
       cp "./cmd/security-file-token-provider/res/token-config.json" \
         "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 

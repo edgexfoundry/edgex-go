@@ -24,12 +24,13 @@ Now that you have EdgeX up and running, you can follow our [API Walkthrough](htt
 
 ## Running EdgeX with security components
 
-Starting with the Fuji release, EdgeX includes enhanced security features that are enabled by default. There are 3 major components that are responsible for security
+Starting with the Fuji release, EdgeX includes enhanced security features that are enabled by default. There are a few major components that are responsible for security
 features: 
 
-- Security-secrets-setup
 - Security-secretstore-setup
 - Security-proxy-setup
+
+As part of Ireland release, the `security-secrets-setup` service is no more as internal service-to-service communication will not run in TLS by default in a single box.
 
 When security features are enabled, additional steps are required to access the resources of EdgeX.
 
