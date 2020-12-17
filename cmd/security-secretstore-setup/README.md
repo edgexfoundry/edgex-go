@@ -2,11 +2,11 @@
 
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
-Go implementation of EdgeX security-secretstore-setup service (aka edgex-vault-worker). The container relies on the `security-secrets-setup` container to create the PKI, fork/execs security-file-token-provider to create the tokens, and adds shared secrets to Vault itself.
+Go implementation of EdgeX security-secretstore-setup service (aka edgex-vault-worker). Prior to the Ireland release, the container relies on the `security-secrets-setup` container to create the PKI, in which the requirements of TLS in a single box are no more. `security-secretstore-setup` service also fork/execs security-file-token-provider to create the tokens, and adds shared secrets to Vault itself.
 
 ## Build
 
-Use the Makefile in the root directory of the repository to build  security-secrets-setup:
+Use the Makefile in the root directory of the repository to build  security-secretstore-setup:
 
 ```sh
 make cmd/security-secretstore-setup/security-secretstore-setup
@@ -42,7 +42,7 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
 
 ## Debugging Tips
 
-* The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.toml`](res/configuration.toml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug either security-secretstore-setup or security-secrets-setup, set this to _false_:
+* The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.toml`](res/configuration.toml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug `security-secretstore-setup`, set this to _false_:
 
     ```toml
     [SecretService]

@@ -1,8 +1,0 @@
-[Writable]
-LogLevel = 'INFO'
-
-[SecretsSetup]
-WorkDir = "/tmp/edgex/secrets-setup"
-DeployDir = "/tmp/edgex/secrets"
-CacheDir = "/etc/edgex/pki"
-CertConfigDir = "./res"

@@ -116,12 +116,11 @@ $ journalctl -u snap.edgexfoundry.consul
 
 ### Security services
 
-Currently, the security services are enabled by default. The security services consitute the following components:
+Currently, the security services are enabled by default. The security services constitute the following components:
 
  * Kong
  * PostgreSQL
  * Vault
- * security-secrets-setup
  * security-secretstore-setup
  * security-proxy-setup
 

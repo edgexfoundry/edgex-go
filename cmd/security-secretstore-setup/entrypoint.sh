@@ -33,14 +33,6 @@ chown -Rh 100:1000 /vault/
 
 echo "starting vault-worker..."
 
-# need to wait until security-secrets-setup produces the necessary TLS assets
-# before start the vault-worker
-
-until /consul/scripts/consul-svc-healthy.sh security-secrets-setup; do 
-    echo 'waiting for security-secrets-setup'; 
-    sleep 1; 
-done;
-
 echo "Initializing secret store"
 /security-secretstore-setup --vaultInterval=10
 

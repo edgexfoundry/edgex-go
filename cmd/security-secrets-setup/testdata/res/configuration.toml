@@ -1,8 +1,0 @@
-[Writable]
-LogLevel = 'DEBUG'
-
-[SecretsSetup]
-WorkDir = "./workingtest"
-DeployDir = "./deploytest"
-CacheDir = "./cachetest"
-CertConfigDir = "./res"

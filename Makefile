@@ -17,7 +17,6 @@ DOCKERS= \
 	docker_support_notifications \
 	docker_sys_mgmt_agent \
 	docker_support_scheduler \
-	docker_security_secrets_setup \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
 	docker_security_bootstrap_redis
@@ -32,7 +31,6 @@ MICROSERVICES= \
 	cmd/sys-mgmt-executor/sys-mgmt-executor \
 	cmd/sys-mgmt-agent/sys-mgmt-agent \
 	cmd/support-scheduler/support-scheduler \
-	cmd/security-secrets-setup/security-secrets-setup \
 	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
@@ -73,9 +71,6 @@ cmd/sys-mgmt-agent/sys-mgmt-agent:
 
 cmd/support-scheduler/support-scheduler:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
-
-cmd/security-secrets-setup/security-secrets-setup:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-secrets-setup/security-secrets-setup ./cmd/security-secrets-setup
 
 cmd/security-proxy-setup/security-proxy-setup:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
@@ -169,16 +164,6 @@ docker_sys_mgmt_agent:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/docker-sys-mgmt-agent-go:$(GIT_SHA) \
 		-t edgexfoundry/docker-sys-mgmt-agent-go:$(DOCKER_TAG) \
-		.
-
-docker_security_secrets_setup:
-	docker build \
-	    --build-arg http_proxy \
-	    --build-arg https_proxy \
-		-f cmd/security-secrets-setup/Dockerfile \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-security-secrets-setup-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-security-secrets-setup-go:$(DOCKER_TAG) \
 		.
 
 docker_security_proxy_setup:
