@@ -25,4 +25,5 @@ type DBClient interface {
 	DeleteEventsByAge(age int64) errors.EdgeX
 	ReadingTotalCount() (uint32, errors.EdgeX)
 	AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX)
+	ReadingsByDeviceName(offset int, limit int, name string) ([]model.Reading, errors.EdgeX)
 }

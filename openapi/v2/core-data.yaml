@@ -427,13 +427,11 @@ components:
             resourceName: "resource-001"
             profileName: "profile-001"
             id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-            modified: 1594975851631
             origin: 1602168089665565300
-            pushed: 1594975851631
             valueType: "Float32"
             value: "39.5"
           - apiVersion: "v2"
-            create: 1594876281221
+            created: 1594876281221
             deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
@@ -1220,46 +1218,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiReadingsResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                readings: 
-                  - apiVersion: "v2"
-                    created: 1594876281221
-                    deviceName: "device-001"
-                    resourceName: "resource-001"
-                    profileName: "profile-001"
-                    id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                    modified: 1594975851631
-                    origin: 1602168089665565300
-                    pushed: 1594975851631
-                    valueType: "Float32"
-                    value: "39.5"
-                  - apiVersion: "v2"
-                    create: 1594876281221
-                    deviceName: "device-001"
-                    resourceName: "resource-001"
-                    profileName: "profile-001"
-                    id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
-                    origin: 1602168089665565300
-                    valueType: "Int8"
-                    value: "75"
-        '404':
-          description: "The requested resource does not exist"
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/AllReadingsExample'
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
               examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

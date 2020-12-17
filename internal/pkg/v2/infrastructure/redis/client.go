@@ -506,3 +506,16 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 	}
 	return readings, nil
 }
+
+// ReadingsByDeviceName query readings by offset, limit and device name
+func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readings []model.Reading, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, edgeXerr = readingsByDeviceName(conn, offset, limit, name)
+	if edgeXerr != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query readings by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
+	}
+	return readings, nil
+}

@@ -39,6 +39,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	rc := dataController.NewReadingController(dic)
 	r.HandleFunc(v2Constant.ApiReadingCountRoute, rc.ReadingTotalCount).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiAllReadingRoute, rc.AllReadings).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiReadingByDeviceNameRoute, rc.ReadingsByDeviceName).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

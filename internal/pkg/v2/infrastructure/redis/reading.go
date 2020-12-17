@@ -172,17 +172,7 @@ func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Readi
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	readings = make([]models.Reading, len(objects))
-	for i, in := range objects {
-		sr := models.SimpleReading{}
-		err := json.Unmarshal(in, &sr)
-		if err != nil {
-			return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "reading format parsing failed from the database", err)
-		}
-		readings[i] = sr
-	}
-
-	return
+	return convertObjectsToReadings(objects)
 }
 
 func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
@@ -195,6 +185,24 @@ func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Read
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
 
+	return convertObjectsToReadings(objects)
+}
+
+// readingsByDeviceName query readings by offset, limit, and device name
+func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionDeviceName, name), offset, end)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToReadings(objects)
+}
+
+func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	readings = make([]models.Reading, len(objects))
 	for i, in := range objects {
 		// as V2 APi doesn't deal with BinaryReading at this moment, convert to SimpleReading here
