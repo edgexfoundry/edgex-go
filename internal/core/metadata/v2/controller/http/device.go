@@ -87,9 +87,6 @@ func (dc *DeviceController) AddDevice(w http.ResponseWriter, r *http.Request) {
 		addResponses = append(addResponses, response)
 	}
 
-	// TODO
-	// After adding devices, we need to invoke deviceService's callback API
-
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(addResponses, w, lc)
 }
@@ -136,7 +133,7 @@ func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Re
 	var response interface{}
 	var statusCode int
 
-	err := application.DeleteDeviceByName(name, dc.dic)
+	err := application.DeleteDeviceByName(name, ctx, dc.dic)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

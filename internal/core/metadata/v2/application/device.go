@@ -8,7 +8,6 @@ package application
 import (
 	"context"
 	"fmt"
-
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
@@ -51,7 +50,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		addedDevice.Id,
 		correlation.FromContext(ctx),
 	))
-
+	go addDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
 	return addedDevice.Id, nil
 }
 
@@ -73,15 +72,20 @@ func DeleteDeviceById(id string, dic *di.Container) errors.EdgeX {
 }
 
 // DeleteDeviceByName deletes the device by name
-func DeleteDeviceByName(name string, dic *di.Container) errors.EdgeX {
+func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceByName(name)
+	device, err := dbClient.DeviceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	err = dbClient.DeleteDeviceByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go deleteDeviceCallback(ctx, dic, device)
 	return nil
 }
 
@@ -194,6 +198,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 		correlation.FromContext(ctx),
 	))
 
+	go updateDeviceCallback(ctx, dic, dto)
 	return nil
 }
 
