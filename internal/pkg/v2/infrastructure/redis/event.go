@@ -270,21 +270,7 @@ func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []mod
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
 	}
-
-	events = make([]models.Event, len(objects))
-	for i, in := range objects {
-		e := models.Event{}
-		err := json.Unmarshal(in, &e)
-		if err != nil {
-			return []models.Event{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "event format parsing failed from the database", err)
-		}
-		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
-		if edgeXerr != nil {
-			return events, errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-		events[i] = e
-	}
-	return events, nil
+	return convertObjectsToEvents(conn, objects)
 }
 
 // eventsByDeviceName query events by offset, limit and device name
@@ -297,36 +283,19 @@ func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (ev
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
 	}
-
-	events = make([]models.Event, len(objects))
-	for i, in := range objects {
-		e := models.Event{}
-		err := json.Unmarshal(in, &e)
-		if err != nil {
-			return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "event parsing failed", err)
-		}
-		e.Readings, edgeXerr = readingsByEventId(conn, e.Id)
-		if edgeXerr != nil {
-			return events, errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-		events[i] = e
-	}
-	return events, nil
+	return convertObjectsToEvents(conn, objects)
 }
 
 // eventsByTimeRange query events by time range, offset, and limit
 func eventsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
-	// Use following redis command to retrieve the id of events satisfied with time range/offset/limit
-	// ZREVRANGEBYSCORE v2:event:created max min LIMIT offset count
-	eventIds, err := redis.Strings(conn.Do(ZREVRANGEBYSCORE, EventsCollectionCreated, end, start, LIMIT, offset, limit))
-	if err != nil {
-		return nil, errors.NewCommonEdgeXWrapper(err)
-	}
-	objects, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(eventIds))
+	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionCreated, start, end, offset, limit)
 	if edgeXerr != nil {
 		return events, edgeXerr
 	}
+	return convertObjectsToEvents(conn, objects)
+}
 
+func convertObjectsToEvents(conn redis.Conn, objects [][]byte) (events []models.Event, edgeXerr errors.EdgeX) {
 	events = make([]models.Event, len(objects))
 	for i, in := range objects {
 		e := models.Event{}

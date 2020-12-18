@@ -507,6 +507,19 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 	return readings, nil
 }
 
+// ReadingsByTimeRange query readings by time range, offset, and limit
+func (c *Client) ReadingsByTimeRange(start int, end int, offset int, limit int) (readings []model.Reading, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, edgeXerr = readingsByTimeRange(conn, start, end, offset, limit)
+	if edgeXerr != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query readings by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), edgeXerr)
+	}
+	return readings, nil
+}
+
 // ReadingsByDeviceName query readings by offset, limit and device name
 func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readings []model.Reading, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
