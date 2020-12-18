@@ -28,7 +28,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.EventById).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.DeleteEventById).Methods(http.MethodDelete)
 	r.HandleFunc(v2Constant.ApiEventCountRoute, ec.EventTotalCount).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiEventCountByDeviceNameRoute, ec.EventCountByDevice).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiEventCountByDeviceNameRoute, ec.EventCountByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiAllEventRoute, ec.AllEvents).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.EventsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventByDeviceNameRoute, ec.DeleteEventsByDeviceName).Methods(http.MethodDelete)
@@ -42,6 +42,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiReadingByDeviceNameRoute, rc.ReadingsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiReadingByTimeRangeRoute, rc.ReadingsByTimeRange).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiReadingByResourceNameRoute, rc.ReadingsByResourceName).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiReadingCountByDeviceNameRoute, rc.ReadingCountByDeviceName).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)

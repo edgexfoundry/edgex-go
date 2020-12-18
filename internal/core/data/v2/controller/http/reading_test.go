@@ -316,3 +316,35 @@ func TestReadingsByDeviceName(t *testing.T) {
 		})
 	}
 }
+
+func TestReadingCountByDeviceName(t *testing.T) {
+	expectedReadingCount := uint32(656672)
+	deviceName := "deviceA"
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByDeviceName", deviceName).Return(expectedReadingCount, nil)
+
+	dic := mocks.NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	rc := NewReadingController(dic)
+
+	req, err := http.NewRequest(http.MethodGet, v2.ApiReadingCountByDeviceNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{v2.Name: deviceName})
+	require.NoError(t, err)
+
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(rc.ReadingCountByDeviceName)
+	handler.ServeHTTP(recorder, req)
+
+	var actualResponse common.CountResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+	require.NoError(t, err)
+	assert.Equal(t, v2.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, http.StatusOK, int(actualResponse.StatusCode), "Response status code not as expected")
+	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+	assert.Equal(t, expectedReadingCount, actualResponse.Count, "Reading count in the response body is not expected")
+}

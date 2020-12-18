@@ -122,7 +122,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("DeleteEventById", nonexistentEventID).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
 		myMock.On("DeleteEventById", testUUIDString).Return(nil)
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
-		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
+		myMock.On("EventCountByDeviceName", testDeviceName).Return(testEventCount, nil)
 		myMock.On("DeleteEventsByDeviceName", testDeviceName).Return(nil)
 		myMock.On("DeleteEventsByAge", int64(0)).Return(nil)
 	}
@@ -279,7 +279,7 @@ func TestEventTotalCount(t *testing.T) {
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }
 
-func TestEventCountByDevice(t *testing.T) {
+func TestEventCountByDeviceName(t *testing.T) {
 	dbClientMock := newMockDB(true)
 
 	dic := mocks.NewMockDIC()
@@ -289,7 +289,7 @@ func TestEventCountByDevice(t *testing.T) {
 		},
 	})
 
-	count, err := EventCountByDevice(testDeviceName, dic)
+	count, err := EventCountByDeviceName(testDeviceName, dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }

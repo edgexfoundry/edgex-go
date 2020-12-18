@@ -291,7 +291,7 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 }
 
 // EventCountByDevice returns the count of Event associated a specific Device from the database
-func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -544,4 +544,17 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readi
 			fmt.Sprintf("fail to query readings by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
 	}
 	return readings, nil
+}
+
+// ReadingCountByDeviceName returns the count of Readings associated a specific Device from the database
+func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(ReadingsCollectionDeviceName, deviceName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
 }
