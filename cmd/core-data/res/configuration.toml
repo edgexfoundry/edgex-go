@@ -6,6 +6,12 @@ ServiceUpdateLastConnected = false
 ValidateCheck = false
 LogLevel = 'INFO'
 ChecksumAlgo = 'xxHash'
+   [Writable.InsecureSecrets]
+      [Writable.InsecureSecrets.DB]
+         path = "redisdb"
+            [Writable.InsecureSecrets.DB.Secrets]
+            username = ""
+            password = ""
 
 [Service]
 BootTimeout = 30000
@@ -33,8 +39,6 @@ Type = 'consul'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'coredata'
-  Password = 'password'
-  Username = 'core'
   Port = 6379
   Timeout = 5000
   Type = 'redisdb'

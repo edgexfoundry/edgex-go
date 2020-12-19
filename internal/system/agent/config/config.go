@@ -32,8 +32,9 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
+	ResendLimit     int
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -88,4 +89,9 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 // GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
 func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 	return c.Registry
+}
+
+// GetInsecureSecrets returns the service's InsecureSecrets of which this service doesn't have. I.e. service has no secrets
+func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
+	return nil
 }

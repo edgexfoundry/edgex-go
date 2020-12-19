@@ -25,7 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/redis/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -63,7 +63,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secret.NewSecret().BootstrapHandler,
+			handlers.SecureProviderBootstrapHandler,
 			handler.getCredentials,
 			handler.connect,
 			handler.maybeSetCredentials,

@@ -25,9 +25,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/testing"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -57,7 +55,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		},
 	})
 
-	httpServer := httpserver.NewBootstrap(router, true)
+	httpServer := handlers.NewHttpServer(router, true)
 
 	bootstrap.Run(
 		ctx,
@@ -71,7 +69,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(router).BootstrapHandler,
 			httpServer.BootstrapHandler,
-			message.NewBootstrap(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
-			testing.NewBootstrap(httpServer, readyStream).BootstrapHandler,
+			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		})
 }
