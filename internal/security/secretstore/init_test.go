@@ -11,10 +11,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +35,7 @@ func TestLoadInitResponse(t *testing.T) {
 	// Arrange
 	assert := assert.New(t)
 	mockLogger := logger.MockLogger{}
-	fileOpener := &MockFileIoPerformer{}
+	fileOpener := &mocks.FileIoPerformer{}
 	stringReader := strings.NewReader(sampleJSON)
 	fileOpener.On("OpenFileReader", "/foo/bar.baz", os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
 	secretConfig := secretstoreclient.SecretServiceInfo{
@@ -55,7 +56,7 @@ func TestSaveInitResponse(t *testing.T) {
 	// Arrange
 	assert := assert.New(t)
 	mockLogger := logger.MockLogger{}
-	fileOpener := &MockFileIoPerformer{}
+	fileOpener := &mocks.FileIoPerformer{}
 	fileOpener.On("OpenFileWriter", "/foo/bar.baz", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&discardWriterCloser{}, nil)
 	secretConfig := secretstoreclient.SecretServiceInfo{
 		TokenFolderPath: "/foo",

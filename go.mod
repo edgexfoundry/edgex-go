@@ -5,11 +5,11 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.60
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.64
 	github.com/edgexfoundry/go-mod-configuration v0.0.8
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.130
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.131
 	github.com/edgexfoundry/go-mod-messaging v0.1.28
-	github.com/edgexfoundry/go-mod-registry v0.1.26
+	github.com/edgexfoundry/go-mod-registry v0.1.27
 	github.com/edgexfoundry/go-mod-secrets v0.0.29
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -23,7 +23,5 @@ require (
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-replace github.com/edgexfoundry/go-mod-bootstrap => ../go-mod-bootstrap
 
 go 1.15

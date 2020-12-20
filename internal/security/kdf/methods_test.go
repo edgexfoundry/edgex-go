@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -31,7 +31,7 @@ func TestNoErrorKdfCreateSalt(t *testing.T) {
 	mockSeedFile := &mockSeedFile{}
 	mockSeedFile.On("Write", mock.Anything).Return(32, nil)
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileWriter", "/target/kdf-salt.dat", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0600)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -58,7 +58,7 @@ func TestNoErrorKdfReadSalt(t *testing.T) {
 		}
 	}).Return(32, nil)
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileReader", "/target/kdf-salt.dat", os.O_RDONLY, os.FileMode(0400)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 	expected, _ := hex.DecodeString(expectedKey)
@@ -79,7 +79,7 @@ func TestFailedStat(t *testing.T) {
 	mockFileInfo := &mockFileInfo{}
 	defer mockOsStat(func(string) (os.FileInfo, error) { return mockFileInfo, os.ErrPermission })()
 	mockSeedFile := &mockSeedFile{}
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
 	// Act
@@ -97,7 +97,7 @@ func TestFailedFileOpenForReading(t *testing.T) {
 	mockFileInfo := &mockFileInfo{}
 	defer mockOsStat(func(string) (os.FileInfo, error) { return mockFileInfo, nil })()
 	mockSeedFile := &mockSeedFile{}
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileReader", "/target/kdf-salt.dat", os.O_RDONLY, os.FileMode(0400)).Return(mockSeedFile, errors.New("error"))
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -117,7 +117,7 @@ func TestFailedRead(t *testing.T) {
 	mockSeedFile := &mockSeedFile{}
 	mockSeedFile.On("Read", mock.Anything).Return(0, errors.New("error"))
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileReader", "/target/kdf-salt.dat", os.O_RDONLY, os.FileMode(0400)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -138,7 +138,7 @@ func TestShortRead(t *testing.T) {
 	mockSeedFile := &mockSeedFile{}
 	mockSeedFile.On("Read", mock.Anything).Return(1, nil)
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileReader", "/target/kdf-salt.dat", os.O_RDONLY, os.FileMode(0400)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -158,7 +158,7 @@ func TestFailedFileOpenForWriting(t *testing.T) {
 	mockFileInfo := &mockFileInfo{}
 	defer mockOsStat(func(string) (os.FileInfo, error) { return mockFileInfo, os.ErrNotExist })()
 	mockSeedFile := &mockSeedFile{}
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileWriter", "/target/kdf-salt.dat", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0600)).Return(mockSeedFile, errors.New("error"))
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -178,7 +178,7 @@ func TestFailedWrite(t *testing.T) {
 	mockSeedFile := &mockSeedFile{}
 	mockSeedFile.On("Write", mock.Anything).Return(32, errors.New("error"))
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileWriter", "/target/kdf-salt.dat", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0600)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
@@ -199,7 +199,7 @@ func TestShortWrite(t *testing.T) {
 	mockSeedFile := &mockSeedFile{}
 	mockSeedFile.On("Write", mock.Anything).Return(15, nil)
 	mockSeedFile.On("Close").Return(nil)
-	mockFileOpener := &MockFileIoPerformer{}
+	mockFileOpener := &mocks.FileIoPerformer{}
 	mockFileOpener.On("OpenFileWriter", "/target/kdf-salt.dat", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(0600)).Return(mockSeedFile, nil)
 	keyDeriver := NewKdf(mockFileOpener, "/target", sha256.New)
 
