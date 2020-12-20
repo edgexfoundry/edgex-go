@@ -51,7 +51,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			Type:      contractsV2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}}
