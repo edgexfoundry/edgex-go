@@ -32,6 +32,7 @@ type ConfigurationStruct struct {
 type WritableInfo struct {
 	LogLevel                        string
 	EnableValueDescriptorManagement bool
+	InsecureSecrets                 bootstrapConfig.InsecureSecrets
 }
 
 // Notification Info provides properties related to the assembly of notification content
@@ -101,4 +102,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
+}
+
+// GetInsecureSecrets returns the service's InsecureSecrets.
+func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
+	return c.Writable.InsecureSecrets
 }

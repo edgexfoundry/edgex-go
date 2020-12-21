@@ -24,7 +24,9 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -62,14 +64,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	// For Redis Streams MessageBus, we reuse the Redis instance running for the DB, which may have a password,
 	// so we need to get and use the DB credentials for the MessageBus connection.
 	if configuration.MessageQueue.Type == "redisstreams" {
-		credentials, err := container.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(configuration.Databases["Primary"])
+		secretProvider := container.SecretProviderFrom(dic.Get)
+		credentials, err := secretProvider.GetSecrets(configuration.Databases["Primary"].Type)
 		if err != nil {
 			lc.Error(fmt.Sprintf("Error getting DB creds for RedisStreams: %s", err.Error()))
 			return false
 		}
 
 		lc.Info("DB Credentials set for using Redis Streams")
-		configuration.MessageQueue.Optional["Password"] = credentials.Password
+		configuration.MessageQueue.Optional["Password"] = credentials[secret.PasswordKey]
 	}
 
 	// Create the messaging client

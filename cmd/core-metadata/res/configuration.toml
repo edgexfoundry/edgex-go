@@ -1,6 +1,12 @@
 [Writable]
 LogLevel = 'INFO'
 EnableValueDescriptorManagement = false
+  [Writable.InsecureSecrets]
+    [Writable.InsecureSecrets.DB]
+    path = "redisdb"
+      [Writable.InsecureSecrets.DB.Secrets]
+      username = ""
+      password = ""
 
 [Service]
 BootTimeout = 30000

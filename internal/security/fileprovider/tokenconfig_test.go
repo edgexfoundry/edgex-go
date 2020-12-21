@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,7 @@ const sampleJSON = `{
 
 func TestLoadTokenConfig(t *testing.T) {
 	stringReader := strings.NewReader(sampleJSON)
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &mocks.FileIoPerformer{}
 	mockFileIoPerformer.On("OpenFileReader", "dummy-file", os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
 
 	var tokenConf TokenConfFile
@@ -62,7 +62,7 @@ func TestLoadTokenConfig(t *testing.T) {
 
 func TestLoadTokenConfigError1(t *testing.T) {
 	stringReader := strings.NewReader(sampleJSON)
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &mocks.FileIoPerformer{}
 	mockFileIoPerformer.On("OpenFileReader", "dummy-file", os.O_RDONLY, os.FileMode(0400)).Return(stringReader, errors.New("an error"))
 
 	var tokenConf TokenConfFile
@@ -72,7 +72,7 @@ func TestLoadTokenConfigError1(t *testing.T) {
 
 func TestLoadTokenConfigError2(t *testing.T) {
 	stringReader := strings.NewReader("in{valid")
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &mocks.FileIoPerformer{}
 	mockFileIoPerformer.On("OpenFileReader", "dummy-file", os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
 
 	var tokenConf TokenConfFile

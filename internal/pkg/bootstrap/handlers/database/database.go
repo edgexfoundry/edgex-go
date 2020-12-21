@@ -25,8 +25,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	dbInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/db/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
@@ -95,15 +95,23 @@ func (d Database) BootstrapHandler(
 	dic *di.Container) bool {
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 
 	// get database credentials.
 	var credentials bootstrapConfig.Credentials
 	for startupTimer.HasNotElapsed() {
 		var err error
-		credentials, err = bootstrapContainer.CredentialsProviderFrom(dic.Get).GetDatabaseCredentials(d.database.GetDatabaseInfo()["Primary"])
+
+		secrets, err := secretProvider.GetSecrets(d.database.GetDatabaseInfo()["Primary"].Type)
 		if err == nil {
+			credentials = bootstrapConfig.Credentials{
+				Username: secrets[secret.UsernameKey],
+				Password: secrets[secret.PasswordKey],
+			}
+
 			break
 		}
+
 		lc.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
 		startupTimer.SleepForInterval()
 	}

@@ -14,7 +14,7 @@ import (
 	. "github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +22,7 @@ import (
 // TestVMKEncryptionNoIkm tests the no-op path
 func TestVMKEncryptionNoIkm(t *testing.T) {
 	// Arrange
-	fileOpener := &MockFileIoPerformer{}
+	fileOpener := &mocks.FileIoPerformer{}
 	pipedHexReader := &MockPipedHexReader{}
 	kdf := &MockKeyDeriver{}
 
@@ -42,7 +42,7 @@ func TestVMKEncryptionNoIkm(t *testing.T) {
 func TestVMKEncryption(t *testing.T) {
 	// Arrange
 	fakeIkm := make([]byte, 512)
-	fileOpener := &MockFileIoPerformer{}
+	fileOpener := &mocks.FileIoPerformer{}
 	pipedHexReader := &MockPipedHexReader{}
 	pipedHexReader.On("ReadHexBytesFromExe", "/bin/myikm").Return(fakeIkm, nil)
 	kdf := &MockKeyDeriver{}
@@ -77,7 +77,7 @@ func TestVMKEncryption(t *testing.T) {
 func TestVMKEncryptionFailPath(t *testing.T) {
 	// Arrange
 	fakeIkm := make([]byte, 512)
-	fileOpener := &MockFileIoPerformer{}
+	fileOpener := &mocks.FileIoPerformer{}
 	pipedHexReader := &MockPipedHexReader{}
 	pipedHexReader.On("ReadHexBytesFromExe", "/bin/myikm").Return(fakeIkm, errors.New("error"))
 	kdf := &MockKeyDeriver{}

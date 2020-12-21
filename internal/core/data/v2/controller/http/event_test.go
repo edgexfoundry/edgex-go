@@ -40,7 +40,7 @@ var testReading = dtos.BaseReading{
 	ResourceName: TestDeviceResourceName,
 	ProfileName:  TestDeviceProfileName,
 	Origin:       TestOriginTime,
-	ValueType:    dtos.ValueTypeUint8,
+	ValueType:    v2.ValueTypeUint8,
 	SimpleReading: dtos.SimpleReading{
 		Value: TestReadingValue,
 	},
@@ -67,7 +67,7 @@ var persistedReading = models.SimpleReading{
 		DeviceName:   TestDeviceName,
 		ResourceName: TestDeviceResourceName,
 		ProfileName:  TestDeviceProfileName,
-		ValueType:    dtos.ValueTypeUint8,
+		ValueType:    v2.ValueTypeUint8,
 	},
 	Value: TestReadingValue,
 }
@@ -151,7 +151,7 @@ func TestAddEvent(t *testing.T) {
 		ResourceName: TestDeviceResourceName,
 		ProfileName:  TestDeviceProfileName,
 		Origin:       TestOriginTime,
-		ValueType:    dtos.ValueTypeBinary,
+		ValueType:    v2.ValueTypeBinary,
 		BinaryReading: dtos.BinaryReading{
 			BinaryValue: []byte{},
 			MediaType:   TestBinaryReadingMediaType,
@@ -163,7 +163,7 @@ func TestAddEvent(t *testing.T) {
 		ResourceName: TestDeviceResourceName,
 		ProfileName:  TestDeviceProfileName,
 		Origin:       TestOriginTime,
-		ValueType:    dtos.ValueTypeBinary,
+		ValueType:    v2.ValueTypeBinary,
 		BinaryReading: dtos.BinaryReading{
 			BinaryValue: []byte(TestReadingBinaryValue),
 			MediaType:   "",

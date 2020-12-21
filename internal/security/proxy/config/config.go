@@ -20,7 +20,7 @@ import (
 	"net/url"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/providers/vault"
+	"github.com/edgexfoundry/go-mod-secrets/pkg/types"
 )
 
 type ConfigurationStruct struct {
@@ -133,7 +133,7 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Protocol:                c.SecretService.Protocol,
 		RootCaCertPath:          c.SecretService.CACertPath,
 		ServerName:              c.SecretService.Server,
-		Authentication:          vault.AuthenticationInfo{AuthType: "X-Vault-Token"},
+		Authentication:          types.AuthenticationInfo{AuthType: "X-Vault-Token"},
 		AdditionalRetryAttempts: 10,
 		RetryWaitPeriod:         "5s",
 		TokenFile:               c.SecretService.TokenPath,
@@ -159,4 +159,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	panic("GetDatabaseInfo() called unexpectedly.")
+}
+
+// GetInsecureSecrets returns the service's InsecureSecrets which this service doesn't support
+func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
+	return nil
 }

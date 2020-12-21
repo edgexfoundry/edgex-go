@@ -30,8 +30,9 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	ResendLimit int
-	LogLevel    string
+	ResendLimit     int
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 type SmtpInfo struct {
@@ -111,4 +112,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
+}
+
+// GetInsecureSecrets returns the service's InsecureSecrets.
+func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
+	return c.Writable.InsecureSecrets
 }

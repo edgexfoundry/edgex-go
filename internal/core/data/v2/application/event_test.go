@@ -5,16 +5,17 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
@@ -52,7 +53,7 @@ func buildReadings() []models.Reading {
 			DeviceName:   testDeviceName,
 			ResourceName: "Temperature",
 			ProfileName:  "TempProfile",
-			ValueType:    dtos.ValueTypeUint16,
+			ValueType:    v2.ValueTypeUint16,
 		},
 		Value: "45",
 	}

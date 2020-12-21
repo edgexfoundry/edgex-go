@@ -25,14 +25,14 @@ import (
 	"strings"
 	"testing"
 
+	loaderMock "github.com/edgexfoundry/go-mod-secrets/pkg/token/authtokenloader/mocks"
+	fileMock "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	. "github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient/mocks"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/authtokenloader/mocks"
-	. "github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -60,7 +60,7 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
 
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, "service1")
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
 	service1Buffer := new(bytes.Buffer)
@@ -73,7 +73,7 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 	mockFileIoPerformer.On("MkdirAll", expectedService2Dir, os.FileMode(0700)).Return(nil)
 	mockFileIoPerformer.On("OpenFileWriter", expectedService2File, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&writeCloserBuffer{service2Buffer}, nil)
 
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := "{}"
@@ -153,7 +153,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
 
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, "myservice")
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
 	service1Buffer := new(bytes.Buffer)
@@ -161,7 +161,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(`{"myservice":{"custom_policy":{"path":{"secret/non/standard/location/*":{"capabilities":["list","read"]}}}}}`), nil)
 	mockFileIoPerformer.On("OpenFileWriter", expectedService1File, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&writeCloserBuffer{service1Buffer}, nil)
 
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := `{"path":{"secret/non/standard/location/*":{"capabilities":["list","read"]}}}`
@@ -201,7 +201,7 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
 
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, "myservice")
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
 	service1Buffer := new(bytes.Buffer)
@@ -209,7 +209,7 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(`{"myservice":{"custom_token_parameters":{"key1":"value1"}}}`), nil)
 	mockFileIoPerformer.On("OpenFileWriter", expectedService1File, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&writeCloserBuffer{service1Buffer}, nil)
 
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := "{}"
@@ -285,7 +285,7 @@ func TestTokenFilePermissions(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
 
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, "myservice")
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
 	service1Buffer := new(bytes.Buffer)
@@ -293,7 +293,7 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(`{"myservice":{"file_permissions":{"uid":0,"gid":0,"mode_octal":"0664"}}}`), nil)
 	mockFileIoPerformer.On("OpenFileWriter", expectedService1File, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&writeCloserBuffer{service1Buffer}, nil)
 
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Parameters := makeMetaServiceName("myservice")
@@ -329,8 +329,8 @@ func TestTokenFilePermissions(t *testing.T) {
 func TestErrorLoading1(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
-	mockFileIoPerformer := &MockFileIoPerformer{}
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", "tokenpath").Return("atoken", errors.New("an error"))
 	mockSecretStoreClient := &MockSecretStoreClient{}
 
@@ -352,9 +352,9 @@ func TestErrorLoading1(t *testing.T) {
 func TestErrorLoading2(t *testing.T) {
 	// Arrange
 	mockLogger := logger.MockLogger{}
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	mockFileIoPerformer.On("OpenFileReader", "", os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(""), errors.New("an error"))
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", "tokenpath").Return("atoken", nil)
 	mockSecretStoreClient := &MockSecretStoreClient{}
 
@@ -403,7 +403,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 
 	_ = os.Setenv(addSecretstoreTokensEnvKey, additionalKeysEnv)
 
-	mockFileIoPerformer := &MockFileIoPerformer{}
+	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, serviceName)
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
 	service1Buffer := new(bytes.Buffer)
@@ -439,7 +439,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 			os.FileMode(0600)).Return(&writeCloserBuffer{expectedSrvBuf}, nil)
 	}
 
-	mockAuthTokenLoader := &MockAuthTokenLoader{}
+	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := `{"path":{"secret/edgex/` + serviceName + `/*":{"capabilities":["create","update","delete","list","read"]}}}`

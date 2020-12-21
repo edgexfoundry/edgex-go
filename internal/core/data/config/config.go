@@ -37,6 +37,7 @@ type WritableInfo struct {
 	ValidateCheck              bool
 	LogLevel                   string
 	ChecksumAlgo               string
+	InsecureSecrets            bootstrapConfig.InsecureSecrets
 }
 
 // MessageQueueInfo provides parameters related to connecting to a message queue
@@ -119,4 +120,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return c.Databases
+}
+
+// GetInsecureSecrets returns the service's InsecureSecrets.
+func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
+	return c.Writable.InsecureSecrets
 }

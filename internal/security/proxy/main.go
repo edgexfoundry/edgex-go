@@ -26,11 +26,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
@@ -85,7 +84,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secret.NewSecret().BootstrapHandler,
+			handlers.SecureProviderBootstrapHandler,
 			NewBootstrap(
 				insecureSkipVerify,
 				initNeeded,

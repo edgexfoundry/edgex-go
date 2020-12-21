@@ -25,18 +25,14 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
+	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/httpserver"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/message"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/secret"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers/testing"
+	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
 
 	"github.com/gorilla/mux"
@@ -62,7 +58,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		},
 	})
 
-	httpServer := httpserver.NewBootstrap(router, true)
+	httpServer := handlers.NewHttpServer(router, true)
 
 	bootstrap.Run(
 		ctx,
@@ -74,14 +70,14 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			secret.NewSecret().BootstrapHandler,
+			handlers.SecureProviderBootstrapHandler,
 			database.NewDatabaseForCoreData(httpServer, configuration).BootstrapHandler,
-			handlers.NewDatabase(httpServer, configuration, v2DataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			v2Handlers.NewDatabase(httpServer, configuration, v2DataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			message.NewBootstrap(clients.CoreDataServiceKey, edgex.Version).BootstrapHandler,
-			testing.NewBootstrap(httpServer, readyStream).BootstrapHandler,
+			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		},
 	)
 }

@@ -1,5 +1,11 @@
 [Writable]
 LogLevel = 'INFO'
+  [Writable.InsecureSecrets]
+    [Writable.InsecureSecrets.DB]
+    path = "redisdb"
+      [Writable.InsecureSecrets.DB.Secrets]
+      username = ""
+      password = ""
 
 [Service]
 BootTimeout = 30000
@@ -27,8 +33,6 @@ Type = 'consul'
   [Databases.Primary]
   Host = 'localhost'
   Name = 'metadata'
-  Password = 'password'
-  Username = 'meta'
   Port = 6379
   Timeout = 5000
   Type = 'redisdb'
