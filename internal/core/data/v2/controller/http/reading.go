@@ -126,6 +126,44 @@ func (rc *ReadingController) ReadingsByTimeRange(w http.ResponseWriter, r *http.
 	pkg.Encode(response, w, lc)
 }
 
+func (rc *ReadingController) ReadingsByResourceName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(rc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := dataContainer.ConfigurationFrom(rc.dic.Get)
+
+	vars := mux.Vars(r)
+	resourceName := vars[v2.ResourceName]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		readings, err := application.ReadingsByResourceName(offset, limit, resourceName, rc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, readings)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
 func (rc *ReadingController) ReadingsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(rc.dic.Get)
 	ctx := r.Context()

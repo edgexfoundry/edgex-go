@@ -41,6 +41,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiAllReadingRoute, rc.AllReadings).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiReadingByDeviceNameRoute, rc.ReadingsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiReadingByTimeRangeRoute, rc.ReadingsByTimeRange).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiReadingByResourceNameRoute, rc.ReadingsByResourceName).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
