@@ -140,6 +140,11 @@ func (lc mockNotifyLogger) SetLogLevel(_ string) error {
 	return nil
 }
 
+// LogLevel returns the current log level setting
+func (lc mockNotifyLogger) LogLevel() string {
+	return ""
+}
+
 // Info simulates logging an entry at the INFO severity level
 func (lc mockNotifyLogger) Info(_ string, _ ...interface{}) {
 }
@@ -162,4 +167,28 @@ func (lc mockNotifyLogger) Trace(_ string, _ ...interface{}) {
 
 // Warn simulates logging an entry at the WARN severity level
 func (lc mockNotifyLogger) Warn(_ string, _ ...interface{}) {
+}
+
+// Infof simulates logging an formatted message at the INFO severity level
+func (lc mockNotifyLogger) Infof(_ string, _ ...interface{}) {
+}
+
+// Debugf simulates logging an formatted message at the DEBUG severity level
+func (lc mockNotifyLogger) Debugf(_ string, _ ...interface{}) {
+}
+
+// Errorf simulates logging an formatted message at the ERROR severity level
+func (lc mockNotifyLogger) Errorf(msg string, _ ...interface{}) {
+	if !lc.expectError {
+		lc.t.Error(msg)
+		lc.t.Fail()
+	}
+}
+
+// Tracef simulates logging an formatted message at the TRACE severity level
+func (lc mockNotifyLogger) Tracef(_ string, _ ...interface{}) {
+}
+
+// Warnf simulates logging an formatted message at the WARN severity level
+func (lc mockNotifyLogger) Warnf(_ string, _ ...interface{}) {
 }
