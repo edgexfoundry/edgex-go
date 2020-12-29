@@ -68,17 +68,19 @@ func putEventOnQueue(evt dtos.Event, ctx context.Context, dic *di.Container) {
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	lc.Debug("Putting V2 API event on message queue", clients.CorrelationHeader, correlationId)
+	lc.Debug("Putting V2 Event DTO on message queue", clients.CorrelationHeader, correlationId)
 
 	var data []byte
 	var err error
-	// Re-marshal JSON content into bytes.
-	if clients.FromContext(ctx, clients.ContentType) == clients.ContentTypeJSON {
-		data, err = json.Marshal(evt)
-		if err != nil {
-			lc.Error(fmt.Sprintf("error marshaling event: %+v", evt), clients.CorrelationHeader, correlationId)
-			return
-		}
+
+	if len(clients.FromContext(ctx, clients.ContentType)) == 0 {
+		ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
+	}
+
+	data, err = json.Marshal(evt)
+	if err != nil {
+		lc.Error(fmt.Sprintf("error marshaling V2 Event DTO: %+v", evt), clients.CorrelationHeader, correlationId)
+		return
 	}
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
