@@ -10,11 +10,13 @@ import (
 	"context"
 	"os"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/models"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
@@ -36,7 +38,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 	f := command.NewCommonFlags()
 	f.Parse(os.Args[1:])
 
-	lc := logger.NewClientStdOut(securitySecretsConfigServiceKey, false, models.ErrorLog)
+	lc := logger.NewClient(securitySecretsConfigServiceKey, models.ErrorLog)
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
