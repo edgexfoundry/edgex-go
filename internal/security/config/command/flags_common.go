@@ -69,12 +69,6 @@ func (f *commonFlags) UseRegistry() bool {
 	return false
 }
 
-// RegistryUrl returns the registry if one was specified
-// TODO: Remove for release V2.0.0 when -registry is back to just bool flag
-func (f *commonFlags) RegistryUrl() string {
-	return ""
-}
-
 // ConfigProviderUrl returns the empty url since Configuration Provider is not used.
 func (f *commonFlags) ConfigProviderUrl() string {
 	return ""

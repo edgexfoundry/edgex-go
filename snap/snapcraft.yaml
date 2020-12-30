@@ -150,17 +150,17 @@ apps:
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
-      SecretService_Server: localhost
+      SECRETSERVICE_SERVER: localhost
       # environment vars for security-secretstore-setup (aka vault-worker)
-      SecretService_TokenFolderPath: $SNAP_DATA/config/security-secretstore-setup/res
-      SecretService_TokenProvider: $SNAP/bin/security-file-token-provider
-      SecretService_TokenProviderArgs: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
-      SecretService_TokenProviderAdminTokenPath: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
+      SECRETSERVICE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res
+      SECRETSERVICE_TOKENPROVIDER: $SNAP/bin/security-file-token-provider
+      SECRETSERVICE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
+      SECRETSERVICE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
 
       # environment for security-file-token-provider, exec'd by secretstore-setup
-      TokenFileProvider_PrivilegedTokenPath: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
-      TokenFileProvider_ConfigFile: $SNAP_DATA/config/security-file-token-provider/res/token-config.json
-      TokenFileProvider_OutputDir: $SNAP_DATA/secrets
+      TOKENFILEPROVIDER_PRIVILEGEDTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
+      TOKENFILEPROVIDER_CONFIGFILE: $SNAP_DATA/config/security-file-token-provider/res/token-config.json
+      TOKENFILEPROVIDER_OUTPUTDIR: $SNAP_DATA/secrets
 
     start-timeout: 15m
     plugs: [network]
@@ -172,7 +172,7 @@ apps:
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     environment:
       INIT_ARG: "--init=true"
-      SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSERVICE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -187,8 +187,8 @@ apps:
     command: bin/security-bootstrap-redis -confdir $SNAP_DATA/config/security-bootstrap-redis/res
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
-      SecretStore_ServerName: localhost
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
+      SECRETSTORE_SERVERNAME: localhost
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
     daemon: oneshot
     plugs: [network]
   core-data:
@@ -200,7 +200,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-data/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-data/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
@@ -216,7 +216,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -229,7 +229,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-core-command/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-command/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -242,7 +242,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-support-notifications/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-notifications/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -255,7 +255,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SecretStore_TokenFile: $SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -268,7 +268,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
+      EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
@@ -284,7 +284,7 @@ apps:
       CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
       PROFILE_ARG: "--profile=res"
       REGISTRY_ARG: "--registry=consul://localhost:8500"
-      Device_ProfilesDir: $SNAP_DATA/config/device-virtual/res
+      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
@@ -294,7 +294,7 @@ apps:
       -profile rules-engine
     daemon: simple
     environment:
-      Binding_PublishTopic: events
+      BINDING_PUBLISHTOPIC: events
       EDGEX_SECURITY_SECRET_STORE: "false"
     plugs: [network, network-bind]
   # helper commands the snap exposes
@@ -302,7 +302,7 @@ apps:
     adapter: none
     command: bin/security-proxy-setup
     environment:
-      SecretService_TokenPath: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSERVICE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
