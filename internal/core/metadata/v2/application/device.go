@@ -198,6 +198,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 		correlation.FromContext(ctx),
 	))
 
+	dto.Name = &device.Name
 	go updateDeviceCallback(ctx, dic, dto)
 	return nil
 }
