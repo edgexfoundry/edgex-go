@@ -75,6 +75,23 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, start in
 	return getObjectsByIds(conn, ids)
 }
 
+// getObjectsByScoreRange query objects by specified key's score range, offset, and limit.  Note that the specified key must be a sorted set.
+func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, offset int, limit int) (objects [][]byte, edgeXerr errors.EdgeX) {
+	count, err := redis.Int(conn.Do(ZCOUNT, key, start, end))
+	if count == 0 { // return nil slice when there is no records satisfied with the score range in the DB
+		return nil, nil
+	} else if count > 0 && offset >= count { // return RangeNotSatisfiable error when offset is out of range
+		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v offset:%v", count, offset), nil)
+	}
+	// Use following redis command to retrieve the id of objects satisfied with score range/offset/limit
+	// ZREVRANGEBYSCORE key max min LIMIT offset count
+	objIds, err := redis.Strings(conn.Do(ZREVRANGEBYSCORE, key, end, start, LIMIT, offset, limit))
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+	return getObjectsByIds(conn, common.ConvertStringsToInterfaces(objIds))
+}
+
 // getObjectsByLabelsAndSomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
 // command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
 func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string, labels []string, start int, end int) ([][]byte, errors.EdgeX) {
