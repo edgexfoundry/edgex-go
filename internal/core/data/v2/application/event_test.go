@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
+	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
@@ -61,7 +60,7 @@ func buildReadings() []models.Reading {
 	r2 := models.BinaryReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks,
+			Created:      ticks + 20,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
 			ResourceName: "FileData",
@@ -71,8 +70,47 @@ func buildReadings() []models.Reading {
 		MediaType:   "file",
 	}
 
+	r3 := models.SimpleReading{
+		BaseReading: models.BaseReading{
+			Id:           uuid.New().String(),
+			Created:      ticks + 30,
+			Origin:       testOriginTime,
+			DeviceName:   testDeviceName,
+			ResourceName: "Temperature",
+			ProfileName:  "TempProfile",
+			ValueType:    v2.ValueTypeUint16,
+		},
+		Value: "33",
+	}
+
+	r4 := models.SimpleReading{
+		BaseReading: models.BaseReading{
+			Id:           uuid.New().String(),
+			Created:      ticks + 40,
+			Origin:       testOriginTime,
+			DeviceName:   testDeviceName,
+			ResourceName: "Temperature",
+			ProfileName:  "TempProfile",
+			ValueType:    v2.ValueTypeUint16,
+		},
+		Value: "44",
+	}
+
+	r5 := models.SimpleReading{
+		BaseReading: models.BaseReading{
+			Id:           uuid.New().String(),
+			Created:      ticks + 50,
+			Origin:       testOriginTime,
+			DeviceName:   testDeviceName,
+			ResourceName: "Temperature",
+			ProfileName:  "TempProfile",
+			ValueType:    v2.ValueTypeUint16,
+		},
+		Value: "55",
+	}
+
 	var readings []models.Reading
-	readings = append(readings, r1, r2)
+	readings = append(readings, r1, r2, r3, r4, r5)
 	return readings
 }
 
@@ -312,6 +350,7 @@ func TestEventsByTimeRange(t *testing.T) {
 	dbClientMock.On("EventsByTimeRange", int(event1.Created), int(event5.Created), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
 	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
 	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 1, 2).Return([]models.Event{event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -325,18 +364,27 @@ func TestEventsByTimeRange(t *testing.T) {
 		offset             int
 		limit              int
 		errorExpected      bool
+		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
 		expectedStatusCode int
 	}{
-		{"Valid - all events", int(event1.Created), int(event5.Created), 0, 10, false, 5, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest", int(event2.Created), int(event4.Created), 0, 10, false, 3, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Created), int(event4.Created), 1, 2, false, 2, http.StatusOK},
+		{"Valid - all events", int(event1.Created), int(event5.Created), 0, 10, false, "", 5, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest", int(event2.Created), int(event4.Created), 0, 10, false, "", 3, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Created), int(event4.Created), 1, 2, false, "", 2, http.StatusOK},
+		{"Invalid - bounds out of range", int(event2.Created), int(event4.Created), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			events, err := EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
-			require.NoError(t, err)
-			assert.Equal(t, testCase.expectedCount, len(events), "Event total count is not expected")
+			if testCase.errorExpected {
+				require.Error(t, err)
+				assert.NotEmpty(t, err.Error(), "Error message is empty")
+				assert.Equal(t, testCase.ExpectedErrKind, errors.Kind(err), "Error kind not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, err.Code(), "Status code not as expected")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expectedCount, len(events), "Event total count is not expected")
+			}
 		})
 	}
 }

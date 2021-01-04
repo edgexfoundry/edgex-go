@@ -202,6 +202,15 @@ func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (
 	return convertObjectsToReadings(objects)
 }
 
+// readingsByTimeRange query readings by time range, offset, and limit
+func readingsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionCreated, start, end, offset, limit)
+	if edgeXerr != nil {
+		return readings, edgeXerr
+	}
+	return convertObjectsToReadings(objects)
+}
+
 func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	readings = make([]models.Reading, len(objects))
 	for i, in := range objects {
