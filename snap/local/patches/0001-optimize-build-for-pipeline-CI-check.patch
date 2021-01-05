@@ -121,7 +121,7 @@ index 1e537489..faf42425 100644
 -      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
 -      PROFILE_ARG: "--profile=res"
 -      REGISTRY_ARG: "--registry=consul://localhost:8500"
--      Device_ProfilesDir: $SNAP_DATA/config/device-virtual/res
+-      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
 -    plugs: [network, network-bind]
 -  app-service-configurable:
 -    adapter: full
@@ -131,7 +131,7 @@ index 1e537489..faf42425 100644
 -      -profile rules-engine
 -    daemon: simple
 -    environment:
--      Binding_PublishTopic: events
+-      BINDING_PUBLISHTOPIC: events
 -      EDGEX_SECURITY_SECRET_STORE: "false"
 -    plugs: [network, network-bind]
    # helper commands the snap exposes
