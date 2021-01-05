@@ -186,7 +186,7 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 	pkg.Encode(countResponse, w, lc) // encode and send out the response
 }
 
-func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventCountByDeviceName(w http.ResponseWriter, r *http.Request) {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
@@ -201,7 +201,7 @@ func (ec *EventController) EventCountByDevice(w http.ResponseWriter, r *http.Req
 	var statusCode int
 
 	// Count the event by device
-	count, err := application.EventCountByDevice(deviceName, ec.dic)
+	count, err := application.EventCountByDeviceName(deviceName, ec.dic)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

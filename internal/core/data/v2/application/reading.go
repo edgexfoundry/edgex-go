@@ -30,6 +30,23 @@ func AllReadings(offset int, limit int, dic *di.Container) (readings []dtos.Base
 	return convertReadingModelsToDTOs(readingModels)
 }
 
+// ReadingsByResourceName query readings with offset, limit, and resource name
+func ReadingsByResourceName(offset int, limit int, resourceName string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+	if resourceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "resourceName is empty", nil)
+	}
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	readingModels, err := dbClient.ReadingsByResourceName(offset, limit, resourceName)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings = make([]dtos.BaseReading, len(readingModels))
+	for i, r := range readingModels {
+		readings[i] = dtos.FromReadingModelToDTO(r)
+	}
+	return readings, nil
+}
+
 // ReadingsByDeviceName query readings with offset, limit, and device name
 func ReadingsByDeviceName(offset int, limit int, name string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
 	if name == "" {
@@ -59,4 +76,18 @@ func convertReadingModelsToDTOs(readingModels []models.Reading) (readings []dtos
 		readings[i] = dtos.FromReadingModelToDTO(r)
 	}
 	return readings, nil
+}
+
+// ReadingCountByDeviceName return the count of all of readings associated with given device and error if any
+func ReadingCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
+	if deviceName == "" {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	count, err := dbClient.ReadingCountByDeviceName(deviceName)
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return count, nil
 }

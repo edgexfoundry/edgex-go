@@ -380,11 +380,11 @@ func TestEventTotalCount(t *testing.T) {
 	assert.Equal(t, expectedEventCount, actualResponse.Count, "Event count in the response body is not expected")
 }
 
-func TestEventCountByDevice(t *testing.T) {
+func TestEventCountByDeviceName(t *testing.T) {
 	expectedEventCount := uint32(656672)
 	deviceName := "deviceA"
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("EventCountByDevice", deviceName).Return(expectedEventCount, nil)
+	dbClientMock.On("EventCountByDeviceName", deviceName).Return(expectedEventCount, nil)
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
@@ -399,7 +399,7 @@ func TestEventCountByDevice(t *testing.T) {
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ec.EventCountByDevice)
+	handler := http.HandlerFunc(ec.EventCountByDeviceName)
 	handler.ServeHTTP(recorder, req)
 
 	var actualResponse common.CountResponse

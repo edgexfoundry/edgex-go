@@ -291,7 +291,7 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 }
 
 // EventCountByDevice returns the count of Event associated a specific Device from the database
-func (c *Client) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -520,6 +520,19 @@ func (c *Client) ReadingsByTimeRange(start int, end int, offset int, limit int) 
 	return readings, nil
 }
 
+// ReadingsByResourceName query readings by offset, limit and resource name
+func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName string) (readings []model.Reading, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, edgeXerr = readingsByResourceName(conn, offset, limit, resourceName)
+	if edgeXerr != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query readings by offset %d, limit %d and resourceName %s", offset, limit, resourceName), edgeXerr)
+	}
+	return readings, nil
+}
+
 // ReadingsByDeviceName query readings by offset, limit and device name
 func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readings []model.Reading, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -531,4 +544,17 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readi
 			fmt.Sprintf("fail to query readings by offset %d, limit %d and name %s", offset, limit, name), edgeXerr)
 	}
 	return readings, nil
+}
+
+// ReadingCountByDeviceName returns the count of Readings associated a specific Device from the database
+func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(ReadingsCollectionDeviceName, deviceName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
 }

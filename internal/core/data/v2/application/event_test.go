@@ -12,25 +12,23 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
 	"github.com/google/uuid"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	testDeviceName     string = "TestDevice"
-	testUUIDString     string = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
-	testCreatedTime           = 1600666214495
-	testOriginTime            = 1600666185705354000
-	nonexistentEventID        = "8ad33474-fbc5-11ea-adc1-0242ac120002"
-	testEventCount            = uint32(7778)
+	testDeviceResourceName = "TestDeviceResource"
+	testDeviceName         = "TestDevice"
+	testUUIDString         = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
+	testCreatedTime        = 1600666214495
+	testOriginTime         = 1600666185705354000
+	nonexistentEventID     = "8ad33474-fbc5-11ea-adc1-0242ac120002"
+	testEventCount         = uint32(7778)
 )
 
 var persistedEvent = models.Event{
@@ -50,7 +48,7 @@ func buildReadings() []models.Reading {
 			Created:      ticks,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
-			ResourceName: "Temperature",
+			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
 			ValueType:    v2.ValueTypeUint16,
 		},
@@ -63,7 +61,7 @@ func buildReadings() []models.Reading {
 			Created:      ticks + 20,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
-			ResourceName: "FileData",
+			ResourceName: testDeviceResourceName,
 			ProfileName:  "FileDataProfile",
 		},
 		BinaryValue: []byte("1010"),
@@ -76,7 +74,7 @@ func buildReadings() []models.Reading {
 			Created:      ticks + 30,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
-			ResourceName: "Temperature",
+			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
 			ValueType:    v2.ValueTypeUint16,
 		},
@@ -89,7 +87,7 @@ func buildReadings() []models.Reading {
 			Created:      ticks + 40,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
-			ResourceName: "Temperature",
+			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
 			ValueType:    v2.ValueTypeUint16,
 		},
@@ -102,7 +100,7 @@ func buildReadings() []models.Reading {
 			Created:      ticks + 50,
 			Origin:       testOriginTime,
 			DeviceName:   testDeviceName,
-			ResourceName: "Temperature",
+			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
 			ValueType:    v2.ValueTypeUint16,
 		},
@@ -124,7 +122,7 @@ func newMockDB(persist bool) *dbMock.DBClient {
 		myMock.On("DeleteEventById", nonexistentEventID).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
 		myMock.On("DeleteEventById", testUUIDString).Return(nil)
 		myMock.On("EventTotalCount").Return(testEventCount, nil)
-		myMock.On("EventCountByDevice", testDeviceName).Return(testEventCount, nil)
+		myMock.On("EventCountByDeviceName", testDeviceName).Return(testEventCount, nil)
 		myMock.On("DeleteEventsByDeviceName", testDeviceName).Return(nil)
 		myMock.On("DeleteEventsByAge", int64(0)).Return(nil)
 	}
@@ -281,7 +279,7 @@ func TestEventTotalCount(t *testing.T) {
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }
 
-func TestEventCountByDevice(t *testing.T) {
+func TestEventCountByDeviceName(t *testing.T) {
 	dbClientMock := newMockDB(true)
 
 	dic := mocks.NewMockDIC()
@@ -291,7 +289,7 @@ func TestEventCountByDevice(t *testing.T) {
 		},
 	})
 
-	count, err := EventCountByDevice(testDeviceName, dic)
+	count, err := EventCountByDeviceName(testDeviceName, dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }

@@ -164,8 +164,8 @@ func (_m *DBClient) EventById(id string) (models.Event, errors.EdgeX) {
 	return r0, r1
 }
 
-// EventCountByDevice provides a mock function with given fields: deviceName
-func (_m *DBClient) EventCountByDevice(deviceName string) (uint32, errors.EdgeX) {
+// EventCountByDeviceName provides a mock function with given fields: deviceName
+func (_m *DBClient) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
 	ret := _m.Called(deviceName)
 
 	var r0 uint32
@@ -260,6 +260,29 @@ func (_m *DBClient) EventsByTimeRange(start int, end int, offset int, limit int)
 	return r0, r1
 }
 
+// ReadingCountByDeviceName provides a mock function with given fields: deviceName
+func (_m *DBClient) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+	ret := _m.Called(deviceName)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string) uint32); ok {
+		r0 = rf(deviceName)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(deviceName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // ReadingTotalCount provides a mock function with given fields:
 func (_m *DBClient) ReadingTotalCount() (uint32, errors.EdgeX) {
 	ret := _m.Called()
@@ -299,6 +322,31 @@ func (_m *DBClient) ReadingsByDeviceName(offset int, limit int, name string) ([]
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
 		r1 = rf(offset, limit, name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ReadingsByResourceName provides a mock function with given fields: offset, limit, resourceName
+func (_m *DBClient) ReadingsByResourceName(offset int, limit int, resourceName string) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(offset, limit, resourceName)
+
+	var r0 []models.Reading
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Reading); ok {
+		r0 = rf(offset, limit, resourceName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Reading)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, resourceName)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

@@ -17,7 +17,7 @@ type DBClient interface {
 	EventById(id string) (model.Event, errors.EdgeX)
 	DeleteEventById(id string) errors.EdgeX
 	EventTotalCount() (uint32, errors.EdgeX)
-	EventCountByDevice(deviceName string) (uint32, errors.EdgeX)
+	EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
 	AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX)
 	EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX)
 	DeleteEventsByDeviceName(deviceName string) errors.EdgeX
@@ -26,5 +26,7 @@ type DBClient interface {
 	ReadingTotalCount() (uint32, errors.EdgeX)
 	AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX)
 	ReadingsByTimeRange(start int, end int, offset int, limit int) ([]model.Reading, errors.EdgeX)
+	ReadingsByResourceName(offset int, limit int, resourceName string) ([]model.Reading, errors.EdgeX)
 	ReadingsByDeviceName(offset int, limit int, name string) ([]model.Reading, errors.EdgeX)
+	ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
 }
