@@ -13,7 +13,7 @@ require (
 	github.com/edgexfoundry/go-mod-secrets v0.0.29
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/uuid v1.1.3
+	github.com/google/uuid v1.1.4
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11
 	github.com/pkg/errors v0.8.1
