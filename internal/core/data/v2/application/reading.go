@@ -77,3 +77,17 @@ func convertReadingModelsToDTOs(readingModels []models.Reading) (readings []dtos
 	}
 	return readings, nil
 }
+
+// ReadingCountByDeviceName return the count of all of readings associated with given device and error if any
+func ReadingCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
+	if deviceName == "" {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	count, err := dbClient.ReadingCountByDeviceName(deviceName)
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return count, nil
+}

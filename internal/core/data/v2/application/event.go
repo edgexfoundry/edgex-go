@@ -138,6 +138,7 @@ func DeleteEventById(id string, dic *di.Container) errors.EdgeX {
 	return nil
 }
 
+// EventTotalCount return the count of all of events currently stored in the database and error if any
 func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)
 
@@ -149,10 +150,11 @@ func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 	return count, nil
 }
 
-func EventCountByDevice(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
+// EventCountByDeviceName return the count of all of events associated with given device and error if any
+func EventCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
 	dbClient := v2DataContainer.DBClientFrom(dic.Get)
 
-	count, err := dbClient.EventCountByDevice(deviceName)
+	count, err := dbClient.EventCountByDeviceName(deviceName)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
