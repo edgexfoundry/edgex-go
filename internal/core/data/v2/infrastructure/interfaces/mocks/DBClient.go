@@ -308,6 +308,31 @@ func (_m *DBClient) ReadingsByDeviceName(offset int, limit int, name string) ([]
 	return r0, r1
 }
 
+// ReadingsByResourceName provides a mock function with given fields: offset, limit, resourceName
+func (_m *DBClient) ReadingsByResourceName(offset int, limit int, resourceName string) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(offset, limit, resourceName)
+
+	var r0 []models.Reading
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Reading); ok {
+		r0 = rf(offset, limit, resourceName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Reading)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, resourceName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // ReadingsByTimeRange provides a mock function with given fields: start, end, offset, limit
 func (_m *DBClient) ReadingsByTimeRange(start int, end int, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	ret := _m.Called(start, end, offset, limit)

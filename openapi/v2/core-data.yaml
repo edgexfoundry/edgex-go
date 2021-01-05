@@ -606,7 +606,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -904,7 +904,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -1011,7 +1011,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -1119,7 +1119,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -1267,7 +1267,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -1346,6 +1346,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1416,7 +1428,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                400Example:
+                416Example:
                   $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
