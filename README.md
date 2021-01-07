@@ -20,7 +20,7 @@ docker-compose up -d
 
 You can check the status of your running EdgeX services by going to http://localhost:8500/
 
-Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/Ch-Walkthrough.html) to learn how the different services work together to connect IoT devices to cloud services.
+Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/1.3/walk-through/Ch-Walkthrough/) to learn how the different services work together to connect IoT devices to cloud services.
 
 ## Running EdgeX with security components
 
