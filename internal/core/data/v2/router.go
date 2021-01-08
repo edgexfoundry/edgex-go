@@ -24,7 +24,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 
 	// Events
 	ec := dataController.NewEventController(dic)
-	r.HandleFunc(v2Constant.ApiEventRoute, ec.AddEvent).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiEventProfileNameDeviceNameRoute, ec.AddEvent).Methods(http.MethodPost)
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.EventById).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiEventIdRoute, ec.DeleteEventById).Methods(http.MethodDelete)
 	r.HandleFunc(v2Constant.ApiEventCountRoute, ec.EventTotalCount).Methods(http.MethodGet)

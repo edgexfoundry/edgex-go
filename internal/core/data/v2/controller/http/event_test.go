@@ -173,28 +173,30 @@ func TestAddEvent(t *testing.T) {
 	tests := []struct {
 		Name               string
 		Request            []requests.AddEventRequest
+		ProfileName        string
+		DeviceName         string
 		ErrorExpected      bool
 		ExpectedStatusCode int
 	}{
-		{"Valid - AddEventRequest", []requests.AddEventRequest{validRequest}, false, http.StatusCreated},
-		{"Valid - No RequestId", []requests.AddEventRequest{noRequestId}, false, http.StatusCreated},
-		{"Invalid - Bad RequestId", []requests.AddEventRequest{badRequestId}, true, http.StatusBadRequest},
-		{"Invalid - No Event", []requests.AddEventRequest{noEvent}, true, http.StatusBadRequest},
-		{"Invalid - No Event Id", []requests.AddEventRequest{noEventID}, true, http.StatusBadRequest},
-		{"Invalid - Bad Event Id", []requests.AddEventRequest{badEventID}, true, http.StatusBadRequest},
-		{"Invalid - No Event DeviceName", []requests.AddEventRequest{noEventDevice}, true, http.StatusBadRequest},
-		{"Invalid - No Event ProfileName", []requests.AddEventRequest{noEventProfile}, true, http.StatusBadRequest},
-		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, true, http.StatusBadRequest},
-		{"Invalid - No Reading", []requests.AddEventRequest{noReading}, true, http.StatusBadRequest},
-		{"Invalid - No Reading DeviceName", []requests.AddEventRequest{noReadingDevice}, true, http.StatusBadRequest},
-		{"Invalid - No Reading ResourceName", []requests.AddEventRequest{noReadingResourceName}, true, http.StatusBadRequest},
-		{"Invalid - No Reading ProfileName", []requests.AddEventRequest{noReadingProfileName}, true, http.StatusBadRequest},
-		{"Invalid - No Reading Origin", []requests.AddEventRequest{noReadingOrigin}, true, http.StatusBadRequest},
-		{"Invalid - No Reading ValueType", []requests.AddEventRequest{noReadingValueType}, true, http.StatusBadRequest},
-		{"Invalid - Invalid Reading ValueType", []requests.AddEventRequest{invalidReadingInvalidValueType}, true, http.StatusBadRequest},
-		{"Invalid - No SimpleReading Value", []requests.AddEventRequest{noSimpleValue}, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading BinaryValue", []requests.AddEventRequest{noBinaryValue}, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading MediaType", []requests.AddEventRequest{noBinaryMediaType}, true, http.StatusBadRequest},
+		{"Valid - AddEventRequest", []requests.AddEventRequest{validRequest}, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
+		{"Valid - No RequestId", []requests.AddEventRequest{noRequestId}, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
+		{"Invalid - Bad RequestId", []requests.AddEventRequest{badRequestId}, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event", []requests.AddEventRequest{noEvent}, "", "", true, http.StatusBadRequest},
+		{"Invalid - No Event Id", []requests.AddEventRequest{noEventID}, noEventID.Event.ProfileName, noEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Bad Event Id", []requests.AddEventRequest{badEventID}, badEventID.Event.ProfileName, badEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event DeviceName", []requests.AddEventRequest{noEventDevice}, noEventDevice.Event.ProfileName, noEventDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event ProfileName", []requests.AddEventRequest{noEventProfile}, noEventProfile.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event Origin", []requests.AddEventRequest{noEventOrigin}, noEventOrigin.Event.ProfileName, noEventOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading", []requests.AddEventRequest{noReading}, noReading.Event.ProfileName, noReading.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading DeviceName", []requests.AddEventRequest{noReadingDevice}, noReadingDevice.Event.ProfileName, noReadingDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ResourceName", []requests.AddEventRequest{noReadingResourceName}, noReadingResourceName.Event.ProfileName, noReadingResourceName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ProfileName", []requests.AddEventRequest{noReadingProfileName}, noReadingProfileName.Event.ProfileName, noReadingProfileName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading Origin", []requests.AddEventRequest{noReadingOrigin}, noReadingOrigin.Event.ProfileName, noReadingOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ValueType", []requests.AddEventRequest{noReadingValueType}, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Invalid Reading ValueType", []requests.AddEventRequest{invalidReadingInvalidValueType}, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No SimpleReading Value", []requests.AddEventRequest{noSimpleValue}, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading BinaryValue", []requests.AddEventRequest{noBinaryValue}, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading MediaType", []requests.AddEventRequest{noBinaryMediaType}, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
 	}
 
 	for _, testCase := range tests {
@@ -204,7 +206,8 @@ func TestAddEvent(t *testing.T) {
 
 			reader := strings.NewReader(string(jsonData))
 
-			req, err := http.NewRequest(http.MethodPost, v2.ApiEventRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, v2.ApiEventProfileNameDeviceNameRoute, reader)
+			req = mux.SetURLVars(req, map[string]string{v2.ProfileName: testCase.ProfileName, v2.DeviceName: testCase.DeviceName})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()

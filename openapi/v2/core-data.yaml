@@ -459,11 +459,23 @@ components:
             valueType: "Float32"
             value: "12.2"
 paths:
-  /event:
+  /event/{profileName}/{deviceName}:
     parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
+    - $ref: '#/components/parameters/correlatedRequestHeader'
+    - name: profileName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device profile"
+    - name: deviceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device"
     post:
-      summary: "Allows for the ingestion of event/reading data"
+      summary: "Allows for the ingestion of event/reading data, and the deviceName and profileName of Events must match to the given deviceName and profileName specified in the path"
       requestBody:
         required: true
         content:

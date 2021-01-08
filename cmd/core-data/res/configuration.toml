@@ -49,6 +49,7 @@ Host = '*'
 Port = 5563
 Type = 'zero'
 Topic = 'events'
+PublishTopicPrefix = 'edgex/events' # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
 [MessageQueue.Optional]
     # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
     # Client Identifiers
