@@ -39,22 +39,18 @@ GO111MODULE=on go mod vendor
 # anything in this loop
 shopt -s nullglob
 
-for cmd in cmd/* ; do
-    cd "$cmd"
-        if [ ! -f Attribution.txt ]; then
-            echo "An Attribution.txt file for $cmd is missing, please add"
-            EXIT_CODE=1
-        else
-            # loop over every library in the modules.txt file in vendor
-            while IFS= read -r lib; do
-                if ! grep -q "$lib" Attribution.txt && [ "$lib" != "explicit" ]; then 
-                    echo "An attribution for $lib is missing from in $cmd Attribution.txt, please add"
-                    # need to do this in a bash subshell, see SC2031
-                    (( EXIT_CODE=1 ))
-                fi
-            done < <(grep '#' < "$GIT_ROOT/vendor/modules.txt" | awk '{print $2}')
+if [ ! -f Attribution.txt ]; then
+    echo "An Attribution.txt file is missing, please add"
+    EXIT_CODE=1
+else
+    # loop over every library in the modules.txt file in vendor
+    while IFS= read -r lib; do
+        if ! grep -q "$lib" Attribution.txt; then
+            echo "An attribution for $lib is missing from Attribution.txt, please add"
+            # need to do this in a bash subshell, see SC2031
+            (( EXIT_CODE=1 ))
         fi
-    cd "$GIT_ROOT"
-done
+    done < <(grep '#' < "$GIT_ROOT/vendor/modules.txt" | awk '{print $2}')
+fi
 
 cleanup 
