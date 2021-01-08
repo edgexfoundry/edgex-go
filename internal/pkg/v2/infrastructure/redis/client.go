@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -557,4 +557,16 @@ func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.Edg
 	}
 
 	return count, nil
+}
+
+// AddProvisionWatcher adds a new provision watcher
+func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(pw.Id) == 0 {
+		pw.Id = uuid.New().String()
+	}
+
+	return addProvisionWatcher(conn, pw)
 }
