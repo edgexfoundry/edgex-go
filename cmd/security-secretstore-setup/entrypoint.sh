@@ -24,27 +24,21 @@ if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ] && [ -f "${SECRETSTORE_SETUP_DONE_FLA
   rm -f "${SECRETSTORE_SETUP_DONE_FLAG}"
 fi
 
-echo "creating /vault/config/assets"
+echo "Starting vault-worker..."
 
-# create token directory and
-# grant permissions of folders for vault:vault
-mkdir -p /vault/config/assets
-chown -Rh 100:1000 /vault/
-
-echo "starting vault-worker..."
-
-echo "Initializing secret store"
+echo "Initializing secret store..."
 /security-secretstore-setup --vaultInterval=10
-
-echo "Executing custom command: $@"
-"$@"
 
 # write a sentinel file when we're done because consul is not
 # secure and we don't trust it it access to the EdgeX secret store
 if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+
+    echo "Changing ownership of secrets to edgex_user:edgex_group"
+    chown -R ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
+
     echo "Signaling secretstore-setup completion"
-    mkdir -p $(dirname "${SECRETSTORE_SETUP_DONE_FLAG}")
-    touch "${SECRETSTORE_SETUP_DONE_FLAG}"
+    mkdir -p $(dirname "${SECRETSTORE_SETUP_DONE_FLAG}") && \
+      touch "${SECRETSTORE_SETUP_DONE_FLAG}"
 fi
 
 echo "Waiting for termination signal"
