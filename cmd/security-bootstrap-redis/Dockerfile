@@ -44,7 +44,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2020 Redis Labs'
 
 WORKDIR /
-COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/Attribution.txt /
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/security-bootstrap-redis /
 COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/entrypoint.sh /
 COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/res/configuration.toml /res/configuration.toml

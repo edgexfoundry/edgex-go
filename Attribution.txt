@@ -1,4 +1,6 @@
-The following open source projects are referenced by System Management Agent Go:
+This file contains the open source projects that are referenced by the EdgeX Foundry Go services.
+As there are many Go services, this list is a union of all open source projects used by all the EdgeX Go services (found in https://github.com/edgexfoundry/edgex-go).
+Not all projects listed are used by each service.
 
 pkg/errors (BSD-2) https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
@@ -48,6 +50,9 @@ https://github.com/mitchellh/consulstructure/blob/master/LICENSE
 mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
 https://github.com/mitchellh/mapstructure/blob/master/LICENSE
 
+mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
+https://github.com/mitchellh/copystructure/blob/master/LICENSE
+
 mitchellh/reflectwalk (MIT) https://github.com/mitchellh/reflectwalk
 https://github.com/mitchellh/reflectwalk/blob/master/LICENSE
 
@@ -69,9 +74,6 @@ https://github.com/mitchellh/go-homedir/blob/master/LICENSE
 mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
 https://github.com/mitchellh/mapstructure/blob/master/LICENSE
 
-mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
-https://github.com/mitchellh/copystructure/blob/master/LICENSE
-
 hashicorp/serf (Mozilla Public License 2.0) https://github.com/hashicorp/serf
 https://github.com/hashicorp/serf/blob/master/LICENSE
 
@@ -85,7 +87,6 @@ hashicorp/golang-lru (Mozilla Public License 2.0) https://github.com/hashicorp/g
 https://github.com/hashicorp/golang-lru/blob/master/LICENSE
 
 github.com/go-redis/redis/v7 (BSD-2) https://github.com/go-redis/redis
-https://github.com/go-redis/redis/blob/master/LICENSE
 https://github.com/go-redis/redis/blob/master/LICENSE
 
 gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo

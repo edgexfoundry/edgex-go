@@ -46,7 +46,7 @@ ENV APP_PORT=48081
 EXPOSE $APP_PORT
 
 WORKDIR /
-COPY --from=builder /edgex-go/cmd/core-metadata/Attribution.txt /
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-metadata/core-metadata /
 COPY --from=builder /edgex-go/cmd/core-metadata/res/configuration.toml /res/configuration.toml
 ENTRYPOINT ["/core-metadata"]
