@@ -50,9 +50,11 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.t
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-# setup the entry point script
+# Setup the entry point script, create token dir, and assign perms
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && ln -s /usr/local/bin/entrypoint.sh /
+    && ln -s /usr/local/bin/entrypoint.sh / \
+    && mkdir -p /vault/config/assets \
+    && chown -Rh 100:1000 /vault/    
 
 ENTRYPOINT ["entrypoint.sh"]
