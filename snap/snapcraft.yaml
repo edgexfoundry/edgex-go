@@ -614,8 +614,8 @@ parts:
 
       done
 
-      install -DT "./Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/$service/Attribution.txt"
-      install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/$service/LICENSE"
+      install -DT "./Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/Attribution.txt"
+      install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/LICENSE"
 
       # install the json config files for security-file-token-provider
       #
