@@ -44,7 +44,7 @@ ENV APP_PORT=48085
 #expose support scheduler port
 EXPOSE $APP_PORT
 
-COPY --from=builder /edgex-go/cmd/support-scheduler/Attribution.txt /
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/support-scheduler/support-scheduler /
 COPY --from=builder /edgex-go/cmd/support-scheduler/res/configuration.toml /res/configuration.toml
 

@@ -46,7 +46,7 @@ ENV APP_PORT=48082
 EXPOSE $APP_PORT
 
 WORKDIR /
-COPY --from=builder /edgex-go/cmd/core-command/Attribution.txt /
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-command/core-command /
 COPY --from=builder /edgex-go/cmd/core-command/res/configuration.toml /res/configuration.toml
 

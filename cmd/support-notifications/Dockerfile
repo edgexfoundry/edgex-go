@@ -46,7 +46,7 @@ EXPOSE $APP_PORT
 COPY --from=builder /bin/sh /bin/sh
 COPY --from=builder /usr/share/ca-certificates /usr/share/ca-certificates
 COPY --from=builder /etc/ssl /etc/ssl
-COPY --from=builder /edgex-go/cmd/support-notifications/Attribution.txt /
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /edgex-go/cmd/support-notifications/res/configuration.toml /res/configuration.toml
 
