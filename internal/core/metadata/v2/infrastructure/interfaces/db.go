@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -42,4 +42,6 @@ type DBClient interface {
 	DeviceByName(name string) (model.Device, errors.EdgeX)
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
 	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
+
+	AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX)
 }

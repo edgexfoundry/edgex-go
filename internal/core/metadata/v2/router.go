@@ -58,6 +58,10 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiDeviceByNameRoute, d.DeviceByName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiDeviceByProfileNameRoute, d.DevicesByProfileName).Methods(http.MethodGet)
 
+	// ProvisionWatcher
+	pwc := metadataController.NewProvisionWatcherController(dic)
+	r.HandleFunc(v2Constant.ApiProvisionWatcherRoute, pwc.AddProvisionWatcher).Methods(http.MethodPost)
+
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
 	r.Use(correlation.OnRequestBegin)
