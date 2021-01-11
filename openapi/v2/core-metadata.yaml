@@ -1305,23 +1305,23 @@ components:
                 frequency: "10s"
                 onChange: false
           - apiVersion: "v2"
-              id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
-              name: "simple-watcher"
-              created: 0
-              modified: 0
-              labels:
-                - simple
-              identifiers:
-                "address": "localhost"
-                "port": "4[0-9]{2}"
-              blockingIdentifiers:
-                "port":
-                  - "497"
-                  - "498"
-                  - "499"
-              profile: "device-simple"
-              service: "device-simple"
-              adminState: "UNLOCKED"
+            id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
+            name: "simple-watcher"
+            created: 0
+            modified: 0
+            labels:
+              - simple
+            identifiers:
+              "address": "localhost"
+              "port": "4[0-9]{2}"
+            blockingIdentifiers:
+              "port":
+                - "497"
+                - "498"
+                - "499"
+            profile: "device-simple"
+            service: "device-simple"
+            adminState: "UNLOCKED"
 paths:
   /batch:
     parameters:
@@ -3512,79 +3512,6 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  '/provisionwatcher/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    delete:
-      summary: "Delete a provision watcher by ID"
-      responses:
-        '200':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '423':
-          description: "The requested resource is locked"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
   '/provisionwatcher/name/{name}':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -3746,6 +3673,56 @@ paths:
         description: "The name identifying a device service"
     get:
       summary: "Returns all provision watchers with specified device service name"
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiProvisionWatchersResponse'
+              examples:
+                GetAllProvisionWatchersResponse:
+                  $ref: '#/components/examples/GetAllProvisionWatchersResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /provisionwatcher/profile/name/{name}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The name identifying a device profile"
+    get:
+      summary: "Returns all provision watchers with specified device profile name"
       responses:
         '200':
           description: "OK"
