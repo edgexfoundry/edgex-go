@@ -49,5 +49,6 @@ WORKDIR /
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-metadata/core-metadata /
 COPY --from=builder /edgex-go/cmd/core-metadata/res/configuration.toml /res/configuration.toml
+
 ENTRYPOINT ["/core-metadata"]
 CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
