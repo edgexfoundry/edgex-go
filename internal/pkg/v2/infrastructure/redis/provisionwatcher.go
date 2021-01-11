@@ -77,3 +77,85 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 
 	return pw, edgexErr
 }
+
+// provisionWatcherByName query provision watcher by name from DB
+func provisionWatcherByName(conn redis.Conn, name string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	edgexErr = getObjectByHash(conn, ProvisionWatcherCollectionName, name, &provisionWatcher)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
+}
+
+// provisionWatchersByServiceName query provision watchers by offset, limit and service name
+func provisionWatchersByServiceName(conn redis.Conn, offset int, limit int, name string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionServiceName, name), offset, end)
+	if err != nil {
+		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	provisionWatchers = make([]models.ProvisionWatcher, len(objects))
+	for i, in := range objects {
+		pw := models.ProvisionWatcher{}
+		err := json.Unmarshal(in, &pw)
+		if err != nil {
+			return []models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher format parsing failed from the database", err)
+		}
+		provisionWatchers[i] = pw
+	}
+
+	return provisionWatchers, nil
+}
+
+// provisionWatchersByProfileName query provision watchers by offset, limit and profile name
+func provisionWatchersByProfileName(conn redis.Conn, offset int, limit int, name string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionProfileName, name), offset, end)
+	if err != nil {
+		return []models.ProvisionWatcher{}, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	provisionWatchers = make([]models.ProvisionWatcher, len(objects))
+	for i, in := range objects {
+		pw := models.ProvisionWatcher{}
+		err := json.Unmarshal(in, &pw)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher format parsing failed from the database", err)
+		}
+		provisionWatchers[i] = pw
+	}
+
+	return provisionWatchers, nil
+}
+
+// provisionWatchersByLabels query provision watchers by offset, limit and labels
+func provisionWatchersByLabels(conn redis.Conn, offset int, limit int, labels []string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, ProvisionWatcherCollection, labels, offset, end)
+	if err != nil {
+		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	provisionWatchers = make([]models.ProvisionWatcher, len(objects))
+	for i, in := range objects {
+		pw := models.ProvisionWatcher{}
+		err := json.Unmarshal(in, &pw)
+		if err != nil {
+			return []models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher format parsing failed from the database", err)
+		}
+		provisionWatchers[i] = pw
+	}
+
+	return
+}

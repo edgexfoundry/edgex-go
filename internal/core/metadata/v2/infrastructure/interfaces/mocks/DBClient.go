@@ -182,6 +182,31 @@ func (_m *DBClient) AllDevices(offset int, limit int, labels []string) ([]models
 	return r0, r1
 }
 
+// AllProvisionWatchers provides a mock function with given fields: offset, limit, labels
+func (_m *DBClient) AllProvisionWatchers(offset int, limit int, labels []string) ([]models.ProvisionWatcher, errors.EdgeX) {
+	ret := _m.Called(offset, limit, labels)
+
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(int, int, []string) []models.ProvisionWatcher); ok {
+		r0 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, []string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()
@@ -600,6 +625,79 @@ func (_m *DBClient) DevicesByServiceName(offset int, limit int, name string) ([]
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Device)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ProvisionWatcherByName provides a mock function with given fields: name
+func (_m *DBClient) ProvisionWatcherByName(name string) (models.ProvisionWatcher, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(string) models.ProvisionWatcher); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.ProvisionWatcher)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ProvisionWatchersByProfileName provides a mock function with given fields: offset, limit, name
+func (_m *DBClient) ProvisionWatchersByProfileName(offset int, limit int, name string) ([]models.ProvisionWatcher, errors.EdgeX) {
+	ret := _m.Called(offset, limit, name)
+
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.ProvisionWatcher); ok {
+		r0 = rf(offset, limit, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ProvisionWatchersByServiceName provides a mock function with given fields: offset, limit, name
+func (_m *DBClient) ProvisionWatchersByServiceName(offset int, limit int, name string) ([]models.ProvisionWatcher, errors.EdgeX) {
+	ret := _m.Called(offset, limit, name)
+
+	var r0 []models.ProvisionWatcher
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.ProvisionWatcher); ok {
+		r0 = rf(offset, limit, name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ProvisionWatcher)
 		}
 	}
 

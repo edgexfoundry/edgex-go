@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2021 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package v2
 
 import (
@@ -61,6 +66,10 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	// ProvisionWatcher
 	pwc := metadataController.NewProvisionWatcherController(dic)
 	r.HandleFunc(v2Constant.ApiProvisionWatcherRoute, pwc.AddProvisionWatcher).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiProvisionWatcherByNameRoute, pwc.ProvisionWatcherByName).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiProvisionWatcherByServiceNameRoute, pwc.ProvisionWatchersByServiceName).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiProvisionWatcherByProfileNameRoute, pwc.ProvisionWatchersByProfileName).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiAllProvisionWatcherRoute, pwc.AllProvisionWatchers).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
