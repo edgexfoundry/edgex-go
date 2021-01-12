@@ -32,8 +32,13 @@ echo "Initializing secret store..."
 # write a sentinel file when we're done because consul is not
 # secure and we don't trust it it access to the EdgeX secret store
 if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
+    # default User and Group in case never set
+    if [ -z "${EDGEX_USER}" ]; then
+      EDGEX_USER="2002"
+      EDGEX_GROUP="2001"
+    fi
 
-    echo "Changing ownership of secrets to edgex_user:edgex_group"
+    echo "Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
     chown -R ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
 
     echo "Signaling secretstore-setup completion"
