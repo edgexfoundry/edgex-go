@@ -570,3 +570,57 @@ func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.Provision
 
 	return addProvisionWatcher(conn, pw)
 }
+
+// ProvisionWatcherByName gets a provision watcher by name
+func (c *Client) ProvisionWatcherByName(name string) (provisionWatcher model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatcher, edgexErr = provisionWatcherByName(conn, name)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
+}
+
+//ProvisionWatchersByServiceName query provision watchers by offset, limit and service name
+func (c *Client) ProvisionWatchersByServiceName(offset int, limit int, name string) (provisionWatchers []model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatchers, edgexErr = provisionWatchersByServiceName(conn, offset, limit, name)
+	if edgexErr != nil {
+		return provisionWatchers, errors.NewCommonEdgeX(errors.Kind(edgexErr),
+			fmt.Sprintf("failed to query provision watcher by offset %d, limit %d and service name %s", offset, limit, name), edgexErr)
+	}
+
+	return
+}
+
+//ProvisionWatchersByProfileName query provision watchers by offset, limit and profile name
+func (c *Client) ProvisionWatchersByProfileName(offset int, limit int, name string) (provisionWatchers []model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatchers, edgexErr = provisionWatchersByProfileName(conn, offset, limit, name)
+	if edgexErr != nil {
+		return provisionWatchers, errors.NewCommonEdgeX(errors.Kind(edgexErr),
+			fmt.Sprintf("failed to query provision watcher by offset %d, limit %d and profile name %s", offset, limit, name), edgexErr)
+	}
+
+	return
+}
+
+// AllProvisionWatchers query provision watchers with offset, limit and labels
+func (c *Client) AllProvisionWatchers(offset int, limit int, labels []string) (provisionWatchers []model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatchers, edgexErr = provisionWatchersByLabels(conn, offset, limit, labels)
+	if edgexErr != nil {
+		return provisionWatchers, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
+}
