@@ -624,3 +624,16 @@ func (c *Client) AllProvisionWatchers(offset int, limit int, labels []string) (p
 
 	return
 }
+
+// DeleteProvisionWatcherByName deletes a provision watcher by name
+func (c *Client) DeleteProvisionWatcherByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteProvisionWatcherByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("failed to delete the provision watcher with name %s", name), edgeXerr)
+	}
+
+	return nil
+}
