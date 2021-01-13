@@ -16,8 +16,8 @@ icon: snap/local/assets/edgex-snap-icon.png
 # Different epochs prevent refreshes between major versions of EdgeX due
 # to continued configuration changes.
 #
-# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3, hanoi: 4
-epoch: 4
+# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3, hanoi: 4, ireland: 5
+epoch: 5
 
 architectures:
   - build-on: arm64
