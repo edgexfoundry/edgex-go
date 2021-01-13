@@ -15,9 +15,6 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        cron:
-          description: "A cron-styled regular expression indicating how often the action under interval should occur.  Use either runOnce, frequency or cron and not all."
-          type: string
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
@@ -151,9 +148,6 @@ components:
         created:
           description: "A timestamp indicating when the interval was created."
           type: integer
-        cron:
-          description: "A cron-styled regular expression indicating how often the action under interval should occur.  Use either runOnce, frequency or cron and not all."
-          type: string
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
@@ -236,6 +230,15 @@ components:
       properties:
         action:
           $ref: '#/components/schemas/IntervalAction'
+    MultiIntervalActionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntervalAction'
     IntervalResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -243,6 +246,15 @@ components:
       properties:
         interval:
           $ref: '#/components/schemas/Interval'
+    MultiIntervalsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interval'
     MetricsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -341,9 +353,6 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        cron:
-          description: "A cron-styled regular expression indicating how often the action under interval should occur.  Use either runOnce, frequency or cron and not all."
-          type: string
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
