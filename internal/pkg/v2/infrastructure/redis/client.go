@@ -571,6 +571,19 @@ func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.Provision
 	return addProvisionWatcher(conn, pw)
 }
 
+// ProvisionWatcherById gets a provision watcher by id
+func (c *Client) ProvisionWatcherById(id string) (provisionWatcher model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatcher, edgexErr = provisionWatcherById(conn, id)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("failed to query provision watcher by id %s", id), edgexErr)
+	}
+
+	return
+}
+
 // ProvisionWatcherByName gets a provision watcher by name
 func (c *Client) ProvisionWatcherByName(name string) (provisionWatcher model.ProvisionWatcher, edgexErr errors.EdgeX) {
 	conn := c.Pool.Get()
