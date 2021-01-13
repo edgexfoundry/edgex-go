@@ -196,7 +196,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/core-data -confdir $SNAP_DATA/config/core-data/res --registry
+    command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -212,7 +212,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res --registry
+    command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -225,7 +225,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/core-command -confdir $SNAP_DATA/config/core-command/res --registry
+    command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -238,7 +238,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res --registry
+    command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -251,7 +251,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res --registry
+    command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -264,7 +264,7 @@ apps:
     after:
       - security-bootstrap-redis
       - security-proxy-setup
-    command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res --registry
+    command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
@@ -278,12 +278,9 @@ apps:
       - security-proxy-setup
       - core-data
       - core-metadata
-    command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
+    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -cp -r
     daemon: simple
     environment:
-      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
-      PROFILE_ARG: "--profile=res"
-      REGISTRY_ARG: "--registry=consul://localhost:8500"
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
     plugs: [network, network-bind]
   app-service-configurable:
