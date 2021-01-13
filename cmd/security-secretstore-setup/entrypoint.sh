@@ -39,7 +39,7 @@ if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
     fi
 
     echo "Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
-    chown -R ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
+    chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
 
     echo "Signaling secretstore-setup completion"
     mkdir -p $(dirname "${SECRETSTORE_SETUP_DONE_FLAG}") && \
