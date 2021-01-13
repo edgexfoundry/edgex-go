@@ -104,7 +104,7 @@ index 1e537489..faf42425 100644
    security-secretstore-setup:
      adapter: full
      after: [vault]
-@@ -271,32 +202,6 @@ apps:
+@@ -271,29 +202,6 @@ apps:
        ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
      daemon: simple
      plugs: [network, network-bind]
@@ -115,12 +115,9 @@ index 1e537489..faf42425 100644
 -      - security-proxy-setup
 -      - core-data
 -      - core-metadata
--    command: bin/device-virtual $CONF_ARG $PROFILE_ARG $REGISTRY_ARG
+-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -cp -r
 -    daemon: simple
 -    environment:
--      CONF_ARG: "--confdir=$SNAP_DATA/config/device-virtual"
--      PROFILE_ARG: "--profile=res"
--      REGISTRY_ARG: "--registry=consul://localhost:8500"
 -      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
 -    plugs: [network, network-bind]
 -  app-service-configurable:

@@ -149,7 +149,7 @@ done
 # -n 1   -- generate a single password
 # -x 24  -- maximum password len
 # -m 16  -- minimum password len
-PGPASSWD=`$SNAP/usr/lib/apg/apg -a 0 -M ncl -n 1 -x 24 -m 16`
+PGPASSWD=$("$SNAP/usr/lib/apg/apg" -a 0 -M ncl -n 1 -x 24 -m 16)
 mkdir -p "$SNAP_DATA/config/postgres/"
 echo "$PGPASSWD" > "$SNAP_DATA/config/postgres/kongpw"
 
@@ -159,7 +159,7 @@ echo "$PGPASSWD" > "$SNAP_DATA/config/postgres/kongpw"
 export PGDATABASE="kong"
 iter_num=0
 until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
-	   "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
+    "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
     sleep 1
     iter_num=$(( iter_num + 1 ))
     if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
