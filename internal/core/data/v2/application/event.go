@@ -69,8 +69,8 @@ func AddEvent(e models.Event, profileName string, deviceName string, ctx context
 	return nil
 }
 
-// PublishEvents publish incoming array of AddEventRequest through MessageClient
-func PublishEvents(addEvents []dto.AddEventRequest, profileName string, deviceName string, ctx context.Context, dic *di.Container) {
+// PublishEvent publish incoming array of AddEventRequest through MessageClient
+func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceName string, ctx context.Context, dic *di.Container) {
 	lc := container.LoggingClientFrom(dic.Get)
 	msgClient := dataContainer.MessagingClientFrom(dic.Get)
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
@@ -85,9 +85,9 @@ func PublishEvents(addEvents []dto.AddEventRequest, profileName string, deviceNa
 		ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
 	}
 
-	data, err = json.Marshal(addEvents)
+	data, err = json.Marshal(addEventReq)
 	if err != nil {
-		lc.Error(fmt.Sprintf("error marshaling V2 AddEventRequest DTO: %+v", addEvents), clients.CorrelationHeader, correlationId)
+		lc.Error(fmt.Sprintf("error marshaling V2 AddEventRequest DTO: %+v", addEventReq), clients.CorrelationHeader, correlationId)
 		return
 	}
 
