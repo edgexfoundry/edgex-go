@@ -64,7 +64,7 @@ restart_db_services () {
     # restart the services with updated configuration if they were
     # already running
     for svc in ${DB_SERVICES[*]}; do
-        status=`snapctl services "$SNAP_NAME.$svc" | grep -o "^active"`
+        status=$(snapctl services "$SNAP_NAME.$svc" | grep -o "^active")
 
         if [ "$status" = "active" ]; then
             snapctl restart "$SNAP_NAME.$svc"
@@ -100,9 +100,9 @@ for key in $ALL_SERVICES; do
             # app-service-configurable is on too
             if [ "$status" = "on" ]; then
                 handle_svc "app-service-configurable" "on"
-	    elif [ "$status" = "off" ]; then
+            elif [ "$status" = "off" ]; then
                 handle_svc "app-service-configurable" "off"
-	    fi
+            fi
             # handle the service too
             handle_svc "$key" "$status"
             ;;
@@ -152,16 +152,3 @@ for key in $ALL_SERVICES; do
             ;;
     esac
 done
-
-# handle usage of database provider
-#
-# FIXME (HANOI)
-#
-# The code to switch dbtype has been removed, however
-# I'm leaving the snapctl get to retrive the dbtype, as
-# this may be leveraged in the configure hook of Hanio
-# to block refresh from Geneva to Hanoi if the dbtype
-# is set to 'mongodb' and the project has not yet provided
-# a database migration script...
-dbProvider=$(snapctl get dbtype)
-PREV_DB_PROVIDER_FILE="$SNAP_DATA/prevdbtype"
