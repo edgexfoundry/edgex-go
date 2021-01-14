@@ -51,7 +51,11 @@ type MessageQueueInfo struct {
 	// Indicates the message queue platform being used.
 	Type string
 	// Indicates the topic the data is published/subscribed
+	// TODO this configuration shall be removed once v1 API is deprecated.
 	Topic string
+	// Indicates the topic prefix the data is published to. Note that /<device-profile-name>/<device-name> will be
+	// added to this Publish Topic prefix as the complete publish topic
+	PublishTopicPrefix string
 	// Provides additional configuration properties which do not fit within the existing field.
 	// Typically the key is the name of the configuration property and the value is a string representation of the
 	// desired value for the configuration property.

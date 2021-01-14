@@ -459,87 +459,59 @@ components:
             valueType: "Float32"
             value: "12.2"
 paths:
-  /event:
+  /event/{profileName}/{deviceName}:
     parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
+    - $ref: '#/components/parameters/correlatedRequestHeader'
+    - name: profileName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device profile"
+    - name: deviceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device"
     post:
-      summary: "Allows for the ingestion of event/reading data"
+      summary: "Allows for the ingestion of event/reading data, and the deviceName and profileName of Event must match to the given deviceName and profileName as specified in the path"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AddEventRequest'
+              $ref: '#/components/schemas/AddEventRequest'
             example:
-              - event:
-                  deviceName: device-002
-                  id: d5471d59-2810-419a-8744-18eb8fa03465
-                  origin: 1602168089665565300
-                  readings:
-                    - deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      origin: 1602168089665565300
-                      valueType: Float32
-                      value: '12.2'
-              - event:
-                  deviceName: device-002
-                  id: d5471d59-2810-419a-8744-18eb8fa03465
-                  origin: 1602168089665565300
-                  readings:
-                    - deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      origin: 1602168089665565300
-                      valueType: Float32
-                      value: '12.2'
-              - event:
-                  deviceName: device-002
-                  id: 73fc4f9c-2d64-4920-addb-b1f33a8f8514
-                  origin: 1602168089665565300
-                  readings:
-                    - apiVersion: v2
-                      created: 1594879337014
-                      deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 71c601d9-cb56-453a-8c75-54461e444713
-                      origin: 1602168089665565300
-                      valueType: Binary
-                      binaryValue: '83010203'
-                      mediaType: image
+              event:
+                deviceName: device-002
+                profileName: profile-002
+                id: d5471d59-2810-419a-8744-18eb8fa03465
+                origin: 1602168089665565300
+                readings:
+                  - deviceName: device-002
+                    resourceName: resource-002
+                    profileName: profile-002
+                    id: 7003cacc-0e00-4676-977c-4e58b9612abd
+                    origin: 1602168089665565300
+                    valueType: Float32
+                    value: '12.2'
       responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+        '201':
+          description: "Indicates the event has been successfully added."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseWithIdResponse'
+                $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 201
-                  message: ""
-                  id: "040bd523-ec33-440d-9d72-e5813a465f37"
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 409
-                  message: "Event Id exists"
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 500
-                  message: "Interval Server Error"
+                requestId: ""
+                apiVersion: "v2"
+                statusCode: 201
+                message: ""
+                id: "040bd523-ec33-440d-9d72-e5813a465f37"
         '400':
           description: "Request is in an invalid state"
           headers:
