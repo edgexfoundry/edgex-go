@@ -13,95 +13,23 @@ components:
     AddNotificationRequest:
       allOf:
       - $ref: '#/components/schemas/BaseRequest'
+      description: "A request to add a new notification."
       type: object
       properties:
-        category:
-          description: "Categorizes the notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
-        content:
-          description: "The actual content to be sent as the body of the notification."
-          type: string
-        contentType:
-          description: "Indicates the MIME type/Content-type of the notification's content."
-          type: string
-        description:
-          description: "An optional description of the notification's intent."
-          type: string
-        labels:
-          description: "Arbitrary labels that can be applied to notifications for further categorization or identification."
-          type: array
-          items:
-            type: string
-        sender:
-          description: "Identifies the sender of a notification, usually an email address."
-          type: string
-        severity:
-          description: "Indicates the level of severity for the notification. Current accepted values include: NORMAL, CRITICAL"
-          type: string
-        slug:
-          description: "Effectively a name or key that labels the notification."
-          type: string
-        status:
-          description: "A status indicating the current processing status of the notification. This should be set to NEW when adding a notification."
-          type: string
+        notification:
+          $ref: '#/components/schemas/Notification'
       required:
-      - category
-      - content
-      - sender
-      - severity
-      - slug
-    AddNotificationResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        slug:
-          type: string
+        - notification
     AddSubscriptionRequest:
       allOf:
       - $ref: '#/components/schemas/BaseRequest'
+      description: "A request to add a new subscription."
       type: object
       properties:
-        categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
-          type: array
-          items:
-            type: string
-        channels:
-          description: "Indicates how this subscription is capable of receiving notifications."
-          type: array
-          items:
-            $ref: '#/components/schemas/Channel'
-        description:
-          description: "An optional description of the subscription's intent."
-          type: string
-        labels:
-          description: "Arbitrary labels that can be applied to the subscription for further categorization or identification."
-          type: array
-          items:
-            type: string
-        receiver:
-          description: "The name of the party interested in the notification."
-          type: string
-        slug:
-          description: "Links the subscription to the name or key that labels the notification of interest."
-          type: string
+        subscription:
+          $ref: '#/components/schemas/CreateSubscription'
       required:
-      - channels
-      - receiver
-      - slug
-    AddSubscriptionResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        slug:
-          type: string
+        - subscription
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
       type: object
@@ -129,6 +57,16 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+    BaseWithIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        id:
+          description: "The unique identifier for the instance."
+          type: string
+          format: uuid
     Channel:
       description: "Defines the transport supported for a given notification."
       type: object
@@ -144,9 +82,6 @@ components:
         url:
           description: "If the transport is REST, the target URL to which the notification will be posted."
           type: string
-    CleanupResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -225,129 +160,181 @@ components:
           description: "Identifies the sender of a notification, usually an email address."
           type: string
         severity:
-          description: "Indicates the level of severity for the notification. Current accepted values include: NORMAL, CRITICAL"
-          type: string
-        slug:
-          description: "Effectively a name or key that labels the notification."
+          description: "Indicates the level of severity for the notification. Current accepted values include: MINOR, NORMAL, CRITICAL"
           type: string
         status:
-          description: "A status indicating the current processing status of the notification. Accepted values are: NEW, PROCSSED, ESCALATED"
+          description: "A status indicating the current processing status of the notification. Accepted values are: NEW, PROCESSED, ESCALATED"
           type: string
+      required:
+        - content
+        - sender
+        - severity
     NotificationResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a notification to the caller."
       type: object
       properties:
         notification:
           $ref: '#/components/schemas/Notification'
+    MultiNotificationsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning Notifications to the caller."
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
     PingResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
+      description: "Provides a response containing the API version and current server timestamp."
       type: object
       properties:
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
-    RequestEnvelope:
-      description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled request type instance. This is the specific, semantically identifiable request -- such as an AddDeviceRequest."
-        strategy:
-          type: string
-          description: "Indicates the expectation of whether a response should be produced synchronously or asynchronously. If asynchronously, desire for either a polling or push/callback should be provided. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the request instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of request DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    ResponseEnvelope:
-      description: "A wrapper type for use when receiving a response from the /batch endpoint. Each individual response type in the HTTP response should be wrapped in an envelope to facilitate unmarshalling by the client. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped response. This should be recapitulated from the originating request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
-        strategy:
-          type: string
-          description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the response instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of response DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
     Subscription:
       description: "Define address information for a party interested in receiving notifications."
       type: object
       properties:
-        categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
-          type: array
-          items:
-            type: string
+        id:
+          description: "Uniquely identifies the subscription"
+          type: string
+          format: uuid
+        created:
+          description: "A timestamp indicating when the subscription was created."
+          type: integer
+        modified:
+          description: "A timestamp indicating when the subscription was last modified."
+          type: integer
+        name:
+          description: "A meaningful identifier for the subscription."
+          type: string
         channels:
           description: "Indicates how this subscription is capable of receiving notifications."
           type: array
           items:
             $ref: '#/components/schemas/Channel'
-        created:
-          description: "A timestamp indicating when the subscription was created."
-          type: integer
-        description:
-          description: "An optional description of the subscription's intent."
-          type: string
-        id:
-          description: "Uniquely identifies the subscription"
-          type: string
-          format: uuid
+        categories:
+          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          type: array
+          items:
+            type: string
         labels:
           description: "Arbitrary labels that can be applied to the subscription for further categorization or identification."
           type: array
           items:
             type: string
-        modified:
-          description: "A timestamp indicating when the subscription was last modified."
-          type: integer
+        description:
+          description: "An optional description of the subscription's intent."
+          type: string
         receiver:
           description: "The name of the party interested in the notification."
           type: string
-        slug:
-          description: "Links the subscription to the name or key that labels the notification of interest."
+        resendLimit:
+          description: "The retry limit for attempts to send notifications."
+          type: integer
+        resendInterval:
+          description: "The interval in ISO 8691 format of resending the notification."
+          type: string
+    CreateSubscription:
+      description: "Create address information for a party interested in receiving notifications."
+      type: object
+      properties:
+        name:
+          description: "A meaningful identifier for the subscription."
+          type: string
+        channels:
+          description: "Indicates how this subscription is capable of receiving notifications."
+          type: array
+          items:
+            $ref: '#/components/schemas/Channel'
+        categories:
+          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          type: array
+          items:
+            type: string
+        labels:
+          description: "Arbitrary labels that can be applied to the subscription for further categorization or identification."
+          type: array
+          items:
+            type: string
+        description:
+          description: "An optional description of the subscription's intent."
+          type: string
+        receiver:
+          description: "The name of the party interested in the notification."
+          type: string
+        resendLimit:
+          description: "The retry limit for attempts to send notifications."
+          type: integer
+        resendInterval:
+          description: "The interval in ISO 8691 format of resending the notification."
+          type: string
+      required:
+        - name
+        - channels
+        - receiver
+    UpdateSubscription:
+      description: "Update address information for a party interested in receiving notifications."
+      type: object
+      properties:
+        id:
+          description: "Uniquely identifies the subscription"
+          type: string
+          format: uuid
+        name:
+          description: "A meaningful identifier for the subscription."
+          type: string
+        channels:
+          description: "Indicates how this subscription is capable of receiving notifications."
+          type: array
+          items:
+            $ref: '#/components/schemas/Channel'
+        categories:
+          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          type: array
+          items:
+            type: string
+        labels:
+          description: "Arbitrary labels that can be applied to the subscription for further categorization or identification."
+          type: array
+          items:
+            type: string
+        description:
+          description: "An optional description of the subscription's intent."
+          type: string
+        receiver:
+          description: "The name of the party interested in the notification."
+          type: string
+        resendLimit:
+          description: "The retry limit for attempts to send notifications."
+          type: integer
+        resendInterval:
+          description: "The interval in ISO 8691 format of resending the notification."
           type: string
     SubscriptionResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a Subscription to the caller."
       type: object
       properties:
         subscription:
           $ref: '#/components/schemas/Subscription'
+    MultiSubscriptionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning Subscriptions to the caller."
+      type: object
+      properties:
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subscription'
     Transmission:
       description: "Records an individual attempt to send a notification, whether successful or not."
       type: object
@@ -361,13 +348,10 @@ components:
           description: "Uniquely identifies the transmission"
           type: string
           format: uuid
-        modified:
-          description: "A timestamp indicating when the transmission was last modified."
-          type: integer
         notification:
           $ref: '#/components/schemas/Notification'
-        receiver:
-          description: "The name of the party interested in the notification."
+        subscriptionName:
+          description: "The name of the subscription interested in the notification."
           type: string
         records:
           description: "Contains the result of all attempts to deliver this particular transmission."
@@ -380,6 +364,11 @@ components:
         status:
           description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, TRXESCALATED"
           type: string
+      required:
+        - channel
+        - notification
+        - subscriptionName
+        - status
     TransmissionRecord:
       description: "Records the result of an individual attempt to transmit a notification."
       type: object
@@ -396,56 +385,31 @@ components:
     TransmissionResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning a Transmission to the caller."
       type: object
       properties:
         transmission:
           $ref: '#/components/schemas/Transmission'
+    MultiTransmissionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning Transmissions to the caller."
+      type: object
+      properties:
+        transmissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transmission'
     UpdateSubscriptionRequest:
       allOf:
       - $ref: '#/components/schemas/BaseRequest'
+      description: "A request to update an existing Subscription. 'id' or 'name' must be populated in order to identify the subscription. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
-        categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
-          type: array
-          items:
-            type: string
-        channels:
-          description: "Indicates how this subscription is capable of receiving notifications."
-          type: array
-          items:
-            $ref: '#/components/schemas/Channel'
-        description:
-          description: "An optional description of the subscription's intent."
-          type: string
-        id:
-          description: "Uniquely identifies the subscription"
-          type: string
-          format: uuid
-        labels:
-          description: "Arbitrary labels that can be applied to the subscription for further categorization or identification."
-          type: array
-          items:
-            type: string
-        receiver:
-          description: "The name of the party interested in the notification."
-          type: string
-        slug:
-          description: "Links the subscription to the name or key that labels the notification of interest."
-          type: string
+        subscription:
+          $ref: '#/components/schemas/UpdateSubscription'
       required:
-      - channels
-      - id
-      - receiver
-      - slug
-    UpdateSubscriptionResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
+        - subscription
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -505,40 +469,11 @@ components:
         statusCode: 500
         message: "Internal Server Error"
 paths:
-  /batch:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      servers:
-      - url:  http://localhost:48060/api
-      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service. Version is not denoted as part of the route since it is included as a property on each RequestEnvelope."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/RequestEnvelope'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/ResponseEnvelope'
   /cleanup:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     delete:
-      summary: "Delete all the Notifications if the current timestamp minus their last modification timestamp is less than a default age setting, and the corresponding Transmissions will also be deleted."
+      summary: "Deletes all notifications and the corresponding transmissions."
       responses:
         '204':
           description: "Delete successful"
@@ -564,7 +499,7 @@ paths:
           type: integer
         description: "Indicates the age of a notification in ticks"
     delete:
-      summary: "Delete all the Notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding Transmissions will also be deleted."
+      summary: "Deletes notifications which have age and is less than the specified one, where the age of Notification is calculated by subtracting its last modification timestamp from the current timestamp. Note that the corresponding transmissions will also be deleted."
       responses:
         '204':
           description: "Delete successful"
@@ -584,7 +519,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
-      summary: "Add one or more notifications - slug (name) must be unique on each request."
+      summary: "Adds one or more notifications to be sent."
       requestBody:
         required: true
         content:
@@ -606,7 +541,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddNotificationResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -646,10 +581,9 @@ paths:
         schema:
           type: integer
         description: "The ending timestamp of the range of notifications to be returned."
-    get:
-      parameters:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+    get:
       summary: "Allows querying of notifications by their creation timestamp within a given time range, sorted in descending order. Results are paginated."
       responses:
         '200':
@@ -660,9 +594,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NotificationResponse'
+                $ref: '#/components/schemas/MultiNotificationsResponse'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -695,7 +627,7 @@ paths:
           type: integer
         description: "Indicates the age of a notification in ticks"
     delete:
-      summary: "Delete the proccessed Notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding Transmissions will also be deteled.  Please notice this API is only for proccessed Notifications (status = PROCCESSED).  If the deletion purpose includes each kind of Notifications, please refer to /cleanup API."
+      summary: "Deletes the processed notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding transmissions will also be deleted.  Please notice that this API is only for processed notifications (status = PROCESSED). If the deletion purpose includes each kind of notifications, please refer to /cleanup API."
       responses:
         '204':
           description: "Delete successful"
@@ -741,7 +673,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Notifications by category."
+      summary: "Returns a paginated list of notifications associated with the given category."
       responses:
         '200':
           description: "OK"
@@ -751,9 +683,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NotificationResponse'
+                $ref: '#/components/schemas/MultiNotificationsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -788,7 +718,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Notifications by label."
+      summary: "Returns a paginated list of notifications associated with the given label."
       responses:
         '200':
           description: "OK"
@@ -798,9 +728,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NotificationResponse'
+                $ref: '#/components/schemas/MultiNotificationsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -823,17 +751,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /notification/slug/{slug}:
+  /notification/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: slug
+      - name: id
         in: path
         required: true
         schema:
           type: string
-        description: "The slug (name) assigned to the notification of interest."
+        description: "The ID that identifies the notification."
     get:
-      summary: "Retrieve the notification associated with the provided slug (name)."
+      summary: "Returns a notification by ID."
       responses:
         '200':
           description: "OK"
@@ -863,7 +791,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
-      summary: "Deletes the notification associated with the provided slug (name) and all of its associated transmissions."
+      summary: "Deletes a notification by ID and all of its associated transmissions."
       responses:
         '204':
           description: "Delete successful"
@@ -909,7 +837,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Notifications by current status"
+      summary: "Returns a paginated list of notifications with the specified status."
       responses:
         '200':
           description: "OK"
@@ -919,9 +847,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NotificationResponse'
+                $ref: '#/components/schemas/MultiNotificationsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -944,11 +870,52 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
+  /notification/subscription/name/{name}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The name of the subscription."
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Returns a paginated list of notifications to which the specified subscription is interested."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiNotificationsResponse'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /subscription:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
-      summary: "Add one or more new subscriptions - slug (name) must be unique on each request."
+      summary: "Adds one or more new subscriptions."
       requestBody:
         required: true
         content:
@@ -970,7 +937,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/AddSubscriptionResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -996,7 +963,7 @@ paths:
                 500Example:
                   $ref: '#/components/examples/500Example'
     patch:
-      summary: "Update one or more existing Subscriptions. You might do this in order to add an additional channel if you want another endpoint/person to receive the notification."
+      summary: "Updates one or more existing Subscriptions. You might do this in order to add an additional channel if you want another endpoint/person to receive the notification."
       requestBody:
         required: true
         content:
@@ -1018,7 +985,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/UpdateSubscriptionResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1059,9 +1026,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiSubscriptionsResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1073,81 +1038,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /subscription/id/{id}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Allows retrieval of the subscription corresponding to the specified ID."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubscriptionResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Deletes a subscription according to the given ID."
-      responses:
-        '204':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /subscription/category/{category}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1160,7 +1050,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Subscriptions by category."
+      summary: "Returns a paginated list of subscriptions associated with the specified category."
       responses:
         '200':
           description: "OK"
@@ -1170,9 +1060,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiSubscriptionsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1207,7 +1095,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Subscriptions by label."
+      summary: "Returns a paginated list of subscriptions associated with the specified label."
       responses:
         '200':
           description: "OK"
@@ -1217,9 +1105,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiSubscriptionsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1254,7 +1140,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Query the Subscriptions by receiver."
+      summary: "Returns a paginated list of subscriptions associated with the specified receiver."
       responses:
         '200':
           description: "OK"
@@ -1264,9 +1150,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiSubscriptionsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1289,17 +1173,17 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /subscription/slug/{slug}:
+  /subscription/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: slug
+      - name: name
         in: path
         required: true
         schema:
           type: string
-        description: "The slug (name) given to the subscription of interest."
+        description: "The name given to the subscription of interest."
     get:
-      summary: "Allows retrieval of the subscription corresponding to the specified slug (name)."
+      summary: "Returns a subscription by its unique name."
       responses:
         '200':
           description: "OK"
@@ -1329,7 +1213,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     delete:
-      summary: "Deletes a subscription according to the given slug (name)."
+      summary: "Deletes a subscription according to the given name."
       responses:
         '204':
           description: "Delete successful"
@@ -1363,6 +1247,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /transmission/id/{id}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The ID that identifies the transmission."
+    get:
+      summary: "Returns a transmission by ID."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransmissionResponse'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /transmission/age/{age}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1373,7 +1296,7 @@ paths:
           type: integer
         description: "Indicates the age of a transmission in ticks"
     delete:
-      summary: "Delete the proccessed Transmissions if the current timestamp minus their last modification timestamp is less than the age parameter."
+      summary: "Deletes the processed transmissions if the current timestamp minus their last modification timestamp is less than the age parameter."
       responses:
         '204':
           description: "Delete successful"
@@ -1413,7 +1336,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Load all transmission records ordered by create timestamp descending. Results will be paginated."
+      summary: "Given the entire range of transmissions sorted in descending order of created time, returns a portion of that range according to the offset and limit parameters."
       responses:
         '200':
           description: "OK"
@@ -1423,9 +1346,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TransmissionResponse'
+                $ref: '#/components/schemas/MultiTransmissionsResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1437,19 +1358,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ErrorResponse'
-  /transmission/slug/{slug}:
+  /transmission/subscription/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-      - name: slug
+      - name: name
         in: path
         required: true
         schema:
           type: string
-        description: "The slug (name) associated with a notification."
+        description: "The name of the subscription."
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Allows retrieval of the transmissions that originated with a notification identified by the slug. Ordered by create timestamp descending."
+      summary: "Returns a paginated list of transmissions that originated with the specified subscription."
       responses:
         '200':
           description: "OK"
@@ -1459,7 +1380,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiTransmissionsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1493,10 +1414,9 @@ paths:
         schema:
           type: integer
         description: "The ending timestamp of the range of transmissions to be returned."
-    get:
-      parameters:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+    get:
       summary: "Allows querying of transmissions by their creation timestamp within a given time range, sorted in descending order. Results are paginated."
       responses:
         '200':
@@ -1507,9 +1427,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TransmissionResponse'
+                $ref: '#/components/schemas/MultiTransmissionsResponse'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1535,14 +1453,14 @@ paths:
   /transmission/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
       - name: status
         in: path
         required: true
         schema:
           type: string
         description: "The status of the transmissions you wish to load."
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Allows retrieval of the transmissions associated with the specified status. Ordered by create timestamp descending."
       responses:
@@ -1554,7 +1472,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubscriptionResponse'
+                $ref: '#/components/schemas/MultiTransmissionsResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
