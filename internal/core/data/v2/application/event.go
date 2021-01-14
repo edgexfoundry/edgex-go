@@ -69,7 +69,7 @@ func AddEvent(e models.Event, profileName string, deviceName string, ctx context
 	return nil
 }
 
-// PublishEvent publish incoming array of AddEventRequest through MessageClient
+// PublishEvent publishes incoming AddEventRequest through MessageClient
 func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceName string, ctx context.Context, dic *di.Container) {
 	lc := container.LoggingClientFrom(dic.Get)
 	msgClient := dataContainer.MessagingClientFrom(dic.Get)
@@ -99,7 +99,7 @@ func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceNam
 			"Device Name: %s, Error: %v", correlationId, profileName, deviceName, err))
 	} else {
 		lc.Debug(fmt.Sprintf(
-			"Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId))
+			"V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId))
 	}
 }
 

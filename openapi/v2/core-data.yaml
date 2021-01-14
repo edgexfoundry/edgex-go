@@ -498,7 +498,7 @@ paths:
                     value: '12.2'
       responses:
         '201':
-          description: "Indicates the event has been successfully created."
+          description: "Indicates the event has been successfully added."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
