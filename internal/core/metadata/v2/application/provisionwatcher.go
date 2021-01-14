@@ -108,3 +108,17 @@ func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Contai
 
 	return
 }
+
+// DeleteProvisionWatcherByName deletes the provision watcher by name
+func DeleteProvisionWatcherByName(name string, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+
+	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteProvisionWatcherByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

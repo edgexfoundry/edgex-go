@@ -159,3 +159,37 @@ func provisionWatchersByLabels(conn redis.Conn, offset int, limit int, labels []
 
 	return
 }
+
+// deleteProvisionWatcherByName deletes the provision watcher by name
+func deleteProvisionWatcherByName(conn redis.Conn, name string) errors.EdgeX {
+	provisionWatcher, err := provisionWatcherByName(conn, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	err = deleteProvisionWatcher(conn, provisionWatcher)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// deleteProvisionWatcher deletes a provision watcher
+func deleteProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.EdgeX {
+	redisKey := provisionWatcherStoredKey(pw.Id)
+	_ = conn.Send(MULTI)
+	_ = conn.Send(DEL, redisKey)
+	_ = conn.Send(HDEL, ProvisionWatcherCollectionName, pw.Name)
+	_ = conn.Send(ZREM, ProvisionWatcherCollection, redisKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), redisKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), redisKey)
+	for _, label := range pw.Labels {
+		_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionLabel, label), redisKey)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher deletion failed", err)
+	}
+
+	return nil
+}

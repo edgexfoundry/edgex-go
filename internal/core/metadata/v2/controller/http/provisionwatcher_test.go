@@ -508,3 +508,58 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 		})
 	}
 }
+
+func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
+	provisionWatcher := dtos.ToProvisionWatcherModel(buildTestAddProvisionWatcherRequest().ProvisionWatcher)
+	noName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeleteProvisionWatcherByName", provisionWatcher.Name).Return(nil)
+	dbClientMock.On("DeleteProvisionWatcherByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewProvisionWatcherController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name                 string
+		provisionWatcherName string
+		expectedStatusCode   int
+	}{
+		{"Valid - delete provision watcher by name", provisionWatcher.Name, http.StatusOK},
+		{"Invalid - name parameter is empty", noName, http.StatusBadRequest},
+		{"Invalid - provision watcher not found by name", notFoundName, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", contractsV2.ApiProvisionWatcherByNameRoute, testCase.provisionWatcherName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{contractsV2.Name: testCase.provisionWatcherName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteProvisionWatcherByName)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.expectedStatusCode == http.StatusOK {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}

@@ -232,3 +232,33 @@ func (pwc *ProvisionWatcherController) AllProvisionWatchers(w http.ResponseWrite
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(pwc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[contractsV2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteProvisionWatcherByName(name, pwc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse(
+			"",
+			"",
+			http.StatusOK)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
