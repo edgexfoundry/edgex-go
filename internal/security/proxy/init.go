@@ -18,7 +18,6 @@ package proxy
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 
@@ -36,26 +35,17 @@ type Bootstrap struct {
 	insecureSkipVerify bool
 	initNeeded         bool
 	resetNeeded        bool
-	userTobeCreated    string
-	userOfGroup        string
-	userToBeDeleted    string
 }
 
 func NewBootstrap(
 	insecureSkipVerify bool,
 	initNeeded bool,
-	resetNeeded bool,
-	userTobeCreated string,
-	userOfGroup string,
-	userToBeDeleted string) *Bootstrap {
+	resetNeeded bool) *Bootstrap {
 
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		initNeeded:         initNeeded,
 		resetNeeded:        resetNeeded,
-		userTobeCreated:    userTobeCreated,
-		userOfGroup:        userOfGroup,
-		userToBeDeleted:    userToBeDeleted,
 	}
 }
 
@@ -106,30 +96,6 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		b.haltIfError(lc, s.Init()) // Where the Service init is called
 	} else if b.resetNeeded {
 		b.haltIfError(lc, s.ResetProxy())
-	}
-
-	if b.userTobeCreated != "" && b.userOfGroup != "" {
-		c := NewConsumer(b.userTobeCreated, req, lc, configuration)
-		b.haltIfError(lc, c.Create(EdgeXKong))
-		b.haltIfError(lc, c.AssociateWithGroup(b.userOfGroup))
-
-		t, err := c.CreateToken()
-		if err != nil {
-			b.errorAndHalt(lc, fmt.Sprintf("failed to create access token for edgex service due to error %s", err.Error()))
-		}
-
-		fmt.Println(fmt.Sprintf("the access token for user %s is: %s. Please keep the token for accessing edgex services", b.userTobeCreated, t))
-
-		file, err := os.Create(configuration.KongAuth.OutputPath)
-		b.haltIfError(lc, err)
-
-		utp := &UserTokenPair{User: b.userTobeCreated, Token: t}
-		b.haltIfError(lc, utp.Save(file))
-	}
-
-	if b.userToBeDeleted != "" {
-		t := NewConsumer(b.userToBeDeleted, req, lc, configuration)
-		b.haltIfError(lc, t.Delete())
 	}
 
 	return false
