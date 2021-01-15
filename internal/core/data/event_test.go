@@ -27,13 +27,13 @@ import (
 	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	correlation "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/google/uuid"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
-	"github.com/edgexfoundry/go-mod-messaging/messaging"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
 
