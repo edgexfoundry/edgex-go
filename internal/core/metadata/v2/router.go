@@ -67,6 +67,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiProvisionWatcherByProfileNameRoute, pwc.ProvisionWatchersByProfileName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiAllProvisionWatcherRoute, pwc.AllProvisionWatchers).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiProvisionWatcherByNameRoute, pwc.DeleteProvisionWatcherByName).Methods(http.MethodDelete)
+	r.HandleFunc(v2Constant.ApiProvisionWatcherRoute, pwc.PatchProvisionWatcher).Methods(http.MethodPatch)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.OnResponseComplete)
