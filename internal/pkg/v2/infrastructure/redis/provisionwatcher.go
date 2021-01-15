@@ -78,6 +78,16 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 	return pw, edgexErr
 }
 
+// provisionWatcherById query provision watcher by id from DB
+func provisionWatcherById(conn redis.Conn, id string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	edgexErr = getObjectById(conn, provisionWatcherStoredKey(id), &provisionWatcher)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
+}
+
 // provisionWatcherByName query provision watcher by name from DB
 func provisionWatcherByName(conn redis.Conn, name string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
 	edgexErr = getObjectByHash(conn, ProvisionWatcherCollectionName, name, &provisionWatcher)
