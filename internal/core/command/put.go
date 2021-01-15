@@ -36,11 +36,12 @@ func NewPutCommand(
 	lc logger.LoggingClient,
 	originalRequest *http.Request) (Executor, error) {
 
+	queryParams := originalRequest.URL.RawQuery
 	url := device.Service.Addressable.GetBaseURL() + strings.Replace(
 		command.Put.Action.Path,
 		DEVICEIDURLPARAM,
 		device.Id,
-		-1)
+		-1) + "?" + queryParams
 	deviceServiceProxiedRequest, err := http.NewRequest(http.MethodPut, url, strings.NewReader(body))
 	if err != nil {
 		return serviceCommand{}, err
