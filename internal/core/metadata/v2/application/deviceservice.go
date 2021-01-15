@@ -18,8 +18,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
-	"github.com/google/uuid"
 )
 
 // The AddDeviceService function accepts the new device service model from the controller function
@@ -96,23 +94,6 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 		correlation.FromContext(ctx),
 	))
 
-	return nil
-}
-
-// DeleteDeviceServiceById delete the device service by Id
-func DeleteDeviceServiceById(id string, ctx context.Context, dic *di.Container) errors.EdgeX {
-	if id == "" {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err = dbClient.DeleteDeviceServiceById(id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
 	return nil
 }
 

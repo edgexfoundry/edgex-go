@@ -801,64 +801,6 @@ func TestDeviceProfileByName(t *testing.T) {
 	}
 }
 
-func TestDeleteDeviceProfileById(t *testing.T) {
-	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
-	noId := ""
-	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
-	invalidId := "invalidId"
-
-	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeleteDeviceProfileById", deviceProfile.Id).Return(nil)
-	dbClientMock.On("DeleteDeviceProfileById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
-	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
-			return dbClientMock
-		},
-	})
-
-	controller := NewDeviceProfileController(dic)
-	require.NotNil(t, controller)
-
-	tests := []struct {
-		name               string
-		deviceProfileId    string
-		errorExpected      bool
-		expectedStatusCode int
-	}{
-		{"Valid - delete device profile by id", deviceProfile.Id, false, http.StatusOK},
-		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
-		{"Invalid - device profile not found by id", notFoundId, true, http.StatusNotFound},
-		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
-	}
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiDeviceProfileRoute, contractsV2.Id, testCase.deviceProfileId)
-			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.deviceProfileId})
-			require.NoError(t, err)
-
-			// Act
-			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceProfileById)
-			handler.ServeHTTP(recorder, req)
-			var res common.BaseResponse
-			err = json.Unmarshal(recorder.Body.Bytes(), &res)
-			require.NoError(t, err)
-
-			// Assert
-			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			if testCase.errorExpected {
-				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
-			} else {
-				assert.Empty(t, res.Message, "Message should be empty when it is successful")
-			}
-		})
-	}
-}
-
 func TestDeleteDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	noName := ""
