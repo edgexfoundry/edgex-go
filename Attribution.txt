@@ -119,7 +119,7 @@ https://github.com/edgexfoundry/go-mod-configuration/blob/master/LICENSE
 edgexfoundry/go-mod-core-contracts (Apache 2.0) https://github.com/edgexfoundry/go-mod-core-contracts
 https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
 
-edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging
+edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging/v2
 https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
 
 edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry

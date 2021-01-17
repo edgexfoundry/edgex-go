@@ -14,6 +14,7 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/clients"
@@ -21,8 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/pkg/types"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/google/uuid"
 )
