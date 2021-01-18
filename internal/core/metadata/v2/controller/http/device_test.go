@@ -122,6 +122,7 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", deviceModel.ProfileName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
+	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
 
 	notFoundService := testDevice
 	notFoundService.Device.ServiceName = "notFoundService"
@@ -223,6 +224,9 @@ func TestDeleteDeviceByName(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteDeviceByName", device.Name).Return(nil)
 	dbClientMock.On("DeleteDeviceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dbClientMock.On("DeviceByName", notFoundName).Return(device, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dbClientMock.On("DeviceByName", device.Name).Return(device, nil)
+	dbClientMock.On("DeviceServiceByName", device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -431,6 +435,8 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("DeleteDeviceById", *valid.Device.Id).Return(nil)
 	dbClientMock.On("AddDevice", mock.Anything).Return(dsModels, nil)
+	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
+
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
@@ -509,7 +515,7 @@ func TestPatchDevice(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(jsonData))
-			req, err := http.NewRequest(http.MethodPost, v2.ApiDeviceRoute, reader)
+			req, err := http.NewRequest(http.MethodPatch, v2.ApiDeviceRoute, reader)
 			require.NoError(t, err)
 
 			// Act

@@ -32,11 +32,11 @@ func AddDeviceService(d models.DeviceService, ctx context.Context, dic *di.Conta
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"DeviceService created on DB successfully. DeviceService ID: %s, Correlation-ID: %s ",
 		addedDeviceService.Id,
 		correlationId,
-	))
+	)
 
 	return addedDeviceService.Id, nil
 }
@@ -89,10 +89,10 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"DeviceService patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
-	))
+	)
 
 	return nil
 }
