@@ -56,23 +56,6 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	return addedDevice.Id, nil
 }
 
-// DeleteDeviceById deletes the device by Id
-func DeleteDeviceById(id string, dic *di.Container) errors.EdgeX {
-	if id == "" {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err = dbClient.DeleteDeviceById(id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	return nil
-}
-
 // DeleteDeviceByName deletes the device by name
 func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if name == "" {
@@ -106,23 +89,6 @@ func DevicesByServiceName(offset int, limit int, name string, ctx context.Contex
 		devices[i] = dtos.FromDeviceModelToDTO(d)
 	}
 	return devices, nil
-}
-
-// DeviceIdExists checks the device existence by id
-func DeviceIdExists(id string, dic *di.Container) (exists bool, edgeXerr errors.EdgeX) {
-	if id == "" {
-		return exists, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return exists, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	exists, edgeXerr = dbClient.DeviceIdExists(id)
-	if edgeXerr != nil {
-		return exists, errors.NewCommonEdgeXWrapper(err)
-	}
-	return exists, nil
 }
 
 // DeviceNameExists checks the device existence by name

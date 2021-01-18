@@ -49,50 +49,49 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	reader := io.NewEventRequestReader()
-	addEventReqDTOs, err := reader.ReadAddEventRequest(r.Body)
+	// URL parameters
+	vars := mux.Vars(r)
+	profileName := vars[v2.ProfileName]
+	deviceName := vars[v2.DeviceName]
+
+	addEventReqDTO, err := ec.reader.ReadAddEventRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
+		errResponses := commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		utils.WriteHttpHeader(w, ctx, err.Code())
 		// encode and send out the response
 		pkg.Encode(errResponses, w, lc)
 		return
 	}
-	events := requestDTO.AddEventReqToEventModels(addEventReqDTOs)
 
-	// map Event models to AddEventResponse DTOs
-	var addResponses []interface{}
-	for i, e := range events {
-		newId, err := application.AddEvent(e, ctx, ec.dic)
-		var addEventResponse interface{}
-		// get the requestID from AddEventRequestDTO
-		reqId := addEventReqDTOs[i].RequestId
+	var addEventResponse interface{}
+	var statusCode int
 
-		if err != nil {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			addEventResponse = commonDTO.NewBaseResponse(
-				reqId,
-				err.Message(),
-				err.Code())
-		} else {
-			addEventResponse = commonDTO.NewBaseWithIdResponse(
-				reqId,
-				"",
-				http.StatusCreated,
-				newId)
-		}
-		addResponses = append(addResponses, addEventResponse)
+	event := requestDTO.AddEventReqToEventModel(addEventReqDTO)
+	err = application.ValidateEvent(event, profileName, deviceName, ctx, ec.dic)
+	if err == nil {
+		err = application.AddEvent(event, profileName, deviceName, ctx, ec.dic)
 	}
 
-	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		addEventResponse = commonDTO.NewBaseResponse(addEventReqDTO.RequestId, err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		addEventResponse = commonDTO.NewBaseWithIdResponse(
+			addEventReqDTO.RequestId,
+			"",
+			http.StatusCreated,
+			event.Id)
+		statusCode = http.StatusCreated
+		application.PublishEvent(addEventReqDTO, profileName, deviceName, ctx, ec.dic)
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
 	// encode and send out the response
-	pkg.Encode(addResponses, w, lc)
+	pkg.Encode(addEventResponse, w, lc)
 }
 
 func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {

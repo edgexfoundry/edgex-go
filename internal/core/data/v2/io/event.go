@@ -15,7 +15,7 @@ import (
 
 // EventReader unmarshals a request body into an Event type
 type EventReader interface {
-	ReadAddEventRequest(reader io.Reader) ([]dto.AddEventRequest, errors.EdgeX)
+	ReadAddEventRequest(reader io.Reader) (dto.AddEventRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -32,11 +32,11 @@ func NewJsonReader() jsonEventReader {
 }
 
 // Read reads and converts the request's JSON event data into an Event struct
-func (jsonEventReader) ReadAddEventRequest(reader io.Reader) ([]dto.AddEventRequest, errors.EdgeX) {
-	var addEvents []dto.AddEventRequest
-	err := json.NewDecoder(reader).Decode(&addEvents)
+func (jsonEventReader) ReadAddEventRequest(reader io.Reader) (dto.AddEventRequest, errors.EdgeX) {
+	var addEvent dto.AddEventRequest
+	err := json.NewDecoder(reader).Decode(&addEvent)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "event json decoding failed", err)
+		return addEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "event json decoding failed", err)
 	}
-	return addEvents, nil
+	return addEvent, nil
 }

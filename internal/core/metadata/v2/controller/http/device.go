@@ -91,36 +91,6 @@ func (dc *DeviceController) AddDevice(w http.ResponseWriter, r *http.Request) {
 	pkg.Encode(addResponses, w, lc)
 }
 
-func (dc *DeviceController) DeleteDeviceById(w http.ResponseWriter, r *http.Request) {
-	lc := container.LoggingClientFrom(dc.dic.Get)
-	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
-
-	// URL parameters
-	vars := mux.Vars(r)
-	id := vars[v2.Id]
-
-	var response interface{}
-	var statusCode int
-
-	err := application.DeleteDeviceById(id, dc.dic)
-	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = commonDTO.NewBaseResponse(
-			"",
-			"",
-			http.StatusOK)
-		statusCode = http.StatusOK
-	}
-
-	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(response, w, lc)
-}
-
 func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
@@ -183,36 +153,6 @@ func (dc *DeviceController) DevicesByServiceName(w http.ResponseWriter, r *http.
 			response = responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
 			statusCode = http.StatusOK
 		}
-	}
-
-	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(response, w, lc)
-}
-
-func (dc *DeviceController) DeviceIdExists(w http.ResponseWriter, r *http.Request) {
-	lc := container.LoggingClientFrom(dc.dic.Get)
-	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
-
-	// URL parameters
-	vars := mux.Vars(r)
-	id := vars[v2.Id]
-
-	var response interface{}
-	var statusCode int
-
-	exists, err := application.DeviceIdExists(id, dc.dic)
-	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else if exists {
-		response = commonDTO.NewBaseResponse("", "", http.StatusOK)
-		statusCode = http.StatusOK
-	} else {
-		response = commonDTO.NewBaseResponse("", "", http.StatusNotFound)
-		statusCode = http.StatusNotFound
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)

@@ -24,6 +24,7 @@ import (
 const (
 	testDeviceResourceName = "TestDeviceResource"
 	testDeviceName         = "TestDevice"
+	testProfileName        = "TestProfile"
 	testUUIDString         = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 	testCreatedTime        = 1600666214495
 	testOriginTime         = 1600666185705354000
@@ -130,20 +131,68 @@ func newMockDB(persist bool) *dbMock.DBClient {
 	return myMock
 }
 
-func TestAddEvent(t *testing.T) {
+func TestValidateEvent(t *testing.T) {
 	evt := models.Event{
-		Id:         testUUIDString,
-		DeviceName: testDeviceName,
-		Origin:     testOriginTime,
-		Readings:   buildReadings(),
+		Id:          testUUIDString,
+		DeviceName:  testDeviceName,
+		ProfileName: testProfileName,
+		Origin:      testOriginTime,
+		Readings:    buildReadings(),
 	}
 
 	tests := []struct {
-		Name        string
-		Persistence bool
+		Name          string
+		event         models.Event
+		profileName   string
+		deviceName    string
+		errorExpected bool
 	}{
-		{Name: "Add Event with persistence", Persistence: true},
-		{Name: "Add Event without persistence", Persistence: false},
+		{"Valid - profileName/deviceName matches", persistedEvent, testProfileName, testDeviceName, false},
+		{"Invalid - empty profile name", persistedEvent, "", testDeviceName, true},
+		{"Invalid - inconsistent profile name", persistedEvent, "inconsistent", testDeviceName, true},
+		{"Invalid - empty device name", persistedEvent, testProfileName, "", true},
+		{"Invalid - inconsistent profile name", persistedEvent, testProfileName, "inconsistent", true},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			dbClientMock := newMockDB(true)
+
+			dic := mocks.NewMockDIC()
+			dic.Update(di.ServiceConstructorMap{
+				v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+					return dbClientMock
+				},
+			})
+			err := ValidateEvent(evt, testCase.profileName, testCase.deviceName, context.Background(), dic)
+
+			if testCase.errorExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestAddEvent(t *testing.T) {
+	evt := models.Event{
+		Id:          testUUIDString,
+		DeviceName:  testDeviceName,
+		ProfileName: testProfileName,
+		Origin:      testOriginTime,
+		Readings:    buildReadings(),
+	}
+
+	tests := []struct {
+		Name          string
+		Persistence   bool
+		profileName   string
+		deviceName    string
+		errorExpected bool
+	}{
+		{"Valid - Add Event with persistence", true, testProfileName, testDeviceName, false},
+		{"Valid - Add Event without persistence", false, testProfileName, testDeviceName, false},
 	}
 
 	for _, testCase := range tests {
@@ -163,9 +212,13 @@ func TestAddEvent(t *testing.T) {
 					return dbClientMock
 				},
 			})
-			_, err := AddEvent(evt, context.Background(), dic)
+			err := AddEvent(evt, testCase.profileName, testCase.deviceName, context.Background(), dic)
 
-			require.NoError(t, err)
+			if testCase.errorExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 
 			if !testCase.Persistence {
 				// assert there is no db client function called

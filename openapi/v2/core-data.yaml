@@ -27,25 +27,25 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-        created:
-          description: "A Unix timestamp indicating when (if) the reading was initially persisted to a database."
-          type: integer
-        deviceName:
-          description: "The name of the device from which the reading originated"
-          type: string
         id:
           description: "The unique identifier for the reading"
           type: string
           format: uuid
+        created:
+          description: "A Unix timestamp indicating when (if) the reading was initially persisted to a database."
+          type: integer
+        origin:
+          description: "A Unix timestamp indicating when the reading was originated at the source device (can support nanoseconds)"
+          type: integer
+        deviceName:
+          description: "The name of the device from which the reading originated"
+          type: string
         resourceName:
           description: "The device resource name for the reading"
           type: string
         profileName:
           description: "The device profile name for the reading"
           type: string
-        origin:
-          description: "A Unix timestamp indicating when the reading was originated at the source device (can support nanoseconds)"
-          type: integer
         valueType:
           description: "Indicates the datatype of the value property"
           type: string
@@ -76,12 +76,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-        statusCode:
-          description: "A numeric code signifying the operational status of the response."
-          type: integer
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+        statusCode:
+          description: "A numeric code signifying the operational status of the response."
+          type: integer
     BaseWithIdResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -122,21 +122,21 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-        created:
-          description: "A Unix timestamp indicating when (if) the event was initially persisted to a database."
-          type: integer
-        deviceName:
-          description: "The name of the device from which the event originated"
-          type: string
         id:
           description: "The unique identifier for the event"
           type: string
           format: uuid
+        deviceName:
+          description: "The name of the device from which the event originated"
+          type: string
+        profileName:
+          description: "The name of the device profile from which the event originated"
+          type: string
+        created:
+          description: "A Unix timestamp indicating when (if) the event was initially persisted to a database."
+          type: integer
         origin:
           description: "A Unix timestamp indicating when the event was originated at the source device (can support nanoseconds)"
-          type: integer
-        pushed:
-          description: "A Unix timestamp indicating when the event was permanently pushed to a northside app/service"
           type: integer
         readings:
           description: "One or more readings captured at the time of the event"
@@ -153,7 +153,9 @@ components:
             "Longitude": "-95.377603",
           }
       required:
+        - id
         - deviceName
+        - profileName
         - origin
         - readings
     ErrorResponse:
@@ -256,16 +258,6 @@ components:
               type: string
       required:
         - value
-    MultiSimpleReadingsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for returning a Reading to the caller. The Reading may only be of type SimpleReading."
-      type: object
-      properties:
-        readings:
-          type: array
-          items:
-            $ref: '#/components/schemas/SimpleReading'
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
@@ -336,6 +328,12 @@ components:
         apiVersion: "v2"
         statusCode: 404
         message: "Not Found"
+    409Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 409
+        message: "Data Duplicate"
     416Example:
       value:
         requestId: ""
@@ -348,6 +346,43 @@ components:
         apiVersion: "v2"
         statusCode: 500
         message: "Interval Server Error" 
+    EventExample:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 200
+        message: ""
+        event:
+          apiVersion: "v2"
+          id: "040bd523-ec33-440d-9d72-e5813a465f37"
+          deviceName: "device-001"
+          profileName: "profile-001"
+          created: 1594876281221
+          origin: 1602168089665565300
+          tags:
+            Gateway: "HoustonStore-000123"
+            Latitude: "29.630771"
+            Longitude: "-95.377603"
+          readings:
+            - apiVersion: "v2"
+              created: 1594876281221
+              deviceName: "device-001"
+              resourceName: "resource-001"
+              profileName: "profile-001"
+              id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+              modified: 1594975851631
+              origin: 1602168089665565300
+              valueType: "Float32"
+              value: "39.5"
+            - apiVersion: "v2"
+              create: 1594876281221
+              deviceName: "device-001"
+              resourceName: "resource-001"
+              profileName: "profile-001"
+              id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+              origin: 1602168089665565300
+              valueType: "Int8"
+              value: "75"
     AllEventsExample:
       value:
         requestId: ""
@@ -356,12 +391,15 @@ components:
         message: ""
         events: 
           - apiVersion: "v2"
-            created: 1594876281221
-            deviceName: "device-001"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
-            modified: 1594975851631
+            deviceName: "device-001"
+            profileName: "profile-001"
+            created: 1594876281221
             origin: 1602168089665565300
-            pushed: 1594975851631
+            tags:
+              Gateway: "HoustonStore-000123"
+              Latitude: "29.630771"
+              Longitude: "-95.377603"
             readings:
               - apiVersion: "v2"
                 created: 1594876281221
@@ -371,7 +409,6 @@ components:
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                 modified: 1594975851631
                 origin: 1602168089665565300
-                pushed: 1594975851631
                 valueType: "Float32"
                 value: "39.5"
               - apiVersion: "v2"
@@ -386,6 +423,7 @@ components:
           - apiVersion: "v2"
             created: 1594877691305
             deviceName: "device-002"
+            profileName: "profile-002"
             id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
             origin: 1602168089665565300
             readings:
@@ -458,88 +496,71 @@ components:
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
+    CountExample:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 200
+        message: ""
+        count: 3
 paths:
-  /event:
+  /event/{profileName}/{deviceName}:
     parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
+    - $ref: '#/components/parameters/correlatedRequestHeader'
+    - name: profileName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device profile"
+    - name: deviceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Uniquely identifies a given device"
     post:
-      summary: "Allows for the ingestion of event/reading data"
+      summary: "Allows for the ingestion of event/reading data, and the deviceName and profileName of Event must match to the given deviceName and profileName as specified in the path"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/AddEventRequest'
+              $ref: '#/components/schemas/AddEventRequest'
             example:
-              - event:
-                  deviceName: device-002
-                  id: d5471d59-2810-419a-8744-18eb8fa03465
-                  origin: 1602168089665565300
-                  readings:
-                    - deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      origin: 1602168089665565300
-                      valueType: Float32
-                      value: '12.2'
-              - event:
-                  deviceName: device-002
-                  id: d5471d59-2810-419a-8744-18eb8fa03465
-                  origin: 1602168089665565300
-                  readings:
-                    - deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                      origin: 1602168089665565300
-                      valueType: Float32
-                      value: '12.2'
-              - event:
-                  deviceName: device-002
-                  id: 73fc4f9c-2d64-4920-addb-b1f33a8f8514
-                  origin: 1602168089665565300
-                  readings:
-                    - apiVersion: v2
-                      created: 1594879337014
-                      deviceName: device-002
-                      resourceName: resource-002
-                      profileName: profile-002
-                      id: 71c601d9-cb56-453a-8c75-54461e444713
-                      origin: 1602168089665565300
-                      valueType: Binary
-                      binaryValue: '83010203'
-                      mediaType: image
+              event:
+                deviceName: device-002
+                profileName: profile-002
+                id: d5471d59-2810-419a-8744-18eb8fa03465
+                origin: 1602168089665565300
+                tags:
+                  Gateway: "HoustonStore-000123"
+                  Latitude: "29.630771"
+                  Longitude: "-95.377603"
+                readings:
+                  - deviceName: device-002
+                    resourceName: resource-002
+                    profileName: profile-002
+                    id: 7003cacc-0e00-4676-977c-4e58b9612abd
+                    origin: 1602168089665565300
+                    valueType: Float32
+                    value: '12.2'
       responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+        '201':
+          description: "Indicates the event has been successfully added."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseWithIdResponse'
+                $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 201
-                  message: ""
-                  id: "040bd523-ec33-440d-9d72-e5813a465f37"
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 409
-                  message: "Event Id exists"
-                - requestId: ""
-                  apiVersion: "v2"
-                  statusCode: 500
-                  message: "Interval Server Error"
+                requestId: ""
+                apiVersion: "v2"
+                statusCode: 201
+                message: ""
+                id: "d5471d59-2810-419a-8744-18eb8fa03465"
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -552,6 +573,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '409':
+          description: "Conflict detected. Event Id must be universally unique."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                409Example:
+                  $ref: '#/components/examples/409Example'
         '500':
           description: An unexpected error occurred on the server
           headers:
@@ -642,38 +675,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                event:
-                  apiVersion: "v2"
-                  created: 1594876281221
-                  deviceName: "device-001"
-                  id: "040bd523-ec33-440d-9d72-e5813a465f37"
-                  modified: 1594975851631
-                  origin: 1602168089665565300
-                  pushed: 1594975851631
-                  readings:
-                    - created: 1594876281221
-                      deviceName: "device-001"
-                      resourceName: "resource-001"
-                      profileName: "profile-001"
-                      id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                      modified: 1594975851631
-                      origin: 1602168089665565300
-                      pushed: 1594975851631
-                      valueType: "Float32"
-                      value: "39.5"
-                    - create: 1594876281221
-                      deviceName: "device-001"
-                      resourceName: "resource-001"
-                      profileName: "profile-001"
-                      id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
-                      origin: 1602168089665565300
-                      valueType: "Int8"
-                      value: "75"
+              examples:
+                EventExample:
+                  $ref: '#/components/examples/EventExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -752,12 +756,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                count: 3
+              examples:
+                CountExample:
+                  $ref: '#/components/examples/CountExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -791,12 +792,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                count: 1
+              examples:
+                CountExample:
+                  $ref: '#/components/examples/CountExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -844,42 +842,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiEventsResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                events:
-                  - apiVersion: "v2"
-                    created: 1594877691305
-                    deviceName: "device-002"
-                    id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
-                    origin: 1602168089665565300
-                    readings:
-                      - created: 1594879337014
-                        deviceName: "device-002"
-                        resourceName: "resource-002"
-                        profileName: "profile-002"
-                        id: "71c601d9-cb56-453a-8c75-54461e444713"
-                        origin: 1602168089665565300
-                        valueType: "Binary"
-                        binaryValue: "83010203"
-                        mediaType: "image"
-                  - apiVersion: "v2"
-                    created: 1594983105886
-                    deviceName: "device-002"
-                    id: "d5471d59-2810-419a-8744-18eb8fa03465"
-                    origin: 1602168089665565300
-                    readings:
-                      - apiVersion: "v2"
-                        created: 594983105886
-                        deviceName: "device-002"
-                        resourceName: "resource-002"
-                        profileName: "profile-002"
-                        id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-                        origin: 1602168089665565300
-                        valueType: "Float32"
-                        value: "12.2"
+              examples:
+                MultiEventsExample:
+                  $ref: '#/components/examples/AllEventsExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -941,7 +906,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                200Example:
+                202Example:
                   $ref: '#/components/examples/202Example'
         '500':
           description: "An unexpected error occurred on the server"
@@ -1049,7 +1014,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                200Example:
+                202Example:
                   $ref: '#/components/examples/202Example'
         '400':
           description: "\"{age}\" must be a parsable unix timestamp"
@@ -1150,12 +1115,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                count: 4
+              examples:
+                CountExample:
+                  $ref: '#/components/examples/CountExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1189,12 +1151,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                count: 2
+              examples:
+                CountExample:
+                  $ref: '#/components/examples/CountExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1295,7 +1254,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: Returns a paginated list of SimpleReadings whose resource name is of the specified one.
+      summary: Returns a paginated list of readings whose resource name is of the specified one.
       responses:
         '200':
           description: "OK"
@@ -1305,33 +1264,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiSimpleReadingsResponse'
-              example:
-                requestId: ""
-                apiVersion: "v2"
-                statusCode: 200
-                message: ""
-                readings:
-                  - apiVersion: "v2"
-                    created: 1594876281221
-                    deviceName: "device-001"
-                    resourceName: "resource-001"
-                    profileName: "profile-001"
-                    id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
-                    modified: 1594975851631
-                    origin: 1602168089665565300
-                    pushed: 1594975851631
-                    valueType: "Float32"
-                    value: "39.5"
-                  - apiVersion: "v2"
-                    created: 594983105886
-                    deviceName: "device-002"
-                    resourceName: "resource-002"
-                    profileName: "profile-002"
-                    id: "7003cacc-0e00-4676-977c-4e58b9612abd"
-                    origin: 1602168089665565300
-                    valueType: "Float32"
-                    value: "12.2"
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/AllReadingsExample'
         '400':
           description: "Request is in an invalid state. \"{resourceName}\" could only contain reserved characters as defined in https://tools.ietf.org/html/rfc3986#section-2.3"
           headers:
