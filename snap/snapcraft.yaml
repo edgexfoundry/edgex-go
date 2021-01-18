@@ -280,7 +280,7 @@ apps:
       - security-proxy-setup
       - core-data
       - core-metadata
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -cp -r
+    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
     daemon: simple
     environment:
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
