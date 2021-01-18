@@ -3,16 +3,16 @@ info:
   title: Edgex Foundry - Support Notifications API
   description: This is the definition of the API for the Support Notifications service in the EdgeX Foundry IOT microservice platform. Support Notifications provides functionality for sending notifications via email/REST from the EdgeX Foundry platform.
   version: 2.x
-  
+
 servers:
   - url: http://localhost:48060/api/v2
     description: URL for local development and testing
-  
+
 components:
   schemas:
     AddNotificationRequest:
       allOf:
-      - $ref: '#/components/schemas/BaseRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new notification."
       type: object
       properties:
@@ -22,7 +22,7 @@ components:
         - notification
     AddSubscriptionRequest:
       allOf:
-      - $ref: '#/components/schemas/BaseRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to add a new subscription."
       type: object
       properties:
@@ -171,7 +171,7 @@ components:
         - severity
     NotificationResponse:
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a notification to the caller."
       type: object
       properties:
@@ -189,7 +189,7 @@ components:
             $ref: '#/components/schemas/Notification'
     PingResponse:
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "Provides a response containing the API version and current server timestamp."
       type: object
       properties:
@@ -319,7 +319,7 @@ components:
           type: string
     SubscriptionResponse:
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a Subscription to the caller."
       type: object
       properties:
@@ -384,7 +384,7 @@ components:
           type: integer
     TransmissionResponse:
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a Transmission to the caller."
       type: object
       properties:
@@ -402,7 +402,7 @@ components:
             $ref: '#/components/schemas/Transmission'
     UpdateSubscriptionRequest:
       allOf:
-      - $ref: '#/components/schemas/BaseRequest'
+        - $ref: '#/components/schemas/BaseRequest'
       description: "A request to update an existing Subscription. 'id' or 'name' must be populated in order to identify the subscription. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
@@ -413,7 +413,7 @@ components:
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       allOf:
-      - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         version:
