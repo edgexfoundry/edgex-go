@@ -28,7 +28,7 @@ diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
 index 1e537489..faf42425 100644
 --- a/snap/snapcraft.yaml
 +++ b/snap/snapcraft.yaml
-@@ -73,75 +73,6 @@ confinement: strict
+@@ -73,77 +73,6 @@ confinement: strict
  
  apps:
    # edgex microservices
@@ -40,9 +40,11 @@ index 1e537489..faf42425 100644
 -  redis:
 -    adapter: full
 -    after: [security-secretstore-setup]
--    command: bin/redis-server --dir $SNAP_DATA/redis $REDIS_SAVE_OPTS
+-    command: bin/redis-server $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
 -    environment:
--      REDIS_SAVE_OPTS: "--save 900 1 --save 300 10"
+-      DIR_OPT: "--dir $SNAP_DATA/redis"
+-      SAVE_OPT1: "--save 900 1"
+-      SAVE_OPT2: "--save 300 10"
 -    daemon: simple
 -    plugs: [network, network-bind]
 -  postgres:
@@ -115,7 +117,7 @@ index 1e537489..faf42425 100644
 -      - security-proxy-setup
 -      - core-data
 -      - core-metadata
--    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -cp -r
+-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
 -    daemon: simple
 -    environment:
 -      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
@@ -357,8 +359,8 @@ index 1e537489..faf42425 100644
 -      - zip
 -
 -  redis:
--    source: https://github.com/antirez/redis.git
--    source-tag: "6.0.8"
+-    source: https://github.com/redis/redis.git
+-    source-tag: "6.0.9"
 -    source-depth: 1
 -    plugin: make
 -    make-install-var: PREFIX

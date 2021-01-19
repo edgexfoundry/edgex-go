@@ -81,9 +81,11 @@ apps:
   redis:
     adapter: full
     after: [security-secretstore-setup]
-    command: bin/redis-server --dir $SNAP_DATA/redis $REDIS_SAVE_OPTS
+    command: bin/redis-server $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
     environment:
-      REDIS_SAVE_OPTS: "--save 900 1 --save 300 10"
+      DIR_OPT: "--dir $SNAP_DATA/redis"
+      SAVE_OPT1: "--save 900 1"
+      SAVE_OPT2: "--save 300 10"
     daemon: simple
     plugs: [network, network-bind]
   postgres:
@@ -278,7 +280,7 @@ apps:
       - security-proxy-setup
       - core-data
       - core-metadata
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual -cp -r
+    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
     daemon: simple
     environment:
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
@@ -571,8 +573,8 @@ parts:
       - zip
 
   redis:
-    source: https://github.com/antirez/redis.git
-    source-tag: "6.0.8"
+    source: https://github.com/redis/redis.git
+    source-tag: "6.0.9"
     source-depth: 1
     plugin: make
     make-install-var: PREFIX
