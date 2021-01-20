@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 // Printing function purely for debugging purposes

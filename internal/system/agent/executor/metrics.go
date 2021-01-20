@@ -22,7 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 // metrics contains references to dependencies required to handle the metrics via external executor use case.

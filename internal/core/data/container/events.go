@@ -14,7 +14,7 @@
 
 package container
 
-import "github.com/edgexfoundry/go-mod-bootstrap/di"
+import "github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 // EventsChannelName contains the name of the Events channel instance in the DIC.
 const EventsChannelName = "CoreDataEventsChannel"

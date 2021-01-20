@@ -28,7 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 func TestRetrieve(t *testing.T) {

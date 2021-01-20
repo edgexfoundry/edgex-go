@@ -18,7 +18,7 @@ package agent
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/go-mod-registry/v2/registry"
 )
 
 func getHealth(services []string, registryClient registry.Client) map[string]interface{} {

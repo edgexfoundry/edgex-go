@@ -17,7 +17,7 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
 // ConfigurationName contains the name of the metadata's config.ConfigurationStruct implementation in the DIC.

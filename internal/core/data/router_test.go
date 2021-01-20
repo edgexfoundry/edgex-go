@@ -32,9 +32,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 // TestSuccessfulConfig configuration used to avoid MaxResultCount errors.

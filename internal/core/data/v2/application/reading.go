@@ -2,10 +2,10 @@ package application
 
 import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // ReadingTotalCount return the count of all of readings currently stored in the database and error if any

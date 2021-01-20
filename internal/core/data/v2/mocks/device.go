@@ -13,10 +13,10 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/types"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

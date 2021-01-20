@@ -2,7 +2,7 @@
 
 package mocks
 
-import go_mod_core_contractsmodels "github.com/edgexfoundry/go-mod-core-contracts/models"
+import go_mod_core_contractsmodels "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 import mock "github.com/stretchr/testify/mock"
 import models "github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"

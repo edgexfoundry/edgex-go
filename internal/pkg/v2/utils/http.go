@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/gorilla/mux"
 )
 

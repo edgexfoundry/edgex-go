@@ -17,7 +17,7 @@ package response
 import (
 	"encoding/json"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 // Process converts a response string (assumed to contain JSON) to a map.

@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 )

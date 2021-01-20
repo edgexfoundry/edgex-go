@@ -32,10 +32,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 )
 
 type CertUploadErrorType int

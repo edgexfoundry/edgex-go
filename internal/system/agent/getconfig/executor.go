@@ -18,16 +18,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
 
 	agentClients "github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-registry/registry"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-registry/v2/registry"
 )
 
 // executor contains references to dependencies required to execute a get configuration request.

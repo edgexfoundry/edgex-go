@@ -19,19 +19,19 @@ import (
 
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2"
 	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/coredata"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/notifications"
 
 	"github.com/gorilla/mux"
 )

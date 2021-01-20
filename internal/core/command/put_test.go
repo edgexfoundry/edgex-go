@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 func TestNewPutCommandWithCorrelationId(t *testing.T) {

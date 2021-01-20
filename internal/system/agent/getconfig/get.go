@@ -20,7 +20,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 // resultConfigurationType defines the type for the Configuration element in resultType

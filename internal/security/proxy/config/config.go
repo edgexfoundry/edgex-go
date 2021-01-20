@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"net/url"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/types"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 type ConfigurationStruct struct {

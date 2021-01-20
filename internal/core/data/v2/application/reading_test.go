@@ -7,9 +7,9 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

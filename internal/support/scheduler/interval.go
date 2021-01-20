@@ -15,7 +15,7 @@
 package scheduler
 
 import (
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"

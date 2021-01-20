@@ -28,10 +28,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/coredata"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/coredata"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/yaml.v2"

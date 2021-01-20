@@ -17,7 +17,7 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
 // SetConfigInterfaceName contains the name of the interfaces.SetConfig implementation in the DIC.

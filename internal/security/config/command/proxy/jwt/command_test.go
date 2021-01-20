@@ -12,7 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -10,10 +10,10 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 )

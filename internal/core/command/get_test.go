@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 const (

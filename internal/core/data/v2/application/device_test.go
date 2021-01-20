@@ -13,7 +13,7 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	mocksV2 "github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/stretchr/testify/require"
 )

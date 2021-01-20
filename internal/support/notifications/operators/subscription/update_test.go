@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/subscription/mocks"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 func TestUpdateExecutor(t *testing.T) {

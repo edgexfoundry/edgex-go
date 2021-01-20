@@ -24,7 +24,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (

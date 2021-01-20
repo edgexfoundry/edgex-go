@@ -21,11 +21,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 
-	"github.com/edgexfoundry/go-mod-configuration/configuration"
-	"github.com/edgexfoundry/go-mod-configuration/pkg/types"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
-	responses "github.com/edgexfoundry/go-mod-core-contracts/responses/configuration"
+	"github.com/edgexfoundry/go-mod-configuration/v2/configuration"
+	"github.com/edgexfoundry/go-mod-configuration/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	requests "github.com/edgexfoundry/go-mod-core-contracts/v2/requests/configuration"
+	responses "github.com/edgexfoundry/go-mod-core-contracts/v2/responses/configuration"
 )
 
 // executor contains references to dependencies required to execute a set configuration request.

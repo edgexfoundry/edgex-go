@@ -16,8 +16,8 @@ package data
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/metadata"
 )
 
 // An event indicating that a given device has just reported some data

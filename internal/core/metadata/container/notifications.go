@@ -15,9 +15,9 @@
 package container
 
 import (
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/notifications"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/notifications"
 )
 
 // NotificationsClientName contains the name of the NotificationsClient's implementation in the DIC.

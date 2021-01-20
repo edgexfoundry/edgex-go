@@ -13,8 +13,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation/models"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 var TestEvent = contract.Event{

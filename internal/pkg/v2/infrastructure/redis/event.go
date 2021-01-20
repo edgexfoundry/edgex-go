@@ -12,9 +12,9 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
