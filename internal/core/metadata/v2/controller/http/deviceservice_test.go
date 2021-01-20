@@ -466,11 +466,15 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
 	noName := ""
 	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteDeviceServiceByName", deviceService.Name).Return(nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, deviceService.Name).Return([]models.Device{}, nil)
 	dbClientMock.On("DeleteDeviceServiceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+	dbClientMock.On("DevicesByServiceName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -489,6 +493,7 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 		{"Valid - delete device service by name", deviceService.Name, false, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
 		{"Invalid - device service not found by name", notFoundName, true, http.StatusNotFound},
+		{"Invalid - associated device exists", deviceExists, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
