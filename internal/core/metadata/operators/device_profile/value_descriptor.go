@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	dataErrors "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"

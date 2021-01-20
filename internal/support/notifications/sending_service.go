@@ -31,8 +31,8 @@ import (
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 func sendViaChannel(

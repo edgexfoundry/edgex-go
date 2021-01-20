@@ -10,8 +10,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/google/uuid"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 var testEvent contract.Event

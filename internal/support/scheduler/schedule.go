@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"

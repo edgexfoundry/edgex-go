@@ -17,9 +17,9 @@ package clients
 import (
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/urlclient/local"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/general"
 	"github.com/stretchr/testify/assert"
 )
 

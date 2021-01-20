@@ -29,9 +29,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval"
 	mockDB "github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/interval/mocks"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	errors "github.com/edgexfoundry/go-mod-core-contracts/clients/types"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	errors "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/types"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gorilla/mux"
 )

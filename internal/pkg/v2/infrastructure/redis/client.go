@@ -12,9 +12,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/google/uuid"
 )

@@ -15,7 +15,7 @@
 package config
 
 import (
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 )
 
 type ConfigurationClients map[string]bootstrapConfig.ClientInfo

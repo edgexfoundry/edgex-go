@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

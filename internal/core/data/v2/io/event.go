@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 )
 
 // EventReader unmarshals a request body into an Event type

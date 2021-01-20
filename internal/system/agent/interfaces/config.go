@@ -17,7 +17,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/requests/configuration"
 )
 
 type GetConfig interface {

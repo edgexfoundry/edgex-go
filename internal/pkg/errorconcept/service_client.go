@@ -14,7 +14,7 @@
 
 package errorconcept
 
-import "github.com/edgexfoundry/go-mod-core-contracts/clients/types"
+import "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/types"
 
 // NewServiceClientHttpError represents the accessor for the service-client-specific error concepts
 func NewServiceClientHttpError(err error) *serviceClientHttpError {

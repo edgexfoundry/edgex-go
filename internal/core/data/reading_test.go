@@ -13,9 +13,9 @@ import (
 	dataMocks "github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/stretchr/testify/mock"
 )

@@ -4,15 +4,15 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	v2HttpClient "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	v2HttpClient "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/clients/http"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/clients/interfaces"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // addDeviceCallback invoke device service's callback function for adding new device

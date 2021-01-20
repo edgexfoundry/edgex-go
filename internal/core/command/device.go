@@ -25,9 +25,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/metadata"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/metadata"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/gorilla/mux"
 )

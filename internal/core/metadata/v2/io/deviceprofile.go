@@ -13,10 +13,10 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 )
 
 // DeviceProfileReader unmarshals a request body into an DeviceProfile type

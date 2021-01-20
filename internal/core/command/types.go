@@ -19,8 +19,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 // serviceCommand type which encapsulates command information to be sent to the command service.

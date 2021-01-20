@@ -19,7 +19,7 @@ import (
 
 	intervalErrors "github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/operators/intervalaction/mocks"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 //var InvalidFreqInterval = SuccessfulIntervalActionResult[4]

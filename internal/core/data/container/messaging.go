@@ -15,7 +15,7 @@
 package container
 
 import (
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
 )
 

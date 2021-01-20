@@ -13,12 +13,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/google/uuid"
 )

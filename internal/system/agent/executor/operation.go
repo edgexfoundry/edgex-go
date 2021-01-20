@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 // operations contains references to dependencies required to handle an operation via executor use case.

@@ -14,7 +14,7 @@ import (
 	. "github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/require"
 )

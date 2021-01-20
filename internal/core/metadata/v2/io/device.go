@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	dtoRequest "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	dtoRequest "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 )
 
 // DeviceReader unmarshals a request body into an array of Device type

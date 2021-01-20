@@ -23,13 +23,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 
 	"github.com/gorilla/mux"
 )

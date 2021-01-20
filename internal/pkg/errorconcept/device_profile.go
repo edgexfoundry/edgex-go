@@ -18,7 +18,7 @@ import (
 	"net/http"
 
 	metadataErrors "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 var DeviceProfile deviceProfileErrorConcept

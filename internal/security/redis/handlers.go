@@ -24,11 +24,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/edgex-go/internal/security/redis/container"
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/secret"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/startup"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/secret"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	redigo "github.com/gomodule/redigo/redis"
 )
 

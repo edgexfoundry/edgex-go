@@ -11,8 +11,8 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 )
 
 // This function will be updated when CheckDevice in v2 core-metadata is available

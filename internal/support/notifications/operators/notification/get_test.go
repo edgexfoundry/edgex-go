@@ -21,7 +21,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/operators/notification/mocks"
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 var Id = "83cb038b-5a94-4707-985d-13effec62de2"

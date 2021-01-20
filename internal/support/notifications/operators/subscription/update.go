@@ -15,7 +15,7 @@
 package subscription
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 type UpdateExecutor interface {

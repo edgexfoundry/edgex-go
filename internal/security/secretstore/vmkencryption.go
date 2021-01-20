@@ -19,7 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/kdf"
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-	"github.com/edgexfoundry/go-mod-secrets/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 )
 
 /*
