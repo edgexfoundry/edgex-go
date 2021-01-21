@@ -104,7 +104,7 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
 
-	// Check the associated Device existence
+	// Check the associated Device and ProvisionWatcher existence
 	devices, err := dbClient.DevicesByServiceName(0, 1, name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -112,6 +112,14 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 	if len(devices) > 0 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to delete the device service when associated device exists", nil)
 	}
+	provisionWatchers, err := dbClient.ProvisionWatchersByServiceName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(provisionWatchers) > 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to delete the device service when associated provisionWatcher exists", nil)
+	}
+
 	err = dbClient.DeleteDeviceServiceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
