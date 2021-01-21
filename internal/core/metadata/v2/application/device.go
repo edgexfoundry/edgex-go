@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -139,12 +139,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
-	err = dbClient.DeleteDeviceById(device.Id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-
-	_, err = dbClient.AddDevice(device)
+	err = dbClient.UpdateDevice(device)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

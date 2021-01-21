@@ -42,6 +42,7 @@ type DBClient interface {
 	DeviceByName(name string) (model.Device, errors.EdgeX)
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
 	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
+	UpdateDevice(d model.Device) errors.EdgeX
 
 	AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherById(id string) (model.ProvisionWatcher, errors.EdgeX)
