@@ -430,6 +430,14 @@ func (c *Client) DevicesByProfileName(offset int, limit int, profileName string)
 	return devices, nil
 }
 
+// Update a device
+func (c *Client) UpdateDevice(d model.Device) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return updateDevice(conn, d)
+}
+
 // AllEvents query events by offset and limit
 func (c *Client) AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX) {
 	conn := c.Pool.Get()
