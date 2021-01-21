@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -79,7 +79,24 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceProfileByName(name)
+
+	// Check the associated Device and ProvisionWatcher existence
+	devices, err := dbClient.DevicesByProfileName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(devices) > 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to delete the device profile when associated device exists", nil)
+	}
+	provisionWatchers, err := dbClient.ProvisionWatchersByProfileName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(provisionWatchers) > 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to delete the device profile when associated provisionWatcher exists", nil)
+	}
+
+	err = dbClient.DeleteDeviceProfileByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -805,11 +805,20 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	noName := ""
 	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
+	provisionWatcherExists := "provisionWatcherExists"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceProfile.Name).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, deviceProfile.Name).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", deviceProfile.Name).Return(nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, notFoundName).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -828,6 +837,8 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 		{"Valid - delete device profile by name", deviceProfile.Name, false, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
 		{"Invalid - device profile not found by name", notFoundName, true, http.StatusNotFound},
+		{"Invalid - associated device exists", deviceExists, true, http.StatusBadRequest},
+		{"Invalid - associated provisionWatcher Exists", provisionWatcherExists, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
