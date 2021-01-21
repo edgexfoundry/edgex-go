@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -433,8 +433,7 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", *valid.Device.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
-	dbClientMock.On("DeleteDeviceById", *valid.Device.Id).Return(nil)
-	dbClientMock.On("AddDevice", mock.Anything).Return(dsModels, nil)
+	dbClientMock.On("UpdateDevice", mock.Anything).Return(nil)
 	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
 
 	validWithNoReqID := testReq

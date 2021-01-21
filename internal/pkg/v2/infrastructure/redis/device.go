@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -49,6 +49,23 @@ func deviceIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	return exists, nil
 }
 
+// sendAddDeviceCmd send redis command for adding device
+func sendAddDeviceCmd(conn redis.Conn, storedKey string, d models.Device) errors.EdgeX {
+	dsJSONBytes, err := json.Marshal(d)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal device for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, dsJSONBytes)
+	_ = conn.Send(ZADD, DeviceCollection, 0, storedKey)
+	_ = conn.Send(HSET, DeviceCollectionName, d.Name, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceCollectionServiceName, d.ServiceName), d.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceCollectionProfileName, d.ProfileName), d.Modified, storedKey)
+	for _, label := range d.Labels {
+		_ = conn.Send(ZADD, CreateKey(DeviceCollectionLabel, label), d.Modified, storedKey)
+	}
+	return nil
+}
+
 // addDevice adds a new device into DB
 func addDevice(conn redis.Conn, d models.Device) (models.Device, errors.EdgeX) {
 	exists, edgeXerr := deviceIdExists(conn, d.Id)
@@ -71,22 +88,13 @@ func addDevice(conn redis.Conn, d models.Device) (models.Device, errors.EdgeX) {
 	}
 	d.Modified = ts
 
-	dsJSONBytes, err := json.Marshal(d)
-	if err != nil {
-		return d, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal device for Redis persistence", err)
-	}
-
 	storedKey := deviceStoredKey(d.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, storedKey, dsJSONBytes)
-	_ = conn.Send(ZADD, DeviceCollection, 0, storedKey)
-	_ = conn.Send(HSET, DeviceCollectionName, d.Name, storedKey)
-	_ = conn.Send(ZADD, CreateKey(DeviceCollectionServiceName, d.ServiceName), d.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(DeviceCollectionProfileName, d.ProfileName), d.Modified, storedKey)
-	for _, label := range d.Labels {
-		_ = conn.Send(ZADD, CreateKey(DeviceCollectionLabel, label), d.Modified, storedKey)
+	edgeXerr = sendAddDeviceCmd(conn, storedKey, d)
+	if edgeXerr != nil {
+		return d, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	_, err = conn.Do(EXEC)
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device creation failed", err)
 	}
@@ -138,10 +146,8 @@ func deleteDeviceByName(conn redis.Conn, name string) errors.EdgeX {
 	return nil
 }
 
-// deleteDevice deletes a device
-func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
-	storedKey := deviceStoredKey(device.Id)
-	_ = conn.Send(MULTI)
+// sendDeleteDeviceCmd send redis command for deleting device
+func sendDeleteDeviceCmd(conn redis.Conn, storedKey string, device models.Device) {
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceCollection, storedKey)
 	_ = conn.Send(HDEL, DeviceCollectionName, device.Name)
@@ -150,6 +156,13 @@ func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
 	for _, label := range device.Labels {
 		_ = conn.Send(ZREM, CreateKey(DeviceCollectionLabel, label), storedKey)
 	}
+}
+
+// deleteDevice deletes a device
+func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
+	storedKey := deviceStoredKey(device.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteDeviceCmd(conn, storedKey, device)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device deletion failed", err)
@@ -224,4 +237,28 @@ func devicesByProfileName(conn redis.Conn, offset int, limit int, profileName st
 		devices[i] = s
 	}
 	return devices, nil
+}
+
+func updateDevice(conn redis.Conn, d models.Device) errors.EdgeX {
+	oldDevice, edgexErr := deviceByName(conn, d.Name)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	ts := common.MakeTimestamp()
+	d.Modified = ts
+
+	storedKey := deviceStoredKey(d.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteDeviceCmd(conn, storedKey, oldDevice)
+	edgexErr = sendAddDeviceCmd(conn, storedKey, d)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device update failed", err)
+	}
+
+	return nil
 }
