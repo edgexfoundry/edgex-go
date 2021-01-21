@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
@@ -83,6 +84,13 @@ func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceNam
 
 	if len(clients.FromContext(ctx, clients.ContentType)) == 0 {
 		ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
+	}
+
+	// Must make sure API Version for embedded DTOs is set since it isn't required by the request,
+	// but is needed when published to Message Bus.
+	addEventReq.Event.Versionable = common.NewVersionable()
+	for index := range addEventReq.Event.Readings {
+		addEventReq.Event.Readings[index].Versionable = common.NewVersionable()
 	}
 
 	data, err = json.Marshal(addEventReq)
