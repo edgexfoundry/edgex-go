@@ -613,8 +613,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", *valid.ProvisionWatcher.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", *valid.ProvisionWatcher.ProfileName).Return(true, nil)
 	dbClientMock.On("ProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(pwModels, nil)
-	dbClientMock.On("DeleteProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(nil)
-	dbClientMock.On("AddProvisionWatcher", mock.Anything).Return(pwModels, nil)
+	dbClientMock.On("UpdateProvisionWatcher", mock.Anything).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
