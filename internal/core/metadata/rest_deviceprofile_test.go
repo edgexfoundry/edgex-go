@@ -26,7 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/mock"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var TestLabelError1 = "TestErrorLabel1"
