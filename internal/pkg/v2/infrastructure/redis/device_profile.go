@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -49,21 +49,38 @@ func deviceProfileIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	return exists, nil
 }
 
+// sendAddDeviceProfileCmd send redis command for adding device profile
+func sendAddDeviceProfileCmd(conn redis.Conn, storedKey string, dp models.DeviceProfile) errors.EdgeX {
+	m, err := json.Marshal(dp)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal device profile for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
+	_ = conn.Send(HSET, DeviceProfileCollectionName, dp.Name, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionManufacturer, dp.Manufacturer), dp.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionModel, dp.Model), dp.Modified, storedKey)
+	for _, label := range dp.Labels {
+		_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionLabel, label), dp.Modified, storedKey)
+	}
+	return nil
+}
+
 // addDeviceProfile adds a device profile to DB
-func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (addedDeviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
+func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (models.DeviceProfile, errors.EdgeX) {
 	// query device profile name and id to avoid the conflict
 	exists, edgeXerr := deviceProfileIdExists(conn, dp.Id)
 	if edgeXerr != nil {
-		return addedDeviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return dp, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
-		return addedDeviceProfile, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile id %s exists", dp.Id), edgeXerr)
+		return dp, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile id %s exists", dp.Id), edgeXerr)
 	}
 
 	exists, edgeXerr = deviceProfileNameExists(conn, dp.Name)
 	if edgeXerr != nil {
-		return addedDeviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return dp, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
-		return addedDeviceProfile, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile name %s exists", dp.Name), edgeXerr)
+		return dp, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile name %s exists", dp.Name), edgeXerr)
 	}
 
 	ts := common.MakeTimestamp()
@@ -74,23 +91,13 @@ func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (addedDeviceProf
 	}
 	dp.Modified = ts
 
-	m, err := json.Marshal(dp)
-	if err != nil {
-		return addedDeviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal device profile for Redis persistence", err)
-	}
-
 	storedKey := deviceProfileStoredKey(dp.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, DeviceProfileCollection, 0, storedKey)
-	_ = conn.Send(HSET, DeviceProfileCollectionName, dp.Name, storedKey)
-	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionManufacturer, dp.Manufacturer), dp.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionModel, dp.Model), dp.Modified, storedKey)
-	for _, label := range dp.Labels {
-		_ = conn.Send(ZADD, CreateKey(DeviceProfileCollectionLabel, label), dp.Modified, storedKey)
+	edgeXerr = sendAddDeviceProfileCmd(conn, storedKey, dp)
+	if edgeXerr != nil {
+		return dp, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-
-	_, err = conn.Do(EXEC)
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile creation failed", err)
 	}
@@ -116,9 +123,8 @@ func deviceProfileByName(conn redis.Conn, name string) (deviceProfile models.Dev
 	return
 }
 
-func deleteDeviceProfile(conn redis.Conn, dp models.DeviceProfile) errors.EdgeX {
-	storedKey := deviceProfileStoredKey(dp.Id)
-	_ = conn.Send(MULTI)
+// sendDeleteDeviceProfileCmd send redis command for deleting device profile
+func sendDeleteDeviceProfileCmd(conn redis.Conn, storedKey string, dp models.DeviceProfile) {
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, DeviceProfileCollection, storedKey)
 	_ = conn.Send(HDEL, DeviceProfileCollectionName, dp.Name)
@@ -127,7 +133,12 @@ func deleteDeviceProfile(conn redis.Conn, dp models.DeviceProfile) errors.EdgeX 
 	for _, label := range dp.Labels {
 		_ = conn.Send(ZREM, CreateKey(DeviceProfileCollectionLabel, label), storedKey)
 	}
+}
 
+func deleteDeviceProfile(conn redis.Conn, dp models.DeviceProfile) errors.EdgeX {
+	storedKey := deviceProfileStoredKey(dp.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteDeviceProfileCmd(conn, storedKey, dp)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile deletion failed", err)
@@ -150,21 +161,23 @@ func updateDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (edgeXerr err
 		}
 	}
 
-	edgeXerr = deleteDeviceProfile(conn, oldDeviceProfile)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
-	}
-
-	// Add new one
 	dp.Id = oldDeviceProfile.Id
 	dp.Created = oldDeviceProfile.Created
 	dp.Modified = common.MakeTimestamp()
-	_, edgeXerr = addDeviceProfile(conn, dp)
+
+	storedKey := deviceProfileStoredKey(dp.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteDeviceProfileCmd(conn, storedKey, oldDeviceProfile)
+	edgeXerr = sendAddDeviceProfileCmd(conn, storedKey, dp)
 	if edgeXerr != nil {
-		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile updating failed", edgeXerr)
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "device profile update failed", err)
 	}
 
-	return edgeXerr
+	return nil
 }
 
 // deleteDeviceProfileById deletes the device profile by id
