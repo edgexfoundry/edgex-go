@@ -190,6 +190,13 @@ func (c *Client) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	return deviceServiceNameExist(conn, name)
 }
 
+// UpdateDeviceService updates a device service
+func (c *Client) UpdateDeviceService(ds model.DeviceService) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateDeviceService(conn, ds)
+}
+
 // DeviceProfileByName gets a device profile by name
 func (c *Client) DeviceProfileByName(name string) (deviceProfile model.DeviceProfile, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()

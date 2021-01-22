@@ -61,20 +61,20 @@ func (_m *DBClient) AddDeviceProfile(e models.DeviceProfile) (models.DeviceProfi
 	return r0, r1
 }
 
-// AddDeviceService provides a mock function with given fields: e
-func (_m *DBClient) AddDeviceService(e models.DeviceService) (models.DeviceService, errors.EdgeX) {
-	ret := _m.Called(e)
+// AddDeviceService provides a mock function with given fields: ds
+func (_m *DBClient) AddDeviceService(ds models.DeviceService) (models.DeviceService, errors.EdgeX) {
+	ret := _m.Called(ds)
 
 	var r0 models.DeviceService
 	if rf, ok := ret.Get(0).(func(models.DeviceService) models.DeviceService); ok {
-		r0 = rf(e)
+		r0 = rf(ds)
 	} else {
 		r0 = ret.Get(0).(models.DeviceService)
 	}
 
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(models.DeviceService) errors.EdgeX); ok {
-		r1 = rf(e)
+		r1 = rf(ds)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -791,6 +791,22 @@ func (_m *DBClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) errors.Ed
 	var r0 errors.EdgeX
 	if rf, ok := ret.Get(0).(func(models.ProvisionWatcher) errors.EdgeX); ok {
 		r0 = rf(pw)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
+// UpdateDeviceService provides a mock function with given fields: ds
+func (_m *DBClient) UpdateDeviceService(ds models.DeviceService) errors.EdgeX {
+	ret := _m.Called(ds)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.DeviceService) errors.EdgeX); ok {
+		r0 = rf(ds)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
