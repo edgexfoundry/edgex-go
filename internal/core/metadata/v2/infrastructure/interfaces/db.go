@@ -51,4 +51,5 @@ type DBClient interface {
 	ProvisionWatchersByProfileName(offset int, limit int, name string) ([]model.ProvisionWatcher, errors.EdgeX)
 	AllProvisionWatchers(offset int, limit int, labels []string) ([]model.ProvisionWatcher, errors.EdgeX)
 	DeleteProvisionWatcherByName(name string) errors.EdgeX
+	UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX
 }
