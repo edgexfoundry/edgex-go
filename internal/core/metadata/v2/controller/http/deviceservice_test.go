@@ -268,8 +268,7 @@ func TestPatchDeviceService(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("DeviceServiceById", *valid.Service.Id).Return(dsModels, nil)
-	dbClientMock.On("DeleteDeviceServiceById", *valid.Service.Id).Return(nil)
-	dbClientMock.On("AddDeviceService", mock.Anything).Return(dsModels, nil)
+	dbClientMock.On("UpdateDeviceService", mock.Anything).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
