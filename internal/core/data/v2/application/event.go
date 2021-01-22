@@ -37,7 +37,7 @@ func ValidateEvent(e models.Event, profileName string, deviceName string, ctx co
 	if e.DeviceName != deviceName {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches %s", e.DeviceName, deviceName), nil)
 	}
-	return checkDevice(e.DeviceName, ctx, dic)
+	return nil
 }
 
 // The AddEvent function accepts the new event model from the controller functions
