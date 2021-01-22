@@ -33,7 +33,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
 	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapRedisKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags.
@@ -52,7 +52,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 	// bootstrap.RunAndReturnWaitGroup is needed for the underlying configuration system.
 	// Conveniently, it also creates a pipeline of functions as the list of BootstrapHandler's is
 	// executed in order.
-	bootstrap.RunAndReturnWaitGroup(
+	_, _, ok := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
@@ -69,4 +69,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 			handler.maybeSetCredentials,
 		},
 	)
+
+	if !ok {
+		// had some issue(s) during bootstrapping redis
+		os.Exit(1)
+	}
 }

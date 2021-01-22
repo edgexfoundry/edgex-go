@@ -13,8 +13,8 @@ There are 2 major components that are responsible for security features:
 When starting a secure EdgeX deployment, the sequence is [see docker-compose-nexus-redis.yml for reference](https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml))
 
 1. Start [Vault by HashiCorp](https://www.vaultproject.io/)
-1. Start the `edgex-vault-worker` container from the `docker-edgex-security-secretstore-setup-go` image to create the shared secrets needed by the microservices.
-1. Finally, the start the `edgex-proxy` container from the `docker-edgex-security-proxy-setup-go` image once [Kong](https://konghq.com/) is up.
+1. Start the `edgex-secretstore-setup` container from the `docker-edgex-security-secretstore-setup-go` image to create the shared secrets needed by the microservices.
+1. Finally, the start the `edgex-proxy-setup` container from the `docker-edgex-security-proxy-setup-go` image once [Kong](https://konghq.com/) is up.
 
 ## Get Started
 

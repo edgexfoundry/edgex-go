@@ -36,10 +36,12 @@ COPY . .
 
 RUN make cmd/core-command/core-command
 
-FROM scratch
+FROM alpine:3.12
+
+RUN apk add --update --no-cache dumb-init
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2018: Dell, Cavium'
+      copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2021: Intel Corporation'
 
 ENV APP_PORT=48082
 #expose command data port

@@ -1,6 +1,6 @@
 #!/usr/bin/dumb-init /bin/sh
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2020 Intel Corporation
+#  Copyright (c) 2021 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -17,27 +17,24 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
+# This is customized entrypoint script for other Edgex services.
+# In particular, it waits for the ReadyToRunPort raised to be ready to roll
+#
+# Note:
+#   Since the entrypoint script is overridden, user should also override the command
+#   so that the $@ is set appropriately on the run-time.
+#
+
 set -e
 
 # env settings are populated from env files of docker-compose
 
-echo "Initializing secret store..."
-/security-secretstore-setup --vaultInterval=10
+echo "Script for waiting on security bootstrapping ready-to-run"
 
-# default User and Group in case never set
-if [ -z "${EDGEX_USER}" ]; then
-  EDGEX_USER="2002"
-  EDGEX_GROUP="2001"
-fi
+# gating on the ready-to-run port
+echo "$(date) Executing dockerize with $@ waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
+/edgex-init/dockerize -wait tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
+  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
 
-# /tmp/edgex/secrets need to be shared with all other services that need secrets and
-# thus change the ownership to EDGEX_USER:EDGEX_GROUP
-echo "$(date) Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
-chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
-
-# Signal tokens ready port for other services waiting on
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
-  --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}"
-if [ $? -ne 0 ]; then
-  echo "$(date) failed to gating the tokens ready port"
-fi
+echo "$(date) Starting $@ ..."
+exec "$@"

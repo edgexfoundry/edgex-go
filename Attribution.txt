@@ -175,3 +175,6 @@ https://github.com/go-playground/validator/blob/master/LICENSE
 
 leodido/go-urn (MIT) https://github.com/leodido/go-urn
 https://github.com/leodido/go-urn
+
+github.com/lib/pq (MIT) https://github.com/lib/pq
+https://github.com/lib/pq/blob/master/LICENSE.md
