@@ -172,12 +172,7 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", provisionWatcher.ProfileName), nil)
 	}
 
-	edgexErr = dbClient.DeleteProvisionWatcherByName(provisionWatcher.Name)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
-	}
-
-	_, edgexErr = dbClient.AddProvisionWatcher(provisionWatcher)
+	edgexErr = dbClient.UpdateProvisionWatcher(provisionWatcher)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)
 	}

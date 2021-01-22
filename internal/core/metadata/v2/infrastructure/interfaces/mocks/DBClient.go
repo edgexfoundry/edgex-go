@@ -783,3 +783,19 @@ func (_m *DBClient) UpdateDeviceProfile(e models.DeviceProfile) errors.EdgeX {
 
 	return r0
 }
+
+// UpdateProvisionWatcher provides a mock function with given fields: pw
+func (_m *DBClient) UpdateProvisionWatcher(pw models.ProvisionWatcher) errors.EdgeX {
+	ret := _m.Called(pw)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.ProvisionWatcher) errors.EdgeX); ok {
+		r0 = rf(pw)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}

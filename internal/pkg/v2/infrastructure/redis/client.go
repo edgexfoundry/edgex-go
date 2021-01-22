@@ -658,3 +658,11 @@ func (c *Client) DeleteProvisionWatcherByName(name string) errors.EdgeX {
 
 	return nil
 }
+
+// Update a provision watcher
+func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return updateProvisionWatcher(conn, pw)
+}
