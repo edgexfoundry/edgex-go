@@ -24,13 +24,14 @@ type DBClient interface {
 	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, errors.EdgeX)
 
-	AddDeviceService(e model.DeviceService) (model.DeviceService, errors.EdgeX)
+	AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)
 	DeviceServiceByName(name string) (model.DeviceService, errors.EdgeX)
 	DeleteDeviceServiceById(id string) errors.EdgeX
 	DeleteDeviceServiceByName(name string) errors.EdgeX
 	DeviceServiceNameExists(name string) (bool, errors.EdgeX)
 	AllDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
+	UpdateDeviceService(ds model.DeviceService) errors.EdgeX
 
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
 	DeleteDeviceById(id string) errors.EdgeX
