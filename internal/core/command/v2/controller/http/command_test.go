@@ -25,6 +25,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,10 +36,15 @@ const (
 	mockHost     = "127.0.0.1"
 	mockPort     = 66666
 
-	testProfileName = "testProfileName"
-	testDeviceName  = "testDeviceName"
-	testPathPrefix  = v2.ApiDeviceRoute + "/" + v2.Name + "/" + testDeviceName + "/" + v2.Command + "/"
-	testUrl         = "http://localhost:48082"
+	testProfileName       = "testProfile"
+	testResourceName      = "testResource"
+	testDeviceName        = "testDevice"
+	testDeviceServiceName = "testDeviceService"
+	testCommandName       = "testCommand"
+	testPathPrefix        = v2.ApiDeviceRoute + "/" + v2.Name + "/" + testDeviceName + "/" + v2.Command + "/"
+	testUrl               = "http://localhost:48082"
+	testBaseAddress       = "http://localhost:49990"
+	testQueryStrings      = "a=1&b=2&ds-pushevent=no"
 )
 
 // NewMockDIC function returns a mock bootstrap di Container
@@ -78,6 +84,7 @@ func buildDeviceResponse() responseDTO.DeviceResponse {
 	device := dtos.Device{
 		Name:        testDeviceName,
 		ProfileName: testProfileName,
+		ServiceName: testDeviceServiceName,
 	}
 	deviceResponse := responseDTO.DeviceResponse{
 		Device: device,
@@ -111,6 +118,31 @@ func buildDeviceProfileResponse() responseDTO.DeviceProfileResponse {
 		Profile: profile,
 	}
 	return deviceResponse
+}
+
+func buildDeviceServiceResponse() responseDTO.DeviceServiceResponse {
+	service := dtos.DeviceService{
+		Name:        testDeviceServiceName,
+		BaseAddress: testBaseAddress,
+	}
+	return responseDTO.DeviceServiceResponse{
+		Service: service,
+	}
+}
+
+func buildEvent() dtos.Event {
+	event := dtos.NewEvent(testProfileName, testDeviceName)
+	event.AddSimpleReading(testResourceName, v2.ValueTypeUint16, uint16(45))
+	id, _ := uuid.NewUUID()
+	event.Id = id.String()
+	event.Readings[0].Id = id.String()
+	return event
+}
+
+func buildEventResponse() responseDTO.EventResponse {
+	return responseDTO.EventResponse{
+		Event: buildEvent(),
+	}
 }
 
 func TestCommandsByDeviceName(t *testing.T) {
@@ -178,6 +210,89 @@ func TestCommandsByDeviceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.CoreCommands), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestIssueReadCommand(t *testing.T) {
+	var nonExistName = "nonExist"
+
+	expectedEventResponse := buildEventResponse()
+	expectedDeviceResponse := buildDeviceResponse()
+	expectedDeviceServiceResponse := buildDeviceServiceResponse()
+
+	dcMock := &mocks.DeviceClient{}
+	dcMock.On("DeviceByName", context.Background(), testDeviceName).Return(expectedDeviceResponse, nil)
+	dcMock.On("DeviceByName", context.Background(), nonExistName).Return(responseDTO.DeviceResponse{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "fail to query device by name", nil))
+
+	dscMock := &mocks.DeviceServiceClient{}
+	dscMock.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(expectedDeviceServiceResponse, nil)
+
+	dsccMock := &mocks.DeviceServiceCommandClient{}
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings).Return(expectedEventResponse, nil)
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "").Return(expectedEventResponse, nil)
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings).Return(responseDTO.EventResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to query device service by name", nil))
+
+	dic := NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+			return dcMock
+		},
+		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+			return dscMock
+		},
+		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+			return dsccMock
+		},
+	})
+	cc := NewCommandController(dic)
+	assert.NotNil(t, cc)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		commandName        string
+		queryStrings       string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - execute read command with valid deviceName, commandName, and query strings", testDeviceName, testCommandName, testQueryStrings, false, http.StatusOK},
+		{"Valid - empty query strings", testDeviceName, testCommandName, "", false, http.StatusOK},
+		{"Invalid - execute read command with invalid deviceName", nonExistName, testCommandName, testQueryStrings, true, http.StatusNotFound},
+		{"Invalid - execute read command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, true, http.StatusBadRequest},
+		{"Invalid - empty device name", "", nonExistName, testQueryStrings, true, http.StatusBadRequest},
+		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiDeviceNameCommandNameRoute, http.NoBody)
+			req.URL.RawQuery = testCase.queryStrings
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName, v2.Command: testCase.commandName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(cc.IssueGetCommandByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.EventResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
