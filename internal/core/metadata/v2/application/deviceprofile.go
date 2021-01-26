@@ -55,7 +55,7 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
 		correlation.FromContext(ctx),
 	))
-
+	go updateDeviceProfileCallback(ctx, dic, dtos.FromDeviceProfileModelToDTO(d))
 	return nil
 }
 
