@@ -32,31 +32,49 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/security-bootstrapper/security-bootstrapper \
-    && make cmd/security-bootstrap-redis/security-bootstrap-redis
+ARG BUILD_BASE_DIR="/tmp/build/dist/linux"
+
+RUN make cmd/security-bootstrapper/security-bootstrapper && \
+    make cmd/security-bootstrap-redis/security-bootstrap-redis && \
+    # build "dockerize" executable based on the architecture that is currently running on
+    set -eux; \
+    mkdir -p "$BUILD_BASE_DIR" && \
+    cd "$BUILD_BASE_DIR" && \
+    git clone https://github.com/jwilder/dockerize.git . && \
+    go get github.com/robfig/glock && \
+    glock sync -n < GLOCKFILE && \
+    TAG=$(git describe --abbrev=0 --tags) && \
+    LDFLAGS="-X main.buildVersion=$TAG" && \
+    arch="$(apk --print-arch)"; \
+    case "$arch" in \
+        x86_64   ) \
+            echo "building [dockerize] for amd64 ... "; \
+            GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -a -tags netgo -installsuffix netgo \
+                    -o "$BUILD_BASE_DIR"/dockerize ;; \
+        aarch64  ) \
+            echo "building [dockerize] for arm64 ... "; \
+            GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o "$BUILD_BASE_DIR"/dockerize ;; \
+        *) echo >&2 "Error: dockerize is not supported in arch $arch"; exit 1 ;;\
+    esac && \
+    echo "$(date) dockerize executable build done and output at directory: $BUILD_BASE_DIR"
 
 FROM alpine:3.12
-
-RUN apk add --update --no-cache dumb-init openssl su-exec
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2021 Intel Corporation'
 
-# Use dockerize utility for services to wait for certain ports to be available
-ENV DOCKERIZE_VERSION v0.6.1
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+RUN apk add --update --no-cache dumb-init openssl su-exec
 
 ENV SECURITY_INIT_DIR /edgex-init
 ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_DIR}/bootstrap-redis
 
 RUN mkdir -p ${SECURITY_INIT_DIR} \
-    && mkdir -p ${BOOTSTRAP_REDIS_DIR} \
-    && echo "Move dockerize executable" \
-    && mv /usr/local/bin/dockerize ${SECURITY_INIT_DIR}
+    && mkdir -p ${BOOTSTRAP_REDIS_DIR}
 
 WORKDIR ${SECURITY_INIT_DIR}
+
+# Use dockerize utility for services to wait for certain ports to be available
+COPY --from=builder /tmp/build/dist/linux/dockerize .
 
 # copy all entrypoint scripts into shared folder
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint-scripts/ ${SECURITY_INIT_DIR}/
