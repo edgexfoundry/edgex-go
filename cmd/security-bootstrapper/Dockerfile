@@ -49,14 +49,19 @@ RUN make cmd/security-bootstrapper/security-bootstrapper && \
     case "$arch" in \
         x86_64   ) \
             echo "building [dockerize] for amd64 ... "; \
-            GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -a -tags netgo -installsuffix netgo \
+            CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -a -tags netgo -installsuffix netgo \
                     -o "$BUILD_BASE_DIR"/dockerize ;; \
         aarch64  ) \
             echo "building [dockerize] for arm64 ... "; \
-            GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o "$BUILD_BASE_DIR"/dockerize ;; \
+            CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$LDFLAGS" -o "$BUILD_BASE_DIR"/dockerize ;; \
         *) echo >&2 "Error: dockerize is not supported in arch $arch"; exit 1 ;;\
     esac && \
     echo "$(date) dockerize executable build done and output at directory: $BUILD_BASE_DIR"
+
+# test the built one is statically linked
+RUN mkdir -p /test && \
+    cp "$BUILD_BASE_DIR"/dockerize /test/ && \
+    ldd /test/dockerize 2>&1 > /test/ldd_out.log || echo "statically linked"
 
 FROM alpine:3.12
 
