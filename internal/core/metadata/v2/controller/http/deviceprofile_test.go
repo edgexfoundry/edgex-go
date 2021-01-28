@@ -388,6 +388,8 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", deviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -691,6 +693,8 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DevicesByProfileName", 0, -1, validDeviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
