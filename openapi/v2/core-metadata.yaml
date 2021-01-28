@@ -147,7 +147,7 @@ components:
           description: Admin state (locked/unlocked)
         operatingState:
           type: string
-          description: Operating state (enabled/disabled)
+          description: Operating state (UP/DOWN)
         lastConnected:
           type: integer
           description: Time (milliseconds) that the device last provided any feedback or responded to any request
@@ -194,7 +194,7 @@ components:
           description: Admin state (locked/unlocked)
         operatingState:
           type: string
-          description: Operating state (enabled/disabled)
+          description: Operating state (UP/DOWN)
         labels:
           type: array
           description: Other labels applied to the device to help with searching
@@ -476,7 +476,7 @@ components:
           description: time in milliseconds that the device service last reported data to the core microservice
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -507,7 +507,7 @@ components:
           description: Device Service Admin State
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -534,7 +534,7 @@ components:
           description: Description of the device service
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -1065,7 +1065,7 @@ components:
             name: AWS IOT Button1
             description: Home automation system
             adminState: UNLOCKED
-            operatingState: ENABLED
+            operatingState: UP
             labels:
               - home
               - hvac
@@ -1090,7 +1090,7 @@ components:
             name: home thermostat device service
             description: manage homethermostats
             adminState: UNLOCKED
-            operatingState: ENABLED
+            operatingState: UP
             labels:
               - hvac
               - thermostat
@@ -1156,7 +1156,7 @@ components:
             created: 1600927134931
             modified: 1600927134931
             adminState: "UNLOCKED"
-            operatingState: "ENABLED"
+            operatingState: "UP"
             lastConnected: 0
             lastReported: 0
             lables:
@@ -1179,7 +1179,7 @@ components:
             created: 1600927134949
             modified: 1600927134949
             adminState: "UNLOCKED"
-            operatingState: "ENABLED"
+            operatingState: "UP"
             lastConnected: 0
             lastReported: 0
             lables:
@@ -1393,7 +1393,7 @@ paths:
               device:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "AWS IOT Button1"
-                  operatingState: "DISABLED"
+                  operatingState: "DOWN"
                   labels:
                     - "home"
                   autoEvents:
@@ -1404,7 +1404,7 @@ paths:
                   name: "AWS IOT Button2"
                   description: "Home automation system"
                   adminState: "LOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1585,7 +1585,7 @@ paths:
                   created: 1600926440123
                   modified: 1600928666321
                   adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   lastConnected: 0
                   lastReported: 0
                   lables:
@@ -2462,15 +2462,15 @@ paths:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "home thermostat device service"
                   description: "Home automation system"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
                 service:
                 - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "Google Home device service"
-                  operatingState: "ENABLED"
-                  adminState: "ENABLED"
+                  operatingState: "UP"
+                  adminState: "UNLOCKED"
                   baseAddress: "http://home-device-service:49980"
       responses:
         '207':
@@ -2546,7 +2546,7 @@ paths:
                     lastConnected: 0
                     lastReported: 0
                     adminState: "UNLOCKED"
-                    operatingState: "ENABLED"
+                    operatingState: "UP"
                     labels:
                       - virtual
                     baseAddress: "http://edgex-device-virtual:49990"
@@ -2610,7 +2610,7 @@ paths:
                   lastConnected: 0
                   lastReported: 0
                   adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   labels:
                     - virtual
                   baseAddress: "http://edgex-device-virtual:49990"
@@ -2786,7 +2786,7 @@ paths:
                     identifiers:
                       "address": "localhost"
                       "port": "3[0-9]{2}"
-                    adminState: "ENABLED"
+                    adminState: "UNLOCKED"
                     labels:
                       - "simple"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
@@ -3005,18 +3005,6 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
-          description: "The requested resource is locked"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3144,18 +3132,11 @@ paths:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
                 apiVersion: "v2"
-                requestId: "d138fccc-f39a-4fd0-bd32-50d52a131f66"
-                statusCode: 200
-                message: ""
                 config:
                   Writeable:
                     EnableValueDescriptorManagement: false
                     LogLevel: "INFO"
                   Clients:
-                    Logging:
-                      Host: "localhost"
-                      Port: 48061
-                      Protocol: "http"
                     CoreData:
                       Host: "edgex-core-data"
                       Port: 48080
@@ -3173,9 +3154,6 @@ paths:
                       Host: "edgex-redis"
                       Port: 6379
                       Name: "metadata"
-                  Logging:
-                    EnableRemote: false
-                    File: ""
                   Notifications:
                     Content: "Device update: "
                     Description: "Metadata device notice"
@@ -3211,9 +3189,6 @@ paths:
                     AdditionalRetryAttempts: 10
                     RetryWaitPeriod: "1s"
                     TokenFile: "/vault/config/assets/resp-init.json"
-                  Startup:
-                    Duration: 30
-                    Interval: 1
         '500':
           description: "Internal Server Error"
           headers:
@@ -3241,9 +3216,6 @@ paths:
                 $ref: '#/components/schemas/MetricsResponse'
               example:
                 apiVersion: "v2"
-                requestId: "dc418c01-e270-447a-961a-170f774af4ab"
-                statusCode: 200
-                message: ""
                 metrics:
                   memAlloc: 877192
                   memFrees: 2248915
@@ -3279,10 +3251,7 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 apiVersion: "v2"
-                requestId: "894f5cba-8372-4a89-a7eb-921fe56801b5"
-                statusCode: 200
-                message: ""
-                timestamp: "1600926440"
+                timestamp: 'Thu Jan 28 00:32:42 UTC 2021'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3310,10 +3279,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v2"
-                requestId: "01f9b481-62a4-48c8-a7e4-8badcc944475"
-                statusCode: 200
-                message: ""
-                version: "master"
+                version: "2.0.0-dev.13"
         '500':
           description: "Internal Server Error"
           headers:
