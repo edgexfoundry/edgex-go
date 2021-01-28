@@ -96,6 +96,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", pwModel).Return(pwModel, nil)
+	dbClientMock.On("DeviceServiceByName", pwModel.ServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -544,8 +545,10 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("ProvisionWatcherByName", provisionWatcher.Name).Return(provisionWatcher, nil)
+	dbClientMock.On("ProvisionWatcherByName", notFoundName).Return(provisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
 	dbClientMock.On("DeleteProvisionWatcherByName", provisionWatcher.Name).Return(nil)
-	dbClientMock.On("DeleteProvisionWatcherByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
+	dbClientMock.On("DeviceServiceByName", provisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -614,6 +617,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	dbClientMock.On("DeviceProfileNameExists", *valid.ProvisionWatcher.ProfileName).Return(true, nil)
 	dbClientMock.On("ProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(pwModels, nil)
 	dbClientMock.On("UpdateProvisionWatcher", mock.Anything).Return(nil)
+	dbClientMock.On("DeviceServiceByName", *valid.ProvisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
