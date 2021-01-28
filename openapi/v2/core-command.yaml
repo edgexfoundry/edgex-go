@@ -38,42 +38,34 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
-    Command:
+    CoreCommand:
       type: object
       properties:
-        created:
-          type: integer
-        get:
-          $ref: '#/components/schemas/CommandAction'
-        id:
-          type: string
-          format: uuid
-        modified:
-          type: integer
         name:
           type: string
+        deviceName:
+          type: string
+        get:
+          type: boolean
         put:
-          $ref: '#/components/schemas/CommandAction'
-    CommandAction:
-      type: object
-      properties:
+          type: boolean
         path:
           type: string
         url:
           type: string
-    CommandResponse:
+      required:
+        - name
+        - deviceName
+    MultiCoreCommandsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "For the specified device, provides a list of the associated commands."
+      description: "A response type for returning multiple CoreCommand to the caller."
       type: object
       properties:
-        device:
-          description: "Indicates a device. Will be either the device ID or name depending on how the request was made."
-          type: string
-        commands:
+        coreCommands:
           type: array
           items:
-            $ref: '#/components/schemas/Command'
+            $ref: '#/components/schemas/CoreCommand'
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -271,6 +263,23 @@ components:
         requestId: ""
         statusCode: 500
         message: "Internal Server Error"
+    MultiCoreCommandsExample:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 200
+        message: ""
+        coreCommands:
+          - name: "coolingpoint1"
+            deviceName: "testDevice"
+            get: true
+            path: "/api/v2/device/name/testDevice/command/coolingpoint1"
+            url: "http://localhost:48082"
+          - name: "coolingpoint2"
+            deviceName: "testDevice"
+            put: true
+            path: "/api/v2/device/name/testDevice/command/coolingpoint2"
+            url: "http://localhost:48082"
 paths:
   /device/name/{deviceName}/command/{commandName}:
     parameters:
@@ -383,7 +392,7 @@ paths:
         required: true
         schema:
           type: string
-        description: "The unique name of a device."
+        description: "A name uniquely identifying a device."
     get:
       summary: "Returns all commands associated with the specified device."
       responses:
@@ -395,7 +404,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/MultiCoreCommandsResponse'
+              examples:
+                MultiCoreCommandsExample:
+                  $ref: '#/components/examples/MultiCoreCommandsExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -430,9 +442,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CommandResponse'
+                $ref: '#/components/schemas/MultiCoreCommandsResponse'
+              examples:
+                MultiCoreCommandsExample:
+                  $ref: '#/components/examples/MultiCoreCommandsExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
