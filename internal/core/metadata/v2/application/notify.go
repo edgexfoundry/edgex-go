@@ -51,7 +51,7 @@ func updateDeviceCallback(ctx context.Context, dic *di.Container, serviceName st
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
 	}
-	updateDevice := deviceModelToUpdateDTO(device)
+	updateDevice := dtos.FromDeviceModelToUpdateDTO(device)
 	response, err := deviceServiceCallbackClient.UpdateDeviceCallback(ctx, requests.UpdateDeviceRequest{Device: updateDevice})
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating device %s, err: %v", device.Name, err)
@@ -76,27 +76,6 @@ func deleteDeviceCallback(ctx context.Context, dic *di.Container, device models.
 	}
 	if response.StatusCode != http.StatusOK {
 		lc.Errorf("fail to invoke device service callback for deleting device %s, err: %s", device.Name, response.Message)
-	}
-}
-
-func deviceModelToUpdateDTO(device models.Device) dtos.UpdateDevice {
-	adminState := string(device.AdminState)
-	operatingState := string(device.OperatingState)
-	return dtos.UpdateDevice{
-		Id:             &device.Id,
-		Name:           &device.Name,
-		Description:    &device.Description,
-		AdminState:     &adminState,
-		OperatingState: &operatingState,
-		LastConnected:  &device.LastConnected,
-		LastReported:   &device.LastReported,
-		ServiceName:    &device.ServiceName,
-		ProfileName:    &device.ProfileName,
-		Labels:         device.Labels,
-		Location:       device.Location,
-		AutoEvents:     dtos.FromAutoEventModelsToDTOs(device.AutoEvents),
-		Protocols:      dtos.FromProtocolModelsToDTOs(device.Protocols),
-		Notify:         &device.Notify,
 	}
 }
 
@@ -188,23 +167,12 @@ func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds mode
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", ds.Name, err)
 	}
-	dto := deviceServiceModelToUpdateDTO(ds)
+	dto := dtos.FromDeviceServiceModelToUpdateDTO(ds)
 	response, err := deviceServiceCallbackClient.UpdateDeviceServiceCallback(ctx, requests.UpdateDeviceServiceRequest{Service: dto})
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %v", ds.Name, err)
 	}
 	if response.StatusCode != http.StatusOK {
 		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %s", ds.Name, response.Message)
-	}
-}
-
-func deviceServiceModelToUpdateDTO(ds models.DeviceService) dtos.UpdateDeviceService {
-	adminState := string(ds.AdminState)
-	return dtos.UpdateDeviceService{
-		Id:          &ds.Id,
-		Name:        &ds.Name,
-		BaseAddress: &ds.BaseAddress,
-		Labels:      ds.Labels,
-		AdminState:  &adminState,
 	}
 }
