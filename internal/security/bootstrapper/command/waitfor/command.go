@@ -188,7 +188,7 @@ func (c *cmd) waitForFile(fileUri url.URL) {
 				return
 			} else if os.IsNotExist(err) {
 				// file not exists at this moment
-				c.loggingClient.Infof("Problem with check file %s exist: %v. Sleeping %s",
+				c.loggingClient.Infof("File %s not exists: %v. Sleeping %s",
 					uri.String(), err, c.retryInterval)
 			} else {
 				// file may or may not exist: see err for details
@@ -231,6 +231,7 @@ func (c *cmd) waitForHTTP(uri url.URL) {
 			if err != nil {
 				c.loggingClient.Infof("Problem with dial: %v. Sleeping %s", err.Error(), c.retryInterval)
 				time.Sleep(c.retryInterval)
+				continue
 			}
 
 			resp, err := client.Do(req)

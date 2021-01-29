@@ -19,10 +19,13 @@ import "fmt"
 
 type uriFlagsVar []string
 
+// String overrides the Flag.Value interface, method String() string
 func (uris *uriFlagsVar) String() string {
 	return fmt.Sprint(*uris)
 }
 
+// Set overrides the Flag.Value interface, method Set(string) error
+// uriFlagsVar is a slice of string flags and thus we aggregate it over each flag call
 func (uris *uriFlagsVar) Set(value string) error {
 	*uris = append(*uris, value)
 	return nil
