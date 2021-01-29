@@ -102,6 +102,8 @@ func HelpCallback() {
 			"    listenTcp     Start up a TCP listener\n"+
 			"    pingPgDb      Test Postgres database readiness\n"+
 			"    getHttpStatus Do an HTTP GET call to get the status code\n"+
-			"    genPassword   Generate a random password\n",
+			"    genPassword   Generate a random password\n"+
+			"    waitfor       Wait for the other services with specified URI(s) to connect:\n"+
+			"                  the URI(s) can be communication protocols like tcp/tcp4/tcp6/http/https or files\n",
 		os.Args[0])
 }

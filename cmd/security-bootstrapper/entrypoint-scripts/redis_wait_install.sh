@@ -27,10 +27,11 @@ set -e
 echo "Script for waiting security bootstrapping on Redis"
 
 # gating on the TokensReadyPort
-echo "$(date) Executing dockerize on Redis with waiting on TokensReadyPort \
+echo "$(date) Executing waitFor on Redis with waiting on TokensReadyPort \
   tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 # the bootstrap-redis needs the connection from Redis db to set it up.
 # Hence, here bootstrap-redis runs in background and then after bootstrap-redis starts,

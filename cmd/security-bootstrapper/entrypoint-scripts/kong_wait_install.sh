@@ -27,18 +27,21 @@ set -e
 echo "Script for waiting security bootstrapping on Kong"
 
 # gating on the ready-to-run port
-echo "$(date) Executing dockerize with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+echo "$(date) Executing waitFor with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 echo "$(date) Kong waits on Postgres to be initialized"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_KONGDB_HOST}":"${STAGEGATE_KONGDB_READYPORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_KONGDB_HOST}":"${STAGEGATE_KONGDB_READYPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 # KONG_PG_PASSWORD_FILE is env used by Kong, it is for kong-db's password file
-echo "$(date) Executing dockerize with waiting on file:${KONG_PG_PASSWORD_FILE}"
-/edgex-init/dockerize -wait file://"${KONG_PG_PASSWORD_FILE}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+echo "$(date) Executing waitFor with waiting on file:${KONG_PG_PASSWORD_FILE}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri file://"${KONG_PG_PASSWORD_FILE}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 # double check and make sure the postgres is setup with that password and ready
 passwd=$(cat "${KONG_PG_PASSWORD_FILE}")

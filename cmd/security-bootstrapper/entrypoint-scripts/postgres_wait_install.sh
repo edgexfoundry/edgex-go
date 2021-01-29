@@ -27,10 +27,11 @@ set -e
 echo "Script for waiting security bootstrapping on Postgres"
 
 # Postgres is waiting for BOOTSTRAP_PORT
-echo "$(date) Executing dockerize on Postgres with waiting on \
+echo "$(date) Executing waitFor on Postgres with waiting on \
   tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_BOOTSTRAPPER_STARTPORT}"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 echo "$(date) Postgres waits on Vault to be initialized"
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corp.
+ * Copyright 2021 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,24 +10,14 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
  *******************************************************************************/
 
-package main
+package config
 
-import (
-	"context"
-	"os"
-
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper"
-	"github.com/gorilla/mux"
-)
-
-func main() {
-	// When running security-bootstrapper's subcommands, we don't want the side effect of
-	// the env var. EDGEX_PROFILE overriding so that unset the env can avoid the TOML's resource
-	// directory path of the security-bootstrapper itself being modified.
-	_ = os.Unsetenv("EDGEX_PROFILE")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	bootstrapper.Main(ctx, cancel, mux.NewRouter(), nil)
+// WaitForInfo defines some fields related to
+// waitFor subcommand of security-bootstrapper
+type WaitForInfo struct {
+	Timeout       string
+	RetryInterval string
 }

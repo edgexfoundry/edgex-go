@@ -32,7 +32,14 @@ func TestNewCommand(t *testing.T) {
 	ctx := context.Background()
 	wg := &sync.WaitGroup{}
 	lc := logger.MockLogger{}
-	config := &config.ConfigurationStruct{}
+	config := &config.ConfigurationStruct{
+		StageGate: config.StageGateInfo{
+			WaitFor: config.WaitForInfo{
+				Timeout:       "2s",
+				RetryInterval: "1s",
+			},
+		},
+	}
 
 	tests := []struct {
 		name            string
@@ -46,10 +53,12 @@ func TestNewCommand(t *testing.T) {
 		{"Good: listenTcp command", []string{"listenTcp", "--port=55555"}, "listenTcp", false},
 		{"Good: genPassword command", []string{"genPassword"}, "genPassword", false},
 		{"Good: getHttpStatus command", []string{"getHttpStatus", "--url=http://localhost:55555"}, "getHttpStatus", false},
+		{"Good: waitFor command", []string{"waitFor", "--uri=http://localhost:55555"}, "waitFor", false},
 		{"Bad: unknown command", []string{"unknown"}, "", true},
 		{"Bad: empty command", []string{}, "", true},
 		{"Bad: listenTcp command missing required --port", []string{"listenTcp"}, "", true},
 		{"Bad: getHttpStatus command missing required --url", []string{"getHttpStatus"}, "", true},
+		{"Bad: waitFor command missing required --uri", []string{"waitFor"}, "", true},
 	}
 
 	for _, tt := range tests {

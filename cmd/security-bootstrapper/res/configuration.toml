@@ -25,3 +25,6 @@ LogLevel = 'INFO'
     Host = "kong-db"
     Port = 5432
     ReadyPort = 54325
+  [StageGate.WaitFor]
+    Timeout = "10s"
+    RetryInterval = "1s"

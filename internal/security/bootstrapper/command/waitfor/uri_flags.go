@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corp.
+ * Copyright 2021 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,24 +10,23 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
  *******************************************************************************/
 
-package main
+package waitfor
 
-import (
-	"context"
-	"os"
+import "fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper"
-	"github.com/gorilla/mux"
-)
+type uriFlagsVar []string
 
-func main() {
-	// When running security-bootstrapper's subcommands, we don't want the side effect of
-	// the env var. EDGEX_PROFILE overriding so that unset the env can avoid the TOML's resource
-	// directory path of the security-bootstrapper itself being modified.
-	_ = os.Unsetenv("EDGEX_PROFILE")
+// String overrides the Flag.Value interface, method String() string
+func (uris *uriFlagsVar) String() string {
+	return fmt.Sprint(*uris)
+}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	bootstrapper.Main(ctx, cancel, mux.NewRouter(), nil)
+// Set overrides the Flag.Value interface, method Set(string) error
+// uriFlagsVar is a slice of string flags and thus we aggregate it over each flag call
+func (uris *uriFlagsVar) Set(value string) error {
+	*uris = append(*uris, value)
+	return nil
 }
