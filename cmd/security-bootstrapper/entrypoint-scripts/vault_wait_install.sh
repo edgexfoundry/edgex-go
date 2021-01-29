@@ -46,11 +46,11 @@ export VAULT_LOCAL_CONFIG
 echo "$(date) VAULT_LOCAL_CONFIG: ${VAULT_LOCAL_CONFIG}"
 
 if [ "$1" = 'server' ]; then
-  echo "$(date) Executing dockerize on vault $* with waiting on \
+  echo "$(date) Executing waitFor on vault $* with \
     tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_BOOTSTRAPPER_STARTPORT}"
-  /edgex-init/dockerize \
-    -wait tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
-    -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+  /edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+    -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
+    -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
   echo "$(date) Starting edgex-vault..."
   exec /usr/local/bin/docker-entrypoint.sh server -log-level=info

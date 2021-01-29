@@ -67,10 +67,11 @@ echo "$(date) Starting edgex-consul..."
 exec docker-entrypoint.sh agent -ui -bootstrap -server -client 0.0.0.0 &
 
 # wait for the consul port
-echo "$(date) Executing dockerize on Consul with waiting on its own port \
+echo "$(date) Executing waitFor on Consul with waiting on its own port \
   tcp://${STAGEGATE_REGISTRY_HOST}:${STAGEGATE_REGISTRY_PORT}"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_REGISTRY_HOST}":"${STAGEGATE_REGISTRY_PORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_REGISTRY_HOST}":"${STAGEGATE_REGISTRY_PORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 # Signal that Consul is ready for services blocked waiting on Consul
 /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \

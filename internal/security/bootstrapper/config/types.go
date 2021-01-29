@@ -77,4 +77,5 @@ type StageGateInfo struct {
 	Database         DatabaseInfo
 	Registry         RegistryInfo
 	KongDB           KongDBInfo
+	WaitFor          WaitForInfo
 }

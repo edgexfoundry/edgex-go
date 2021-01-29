@@ -27,10 +27,11 @@ set -e
 echo "Script for waiting security bootstrapping on proxy-setup"
 
 # gating on the ready-to-run port
-echo "$(date) Executing dockerize for ${PROXY_SETUP_HOST} with waiting on \
+echo "$(date) Executing waitFor for ${PROXY_SETUP_HOST} with waiting on \
   tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
-/edgex-init/dockerize -wait tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
-  -timeout "${SECTY_BOOTSTRAP_GATING_TIMEOUT_DURATION}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 echo "$(date) ${PROXY_SETUP_HOST} waits on Kong to be initialized"
 
