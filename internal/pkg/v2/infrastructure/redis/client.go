@@ -673,3 +673,15 @@ func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX 
 
 	return updateProvisionWatcher(conn, pw)
 }
+
+// AddInterval adds a new interval
+func (c *Client) AddInterval(interval model.Interval) (model.Interval, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(interval.Id) == 0 {
+		interval.Id = uuid.New().String()
+	}
+
+	return addInterval(conn, interval)
+}
