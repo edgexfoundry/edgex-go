@@ -10,8 +10,8 @@ import (
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/v2/controller/http"
 	schedulerController "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/controller/http"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	v2Constant "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	v2Constant "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 
 	"github.com/gorilla/mux"
 )

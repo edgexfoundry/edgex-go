@@ -14,11 +14,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/io"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 )
 
 type IntervalController struct {
