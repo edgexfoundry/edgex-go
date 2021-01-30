@@ -84,9 +84,11 @@ apps:
   redis:
     adapter: full
     after: [security-secretstore-setup]
-    command: bin/redis-server --dir $SNAP_DATA/redis $REDIS_SAVE_OPTS
+    command: bin/redis-server $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
     environment:
-      REDIS_SAVE_OPTS: "--save 900 1 --save 300 10"
+      DIR_OPT: "--dir $SNAP_DATA/redis"
+      SAVE_OPT1: "--save 900 1"
+      SAVE_OPT2: "--save 300 10"
     daemon: simple
     plugs: [network, network-bind]
   postgres:
