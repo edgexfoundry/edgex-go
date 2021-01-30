@@ -358,8 +358,8 @@ index 4f322fc4..a1dfb449 100644
 -      - zip
 -
 -  redis:
--    source: https://github.com/antirez/redis.git
--    source-tag: "6.0.8"
+-    source: https://github.com/redis/redis.git
+-    source-tag: "6.0.9"
 -    source-depth: 1
 -    plugin: make
 -    make-install-var: PREFIX
