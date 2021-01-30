@@ -245,7 +245,7 @@ func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.Respo
 	var response interface{}
 	var statusCode int
 
-	err := application.DeleteProvisionWatcherByName(name, pwc.dic)
+	err := application.DeleteProvisionWatcherByName(ctx, name, pwc.dic)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

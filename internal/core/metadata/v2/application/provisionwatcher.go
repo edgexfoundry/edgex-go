@@ -10,7 +10,9 @@ import (
 	"fmt"
 
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -36,7 +38,7 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 		addProvisionWatcher.Id,
 		correlationId,
 	)
-
+	go addProvisionWatcherCallback(ctx, dic, dtos.FromProvisionWatcherModelToDTO(pw))
 	return addProvisionWatcher.Id, nil
 }
 
@@ -113,16 +115,20 @@ func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Contai
 }
 
 // DeleteProvisionWatcherByName deletes the provision watcher by name
-func DeleteProvisionWatcherByName(name string, dic *di.Container) errors.EdgeX {
+func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Container) errors.EdgeX {
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteProvisionWatcherByName(name)
+	pw, err := dbClient.ProvisionWatcherByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	err = dbClient.DeleteProvisionWatcherByName(pw.Name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go deleteProvisionWatcherCallback(ctx, dic, pw)
 	return nil
 }
 
@@ -131,52 +137,74 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	var provisionWatcher models.ProvisionWatcher
-	var edgexErr errors.EdgeX
-	if dto.Name != nil {
-		if *dto.Name == "" {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
-		}
-		provisionWatcher, edgexErr = dbClient.ProvisionWatcherByName(*dto.Name)
-		if edgexErr != nil {
-			return errors.NewCommonEdgeXWrapper(edgexErr)
-		}
-	} else {
-		if *dto.Id == "" {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-		}
-		_, err := uuid.Parse(*dto.Id)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.KindInvalidId, "failed to parse id as an UUID", err)
-		}
-		provisionWatcher, edgexErr = dbClient.ProvisionWatcherById(*dto.Id)
-		if edgexErr != nil {
-			return errors.NewCommonEdgeXWrapper(edgexErr)
+	if dto.ServiceName != nil {
+		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", *dto.ServiceName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", *dto.ServiceName), nil)
 		}
 	}
-	if dto.Name != nil && *dto.Name != provisionWatcher.Name {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("provision watcher name '%s' not match the existing '%s' ", *dto.Name, provisionWatcher.Name), nil)
+	if dto.ProfileName != nil {
+		exists, edgeXerr := dbClient.DeviceProfileNameExists(*dto.ProfileName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", *dto.ProfileName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", *dto.ProfileName), nil)
+		}
 	}
 
-	requests.ReplaceProvisionWatcherModelFieldsWithDTO(&provisionWatcher, dto)
-	exists, edgeXerr := dbClient.DeviceServiceNameExists(provisionWatcher.ServiceName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", provisionWatcher.ServiceName), edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", provisionWatcher.ServiceName), nil)
-	}
-	exists, edgeXerr = dbClient.DeviceProfileNameExists(provisionWatcher.ProfileName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", provisionWatcher.ProfileName), edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", provisionWatcher.ProfileName), nil)
+	pw, err := provisionWatcherByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	edgexErr = dbClient.UpdateProvisionWatcher(provisionWatcher)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
+	// Old service name is used for invoking callback
+	var oldServiceName string
+	if dto.ServiceName != nil && *dto.ServiceName != pw.ServiceName {
+		oldServiceName = pw.ServiceName
+	}
+
+	requests.ReplaceProvisionWatcherModelFieldsWithDTO(&pw, dto)
+
+	err = dbClient.UpdateProvisionWatcher(pw)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	lc.Debugf("ProvisionWatcher patched on DB successfully. Correlation-ID: %s ", correlation.FromContext(ctx))
+
+	if oldServiceName != "" {
+		go updateProvisionWatcherCallback(ctx, dic, oldServiceName, pw)
+	}
+	go updateProvisionWatcherCallback(ctx, dic, pw.ServiceName, pw)
 	return nil
+}
+
+func provisionWatcherByDTO(dbClient interfaces.DBClient, dto dtos.UpdateProvisionWatcher) (pw models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	if dto.Name != nil {
+		if *dto.Name == "" {
+			return pw, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		}
+		pw, edgexErr = dbClient.ProvisionWatcherByName(*dto.Name)
+		if edgexErr != nil {
+			return pw, errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+	} else {
+		if *dto.Id == "" {
+			return pw, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+		}
+		_, err := uuid.Parse(*dto.Id)
+		if err != nil {
+			return pw, errors.NewCommonEdgeX(errors.KindInvalidId, "failed to parse id as an UUID", err)
+		}
+		pw, edgexErr = dbClient.ProvisionWatcherById(*dto.Id)
+		if edgexErr != nil {
+			return pw, errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != pw.Name {
+		return pw, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("provision watcher name '%s' not match the existing '%s' ", *dto.Name, pw.Name), nil)
+	}
+	return pw, nil
 }
