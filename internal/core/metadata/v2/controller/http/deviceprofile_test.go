@@ -841,8 +841,8 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 		{"Valid - delete device profile by name", deviceProfile.Name, false, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
 		{"Invalid - device profile not found by name", notFoundName, true, http.StatusNotFound},
-		{"Invalid - associated device exists", deviceExists, true, http.StatusBadRequest},
-		{"Invalid - associated provisionWatcher Exists", provisionWatcherExists, true, http.StatusBadRequest},
+		{"Invalid - associated device exists", deviceExists, true, http.StatusConflict},
+		{"Invalid - associated provisionWatcher Exists", provisionWatcherExists, true, http.StatusConflict},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
