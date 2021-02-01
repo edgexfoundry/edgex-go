@@ -971,7 +971,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
     labelsParam:
       in: query
@@ -986,7 +985,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
     200Example:
@@ -1652,18 +1650,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -2187,18 +2173,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -2665,18 +2639,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -2981,18 +2943,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:

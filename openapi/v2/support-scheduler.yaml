@@ -479,7 +479,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   headers:
     correlatedResponseHeader:
@@ -487,7 +486,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
     400Example:
@@ -679,15 +677,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -882,15 +871,6 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: "The requested resource does not exist"
           headers:
