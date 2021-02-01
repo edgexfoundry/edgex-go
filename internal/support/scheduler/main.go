@@ -72,8 +72,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		dic,
 		[]interfaces.BootstrapHandler{
 			handlers.SecureProviderBootstrapHandler,
-			v2Handlers.NewDatabase(httpServer, configuration, v2SchedulerContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			database.NewDatabase(httpServer, configuration).BootstrapHandler,
+			v2Handlers.NewDatabase(httpServer, configuration, v2SchedulerContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
