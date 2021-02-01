@@ -88,7 +88,7 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 		"DeviceService patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
-
+	go updateDeviceServiceCallback(ctx, dic, deviceService)
 	return nil
 }
 
