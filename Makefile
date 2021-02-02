@@ -34,7 +34,6 @@ MICROSERVICES= \
 	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
-	cmd/security-bootstrap-redis/security-bootstrap-redis \
 	cmd/secrets-config/secrets-config \
 	cmd/security-bootstrapper/security-bootstrapper
 
@@ -81,9 +80,6 @@ cmd/security-secretstore-setup/security-secretstore-setup:
 
 cmd/security-file-token-provider/security-file-token-provider:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
-
-cmd/security-bootstrap-redis/security-bootstrap-redis:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrap-redis/security-bootstrap-redis ./cmd/security-bootstrap-redis
 
 cmd/secrets-config/secrets-config:
 	$(GO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config

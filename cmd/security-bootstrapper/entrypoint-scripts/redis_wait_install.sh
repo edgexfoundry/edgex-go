@@ -33,27 +33,36 @@ echo "$(date) Executing waitFor on Redis with waiting on TokensReadyPort \
   -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
-# the bootstrap-redis needs the connection from Redis db to set it up.
-# Hence, here bootstrap-redis runs in background and then after bootstrap-redis starts,
-# the Redis db starts in background.
+# the configureRedis retrieves the redis default user's credentials from secretstore (i.e. Vault) and 
+# generates the redis configuration file with ACL rules in it.
+# The redis database server will start with the generated configuration file so that it is 
+# started securely.
 echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping redis..."
-/edgex-init/bootstrap-redis/security-bootstrap-redis --confdir=/edgex-init/bootstrap-redis/res &
-redis_bootstrapper_pid=$!
+/edgex-init/security-bootstrapper --confdir=/edgex-init/bootstrap-redis/res configureRedis
 
-# give some time for bootstrap-redis to start up
-sleep 1
-
-echo "$(date) Starting edgex-redis..."
-exec /usr/local/bin/docker-entrypoint.sh redis-server &
-
-# wait for bootstrap-redis to finish before signal the redis is ready
-wait $redis_bootstrapper_pid
 redis_bootstrapping_status=$?
-if [ $redis_bootstrapping_status -eq 0 ]; then
-  echo "$(date) redis is bootstrapped and ready"
-else
+if [ $redis_bootstrapping_status -ne 0 ]; then
   echo "$(date) failed to bootstrap redis"
+  exit 1
 fi
+
+# make sure the config file is present before redis server starts up
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri file://"${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
+
+# starting redis with config file
+echo "$(date) Starting edgex-redis ..."
+exec /usr/local/bin/docker-entrypoint.sh redis-server "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" &
+
+# wait for the Redis port
+echo "$(date) Executing waitFor on database redis with waiting on its own port \
+  tcp://${STAGEGATE_DATABASE_HOST}:${STAGEGATE_DATABASE_PORT}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_DATABASE_HOST}":"${STAGEGATE_DATABASE_PORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
+
+echo "$(date) redis is bootstrapped and ready"
 
 # Signal that Redis is ready for services blocked waiting on Redis
 /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \

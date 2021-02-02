@@ -17,6 +17,8 @@ package bootstrapper
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -26,6 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
@@ -34,7 +37,8 @@ import (
 )
 
 const (
-	securityBootstrapperServiceKey = "edgex-security-bootstrapper"
+	securityBootstrapperServiceKey  = "edgex-security-bootstrapper"
+	configureDatabaseSubcommandName = "configureRedis"
 )
 
 // Main function is the wrapper for the security bootstrapper main
@@ -47,6 +51,23 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	f := bootstrapper.NewCommonFlags()
 
 	f.Parse(os.Args[1:])
+
+	// find out the subcommand name before assigning the real concrete configuration
+	// bootstrapRedis has its own configuration settings
+	var confdir string
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	flagSet.StringVar(&confdir, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	err := flagSet.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(0)
+	}
+
+	// branch out to bootstrap redis if it is configureRedis
+	if flagSet.Arg(0) == configureDatabaseSubcommandName {
+		redis.Configure(ctx, cancel, f)
+		return
+	}
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

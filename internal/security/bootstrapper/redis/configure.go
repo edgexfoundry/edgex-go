@@ -1,4 +1,5 @@
 /*******************************************************************************
+* Copyright 2021 Intel Corporation
 * Copyright 2020 Redis Labs
 *
 * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -21,8 +22,10 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/redis/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/redis/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/container"
+	redisHandlers "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/handlers"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/handlers"
@@ -30,15 +33,13 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
+// Configure is the main entry point for configuring the database redis before startup
+func Configure(ctx context.Context,
+	cancel context.CancelFunc,
+	flags flags.Common) {
 	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapRedisKey)
-
-	// All common command-line flags have been moved to DefaultCommonFlags.
-	f := flags.New()
-	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -47,7 +48,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		},
 	})
 
-	handler := NewHandler()
+	redisBootstrapHdl := redisHandlers.NewHandler()
 
 	// bootstrap.RunAndReturnWaitGroup is needed for the underlying configuration system.
 	// Conveniently, it also creates a pipeline of functions as the list of BootstrapHandler's is
@@ -55,7 +56,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 	_, _, ok := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
-		f,
+		flags,
 		clients.SecurityBootstrapRedisKey,
 		internal.ConfigStemCore+internal.ConfigMajorVersion,
 		configuration,
@@ -64,9 +65,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		dic,
 		[]interfaces.BootstrapHandler{
 			handlers.SecureProviderBootstrapHandler,
-			handler.getCredentials,
-			handler.connect,
-			handler.maybeSetCredentials,
+			redisBootstrapHdl.GetCredentials,
+			redisBootstrapHdl.SetupConfFile,
 		},
 	)
 

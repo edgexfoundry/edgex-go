@@ -1,4 +1,5 @@
 /*******************************************************************************
+ * Copyright 2021 Intel Corporation
  * Copyright 2020 Redis Labs
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -11,7 +12,6 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *
- * @author: Andre Srinivasan
  *******************************************************************************/
 package config
 
@@ -20,17 +20,24 @@ import (
 )
 
 // ConfigurationStruct has a 1:1 relationship to the configuration.toml for the service. Writable is
-// the runtime extension of the static configuraiton.
+// the runtime extension of the static configuration.
 type ConfigurationStruct struct {
-	Writable    WritableInfo
-	SecretStore bootstrapConfig.SecretStoreInfo
-	Databases   map[string]bootstrapConfig.Database
+	Writable       WritableInfo
+	SecretStore    bootstrapConfig.SecretStoreInfo
+	Databases      map[string]bootstrapConfig.Database
+	DatabaseConfig DatabaseBootstrapConfigInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting
 // the service.
 type WritableInfo struct {
 	LogLevel string
+}
+
+// DatabaseBootstrapConfigInfo contains the configuration properties for bootstrapping the database
+type DatabaseBootstrapConfigInfo struct {
+	Path string
+	Name string
 }
 
 // Implement interface.Configuration
