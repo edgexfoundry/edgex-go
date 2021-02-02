@@ -58,7 +58,7 @@ func mockDic() *di.Container {
 func addSubscriptionRequestData() requests.AddSubscriptionRequest {
 	var testAddSubscriptionReq = requests.AddSubscriptionRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
 			Versionable: common.NewVersionable(),
 		},
 		Subscription: dtos.Subscription{

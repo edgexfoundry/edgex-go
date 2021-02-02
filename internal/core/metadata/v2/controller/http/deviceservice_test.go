@@ -38,9 +38,11 @@ var testBaseAddress = "http://home-device-service:49990"
 func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 	var testAddDeviceServiceReq = requests.AddDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Service: dtos.DeviceService{
+			Versionable: common.NewVersionable(),
 			Id:          ExampleUUID,
 			Name:        testDeviceServiceName,
 			Description: TestDescription,
@@ -58,7 +60,8 @@ func buildTestUpdateDeviceServiceRequest() requests.UpdateDeviceServiceRequest {
 	testAdminState := models.Unlocked
 	var testUpdateDeviceServiceReq = requests.UpdateDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Service: dtos.UpdateDeviceService{
 			Id:          &testUUID,

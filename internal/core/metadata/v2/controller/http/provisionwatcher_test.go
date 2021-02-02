@@ -45,9 +45,11 @@ var testProvisionWatcherAutoEvents = []dtos.AutoEvent{
 func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {
 	return requests.AddProvisionWatcherRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		ProvisionWatcher: dtos.ProvisionWatcher{
+			Versionable:         common.NewVersionable(),
 			Id:                  ExampleUUID,
 			Name:                testProvisionWatcherName,
 			Labels:              testProvisionWatcherLabels,
@@ -70,9 +72,11 @@ func buildTestUpdateProvisionWatcherRequest() requests.UpdateProvisionWatcherReq
 
 	var testUpdateProvisionWatcherReq = requests.UpdateProvisionWatcherRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		ProvisionWatcher: dtos.UpdateProvisionWatcher{
+			Versionable:         common.NewVersionable(),
 			Id:                  &testUUID,
 			Name:                &testName,
 			Labels:              testProvisionWatcherLabels,
