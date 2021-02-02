@@ -72,9 +72,11 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 
 	var testDeviceProfileReq = requests.DeviceProfileRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Profile: dtos.DeviceProfile{
+			Versionable:     common.NewVersionable(),
 			Id:              ExampleUUID,
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,

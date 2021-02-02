@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
  * Copyright (c) 2019 Intel Corporation
+ * Copyright (C) 2020-2021 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,6 +19,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/v2"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
@@ -39,5 +41,6 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization for the notifications service.
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
+	v2.LoadRestRoutes(b.router, dic)
 	return true
 }

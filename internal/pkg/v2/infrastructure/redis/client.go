@@ -685,3 +685,15 @@ func (c *Client) AddInterval(interval model.Interval) (model.Interval, errors.Ed
 
 	return addInterval(conn, interval)
 }
+
+// AddSubscription adds a new subscription
+func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(subscription.Id) == 0 {
+		subscription.Id = uuid.New().String()
+	}
+
+	return addSubscription(conn, subscription)
+}

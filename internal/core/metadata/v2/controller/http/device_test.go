@@ -46,9 +46,11 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 	}
 	var testAddDeviceReq = requests.AddDeviceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Device: dtos.Device{
+			Versionable:    common.NewVersionable(),
 			Id:             ExampleUUID,
 			Name:           TestDeviceName,
 			ServiceName:    TestDeviceServiceName,
@@ -88,7 +90,8 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	}
 	var testUpdateDeviceReq = requests.UpdateDeviceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Device: dtos.UpdateDevice{
 			Id:             &testUUID,

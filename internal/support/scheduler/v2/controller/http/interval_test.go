@@ -53,15 +53,17 @@ func mockDic() *di.Container {
 func addIntervalRequestData() requests.AddIntervalRequest {
 	var testAddIntervalReq = requests.AddIntervalRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Interval: dtos.Interval{
-			Id:        ExampleUUID,
-			Name:      TestIntervalName,
-			Start:     TestIntervalStart,
-			End:       TestIntervalEnd,
-			Frequency: TestIntervalFrequency,
-			RunOnce:   TestIntervalRunOnce,
+			Versionable: common.NewVersionable(),
+			Id:          ExampleUUID,
+			Name:        TestIntervalName,
+			Start:       TestIntervalStart,
+			End:         TestIntervalEnd,
+			Frequency:   TestIntervalFrequency,
+			RunOnce:     TestIntervalRunOnce,
 		},
 	}
 

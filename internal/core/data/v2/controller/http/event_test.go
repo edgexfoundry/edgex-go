@@ -36,6 +36,7 @@ var expectedCorrelationId = uuid.New().String()
 var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
+	Versionable:  common.NewVersionable(),
 	DeviceName:   TestDeviceName,
 	ResourceName: TestDeviceResourceName,
 	ProfileName:  TestDeviceProfileName,
@@ -48,9 +49,11 @@ var testReading = dtos.BaseReading{
 
 var testAddEvent = requests.AddEventRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Event: dtos.Event{
+		Versionable: common.NewVersionable(),
 		Id:          expectedEventId,
 		DeviceName:  TestDeviceName,
 		ProfileName: TestDeviceProfileName,
