@@ -40,5 +40,5 @@ TokenFile = '/vault/config/assets/resp-init.json'
   Type = 'redisdb'
 
 [DatabaseConfig]
-  Path = '/user/local/etc/redis/conf'
+  Path = '/path/to/redis/conf/dir'
   Name = 'redis.conf'

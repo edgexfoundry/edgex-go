@@ -47,26 +47,12 @@ if [ $redis_bootstrapping_status -ne 0 ]; then
 fi
 
 # make sure the config file is present before redis server starts up
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
-  -uri file://"${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" \
-  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
+if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
+  ehco "$(date) Error: conf file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
+  exit 1
+fi
 
 # starting redis with config file
+# security-bootstrapper in this case should just wait for the Redis's port
 echo "$(date) Starting edgex-redis ..."
-exec /usr/local/bin/docker-entrypoint.sh redis-server "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" &
-
-# wait for the Redis port
-echo "$(date) Executing waitFor on database redis with waiting on its own port \
-  tcp://${STAGEGATE_DATABASE_HOST}:${STAGEGATE_DATABASE_PORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
-  -uri tcp://"${STAGEGATE_DATABASE_HOST}":"${STAGEGATE_DATABASE_PORT}" \
-  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
-
-echo "$(date) redis is bootstrapped and ready"
-
-# Signal that Redis is ready for services blocked waiting on Redis
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
-  --port="${STAGEGATE_DATABASE_READYPORT}" --host="${DATABASES_PRIMARY_HOST}"
-if [ $? -ne 0 ]; then
-  echo "$(date) failed to gating the redis ready port, exits"
-fi
+exec /usr/local/bin/docker-entrypoint.sh redis-server "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}"

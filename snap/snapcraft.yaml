@@ -87,7 +87,6 @@ apps:
       SAVE_OPT1: "--save 900 1"
       SAVE_OPT2: "--save 300 10"
       CONFIG_FILE: "$SNAP_DATA/redis/conf/redis.conf"
-      DONE_FILE: "$SNAP_DATA/redis/conf/.done"
     daemon: simple
     plugs: [network, network-bind]
   postgres:
@@ -181,10 +180,10 @@ apps:
     start-timeout: 15m
     plugs: [network]
   # This is a simple service which calls into vault to retrieve the Redis password and then 
-  # generate Redis config file for Redis to start up with credentials and ACL rules. 
-  # Redis should be start once the doneFile is created. Once the config file has been generated and 
-  # verified authenticated connection, this service exits. In the Docker version, 
-  # the customized redis' entrypoint.sh performs the similar actions as described above.
+  # to generate Redis config file for Redis server to start up with credentials and ACL rules. 
+  # Redis can be started once the confFile is created. Once the config file has been generated, 
+  # this service exits. In the Docker version, the customized redis' entrypoint.sh performs 
+  # the similar actions as described above.
   security-bootstrap-redis:
     adapter: none
     after:
