@@ -697,3 +697,17 @@ func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscri
 
 	return addSubscription(conn, subscription)
 }
+
+// AllSubscriptions returns multiple subscriptions per query criteria, including
+// offset: The number of items to skip before starting to collect the result set.
+// limit: The maximum number of items to return.
+func (c *Client) AllSubscriptions(offset int, limit int) ([]model.Subscription, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr := allSubscriptions(conn, offset, limit)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return subscriptions, nil
+}

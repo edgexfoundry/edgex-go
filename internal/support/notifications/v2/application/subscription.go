@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -34,4 +35,18 @@ func AddSubscription(d models.Subscription, ctx context.Context, dic *di.Contain
 		correlation.FromContext(ctx))
 
 	return addedSubscription.Id, nil
+}
+
+// AllSubscriptions queries subscriptions by offset and limit
+func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dtos.Subscription, err errors.EdgeX) {
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	subs, err := dbClient.AllSubscriptions(offset, limit)
+	if err != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(err)
+	}
+	subscriptions = make([]dtos.Subscription, len(subs))
+	for i, sub := range subs {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(sub)
+	}
+	return subscriptions, nil
 }

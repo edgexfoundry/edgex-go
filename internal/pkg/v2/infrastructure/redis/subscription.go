@@ -77,3 +77,26 @@ func addSubscription(conn redis.Conn, subscription models.Subscription) (models.
 
 	return subscription, edgeXerr
 }
+
+// allSubscriptions queries subscriptions by offset and limit
+func allSubscriptions(conn redis.Conn, offset, limit int) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, edgeXerr := getObjectsBySomeRange(conn, ZREVRANGE, SubscriptionCollection, offset, end)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	subscriptions = make([]models.Subscription, len(objects))
+	for i, o := range objects {
+		s := models.Subscription{}
+		err := json.Unmarshal(o, &s)
+		if err != nil {
+			return []models.Subscription{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "subscription format parsing failed from the database", err)
+		}
+		subscriptions[i] = s
+	}
+	return subscriptions, nil
+}
