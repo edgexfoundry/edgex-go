@@ -13,10 +13,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
+	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -25,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/stretchr/testify/assert"
@@ -49,6 +53,16 @@ var (
 
 func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
+		notificationContainer.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				Writable: config.WritableInfo{
+					LogLevel: "DEBUG",
+				},
+				Service: bootstrapConfig.ServiceInfo{
+					MaxResultCount: 30,
+				},
+			}
+		},
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()
 		},
@@ -181,6 +195,76 @@ func TestAddSubscription(t *testing.T) {
 					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+			}
+		})
+	}
+}
+
+func TestAllSubscriptions(t *testing.T) {
+	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
+	subscriptions := []models.Subscription{subscription, subscription, subscription}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllSubscriptions", 0, 20).Return(subscriptions, nil)
+	dbClientMock.On("AllSubscriptions", 1, 2).Return([]models.Subscription{subscriptions[1], subscriptions[2]}, nil)
+	dbClientMock.On("AllSubscriptions", 4, 1).Return([]models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewSubscriptionController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get subscriptions without offset and limit", "", "", false, 3, http.StatusOK},
+		{"Valid - get subscriptions with offset and limit", "1", "2", false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", true, 0, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllSubscriptionRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AllSubscriptions)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiSubscriptionsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Subscriptions), "Subscription count is not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
 	}

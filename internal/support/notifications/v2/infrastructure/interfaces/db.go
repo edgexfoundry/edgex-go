@@ -14,4 +14,5 @@ type DBClient interface {
 	CloseSession()
 
 	AddSubscription(e models.Subscription) (models.Subscription, errors.EdgeX)
+	AllSubscriptions(offset int, limit int) ([]models.Subscription, errors.EdgeX)
 }
