@@ -28,10 +28,8 @@ func TestGenerateConfig(t *testing.T) {
 	confFile, err := os.OpenFile(testConfFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	require.NoError(t, err)
 	defer func() {
-		err = confFile.Close()
-		require.NoError(t, err)
-		err = os.RemoveAll(testConfFile)
-		require.NoError(t, err)
+		_ = confFile.Close()
+		_ = os.RemoveAll(testConfFile)
 	}()
 
 	fw := bufio.NewWriter(confFile)
@@ -39,19 +37,22 @@ func TestGenerateConfig(t *testing.T) {
 
 	err = GenerateConfig(fw, &testFakePwd)
 	require.NoError(t, err)
-	require.NoError(t, fw.Flush())
+	err = fw.Flush()
+	require.NoError(t, err)
 
 	inputFile, err := os.Open(testConfFile)
 	require.NoError(t, err)
 	defer inputFile.Close()
 	inputScanner := bufio.NewScanner(inputFile)
 	inputScanner.Split(bufio.ScanLines)
-	lineCount := 0
+	var outputlines []string
 	// Read until a newline for each Scan
 	for inputScanner.Scan() {
-		lineCount++
 		line := inputScanner.Text()
 		require.Contains(t, line, testFakePwd)
+		outputlines = append(outputlines, line)
 	}
-	require.Equal(t, 2, lineCount)
+	require.Equal(t, 2, len(outputlines))
+	require.Equal(t, "user default on allkeys +@all -@dangerous >"+testFakePwd, outputlines[0])
+	require.Equal(t, "requirepass "+testFakePwd, outputlines[1])
 }
