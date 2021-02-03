@@ -315,7 +315,7 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
           description: List of commands to Get/Put information for devices associated with this profile
@@ -349,7 +349,7 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
           description: List of commands to Get/Put information for devices associated with this profile
@@ -390,7 +390,7 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
           description: List of commands to Get/Put information for devices associated with this profile
@@ -757,7 +757,7 @@ components:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
-    ProfileResource:
+    DeviceCommand:
       description: "Defines read/write capabilities native to the device"
       type: object
       properties:
