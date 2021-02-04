@@ -1,4 +1,3 @@
-[Writable]
 LogLevel = 'INFO'
 
 [StageGate]

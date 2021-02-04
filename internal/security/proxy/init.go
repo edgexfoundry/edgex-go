@@ -69,13 +69,13 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	if len(configuration.SecretService.CACertPath) > 0 {
 		req = NewRequestor(
 			b.insecureSkipVerify,
-			configuration.Writable.RequestTimeout,
+			configuration.RequestTimeout,
 			configuration.SecretService.CACertPath,
 			lc)
 	} else {
 		req = NewRequestor(
 			true, // non-TLS mode internally
-			configuration.Writable.RequestTimeout,
+			configuration.RequestTimeout,
 			"", // irrelevant
 			lc)
 	}
