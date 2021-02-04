@@ -55,8 +55,8 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			ReadWrite: "RW",
 		},
 	}}
-	var testDeviceCommands = []dtos.ProfileResource{{
-		Name: TestProfileResourceName,
+	var testDeviceCommands = []dtos.DeviceCommand{{
+		Name: TestDeviceCommandName,
 		Get: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
@@ -65,7 +65,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		}},
 	}}
 	var testCoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  true,
 		Put:  true,
 	}}
@@ -230,12 +230,12 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Put:  false,
 	}}
 
@@ -373,12 +373,12 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}}
 	noCommandGet := deviceProfileRequest
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfileRequest
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Put:  false,
 	}}
 	notFound := deviceProfileRequest
@@ -532,12 +532,12 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Put:  false,
 	}}
 	tests := []struct {
@@ -678,12 +678,12 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Put:  false,
 	}}
 	notFound := deviceProfile
