@@ -29,4 +29,5 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	nc := notificationsController.NewSubscriptionController(dic)
 	r.HandleFunc(v2Constant.ApiSubscriptionRoute, nc.AddSubscription).Methods(http.MethodPost)
 	r.HandleFunc(v2Constant.ApiAllSubscriptionRoute, nc.AllSubscriptions).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByCategoryRoute, nc.SubscriptionsByCategory).Methods(http.MethodGet)
 }
