@@ -72,6 +72,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -116,10 +122,10 @@ components:
           description: Command name (unique on the profile). Must name a DeviceCommand or a DeviceResource in this profile
         get:
           type: boolean
-          description: Get Command enabled. At least one of Get and Put must be present
-        put:
+          description: Get Command enabled. At least one of Get and Set must be present
+        set:
           type: boolean
-          description: Put Command enabled. At least one of Get and Put must be present
+          description: Set Command enabled. At least one of Get and Set must be present
       required:
         - name
     Device:
@@ -318,7 +324,7 @@ components:
             $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
     CreateDeviceProfile:
@@ -352,7 +358,7 @@ components:
             $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
       required:
@@ -393,7 +399,7 @@ components:
             $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
     DeviceProfileResponse:
@@ -719,40 +725,52 @@ components:
       description: "A response type for returning a generic error to the caller."
       type: object
     ConfigResponse:
-      description: "Provides a response containing the configuration for the targeted service."
+      description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
-          type: string
+          type: object
     MetricsResponse:
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
-        memAlloc:
-          description: "Alloc is bytes of allocated heap objects."
-          type: integer
-        memFrees:
-          description: "Frees is the cumulative count of heap objects freed."
-          type: integer
-        memLiveObjects:
-          description: "The number of live objects is Mallocs - Frees."
-          type: integer
-        memMallocs:
-          description: "The cumulative count of heap objects allocated."
-          type: integer
-        memSys:
-          description: "The total bytes of memory obtained from the OS."
-          type: integer
-        memTotalAlloc:
-          description: "Cumulative bytes allocated for heap objects."
-          type: integer
-        cpuBusyAvg:
-          description: "Indicates the average level of CPU utilization"
-          type: number
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+        metrics:
+          type: object
+          properties:
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed."
+              type: integer
+            memLiveObjects:
+              description: "The number of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS."
+              type: integer
+            memTotalAlloc:
+              description: "Cumulative bytes allocated for heap objects."
+              type: integer
+            cpuBusyAvg:
+              description: "Indicates the average level of CPU utilization"
+              type: number
     PingResponse:
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -942,6 +960,9 @@ components:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         version:
           description: "The latest version supported by the service."
           type: string
@@ -1011,12 +1032,12 @@ components:
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "Data Duplicate"
-    423Example:
+    409DeleteExample:
       value:
         apiVersion: "v2"
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
-        statusCode: 423
-        message: "Locked"
+        statusCode: 409
+        message: "associated object exists"
     500Example:
       value:
         apiVersion: "v2"
@@ -1059,6 +1080,7 @@ components:
     AddDeviceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           device:
             name: AWS IOT Button1
             description: Home automation system
@@ -1084,6 +1106,7 @@ components:
     AddDeviceServiceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           service:
             name: home thermostat device service
             description: manage homethermostats
@@ -1096,6 +1119,7 @@ components:
     AddDeviceProfileRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           profile:
             name: "Simple-Device-Profile"
             manufacturer: "Simple Corp."
@@ -1121,10 +1145,11 @@ components:
             coreCommands:
               - name: "Switch"
                 get: true
-                put: true
+                set: true
     AddProvisionWatcherRequest:
       value:
         - requestId: "fb34e122-84d6-4c4c-a0ba-ac181021dc6b"
+          apiVersion: v2
           provisionwatcher:
             name: "Simple-Provision-Watcher"
             labels:
@@ -1237,7 +1262,7 @@ components:
               created: 1601012840000
               modified: 1601012840000
               get: true
-              put: true
+              set: true
         - apiVersion: "v2"
           id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
           name: "Device-Modbus-Profile"
@@ -1272,7 +1297,7 @@ components:
               created: 1601012840000
               modified: 1601012840000
               get: true
-              put: true
+              set: true
     GetAllProvisionWatchersResponse:
       value:
         apiVersion: "v2"
@@ -1388,6 +1413,7 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceRequest'
             example:
               requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+              apiVersion: v2
               device:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "AWS IOT Button1"
@@ -2121,7 +2147,7 @@ paths:
                     created: 1601012840000
                     modified: 1601012840000
                     get: true
-                    put: true
+                    set: true
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -2185,7 +2211,7 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
+        '409':
           description: "The requested resource is locked"
           headers:
             X-Correlation-ID:
@@ -2195,8 +2221,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2432,6 +2458,7 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceServiceRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+                apiVersion: v2
                 service:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "home thermostat device service"
@@ -2440,6 +2467,7 @@ paths:
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
+                apiVersion: v2
                 service:
                 - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "Google Home device service"
@@ -2651,7 +2679,7 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
+        '409':
           description: "The requested resource is locked"
           headers:
             X-Correlation-ID:
@@ -2661,8 +2689,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2742,6 +2770,7 @@ paths:
               $ref: '#/components/schemas/UpdateProvisionWatcherRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+                apiVersion: v2
                 provisionwatcher:
                   - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                     name: "simple-identifier"
@@ -2752,6 +2781,7 @@ paths:
                     labels:
                       - "simple"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
+                apiVersion: v2
                 provisionwatcher:
                   - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                     name: "virtual-identifier"
