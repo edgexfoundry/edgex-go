@@ -77,6 +77,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
 			return V2Clients.NewDeviceProfileClient(configuration.Clients["Metadata"].Url() + V2Routes.ApiDeviceProfileRoute)
 		},
+		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceServiceClient
+			return V2Clients.NewDeviceServiceClient(configuration.Clients["Metadata"].Url() + V2Routes.ApiDeviceServiceRoute)
+		},
+		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+			return V2Clients.NewDeviceServiceCommandClient()
+		},
 	})
 
 	return true
