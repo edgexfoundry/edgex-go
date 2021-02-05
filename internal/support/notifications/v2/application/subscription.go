@@ -84,3 +84,20 @@ func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (s
 	}
 	return subscriptions, nil
 }
+
+// SubscriptionsByReceiver queries subscriptions with offset, limit, and receiver
+func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Container) (subscriptions []dtos.Subscription, err errors.EdgeX) {
+	if receiver == "" {
+		return subscriptions, errors.NewCommonEdgeX(errors.KindContractInvalid, "receiver is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	subscriptionModels, err := dbClient.SubscriptionsByReceiver(offset, limit, receiver)
+	if err != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(err)
+	}
+	subscriptions = make([]dtos.Subscription, len(subscriptionModels))
+	for i, s := range subscriptionModels {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
+	}
+	return subscriptions, nil
+}
