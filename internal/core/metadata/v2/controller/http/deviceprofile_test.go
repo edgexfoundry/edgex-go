@@ -51,7 +51,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      contractsV2.ValueTypeInt16,
+			ValueType: contractsV2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}}
@@ -209,7 +209,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -352,7 +352,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -511,7 +511,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -657,7 +657,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}

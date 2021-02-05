@@ -109,6 +109,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -133,14 +139,16 @@ components:
       description: "A response type for returning a generic error to the caller."
       type: object
     ConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "Provides a response containing the configuration for the targeted service."
+      description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
-          type: string
+          type: object
     Interval:
       description: "Defines the frequency at which some action should occur."
       type: object
@@ -256,40 +264,45 @@ components:
           items:
             $ref: '#/components/schemas/Interval'
     MetricsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
         metrics:
           type: object
           properties:
-            memAlloc:
-              description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
-              type: integer
-            memFrees:
-              description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
-              type: integer
-            memLiveObjects:
-              description: "The uint64 type integer of live objects is Mallocs - Frees."
-              type: integer
-            memMallocs:
-              description: "The cumulative count of heap objects allocated which is a uint64 type integer."
-              type: integer
-            memSys:
-              description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
-              type: integer
-            memTotalAlloc:
-              description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
-              type: integer
-            cpuBusyAvg:
-              description: "A uint8 type integer indicates the average level of CPU utilization"
-              type: number
+            apiVersion:
+              description: "A version number shows the API version in DTOs."
+              type: string
+              example: v2
+            metrics:
+              memAlloc:
+                description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
+                type: integer
+              memFrees:
+                description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
+                type: integer
+              memLiveObjects:
+                description: "The uint64 type integer of live objects is Mallocs - Frees."
+                type: integer
+              memMallocs:
+                description: "The cumulative count of heap objects allocated which is a uint64 type integer."
+                type: integer
+              memSys:
+                description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
+                type: integer
+              memTotalAlloc:
+                description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
+                type: integer
+              cpuBusyAvg:
+                description: "A uint8 type integer indicates the average level of CPU utilization"
+                type: number
     PingResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -446,10 +459,12 @@ components:
           format: uuid
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         version:
           description: "The latest version supported by the service."
           type: string
@@ -985,6 +1000,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
+              example:
+                apiVersion: "v2"
+                metrics:
+                  memAlloc: 877192
+                  memFrees: 2248915
+                  memLiveObjects: 6522
+                  memMallocs: 2255437
+                  memSys: 72876280
+                  memTotalAlloc: 203821192
+                  cpuBusyAvg: 2.2521221920656003
         '500':
           description: "Interval Server Error"
           headers:
@@ -1010,6 +1035,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
+              example:
+                apiVersion: "v2"
+                timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
         '500':
           description: "Interval Server Error"
           headers:
@@ -1035,6 +1063,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
+              example:
+                apiVersion: "v2"
+                version: "2.0.0-dev.13"
         '500':
           description: "Interval Server Error"
           headers:

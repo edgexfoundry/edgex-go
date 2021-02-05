@@ -14,7 +14,6 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 )
@@ -69,10 +68,6 @@ func (jsonDeviceProfileReader) ReadDeviceProfileYaml(r *http.Request) (dtos.Devi
 	err = yaml.Unmarshal(data, &dp)
 	if err != nil {
 		return dtos.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to unmarshal yaml file", err)
-	}
-	err = v2.Validate(dp)
-	if err != nil {
-		return dtos.DeviceProfile{}, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	return dp, nil

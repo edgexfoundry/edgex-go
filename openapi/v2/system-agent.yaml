@@ -19,6 +19,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -154,10 +160,12 @@ components:
           type: string
           example: "docker"
     PingResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -253,15 +261,15 @@ components:
         - service
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         version:
           description: "The latest version supported by the service."
           type: string
-      required:
-        - version
   parameters:
     correlatedRequestHeader:
       in: header
@@ -589,6 +597,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
+              example:
+                apiVersion: "v2"
+                timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
         '500':
           description: "Interval Server Error"
           headers:
@@ -614,6 +625,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
+              example:
+                apiVersion: "v2"
+                version: "2.0.0-dev.13"
         '500':
           description: "Interval Server Error"
           headers:

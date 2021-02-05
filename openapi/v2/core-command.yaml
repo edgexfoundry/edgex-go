@@ -19,6 +19,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -47,7 +53,7 @@ components:
           type: string
         get:
           type: boolean
-        put:
+        set:
           type: boolean
         path:
           type: string
@@ -193,20 +199,22 @@ components:
         event:
           $ref: '#/components/schemas/Event'
     ConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       description: "Provides a response containing the configuration for the targeted service."
       type: object
       properties:
-        config:
-          description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
           type: string
+        config:
+          description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
+          type: object
     MetricsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         metrics:
           type: object
           properties:
@@ -232,10 +240,11 @@ components:
               description: "A uint8 type integer indicates the average level of CPU utilization"
               type: number
     PingResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         timestamp:
           type: string
           description: "Outputs the current server timestamp in RFC1123 format"
@@ -296,10 +305,12 @@ components:
         - version
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
         version:
           description: "The latest version supported by the service."
           type: string
@@ -364,7 +375,7 @@ components:
             url: "http://localhost:48082"
           - name: "coolingpoint2"
             deviceName: "testDevice"
-            put: true
+            set: true
             path: "/api/v2/device/name/testDevice/command/coolingpoint2"
             url: "http://localhost:48082"
 paths:
@@ -632,6 +643,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
+              example:
+                apiVersion: "v2"
+                metrics:
+                  memAlloc: 877192
+                  memFrees: 2248915
+                  memLiveObjects: 6522
+                  memMallocs: 2255437
+                  memSys: 72876280
+                  memTotalAlloc: 203821192
+                  cpuBusyAvg: 2.2521221920656003
         '500':
           description: "Interval Server Error"
           headers:
@@ -657,6 +678,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
+              example:
+                apiVersion: "v2"
+                timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
         '500':
           description: "Interval Server Error"
           headers:
@@ -682,6 +706,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
+              example:
+                apiVersion: "v2"
+                version: "2.0.0-dev.13"
         '500':
           description: "Interval Server Error"
           headers:
