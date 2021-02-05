@@ -406,3 +406,71 @@ func TestSubscriptionsByLabel(t *testing.T) {
 		})
 	}
 }
+
+func TestSubscriptionsByReceiver(t *testing.T) {
+	testReceiver := "receiver"
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionsByReceiver", 0, 20, testReceiver).Return([]models.Subscription{}, nil)
+	dbClientMock.On("SubscriptionsByReceiver", 0, 1, testReceiver).Return([]models.Subscription{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewSubscriptionController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		receiver           string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - get subscriptions without offset, and limit", "", "", testReceiver, false, http.StatusOK},
+		{"Valid - get subscriptions with offset, and limit", "0", "1", testReceiver, false, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testReceiver, true, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testReceiver, true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiSubscriptionByReceiverRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{v2.Receiver: testCase.receiver})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.SubscriptionsByReceiver)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiSubscriptionsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
