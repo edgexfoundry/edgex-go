@@ -777,7 +777,7 @@ components:
       description: "Defines constraints with regard to the range of acceptable values assigned to an event reading and defined as a property within a device profile."
       type: object
       properties:
-        type:
+        valueType:
           type: string
           description: "ValueDescriptor Type of property after transformations. Optional: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, bool, string, binary, uint8array, uint16array, uint32array, uint64array, int8array, int16array, int32array, int64array, float32array, float64array, boolarray."
         readWrite:
@@ -1108,7 +1108,7 @@ components:
               - name: "SwitchButton"
                 description: "Switch On/Off."
                 properties:
-                  type: "String"
+                  valueType: "String"
                   readWrite: "RW"
                   defaultValue: "On"
                   units: "On/Off"
