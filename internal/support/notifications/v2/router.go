@@ -30,4 +30,5 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiSubscriptionRoute, nc.AddSubscription).Methods(http.MethodPost)
 	r.HandleFunc(v2Constant.ApiAllSubscriptionRoute, nc.AllSubscriptions).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiSubscriptionByCategoryRoute, nc.SubscriptionsByCategory).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByLabelRoute, nc.SubscriptionsByLabel).Methods(http.MethodGet)
 }

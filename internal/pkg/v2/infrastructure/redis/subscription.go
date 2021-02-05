@@ -115,6 +115,20 @@ func subscriptionsByCategory(conn redis.Conn, offset int, limit int, category st
 	return convertObjectsToSubscriptions(objects)
 }
 
+// subscriptionsByLabel queries subscriptions by offset, limit, and label
+func subscriptionsByLabel(conn redis.Conn, offset int, limit int, label string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionLabel, label), offset, end)
+	if err != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToSubscriptions(objects)
+}
+
 func convertObjectsToSubscriptions(objects [][]byte) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
 	subscriptions = make([]models.Subscription, len(objects))
 	for i, o := range objects {
