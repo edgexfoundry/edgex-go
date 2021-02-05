@@ -64,6 +64,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -172,20 +178,22 @@ components:
         event:
           $ref: '#/components/schemas/Event'
     ConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       description: "Provides a response containing the configuration for the targeted service."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         config:
-          description: "An object containing the service's configuration. Please refer to Core Data's configuration documentation for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
+          description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
     MetricsResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         metrics:
           type: object
           properties:
@@ -231,10 +239,11 @@ components:
           items:
             $ref: '#/components/schemas/BaseReading'
     PingResponse:
-      allOf:
-      - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -260,10 +269,11 @@ components:
         - value
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         version:
           description: "The latest version supported by the service."
           type: string
@@ -526,7 +536,9 @@ paths:
             schema:
               $ref: '#/components/schemas/AddEventRequest'
             example:
+              apiVersion: v2
               event:
+                apiVersion: v2
                 deviceName: device-002
                 profileName: profile-002
                 id: d5471d59-2810-419a-8744-18eb8fa03465
@@ -536,7 +548,8 @@ paths:
                   Latitude: "29.630771"
                   Longitude: "-95.377603"
                 readings:
-                  - deviceName: device-002
+                  - apiVersion: v2
+                    deviceName: device-002
                     resourceName: resource-002
                     profileName: profile-002
                     id: 7003cacc-0e00-4676-977c-4e58b9612abd
@@ -1392,10 +1405,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
-                requestId: ""
                 apiVersion: "v2"
-                statusCode: 200
-                message: ""
                 config:
                   Writeable:
                     DeviceUpdateLastConnected: false
@@ -1499,10 +1509,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
               example:
-                requestId: ""
                 apiVersion: "v2"
-                statusCode: 200
-                message: ""
                 metrics:
                   memAlloc: 877192
                   memFrees: 2248915
@@ -1537,10 +1544,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
-                requestId: ""
                 apiVersion: "v2"
-                statusCode: 200
-                message: ""
                 timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
         '500':
           description: "Interval Server Error"
@@ -1568,10 +1572,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
-                requestId: ""
                 apiVersion: "v2"
-                statusCode: 200
-                message: ""
                 version: "master"                
         '500':
           description: "Interval Server Error"
