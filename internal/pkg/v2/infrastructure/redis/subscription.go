@@ -164,3 +164,42 @@ func convertObjectsToSubscriptions(objects [][]byte) (subscriptions []models.Sub
 	}
 	return subscriptions, nil
 }
+
+// deleteSubscriptionByName deletes the subscription by name
+func deleteSubscriptionByName(conn redis.Conn, name string) errors.EdgeX {
+	subscription, err := subscriptionByName(conn, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = deleteSubscription(conn, subscription)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// sendDeleteSubscriptionCmd sends redis command to delete a subscription
+func sendDeleteSubscriptionCmd(conn redis.Conn, storedKey string, subscription models.Subscription) {
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, SubscriptionCollection, storedKey)
+	_ = conn.Send(HDEL, SubscriptionCollectionName, subscription.Name)
+	for _, category := range subscription.Categories {
+		_ = conn.Send(ZREM, CreateKey(SubscriptionCollectionCategory, string(category)), storedKey)
+	}
+	for _, label := range subscription.Labels {
+		_ = conn.Send(ZREM, CreateKey(SubscriptionCollectionLabel, label), storedKey)
+	}
+	_ = conn.Send(ZREM, CreateKey(SubscriptionCollectionReceiver, subscription.Receiver), storedKey)
+}
+
+// deleteSubscription deletes a subscription
+func deleteSubscription(conn redis.Conn, subscription models.Subscription) errors.EdgeX {
+	storedKey := subscriptionStoredKey(subscription.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteSubscriptionCmd(conn, storedKey, subscription)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "subscription deletion failed", err)
+	}
+	return nil
+}

@@ -269,3 +269,30 @@ func (sc *SubscriptionController) SubscriptionsByReceiver(w http.ResponseWriter,
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (sc *SubscriptionController) DeleteSubscriptionByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(sc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteSubscriptionByName(name, ctx, sc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusNoContent)
+		statusCode = http.StatusNoContent
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

@@ -537,3 +537,60 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteSubscriptionByName(t *testing.T) {
+	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
+	noName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteSubscriptionByName", subscription.Name).Return(nil)
+	dbClientMock.On("DeleteSubscriptionByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
+	dbClientMock.On("SubscriptionByName", notFoundName).Return(subscription, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
+	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewSubscriptionController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		subscriptionName   string
+		expectedStatusCode int
+	}{
+		{"Valid - delete subscription by name", subscription.Name, http.StatusNoContent},
+		{"Invalid - name parameter is empty", noName, http.StatusBadRequest},
+		{"Invalid - subscription not found by name", notFoundName, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiSubscriptionByNameRoute, testCase.subscriptionName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.subscriptionName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteSubscriptionByName)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.expectedStatusCode == http.StatusNoContent {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
