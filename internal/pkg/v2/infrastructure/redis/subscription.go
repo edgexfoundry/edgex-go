@@ -101,6 +101,15 @@ func allSubscriptions(conn redis.Conn, offset, limit int) (subscriptions []model
 	return subscriptions, nil
 }
 
+// subscriptionByName queries subscription by name
+func subscriptionByName(conn redis.Conn, name string) (subscription models.Subscription, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, SubscriptionCollectionName, name, &subscription)
+	if edgeXerr != nil {
+		return subscription, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
 // subscriptionsByCategory queries subscriptions by offset, limit, and category
 func subscriptionsByCategory(conn redis.Conn, offset int, limit int, category string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
 	end := offset + limit - 1

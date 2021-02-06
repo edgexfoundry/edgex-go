@@ -127,6 +127,35 @@ func (sc *SubscriptionController) AllSubscriptions(w http.ResponseWriter, r *htt
 	pkg.Encode(response, w, lc)
 }
 
+func (sc *SubscriptionController) SubscriptionByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(sc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	subscription, err := application.SubscriptionByName(name, sc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = responseDTO.NewSubscriptionResponse("", "", http.StatusOK, subscription)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
 func (sc *SubscriptionController) SubscriptionsByCategory(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(sc.dic.Get)
 	ctx := r.Context()

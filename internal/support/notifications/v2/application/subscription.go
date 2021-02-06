@@ -51,6 +51,20 @@ func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dto
 	return subscriptions, nil
 }
 
+// SubscriptionByName queries subscription by name
+func SubscriptionByName(name string, dic *di.Container) (subscription dtos.Subscription, err errors.EdgeX) {
+	if name == "" {
+		return subscription, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	subscriptionModel, err := dbClient.SubscriptionByName(name)
+	if err != nil {
+		return subscription, errors.NewCommonEdgeXWrapper(err)
+	}
+	subscription = dtos.FromSubscriptionModelToDTO(subscriptionModel)
+	return subscription, nil
+}
+
 // SubscriptionsByCategory queries subscriptions with offset, limit, and category
 func SubscriptionsByCategory(offset, limit int, category string, dic *di.Container) (subscriptions []dtos.Subscription, err errors.EdgeX) {
 	if category == "" {
