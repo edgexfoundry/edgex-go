@@ -271,6 +271,69 @@ func TestAllSubscriptions(t *testing.T) {
 	}
 }
 
+func TestSubscriptionByName(t *testing.T) {
+	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
+	emptyName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
+	dbClientMock.On("SubscriptionByName", notFoundName).Return(models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewSubscriptionController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		subscriptionName   string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find subscription by name", subscription.Name, false, http.StatusOK},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - subscription not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiSubscriptionByNameRoute, testCase.subscriptionName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.subscriptionName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.SubscriptionByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.SubscriptionResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.subscriptionName, res.Subscription.Name, "Name not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
 func TestSubscriptionsByCategory(t *testing.T) {
 	testCategory := "category"
 	dic := mockDic()

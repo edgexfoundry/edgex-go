@@ -68,6 +68,29 @@ func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
 
+// SubscriptionByName provides a mock function with given fields: name
+func (_m *DBClient) SubscriptionByName(name string) (models.Subscription, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.Subscription
+	if rf, ok := ret.Get(0).(func(string) models.Subscription); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.Subscription)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // SubscriptionsByCategory provides a mock function with given fields: offset, limit, category
 func (_m *DBClient) SubscriptionsByCategory(offset int, limit int, category string) ([]models.Subscription, errors.EdgeX) {
 	ret := _m.Called(offset, limit, category)
