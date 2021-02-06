@@ -48,6 +48,16 @@ func CreateDirectoryIfNotExists(dirName string) (err error) {
 	return
 }
 
+// ChownDirRecursive changes ownership of files and directory dirName recursively
+func ChownDirRecursive(dirName string, uid, gid int) error {
+	return filepath.Walk(dirName, func(fileName string, info os.FileInfo, err error) error {
+		if err == nil {
+			err = os.Chown(fileName, uid, gid)
+		}
+		return err
+	})
+}
+
 func checkIfFileExists(fileName string) bool {
 	fileInfo, statErr := os.Stat(fileName)
 	if os.IsNotExist(statErr) {

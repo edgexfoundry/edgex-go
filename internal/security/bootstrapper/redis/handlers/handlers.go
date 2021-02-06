@@ -34,6 +34,14 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
+const (
+	// based on the Redis' alpine Dockerfile:
+	// https://github.com/docker-library/redis/blob/68595be6067839e5c5c1a35bdbb6357d017a8a4e/6.0/alpine/Dockerfile#L4
+	// redis server runs with redis uid 999 and redis group gid 1000
+	redisUid = 999
+	redisGid = 1000
+)
+
 // Handler is the redis bootstrapping handler
 type Handler struct {
 	credentials bootstrapConfig.Credentials
@@ -107,14 +115,11 @@ func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ 
 	lc.Infof("Setting up the database config file %s", dbConfigFilePath)
 
 	// open config file with read-write and overwritten attribute (TRUNC)
-	confFile, err := os.OpenFile(dbConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	confFile, err := os.OpenFile(dbConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		lc.Errorf("failed to open db config file %s: %v", dbConfigFilePath, err)
 		return false
 	}
-	defer func() {
-		_ = confFile.Close()
-	}()
 
 	// writing the config file
 	fwriter := bufio.NewWriter(confFile)
@@ -124,6 +129,14 @@ func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ 
 	}
 	if err := fwriter.Flush(); err != nil {
 		lc.Errorf("failed to flush the file writer buffer %v", err)
+		return false
+	}
+	if err := confFile.Close(); err != nil {
+		lc.Errorf("failed to close the config file %v", err)
+		return false
+	}
+	if err := helper.ChownDirRecursive(dbConfigDir, redisUid, redisGid); err != nil {
+		lc.Errorf("failed to change the ownership for redis' configDir %s:  %v", dbConfigDir, err)
 		return false
 	}
 
