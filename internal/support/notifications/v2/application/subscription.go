@@ -115,3 +115,16 @@ func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Contain
 	}
 	return subscriptions, nil
 }
+
+// DeleteSubscriptionByName deletes the subscription by name
+func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteSubscriptionByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

@@ -763,3 +763,16 @@ func (c *Client) SubscriptionByName(name string) (subscription model.Subscriptio
 	}
 	return subscription, nil
 }
+
+// DeleteSubscriptionByName deletes a subscription by name
+func (c *Client) DeleteSubscriptionByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteSubscriptionByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the subscription with name %s", name), edgeXerr)
+	}
+
+	return nil
+}
