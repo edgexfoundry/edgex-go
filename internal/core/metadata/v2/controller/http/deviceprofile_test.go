@@ -67,7 +67,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 	var testCoreCommands = []dtos.Command{{
 		Name: TestDeviceCommandName,
 		Get:  true,
-		Put:  true,
+		Set:  true,
 	}}
 
 	var testDeviceProfileReq = requests.DeviceProfileRequest{
@@ -226,7 +226,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.Profile.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
@@ -236,7 +236,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	noCommandPut := deviceProfile
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
 		Name: TestDeviceCommandName,
-		Put:  false,
+		Set:  false,
 	}}
 
 	tests := []struct {
@@ -369,7 +369,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	noCommandName := deviceProfileRequest
 	noCommandName.Profile.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfileRequest
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
@@ -379,7 +379,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	noCommandPut := deviceProfileRequest
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
 		Name: TestDeviceCommandName,
-		Put:  false,
+		Set:  false,
 	}}
 	notFound := deviceProfileRequest
 	notFound.Profile.Name = "testDevice"
@@ -528,7 +528,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
@@ -538,7 +538,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
 		Name: TestDeviceCommandName,
-		Put:  false,
+		Set:  false,
 	}}
 	tests := []struct {
 		name    string
@@ -674,7 +674,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
@@ -684,7 +684,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
 		Name: TestDeviceCommandName,
-		Put:  false,
+		Set:  false,
 	}}
 	notFound := deviceProfile
 	notFound.Name = "testDevice"
