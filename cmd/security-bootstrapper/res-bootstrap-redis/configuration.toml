@@ -39,3 +39,6 @@ TokenFile = '/vault/config/assets/resp-init.json'
   Timeout = 5000
   Type = 'redisdb'
 
+[DatabaseConfig]
+  Path = '/path/to/redis/conf/dir'
+  Name = 'redis.conf'

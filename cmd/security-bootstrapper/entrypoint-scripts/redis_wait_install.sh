@@ -33,31 +33,33 @@ echo "$(date) Executing waitFor on Redis with waiting on TokensReadyPort \
   -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
-# the bootstrap-redis needs the connection from Redis db to set it up.
-# Hence, here bootstrap-redis runs in background and then after bootstrap-redis starts,
-# the Redis db starts in background.
+# the configureRedis retrieves the redis default user's credentials from secretstore (i.e. Vault) and 
+# generates the redis configuration file with ACL rules in it.
+# The redis database server will start with the generated configuration file so that it is 
+# started securely.
 echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping redis..."
-/edgex-init/bootstrap-redis/security-bootstrap-redis --confdir=/edgex-init/bootstrap-redis/res &
-redis_bootstrapper_pid=$!
+/edgex-init/security-bootstrapper --confdir=/edgex-init/bootstrap-redis/res configureRedis
 
-# give some time for bootstrap-redis to start up
-sleep 1
-
-echo "$(date) Starting edgex-redis..."
-exec /usr/local/bin/docker-entrypoint.sh redis-server &
-
-# wait for bootstrap-redis to finish before signal the redis is ready
-wait $redis_bootstrapper_pid
 redis_bootstrapping_status=$?
-if [ $redis_bootstrapping_status -eq 0 ]; then
-  echo "$(date) redis is bootstrapped and ready"
-else
+if [ $redis_bootstrapping_status -ne 0 ]; then
   echo "$(date) failed to bootstrap redis"
+  exit 1
 fi
 
-# Signal that Redis is ready for services blocked waiting on Redis
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
-  --port="${STAGEGATE_DATABASE_READYPORT}" --host="${DATABASES_PRIMARY_HOST}"
-if [ $? -ne 0 ]; then
-  echo "$(date) failed to gating the redis ready port, exits"
+# make sure the config file is present before redis server starts up
+if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
+  ehco "$(date) Error: conf file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
+  exit 1
+else
+  # before using the generated config file we need to change the ownership to redis:redis
+  # as the redis server for docker is running as that permission
+  # based on the Redis' alpine Dockerfile: 
+  # https://github.com/docker-library/redis/blob/68595be6067839e5c5c1a35bdbb6357d017a8a4e/6.0/alpine/Dockerfile#L4
+  # redis server runs with redis uid 999 and redis group gid 1000
+  chown -Rh 999:1000 "${DATABASECONFIG_PATH}"/  
 fi
+
+# starting redis with config file
+# security-bootstrapper in this case should just wait for the Redis's port
+echo "$(date) Starting edgex-redis ..."
+exec /usr/local/bin/docker-entrypoint.sh redis-server "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}"

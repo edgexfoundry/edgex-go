@@ -80,12 +80,13 @@ apps:
     plugs: [network, network-bind]
   redis:
     adapter: full
-    after: [security-secretstore-setup]
-    command: bin/redis-server $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
+    after: [security-bootstrap-redis]
+    command: bin/redis-server $CONFIG_FILE $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
     environment:
       DIR_OPT: "--dir $SNAP_DATA/redis"
       SAVE_OPT1: "--save 900 1"
       SAVE_OPT2: "--save 300 10"
+      CONFIG_FILE: "$SNAP_DATA/redis/conf/redis.conf"
     daemon: simple
     plugs: [network, network-bind]
   postgres:
@@ -178,19 +179,22 @@ apps:
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
-  # This is a simple service which calls into vault to retrieve the Redis password and then makes a
-  # Redis call to set the password. As such, Redis is now started after security-secretstore-setup
-  # has run, following by this service. Once the password has been set, this service exits. In the
-  # Docker version, the entrypoint.sh waits until it is interrupted before it exits.
+  # This is a simple service which calls into vault to retrieve the Redis password and then 
+  # to generate Redis config file for Redis server to start up with credentials and ACL rules. 
+  # Redis can be started once the confFile is created. Once the config file has been generated, 
+  # this service exits. In the Docker version, the customized redis' entrypoint.sh performs 
+  # the similar actions as described above.
   security-bootstrap-redis:
     adapter: none
     after:
-      - redis
-    command: bin/security-bootstrap-redis -confdir $SNAP_DATA/config/security-bootstrap-redis/res
+      - security-secretstore-setup
+    command: bin/security-bootstrapper -confdir $SNAP_DATA/config/security-bootstrapper/res configureRedis
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
       SECRETSTORE_SERVERNAME: localhost
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
+      DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
+      DATABASECONFIG_NAME: redis.conf
     daemon: oneshot
     plugs: [network]
   core-data:
@@ -592,7 +596,7 @@ parts:
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-notifications support-scheduler sys-mgmt-agent \
           security-proxy-setup security-secretstore-setup security-file-token-provider \
-          security-bootstrap-redis secrets-config; do
+          security-bootstrapper secrets-config; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
 
@@ -600,6 +604,13 @@ parts:
           "security-file-token-provider")
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
+          ;;
+          # For security bootstrapping Redis, we only need the configuration file used for "configureRedis"
+          # as part of the whole "security-bootstrapper". The other parts of security-bootstrapper is only 
+          # for Docker version running in docker-compose file cases.
+          "security-bootstrapper")
+              install -DT "./cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.toml"
           ;;
           # The security-secrets-config doesn't have a default configuration.toml, but since it shares
           # the same config as proxy-setup, just use that one.

@@ -32,8 +32,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make cmd/security-bootstrapper/security-bootstrapper && \
-    make cmd/security-bootstrap-redis/security-bootstrap-redis
+RUN make cmd/security-bootstrapper/security-bootstrapper
 
 FROM alpine:3.12
 
@@ -59,8 +58,7 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/security-bootstrapper .
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml ./res/
 
 # needed for bootstrapping Redis db
-COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/security-bootstrap-redis ${BOOTSTRAP_REDIS_DIR}/
-COPY --from=builder /edgex-go/cmd/security-bootstrap-redis/res/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
 
 # Expose the file directory as a volume since there's long-running state
 VOLUME ${SECURITY_INIT_DIR}
