@@ -84,6 +84,29 @@ func (_m *DBClient) DeleteSubscriptionByName(name string) errors.EdgeX {
 	return r0
 }
 
+// SubscriptionById provides a mock function with given fields: id
+func (_m *DBClient) SubscriptionById(id string) (models.Subscription, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Subscription
+	if rf, ok := ret.Get(0).(func(string) models.Subscription); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Subscription)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // SubscriptionByName provides a mock function with given fields: name
 func (_m *DBClient) SubscriptionByName(name string) (models.Subscription, errors.EdgeX) {
 	ret := _m.Called(name)

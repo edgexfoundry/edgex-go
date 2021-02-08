@@ -7,6 +7,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -126,5 +128,47 @@ func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Containe
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	return nil
+}
+
+// PatchSubscription executes the PATCH operation with the subscription DTO to replace the old data
+func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di.Container) errors.EdgeX {
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	var subscription models.Subscription
+	var edgexErr errors.EdgeX
+	if dto.Id != nil {
+		subscription, edgexErr = dbClient.SubscriptionById(*dto.Id)
+		if edgexErr != nil {
+			return errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+	} else {
+		subscription, edgexErr = dbClient.SubscriptionByName(*dto.Name)
+		if edgexErr != nil {
+			return errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != subscription.Name {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("subscription name '%s' not match the existing '%s' ", *dto.Name, subscription.Name), nil)
+	}
+
+	requests.ReplaceSubscriptionModelFieldsWithDTO(&subscription, dto)
+	_, edgeXerr := dbClient.SubscriptionByName(subscription.Name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("subscription '%s' existence check failed", subscription.Name), edgeXerr)
+	}
+
+	edgexErr = dbClient.DeleteSubscriptionByName(subscription.Name)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	_, edgexErr = dbClient.AddSubscription(subscription)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	lc.Debugf("Subscription patched on DB successfully. Correlation-ID: %s ", correlation.FromContext(ctx))
 	return nil
 }
