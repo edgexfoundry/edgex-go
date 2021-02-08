@@ -16,6 +16,7 @@ import (
 // SubscriptionReader unmarshals a request body into an array of Subscription type
 type SubscriptionReader interface {
 	ReadAddSubscriptionRequest(reader io.Reader) ([]dtoRequest.AddSubscriptionRequest, errors.EdgeX)
+	ReadUpdateSubscriptionRequest(reader io.Reader) ([]dtoRequest.UpdateSubscriptionRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -39,4 +40,15 @@ func (jsonSubscriptionReader) ReadAddSubscriptionRequest(reader io.Reader) ([]dt
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription json decoding failed", err)
 	}
 	return addSubscriptions, nil
+}
+
+// ReadUpdateSubscriptionRequest reads a request and then converts its JSON data into an array of UpdateSubscriptionRequest struct
+func (jsonSubscriptionReader) ReadUpdateSubscriptionRequest(reader io.Reader) ([]dtoRequest.UpdateSubscriptionRequest, errors.EdgeX) {
+	var updateSubscriptions []dtoRequest.UpdateSubscriptionRequest
+	err := json.NewDecoder(reader).Decode(&updateSubscriptions)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription json decoding failed", err)
+	}
+
+	return updateSubscriptions, nil
 }

@@ -751,6 +751,19 @@ func (c *Client) SubscriptionsByReceiver(offset int, limit int, receiver string)
 	return subscriptions, nil
 }
 
+// SubscriptionById gets a subscription by id
+func (c *Client) SubscriptionById(id string) (subscription model.Subscription, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscription, edgexErr = subscriptionById(conn, id)
+	if edgexErr != nil {
+		return subscription, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("failed to query subscription by id %s", id), edgexErr)
+	}
+
+	return
+}
+
 // SubscriptionByName queries subscription by name
 func (c *Client) SubscriptionByName(name string) (subscription model.Subscription, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()

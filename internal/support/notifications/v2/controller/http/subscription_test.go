@@ -33,6 +33,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,30 +72,40 @@ func mockDic() *di.Container {
 }
 
 func addSubscriptionRequestData() requests.AddSubscriptionRequest {
-	var testAddSubscriptionReq = requests.AddSubscriptionRequest{
-		BaseRequest: common.BaseRequest{
-			RequestId:   ExampleUUID,
-			Versionable: common.NewVersionable(),
-		},
-		Subscription: dtos.Subscription{
-			Versionable:    common.NewVersionable(),
-			Id:             ExampleUUID,
-			Name:           testSubscriptionName,
-			Categories:     testSubscriptionCategories,
-			Labels:         testSubscriptionLabels,
-			Channels:       testSubscriptionChannels,
-			Description:    testSubscriptionDescription,
-			Receiver:       testSubscriptionReceiver,
-			ResendLimit:    testSubscriptionResendLimit,
-			ResendInterval: testSubscriptionResendInterval,
-		},
+	subscription := dtos.Subscription{
+		Versionable:    common.NewVersionable(),
+		Name:           testSubscriptionName,
+		Categories:     testSubscriptionCategories,
+		Labels:         testSubscriptionLabels,
+		Channels:       testSubscriptionChannels,
+		Description:    testSubscriptionDescription,
+		Receiver:       testSubscriptionReceiver,
+		ResendLimit:    testSubscriptionResendLimit,
+		ResendInterval: testSubscriptionResendInterval,
 	}
+	return requests.NewAddSubscriptionRequest(subscription)
+}
 
-	return testAddSubscriptionReq
+func updateSubscriptionRequestData() requests.UpdateSubscriptionRequest {
+	testUUID := ExampleUUID
+	testName := testSubscriptionName
+	testDescription := testSubscriptionDescription
+	subscription := dtos.UpdateSubscription{
+		Versionable:    common.NewVersionable(),
+		Id:             &testUUID,
+		Name:           &testName,
+		Channels:       testSubscriptionChannels,
+		Receiver:       &testSubscriptionReceiver,
+		Categories:     testSubscriptionCategories,
+		Labels:         testSubscriptionLabels,
+		Description:    &testDescription,
+		ResendLimit:    &testSubscriptionResendLimit,
+		ResendInterval: &testSubscriptionResendInterval,
+	}
+	return requests.NewUpdateSubscriptionRequest(subscription)
 }
 
 func TestAddSubscription(t *testing.T) {
-	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 
@@ -193,7 +204,7 @@ func TestAddSubscription(t *testing.T) {
 				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, v2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
 				if res[0].RequestId != "" {
-					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+					assert.Equal(t, testCase.request[0].RequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 			}
@@ -589,6 +600,133 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 			if testCase.expectedStatusCode == http.StatusNoContent {
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
+
+func TestPatchSubscription(t *testing.T) {
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	testReq := updateSubscriptionRequestData()
+	subscriptionModel := models.Subscription{
+		Id:             *testReq.Subscription.Id,
+		Name:           *testReq.Subscription.Name,
+		Channels:       dtos.ToChannelModels(testReq.Subscription.Channels),
+		Receiver:       *testReq.Subscription.Receiver,
+		Categories:     dtos.ToCategoryModels(testReq.Subscription.Categories),
+		Labels:         testReq.Subscription.Labels,
+		Description:    *testReq.Subscription.Description,
+		ResendLimit:    *testReq.Subscription.ResendLimit,
+		ResendInterval: *testReq.Subscription.ResendInterval,
+	}
+
+	valid := testReq
+	dbClientMock.On("SubscriptionById", *valid.Subscription.Id).Return(subscriptionModel, nil)
+	dbClientMock.On("DeleteSubscriptionByName", *valid.Subscription.Name).Return(nil)
+	dbClientMock.On("AddSubscription", mock.Anything).Return(subscriptionModel, nil)
+	validWithNoReqID := testReq
+	validWithNoReqID.RequestId = ""
+	validWithNoId := testReq
+	validWithNoId.Subscription.Id = nil
+	dbClientMock.On("SubscriptionByName", *validWithNoId.Subscription.Name).Return(subscriptionModel, nil)
+	validWithNoName := testReq
+	validWithNoName.Subscription.Name = nil
+
+	invalidId := testReq
+	invalidUUID := "invalidUUID"
+	invalidId.Subscription.Id = &invalidUUID
+
+	emptyString := ""
+	emptyId := testReq
+	emptyId.Subscription.Id = &emptyString
+	emptyName := testReq
+	emptyName.Subscription.Id = nil
+	emptyName.Subscription.Name = &emptyString
+
+	invalidNoIdAndName := testReq
+	invalidNoIdAndName.Subscription.Id = nil
+	invalidNoIdAndName.Subscription.Name = nil
+
+	invalidNotFoundId := testReq
+	invalidNotFoundId.Subscription.Name = nil
+	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
+	invalidNotFoundId.Subscription.Id = &notFoundId
+	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	dbClientMock.On("SubscriptionById", *invalidNotFoundId.Subscription.Id).Return(subscriptionModel, notFoundIdError)
+
+	invalidNotFoundName := testReq
+	invalidNotFoundName.Subscription.Id = nil
+	notFoundName := "notFoundName"
+	invalidNotFoundName.Subscription.Name = &notFoundName
+	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
+	dbClientMock.On("SubscriptionByName", *invalidNotFoundName.Subscription.Name).Return(subscriptionModel, notFoundNameError)
+
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewSubscriptionController(dic)
+	require.NotNil(t, controller)
+	tests := []struct {
+		name                 string
+		request              []requests.UpdateSubscriptionRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+	}{
+		{"Valid", []requests.UpdateSubscriptionRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no requestId", []requests.UpdateSubscriptionRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no id", []requests.UpdateSubscriptionRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no name", []requests.UpdateSubscriptionRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - invalid id", []requests.UpdateSubscriptionRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateSubscriptionRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty name", []requests.UpdateSubscriptionRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found id", []requests.UpdateSubscriptionRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found name", []requests.UpdateSubscriptionRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - no id and name", []requests.UpdateSubscriptionRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, v2.ApiSubscriptionRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchSubscription)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, testCase.request[0].RequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
 		})
