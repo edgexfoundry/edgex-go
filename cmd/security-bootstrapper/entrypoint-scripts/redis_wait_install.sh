@@ -50,6 +50,13 @@ fi
 if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
   ehco "$(date) Error: conf file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
   exit 1
+else
+  # before using the generated config file we need to change the ownership to redis:redis
+  # as the redis server for docker is running as that permission
+  # based on the Redis' alpine Dockerfile: 
+  # https://github.com/docker-library/redis/blob/68595be6067839e5c5c1a35bdbb6357d017a8a4e/6.0/alpine/Dockerfile#L4
+  # redis server runs with redis uid 999 and redis group gid 1000
+  chown -Rh 999:1000 "${DATABASECONFIG_PATH}"/  
 fi
 
 # starting redis with config file

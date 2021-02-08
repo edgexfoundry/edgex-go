@@ -16,7 +16,6 @@
 package helper
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -56,34 +55,6 @@ func TestCreateDirectoryIfNotExists(t *testing.T) {
 	err = CreateDirectoryIfNotExists(testPreCreatedDir)
 	require.NoError(t, err)
 	require.DirExists(t, testPreCreatedDir)
-}
-
-func TestChownDirRecursively(t *testing.T) {
-	testDir := "testChownDir"
-	testFile := "testChownFile"
-
-	defer (cleanupDir(testDir))()
-
-	err := os.MkdirAll(testDir, os.ModePerm)
-	require.NoError(t, err)
-
-	testFilePath := filepath.Join(testDir, testFile)
-
-	err = ioutil.WriteFile(testFilePath, []byte("this is a test"), 0600)
-	require.NoError(t, err)
-
-	err = ChownDirRecursive(testDir, os.Geteuid(), os.Getegid())
-	require.NoError(t, err)
-
-	// if try to change ownership to a different uid, since this test most likely will be run
-	// as non-root user, so the error will be expected
-	err = ChownDirRecursive(testDir, 999, os.Getegid())
-	if os.Geteuid() != 0 {
-		// expected permission issue since it is not allowed to change ownership to other user
-		require.Error(t, err)
-	} else {
-		require.NoError(t, err)
-	}
 }
 
 // cleanupDir deletes all files in the directory and files in the directory
