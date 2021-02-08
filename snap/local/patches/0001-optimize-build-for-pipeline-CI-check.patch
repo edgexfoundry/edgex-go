@@ -28,7 +28,7 @@ diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
 index 1e537489..faf42425 100644
 --- a/snap/snapcraft.yaml
 +++ b/snap/snapcraft.yaml
-@@ -73,77 +73,6 @@ confinement: strict
+@@ -73,78 +73,6 @@ confinement: strict
  
  apps:
    # edgex microservices
@@ -39,12 +39,13 @@ index 1e537489..faf42425 100644
 -    plugs: [network, network-bind]
 -  redis:
 -    adapter: full
--    after: [security-secretstore-setup]
--    command: bin/redis-server $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
+-    after: [security-bootstrap-redis]
+-    command: bin/redis-server $CONFIG_FILE $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
 -    environment:
 -      DIR_OPT: "--dir $SNAP_DATA/redis"
 -      SAVE_OPT1: "--save 900 1"
 -      SAVE_OPT2: "--save 300 10"
+-      CONFIG_FILE: "$SNAP_DATA/redis/conf/redis.conf"
 -    daemon: simple
 -    plugs: [network, network-bind]
 -  postgres:
