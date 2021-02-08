@@ -53,7 +53,7 @@ func CommandsByDeviceName(name string, dic *di.Container) (commands []dtos.CoreC
 			Name:       c.Name,
 			DeviceName: deviceResponse.Device.Name,
 			Get:        c.Get,
-			Put:        c.Put,
+			Set:        c.Set,
 			Url:        serviceUrl,
 			Path:       fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceResponse.Device.Name, V2Routes.Command, c.Name),
 		}

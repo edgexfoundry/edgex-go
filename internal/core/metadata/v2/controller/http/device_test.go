@@ -94,6 +94,7 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Device: dtos.UpdateDevice{
+			Versionable:    common.NewVersionable(),
 			Id:             &testUUID,
 			Name:           &testName,
 			Description:    &testDescription,

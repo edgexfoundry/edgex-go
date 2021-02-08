@@ -72,7 +72,7 @@ func buildCoreCommands(commands []dtos.Command) []dtos.CoreCommand {
 			Name:       c.Name,
 			DeviceName: testDeviceName,
 			Get:        c.Get,
-			Put:        c.Put,
+			Set:        c.Set,
 			Url:        testUrl,
 			Path:       testPathPrefix + c.Name,
 		}
@@ -96,12 +96,12 @@ func buildCommands() []dtos.Command {
 	c1 := dtos.Command{
 		Name: "command1",
 		Get:  true,
-		Put:  false,
+		Set:  false,
 	}
 	c2 := dtos.Command{
 		Name: "command2",
 		Get:  true,
-		Put:  false,
+		Set:  false,
 	}
 	var commands []dtos.Command
 	commands = append(commands, c1, c2)
