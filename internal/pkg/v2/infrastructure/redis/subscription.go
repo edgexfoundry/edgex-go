@@ -101,6 +101,16 @@ func allSubscriptions(conn redis.Conn, offset, limit int) (subscriptions []model
 	return subscriptions, nil
 }
 
+// subscriptionById query subscription by id from DB
+func subscriptionById(conn redis.Conn, id string) (subscription models.Subscription, edgexErr errors.EdgeX) {
+	edgexErr = getObjectById(conn, subscriptionStoredKey(id), &subscription)
+	if edgexErr != nil {
+		return subscription, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
+}
+
 // subscriptionByName queries subscription by name
 func subscriptionByName(conn redis.Conn, name string) (subscription models.Subscription, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, SubscriptionCollectionName, name, &subscription)
