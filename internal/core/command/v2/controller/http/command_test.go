@@ -53,9 +53,10 @@ func NewMockDIC() *di.Container {
 		commandContainer.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Service: bootstrapConfig.ServiceInfo{
-					Protocol: mockProtocol,
-					Host:     mockHost,
-					Port:     mockPort,
+					Protocol:       mockProtocol,
+					Host:           mockHost,
+					Port:           mockPort,
+					MaxResultCount: 20,
 				},
 			}
 		},
@@ -65,19 +66,22 @@ func NewMockDIC() *di.Container {
 	})
 }
 
-func buildCoreCommands(commands []dtos.Command) []dtos.CoreCommand {
-	coreCommands := make([]dtos.CoreCommand, len(commands))
-	for i, c := range commands {
+func buildDeviceCoreCommands(device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
+	coreCommands := make([]dtos.CoreCommand, len(deviceProfile.CoreCommands))
+	for i, c := range deviceProfile.CoreCommands {
 		coreCommands[i] = dtos.CoreCommand{
-			Name:       c.Name,
-			DeviceName: testDeviceName,
-			Get:        c.Get,
-			Set:        c.Set,
-			Url:        testUrl,
-			Path:       testPathPrefix + c.Name,
+			Name: c.Name,
+			Get:  c.Get,
+			Set:  c.Set,
+			Url:  testUrl,
+			Path: testPathPrefix + c.Name,
 		}
 	}
-	return coreCommands
+	return dtos.DeviceCoreCommand{
+		DeviceName:   device.Name,
+		ProfileName:  deviceProfile.Name,
+		CoreCommands: coreCommands,
+	}
 }
 
 func buildDeviceResponse() responseDTO.DeviceResponse {
@@ -90,6 +94,16 @@ func buildDeviceResponse() responseDTO.DeviceResponse {
 		Device: device,
 	}
 	return deviceResponse
+}
+
+func buildMultiDevicesResponse() responseDTO.MultiDevicesResponse {
+	devices := []dtos.Device{
+		{Name: testDeviceName + "1", ProfileName: testProfileName, ServiceName: testDeviceServiceName},
+		{Name: testDeviceName + "2", ProfileName: testProfileName, ServiceName: testDeviceServiceName},
+	}
+	return responseDTO.MultiDevicesResponse{
+		Devices: devices,
+	}
 }
 
 func buildCommands() []dtos.Command {
@@ -145,12 +159,96 @@ func buildEventResponse() responseDTO.EventResponse {
 	}
 }
 
+func TestAllCommands(t *testing.T) {
+	expectedMultiDevicesResponse := buildMultiDevicesResponse()
+	expectedDeviceProfileResponse := buildDeviceProfileResponse()
+	deviceCoreCommand1 := buildDeviceCoreCommands(expectedMultiDevicesResponse.Devices[0], expectedDeviceProfileResponse.Profile)
+	deviceCoreCommand2 := buildDeviceCoreCommands(expectedMultiDevicesResponse.Devices[1], expectedDeviceProfileResponse.Profile)
+	expectedMultiDeviceCoreCommandsResponse := responseDTO.MultiDeviceCoreCommandsResponse{
+		DeviceCoreCommands: []dtos.DeviceCoreCommand{deviceCoreCommand1, deviceCoreCommand2},
+	}
+
+	dcMock := &mocks.DeviceClient{}
+	dcMock.On("AllDevices", context.Background(), []string(nil), 0, 20).Return(expectedMultiDevicesResponse, nil)
+	dcMock.On("AllDevices", context.Background(), []string(nil), 0, 2).Return(expectedMultiDevicesResponse, nil)
+	dcMock.On("AllDevices", context.Background(), []string(nil), 3, 10).Return(responseDTO.MultiDevicesResponse{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "bounds out of range", nil))
+
+	dpcMock := &mocks.DeviceProfileClient{}
+	dpcMock.On("DeviceProfileByName", context.Background(), testProfileName).Return(expectedDeviceProfileResponse, nil)
+
+	dic := NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+			return dcMock
+		},
+		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+			return dpcMock
+		},
+	})
+	cc := NewCommandController(dic)
+	assert.NotNil(t, cc)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get commands without offset and limit", "", "", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), http.StatusOK},
+		{"Valid - get commands with offset and limit", "0", "2", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), http.StatusOK},
+		{"Invalid - bounds out of range", "3", "10", true, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Invalid - invalid offset format", "aaa", "10", true, 0, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "aaa", true, 0, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllDeviceRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(cc.AllCommands)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDeviceCoreCommandsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.DeviceCoreCommands), "Device count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
 func TestCommandsByDeviceName(t *testing.T) {
 	var nonExistDeviceName = "nonExistDevice"
 
 	expectedDeviceResponse := buildDeviceResponse()
 	expectedDeviceProfileResponse := buildDeviceProfileResponse()
-	expectedCoreCommands := buildCoreCommands(expectedDeviceProfileResponse.Profile.CoreCommands)
+	expectedDeviceCoreCommand := buildDeviceCoreCommands(expectedDeviceResponse.Device, expectedDeviceProfileResponse.Profile)
 
 	dcMock := &mocks.DeviceClient{}
 	dcMock.On("DeviceByName", context.Background(), testDeviceName).Return(expectedDeviceResponse, nil)
@@ -178,7 +276,7 @@ func TestCommandsByDeviceName(t *testing.T) {
 		expectedCount      int
 		expectedStatusCode int
 	}{
-		{"Valid - get coreCommands with deviceName", testDeviceName, false, len(expectedCoreCommands), http.StatusOK},
+		{"Valid - get coreCommands with deviceName", testDeviceName, false, len(expectedDeviceCoreCommand.CoreCommands), http.StatusOK},
 		{"Invalid - get coreCommands with empty deviceName", "", true, 0, http.StatusBadRequest},
 		{"Invalid - get coreCommands with non exist deviceName", nonExistDeviceName, true, 0, http.StatusNotFound},
 	}
@@ -203,13 +301,13 @@ func TestCommandsByDeviceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			} else {
-				var res responseDTO.MultiCoreCommandsResponse
+				var res responseDTO.DeviceCoreCommandResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
 				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-				assert.Equal(t, testCase.expectedCount, len(res.CoreCommands), "Device count not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.DeviceCoreCommand.CoreCommands), "Device count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
