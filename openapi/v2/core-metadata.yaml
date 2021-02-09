@@ -72,6 +72,12 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+      required:
+        - apiVersion
     BaseResponse:
       description: "Defines basic properties which all use-case specific response DTO instances should support"
       type: object
@@ -116,10 +122,10 @@ components:
           description: Command name (unique on the profile). Must name a DeviceCommand or a DeviceResource in this profile
         get:
           type: boolean
-          description: Get Command enabled. At least one of Get and Put must be present
-        put:
+          description: Get Command enabled. At least one of Get and Set must be present
+        set:
           type: boolean
-          description: Put Command enabled. At least one of Get and Put must be present
+          description: Set Command enabled. At least one of Get and Set must be present
       required:
         - name
     Device:
@@ -147,7 +153,7 @@ components:
           description: Admin state (locked/unlocked)
         operatingState:
           type: string
-          description: Operating state (enabled/disabled)
+          description: Operating state (UP/DOWN)
         lastConnected:
           type: integer
           description: Time (milliseconds) that the device last provided any feedback or responded to any request
@@ -194,7 +200,7 @@ components:
           description: Admin state (locked/unlocked)
         operatingState:
           type: string
-          description: Operating state (enabled/disabled)
+          description: Operating state (UP/DOWN)
         labels:
           type: array
           description: Other labels applied to the device to help with searching
@@ -315,10 +321,10 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
     CreateDeviceProfile:
@@ -349,10 +355,10 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
       required:
@@ -390,10 +396,10 @@ components:
         deviceCommands:
           type: array
           items:
-            $ref: '#/components/schemas/ProfileResource'
+            $ref: '#/components/schemas/DeviceCommand'
         coreCommands:
           type: array
-          description: List of commands to Get/Put information for devices associated with this profile
+          description: List of commands to Get/Set information for devices associated with this profile
           items:
             $ref: '#/components/schemas/Command'
     DeviceProfileResponse:
@@ -476,7 +482,7 @@ components:
           description: time in milliseconds that the device service last reported data to the core microservice
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -507,7 +513,7 @@ components:
           description: Device Service Admin State
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -534,7 +540,7 @@ components:
           description: Description of the device service
         operatingState:
           type: string
-          description: operational state - either enabled or disabled
+          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -719,45 +725,57 @@ components:
       description: "A response type for returning a generic error to the caller."
       type: object
     ConfigResponse:
-      description: "Provides a response containing the configuration for the targeted service."
+      description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
-          type: string
+          type: object
     MetricsResponse:
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
-        memAlloc:
-          description: "Alloc is bytes of allocated heap objects."
-          type: integer
-        memFrees:
-          description: "Frees is the cumulative count of heap objects freed."
-          type: integer
-        memLiveObjects:
-          description: "The number of live objects is Mallocs - Frees."
-          type: integer
-        memMallocs:
-          description: "The cumulative count of heap objects allocated."
-          type: integer
-        memSys:
-          description: "The total bytes of memory obtained from the OS."
-          type: integer
-        memTotalAlloc:
-          description: "Cumulative bytes allocated for heap objects."
-          type: integer
-        cpuBusyAvg:
-          description: "Indicates the average level of CPU utilization"
-          type: number
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+        metrics:
+          type: object
+          properties:
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed."
+              type: integer
+            memLiveObjects:
+              description: "The number of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS."
+              type: integer
+            memTotalAlloc:
+              description: "Cumulative bytes allocated for heap objects."
+              type: integer
+            cpuBusyAvg:
+              description: "Indicates the average level of CPU utilization"
+              type: number
     PingResponse:
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
-    ProfileResource:
+    DeviceCommand:
       description: "Defines read/write capabilities native to the device"
       type: object
       properties:
@@ -777,7 +795,7 @@ components:
       description: "Defines constraints with regard to the range of acceptable values assigned to an event reading and defined as a property within a device profile."
       type: object
       properties:
-        type:
+        valueType:
           type: string
           description: "ValueDescriptor Type of property after transformations. Optional: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, bool, string, binary, uint8array, uint16array, uint32array, uint64array, int8array, int16array, int32array, int64array, float32array, float64array, boolarray."
         readWrite:
@@ -942,6 +960,9 @@ components:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         version:
           description: "The latest version supported by the service."
           type: string
@@ -971,7 +992,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
     labelsParam:
       in: query
@@ -986,7 +1006,6 @@ components:
       schema:
         type: string
         format: uuid
-      required: true
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
     200Example:
@@ -1013,12 +1032,12 @@ components:
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "Data Duplicate"
-    423Example:
+    409DeleteExample:
       value:
         apiVersion: "v2"
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
-        statusCode: 423
-        message: "Locked"
+        statusCode: 409
+        message: "associated object exists"
     500Example:
       value:
         apiVersion: "v2"
@@ -1061,11 +1080,12 @@ components:
     AddDeviceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           device:
             name: AWS IOT Button1
             description: Home automation system
             adminState: UNLOCKED
-            operatingState: ENABLED
+            operatingState: UP
             labels:
               - home
               - hvac
@@ -1086,11 +1106,12 @@ components:
     AddDeviceServiceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           service:
             name: home thermostat device service
             description: manage homethermostats
             adminState: UNLOCKED
-            operatingState: ENABLED
+            operatingState: UP
             labels:
               - hvac
               - thermostat
@@ -1098,6 +1119,7 @@ components:
     AddDeviceProfileRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
           profile:
             name: "Simple-Device-Profile"
             manufacturer: "Simple Corp."
@@ -1110,7 +1132,7 @@ components:
               - name: "SwitchButton"
                 description: "Switch On/Off."
                 properties:
-                  type: "String"
+                  valueType: "String"
                   readWrite: "RW"
                   defaultValue: "On"
                   units: "On/Off"
@@ -1123,10 +1145,11 @@ components:
             coreCommands:
               - name: "Switch"
                 get: true
-                put: true
+                set: true
     AddProvisionWatcherRequest:
       value:
         - requestId: "fb34e122-84d6-4c4c-a0ba-ac181021dc6b"
+          apiVersion: v2
           provisionwatcher:
             name: "Simple-Provision-Watcher"
             labels:
@@ -1156,7 +1179,7 @@ components:
             created: 1600927134931
             modified: 1600927134931
             adminState: "UNLOCKED"
-            operatingState: "ENABLED"
+            operatingState: "UP"
             lastConnected: 0
             lastReported: 0
             lables:
@@ -1179,7 +1202,7 @@ components:
             created: 1600927134949
             modified: 1600927134949
             adminState: "UNLOCKED"
-            operatingState: "ENABLED"
+            operatingState: "UP"
             lastConnected: 0
             lastReported: 0
             lables:
@@ -1239,7 +1262,7 @@ components:
               created: 1601012840000
               modified: 1601012840000
               get: true
-              put: true
+              set: true
         - apiVersion: "v2"
           id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
           name: "Device-Modbus-Profile"
@@ -1274,7 +1297,7 @@ components:
               created: 1601012840000
               modified: 1601012840000
               get: true
-              put: true
+              set: true
     GetAllProvisionWatchersResponse:
       value:
         apiVersion: "v2"
@@ -1323,36 +1346,6 @@ components:
             service: "device-simple"
             adminState: "UNLOCKED"
 paths:
-  /batch:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      servers:
-      - url:  http://localhost:48081/api
-      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service. Version is not denoted as part of the route since it is included as a property on each RequestEnvelope."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/RequestEnvelope'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ResponseEnvelope'
-              examples:
-                MultiPOSTStatusExample:
-                  $ref: '#/components/examples/MultiPOSTStatusExample'
   /device:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1420,10 +1413,11 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceRequest'
             example:
               requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+              apiVersion: v2
               device:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "AWS IOT Button1"
-                  operatingState: "DISABLED"
+                  operatingState: "DOWN"
                   labels:
                     - "home"
                   autoEvents:
@@ -1434,7 +1428,7 @@ paths:
                   name: "AWS IOT Button2"
                   description: "Home automation system"
                   adminState: "LOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1521,67 +1515,6 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  '/device/check/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returned status code indicates if the device exists or not."
-      responses:
-        '200':
-          description: "Device exists"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
   '/device/check/name/{name}':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1596,144 +1529,6 @@ paths:
       responses:
         '200':
           description: "Device exists"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-  '/device/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns a device by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceResponse'
-              example:
-                apiVersion: "v2"
-                requestId: "99c4ae00-9e77-461a-92ce-950764191d71"
-                statusCode: 200
-                message: ""
-                device:
-                  apiVersion: "v2"
-                  id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
-                  name: "Random-Boolean-Device"
-                  description: "Example of Device Virtual"
-                  created: 1600926440123
-                  modified: 1600928666321
-                  adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
-                  lastConnected: 0
-                  lastReported: 0
-                  lables:
-                    - device-virtual-example
-                  location: ""
-                  serviceName: "device-virtual"
-                  profileName: "Random-Boolean-Device"
-                  autoEvents:
-                    - frequency: "10s"
-                      onChange: false
-                      resource: "Bool"
-                  protocols:
-                    - other:
-                        Address: "device-virtual-bool-01"
-                        Port: "300"
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-    delete:
-      summary: "Delete a device by ID"
-      responses:
-        '200':
-          description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1814,7 +1609,7 @@ paths:
                   created: 1600926440123
                   modified: 1600928666321
                   adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   lastConnected: 0
                   lastReported: 0
                   lables:
@@ -1881,18 +1676,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1905,56 +1688,6 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-  '/device/profile/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique id of a device profile"
-    get:
-      summary: "Returns all devices assigned to the specified device profile"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MultiDevicesResponse'
-              examples:
-                GetAllDevicesResponse:
-                  $ref: '#/components/examples/GetAllDevicesResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -1980,56 +1713,6 @@ paths:
         description: "The name identifying a device profile"
     get:
       summary: "Returns all devices assigned to the specified device profile"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MultiDevicesResponse'
-              examples:
-                GetAllDevicesResponse:
-                  $ref: '#/components/examples/GetAllDevicesResponse'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-  '/device/service/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique id of a device service"
-    get:
-      summary: "Returns all devices assigned to the specified device service"
       responses:
         '200':
           description: "OK"
@@ -2403,168 +2086,6 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  '/deviceprofile/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns a device profile by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceProfileResponse'
-              example:
-               apiVersion: "v2"
-               requestId: "83260e7c-1bf0-4103-b736-7b2ac3db7993"
-               statusCode: 200
-               message: ""
-               profile:
-                apiVersion: "v2"
-                id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
-                name: "device-virtual"
-                description: "Example of Device-Virtual"
-                created: 1600927134904
-                modified: 1600927134904
-                manufacturer: "IOTech"
-                model: "Device-Virtual-01"
-                labels:
-                  - device-virtual-example
-                deviceResources:
-                  - description: "Generate random float32 value"
-                    name: "Float32"
-                    properties:
-                      type: "Float32"
-                      readWrite: "RW"
-                      defaultValue: "0"
-                deviceCommands:
-                  - name: "Float32"
-                    get:
-                      - index: "1"
-                        operation: "get"
-                        deviceResource: "Float32"
-                    set:
-                      - index: "1"
-                        operation: "set"
-                        deviceResource: "Float32"
-                        parameter: "false"
-                coreCommands:
-                  - id: "c75d4e0a-aedc-41f5-a8c8-79aa3376818a"
-                    name: "Float32"
-                    created: 1601012840000
-                    modified: 1601012840000
-                    get: true
-                    put: true
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-    delete:
-      summary: "Delete a device profile by ID. This operation will fail if there are devices actively using the profile."
-      responses:
-        '200':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '423':
-          description: "The requested resource is locked"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
   '/deviceprofile/name/{name}':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -2626,7 +2147,7 @@ paths:
                     created: 1601012840000
                     modified: 1601012840000
                     get: true
-                    put: true
+                    set: true
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -2678,18 +2199,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -2702,7 +2211,7 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
+        '409':
           description: "The requested resource is locked"
           headers:
             X-Correlation-ID:
@@ -2712,8 +2221,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2949,19 +2458,21 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceServiceRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+                apiVersion: v2
                 service:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "home thermostat device service"
                   description: "Home automation system"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
+                apiVersion: v2
                 service:
                 - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "Google Home device service"
-                  operatingState: "ENABLED"
-                  adminState: "ENABLED"
+                  operatingState: "UP"
+                  adminState: "UNLOCKED"
                   baseAddress: "http://home-device-service:49980"
       responses:
         '207':
@@ -3037,7 +2548,7 @@ paths:
                     lastConnected: 0
                     lastReported: 0
                     adminState: "UNLOCKED"
-                    operatingState: "ENABLED"
+                    operatingState: "UP"
                     labels:
                       - virtual
                     baseAddress: "http://edgex-device-virtual:49990"
@@ -3053,146 +2564,6 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-  '/deviceservice/id/{id}':
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: "An ID of datatype string, by default a GUID."
-    get:
-      summary: "Returns a device service by ID"
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceServiceResponse'
-              example:
-                apiVersion: "v2"
-                requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
-                statusCode: 200
-                message: ""
-                service:
-                  apiVersion: "v2"
-                  id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
-                  name: "device-virtual"
-                  description: "Example"
-                  created: 1600927134890
-                  modified: 1600927134890
-                  lastConnected: 0
-                  lastReported: 0
-                  adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
-                  labels:
-                    - virtual
-                  baseAddress: "http://edgex-device-virtual:49990"
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'
-    delete:
-      summary: "Delete a device service by ID"
-      responses:
-        '200':
-          description: "Delete successful"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
-        '423':
-          description: "The requested resource is locked"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3241,7 +2612,7 @@ paths:
                   lastConnected: 0
                   lastReported: 0
                   adminState: "UNLOCKED"
-                  operatingState: "ENABLED"
+                  operatingState: "UP"
                   labels:
                     - virtual
                   baseAddress: "http://edgex-device-virtual:49990"
@@ -3296,18 +2667,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -3320,7 +2679,7 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
+        '409':
           description: "The requested resource is locked"
           headers:
             X-Correlation-ID:
@@ -3330,8 +2689,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3411,16 +2770,18 @@ paths:
               $ref: '#/components/schemas/UpdateProvisionWatcherRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
+                apiVersion: v2
                 provisionwatcher:
                   - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                     name: "simple-identifier"
                     identifiers:
                       "address": "localhost"
                       "port": "3[0-9]{2}"
-                    adminState: "ENABLED"
+                    adminState: "UNLOCKED"
                     labels:
                       - "simple"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
+                apiVersion: v2
                 provisionwatcher:
                   - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                     name: "virtual-identifier"
@@ -3612,18 +2973,6 @@ paths:
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
-        '400':
-          description: "Request is in an invalid state"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                400Example:
-                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -3636,18 +2985,6 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-        '423':
-          description: "The requested resource is locked"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3775,18 +3112,11 @@ paths:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
                 apiVersion: "v2"
-                requestId: "d138fccc-f39a-4fd0-bd32-50d52a131f66"
-                statusCode: 200
-                message: ""
                 config:
                   Writeable:
                     EnableValueDescriptorManagement: false
                     LogLevel: "INFO"
                   Clients:
-                    Logging:
-                      Host: "localhost"
-                      Port: 48061
-                      Protocol: "http"
                     CoreData:
                       Host: "edgex-core-data"
                       Port: 48080
@@ -3804,9 +3134,6 @@ paths:
                       Host: "edgex-redis"
                       Port: 6379
                       Name: "metadata"
-                  Logging:
-                    EnableRemote: false
-                    File: ""
                   Notifications:
                     Content: "Device update: "
                     Description: "Metadata device notice"
@@ -3842,9 +3169,6 @@ paths:
                     AdditionalRetryAttempts: 10
                     RetryWaitPeriod: "1s"
                     TokenFile: "/vault/config/assets/resp-init.json"
-                  Startup:
-                    Duration: 30
-                    Interval: 1
         '500':
           description: "Internal Server Error"
           headers:
@@ -3872,9 +3196,6 @@ paths:
                 $ref: '#/components/schemas/MetricsResponse'
               example:
                 apiVersion: "v2"
-                requestId: "dc418c01-e270-447a-961a-170f774af4ab"
-                statusCode: 200
-                message: ""
                 metrics:
                   memAlloc: 877192
                   memFrees: 2248915
@@ -3910,10 +3231,7 @@ paths:
                 $ref: '#/components/schemas/PingResponse'
               example:
                 apiVersion: "v2"
-                requestId: "894f5cba-8372-4a89-a7eb-921fe56801b5"
-                statusCode: 200
-                message: ""
-                timestamp: "1600926440"
+                timestamp: 'Thu Jan 28 00:32:42 UTC 2021'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3941,10 +3259,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v2"
-                requestId: "01f9b481-62a4-48c8-a7e4-8badcc944475"
-                statusCode: 200
-                message: ""
-                version: "master"
+                version: "2.0.0-dev.13"
         '500':
           description: "Internal Server Error"
           headers:

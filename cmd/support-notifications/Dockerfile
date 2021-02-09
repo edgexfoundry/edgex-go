@@ -34,18 +34,17 @@ RUN go mod download
 COPY . .
 RUN make cmd/support-notifications/support-notifications
 
-FROM scratch
+FROM alpine:3.12
+
+RUN apk add --update --no-cache ca-certificates dumb-init
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2018: Cavium'
+      copyright='Copyright (c) 2018: Cavium, Copyright (c) 2021: Intel Corporation'
 
 ENV APP_PORT=48060
 #expose support notifications port
 EXPOSE $APP_PORT
 
-COPY --from=builder /bin/sh /bin/sh
-COPY --from=builder /usr/share/ca-certificates /usr/share/ca-certificates
-COPY --from=builder /etc/ssl /etc/ssl
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /edgex-go/cmd/support-notifications/res/configuration.toml /res/configuration.toml

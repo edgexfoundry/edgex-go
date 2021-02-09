@@ -15,7 +15,7 @@
 package device_profile
 
 import (
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 // DeviceLoader retrieves devices as needed from the perspective of device profiles.

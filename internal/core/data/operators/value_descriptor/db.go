@@ -16,7 +16,7 @@
 
 package value_descriptor
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 // Loader provides functionality for loading ValueDescriptors.
 type Loader interface {

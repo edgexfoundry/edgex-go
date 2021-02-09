@@ -16,8 +16,8 @@
 
 # This is a TOML config file for edgexsecurity service.
 
-[Writable]
 LogLevel = "DEBUG"
+# RequestTimeout for proxy-setup http client caller
 RequestTimeout = 10
 
 [KongURL]

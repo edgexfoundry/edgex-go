@@ -5,20 +5,21 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap v0.0.70
-	github.com/edgexfoundry/go-mod-configuration v0.0.8
-	github.com/edgexfoundry/go-mod-core-contracts v0.1.145
-	github.com/edgexfoundry/go-mod-messaging v0.1.30
-	github.com/edgexfoundry/go-mod-registry v0.1.27
-	github.com/edgexfoundry/go-mod-secrets v0.0.32
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.7
+	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.1
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.29
+	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.1
+	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.1
+	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.3
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/uuid v1.1.4
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.11
+	github.com/lib/pq v1.9.0
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.4.0

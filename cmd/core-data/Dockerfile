@@ -50,7 +50,7 @@ EXPOSE $APP_PORT
 # So we can try these.
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache zeromq
+RUN apk add --update --no-cache zeromq dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-data/core-data /
 COPY --from=builder /edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml

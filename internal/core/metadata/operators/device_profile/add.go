@@ -15,7 +15,7 @@
 package device_profile
 
 import (
-	contracts "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contracts "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"

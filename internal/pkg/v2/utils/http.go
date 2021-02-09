@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/gorilla/mux"
 )
 
@@ -77,6 +77,17 @@ func ParseQueryStringToStrings(r *http.Request, queryStringKey string, separator
 		stringArray = strings.Split(strings.TrimSpace(values[0]), separator)
 	}
 	return stringArray
+}
+
+// Parse the specified query string key to a string.  If specified query string key is found more than once in
+// the http request, only the first specified query string will be parsed and converted to a string.  If no specified
+// query string could be found, defaultValue will be returned.
+func ParseQueryStringToString(r *http.Request, queryStringKey string, defaultValue string) string {
+	value, ok := r.URL.Query()[queryStringKey]
+	if !ok {
+		return defaultValue
+	}
+	return value[0]
 }
 
 func ParseTimeRangeOffsetLimit(r *http.Request, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {

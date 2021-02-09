@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,13 +12,11 @@ import (
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
-	"github.com/google/uuid"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 // The AddDeviceProfile function accepts the new device profile model from the controller functions
@@ -57,7 +55,7 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
 		correlation.FromContext(ctx),
 	))
-
+	go updateDeviceProfileCallback(ctx, dic, dtos.FromDeviceProfileModelToDTO(d))
 	return nil
 }
 
@@ -75,30 +73,30 @@ func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (d
 	return deviceProfile, nil
 }
 
-// DeleteDeviceProfileById delete the device profile by Id
-func DeleteDeviceProfileById(id string, ctx context.Context, dic *di.Container) errors.EdgeX {
-	if id == "" {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err = dbClient.DeleteDeviceProfileById(id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	return nil
-}
-
 // DeleteDeviceProfileByName delete the device profile by name
 func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceProfileByName(name)
+
+	// Check the associated Device and ProvisionWatcher existence
+	devices, err := dbClient.DevicesByProfileName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(devices) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device profile when associated device exists", nil)
+	}
+	provisionWatchers, err := dbClient.ProvisionWatchersByProfileName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(provisionWatchers) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device profile when associated provisionWatcher exists", nil)
+	}
+
+	err = dbClient.DeleteDeviceProfileByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

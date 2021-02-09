@@ -17,7 +17,7 @@ package clients
 import (
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/general"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/general"
 )
 
 // GeneralType is an alias for general.GeneralClient and hides implementation detail.

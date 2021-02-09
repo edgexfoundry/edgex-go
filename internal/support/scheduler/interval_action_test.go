@@ -16,7 +16,7 @@ package scheduler
 import (
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
 

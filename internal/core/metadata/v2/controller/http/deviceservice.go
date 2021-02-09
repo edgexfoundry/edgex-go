@@ -16,14 +16,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 
 	"github.com/gorilla/mux"
 )
@@ -170,36 +170,6 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(updateResponses, w, lc)
-}
-
-func (dc *DeviceServiceController) DeleteDeviceServiceById(w http.ResponseWriter, r *http.Request) {
-	lc := container.LoggingClientFrom(dc.dic.Get)
-	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
-
-	// URL parameters
-	vars := mux.Vars(r)
-	id := vars[contractsV2.Id]
-
-	var response interface{}
-	var statusCode int
-
-	err := application.DeleteDeviceServiceById(id, ctx, dc.dic)
-	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = commonDTO.NewBaseResponse(
-			"",
-			"",
-			http.StatusOK)
-		statusCode = http.StatusOK
-	}
-
-	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(response, w, lc)
 }
 
 func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWriter, r *http.Request) {

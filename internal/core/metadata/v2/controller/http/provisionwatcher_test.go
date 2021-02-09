@@ -15,16 +15,17 @@ import (
 
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,9 +45,11 @@ var testProvisionWatcherAutoEvents = []dtos.AutoEvent{
 func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {
 	return requests.AddProvisionWatcherRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		ProvisionWatcher: dtos.ProvisionWatcher{
+			Versionable:         common.NewVersionable(),
 			Id:                  ExampleUUID,
 			Name:                testProvisionWatcherName,
 			Labels:              testProvisionWatcherLabels,
@@ -60,6 +63,35 @@ func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {
 	}
 }
 
+func buildTestUpdateProvisionWatcherRequest() requests.UpdateProvisionWatcherRequest {
+	testUUID := ExampleUUID
+	testName := testProvisionWatcherName
+	testServiceName := TestDeviceServiceName
+	testProfileName := TestDeviceProfileName
+	testAdminState := models.Unlocked
+
+	var testUpdateProvisionWatcherReq = requests.UpdateProvisionWatcherRequest{
+		BaseRequest: common.BaseRequest{
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
+		},
+		ProvisionWatcher: dtos.UpdateProvisionWatcher{
+			Versionable:         common.NewVersionable(),
+			Id:                  &testUUID,
+			Name:                &testName,
+			Labels:              testProvisionWatcherLabels,
+			Identifiers:         testProvisionWatcherIdentifiers,
+			BlockingIdentifiers: testProvisionWatcherBlockingIdentifiers,
+			ServiceName:         &testServiceName,
+			ProfileName:         &testProfileName,
+			AdminState:          &testAdminState,
+			AutoEvents:          testProvisionWatcherAutoEvents,
+		},
+	}
+
+	return testUpdateProvisionWatcherReq
+}
+
 func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	validReq := buildTestAddProvisionWatcherRequest()
 	pwModel := requests.AddProvisionWatcherReqToProvisionWatcherModels([]requests.AddProvisionWatcherRequest{validReq})[0]
@@ -68,6 +100,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", pwModel).Return(pwModel, nil)
+	dbClientMock.On("DeviceServiceByName", pwModel.ServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -516,8 +549,10 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("ProvisionWatcherByName", provisionWatcher.Name).Return(provisionWatcher, nil)
+	dbClientMock.On("ProvisionWatcherByName", notFoundName).Return(provisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
 	dbClientMock.On("DeleteProvisionWatcherByName", provisionWatcher.Name).Return(nil)
-	dbClientMock.On("DeleteProvisionWatcherByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
+	dbClientMock.On("DeviceServiceByName", provisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -558,6 +593,148 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 			if testCase.expectedStatusCode == http.StatusOK {
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
+
+func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
+	expectedRequestId := ExampleUUID
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	testReq := buildTestUpdateProvisionWatcherRequest()
+	pwModels := models.ProvisionWatcher{
+		Id:                  *testReq.ProvisionWatcher.Id,
+		Name:                *testReq.ProvisionWatcher.Name,
+		Labels:              testReq.ProvisionWatcher.Labels,
+		Identifiers:         testReq.ProvisionWatcher.Identifiers,
+		BlockingIdentifiers: testReq.ProvisionWatcher.BlockingIdentifiers,
+		AdminState:          models.AdminState(*testReq.ProvisionWatcher.AdminState),
+		ServiceName:         *testReq.ProvisionWatcher.ServiceName,
+		ProfileName:         *testReq.ProvisionWatcher.ProfileName,
+		AutoEvents:          dtos.ToAutoEventModels(testReq.ProvisionWatcher.AutoEvents),
+	}
+
+	valid := testReq
+	dbClientMock.On("DeviceServiceNameExists", *valid.ProvisionWatcher.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", *valid.ProvisionWatcher.ProfileName).Return(true, nil)
+	dbClientMock.On("ProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(pwModels, nil)
+	dbClientMock.On("UpdateProvisionWatcher", mock.Anything).Return(nil)
+	dbClientMock.On("DeviceServiceByName", *valid.ProvisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
+	validWithNoReqID := testReq
+	validWithNoReqID.RequestId = ""
+	validWithNoId := testReq
+	validWithNoId.ProvisionWatcher.Id = nil
+	dbClientMock.On("ProvisionWatcherByName", *validWithNoId.ProvisionWatcher.Name).Return(pwModels, nil)
+	validWithNoName := testReq
+	validWithNoName.ProvisionWatcher.Name = nil
+	dbClientMock.On("ProvisionWatcherById", *validWithNoName.ProvisionWatcher.Id).Return(pwModels, nil)
+
+	invalidId := testReq
+	invalidUUID := "invalidUUID"
+	invalidId.ProvisionWatcher.Id = &invalidUUID
+
+	emptyString := ""
+	emptyId := testReq
+	emptyId.ProvisionWatcher.Id = &emptyString
+	emptyName := testReq
+	emptyName.ProvisionWatcher.Id = nil
+	emptyName.ProvisionWatcher.Name = &emptyString
+
+	invalidNoIdAndName := testReq
+	invalidNoIdAndName.ProvisionWatcher.Id = nil
+	invalidNoIdAndName.ProvisionWatcher.Name = nil
+
+	invalidNotFoundId := testReq
+	invalidNotFoundId.ProvisionWatcher.Name = nil
+	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
+	invalidNotFoundId.ProvisionWatcher.Id = &notFoundId
+	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	dbClientMock.On("ProvisionWatcherById", *invalidNotFoundId.ProvisionWatcher.Id).Return(pwModels, notFoundIdError)
+
+	invalidNotFoundName := testReq
+	invalidNotFoundName.ProvisionWatcher.Name = nil
+	notFoundName := "notFoundName"
+	invalidNotFoundName.ProvisionWatcher.Name = &notFoundName
+	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
+	dbClientMock.On("ProvisionWatcherByName", *invalidNotFoundName.ProvisionWatcher.Name).Return(pwModels, notFoundNameError)
+
+	notFountServiceName := "notFoundService"
+	notFoundService := testReq
+	notFoundService.ProvisionWatcher.ServiceName = &notFountServiceName
+	dbClientMock.On("DeviceServiceNameExists", *notFoundService.ProvisionWatcher.ServiceName).Return(false, nil)
+	notFountProfileName := "notFoundProfile"
+	notFoundProfile := testReq
+	notFoundProfile.ProvisionWatcher.ProfileName = &notFountProfileName
+	dbClientMock.On("DeviceProfileNameExists", *notFoundProfile.ProvisionWatcher.ProfileName).Return(false, nil)
+
+	dic.Update(di.ServiceConstructorMap{
+		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewProvisionWatcherController(dic)
+	require.NotNil(t, controller)
+	tests := []struct {
+		name                 string
+		request              []requests.UpdateProvisionWatcherRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+	}{
+		{"Valid", []requests.UpdateProvisionWatcherRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no requestId", []requests.UpdateProvisionWatcherRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no id", []requests.UpdateProvisionWatcherRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no name", []requests.UpdateProvisionWatcherRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - invalid id", []requests.UpdateProvisionWatcherRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateProvisionWatcherRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty name", []requests.UpdateProvisionWatcherRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found id", []requests.UpdateProvisionWatcherRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found name", []requests.UpdateProvisionWatcherRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - no id and name", []requests.UpdateProvisionWatcherRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found service", []requests.UpdateProvisionWatcherRequest{notFoundService}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found profile", []requests.UpdateProvisionWatcherRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, contractsV2.ApiProvisionWatcherRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchProvisionWatcher)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, contractsV2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
 		})

@@ -18,14 +18,14 @@ import (
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -36,6 +36,7 @@ var expectedCorrelationId = uuid.New().String()
 var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
+	Versionable:  common.NewVersionable(),
 	DeviceName:   TestDeviceName,
 	ResourceName: TestDeviceResourceName,
 	ProfileName:  TestDeviceProfileName,
@@ -48,9 +49,11 @@ var testReading = dtos.BaseReading{
 
 var testAddEvent = requests.AddEventRequest{
 	BaseRequest: common.BaseRequest{
-		RequestId: ExampleUUID,
+		RequestId:   ExampleUUID,
+		Versionable: common.NewVersionable(),
 	},
 	Event: dtos.Event{
+		Versionable: common.NewVersionable(),
 		Id:          expectedEventId,
 		DeviceName:  TestDeviceName,
 		ProfileName: TestDeviceProfileName,

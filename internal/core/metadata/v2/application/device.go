@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,14 +10,15 @@ import (
 	"fmt"
 
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/google/uuid"
 )
@@ -51,37 +52,25 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		addedDevice.Id,
 		correlation.FromContext(ctx),
 	))
-
+	go addDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
 	return addedDevice.Id, nil
 }
 
-// DeleteDeviceById deletes the device by Id
-func DeleteDeviceById(id string, dic *di.Container) errors.EdgeX {
-	if id == "" {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err = dbClient.DeleteDeviceById(id)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	return nil
-}
-
 // DeleteDeviceByName deletes the device by name
-func DeleteDeviceByName(name string, dic *di.Container) errors.EdgeX {
+func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceByName(name)
+	device, err := dbClient.DeviceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	err = dbClient.DeleteDeviceByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go deleteDeviceCallback(ctx, dic, device)
 	return nil
 }
 
@@ -102,23 +91,6 @@ func DevicesByServiceName(offset int, limit int, name string, ctx context.Contex
 	return devices, nil
 }
 
-// DeviceIdExists checks the device existence by id
-func DeviceIdExists(id string, dic *di.Container) (exists bool, edgeXerr errors.EdgeX) {
-	if id == "" {
-		return exists, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-	}
-	_, err := uuid.Parse(id)
-	if err != nil {
-		return exists, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	exists, edgeXerr = dbClient.DeviceIdExists(id)
-	if edgeXerr != nil {
-		return exists, errors.NewCommonEdgeXWrapper(err)
-	}
-	return exists, nil
-}
-
 // DeviceNameExists checks the device existence by name
 func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.EdgeX) {
 	if name == "" {
@@ -137,56 +109,39 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	var device models.Device
-	var edgeXerr errors.EdgeX
-	if dto.Id != nil {
-		if *dto.Id == "" {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-		}
-		_, err := uuid.Parse(*dto.Id)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-		}
-		device, edgeXerr = dbClient.DeviceById(*dto.Id)
+	if dto.ServiceName != nil {
+		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
 		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-	} else {
-		if *dto.Name == "" {
-			return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
-		}
-		device, edgeXerr = dbClient.DeviceByName(*dto.Name)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", *dto.ServiceName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", *dto.ServiceName), nil)
 		}
 	}
-	if dto.Name != nil && *dto.Name != device.Name {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device name '%s' not match the exsting '%s' ", *dto.Name, device.Name), nil)
+	if dto.ProfileName != nil {
+		exists, edgeXerr := dbClient.DeviceProfileNameExists(*dto.ProfileName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", *dto.ProfileName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", *dto.ProfileName), nil)
+		}
+	}
+
+	device, err := deviceByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// Old service name is used for invoking callback
+	var oldServiceName string
+	if dto.ServiceName != nil && *dto.ServiceName != device.ServiceName {
+		oldServiceName = device.ServiceName
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
-	exists, edgeXerr := dbClient.DeviceServiceNameExists(device.ServiceName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", device.ServiceName), edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", device.ServiceName), nil)
-	}
-	exists, edgeXerr = dbClient.DeviceProfileNameExists(device.ProfileName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", device.ProfileName), edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", device.ProfileName), nil)
-	}
-
-	edgeXerr = dbClient.DeleteDeviceById(device.Id)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
-	}
-
-	_, edgeXerr = dbClient.AddDevice(device)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	err = dbClient.UpdateDevice(device)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	lc.Debug(fmt.Sprintf(
@@ -194,7 +149,39 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 		correlation.FromContext(ctx),
 	))
 
+	if oldServiceName != "" {
+		go updateDeviceCallback(ctx, dic, oldServiceName, device)
+	}
+	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
 	return nil
+}
+
+func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device models.Device, edgeXerr errors.EdgeX) {
+	if dto.Id != nil {
+		if *dto.Id == "" {
+			return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+		}
+		_, err := uuid.Parse(*dto.Id)
+		if err != nil {
+			return device, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
+		}
+		device, edgeXerr = dbClient.DeviceById(*dto.Id)
+		if edgeXerr != nil {
+			return device, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	} else {
+		if *dto.Name == "" {
+			return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		}
+		device, edgeXerr = dbClient.DeviceByName(*dto.Name)
+		if edgeXerr != nil {
+			return device, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != device.Name {
+		return device, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device name '%s' not match the exsting '%s' ", *dto.Name, device.Name), nil)
+	}
+	return device, nil
 }
 
 // AllDevices query the devices with offset, limit, and labels

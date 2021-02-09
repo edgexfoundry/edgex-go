@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -16,14 +16,14 @@ import (
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -38,9 +38,11 @@ var testBaseAddress = "http://home-device-service:49990"
 func buildTestDeviceServiceRequest() requests.AddDeviceServiceRequest {
 	var testAddDeviceServiceReq = requests.AddDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Service: dtos.DeviceService{
+			Versionable: common.NewVersionable(),
 			Id:          ExampleUUID,
 			Name:        testDeviceServiceName,
 			Description: TestDescription,
@@ -58,9 +60,11 @@ func buildTestUpdateDeviceServiceRequest() requests.UpdateDeviceServiceRequest {
 	testAdminState := models.Unlocked
 	var testUpdateDeviceServiceReq = requests.UpdateDeviceServiceRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Service: dtos.UpdateDeviceService{
+			Versionable: common.NewVersionable(),
 			Id:          &testUUID,
 			Name:        &testDeviceServiceName,
 			Labels:      testDeviceServiceLabels,
@@ -268,8 +272,7 @@ func TestPatchDeviceService(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("DeviceServiceById", *valid.Service.Id).Return(dsModels, nil)
-	dbClientMock.On("DeleteDeviceServiceById", *valid.Service.Id).Return(nil)
-	dbClientMock.On("AddDeviceService", mock.Anything).Return(dsModels, nil)
+	dbClientMock.On("UpdateDeviceService", mock.Anything).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
@@ -462,73 +465,24 @@ func TestAllDeviceServices(t *testing.T) {
 	}
 }
 
-func TestDeleteDeviceServiceById(t *testing.T) {
-	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
-	noId := ""
-	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
-	invalidId := "invalidId"
-
-	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeleteDeviceServiceById", deviceService.Id).Return(nil)
-	dbClientMock.On("DeleteDeviceServiceById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
-	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
-			return dbClientMock
-		},
-	})
-
-	controller := NewDeviceServiceController(dic)
-	require.NotNil(t, controller)
-
-	tests := []struct {
-		name               string
-		deviceServiceId    string
-		errorExpected      bool
-		expectedStatusCode int
-	}{
-		{"Valid - delete device service by id", deviceService.Id, false, http.StatusOK},
-		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
-		{"Invalid - device srvice not found by id", notFoundId, true, http.StatusNotFound},
-		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
-	}
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", contractsV2.ApiDeviceServiceByIdRoute, testCase.deviceServiceId)
-			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.deviceServiceId})
-			require.NoError(t, err)
-
-			// Act
-			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceServiceById)
-			handler.ServeHTTP(recorder, req)
-			var res common.BaseResponse
-			err = json.Unmarshal(recorder.Body.Bytes(), &res)
-			require.NoError(t, err)
-
-			// Assert
-			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			if testCase.errorExpected {
-				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
-			} else {
-				assert.Empty(t, res.Message, "Message should be empty when it is successful")
-			}
-		})
-	}
-}
-
 func TestDeleteDeviceServiceByName(t *testing.T) {
 	deviceService := dtos.ToDeviceServiceModel(buildTestDeviceServiceRequest().Service)
 	noName := ""
 	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
+	provisionWatcherExists := "provisionWatcherExists"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DevicesByServiceName", 0, 1, deviceService.Name).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, deviceService.Name).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceServiceByName", deviceService.Name).Return(nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, notFoundName).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceServiceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+	dbClientMock.On("DevicesByServiceName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -547,6 +501,8 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 		{"Valid - delete device service by name", deviceService.Name, false, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
 		{"Invalid - device service not found by name", notFoundName, true, http.StatusNotFound},
+		{"Invalid - associated device exists", deviceExists, true, http.StatusConflict},
+		{"Invalid - associated provisionWatcher Exists", provisionWatcherExists, true, http.StatusConflict},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -12,9 +12,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/google/uuid"
 )
@@ -188,6 +188,13 @@ func (c *Client) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 	return deviceServiceNameExist(conn, name)
+}
+
+// UpdateDeviceService updates a device service
+func (c *Client) UpdateDeviceService(ds model.DeviceService) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateDeviceService(conn, ds)
 }
 
 // DeviceProfileByName gets a device profile by name
@@ -430,6 +437,14 @@ func (c *Client) DevicesByProfileName(offset int, limit int, profileName string)
 	return devices, nil
 }
 
+// Update a device
+func (c *Client) UpdateDevice(d model.Device) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return updateDevice(conn, d)
+}
+
 // AllEvents query events by offset and limit
 func (c *Client) AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -571,6 +586,19 @@ func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.Provision
 	return addProvisionWatcher(conn, pw)
 }
 
+// ProvisionWatcherById gets a provision watcher by id
+func (c *Client) ProvisionWatcherById(id string) (provisionWatcher model.ProvisionWatcher, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	provisionWatcher, edgexErr = provisionWatcherById(conn, id)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("failed to query provision watcher by id %s", id), edgexErr)
+	}
+
+	return
+}
+
 // ProvisionWatcherByName gets a provision watcher by name
 func (c *Client) ProvisionWatcherByName(name string) (provisionWatcher model.ProvisionWatcher, edgexErr errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -633,6 +661,117 @@ func (c *Client) DeleteProvisionWatcherByName(name string) errors.EdgeX {
 	edgeXerr := deleteProvisionWatcherByName(conn, name)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("failed to delete the provision watcher with name %s", name), edgeXerr)
+	}
+
+	return nil
+}
+
+// Update a provision watcher
+func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	return updateProvisionWatcher(conn, pw)
+}
+
+// AddInterval adds a new interval
+func (c *Client) AddInterval(interval model.Interval) (model.Interval, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(interval.Id) == 0 {
+		interval.Id = uuid.New().String()
+	}
+
+	return addInterval(conn, interval)
+}
+
+// AddSubscription adds a new subscription
+func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(subscription.Id) == 0 {
+		subscription.Id = uuid.New().String()
+	}
+
+	return addSubscription(conn, subscription)
+}
+
+// AllSubscriptions returns multiple subscriptions per query criteria, including
+// offset: The number of items to skip before starting to collect the result set.
+// limit: The maximum number of items to return.
+func (c *Client) AllSubscriptions(offset int, limit int) ([]model.Subscription, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr := allSubscriptions(conn, offset, limit)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return subscriptions, nil
+}
+
+// SubscriptionsByCategory queries subscriptions by offset, limit and category
+func (c *Client) SubscriptionsByCategory(offset int, limit int, category string) (subscriptions []model.Subscription, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr = subscriptionsByCategory(conn, offset, limit, category)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query subscriptions by offset %d, limit %d and category %s", offset, limit, category), edgeXerr)
+	}
+	return subscriptions, nil
+}
+
+// SubscriptionsByLabel queries subscriptions by offset, limit and label
+func (c *Client) SubscriptionsByLabel(offset int, limit int, label string) (subscriptions []model.Subscription, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr = subscriptionsByLabel(conn, offset, limit, label)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query subscriptions by offset %d, limit %d and label %s", offset, limit, label), edgeXerr)
+	}
+	return subscriptions, nil
+}
+
+// SubscriptionsByReceiver queries subscriptions by offset, limit and receiver
+func (c *Client) SubscriptionsByReceiver(offset int, limit int, receiver string) (subscriptions []model.Subscription, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr = subscriptionsByReceiver(conn, offset, limit, receiver)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query subscriptions by offset %d, limit %d and receiver %s", offset, limit, receiver), edgeXerr)
+	}
+	return subscriptions, nil
+}
+
+// SubscriptionByName queries subscription by name
+func (c *Client) SubscriptionByName(name string) (subscription model.Subscription, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscription, edgeXerr = subscriptionByName(conn, name)
+	if edgeXerr != nil {
+		return subscription, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query subscription by name %s", name), edgeXerr)
+	}
+	return subscription, nil
+}
+
+// DeleteSubscriptionByName deletes a subscription by name
+func (c *Client) DeleteSubscriptionByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteSubscriptionByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the subscription with name %s", name), edgeXerr)
 	}
 
 	return nil

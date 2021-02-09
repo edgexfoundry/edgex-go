@@ -1,7 +1,7 @@
 // addressable contains functionality for obtaining Addressable data.
 package addressable
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 // AddressLoader provides functionality for obtaining Addressables.
 type AddressLoader interface {

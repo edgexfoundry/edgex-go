@@ -17,7 +17,7 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
 // ConfigurationName contains the name of the agent's config.ConfigurationStruct implementation in the DIC.

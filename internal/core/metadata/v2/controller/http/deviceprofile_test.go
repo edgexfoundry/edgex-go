@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,18 +21,18 @@ import (
 	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -51,12 +51,12 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      contractsV2.ValueTypeInt16,
+			ValueType: contractsV2.ValueTypeInt16,
 			ReadWrite: "RW",
 		},
 	}}
-	var testDeviceCommands = []dtos.ProfileResource{{
-		Name: TestProfileResourceName,
+	var testDeviceCommands = []dtos.DeviceCommand{{
+		Name: TestDeviceCommandName,
 		Get: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
@@ -65,16 +65,18 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		}},
 	}}
 	var testCoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  true,
-		Put:  true,
+		Set:  true,
 	}}
 
 	var testDeviceProfileReq = requests.DeviceProfileRequest{
 		BaseRequest: common.BaseRequest{
-			RequestId: ExampleUUID,
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
 		},
 		Profile: dtos.DeviceProfile{
+			Versionable:     common.NewVersionable(),
 			Id:              ExampleUUID,
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,
@@ -207,7 +209,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -224,17 +226,17 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.Profile.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
-		Put:  false,
+		Name: TestDeviceCommandName,
+		Set:  false,
 	}}
 
 	tests := []struct {
@@ -350,7 +352,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -367,17 +369,17 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	noCommandName := deviceProfileRequest
 	noCommandName.Profile.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfileRequest
 	noCommandGet.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfileRequest
 	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
-		Put:  false,
+		Name: TestDeviceCommandName,
+		Set:  false,
 	}}
 	notFound := deviceProfileRequest
 	notFound.Profile.Name = "testDevice"
@@ -388,6 +390,8 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", deviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -507,7 +511,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -524,17 +528,17 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
-		Put:  false,
+		Name: TestDeviceCommandName,
+		Set:  false,
 	}}
 	tests := []struct {
 		name    string
@@ -653,7 +657,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.PropertyValue{
-			Type:      "INT16",
+			ValueType: "INT16",
 			ReadWrite: "RW",
 		},
 	}}
@@ -670,17 +674,17 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	noCommandName := deviceProfile
 	noCommandName.CoreCommands = []dtos.Command{{
 		Get: true,
-		Put: true,
+		Set: true,
 	}}
 	noCommandGet := deviceProfile
 	noCommandGet.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
+		Name: TestDeviceCommandName,
 		Get:  false,
 	}}
 	noCommandPut := deviceProfile
 	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestProfileResourceName,
-		Put:  false,
+		Name: TestDeviceCommandName,
+		Set:  false,
 	}}
 	notFound := deviceProfile
 	notFound.Name = "testDevice"
@@ -691,6 +695,8 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DevicesByProfileName", 0, -1, validDeviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -801,73 +807,24 @@ func TestDeviceProfileByName(t *testing.T) {
 	}
 }
 
-func TestDeleteDeviceProfileById(t *testing.T) {
-	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
-	noId := ""
-	notFoundId := "82eb2e26-1111-2222-ae4c-de9dac3fb9bc"
-	invalidId := "invalidId"
-
-	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeleteDeviceProfileById", deviceProfile.Id).Return(nil)
-	dbClientMock.On("DeleteDeviceProfileById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
-	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
-			return dbClientMock
-		},
-	})
-
-	controller := NewDeviceProfileController(dic)
-	require.NotNil(t, controller)
-
-	tests := []struct {
-		name               string
-		deviceProfileId    string
-		errorExpected      bool
-		expectedStatusCode int
-	}{
-		{"Valid - delete device profile by id", deviceProfile.Id, false, http.StatusOK},
-		{"Invalid - id parameter is empty", noId, true, http.StatusBadRequest},
-		{"Invalid - device profile not found by id", notFoundId, true, http.StatusNotFound},
-		{"Invalid - invalid uuid", invalidId, true, http.StatusBadRequest},
-	}
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s/%s", contractsV2.ApiDeviceProfileRoute, contractsV2.Id, testCase.deviceProfileId)
-			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{contractsV2.Id: testCase.deviceProfileId})
-			require.NoError(t, err)
-
-			// Act
-			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceProfileById)
-			handler.ServeHTTP(recorder, req)
-			var res common.BaseResponse
-			err = json.Unmarshal(recorder.Body.Bytes(), &res)
-			require.NoError(t, err)
-
-			// Assert
-			assert.Equal(t, contractsV2.ApiVersion, res.ApiVersion, "API Version not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			if testCase.errorExpected {
-				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
-			} else {
-				assert.Empty(t, res.Message, "Message should be empty when it is successful")
-			}
-		})
-	}
-}
-
 func TestDeleteDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	noName := ""
 	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
+	provisionWatcherExists := "provisionWatcherExists"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceProfile.Name).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, deviceProfile.Name).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", deviceProfile.Name).Return(nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, notFoundName).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -886,6 +843,8 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 		{"Valid - delete device profile by name", deviceProfile.Name, false, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, true, http.StatusBadRequest},
 		{"Invalid - device profile not found by name", notFoundName, true, http.StatusNotFound},
+		{"Invalid - associated device exists", deviceExists, true, http.StatusConflict},
+		{"Invalid - associated provisionWatcher Exists", provisionWatcherExists, true, http.StatusConflict},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

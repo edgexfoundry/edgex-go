@@ -5,7 +5,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/errors"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 )
 
 // propagatedHeader is a slice containing request headers that we want to propagate. It is

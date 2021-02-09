@@ -14,37 +14,30 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-#  SPDX-License-Identifier: Apache-2.0'
+#  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
 set -e
 
-if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ] && [ -f "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
-  echo "Clearing secretstore-setup completion flag"
-  rm -f "${SECRETSTORE_SETUP_DONE_FLAG}"
-fi
-
-echo "Starting vault-worker..."
+# env settings are populated from env files of docker-compose
 
 echo "Initializing secret store..."
 /security-secretstore-setup --vaultInterval=10
 
-# write a sentinel file when we're done because consul is not
-# secure and we don't trust it it access to the EdgeX secret store
-if [ -n "${SECRETSTORE_SETUP_DONE_FLAG}" ]; then
-    # default User and Group in case never set
-    if [ -z "${EDGEX_USER}" ]; then
-      EDGEX_USER="2002"
-      EDGEX_GROUP="2001"
-    fi
-
-    echo "Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
-    chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
-
-    echo "Signaling secretstore-setup completion"
-    mkdir -p $(dirname "${SECRETSTORE_SETUP_DONE_FLAG}") && \
-      touch "${SECRETSTORE_SETUP_DONE_FLAG}"
+# default User and Group in case never set
+if [ -z "${EDGEX_USER}" ]; then
+  EDGEX_USER="2002"
+  EDGEX_GROUP="2001"
 fi
 
-echo "Waiting for termination signal"
-exec tail -f /dev/null
+# /tmp/edgex/secrets need to be shared with all other services that need secrets and
+# thus change the ownership to EDGEX_USER:EDGEX_GROUP
+echo "$(date) Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
+chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
+
+# Signal tokens ready port for other services waiting on
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+  --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}"
+if [ $? -ne 0 ]; then
+  echo "$(date) failed to gating the tokens ready port"
+fi

@@ -19,7 +19,7 @@ DOCKERS= \
 	docker_support_scheduler \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
-	docker_security_bootstrap_redis
+	docker_security_bootstrapper
 
 .PHONY: $(DOCKERS)
 
@@ -34,8 +34,8 @@ MICROSERVICES= \
 	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
-	cmd/security-bootstrap-redis/security-bootstrap-redis \
-	cmd/secrets-config/secrets-config
+	cmd/secrets-config/secrets-config \
+	cmd/security-bootstrapper/security-bootstrapper
 
 .PHONY: $(MICROSERVICES)
 
@@ -81,11 +81,11 @@ cmd/security-secretstore-setup/security-secretstore-setup:
 cmd/security-file-token-provider/security-file-token-provider:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
-cmd/security-bootstrap-redis/security-bootstrap-redis:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrap-redis/security-bootstrap-redis ./cmd/security-bootstrap-redis
-
 cmd/secrets-config/secrets-config:
 	$(GO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
+
+cmd/security-bootstrapper/security-bootstrapper:
+	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -186,10 +186,12 @@ docker_security_secretstore_setup:
 		-t edgexfoundry/docker-security-secretstore-setup-go:$(DOCKER_TAG) \
 		.
 
-docker_security_bootstrap_redis:
-		docker build \
-		-f cmd/security-bootstrap-redis/Dockerfile \
+docker_security_bootstrapper:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-bootstrapper/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/docker-security-bootstrap-redis-go:$(GIT_SHA) \
-		-t edgexfoundry/docker-security-bootstrap-redis-go:$(DOCKER_TAG) \
+		-t edgexfoundry/docker-security-bootstrapper-go:$(GIT_SHA) \
+		-t edgexfoundry/docker-security-bootstrapper-go:$(DOCKER_TAG) \
 		.

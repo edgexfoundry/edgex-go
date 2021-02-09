@@ -14,7 +14,7 @@
 
 package notification
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 // NotificationLoader provides functionality for obtaining Notifications.
 type NotificationLoader interface {

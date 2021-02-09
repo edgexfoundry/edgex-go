@@ -17,8 +17,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {

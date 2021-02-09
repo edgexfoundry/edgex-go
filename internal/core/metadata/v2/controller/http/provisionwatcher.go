@@ -15,14 +15,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
-	"github.com/edgexfoundry/go-mod-bootstrap/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 	"github.com/gorilla/mux"
 )
 
@@ -245,7 +245,7 @@ func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.Respo
 	var response interface{}
 	var statusCode int
 
-	err := application.DeleteProvisionWatcherByName(name, pwc.dic)
+	err := application.DeleteProvisionWatcherByName(ctx, name, pwc.dic)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -261,4 +261,52 @@ func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.Respo
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
+}
+
+func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(pwc.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	updateProvisionWatcherDTOs, err := pwc.reader.ReadUpdateProvisionWatcherRequest(r.Body)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
+
+	var updateResponses []interface{}
+	for _, dto := range updateProvisionWatcherDTOs {
+		var response interface{}
+		reqId := dto.RequestId
+		err := application.PatchProvisionWatcher(ctx, dto.ProvisionWatcher, pwc.dic)
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"",
+				http.StatusOK)
+		}
+		updateResponses = append(updateResponses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.Encode(updateResponses, w, lc)
 }

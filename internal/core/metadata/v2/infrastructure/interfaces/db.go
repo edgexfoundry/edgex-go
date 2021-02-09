@@ -6,8 +6,8 @@
 package interfaces
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
 type DBClient interface {
@@ -24,13 +24,14 @@ type DBClient interface {
 	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, errors.EdgeX)
 
-	AddDeviceService(e model.DeviceService) (model.DeviceService, errors.EdgeX)
+	AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)
 	DeviceServiceByName(name string) (model.DeviceService, errors.EdgeX)
 	DeleteDeviceServiceById(id string) errors.EdgeX
 	DeleteDeviceServiceByName(name string) errors.EdgeX
 	DeviceServiceNameExists(name string) (bool, errors.EdgeX)
 	AllDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
+	UpdateDeviceService(ds model.DeviceService) errors.EdgeX
 
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
 	DeleteDeviceById(id string) errors.EdgeX
@@ -42,11 +43,14 @@ type DBClient interface {
 	DeviceByName(name string) (model.Device, errors.EdgeX)
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
 	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
+	UpdateDevice(d model.Device) errors.EdgeX
 
 	AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX)
+	ProvisionWatcherById(id string) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherByName(name string) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatchersByServiceName(offset int, limit int, name string) ([]model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatchersByProfileName(offset int, limit int, name string) ([]model.ProvisionWatcher, errors.EdgeX)
 	AllProvisionWatchers(offset int, limit int, labels []string) ([]model.ProvisionWatcher, errors.EdgeX)
 	DeleteProvisionWatcherByName(name string) errors.EdgeX
+	UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX
 }

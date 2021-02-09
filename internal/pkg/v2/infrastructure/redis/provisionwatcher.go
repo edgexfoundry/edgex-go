@@ -10,9 +10,9 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/errors"
-	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	v2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -28,6 +28,23 @@ const (
 // provisionWatcherStoredKey return the provision watcher's stored key which combines the collection name and object id
 func provisionWatcherStoredKey(id string) string {
 	return CreateKey(ProvisionWatcherCollection, id)
+}
+
+// sendAddProvisionWatcherCmd send redis command for adding provision watcher
+func sendAddProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.ProvisionWatcher) errors.EdgeX {
+	m, err := json.Marshal(pw)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal provision watcher for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(HSET, ProvisionWatcherCollectionName, pw.Name, storedKey)
+	_ = conn.Send(ZADD, ProvisionWatcherCollection, pw.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), pw.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), pw.Modified, storedKey)
+	for _, label := range pw.Labels {
+		_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionLabel, label), pw.Modified, storedKey)
+	}
+	return nil
 }
 
 // addProvisionWatcher adds a new provision watcher into DB
@@ -52,30 +69,27 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 	if pw.Created == 0 {
 		pw.Created = ts
 	}
-	// query API will sort the result based on Modified, so even newly created device service shall specify Modified as Created
+	// query API will sort the result based on Modified, so even newly created provision watcher shall specify Modified as Created
 	pw.Modified = ts
-
-	dsJSONBytes, err := json.Marshal(pw)
-	if err != nil {
-		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal provision watcher for Redis persistence", err)
-	}
-
-	redisKey := provisionWatcherStoredKey(pw.Id)
+	storedKey := provisionWatcherStoredKey(pw.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, redisKey, dsJSONBytes)
-	_ = conn.Send(HSET, ProvisionWatcherCollectionName, pw.Name, redisKey)
-	_ = conn.Send(ZADD, ProvisionWatcherCollection, pw.Modified, redisKey)
-	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), pw.Modified, redisKey)
-	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), pw.Modified, redisKey)
-	for _, label := range pw.Labels {
-		_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionLabel, label), pw.Modified, redisKey)
-	}
-	_, err = conn.Do(EXEC)
+	edgexErr = sendAddProvisionWatcherCmd(conn, storedKey, pw)
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgexErr = errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher creation failed", err)
 	}
 
 	return pw, edgexErr
+}
+
+// provisionWatcherById query provision watcher by id from DB
+func provisionWatcherById(conn redis.Conn, id string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
+	edgexErr = getObjectById(conn, provisionWatcherStoredKey(id), &provisionWatcher)
+	if edgexErr != nil {
+		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	return
 }
 
 // provisionWatcherByName query provision watcher by name from DB
@@ -174,21 +188,48 @@ func deleteProvisionWatcherByName(conn redis.Conn, name string) errors.EdgeX {
 	return nil
 }
 
+// sendDeleteProvisionWatcherCmd send redis command for deleting provision watcher
+func sendDeleteProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.ProvisionWatcher) {
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(HDEL, ProvisionWatcherCollectionName, pw.Name)
+	_ = conn.Send(ZREM, ProvisionWatcherCollection, storedKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), storedKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), storedKey)
+	for _, label := range pw.Labels {
+		_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionLabel, label), storedKey)
+	}
+}
+
 // deleteProvisionWatcher deletes a provision watcher
 func deleteProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.EdgeX {
-	redisKey := provisionWatcherStoredKey(pw.Id)
+	storedKey := provisionWatcherStoredKey(pw.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(DEL, redisKey)
-	_ = conn.Send(HDEL, ProvisionWatcherCollectionName, pw.Name)
-	_ = conn.Send(ZREM, ProvisionWatcherCollection, redisKey)
-	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), redisKey)
-	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), redisKey)
-	for _, label := range pw.Labels {
-		_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionLabel, label), redisKey)
-	}
+	sendDeleteProvisionWatcherCmd(conn, storedKey, pw)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher deletion failed", err)
+	}
+
+	return nil
+}
+
+func updateProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.EdgeX {
+	oldProvisionWatcher, edgexErr := provisionWatcherByName(conn, pw.Name)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	pw.Modified = common.MakeTimestamp()
+	storedKey := provisionWatcherStoredKey(pw.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteProvisionWatcherCmd(conn, storedKey, oldProvisionWatcher)
+	edgexErr = sendAddProvisionWatcherCmd(conn, storedKey, pw)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "provision watcher update failed", err)
 	}
 
 	return nil

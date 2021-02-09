@@ -20,7 +20,7 @@ import (
 	data "github.com/edgexfoundry/edgex-go/internal/core/data/errors"
 	metadata "github.com/edgexfoundry/edgex-go/internal/core/metadata/errors"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 var Common commonErrorConcept

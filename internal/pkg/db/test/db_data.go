@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"testing"
 
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/interfaces"

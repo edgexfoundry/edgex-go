@@ -13,7 +13,7 @@
  *******************************************************************************/
 package interval
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 // IntervalLoader provides functionality for obtaining Interval.
 type IntervalLoader interface {

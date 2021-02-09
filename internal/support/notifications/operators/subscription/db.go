@@ -14,7 +14,7 @@
 
 package subscription
 
-import contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+import contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 // SubscriptionLoader provides functionality for obtaining Subscriptions.
 type SubscriptionLoader interface {

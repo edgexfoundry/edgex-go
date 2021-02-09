@@ -22,8 +22,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/operators/device/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 func TestUpdateDevice(t *testing.T) {

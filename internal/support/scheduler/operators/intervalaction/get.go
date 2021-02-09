@@ -17,9 +17,9 @@ package intervalaction
 import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/errors"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 
-	contract "github.com/edgexfoundry/go-mod-core-contracts/models"
+	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 // This interface that returns a collection of interval actions

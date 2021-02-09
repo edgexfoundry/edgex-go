@@ -17,8 +17,8 @@ package setconfig
 import (
 	"testing"
 
-	requests "github.com/edgexfoundry/go-mod-core-contracts/requests/configuration"
-	responses "github.com/edgexfoundry/go-mod-core-contracts/responses/configuration"
+	requests "github.com/edgexfoundry/go-mod-core-contracts/v2/requests/configuration"
+	responses "github.com/edgexfoundry/go-mod-core-contracts/v2/responses/configuration"
 
 	"github.com/stretchr/testify/assert"
 )

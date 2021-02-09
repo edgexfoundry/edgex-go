@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 func TestNewRequester(t *testing.T) {
