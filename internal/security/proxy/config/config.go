@@ -1,4 +1,5 @@
 /*******************************************************************************
+ * Copyright 2021 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -24,18 +25,14 @@ import (
 )
 
 type ConfigurationStruct struct {
-	Writable      WritableInfo
-	KongURL       KongUrlInfo
-	KongAuth      KongAuthInfo
-	KongACL       KongAclInfo
-	SecretStore   bootstrapConfig.SecretStoreInfo
-	SecretService SecretServiceInfo
-	Clients       map[string]bootstrapConfig.ClientInfo
-}
-
-type WritableInfo struct {
 	LogLevel       string
 	RequestTimeout int
+	KongURL        KongUrlInfo
+	KongAuth       KongAuthInfo
+	KongACL        KongAclInfo
+	SecretStore    bootstrapConfig.SecretStoreInfo
+	SecretService  SecretServiceInfo
+	Clients        map[string]bootstrapConfig.ClientInfo
 }
 
 type KongUrlInfo struct {
@@ -92,31 +89,19 @@ func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
 // then used to overwrite the service's existing configuration struct.
 func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
-	configuration, ok := rawConfig.(*ConfigurationStruct)
-	if ok {
-		// Check that information was successfully read from Registry
-		if configuration.SecretService.Port == 0 {
-			return false
-		}
-		*c = *configuration
-	}
-	return ok
+	return false
 }
 
 // EmptyWritablePtr returns a pointer to a service-specific empty WritableInfo struct.  It is used by the bootstrap to
 // provide the appropriate structure to registry.Client's WatchForChanges().
 func (c *ConfigurationStruct) EmptyWritablePtr() interface{} {
-	return &WritableInfo{}
+	return nil
 }
 
 // UpdateWritableFromRaw converts configuration received from the registry to a service-specific WritableInfo struct
 // which is then used to overwrite the service's existing configuration's WritableInfo struct.
 func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) bool {
-	writable, ok := rawWritable.(*WritableInfo)
-	if ok {
-		c.Writable = *writable
-	}
-	return ok
+	return false
 }
 
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
@@ -148,7 +133,7 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
 func (c *ConfigurationStruct) GetLogLevel() string {
-	return c.Writable.LogLevel
+	return c.LogLevel
 }
 
 // GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
@@ -158,7 +143,7 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 
 // GetDatabaseInfo returns a database information map.
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
-	panic("GetDatabaseInfo() called unexpectedly.")
+	return nil
 }
 
 // GetInsecureSecrets returns the service's InsecureSecrets which this service doesn't support

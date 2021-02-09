@@ -20,38 +20,26 @@ import (
 )
 
 type ConfigurationStruct struct {
-	Writable  WritableInfo
+	LogLevel  string
 	StageGate StageGateInfo
-}
-
-type WritableInfo struct {
-	LogLevel string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
 // then used to overwrite the service's existing configuration struct.
 func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
-	configuration, ok := rawConfig.(*ConfigurationStruct)
-	if ok {
-		*c = *configuration
-	}
-	return ok
+	return false
 }
 
 // EmptyWritablePtr returns a pointer to a service-specific empty WritableInfo struct.  It is used by the bootstrap to
 // provide the appropriate structure to registry.Client's WatchForChanges().
 func (c *ConfigurationStruct) EmptyWritablePtr() interface{} {
-	return &WritableInfo{}
+	return nil
 }
 
 // UpdateWritableFromRaw converts configuration received from the registry to a service-specific WritableInfo struct
 // which is then used to overwrite the service's existing configuration's WritableInfo struct.
 func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) bool {
-	writable, ok := rawWritable.(*WritableInfo)
-	if ok {
-		c.Writable = *writable
-	}
-	return ok
+	return false
 }
 
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
@@ -65,7 +53,7 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
 func (c *ConfigurationStruct) GetLogLevel() string {
-	return c.Writable.LogLevel
+	return c.LogLevel
 }
 
 // GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.

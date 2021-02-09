@@ -16,7 +16,6 @@
 
 # This is a TOML config file for edgexsecurity service.
 
-[Writable]
 LogLevel = 'DEBUG'
 RequestTimeout = 10
 
