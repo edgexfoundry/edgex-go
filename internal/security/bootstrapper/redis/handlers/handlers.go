@@ -17,8 +17,8 @@
 package handlers
 
 import (
-	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,6 +32,15 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+)
+
+const (
+	// redis aclfile name
+	redisACLFileName = "edgex_redis_acl.conf"
+
+	// file read/write permission only for owner
+	readWriteOnlyForOwner os.FileMode = 0600
 )
 
 // Handler is the redis bootstrapping handler
@@ -78,8 +87,8 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 	return true
 }
 
-// SetupConfFile dynamically creates redis config file with the retrieved credentials
-func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
+// SetupConfFiles dynamically creates redis config file with the retrieved credentials and setup ACLs
+func (handler *Handler) SetupConfFiles(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
@@ -103,31 +112,52 @@ func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ 
 		return false
 	}
 
-	dbConfigFilePath := filepath.Join(dbConfigDir, dbConfigFile)
-	lc.Infof("Setting up the database config file %s", dbConfigFilePath)
-
-	// open config file with read-write and overwritten attribute (TRUNC)
-	confFile, err := os.OpenFile(dbConfigFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	// create redis config file
+	confFile, err := createConfigFile(dbConfigDir, dbConfigFile, lc)
 	if err != nil {
-		lc.Errorf("failed to open db config file %s: %v", dbConfigFilePath, err)
+		lc.Error(err.Error())
 		return false
 	}
 	defer func() {
 		_ = confFile.Close()
 	}()
 
+	edgeXRedisACLFilePath := filepath.Join(dbConfigDir, redisACLFileName)
 	// writing the config file
-	fwriter := bufio.NewWriter(confFile)
-	if err := helper.GenerateConfig(fwriter, &handler.credentials.Password); err != nil {
-		lc.Errorf("cannot write the db config file %s: %v", dbConfigFilePath, err)
-		return false
-	}
-	if err := fwriter.Flush(); err != nil {
-		lc.Errorf("failed to flush the file writer buffer %v", err)
+	if err := helper.GenerateRedisConfig(confFile, edgeXRedisACLFilePath); err != nil {
+		lc.Errorf("cannot write the db config file %s: %v", confFile.Name(), err)
 		return false
 	}
 
-	lc.Info("database credentials have been set in the config file")
+	// create ACL config file
+	aclFile, err := createConfigFile(dbConfigDir, redisACLFileName, lc)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
+	defer func() {
+		_ = aclFile.Close()
+	}()
+
+	// write the ACL file
+	if err := helper.GenerateACLConfig(aclFile, &handler.credentials.Password); err != nil {
+		lc.Errorf("cannot write the ACL config file %s: %v", edgeXRedisACLFilePath, err)
+		return false
+	}
+
+	lc.Info("database config and ACL have been set in the config files")
 
 	return true
+}
+
+func createConfigFile(configDir, configFileName string, lc logger.LoggingClient) (*os.File, error) {
+	configFilePath := filepath.Join(configDir, configFileName)
+	lc.Infof("Creating the database config file: %s", configFilePath)
+
+	// open config file with read-write and overwritten attribute (TRUNC)
+	configFile, err := os.OpenFile(configFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open config file %s: %v", configFilePath, err)
+	}
+	return configFile, nil
 }
