@@ -178,3 +178,18 @@ https://github.com/leodido/go-urn
 
 github.com/lib/pq (MIT) https://github.com/lib/pq
 https://github.com/lib/pq/blob/master/LICENSE.md
+
+github.com/fatih/color (MIT) https://github.com/fatih/color
+https://github.com/fatih/color/blob/master/LICENSE.md
+
+github.com/hashicorp/go-hclog (MIT) https://github.com/hashicorp/go-hclog
+https://github.com/hashicorp/go-hclog/blob/master/LICENSE
+
+github.com/mattn/go-colorable (MIT) https://github.com/mattn/go-colorable
+https://github.com/mattn/go-colorable/blob/master/LICENSE
+
+github.com/mattn/go-isatty (MIT) https://github.com/mattn/go-isatty
+https://github.com/mattn/go-isatty/blob/master/LICENSE
+
+golang.org/x/sys (Unspecified) https://github.com/golang/sys
+https://github.com/golang/sys/blob/master/LICENSE
