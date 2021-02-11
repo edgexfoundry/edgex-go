@@ -17,48 +17,99 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 )
 
-// CommandsByDeviceName query coreCommands with device name
-func CommandsByDeviceName(name string, dic *di.Container) (commands []dtos.CoreCommand, err errors.EdgeX) {
-	if name == "" {
-		return commands, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
-	}
-
+// AllCommands query commands by offset, and limit
+func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands []dtos.DeviceCoreCommand, err errors.EdgeX) {
 	// retrieve device information through Metadata DeviceClient
 	dc := V2Container.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return commands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
 	}
-	deviceResponse, err := dc.DeviceByName(context.Background(), name)
+	multiDevicesResponse, err := dc.AllDevices(context.Background(), nil, offset, limit)
 	if err != nil {
-		return commands, errors.NewCommonEdgeXWrapper(err)
+		return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// retrieve device profile information through Metadata DeviceProfileClient
 	dpc := V2Container.MetadataDeviceProfileClientFrom(dic.Get)
 	if dpc == nil {
-		return commands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceProfileClient returned", nil)
-	}
-	deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), deviceResponse.Device.ProfileName)
-	if err != nil {
-		return commands, errors.NewCommonEdgeXWrapper(err)
+		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceProfileClient returned", nil)
 	}
 
 	// Prepare the url for command
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	commands = make([]dtos.CoreCommand, len(deviceProfileResponse.Profile.CoreCommands))
-	for i, c := range deviceProfileResponse.Profile.CoreCommands {
-		commands[i] = dtos.CoreCommand{
-			Name:       c.Name,
-			DeviceName: deviceResponse.Device.Name,
-			Get:        c.Get,
-			Set:        c.Set,
-			Url:        serviceUrl,
-			Path:       fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceResponse.Device.Name, V2Routes.Command, c.Name),
+	deviceCoreCommands = make([]dtos.DeviceCoreCommand, len(multiDevicesResponse.Devices))
+	for i, device := range multiDevicesResponse.Devices {
+		deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), device.ProfileName)
+		if err != nil {
+			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
+		}
+		commands := make([]dtos.CoreCommand, len(deviceProfileResponse.Profile.CoreCommands))
+		for index, c := range deviceProfileResponse.Profile.CoreCommands {
+			commands[index] = dtos.CoreCommand{
+				Name: c.Name,
+				Get:  c.Get,
+				Set:  c.Set,
+				Url:  serviceUrl,
+				Path: fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, device.Name, V2Routes.Command, c.Name),
+			}
+		}
+		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
+			DeviceName:   device.Name,
+			ProfileName:  device.ProfileName,
+			CoreCommands: commands,
 		}
 	}
-	return commands, nil
+	return deviceCoreCommands, nil
+}
+
+// CommandsByDeviceName query coreCommands with device name
+func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dtos.DeviceCoreCommand, err errors.EdgeX) {
+	if name == "" {
+		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
+	}
+
+	// retrieve device information through Metadata DeviceClient
+	dc := V2Container.MetadataDeviceClientFrom(dic.Get)
+	if dc == nil {
+		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+	}
+	deviceResponse, err := dc.DeviceByName(context.Background(), name)
+	if err != nil {
+		return deviceCoreCommand, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// retrieve device profile information through Metadata DeviceProfileClient
+	dpc := V2Container.MetadataDeviceProfileClientFrom(dic.Get)
+	if dpc == nil {
+		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceProfileClient returned", nil)
+	}
+	deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), deviceResponse.Device.ProfileName)
+	if err != nil {
+		return deviceCoreCommand, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// Prepare the url for command
+	configuration := commandContainer.ConfigurationFrom(dic.Get)
+	serviceUrl := configuration.Service.Url()
+
+	commands := make([]dtos.CoreCommand, len(deviceProfileResponse.Profile.CoreCommands))
+	for i, c := range deviceProfileResponse.Profile.CoreCommands {
+		commands[i] = dtos.CoreCommand{
+			Name: c.Name,
+			Get:  c.Get,
+			Set:  c.Set,
+			Url:  serviceUrl,
+			Path: fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceResponse.Device.Name, V2Routes.Command, c.Name),
+		}
+	}
+	deviceCoreCommand = dtos.DeviceCoreCommand{
+		DeviceName:   deviceResponse.Device.Name,
+		ProfileName:  deviceResponse.Device.ProfileName,
+		CoreCommands: commands,
+	}
+	return deviceCoreCommand, nil
 }
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also

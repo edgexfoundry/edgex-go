@@ -27,6 +27,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 
 	// Command
 	cmd := commandController.NewCommandController(dic)
+	r.HandleFunc(v2Constant.ApiAllDeviceRoute, cmd.AllCommands).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiDeviceByNameRoute, cmd.CommandsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiDeviceNameCommandNameRoute, cmd.IssueGetCommandByName).Methods(http.MethodGet)
 

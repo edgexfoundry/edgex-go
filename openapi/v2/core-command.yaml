@@ -44,12 +44,21 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+    DeviceCoreCommand:
+      type: object
+      properties:
+        deviceName:
+          type: string
+        profileName:
+          type: string
+        coreCommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreCommand'
     CoreCommand:
       type: object
       properties:
         name:
-          type: string
-        deviceName:
           type: string
         get:
           type: boolean
@@ -59,19 +68,24 @@ components:
           type: string
         url:
           type: string
-      required:
-        - name
-        - deviceName
-    MultiCoreCommandsResponse:
+    DeviceCoreCommandResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for returning multiple CoreCommand to the caller."
+      description: "A response type for returning multiple DeviceCoreCommand to the caller."
       type: object
       properties:
-        coreCommands:
+        deviceCoreCommand:
+          $ref: '#/components/schemas/DeviceCoreCommand'
+    MultiDeviceCoreCommandsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "A response type for returning multiple DeviceCoreCommand to the caller."
+      type: object
+      properties:
+        deviceCoreCommands:
           type: array
           items:
-            $ref: '#/components/schemas/CoreCommand'
+            $ref: '#/components/schemas/DeviceCoreCommand'
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -355,29 +369,65 @@ components:
         requestId: ""
         statusCode: 400
         message: "Bad Request"
+    416Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v2"
         requestId: ""
         statusCode: 500
         message: "Internal Server Error"
-    MultiCoreCommandsExample:
+    DeviceCoreCommandExample:
       value:
         requestId: ""
         apiVersion: "v2"
         statusCode: 200
         message: ""
-        coreCommands:
-          - name: "coolingpoint1"
-            deviceName: "testDevice"
-            get: true
-            path: "/api/v2/device/name/testDevice/command/coolingpoint1"
-            url: "http://localhost:48082"
-          - name: "coolingpoint2"
-            deviceName: "testDevice"
-            set: true
-            path: "/api/v2/device/name/testDevice/command/coolingpoint2"
-            url: "http://localhost:48082"
+        deviceCoreCommand:
+          - deviceName: "testDevice"
+            profileName: "testProfile"
+            coreCommands:
+              - name: "coolingpoint1"
+                get: true
+                path: "/api/v2/device/name/testDevice/command/coolingpoint1"
+                url: "http://localhost:48082"
+              - name: "coolingpoint2"
+                set: true
+                path: "/api/v2/device/name/testDevice/command/coolingpoint2"
+                url: "http://localhost:48082"
+    MultiDeviceCoreCommandsExample:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 200
+        message: ""
+        deviceCoreCommands:
+          - deviceName: "testDevice1"
+            profileName: "testProfile"
+            coreCommands:
+            - name: "coolingpoint1"
+              get: true
+              path: "/api/v2/device/name/testDevice1/command/coolingpoint1"
+              url: "http://localhost:48082"
+            - name: "coolingpoint2"
+              set: true
+              path: "/api/v2/device/name/testDevice1/command/coolingpoint2"
+              url: "http://localhost:48082"
+          - deviceName: "testDevice2"
+            profileName: "testProfile"
+            coreCommands:
+            - name: "coolingpoint1"
+              get: true
+              path: "/api/v2/device/name/testDevice2/command/coolingpoint1"
+              url: "http://localhost:48082"
+            - name: "coolingpoint2"
+              set: true
+              path: "/api/v2/device/name/testDevice2/command/coolingpoint2"
+              url: "http://localhost:48082"
 paths:
   /device/name/{name}/{command}:
     parameters:
@@ -552,10 +602,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiCoreCommandsResponse'
+                $ref: '#/components/schemas/DeviceCoreCommandResponse'
               examples:
-                MultiCoreCommandsExample:
-                  $ref: '#/components/examples/MultiCoreCommandsExample'
+                DeviceCoreCommandExample:
+                  $ref: '#/components/examples/DeviceCoreCommandExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -580,7 +630,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Returns a paginated list of CommandResponses. The list contains all of the commands in the system associated with their respective device."
+      summary: "Returns a paginated list of MultiDeviceCoreCommandsResponse. The list contains all of the commands in the system associated with their respective device."
       responses:
         '200':
           description: "OK"
@@ -590,10 +640,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiCoreCommandsResponse'
+                $ref: '#/components/schemas/MultiDeviceCoreCommandsResponse'
               examples:
                 MultiCoreCommandsExample:
-                  $ref: '#/components/examples/MultiCoreCommandsExample'
+                  $ref: '#/components/examples/MultiDeviceCoreCommandsExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

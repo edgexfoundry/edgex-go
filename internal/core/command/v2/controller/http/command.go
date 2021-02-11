@@ -6,8 +6,10 @@
 package http
 
 import (
+	"math"
 	"net/http"
 
+	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/v2/application"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
@@ -32,6 +34,40 @@ func NewCommandController(dic *di.Container) *CommandController {
 	}
 }
 
+func (cc *CommandController) AllCommands(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(cc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := commandContainer.ConfigurationFrom(cc.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		commands, err := application.AllCommands(offset, limit, cc.dic)
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiDeviceCoreCommandsResponse("", "", http.StatusOK, commands)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
+	pkg.Encode(response, w, lc)
+}
+
 func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(cc.dic.Get)
 	ctx := r.Context()
@@ -44,14 +80,14 @@ func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http
 	var response interface{}
 	var statusCode int
 
-	commands, err := application.CommandsByDeviceName(name, cc.dic)
+	deviceCoreCommand, err := application.CommandsByDeviceName(name, cc.dic)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		response = responseDTO.NewMultiCoreCommandsResponse("", "", http.StatusOK, commands)
+		response = responseDTO.NewDeviceCoreCommandResponse("", "", http.StatusOK, deviceCoreCommand)
 		statusCode = http.StatusOK
 	}
 
