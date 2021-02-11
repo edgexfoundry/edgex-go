@@ -66,7 +66,7 @@ func Configure(ctx context.Context,
 		[]interfaces.BootstrapHandler{
 			handlers.SecureProviderBootstrapHandler,
 			redisBootstrapHdl.GetCredentials,
-			redisBootstrapHdl.SetupConfFile,
+			redisBootstrapHdl.SetupConfFiles,
 		},
 	)
 
