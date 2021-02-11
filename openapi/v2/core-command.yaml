@@ -55,9 +55,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreCommand'
-      required:
-        - deviceName
-        - profileName
     CoreCommand:
       type: object
       properties:
@@ -71,8 +68,6 @@ components:
           type: string
         url:
           type: string
-      required:
-        - name
     DeviceCoreCommandResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
