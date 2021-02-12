@@ -31,7 +31,7 @@ RUN apk add --update --no-cache zeromq-dev libsodium-dev pkgconfig build-base gi
 
 COPY go.mod .
 
-RUN go mod download
+#RUN go mod download
 
 COPY . .
 RUN make cmd/core-data/core-data

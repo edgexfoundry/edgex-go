@@ -66,11 +66,11 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	configuration := container.ConfigurationFrom(dic.Get)
 
 	var req internal.HttpCaller
-	if len(configuration.SecretService.CACertPath) > 0 {
+	if len(configuration.SecretStore.CACertPath) > 0 {
 		req = NewRequestor(
 			b.insecureSkipVerify,
 			configuration.RequestTimeout,
-			configuration.SecretService.CACertPath,
+			configuration.SecretStore.CACertPath,
 			lc)
 	} else {
 		req = NewRequestor(

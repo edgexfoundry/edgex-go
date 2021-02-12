@@ -30,7 +30,7 @@ RUN apk add --update --no-cache make git
 
 COPY go.mod .
 
-RUN go mod download
+#RUN go mod download
 
 COPY . .
 RUN make cmd/support-scheduler/support-scheduler

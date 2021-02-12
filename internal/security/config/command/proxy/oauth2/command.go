@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -45,7 +45,7 @@ func NewCommand(
 
 	cmd := cmd{
 		loggingClient: lc,
-		client:        secretstoreclient.NewRequestor(lc).Insecure(),
+		client:        pkg.NewRequester(lc).Insecure(),
 		configuration: configuration,
 	}
 	var dummy string
@@ -71,8 +71,8 @@ func NewCommand(
 }
 
 func (c *cmd) Execute() (statusCode int, err error) {
-	// Client credentialks grant: https://tools.ietf.org/html/rfc6749#section-4.4
-	// curk -k https://kong:8443/{service}/oauth2/token -d "grant_type=client_credentials" -d "scope=" -d "client_id=<clientid>" -d "client_secret=<clientsecret>"
+	// Client credentials grant: https://tools.ietf.org/html/rfc6749#section-4.4
+	// curl -k https://kong:8443/{service}/oauth2/token -d "grant_type=client_credentials" -d "scope=" -d "client_id=<clientid>" -d "client_secret=<clientsecret>"
 
 	clientCredentialsForm := url.Values{
 		"client_id":     []string{c.clientID},
@@ -93,7 +93,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to obtain OAuth2 token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

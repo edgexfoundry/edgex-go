@@ -16,15 +16,16 @@
 LogLevel = 'INFO'
 
 [SecretStore]
-Host = 'localhost'          ## Override in environment variables, if necessary
-ServerName = ''
-Port = 8200
+Type = 'vault'
 Protocol = 'http'
+Host = 'localhost'          ## Override in environment variables, if necessary
+Port = 8200
+Path = '/v1/secret/edgex/bootstrap-redis/'
+TokenFile = '/vault/config/assets/resp-init.json'
+RootCaCertPath = ''
+ServerName = ''
 AdditionalRetryAttempts = 10
 RetryWaitPeriod = '1s'
-Path = '/v1/secret/edgex/bootstrap-redis/'
-RootCaCertPath = ''
-TokenFile = '/vault/config/assets/resp-init.json'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
 

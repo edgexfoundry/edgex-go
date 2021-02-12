@@ -15,14 +15,22 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go.net v0.0.1 // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/lib/pq v1.9.0
+	github.com/mitchellh/gox v0.4.0 // indirect
+	github.com/mitchellh/iochan v1.0.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+replace (
+	github.com/edgexfoundry/go-mod-bootstrap/v2 => ../MODS/go-mod-bootstrap
+	github.com/edgexfoundry/go-mod-secrets/v2 => ../MODS/go-mod-secrets
 )
 
 go 1.15

@@ -18,14 +18,14 @@ package fileprovider
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 )
 
 // TokenProvider is the interface that the main program expects
 // for implemeneting token generation
 type TokenProvider interface {
 	// Set configuration
-	SetConfiguration(secretConfig secretstoreclient.SecretServiceInfo, tokenConfig config.TokenFileProviderInfo)
+	SetConfiguration(secretStore secretstoreConfig.SecretStoreInfo, tokenConfig config.TokenFileProviderInfo)
 	// Generate tokens
 	Run() error
 }

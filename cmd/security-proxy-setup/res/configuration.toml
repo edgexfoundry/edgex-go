@@ -37,13 +37,14 @@ OutputPath = "accessToken.json"
 Name = "acl"
 WhiteList = "admin"
 
-[SecretService]
+[SecretStore]
+Type = "vault"
 Protocol = "http"
-Server = "localhost"
+Host = "localhost"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
-CertPath = ""
 TokenPath = "res/resp-init.json"
+CertPath = ""
 CACertPath = ""
 SNIS = [""]
 

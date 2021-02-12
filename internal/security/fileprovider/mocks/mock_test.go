@@ -21,7 +21,8 @@ import (
 
 	. "github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -44,9 +45,9 @@ func TestMockRun(t *testing.T) {
 
 func TestMockSetConfiguration(t *testing.T) {
 	p := &MockTokenProvider{}
-	p.On("SetConfiguration", secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.On("SetConfiguration", secretStoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{})
 
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.SetConfiguration(secretStoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{})
 
 	p.AssertExpectations(t)
 }

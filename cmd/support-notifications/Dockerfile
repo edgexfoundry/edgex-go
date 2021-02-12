@@ -29,7 +29,7 @@ RUN apk add --update --no-cache make bash git ca-certificates
 
 COPY go.mod .
 
-RUN go mod download
+#RUN go mod download
 
 COPY . .
 RUN make cmd/support-notifications/support-notifications

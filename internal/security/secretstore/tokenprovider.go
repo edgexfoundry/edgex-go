@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,8 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
-//
 
 package secretstore
 
@@ -23,7 +21,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
@@ -34,7 +33,7 @@ type TokenProvider struct {
 	ctx           context.Context
 	execRunner    ExecRunner
 	initialized   bool
-	config        secretstoreclient.SecretServiceInfo
+	secretStore   config.SecretStoreInfo
 	resolvedPath  string
 }
 
@@ -48,17 +47,17 @@ func NewTokenProvider(ctx context.Context, lc logger.LoggingClient, execRunner E
 }
 
 // SetConfiguration parses token provider configuration and resolves paths specified therein
-func (p *TokenProvider) SetConfiguration(config secretstoreclient.SecretServiceInfo) error {
+func (p *TokenProvider) SetConfiguration(secretStore config.SecretStoreInfo) error {
 	var err error
-	p.config = config
-	if p.config.TokenProviderType != OneShotProvider {
-		err := fmt.Errorf("%s is not a supported TokenProviderType", p.config.TokenProviderType)
+	p.secretStore = secretStore
+	if p.secretStore.TokenProviderType != OneShotProvider {
+		err := fmt.Errorf("%s is not a supported TokenProviderType", p.secretStore.TokenProviderType)
 		p.loggingClient.Error(err.Error())
 		return err
 	}
-	resolvedPath, err := p.execRunner.LookPath(p.config.TokenProvider)
+	resolvedPath, err := p.execRunner.LookPath(p.secretStore.TokenProvider)
 	if err != nil {
-		p.loggingClient.Error(fmt.Sprintf("Failed to locate %s on PATH: %s", p.config.TokenProvider, err.Error()))
+		p.loggingClient.Error(fmt.Sprintf("Failed to locate %s on PATH: %s", p.secretStore.TokenProvider, err.Error()))
 		return err
 	}
 	p.initialized = true
@@ -73,8 +72,8 @@ func (p *TokenProvider) Launch() error {
 		return err
 	}
 
-	p.loggingClient.Info(fmt.Sprintf("Launching token provider %s with arguments %s", p.resolvedPath, strings.Join(p.config.TokenProviderArgs, " ")))
-	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, p.config.TokenProviderArgs...)
+	p.loggingClient.Info(fmt.Sprintf("Launching token provider %s with arguments %s", p.resolvedPath, strings.Join(p.secretStore.TokenProviderArgs, " ")))
+	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, p.secretStore.TokenProviderArgs...)
 	if err := cmd.Start(); err != nil {
 		// For example, this might occur if a shared library was missing
 		p.loggingClient.Error(fmt.Sprintf("%s failed to launch: %s", p.resolvedPath, err.Error()))

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -12,7 +12,7 @@ import (
 
 	. "github.com/edgexfoundry/edgex-go/internal/security/kdf/mocks"
 	. "github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
 
@@ -48,7 +48,7 @@ func TestVMKEncryption(t *testing.T) {
 	kdf := &MockKeyDeriver{}
 	kdf.On("DeriveKey", make([]byte, 512), uint(32), "vault0").Return(make([]byte, 32), nil)
 	kdf.On("DeriveKey", make([]byte, 512), uint(32), "vault1").Return(make([]byte, 32), nil)
-	initialInitResp := secretstoreclient.InitResponse{
+	initialInitResp := types.InitResponse{
 		Keys:       []string{"aabbcc", "ddeeff"},
 		KeysBase64: []string{"qrvM", "3e7/"},
 	}
@@ -59,10 +59,10 @@ func TestVMKEncryption(t *testing.T) {
 	err := vmkEncryption.LoadIKM("/bin/myikm")
 	require.NoError(t, err)
 
-	err = vmkEncryption.EncryptInitResponse(&initResp)
+	initResp, err = vmkEncryption.EncryptInitResponse(initResp)
 	require.NoError(t, err)
 
-	err = vmkEncryption.DecryptInitResponse(&initResp)
+	initResp, err = vmkEncryption.DecryptInitResponse(initResp)
 	require.NoError(t, err)
 	require.Equal(t, initialInitResp, initResp)
 
@@ -81,7 +81,7 @@ func TestVMKEncryptionFailPath(t *testing.T) {
 	pipedHexReader := &MockPipedHexReader{}
 	pipedHexReader.On("ReadHexBytesFromExe", "/bin/myikm").Return(fakeIkm, errors.New("error"))
 	kdf := &MockKeyDeriver{}
-	initialInitResp := secretstoreclient.InitResponse{
+	initialInitResp := types.InitResponse{
 		Keys: []string{"aabbcc", "ddeeff"},
 	}
 	initResp := initialInitResp
@@ -91,13 +91,11 @@ func TestVMKEncryptionFailPath(t *testing.T) {
 	err := vmkEncryption.LoadIKM("/bin/myikm")
 	require.Error(t, err)
 
-	err = vmkEncryption.EncryptInitResponse(&initResp)
+	initResp, err = vmkEncryption.EncryptInitResponse(initResp)
 	require.Error(t, err)
-	require.Equal(t, initialInitResp, initResp)
 
-	err = vmkEncryption.DecryptInitResponse(&initResp)
+	initResp, err = vmkEncryption.DecryptInitResponse(initResp)
 	require.Error(t, err)
-	require.Equal(t, initialInitResp, initResp)
 
 	vmkEncryption.WipeIKM()
 

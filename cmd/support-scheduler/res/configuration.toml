@@ -60,13 +60,14 @@ Type = 'consul'
     Interval = 'midnight'
 
 [SecretStore]
+Type = 'vault'
+Protocol = 'http'
 Host = 'localhost'
 Port = 8200
 Path = '/v1/secret/edgex/scheduler/'
-Protocol = 'http'
+TokenFile = '/vault/config/assets/resp-init.json'
 RootCaCertPath = ''
 ServerName = ''
-TokenFile = '/vault/config/assets/resp-init.json'
 # Number of attempts to retry retrieving secrets before failing to start the service.
 AdditionalRetryAttempts = 10
 # Amount of time to wait before attempting another retry

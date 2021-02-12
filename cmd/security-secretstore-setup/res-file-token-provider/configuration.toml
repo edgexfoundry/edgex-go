@@ -1,10 +1,11 @@
 LogLevel = 'DEBUG'
 
-[SecretService]
+[SecretStore]
+Type = "vault"
 Protocol = "http"
-Server = "edgex-vault"
-ServerName = ""
+Host = "edgex-vault"
 Port = 8200
+ServerName = ""
 CaFilePath = ""
 
 [TokenFileProvider]

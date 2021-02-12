@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -49,7 +49,7 @@ func (p *PasswordProvider) SetConfiguration(passwordProvider string, passwordPro
 	return nil
 }
 
-// Generate retrives the password from the tool
+// Generate retrieves the password from the tool
 func (p *PasswordProvider) Generate(ctx context.Context) (string, error) {
 	var outputBuffer bytes.Buffer
 

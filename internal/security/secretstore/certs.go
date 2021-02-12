@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2021 Intel Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -105,7 +106,7 @@ func (cs *Certs) retrieve() (*CertPair, error) {
 		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	cc := CertCollect{}
 
@@ -127,7 +128,7 @@ func (cs *Certs) retrieve() (*CertPair, error) {
 	return &cc.Pair, nil
 }
 
-func (cs *Certs) AlreadyinStore() (bool, error) {
+func (cs *Certs) AlreadyInStore() (bool, error) {
 	cp, err := cs.getCertPair()
 	if err != nil {
 		if err == errNotFound {
@@ -194,7 +195,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 		cs.loggingClient.Error(e)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)
