@@ -9,7 +9,7 @@ require (
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.1
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.34
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.2
-	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.1
+	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.3
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.5
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -20,7 +20,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
