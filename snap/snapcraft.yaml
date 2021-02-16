@@ -488,40 +488,16 @@ parts:
     plugin: dump
     # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
+    build-snaps:
+      - go/1.15/stable
     prime: [-*]
 
   config-common:
     plugin: dump
     source: snap/local/runtime-helpers
 
-  go115:
-    plugin: nil
-    source: snap/local/build-helpers
-    override-build: |
-      # use dpkg architecture to figure out our target arch
-      # note - we specifically don't use arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=go1.15.2.linux-amd64.tar.gz
-          FILE_HASH=b49fda1ca29a1946d6bb2a5a6982cf07ccd2aba849289508ee0f9918f6bb4552
-          ;;
-        arm64)
-          FILE_NAME=go1.15.2.linux-arm64.tar.gz
-          FILE_HASH=c8ec460cc82d61604b048f9439c06bd591722efce5cd48f49e19b5f6226bd36d
-          ;;
-      esac
-      # download the archive, failing on ssl cert problems
-      curl https://dl.google.com/go/$FILE_NAME -O
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      mkdir -p $SNAPCRAFT_STAGE/go1.15
-      tar -C $SNAPCRAFT_STAGE/go1.15 -xf "$FILE_NAME" --strip-components=1
-    prime:
-      - "-*"
-    after: [go-build-helper]
-
   consul:
-    after: [go115]
+    after: [go-build-helper]
     plugin: make
     source: https://github.com/hashicorp/consul.git
     source-tag: v1.8.4
@@ -543,7 +519,7 @@ parts:
       fi
 
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/consul 1.15
+      gopartbootstrap github.com/hashicorp/consul
       export GO111MODULES=off
       go get -u github.com/kardianos/govendor
       govendor install
@@ -586,9 +562,8 @@ parts:
   edgex-go:
     source: .
     plugin: make
-    after: [go115]
+    after: [go-build-helper]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
       cd $SNAPCRAFT_PART_SRC
 
       make build
@@ -688,14 +663,14 @@ parts:
 
   # SECURITY SERVICES PARTS
   vault:
-    after: [go115]
+    after: [go-build-helper]
     plugin: make
     source: https://github.com/hashicorp/vault.git
     source-tag: v1.5.4
     source-depth: 1
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/vault 1.15
+      gopartbootstrap github.com/hashicorp/vault
       export GO111MODULES=off
       make bootstrap
       make dev
@@ -738,10 +713,8 @@ parts:
     source-depth: 1
     source-tag: v1.2.1
     plugin: make
-    after: [go115]
+    after: [go-build-helper]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
-      cd $SNAPCRAFT_PART_SRC
       # create VERSION file (supposed to be created by jenkins pipeline...)
       echo "1.2.1" > ./VERSION
       make build
@@ -767,10 +740,8 @@ parts:
     plugin: make
     build-packages: [gcc, git, libzmq3-dev, pkg-config]
     stage-packages: [libzmq5]
-    after: [go115]
+    after: [go-build-helper]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
-      cd $SNAPCRAFT_PART_SRC
       make build
 
       # install the service binary, configuration, and license files
@@ -787,11 +758,8 @@ parts:
     source: https://github.com/emqx/kuiper.git
     source-tag: 0.4.1
     plugin: make
-    after: [go115]
+    after: [go-build-helper]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
-
-      cd $SNAPCRAFT_PART_SRC
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD
       export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
       make build_with_edgex
