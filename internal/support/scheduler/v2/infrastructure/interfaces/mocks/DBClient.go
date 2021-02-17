@@ -42,3 +42,26 @@ func (_m *DBClient) AddInterval(e models.Interval) (models.Interval, errors.Edge
 func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
+
+// IntervalByName provides a mock function with given fields: name
+func (_m *DBClient) IntervalByName(name string) (models.Interval, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.Interval
+	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.Interval)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}

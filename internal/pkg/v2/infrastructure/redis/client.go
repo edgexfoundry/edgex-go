@@ -686,6 +686,18 @@ func (c *Client) AddInterval(interval model.Interval) (model.Interval, errors.Ed
 	return addInterval(conn, interval)
 }
 
+// IntervalByName gets a interval by name
+func (c *Client) IntervalByName(name string) (interval model.Interval, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	interval, edgeXerr = intervalByName(conn, name)
+	if edgeXerr != nil {
+		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
