@@ -35,7 +35,9 @@ func addDeviceCallback(ctx context.Context, dic *di.Container, device dtos.Devic
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", device.ServiceName, err)
 	}
-	response, err := deviceServiceCallbackClient.AddDeviceCallback(ctx, requests.AddDeviceRequest{Device: device})
+
+	request := requests.NewAddDeviceRequest(device)
+	response, err := deviceServiceCallbackClient.AddDeviceCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for adding device %s, err: %v", device.Name, err)
 	}
@@ -51,8 +53,9 @@ func updateDeviceCallback(ctx context.Context, dic *di.Container, serviceName st
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
 	}
-	updateDevice := dtos.FromDeviceModelToUpdateDTO(device)
-	response, err := deviceServiceCallbackClient.UpdateDeviceCallback(ctx, requests.UpdateDeviceRequest{Device: updateDevice})
+
+	request := requests.NewUpdateDeviceRequest(dtos.FromDeviceModelToUpdateDTO(device))
+	response, err := deviceServiceCallbackClient.UpdateDeviceCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating device %s, err: %v", device.Name, err)
 		return
@@ -98,7 +101,9 @@ func updateDeviceProfileCallback(ctx context.Context, dic *di.Container, deviceP
 		if err != nil {
 			lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", d.ServiceName, err)
 		}
-		response, err := deviceServiceCallbackClient.UpdateDeviceProfileCallback(ctx, requests.DeviceProfileRequest{Profile: deviceProfile})
+
+		request := requests.NewDeviceProfileRequest(deviceProfile)
+		response, err := deviceServiceCallbackClient.UpdateDeviceProfileCallback(ctx, request)
 		if err != nil {
 			lc.Errorf("fail to invoke device service callback for updating device profile %s, err: %v", deviceProfile.Name, err)
 			return
@@ -116,7 +121,9 @@ func addProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw dtos
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
 	}
-	response, err := deviceServiceCallbackClient.AddProvisionWatcherCallback(ctx, requests.AddProvisionWatcherRequest{ProvisionWatcher: pw})
+
+	request := requests.NewAddProvisionWatcherRequest(pw)
+	response, err := deviceServiceCallbackClient.AddProvisionWatcherCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for adding  provision watcher %s, err: %v", pw.Name, err)
 	}
@@ -132,8 +139,9 @@ func updateProvisionWatcherCallback(ctx context.Context, dic *di.Container, serv
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
 	}
-	dto := dtos.FromProvisionWatcherModelToUpdateDTO(pw)
-	response, err := deviceServiceCallbackClient.UpdateProvisionWatcherCallback(ctx, requests.UpdateProvisionWatcherRequest{ProvisionWatcher: dto})
+
+	request := requests.NewUpdateProvisionWatcherRequest(dtos.FromProvisionWatcherModelToUpdateDTO(pw))
+	response, err := deviceServiceCallbackClient.UpdateProvisionWatcherCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating provision watcher %s, err: %v", pw.Name, err)
 		return
@@ -167,8 +175,9 @@ func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds mode
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", ds.Name, err)
 	}
-	dto := dtos.FromDeviceServiceModelToUpdateDTO(ds)
-	response, err := deviceServiceCallbackClient.UpdateDeviceServiceCallback(ctx, requests.UpdateDeviceServiceRequest{Service: dto})
+
+	request := requests.NewUpdateDeviceServiceRequest(dtos.FromDeviceServiceModelToUpdateDTO(ds))
+	response, err := deviceServiceCallbackClient.UpdateDeviceServiceCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %v", ds.Name, err)
 	}
