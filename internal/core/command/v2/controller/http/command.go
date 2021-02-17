@@ -127,3 +127,39 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }
+
+func (cc *CommandController) IssueSetCommandByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(cc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	deviceName := vars[v2.Name]
+	commandName := vars[v2.Command]
+
+	// Query params
+	queryParams := r.URL.RawQuery
+
+	var response commonDTO.BaseResponse
+	var statusCode int
+
+	// Request body
+	settings, err := utils.ParseBodyToMap(r)
+	if err == nil {
+		response, err = application.IssueSetCommandByName(deviceName, commandName, queryParams, settings, cc.dic)
+	}
+
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		statusCode = response.StatusCode
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	// encode and send out the response
+	pkg.Encode(response, w, lc)
+}
