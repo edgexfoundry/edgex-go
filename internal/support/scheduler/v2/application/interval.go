@@ -14,6 +14,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -33,4 +34,18 @@ func AddInterval(d models.Interval, ctx context.Context, dic *di.Container) (id 
 		correlation.FromContext(ctx))
 
 	return addedInterval.Id, nil
+}
+
+// IntervalByName query the interval by name
+func IntervalByName(name string, ctx context.Context, dic *di.Container) (dto dtos.Interval, edgeXerr errors.EdgeX) {
+	if name == "" {
+		return dto, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	interval, err := dbClient.IntervalByName(name)
+	if err != nil {
+		return dto, errors.NewCommonEdgeXWrapper(err)
+	}
+	dto = dtos.FromIntervalModelToDTO(interval)
+	return dto, nil
 }

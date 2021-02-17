@@ -67,3 +67,12 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 
 	return interval, edgeXerr
 }
+
+// intervalByName query interval by name from DB
+func intervalByName(conn redis.Conn, name string) (interval models.Interval, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, IntervalCollectionName, name, &interval)
+	if edgeXerr != nil {
+		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
