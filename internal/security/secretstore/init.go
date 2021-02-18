@@ -1,6 +1,6 @@
 /*******************************************************************************
+ * Copyright 2021 Intel Corporation
  * Copyright 2019 Dell Inc.
- * Copyright 2021 Intel Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -317,8 +317,16 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Enable KV secret engine
-	if err := enableKVSecretsEngine(lc, client, rootToken); err != nil {
-		lc.Errorf("failed to enable KV secrets engine: %s", err.Error())
+	if err := secretsengine.New(KVSecretsEngineMountPoint, secretstoreclient.KeyValue).
+		Enable(&rootToken, lc, vc); err != nil {
+		lc.Error(fmt.Sprintf("failed to enable KV secrets engine: %s", err.Error()))
+		os.Exit(1)
+	}
+
+	// Enable Consul secret engine
+	if err := secretsengine.New(ConsulSecretEngineMountPoint, secretstoreclient.Consul).
+		Enable(&rootToken, lc, vc); err != nil {
+		lc.Error(fmt.Sprintf("failed to enable Consul secrets engine: %s", err.Error()))
 		os.Exit(1)
 	}
 
@@ -526,30 +534,6 @@ func makeTokenIssuingToken(
 	}
 
 	return revokeIssuingTokenFuc, nil
-}
-
-func enableKVSecretsEngine(
-	lc logger.LoggingClient,
-	client secrets.SecretStoreClient,
-	rootToken string) error {
-
-	installed, err := client.CheckSecretEngineInstalled(rootToken, "secret/", "kv")
-	if err != nil {
-		lc.Errorf("failed call to check if kv secrets engine is installed: %s", err.Error())
-		return err
-	}
-	if !installed {
-		lc.Info("enabling KV secrets engine for the first time...")
-		// Enable KV version 1 at /v1/secret path (/v1 prefix supplied by Vault)
-		err := client.EnableKVSecretEngine(rootToken, "secret", "1")
-		if err != nil {
-			lc.Errorf("failed call to enable KV secrets engine: %s", err.Error())
-			return err
-		}
-	} else {
-		lc.Info("KV secrets engine already enabled...")
-	}
-	return nil
 }
 
 func loadInitResponse(
