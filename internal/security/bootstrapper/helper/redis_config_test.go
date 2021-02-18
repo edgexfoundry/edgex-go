@@ -17,27 +17,25 @@ package helper
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateConfig(t *testing.T) {
+func TestGenerateRedisConfig(t *testing.T) {
 	testConfFile := "testConfFile"
-	confFile, err := os.OpenFile(testConfFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	testACLFile := "testACLFile"
+	confFile, err := os.OpenFile(testConfFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	require.NoError(t, err)
 	defer func() {
 		_ = confFile.Close()
 		_ = os.RemoveAll(testConfFile)
 	}()
 
-	fw := bufio.NewWriter(confFile)
-	testFakePwd := "123456abcdefg!@#$%^&"
-
-	err = GenerateConfig(fw, &testFakePwd)
-	require.NoError(t, err)
-	err = fw.Flush()
+	err = GenerateRedisConfig(confFile, testACLFile)
 	require.NoError(t, err)
 
 	inputFile, err := os.Open(testConfFile)
@@ -49,10 +47,43 @@ func TestGenerateConfig(t *testing.T) {
 	// Read until a newline for each Scan
 	for inputScanner.Scan() {
 		line := inputScanner.Text()
-		require.Contains(t, line, testFakePwd)
 		outputlines = append(outputlines, line)
 	}
-	require.Equal(t, 2, len(outputlines))
-	require.Equal(t, "user default on allkeys +@all -@dangerous >"+testFakePwd, outputlines[0])
-	require.Equal(t, "requirepass "+testFakePwd, outputlines[1])
+
+	require.Equal(t, 1, len(outputlines))
+	require.Equal(t, "aclfile "+testACLFile, outputlines[0])
+}
+
+func TestGenerateACLConfig(t *testing.T) {
+	testACLFile := "testACLFile"
+	aclFile, err := os.OpenFile(testACLFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	require.NoError(t, err)
+	defer func() {
+		_ = aclFile.Close()
+		_ = os.RemoveAll(testACLFile)
+	}()
+
+	testFakePwd := "123456abcdefg!@#$%^&"
+
+	err = GenerateACLConfig(aclFile, &testFakePwd)
+	require.NoError(t, err)
+
+	inputFile, err := os.Open(testACLFile)
+	require.NoError(t, err)
+	defer inputFile.Close()
+	inputScanner := bufio.NewScanner(inputFile)
+	inputScanner.Split(bufio.ScanLines)
+	var outputlines []string
+	// Read until a newline for each Scan
+	for inputScanner.Scan() {
+		line := inputScanner.Text()
+		outputlines = append(outputlines, line)
+	}
+
+	require.Equal(t, 1, len(outputlines))
+	require.Equal(t, fmt.Sprintf("user default on allkeys +@all -@dangerous #%x",
+		sha256.Sum256([]byte(testFakePwd))), outputlines[0])
+	// should not be equal if use different password
+	require.NotEqual(t, fmt.Sprintf("user default on allkeys +@all -@dangerous #%x",
+		sha256.Sum256([]byte("differentPassword"))), outputlines[0])
 }

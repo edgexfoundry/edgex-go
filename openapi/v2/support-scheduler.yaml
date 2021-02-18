@@ -15,23 +15,10 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        end:
-          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
-          type: string
-        frequency:
-          description: "The frequency of the event according ISO 8601"
-          type: string
-        name:
-          description: "Non-database identifier for an interval (*must be unique)"
-          type: string
-        runOnce:
-          description: "Indicates that this interval runs one time - at the time indicated by the start"
-          type: boolean
-        start:
-          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
-          type: string
+        interval:
+          $ref: '#/components/schemas/Interval'
       required:
-      - name
+      - interval
     AddIntervalResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -47,49 +34,10 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        host:
-          description: "The host targeted by the action"
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used when the action targets a REST endpoint."
-          type: string
-        intervalId:
-          description: "The ID of the interval to which the action is associated."
-          type: string
-          format: uuid
-        name:
-          description: "Non-database identifier for an interval action"
-          type: string
-        parameters:
-          description: "Any parameters required by the action"
-          type: string
-        password:
-          description: "If authentication is required, the password"
-          type: string
-        path:
-          description: "The required path at the targeted host for fulfillment of the action."
-          type: string
-        port:
-          description: "The port to address on the targeted host"
-          type: integer
-        protocol:
-          description: "Identifies the protocol required by the action"
-          type: string
-        publisher:
-          type: string
-        target:
-          description: "The target of the action"
-          type: string
-        topic:
-          description: "When the action supports pub/sub the topic to which a message should be published."
-          type: string
-        user:
-          description: "If authentication is required, the username"
-          type: string
+        action:
+          $ref: '#/components/schemas/IntervalAction'
       required:
-      - intervalId
-      - name
-      - target
+      - action
     AddIntervalActionResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -153,6 +101,8 @@ components:
       description: "Defines the frequency at which some action should occur."
       type: object
       properties:
+        apiVersion:
+          type: string
         created:
           description: "A timestamp indicating when the interval was created."
           type: integer
@@ -182,6 +132,8 @@ components:
       description: "Defines the action to be taken at a specified interval."
       type: object
       properties:
+        apiVersion:
+          type: string
         created:
           description: "A timestamp indicating when the interval action was created."
           type: integer
@@ -267,35 +219,33 @@ components:
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
         metrics:
           type: object
           properties:
-            apiVersion:
-              description: "A version number shows the API version in DTOs."
-              type: string
-              example: v2
-            metrics:
-              memAlloc:
-                description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
-                type: integer
-              memFrees:
-                description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
-                type: integer
-              memLiveObjects:
-                description: "The uint64 type integer of live objects is Mallocs - Frees."
-                type: integer
-              memMallocs:
-                description: "The cumulative count of heap objects allocated which is a uint64 type integer."
-                type: integer
-              memSys:
-                description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
-                type: integer
-              memTotalAlloc:
-                description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
-                type: integer
-              cpuBusyAvg:
-                description: "A uint8 type integer indicates the average level of CPU utilization"
-                type: number
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed."
+              type: integer
+            memLiveObjects:
+              description: "The number of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS."
+              type: integer
+            memTotalAlloc:
+              description: "Cumulative bytes allocated for heap objects."
+              type: integer
+            cpuBusyAvg:
+              description: "Indicates the average level of CPU utilization"
+              type: number
     PingResponse:
       type: object
       properties:

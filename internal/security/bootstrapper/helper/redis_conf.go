@@ -16,8 +16,10 @@
 package helper
 
 import (
+	"bufio"
+	"crypto/sha256"
 	"fmt"
-	"io"
+	"os"
 	"text/template"
 )
 
@@ -55,9 +57,6 @@ import (
 #  allcommands  Alias for +@all. Note that it implies the ability to execute
 #               all the future commands loaded via the modules system.
 #  allkeys      Alias for ~*
-#  ><password>  Add this password to the list of valid password for the user.
-#               For example >mypass will add "mypass" to the list.
-#               This directive clears the "nopass" flag (see later).
 #
 # ACL rules can be specified in any order: for instance you can start with
 # passwords, then flags, or key patterns. However note that the additive
@@ -68,13 +67,20 @@ import (
 # For more information about ACL configuration please refer to
 # the Redis web site at https://redis.io/topics/acl
 #
-# IMPORTANT NOTE: starting with Redis 6 "requirepass" is just a compatibility
-# layer on top of the new ACL system. The option effect will be just setting
-# the password for the default user. Clients will still authenticate using
-# AUTH <password> as usually, or more explicitly with AUTH default <password>
-# if they follow the new protocol: both will work.
 #
-# requirepass foobared
+#
+# Using an external ACL file
+#
+# Instead of configuring users here in this file, it is possible to use
+# a stand-alone file just listing users. The two methods cannot be mixed:
+# if you configure users here and at the same time you activate the external
+# ACL file, the server will refuse to start.
+#
+# The format of the external ACL user file is exactly the same as the
+# format that is used inside redis.conf to describe users.
+#
+# aclfile /etc/redis/users.acl
+#
 *
 * For EdgeX's use case today, the ACL rules are defined in a template as seen in
 * the following constant aclDefaultUserTemplate.
@@ -82,43 +88,72 @@ import (
 *   1) allkeys: it allows the user to access all the keys
 *   2) +@all: this is an alias for allcommands and + means to allow
 *   3) -@dangerous: disallow all the commands that are tagged as dangerous inside the Redis command table
-*   4) >{{.RedisPwd}}: add the dynamically injected password for this user
+*   4) #{{.Sha256RedisPwd}}: add the dynamically injected SHA-256 hashed password for this user
 *
+* We do not use "requirepass" directive any more since hashed password already specified in the ACL rule
+* for that user.
 *
 */
 
 const (
-	// aclDefaultUserTemplate is the ACL rule for "default" user
-	aclDefaultUserTemplate = "user default on allkeys +@all -@dangerous >{{.RedisPwd}}"
+	// the default user name from redis built-in
+	redisDefaultUser = "default"
 
-	// requirePassTemplate is the authenticate password for "default" user
-	requirePassTemplate = "requirepass {{.RedisPwd}}"
+	// aclFileConfigTemplate is the external acl file for redis config
+	aclFileConfigTemplate = "aclfile {{.ACLFilePath}}"
+
+	// aclDefaultUserTemplate is the ACL rule for "default" user
+	aclDefaultUserTemplate = "user {{.RedisUser}} on allkeys +@all -@dangerous #{{.Sha256RedisPwd}}"
 )
 
-// GenerateConfig writes the redis config based on the pre-defined templates
-func GenerateConfig(wr io.Writer, pwd *string) error {
+// GenerateRedisConfig writes the startup configuration of Redis server based on pre-defined template
+func GenerateRedisConfig(confFile *os.File, aclfilePath string) error {
+	aclfile, err := template.New("redis-conf").Parse(aclFileConfigTemplate + fmt.Sprintln())
+	if err != nil {
+		return fmt.Errorf("failed to parse Redis conf template %s: %v", aclFileConfigTemplate, err)
+	}
+
+	// writing the config file
+	fwriter := bufio.NewWriter(confFile)
+	if err := aclfile.Execute(fwriter, map[string]interface{}{
+		"ACLFilePath": aclfilePath,
+	}); err != nil {
+		return fmt.Errorf("failed to execute external ACL file for config %s: %v", aclFileConfigTemplate, err)
+	}
+
+	if err := fwriter.Flush(); err != nil {
+		return fmt.Errorf("failed to flush the config file writer buffer %v", err)
+	}
+
+	return nil
+}
+
+// GenerateACLConfig writes the redis ACL file based on the pre-defined templates
+func GenerateACLConfig(aclFile *os.File, pwd *string) error {
+	// the metadata for Redis ACL file
+	type redisACL struct {
+		RedisUser      string
+		Sha256RedisPwd string
+	}
+
 	acl, err := template.New("redis-acl").Parse(aclDefaultUserTemplate + fmt.Sprintln())
 	if err != nil {
 		return fmt.Errorf("failed to parse ACL template %s: %v", aclDefaultUserTemplate, err)
 	}
 
+	hashed256 := sha256.Sum256([]byte(*pwd))
+
 	// writing the ACL rules:
-	if err := acl.Execute(wr, map[string]interface{}{
-		"RedisPwd": pwd,
+	fwriter := bufio.NewWriter(aclFile)
+	if err := acl.Execute(fwriter, redisACL{
+		RedisUser:      redisDefaultUser,
+		Sha256RedisPwd: fmt.Sprintf("%x", hashed256),
 	}); err != nil {
 		return fmt.Errorf("failed to execute ACL for config %s: %v", aclDefaultUserTemplate, err)
 	}
 
-	// writing the required pwd:
-	requirePass, err := template.New("redis-require-pass").Parse(requirePassTemplate + fmt.Sprintln())
-	if err != nil {
-		return fmt.Errorf("failed to parse requirePass template %s: %v", requirePassTemplate, err)
-	}
-
-	if err := requirePass.Execute(wr, map[string]interface{}{
-		"RedisPwd": pwd,
-	}); err != nil {
-		return fmt.Errorf("failed to execute requirePass for config %s: %v", requirePassTemplate, err)
+	if err := fwriter.Flush(); err != nil {
+		return fmt.Errorf("failed to flush the ACL file writer buffer %v", err)
 	}
 
 	return nil

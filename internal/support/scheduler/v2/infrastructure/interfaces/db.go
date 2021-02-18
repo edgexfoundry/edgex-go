@@ -14,4 +14,5 @@ type DBClient interface {
 	CloseSession()
 
 	AddInterval(e model.Interval) (model.Interval, errors.EdgeX)
+	IntervalByName(name string) (model.Interval, errors.EdgeX)
 }
