@@ -6,6 +6,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -64,6 +65,13 @@ func NewMockDIC() *di.Container {
 			return logger.NewMockClient()
 		},
 	})
+}
+
+func buildTestSettings() map[string]string {
+	var settings = make(map[string]string)
+	settings["AHU-TargetTemperature"] = "28.5"
+	settings["AHU-TargetBand"] = "4.0"
+	return settings
 }
 
 func buildDeviceCoreCommands(device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
@@ -314,7 +322,7 @@ func TestCommandsByDeviceName(t *testing.T) {
 	}
 }
 
-func TestIssueReadCommand(t *testing.T) {
+func TestIssueGetCommand(t *testing.T) {
 	var nonExistName = "nonExist"
 
 	expectedEventResponse := buildEventResponse()
@@ -391,6 +399,88 @@ func TestIssueReadCommand(t *testing.T) {
 				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestIssueSetCommand(t *testing.T) {
+	var nonExistName = "nonExist"
+
+	expectedBaseResponse := common.NewBaseResponse("", "", http.StatusOK)
+	expectedDeviceResponse := buildDeviceResponse()
+	expectedDeviceServiceResponse := buildDeviceServiceResponse()
+
+	dcMock := &mocks.DeviceClient{}
+	dcMock.On("DeviceByName", context.Background(), testDeviceName).Return(expectedDeviceResponse, nil)
+	dcMock.On("DeviceByName", context.Background(), nonExistName).Return(responseDTO.DeviceResponse{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "fail to query device by name", nil))
+
+	dscMock := &mocks.DeviceServiceClient{}
+	dscMock.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(expectedDeviceServiceResponse, nil)
+
+	testSettings := buildTestSettings()
+	testSettingsJsonStr, _ := json.Marshal(testSettings)
+	dsccMock := &mocks.DeviceServiceCommandClient{}
+	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, testSettings).Return(expectedBaseResponse, nil)
+	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "", testSettings).Return(expectedBaseResponse, nil)
+	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, "").Return(common.BaseResponse{}, errors.NewCommonEdgeX(errors.KindServerError, "no request body provided for PUT command", nil))
+	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings, testSettings).Return(common.BaseResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "no corresponding PUT command", nil))
+
+	dic := NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+			return dcMock
+		},
+		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+			return dscMock
+		},
+		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+			return dsccMock
+		},
+	})
+	cc := NewCommandController(dic)
+	assert.NotNil(t, cc)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		commandName        string
+		queryStrings       string
+		settings           []byte
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - execute set command with valid deviceName, commandName, query strings, and settings", testDeviceName, testCommandName, testQueryStrings, testSettingsJsonStr, false, http.StatusOK},
+		{"Valid - empty query strings", testDeviceName, testCommandName, "", testSettingsJsonStr, false, http.StatusOK},
+		{"Invalid - execute set command with invalid deviceName", nonExistName, testCommandName, testQueryStrings, testSettingsJsonStr, true, http.StatusNotFound},
+		{"Invalid - execute set command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
+		{"Invalid - empty device name", "", testCommandName, testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
+		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
+		{"Invalid - empty settings", testDeviceName, testCommandName, testQueryStrings, []byte{}, true, http.StatusInternalServerError},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPut, v2.ApiDeviceNameCommandNameRoute, bytes.NewBuffer(testCase.settings))
+			req.URL.RawQuery = testCase.queryStrings
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.deviceName, v2.Command: testCase.commandName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(cc.IssueSetCommandByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.errorExpected {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

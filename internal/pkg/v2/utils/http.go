@@ -7,7 +7,9 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,5 +128,21 @@ func ParsePathParamToInt(r *http.Request, pathKey string) (int, errors.EdgeX) {
 	if parsingErr != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse path param %s's value %s into integer. Error:%s", pathKey, val, parsingErr.Error()), nil)
 	}
+	return result, nil
+}
+
+// Parse the body of http request to a map[string]string.  EdgeX error will be returned if any parsing error occurs.
+func ParseBodyToMap(r *http.Request) (map[string]string, errors.EdgeX) {
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "failed to read request body", err)
+	}
+
+	var result map[string]string
+	if err = json.Unmarshal(body, &result); err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "failed to parse request body", err)
+	}
+
 	return result, nil
 }
