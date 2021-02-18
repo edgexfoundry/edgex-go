@@ -23,6 +23,11 @@ import (
 )
 
 const (
+	// KVSecretsEngineMountPoint is the name of the mount point base for Vault's key-value secrets engine
+	KVSecretsEngineMountPoint = "secret"
+	// ConsulSecretEngineMountPoint is the name of the mount point base for Vault's Consul secrets engine
+	ConsulSecretEngineMountPoint = "consul"
+
 	// Vault's secrets engine type related constants
 	KeyValue = "kv"
 	Consul   = "consul"

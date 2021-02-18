@@ -38,6 +38,7 @@ TokenProviderAdminTokenPath = "/run/edgex/secrets/tokenprovider/secrets-token.js
 PasswordProvider = ""
 PasswordProviderArgs = [ ]
 RevokeRootTokens = true
+ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
 
 [Databases]
   [Databases.admin]

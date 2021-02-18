@@ -19,10 +19,8 @@
 package secretstore
 
 const (
-	// KVSecretsEngineMountPoint is the name of the mount point base for Vault's key-value secrets engine
-	KVSecretsEngineMountPoint = "secret"
-	// ConsulSecretEngineMountPoint is the name of the mount point base for Vault's Consul secrets engine
-	ConsulSecretEngineMountPoint = "consul"
+	// this is a feature key to indicate whether to enable Registry Consul's ACL or not
+	RegistryACLFeatureFlag = "ENABLE_REGISTRY_ACL"
 
 	VaultToken             = "X-Vault-Token"
 	TokenCreatorPolicyName = "privileged-token-creator"
