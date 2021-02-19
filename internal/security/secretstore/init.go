@@ -34,9 +34,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
-	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -44,7 +42,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 )
 
 type Bootstrap struct {
@@ -317,16 +318,16 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Enable KV secret engine
-	if err := secretsengine.New(KVSecretsEngineMountPoint, secretstoreclient.KeyValue).
-		Enable(&rootToken, lc, vc); err != nil {
-		lc.Error(fmt.Sprintf("failed to enable KV secrets engine: %s", err.Error()))
+	if err := secretsengine.New(KVSecretsEngineMountPoint, secretsengine.KeyValue).
+		Enable(&rootToken, lc, client); err != nil {
+		lc.Errorf("failed to enable KV secrets engine: %s", err.Error())
 		os.Exit(1)
 	}
 
 	// Enable Consul secret engine
-	if err := secretsengine.New(ConsulSecretEngineMountPoint, secretstoreclient.Consul).
-		Enable(&rootToken, lc, vc); err != nil {
-		lc.Error(fmt.Sprintf("failed to enable Consul secrets engine: %s", err.Error()))
+	if err := secretsengine.New(ConsulSecretEngineMountPoint, secretsengine.Consul).
+		Enable(&rootToken, lc, client); err != nil {
+		lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
 		os.Exit(1)
 	}
 

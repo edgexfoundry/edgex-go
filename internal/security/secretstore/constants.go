@@ -19,7 +19,9 @@
 package secretstore
 
 const (
-	KVSecretsEngineMountPoint    = "secret"
+	// KVSecretsEngineMountPoint is the name of the mount point base for Vault's key-value secrets engine
+	KVSecretsEngineMountPoint = "secret"
+	// ConsulSecretEngineMountPoint is the name of the mount point base for Vault's Consul secrets engine
 	ConsulSecretEngineMountPoint = "consul"
 
 	VaultToken             = "X-Vault-Token"

@@ -18,12 +18,15 @@ package secretsengine
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 )
 
 const (
+	// Vault's secrets engine type related constants
+	KeyValue = "kv"
+	Consul   = "consul"
+
 	// kvVersion is the version of key-value secret storage used
 	// currently we use version 1 from Vault
 	kvVersion = "1"
@@ -50,7 +53,7 @@ func New(mountPoint string, engineType string) SecretsEngine {
 // also returns error if unsupported / unknown secretsEngineType is used
 func (eng SecretsEngine) Enable(rootToken *string,
 	lc logger.LoggingClient,
-	vc secretstoreclient.SecretStoreClient) error {
+	client secrets.SecretStoreClient) error {
 	if rootToken == nil {
 		return fmt.Errorf("rootToken is required")
 	}
@@ -58,7 +61,7 @@ func (eng SecretsEngine) Enable(rootToken *string,
 	// the data returned from GET of check installed secrets engine API of Vault is
 	// the mountPoint with trailing slash(/), eg. "secret/" for kv's mountPoint "secret"
 	checkMountPoint := eng.mountPoint + "/"
-	installed, err := vc.CheckSecretEngineInstalled(*rootToken, checkMountPoint, eng.engineType)
+	installed, err := client.CheckSecretEngineInstalled(*rootToken, checkMountPoint, eng.engineType)
 	if err != nil {
 		return fmt.Errorf("failed call to check if %s secrets engine is installed: %s",
 			eng.engineType, err.Error())
@@ -67,19 +70,17 @@ func (eng SecretsEngine) Enable(rootToken *string,
 	if !installed {
 		lc.Infof("enabling %s secrets engine for the first time...", eng.engineType)
 		switch eng.engineType {
-		case secretstoreclient.KeyValue:
+		case KeyValue:
 			// Enable KV storage version 1 at /v1/{eng.path} path (/v1 prefix supplied by Vault)
-			if statusCode, err := vc.EnableKVSecretEngine(*rootToken, eng.mountPoint, kvVersion); err != nil {
-				return fmt.Errorf("failed to enable KV version 1 secrets engine with statusCode= %d and error: %s",
-					statusCode, err.Error())
+			if err := client.EnableKVSecretEngine(*rootToken, eng.mountPoint, kvVersion); err != nil {
+				return fmt.Errorf("failed to enable KV version 1 secrets engine: %s", err.Error())
 			}
 			lc.Infof("KeyValue secrets engine enabled")
-		case secretstoreclient.Consul:
+		case Consul:
 			// Enable Consul secrets storage at /consul path
-			if statusCode, err := vc.EnableConsulSecretEngine(*rootToken,
+			if err := client.EnableConsulSecretEngine(*rootToken,
 				eng.mountPoint, defaultConsulTokenLeaseTtl); err != nil {
-				return fmt.Errorf("failed to enable Consul secrets engine with statusCode= %d and error: %s",
-					statusCode, err.Error())
+				return fmt.Errorf("failed to enable Consul secrets engine: %s", err.Error())
 			}
 			lc.Infof("Consul secrets engine enabled")
 		default:

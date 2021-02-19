@@ -17,16 +17,13 @@ package secretsengine
 
 import (
 	"errors"
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient/mocks"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets/mocks"
 )
 
 func TestNewSecretsEngine(t *testing.T) {
@@ -35,8 +32,8 @@ func TestNewSecretsEngine(t *testing.T) {
 		mountPath  string
 		engineType string
 	}{
-		{"New kv type of secrets engine", "kv-1-test/", secretstoreclient.KeyValue},
-		{"New consul type of secrets engine", "consul-test/", secretstoreclient.Consul},
+		{"New kv type of secrets engine", "kv-1-test/", KeyValue},
+		{"New consul type of secrets engine", "consul-test/", Consul},
 	}
 
 	for _, tt := range tests {
@@ -64,33 +61,33 @@ func TestEnableSecretsEngine(t *testing.T) {
 		expectError      bool
 	}{
 		{"Ok:Enable kv secrets engine not installed yet with client call ok", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, false, false, false, false},
+			KeyValue, false, false, false, false},
 		{"Ok:Enable consul secrets engine not installed yet with client call ok", &testToken, "consul-test",
-			secretstoreclient.Consul, false, false, false, false},
+			Consul, false, false, false, false},
 		{"Ok:Enable kv secrets engine already installed with client call ok (1)", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, true, false, false, false},
+			KeyValue, true, false, false, false},
 		{"Ok:Enable consul secrets engine already installed with client call ok (1)", &testToken, "consul-test",
-			secretstoreclient.Consul, false, true, false, false},
+			Consul, false, true, false, false},
 		{"Ok:Enable kv secrets engine already installed with client call ok (2)", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, true, true, false, false},
+			KeyValue, true, true, false, false},
 		{"Ok:Enable consul secrets engine already installed with client call ok (2)", &testToken, "consul-test",
-			secretstoreclient.Consul, true, true, false, false},
+			Consul, true, true, false, false},
 		{"Bad:Enable kv secrets engine not installed yet but client call failed", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, false, false, true, true},
+			KeyValue, false, false, true, true},
 		{"Bad:Enable consul secrets engine not installed yet but client call failed", &testToken, "consul-test",
-			secretstoreclient.Consul, false, false, true, true},
+			Consul, false, false, true, true},
 		{"Bad:Enable kv secrets engine already installed but client call failed (1)", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, true, false, true, true},
+			KeyValue, true, false, true, true},
 		{"Bad:Enable consul secrets engine already installed but client call failed (1)", &testToken, "consul-test",
-			secretstoreclient.Consul, false, true, true, true},
+			Consul, false, true, true, true},
 		{"Bad:Enable kv secrets engine already installed but client call failed (2)", &testToken, "kv-1-test",
-			secretstoreclient.KeyValue, true, true, true, true},
+			KeyValue, true, true, true, true},
 		{"Bad:Enable consul secrets engine already installed but client call failed (2)", &testToken, "consul-test",
-			secretstoreclient.Consul, true, true, true, true},
+			Consul, true, true, true, true},
 		{"Bad:Enable kv secrets engine with nil token", nil, "kv-1-test",
-			secretstoreclient.KeyValue, false, true, false, true},
+			KeyValue, false, true, false, true},
 		{"Bad:Enable consul secrets engine with nil token", nil, "consul-test",
-			secretstoreclient.Consul, true, false, false, true},
+			Consul, true, false, false, true},
 		{"Bad:Unsupported secrets engine type", &testToken, "whatever",
 			"unsupported", false, false, false, true},
 	}
@@ -103,33 +100,29 @@ func TestEnableSecretsEngine(t *testing.T) {
 			t.Parallel()
 
 			var chkErr error
-			var enableStatusCode int
 			var enableClientErr error
 
 			// to simplify testing, assume both errors when client calls failed
 			if localTest.clientCallFailed {
 				chkErr = errors.New("CheckSecretEngineInstalled called failed")
 				enableClientErr = errors.New("EnableKVSecretEngine called failed")
-				enableStatusCode = http.StatusBadRequest
-			} else {
-				enableStatusCode = http.StatusNoContent
 			}
 
-			mockClient := &mocks.MockSecretStoreClient{}
-			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, secretstoreclient.KeyValue).
+			mockClient := &mocks.SecretStoreClient{}
+			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, KeyValue).
 				Return(localTest.kvInstalled, chkErr)
-			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, secretstoreclient.Consul).
+			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, Consul).
 				Return(localTest.consulInstalled, chkErr)
 			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, mock.Anything).
 				Return(false, chkErr)
 			mockClient.On("EnableKVSecretEngine", mock.Anything, localTest.mountPoint, kvVersion).
-				Return(enableStatusCode, enableClientErr)
+				Return(enableClientErr)
 			mockClient.On("EnableKVSecretEngine", mock.Anything, mock.Anything, mock.Anything).
-				Return(enableStatusCode, unsupportedEngTypeErr)
+				Return(unsupportedEngTypeErr)
 			mockClient.On("EnableConsulSecretEngine", mock.Anything, localTest.mountPoint, defaultConsulTokenLeaseTtl).
-				Return(enableStatusCode, enableClientErr)
+				Return(enableClientErr)
 			mockClient.On("EnableConsulSecretEngine", mock.Anything, mock.Anything, mock.Anything).
-				Return(enableStatusCode, unsupportedEngTypeErr)
+				Return(unsupportedEngTypeErr)
 
 			err := New(localTest.mountPoint, localTest.engineType).
 				Enable(localTest.rootToken, lc, mockClient)
