@@ -135,7 +135,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				shouldContinue = false
 
 			case http.StatusTooManyRequests:
-				lc.Errorf("vault is unsealed and in standby mode (Status Code: %d)", sCode)
+				// we're done here. Will go into ready mode or reseal
 				shouldContinue = false
 
 			case http.StatusNotImplemented:
@@ -152,19 +152,18 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					lc.Info("Root token stripped from init response for security reasons")
 				}
 
-				err = client.Unseal(initResponse.Keys, initResponse.KeysBase64)
-				if err == nil {
+				err = client.Unseal(initResponse.KeysBase64)
+				if err != nil {
 					lc.Errorf("Unable to unseal Vault: %s", err.Error())
 					return false
 				}
 
 				// We need the unencrypted initResponse in order to generate a temporary root token later
 				// Make a copy and save the copy, possibly encrypted
-				var encryptedInitResponse types.InitResponse
+				encryptedInitResponse := initResponse
 				// Optionally encrypt the vault init response based on whether encryption was enabled
 				if vmkEncryption.IsEncrypting() {
-					encryptedInitResponse, err = vmkEncryption.EncryptInitResponse(initResponse)
-					if err != nil {
+					if err := vmkEncryption.EncryptInitResponse(&encryptedInitResponse); err != nil {
 						lc.Errorf("failed to encrypt init response from secret store: %s", err.Error())
 						return false
 					}
@@ -182,13 +181,14 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				}
 				// Optionally decrypt the vault init response based on whether encryption was enabled
 				if vmkEncryption.IsEncrypting() {
-					initResponse, err = vmkEncryption.DecryptInitResponse(initResponse)
+					err = vmkEncryption.DecryptInitResponse(&initResponse)
 					if err != nil {
 						lc.Errorf("failed to decrypt key shares for secret store unsealing: %s", err.Error())
 						return false
 					}
 				}
-				err := client.Unseal(initResponse.Keys, initResponse.KeysBase64)
+
+				err := client.Unseal(initResponse.KeysBase64)
 				if err == nil {
 					shouldContinue = false
 				}

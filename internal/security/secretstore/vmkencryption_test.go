@@ -59,10 +59,10 @@ func TestVMKEncryption(t *testing.T) {
 	err := vmkEncryption.LoadIKM("/bin/myikm")
 	require.NoError(t, err)
 
-	initResp, err = vmkEncryption.EncryptInitResponse(initResp)
+	err = vmkEncryption.EncryptInitResponse(&initResp)
 	require.NoError(t, err)
 
-	initResp, err = vmkEncryption.DecryptInitResponse(initResp)
+	err = vmkEncryption.DecryptInitResponse(&initResp)
 	require.NoError(t, err)
 	require.Equal(t, initialInitResp, initResp)
 
@@ -91,10 +91,10 @@ func TestVMKEncryptionFailPath(t *testing.T) {
 	err := vmkEncryption.LoadIKM("/bin/myikm")
 	require.Error(t, err)
 
-	initResp, err = vmkEncryption.EncryptInitResponse(initResp)
+	err = vmkEncryption.EncryptInitResponse(&initResp)
 	require.Error(t, err)
 
-	initResp, err = vmkEncryption.DecryptInitResponse(initResp)
+	err = vmkEncryption.DecryptInitResponse(&initResp)
 	require.Error(t, err)
 
 	vmkEncryption.WipeIKM()

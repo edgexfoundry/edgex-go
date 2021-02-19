@@ -104,11 +104,10 @@ func (v *VMKEncryption) IsEncrypting() bool {
 // in the end, Keys and KeysBase64 are removed and replaced with
 // EncryptedKeys and Nonces in the resulting JSON
 // Root token is left untouched
-func (v *VMKEncryption) EncryptInitResponse(initResp types.InitResponse) (types.InitResponse, error) {
-	var encryptedResponse types.InitResponse
+func (v *VMKEncryption) EncryptInitResponse(initResp *types.InitResponse) error {
 	// Check prerequisite (key has been loaded)
 	if !v.encrypting {
-		return encryptedResponse, fmt.Errorf("Cannot encrypt init response as key has not been loaded")
+		return fmt.Errorf("cannot encrypt init response as key has not been loaded")
 	}
 
 	newKeys := make([]string, len(initResp.Keys))
@@ -118,12 +117,12 @@ func (v *VMKEncryption) EncryptInitResponse(initResp types.InitResponse) (types.
 
 		plainText, err := hex.DecodeString(hexPlaintext)
 		if err != nil {
-			return encryptedResponse, fmt.Errorf("failed to decode hex bytes of keyshare (details omitted): %w", err)
+			return fmt.Errorf("failed to decode hex bytes of keyshare (details omitted): %w", err)
 		}
 
 		keyShare, nonce, err := v.gcmEncryptKeyShare(plainText, i) // Wrap using a unique AES key
 		if err != nil {
-			return encryptedResponse, fmt.Errorf("failed to wrap key %d: %w", i, err)
+			return fmt.Errorf("failed to wrap key %d: %w", i, err)
 		}
 
 		newKeys[i] = hex.EncodeToString(keyShare)
@@ -133,51 +132,53 @@ func (v *VMKEncryption) EncryptInitResponse(initResp types.InitResponse) (types.
 		wipeKey(nonce)    // Clear out nonce
 	}
 
-	encryptedResponse.EncryptedKeys = newKeys
-	encryptedResponse.Nonces = newNonces
-	return encryptedResponse, nil
+	initResp.EncryptedKeys = newKeys
+	initResp.Nonces = newNonces
+	initResp.Keys = nil       // strings are immutable, must wait for GC
+	initResp.KeysBase64 = nil // strings are immutable, must wait for GC
+	return nil
 }
 
 // DecryptInitResponse processes the InitResponse and decrypts the key shares
 // in the end, EncryptedKeys and Nonces are removed and replaced with
 // Keys and KeysBase64 in the resulting JSON like the init response was originally
 // Root token is left untouched
-func (v *VMKEncryption) DecryptInitResponse(initResp types.InitResponse) (types.InitResponse, error) {
-	var decryptedResponse types.InitResponse
-
+func (v *VMKEncryption) DecryptInitResponse(initResp *types.InitResponse) error {
 	// Check prerequisite (key has been loaded)
 	if !v.encrypting {
-		return decryptedResponse, fmt.Errorf("Cannot decrypt init response as key has not been loaded")
+		return fmt.Errorf("cannot decrypt init response as key has not been loaded")
 	}
 
 	newKeys := make([]string, len(initResp.EncryptedKeys))
 	newKeysBase64 := make([]string, len(initResp.EncryptedKeys))
 
 	for i, hexCiphertext := range initResp.EncryptedKeys {
-
 		hexNonce := initResp.Nonces[i]
 		nonce, err := hex.DecodeString(hexNonce)
 		if err != nil {
-			return decryptedResponse, fmt.Errorf("failed to decode hex bytes of nonce: %w", err)
+			return fmt.Errorf("failed to decode hex bytes of nonce: %w", err)
 		}
 
 		cipherText, err := hex.DecodeString(hexCiphertext)
 		if err != nil {
-			return decryptedResponse, fmt.Errorf("failed to decode hex bytes of ciphertext: %w", err)
+			return fmt.Errorf("failed to decode hex bytes of ciphertext: %w", err)
 		}
 
 		keyShare, err := v.gcmDecryptKeyShare(cipherText, nonce, i) // Unwrap using a unique AES key
 		if err != nil {
-			return decryptedResponse, fmt.Errorf("failed to unwrap key %d: %w", i, err)
+			return fmt.Errorf("failed to unwrap key %d: %w", i, err)
 		}
 
 		newKeys[i] = hex.EncodeToString(keyShare)
 		newKeysBase64[i] = base64.StdEncoding.EncodeToString(keyShare)
 	}
 
-	decryptedResponse.Keys = newKeys
-	decryptedResponse.KeysBase64 = newKeysBase64
-	return decryptedResponse, nil
+	initResp.Keys = newKeys
+	initResp.KeysBase64 = newKeysBase64
+	initResp.EncryptedKeys = nil
+	initResp.Nonces = nil
+
+	return nil
 }
 
 //
