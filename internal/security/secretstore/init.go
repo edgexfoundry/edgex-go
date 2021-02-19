@@ -143,6 +143,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				initResponse, err = client.Init(secretStoreConfig.VaultSecretThreshold, secretStoreConfig.VaultSecretShares)
 				if err != nil {
 					lc.Errorf("Unable to Initialize Vault: %s. Will try again...", err.Error())
+					// TODO: This function should be refactored to resolve logic issue where we are returning
+					//       success=true when there was an error. Function needs to be extracted out so it is no longer in-line.
 					return true
 				}
 

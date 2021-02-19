@@ -82,6 +82,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	if err != nil {
 		lc.Errorf("error occurred creating SecretStoreClient: %s", err.Error())
 		b.exitCode = 1
+		return false
 	}
 
 	fileProvider := NewTokenProvider(lc, fileOpener, tokenProvider, client)
