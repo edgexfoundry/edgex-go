@@ -121,7 +121,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	//step 3: initialize and unseal Vault
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
-		successful := func() bool {
+		terminalFailure := func() bool {
 			sCode, _ := client.HealthCheck()
 
 			switch sCode {
@@ -129,7 +129,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				// Load the init response from disk since we need it to regenerate root token later
 				if err := loadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
-					return false
+					return true
 				}
 				lc.Infof("vault is initialized and unsealed (status code: %d)", sCode)
 				shouldContinue = false
@@ -143,9 +143,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				initResponse, err = client.Init(secretStoreConfig.VaultSecretThreshold, secretStoreConfig.VaultSecretShares)
 				if err != nil {
 					lc.Errorf("Unable to Initialize Vault: %s. Will try again...", err.Error())
-					// TODO: This function should be refactored to resolve logic issue where we are returning
-					//       success=true when there was an error. Function needs to be extracted out so it is no longer in-line.
-					return true
+					// Not terminal failure, should continue and try again
+					return false
 				}
 
 				if secretStoreConfig.RevokeRootTokens {
@@ -157,7 +156,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				err = client.Unseal(initResponse.KeysBase64)
 				if err != nil {
 					lc.Errorf("Unable to unseal Vault: %s", err.Error())
-					return false
+					return true
 				}
 
 				// We need the unencrypted initResponse in order to generate a temporary root token later
@@ -167,26 +166,26 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				if vmkEncryption.IsEncrypting() {
 					if err := vmkEncryption.EncryptInitResponse(&encryptedInitResponse); err != nil {
 						lc.Errorf("failed to encrypt init response from secret store: %s", err.Error())
-						return false
+						return true
 					}
 				}
 				if err := saveInitResponse(lc, fileOpener, secretStoreConfig, &encryptedInitResponse); err != nil {
 					lc.Errorf("unable to save init response: %s", err.Error())
-					return false
+					return true
 				}
 
 			case http.StatusServiceUnavailable:
 				lc.Infof("vault is sealed (status code: %d). Starting unseal phase", sCode)
 				if err := loadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
-					return false
+					return true
 				}
 				// Optionally decrypt the vault init response based on whether encryption was enabled
 				if vmkEncryption.IsEncrypting() {
 					err = vmkEncryption.DecryptInitResponse(&initResponse)
 					if err != nil {
 						lc.Errorf("failed to decrypt key shares for secret store unsealing: %s", err.Error())
-						return false
+						return true
 					}
 				}
 
@@ -203,10 +202,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				}
 			}
 
-			return true
+			return false
 		}()
 
-		if !successful {
+		if terminalFailure {
 			return false
 		}
 
