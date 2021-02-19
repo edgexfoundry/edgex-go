@@ -63,12 +63,12 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
-// Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetLogLevel() string {
 	return c.LogLevel
 }
 
 // GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
+// Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 	return bootstrapConfig.RegistryInfo{}
 }

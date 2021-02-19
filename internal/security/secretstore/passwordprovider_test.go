@@ -21,7 +21,7 @@ import (
 )
 
 func TestInvalidPasswordProvider(t *testing.T) {
-	serviceInfo := config.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider: "does-not-exist",
 	}
 	mockExecRunner := &mockExecRunner{}
@@ -47,7 +47,7 @@ func TestPasswordConfigNotInitialized(t *testing.T) {
 }
 
 func TestPasswordProviderFailsToStart(t *testing.T) {
-	serviceInfo := config.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
@@ -72,7 +72,7 @@ func TestPasswordProviderFailsToStart(t *testing.T) {
 }
 
 func TestPasswordProviderFailsAtRuntime(t *testing.T) {
-	serviceInfo := config.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}

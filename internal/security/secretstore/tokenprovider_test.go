@@ -32,7 +32,7 @@ import (
 )
 
 func TestInvalidProvider(t *testing.T) {
-	serviceConfig := config.SecretServiceInfo{
+	serviceConfig := config.SecretStoreInfo{
 		TokenProvider:     "does-not-exist",
 		TokenProviderType: OneShotProvider,
 	}
@@ -41,7 +41,7 @@ func TestInvalidProvider(t *testing.T) {
 		Return("", errors.New("fake file does not exist"))
 	cancel, err := testCommon(serviceConfig, &mockExecRunner)
 	defer func() {
-		if cancel == nil {
+		if cancel != nil {
 			cancel()
 		}
 	}()
@@ -51,7 +51,7 @@ func TestInvalidProvider(t *testing.T) {
 }
 
 func TestInvalidProviderType(t *testing.T) {
-	serviceConfig := config.SecretServiceInfo{
+	serviceConfig := config.SecretStoreInfo{
 		TokenProvider:     "success-executable",
 		TokenProviderType: "simple",
 	}
@@ -76,7 +76,7 @@ func TestNoConfig(t *testing.T) {
 }
 
 func TestSuccess(t *testing.T) {
-	serviceConfig := config.SecretServiceInfo{
+	serviceConfig := config.SecretStoreInfo{
 		TokenProvider:     "success-executable",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{"arg1", "arg2"},
@@ -102,7 +102,7 @@ func TestSuccess(t *testing.T) {
 }
 
 func TestFailure(t *testing.T) {
-	serviceConfig := config.SecretServiceInfo{
+	serviceConfig := config.SecretStoreInfo{
 		TokenProvider:     "failure-executable",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{"arg1", "arg2"},
@@ -127,7 +127,7 @@ func TestFailure(t *testing.T) {
 	mockCmd.AssertExpectations(t)
 }
 
-func testCommon(config config.SecretServiceInfo, mockExecRunner ExecRunner) (context.CancelFunc, error) {
+func testCommon(config config.SecretStoreInfo, mockExecRunner ExecRunner) (context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	p := NewTokenProvider(ctx, logger.MockLogger{}, mockExecRunner)
 	if err := p.SetConfiguration(config); err != nil {

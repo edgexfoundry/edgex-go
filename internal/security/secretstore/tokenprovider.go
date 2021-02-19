@@ -51,13 +51,12 @@ func (p *TokenProvider) SetConfiguration(secretStore config.SecretStoreInfo) err
 	var err error
 	p.secretStore = secretStore
 	if p.secretStore.TokenProviderType != OneShotProvider {
-		err := fmt.Errorf("%s is not a supported TokenProviderType", p.secretStore.TokenProviderType)
-		p.loggingClient.Error(err.Error())
+		err = fmt.Errorf("%s is not a supported TokenProviderType", p.secretStore.TokenProviderType)
 		return err
 	}
 	resolvedPath, err := p.execRunner.LookPath(p.secretStore.TokenProvider)
 	if err != nil {
-		p.loggingClient.Error(fmt.Sprintf("Failed to locate %s on PATH: %s", p.secretStore.TokenProvider, err.Error()))
+		err = fmt.Errorf("Failed to locate %s on PATH: %s", p.secretStore.TokenProvider, err.Error())
 		return err
 	}
 	p.initialized = true
@@ -72,22 +71,26 @@ func (p *TokenProvider) Launch() error {
 		return err
 	}
 
-	p.loggingClient.Info(fmt.Sprintf("Launching token provider %s with arguments %s", p.resolvedPath, strings.Join(p.secretStore.TokenProviderArgs, " ")))
+	p.loggingClient.Infof(
+		"Launching token provider %s with arguments %s",
+		p.resolvedPath,
+		strings.Join(p.secretStore.TokenProviderArgs, " "))
+
 	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, p.secretStore.TokenProviderArgs...)
 	if err := cmd.Start(); err != nil {
 		// For example, this might occur if a shared library was missing
-		p.loggingClient.Error(fmt.Sprintf("%s failed to launch: %s", p.resolvedPath, err.Error()))
+		err = fmt.Errorf("%s failed to launch: %s", p.resolvedPath, err.Error())
 		return err
 	}
 
 	err := cmd.Wait()
 	if exitError, ok := err.(*exec.ExitError); ok {
 		waitStatus := exitError.Sys().(syscall.WaitStatus)
-		p.loggingClient.Error(fmt.Sprintf("%s terminated with non-zero exit code %d", p.resolvedPath, waitStatus.ExitStatus()))
+		err = fmt.Errorf("%s terminated with non-zero exit code %d", p.resolvedPath, waitStatus.ExitStatus())
 		return err
 	}
 	if err != nil {
-		p.loggingClient.Error(fmt.Sprintf("%s failed with unexpected error: %s", p.resolvedPath, err.Error()))
+		err = fmt.Errorf("%s failed with unexpected error: %s", p.resolvedPath, err.Error())
 		return err
 	}
 

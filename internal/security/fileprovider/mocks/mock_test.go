@@ -29,8 +29,8 @@ import (
 
 func TestMockInterfaceType(t *testing.T) {
 	// Typecast will fail if doesn't implement interface properly
-	var iface TokenProvider = &MockTokenProvider{}
-	assert.NotNil(t, iface)
+	var provider TokenProvider = &MockTokenProvider{}
+	assert.NotNil(t, provider)
 }
 
 func TestMockRun(t *testing.T) {
@@ -45,9 +45,9 @@ func TestMockRun(t *testing.T) {
 
 func TestMockSetConfiguration(t *testing.T) {
 	p := &MockTokenProvider{}
-	p.On("SetConfiguration", secretStoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.On("SetConfiguration", secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
 
-	p.SetConfiguration(secretStoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.SetConfiguration(secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
 
 	p.AssertExpectations(t)
 }

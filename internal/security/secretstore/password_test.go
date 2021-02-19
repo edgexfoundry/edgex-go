@@ -68,7 +68,7 @@ func TestRetrieveCred(t *testing.T) {
 	require.NoError(t, err)
 
 	configuration := &config.ConfigurationStruct{
-		SecretService: config.SecretServiceInfo{
+		SecretStore: config.SecretStoreInfo{
 			Host:     parsed.Hostname(),
 			Port:     port,
 			Protocol: "https",
@@ -80,7 +80,7 @@ func TestRetrieveCred(t *testing.T) {
 		pkg.NewRequester(mockLogger).Insecure(),
 		"token",
 		NewPasswordGenerator(mockLogger, "", []string{}),
-		configuration.SecretService.GetSecretSvcBaseURL(),
+		configuration.SecretStore.GetBaseURL(),
 		mockLogger)
 	pair, err := cr.retrieve(credPath)
 	require.NoError(t, err)

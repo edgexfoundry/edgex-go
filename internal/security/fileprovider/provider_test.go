@@ -90,7 +90,7 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -110,8 +110,8 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("service1"), service1Buffer.Bytes())
-	assert.Equal(t, expectedTokenFile("service2"), service2Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service2Buffer.Bytes())
 }
 
 func createTokenResponse() map[string]interface{} {
@@ -134,7 +134,7 @@ func makeMetaServiceName(serviceName string) map[string]interface{} {
 	return createTokenParameters
 }
 
-func expectedTokenFile(_ string) []byte {
+func expectedTokenFile() []byte {
 	tokenResponse := createTokenResponse()
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(tokenResponse)
@@ -167,7 +167,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -185,7 +185,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 
 // TestNoDefaultsCustomTokenParameters
@@ -215,7 +215,7 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -233,7 +233,7 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 
 // TestTokenUsingDefaults
@@ -294,7 +294,7 @@ func TestTokenFilePermissions(t *testing.T) {
 		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -312,7 +312,7 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 func TestErrorLoading1(t *testing.T) {
 	// Arrange
@@ -323,7 +323,7 @@ func TestErrorLoading1(t *testing.T) {
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: "tokenpath",
 	})
 
@@ -347,7 +347,7 @@ func TestErrorLoading2(t *testing.T) {
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: "tokenpath",
 	})
 
@@ -454,7 +454,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -478,11 +478,11 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile(serviceName), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 
 	// verify the expected token files for additional services from env
 	for service := range expectedTokenConfigs {
-		assert.Equal(t, expectedTokenFile(service), expectedEnvServiceBufMap[service].Bytes())
+		assert.Equal(t, expectedTokenFile(), expectedEnvServiceBufMap[service].Bytes())
 	}
 
 	return nil

@@ -18,7 +18,7 @@ RUN apk add --update --no-cache make bash git
 
 COPY go.mod .
 
-#RUN go mod download
+RUN go mod download
 
 COPY . .
 

@@ -18,7 +18,6 @@ package fileprovider
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 
@@ -64,7 +63,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		lc.Info("using certificate verification for secret store connection")
 		caReader, err := fileOpener.OpenFileReader(caFilePath, os.O_RDONLY, 0400)
 		if err != nil {
-			lc.Error(fmt.Sprintf("failed to load CA certificate: %s", err.Error()))
+			lc.Errorf("failed to load CA certificate: %s", err.Error())
 			return false
 		}
 		requester = pkg.NewRequester(lc).WithTLS(caReader, cfg.SecretStore.ServerName)
@@ -81,7 +80,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	}
 	client, err := secrets.NewSecretStoreClient(clientConfig, lc, requester)
 	if err != nil {
-		lc.Error(fmt.Sprintf("error occurred creating SecretStoreClient: %s", err.Error()))
+		lc.Errorf("error occurred creating SecretStoreClient: %s", err.Error())
 		b.exitCode = 1
 	}
 
@@ -91,7 +90,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	err = fileProvider.Run()
 
 	if err != nil {
-		lc.Error(fmt.Sprintf("error occurred generating tokens: %s", err.Error()))
+		lc.Errorf("error occurred generating tokens: %s", err.Error())
 		b.exitCode = 1
 	}
 

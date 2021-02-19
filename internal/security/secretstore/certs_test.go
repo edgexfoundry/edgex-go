@@ -55,7 +55,7 @@ func TestRetrieve(t *testing.T) {
 	require.NoError(t, err)
 
 	configuration := &config.ConfigurationStruct{}
-	configuration.SecretService = config.SecretServiceInfo{
+	configuration.SecretStore = config.SecretStoreInfo{
 		Host:     parsed.Hostname(),
 		Port:     port,
 		Protocol: "https",
@@ -66,7 +66,7 @@ func TestRetrieve(t *testing.T) {
 		pkg.NewRequester(mockLogger).Insecure(),
 		certPath,
 		"token",
-		configuration.SecretService.GetSecretSvcBaseURL(),
+		configuration.SecretStore.GetBaseURL(),
 		mockLogger)
 	cp, err := cs.retrieve()
 	require.NoError(t, err)

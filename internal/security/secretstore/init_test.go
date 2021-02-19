@@ -41,7 +41,7 @@ func TestLoadInitResponse(t *testing.T) {
 	fileOpener := &mocks.FileIoPerformer{}
 	stringReader := strings.NewReader(sampleJSON)
 	fileOpener.On("OpenFileReader", filepath.Join(expectedFolder, expectedFile), os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
-	secretConfig := config.SecretServiceInfo{
+	secretConfig := config.SecretStoreInfo{
 		TokenFolderPath: expectedFolder,
 		TokenFile:       expectedFile,
 	}
@@ -61,7 +61,7 @@ func TestSaveInitResponse(t *testing.T) {
 	mockLogger := logger.MockLogger{}
 	fileOpener := &mocks.FileIoPerformer{}
 	fileOpener.On("OpenFileWriter", filepath.Join(expectedFolder, expectedFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&discardWriterCloser{}, nil)
-	secretConfig := config.SecretServiceInfo{
+	secretConfig := config.SecretStoreInfo{
 		TokenFolderPath: expectedFolder,
 		TokenFile:       expectedFile,
 	}

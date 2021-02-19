@@ -23,9 +23,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
-	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +34,7 @@ import (
 // run a real executable taking real arguments.
 func TestCreatesFile(t *testing.T) {
 	const testfile = "/tmp/tokenprovider_linux_test.dat"
-	config := secretStoreConfig.SecretServiceInfo{
+	configuration := config.SecretStoreInfo{
 		TokenProvider:     "touch",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{testfile},
@@ -45,7 +45,7 @@ func TestCreatesFile(t *testing.T) {
 	defer os.RemoveAll(testfile) // cleanup
 
 	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
-	p.SetConfiguration(config)
+	p.SetConfiguration(configuration)
 	assert.NoError(t, err)
 
 	p.Launch()
