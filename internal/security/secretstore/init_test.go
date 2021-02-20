@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -8,12 +8,13 @@ package secretstore
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
-
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
@@ -31,38 +32,40 @@ const sampleJSON = `
 	"root_token": "test-root-token"
 }`
 
+var expectedFolder = "/foo"
+var expectedFile = "bar.baz"
+
 func TestLoadInitResponse(t *testing.T) {
 	// Arrange
-	assert := assert.New(t)
 	mockLogger := logger.MockLogger{}
 	fileOpener := &mocks.FileIoPerformer{}
 	stringReader := strings.NewReader(sampleJSON)
-	fileOpener.On("OpenFileReader", "/foo/bar.baz", os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
-	secretConfig := secretstoreclient.SecretServiceInfo{
-		TokenFolderPath: "/foo",
-		TokenFile:       "bar.baz",
+	fileOpener.On("OpenFileReader", filepath.Join(expectedFolder, expectedFile), os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
+	secretConfig := config.SecretStoreInfo{
+		TokenFolderPath: expectedFolder,
+		TokenFile:       expectedFile,
 	}
-	initResponse := secretstoreclient.InitResponse{}
+	initResponse := types.InitResponse{}
 
 	// Act
 	err := loadInitResponse(mockLogger, fileOpener, secretConfig, &initResponse)
 
 	// Assert
-	assert.NoError(err)
+	assert.NoError(t, err)
 	fileOpener.AssertExpectations(t)
 }
 
 func TestSaveInitResponse(t *testing.T) {
+
 	// Arrange
-	assert := assert.New(t)
 	mockLogger := logger.MockLogger{}
 	fileOpener := &mocks.FileIoPerformer{}
-	fileOpener.On("OpenFileWriter", "/foo/bar.baz", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&discardWriterCloser{}, nil)
-	secretConfig := secretstoreclient.SecretServiceInfo{
-		TokenFolderPath: "/foo",
-		TokenFile:       "bar.baz",
+	fileOpener.On("OpenFileWriter", filepath.Join(expectedFolder, expectedFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&discardWriterCloser{}, nil)
+	secretConfig := config.SecretStoreInfo{
+		TokenFolderPath: expectedFolder,
+		TokenFile:       expectedFile,
 	}
-	initResponse := secretstoreclient.InitResponse{
+	initResponse := types.InitResponse{
 		Keys:       []string{"test-key-1"},
 		KeysBase64: []string{"dGVzdC1rZXktMQ=="},
 	}
@@ -71,7 +74,7 @@ func TestSaveInitResponse(t *testing.T) {
 	err := saveInitResponse(mockLogger, fileOpener, secretConfig, &initResponse)
 
 	// Assert
-	assert.NoError(err)
+	assert.NoError(t, err)
 	fileOpener.AssertExpectations(t)
 }
 

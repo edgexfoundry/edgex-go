@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -13,23 +13,24 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 )
 
 func TestInvalidPasswordProvider(t *testing.T) {
-	config := secretstoreclient.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider: "does-not-exist",
 	}
 	mockExecRunner := &mockExecRunner{}
-	mockExecRunner.On("LookPath", config.PasswordProvider).
+	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
 		Return("", errors.New("fake file does not exist"))
 	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	p := NewPasswordProvider(logger.MockLogger{}, mockExecRunner)
-	err := p.SetConfiguration(config.PasswordProvider, config.PasswordProviderArgs)
+	err := p.SetConfiguration(serviceInfo.PasswordProvider, serviceInfo.PasswordProviderArgs)
 	assert.Error(t, err)
 	mockExecRunner.AssertExpectations(t)
 }
@@ -46,24 +47,24 @@ func TestPasswordConfigNotInitialized(t *testing.T) {
 }
 
 func TestPasswordProviderFailsToStart(t *testing.T) {
-	config := secretstoreclient.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
 	mockExecRunner := &mockExecRunner{}
 	mockCmd := mockCmd{}
-	mockExecRunner.On("LookPath", config.PasswordProvider).
-		Return(config.PasswordProvider, nil)
+	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
+		Return(serviceInfo.PasswordProvider, nil)
 	mockExecRunner.On("SetStdout", mock.Anything).Once()
 	mockExecRunner.On("CommandContext", mock.Anything,
-		config.PasswordProvider, config.PasswordProviderArgs).
+		serviceInfo.PasswordProvider, serviceInfo.PasswordProviderArgs).
 		Return(&mockCmd)
 	mockCmd.On("Start").Return(errors.New("error starting"))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	p := NewPasswordProvider(logger.MockLogger{}, mockExecRunner)
-	err := p.SetConfiguration(config.PasswordProvider, config.PasswordProviderArgs)
+	err := p.SetConfiguration(serviceInfo.PasswordProvider, serviceInfo.PasswordProviderArgs)
 	assert.NoError(t, err)
 	_, err = p.Generate(ctx)
 	assert.Error(t, err)
@@ -71,17 +72,17 @@ func TestPasswordProviderFailsToStart(t *testing.T) {
 }
 
 func TestPasswordProviderFailsAtRuntime(t *testing.T) {
-	config := secretstoreclient.SecretServiceInfo{
+	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
 	mockExecRunner := &mockExecRunner{}
 	mockCmd := mockCmd{}
-	mockExecRunner.On("LookPath", config.PasswordProvider).
-		Return(config.PasswordProvider, nil)
+	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
+		Return(serviceInfo.PasswordProvider, nil)
 	mockExecRunner.On("SetStdout", mock.Anything).Once()
 	mockExecRunner.On("CommandContext", mock.Anything,
-		config.PasswordProvider, config.PasswordProviderArgs).
+		serviceInfo.PasswordProvider, serviceInfo.PasswordProviderArgs).
 		Return(&mockCmd)
 	mockCmd.On("Start").Return(nil)
 	mockCmd.On("Wait").Return(&exec.ExitError{ProcessState: &os.ProcessState{}})
@@ -89,7 +90,7 @@ func TestPasswordProviderFailsAtRuntime(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	p := NewPasswordProvider(logger.MockLogger{}, mockExecRunner)
-	err := p.SetConfiguration(config.PasswordProvider, config.PasswordProviderArgs)
+	err := p.SetConfiguration(serviceInfo.PasswordProvider, serviceInfo.PasswordProviderArgs)
 	assert.NoError(t, err)
 	_, err = p.Generate(ctx)
 	assert.Error(t, err)

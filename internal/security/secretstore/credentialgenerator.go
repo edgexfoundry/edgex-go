@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -27,7 +27,7 @@ func NewDefaultCredentialGenerator() CredentialGenerator {
 }
 
 // Generate implementation returns base64-encoded randomBytesLength random bytes
-func (cg *defaultCredentialGenerator) Generate(ctx context.Context) (string, error) {
+func (cg *defaultCredentialGenerator) Generate(_ context.Context) (string, error) {
 	randomBytes := make([]byte, randomBytesLength)
 	_, err := rand.Read(randomBytes) // all of salt guaranteed to be filled if err==nil
 	if err != nil {

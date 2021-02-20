@@ -18,13 +18,14 @@ package fileprovider
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -57,30 +58,40 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
 	tokenProvider := authtokenloader.NewAuthTokenLoader(fileOpener)
 
-	var req internal.HttpCaller
-	if caFilePath := cfg.SecretService.CaFilePath; caFilePath != "" {
+	var requester internal.HttpCaller
+	if caFilePath := cfg.SecretStore.CaFilePath; caFilePath != "" {
 		lc.Info("using certificate verification for secret store connection")
 		caReader, err := fileOpener.OpenFileReader(caFilePath, os.O_RDONLY, 0400)
 		if err != nil {
-			lc.Error(fmt.Sprintf("failed to load CA certificate: %s", err.Error()))
+			lc.Errorf("failed to load CA certificate: %s", err.Error())
 			return false
 		}
-		req = secretstoreclient.NewRequestor(lc).WithTLS(caReader, cfg.SecretService.ServerName)
+		requester = pkg.NewRequester(lc).WithTLS(caReader, cfg.SecretStore.ServerName)
 	} else {
 		lc.Info("bypassing certificate verification for secret store connection")
-		req = secretstoreclient.NewRequestor(lc).Insecure()
+		requester = pkg.NewRequester(lc).Insecure()
 	}
-	vaultProtocol := cfg.SecretService.Protocol
-	vaultHost := fmt.Sprintf("%s:%v", cfg.SecretService.Server, cfg.SecretService.Port)
-	vaultClient := secretstoreclient.NewSecretStoreClient(lc, req, vaultProtocol, vaultHost)
 
-	fileProvider := NewTokenProvider(lc, fileOpener, tokenProvider, vaultClient)
+	clientConfig := types.SecretConfig{
+		Type:     secrets.Vault,
+		Host:     cfg.SecretStore.Host,
+		Port:     cfg.SecretStore.Port,
+		Protocol: cfg.SecretStore.Protocol,
+	}
+	client, err := secrets.NewSecretStoreClient(clientConfig, lc, requester)
+	if err != nil {
+		lc.Errorf("error occurred creating SecretStoreClient: %s", err.Error())
+		b.exitCode = 1
+		return false
+	}
 
-	fileProvider.SetConfiguration(cfg.SecretService, cfg.TokenFileProvider)
-	err := fileProvider.Run()
+	fileProvider := NewTokenProvider(lc, fileOpener, tokenProvider, client)
+
+	fileProvider.SetConfiguration(cfg.SecretStore, cfg.TokenFileProvider)
+	err = fileProvider.Run()
 
 	if err != nil {
-		lc.Error(fmt.Sprintf("error occurred generating tokens: %s", err.Error()))
+		lc.Errorf("error occurred generating tokens: %s", err.Error())
 		b.exitCode = 1
 	}
 

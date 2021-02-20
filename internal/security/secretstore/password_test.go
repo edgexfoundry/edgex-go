@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
@@ -50,38 +50,26 @@ func TestGenerateWithDefaults(t *testing.T) {
 
 func TestRetrieveCred(t *testing.T) {
 	credPath := "testCredPath"
-	token := "token"
+	expected := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"username": "test-user", "password": "test-password"}}`))
-		if r.Method != "GET" {
-			t.Errorf("expected GET request, got %s instead", r.Method)
-		}
-
-		if r.URL.EscapedPath() != fmt.Sprintf("/%s", credPath) {
-			t.Errorf("expected request to /%s, got %s instead", credPath, r.URL.EscapedPath())
-		}
-
-		if r.Header.Get(VaultToken) != token {
-			t.Errorf("expected request header for %s is %s, got %s instead", VaultToken, token, r.Header.Get(VaultToken))
-		}
+		_, err := w.Write([]byte(`{"data": {"username": "test-user", "password": "test-password"}}`))
+		require.NoError(t, err)
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, fmt.Sprintf("/%s", credPath), r.URL.EscapedPath())
+		actual := r.Header.Get(VaultToken)
+		assert.Equal(t, expected, actual)
 	}))
 	defer ts.Close()
 
 	parsed, err := url.Parse(ts.URL)
-	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
-		return
-	}
+	require.NoError(t, err)
 	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
+	require.NoError(t, err)
 
 	configuration := &config.ConfigurationStruct{
-		SecretService: secretstoreclient.SecretServiceInfo{
-			Server:   parsed.Hostname(),
+		SecretStore: config.SecretStoreInfo{
+			Host:     parsed.Hostname(),
 			Port:     port,
 			Protocol: "https",
 		},
@@ -89,16 +77,14 @@ func TestRetrieveCred(t *testing.T) {
 
 	mockLogger := logger.MockLogger{}
 	cr := NewCred(
-		secretstoreclient.NewRequestor(mockLogger).Insecure(),
+		pkg.NewRequester(mockLogger).Insecure(),
 		"token",
 		NewPasswordGenerator(mockLogger, "", []string{}),
-		configuration.SecretService.GetSecretSvcBaseURL(),
+		configuration.SecretStore.GetBaseURL(),
 		mockLogger)
 	pair, err := cr.retrieve(credPath)
-	if err != nil {
-		t.Errorf("failed to retrieve credential pair")
-		t.Errorf(err.Error())
-	}
+	require.NoError(t, err)
+
 	if pair.User != "test-user" || pair.Password != "test-password" {
 		t.Errorf("failed to parse credential pair")
 	}

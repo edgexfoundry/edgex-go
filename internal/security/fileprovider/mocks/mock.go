@@ -18,7 +18,7 @@ package mocks
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -34,7 +34,7 @@ func (p *MockTokenProvider) Run() error {
 	return arguments.Error(0)
 }
 
-func (p *MockTokenProvider) SetConfiguration(secretConfig secretstoreclient.SecretServiceInfo, tokenConfig config.TokenFileProviderInfo) {
+func (p *MockTokenProvider) SetConfiguration(secretConfig secretStoreConfig.SecretStoreInfo, tokenConfig config.TokenFileProviderInfo) {
 	// Boilerplate that returns whatever Mock.On().Returns() is configured for
 	p.Called(secretConfig, tokenConfig)
 }

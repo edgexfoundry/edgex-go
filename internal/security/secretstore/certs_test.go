@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2021 Intel Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,62 +26,51 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 func TestRetrieve(t *testing.T) {
 	certPath := "testCertPath"
-	token := "token"
+	expected := "token"
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
-		if r.Method != "GET" {
-			t.Errorf("expected GET request, got %s instead", r.Method)
-		}
-
-		if r.URL.EscapedPath() != fmt.Sprintf("/%s", certPath) {
-			t.Errorf("expected request to /%s, got %s instead", certPath, r.URL.EscapedPath())
-		}
-
-		if r.Header.Get(VaultToken) != token {
-			t.Errorf("expected request header for %s is %s, got %s instead", VaultToken, token, r.Header.Get(VaultToken))
-		}
+		_, err := w.Write([]byte(`{"data": {"cert": "test-certificate", "key": "test-private-key"}}`))
+		require.NoError(t, err)
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, fmt.Sprintf("/%s", certPath), r.URL.EscapedPath())
+		actual := r.Header.Get(VaultToken)
+		assert.Equal(t, expected, actual)
 	}))
 	defer ts.Close()
 
 	parsed, err := url.Parse(ts.URL)
-	if err != nil {
-		t.Errorf("unable to parse test server URL %s", ts.URL)
-		return
-	}
+	require.NoError(t, err)
 	port, err := strconv.Atoi(parsed.Port())
-	if err != nil {
-		t.Errorf("parsed port number cannot be converted to int %s", parsed.Port())
-		return
-	}
+	require.NoError(t, err)
 
 	configuration := &config.ConfigurationStruct{}
-	configuration.SecretService = secretstoreclient.SecretServiceInfo{
-		Server:   parsed.Hostname(),
+	configuration.SecretStore = config.SecretStoreInfo{
+		Host:     parsed.Hostname(),
 		Port:     port,
 		Protocol: "https",
 	}
 
 	mockLogger := logger.MockLogger{}
 	cs := NewCerts(
-		secretstoreclient.NewRequestor(mockLogger).Insecure(),
+		pkg.NewRequester(mockLogger).Insecure(),
 		certPath,
 		"token",
-		configuration.SecretService.GetSecretSvcBaseURL(),
+		configuration.SecretStore.GetBaseURL(),
 		mockLogger)
 	cp, err := cs.retrieve()
-	if err != nil {
-		t.Errorf("failed to retrieve cert pair")
-		t.Errorf(err.Error())
-	}
+	require.NoError(t, err)
+
 	if cp.Cert != "test-certificate" || cp.Key != "test-private-key" {
 		t.Errorf("failed to parse certificate key pair")
 	}

@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright 2021 Intel Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -132,7 +133,7 @@ func (cr *Cred) retrieve(path string) (*UserPasswordPair, error) {
 		cr.loggingClient.Error(e.Error())
 		return nil, e
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	cred := CredCollect{}
 
@@ -202,7 +203,7 @@ func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 		cr.loggingClient.Error(e)
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		b, err := ioutil.ReadAll(resp.Body)

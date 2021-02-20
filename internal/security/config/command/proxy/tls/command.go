@@ -21,8 +21,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -52,7 +52,7 @@ func NewCommand(
 
 	cmd := cmd{
 		loggingClient: lc,
-		client:        secretstoreclient.NewRequestor(lc).Insecure(),
+		client:        pkg.NewRequester(lc).Insecure(),
 		configuration: configuration,
 	}
 	var dummy string
@@ -164,7 +164,7 @@ func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send request to list Kong snis tls certs: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -210,7 +210,7 @@ func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to send request to delete Kong tls cert: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch resp.StatusCode {
 	case http.StatusNoContent:
@@ -246,7 +246,7 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 	if err != nil {
 		return fmt.Errorf("Failed to send request to post Kong tls cert: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("Failed to read response body: %v", err)
@@ -307,8 +307,8 @@ func getServerNameIndicators(snisList string) []string {
 }
 
 func parseAndTrimSpaces(commaSep string) (ret []string) {
-	splitStrs := strings.Split(commaSep, ",")
-	for _, s := range splitStrs {
+	items := strings.Split(commaSep, ",")
+	for _, s := range items {
 		trimmed := strings.TrimSpace(s)
 		if len(trimmed) > 0 { // effective only it is non-empty string
 			ret = append(ret, trimmed)

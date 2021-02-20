@@ -1,7 +1,7 @@
 // +build linux
 
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -23,7 +23,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/stretchr/testify/assert"
@@ -33,7 +34,7 @@ import (
 // run a real executable taking real arguments.
 func TestCreatesFile(t *testing.T) {
 	const testfile = "/tmp/tokenprovider_linux_test.dat"
-	config := secretstoreclient.SecretServiceInfo{
+	configuration := config.SecretStoreInfo{
 		TokenProvider:     "touch",
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{testfile},
@@ -44,7 +45,7 @@ func TestCreatesFile(t *testing.T) {
 	defer os.RemoveAll(testfile) // cleanup
 
 	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
-	p.SetConfiguration(config)
+	p.SetConfiguration(configuration)
 	assert.NoError(t, err)
 
 	p.Launch()

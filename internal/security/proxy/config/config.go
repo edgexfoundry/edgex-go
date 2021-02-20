@@ -21,7 +21,6 @@ import (
 	"net/url"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 type ConfigurationStruct struct {
@@ -30,8 +29,7 @@ type ConfigurationStruct struct {
 	KongURL        KongUrlInfo
 	KongAuth       KongAuthInfo
 	KongACL        KongAclInfo
-	SecretStore    bootstrapConfig.SecretStoreInfo
-	SecretService  SecretServiceInfo
+	SecretStore    SecretStoreInfo
 	Clients        map[string]bootstrapConfig.ClientInfo
 }
 
@@ -44,19 +42,19 @@ type KongUrlInfo struct {
 }
 
 func (k KongUrlInfo) GetProxyBaseURL() string {
-	url := &url.URL{
+	baseUrl := &url.URL{
 		Scheme: "http",
 		Host:   fmt.Sprintf("%s:%v", k.Server, k.AdminPort),
 	}
-	return url.String()
+	return baseUrl.String()
 }
 
 func (k KongUrlInfo) GetSecureURL() string {
-	url := &url.URL{
+	secureUrl := &url.URL{
 		Scheme: "https",
 		Host:   fmt.Sprintf("%s:%v", k.Server, k.ApplicationPortSSL),
 	}
-	return url.String()
+	return secureUrl.String()
 }
 
 type KongAuthInfo struct {
@@ -71,64 +69,45 @@ type KongAclInfo struct {
 	WhiteList string
 }
 
-type SecretServiceInfo struct {
+type SecretStoreInfo struct {
+	Type            string
 	Protocol        string
-	Server          string
+	Host            string
 	Port            int
-	HealthcheckPath string
+	HealthCheckPath string
 	CertPath        string
 	TokenPath       string
 	CACertPath      string
 	SNIS            []string
 }
 
-func (s SecretServiceInfo) GetSecretSvcBaseURL() string {
-	return fmt.Sprintf("%s://%s:%d", s.Protocol, s.Server, s.Port)
+// GetBaseURL builds and returns the base URL for the SecretStore service
+func (s SecretStoreInfo) GetBaseURL() string {
+	return fmt.Sprintf("%s://%s:%d", s.Protocol, s.Host, s.Port)
 }
 
-// UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
-// then used to overwrite the service's existing configuration struct.
-func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
+// UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct
+// Not needed for this service, so just return false
+func (c *ConfigurationStruct) UpdateFromRaw(_ interface{}) bool {
 	return false
 }
 
-// EmptyWritablePtr returns a pointer to a service-specific empty WritableInfo struct.  It is used by the bootstrap to
-// provide the appropriate structure to registry.Client's WatchForChanges().
+// EmptyWritablePtr returns a pointer to a service-specific empty WritableInfo struct.
+// Not needed for this service, so return nil
 func (c *ConfigurationStruct) EmptyWritablePtr() interface{} {
 	return nil
 }
 
 // UpdateWritableFromRaw converts configuration received from the registry to a service-specific WritableInfo struct
-// which is then used to overwrite the service's existing configuration's WritableInfo struct.
-func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) bool {
+// Not needed for this service, so just return false
+func (c *ConfigurationStruct) UpdateWritableFromRaw(_ interface{}) bool {
 	return false
 }
 
-// GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
-// data is returned.  This is intended to be temporary -- since ConfigurationStruct drives the configuration.toml's
-// structure -- until we can make backwards-breaking configuration.toml changes (which would consolidate these fields
-// into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
+// GetBootstrap returns the configuration elements required by the bootstrap.
+// Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	//To keep config file for proxy unchanged in Geneva we need to create a temporary SecretStore struct so that bootstrapHandler can use it to create a secret client
-	//The config file may be changed in the future version and SecretStore can be used directly like other core services
-	ss := bootstrapConfig.SecretStoreInfo{
-		Host:                    c.SecretService.Server,
-		Port:                    c.SecretService.Port,
-		Path:                    c.SecretService.CertPath,
-		Protocol:                c.SecretService.Protocol,
-		RootCaCertPath:          c.SecretService.CACertPath,
-		ServerName:              c.SecretService.Server,
-		Authentication:          types.AuthenticationInfo{AuthType: "X-Vault-Token"},
-		AdditionalRetryAttempts: 10,
-		RetryWaitPeriod:         "5s",
-		TokenFile:               c.SecretService.TokenPath,
-	}
-
-	// temporary until we can make backwards-breaking configuration.toml change
-	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		SecretStore: ss,
-	}
+	return bootstrapConfig.BootstrapConfiguration{}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
@@ -137,16 +116,19 @@ func (c *ConfigurationStruct) GetLogLevel() string {
 }
 
 // GetRegistryInfo returns the RegistryInfo from the ConfigurationStruct.
+// Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 	return bootstrapConfig.RegistryInfo{}
 }
 
 // GetDatabaseInfo returns a database information map.
+// Not needed for this service, so return nil
 func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
 	return nil
 }
 
-// GetInsecureSecrets returns the service's InsecureSecrets which this service doesn't support
+// GetInsecureSecrets returns the service's InsecureSecrets
+// Not needed for this service, so return nil
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return nil
 }

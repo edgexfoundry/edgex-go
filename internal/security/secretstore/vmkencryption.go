@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,8 +18,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/kdf"
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 /*
@@ -104,11 +104,10 @@ func (v *VMKEncryption) IsEncrypting() bool {
 // in the end, Keys and KeysBase64 are removed and replaced with
 // EncryptedKeys and Nonces in the resulting JSON
 // Root token is left untouched
-func (v *VMKEncryption) EncryptInitResponse(initResp *secretstoreclient.InitResponse) error {
-
+func (v *VMKEncryption) EncryptInitResponse(initResp *types.InitResponse) error {
 	// Check prerequisite (key has been loaded)
 	if !v.encrypting {
-		return fmt.Errorf("Cannot encrypt init response as key has not been loaded")
+		return fmt.Errorf("cannot encrypt init response as key has not been loaded")
 	}
 
 	newKeys := make([]string, len(initResp.Keys))
@@ -121,7 +120,7 @@ func (v *VMKEncryption) EncryptInitResponse(initResp *secretstoreclient.InitResp
 			return fmt.Errorf("failed to decode hex bytes of keyshare (details omitted): %w", err)
 		}
 
-		keyShare, nonce, err := v.gcmEncryptKeyshare(plainText, i) // Wrap using a unique AES key
+		keyShare, nonce, err := v.gcmEncryptKeyShare(plainText, i) // Wrap using a unique AES key
 		if err != nil {
 			return fmt.Errorf("failed to wrap key %d: %w", i, err)
 		}
@@ -144,18 +143,16 @@ func (v *VMKEncryption) EncryptInitResponse(initResp *secretstoreclient.InitResp
 // in the end, EncryptedKeys and Nonces are removed and replaced with
 // Keys and KeysBase64 in the resulting JSON like the init response was originally
 // Root token is left untouched
-func (v *VMKEncryption) DecryptInitResponse(initResp *secretstoreclient.InitResponse) error {
-
+func (v *VMKEncryption) DecryptInitResponse(initResp *types.InitResponse) error {
 	// Check prerequisite (key has been loaded)
 	if !v.encrypting {
-		return fmt.Errorf("Cannot decrypt init response as key has not been loaded")
+		return fmt.Errorf("cannot decrypt init response as key has not been loaded")
 	}
 
 	newKeys := make([]string, len(initResp.EncryptedKeys))
 	newKeysBase64 := make([]string, len(initResp.EncryptedKeys))
 
 	for i, hexCiphertext := range initResp.EncryptedKeys {
-
 		hexNonce := initResp.Nonces[i]
 		nonce, err := hex.DecodeString(hexNonce)
 		if err != nil {
@@ -167,7 +164,7 @@ func (v *VMKEncryption) DecryptInitResponse(initResp *secretstoreclient.InitResp
 			return fmt.Errorf("failed to decode hex bytes of ciphertext: %w", err)
 		}
 
-		keyShare, err := v.gcmDecryptKeyshare(cipherText, nonce, i) // Unwrap using a unique AES key
+		keyShare, err := v.gcmDecryptKeyShare(cipherText, nonce, i) // Unwrap using a unique AES key
 		if err != nil {
 			return fmt.Errorf("failed to unwrap key %d: %w", i, err)
 		}
@@ -180,6 +177,7 @@ func (v *VMKEncryption) DecryptInitResponse(initResp *secretstoreclient.InitResp
 	initResp.KeysBase64 = newKeysBase64
 	initResp.EncryptedKeys = nil
 	initResp.Nonces = nil
+
 	return nil
 }
 
@@ -187,12 +185,12 @@ func (v *VMKEncryption) DecryptInitResponse(initResp *secretstoreclient.InitResp
 // Internal methods
 //
 
-// gcmEncryptKeyshare encrypts each key share with a unique key
+// gcmEncryptKeyShare encrypts each key share with a unique key
 // from the key derivation function based on passing the info
 // string vault0, vault1, ... et cetera to the KDF.
-func (v *VMKEncryption) gcmEncryptKeyshare(keyshare []byte, counter int) ([]byte, []byte, error) {
+func (v *VMKEncryption) gcmEncryptKeyShare(keyShare []byte, counter int) ([]byte, []byte, error) {
 
-	defer wipeKey(keyshare) // wipe original keyshare on exit
+	defer wipeKey(keyShare) // wipe original keyShare on exit
 
 	info := fmt.Sprintf("vault%d", counter)
 
@@ -207,28 +205,28 @@ func (v *VMKEncryption) gcmEncryptKeyshare(keyshare []byte, counter int) ([]byte
 		return nil, nil, fmt.Errorf("failed to initialize block cipher: %w", err)
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
+	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize AES cipher: %w", err)
 	}
 
-	nonce := make([]byte, aesgcm.NonceSize())
+	nonce := make([]byte, aesGCM.NonceSize())
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize random nonce: %w", err)
 	}
 
 	// Encrypt the key share (plaintext to be wiped on exit by deferred function)
-	ciphertext := aesgcm.Seal(nil, nonce, keyshare, nil)
+	ciphertext := aesGCM.Seal(nil, nonce, keyShare, nil)
 
 	return ciphertext, nonce, nil
 }
 
-// gcmDecryptKeyshare decrypts each key share with a unique key
+// gcmDecryptKeyShare decrypts each key share with a unique key
 // from the key derivation function based on passing the info
 // string vault0, vault1, ... et cetera to the KDF.
-func (v *VMKEncryption) gcmDecryptKeyshare(keyshare []byte, nonce []byte, counter int) ([]byte, error) {
+func (v *VMKEncryption) gcmDecryptKeyShare(keyShare []byte, nonce []byte, counter int) ([]byte, error) {
 
-	defer wipeKey(keyshare) // wipe original (encrypted) keyshare on exit (not technically needed)
+	defer wipeKey(keyShare) // wipe original (encrypted) key share on exit (not technically needed)
 
 	info := fmt.Sprintf("vault%d", counter)
 
@@ -243,13 +241,13 @@ func (v *VMKEncryption) gcmDecryptKeyshare(keyshare []byte, nonce []byte, counte
 		return nil, fmt.Errorf("failed to initialize block cipher: %w", err)
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
+	aesGCM, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize AES cipher: %w", err)
 	}
 
 	// Decrypt key share; on error, erase any partial results
-	plaintext, err := aesgcm.Open(nil, nonce, keyshare, nil)
+	plaintext, err := aesGCM.Open(nil, nonce, keyShare, nil)
 	if err != nil {
 		if plaintext != nil {
 			wipeKey(plaintext)

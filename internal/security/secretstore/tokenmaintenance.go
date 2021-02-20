@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,8 +11,6 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
-//
 
 package secretstore
 
@@ -20,7 +18,7 @@ package secretstore
 
 High level token maintenance flow is as follows:
 
-1. Recover a root token from keyshares
+1. Recover a root token from key shares
 2. Revoke all previous non-root tokens
 3. Create new admin token from that root token
 4. Create per-service tokens using admin token
@@ -38,19 +36,20 @@ For Fuji.DOT/Geneva, all root tokens will be revoked.
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 )
 
 type RevokeFunc func()
 
 type TokenMaintenance struct {
 	logging      logger.LoggingClient
-	secretClient secretstoreclient.SecretStoreClient
+	secretClient secrets.SecretStoreClient
 }
 
 // NewTokenMaintenance creates a new TokenProvider
-func NewTokenMaintenance(logging logger.LoggingClient, secretClient secretstoreclient.SecretStoreClient) *TokenMaintenance {
+func NewTokenMaintenance(logging logger.LoggingClient, secretClient secrets.SecretStoreClient) *TokenMaintenance {
 	return &TokenMaintenance{
 		logging:      logging,
 		secretClient: secretClient,
@@ -63,7 +62,7 @@ func NewTokenMaintenance(logging logger.LoggingClient, secretClient secretstorec
 // if called, with revoke the token
 func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[string]interface{}, RevokeFunc, error) {
 
-	_, err := tm.secretClient.InstallPolicy(rootToken, TokenCreatorPolicyName, TokenCreatorPolicy)
+	err := tm.secretClient.InstallPolicy(rootToken, TokenCreatorPolicyName, TokenCreatorPolicy)
 	if err != nil {
 		tm.logging.Error("failed installation of token-issuing-token policy")
 		return nil, nil, err
@@ -76,7 +75,7 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 	createTokenParameters["policies"] = []string{TokenCreatorPolicyName}
 	createTokenParameters["ttl"] = "1h"
 	createTokenResponse := make(map[string]interface{})
-	_, err = tm.secretClient.CreateToken(rootToken, createTokenParameters, &createTokenResponse)
+	createTokenResponse, err = tm.secretClient.CreateToken(rootToken, createTokenParameters)
 	if err != nil {
 		tm.logging.Error(fmt.Sprintf("failed creation of token-issuing-token: %s", err.Error()))
 		return nil, nil, err
@@ -85,8 +84,8 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 	newToken := createTokenResponse["auth"].(map[string]interface{})["client_token"].(string)
 	revokeFunc := func() {
 		tm.logging.Info("revoking token-issuing-token")
-		if _, err2 := tm.secretClient.RevokeSelf(newToken); err2 != nil {
-			tm.logging.Warn("failed revokation of token-issuing-token: %s", err2.Error())
+		if err2 := tm.secretClient.RevokeToken(newToken); err2 != nil {
+			tm.logging.Warn("failed revocation of token-issuing-token: %s", err2.Error())
 		}
 	}
 	return createTokenResponse, revokeFunc, nil
@@ -96,16 +95,14 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 // issued in previous EdgeX runs.  Should be called with a high-privileged token.
 func (tm *TokenMaintenance) RevokeNonRootTokens(privilegedToken string) error {
 	// First enumerate all accessors
-	allAccessors := make([]string, 0)
-	_, err := tm.secretClient.ListAccessors(privilegedToken, &allAccessors)
+	allAccessors, err := tm.secretClient.ListTokenAccessors(privilegedToken)
 	if err != nil {
-		return err // secretclient already logged failure
+		return err // secret client already logged failure
 	}
 
-	var selfMetadata secretstoreclient.TokenMetadata
-	_, err = tm.secretClient.LookupSelf(privilegedToken, &selfMetadata)
+	selfMetadata, err := tm.secretClient.LookupToken(privilegedToken)
 	if err != nil {
-		return err // secretclient already logged failure
+		return err // secret client already logged failure
 	}
 	selfAccessor := selfMetadata.Accessor
 
@@ -116,10 +113,9 @@ func (tm *TokenMaintenance) RevokeNonRootTokens(privilegedToken string) error {
 		if accessor == selfAccessor {
 			continue // don't revoke ourselves
 		}
-		tokenMetadata := secretstoreclient.TokenMetadata{}
-		_, err := tm.secretClient.LookupAccessor(privilegedToken, accessor, &tokenMetadata)
+		tokenMetadata, err := tm.secretClient.LookupTokenAccessor(privilegedToken, accessor)
 		if err != nil {
-			return err // secretclient already logged failure
+			return err // secret client already logged failure
 		}
 		// Search attached policies: flag tokens with root policy attached
 		var hasRootToken bool
@@ -139,7 +135,7 @@ func (tm *TokenMaintenance) RevokeNonRootTokens(privilegedToken string) error {
 	// Revoke all the accessors in the above list
 	for _, accessor := range accessorsToRevoke {
 		// Revoke as many as we can despite errors
-		_, err = tm.secretClient.RevokeAccessor(privilegedToken, accessor)
+		err = tm.secretClient.RevokeTokenAccessor(privilegedToken, accessor)
 		if err != nil {
 			lastErr = err
 		}
@@ -152,16 +148,14 @@ func (tm *TokenMaintenance) RevokeNonRootTokens(privilegedToken string) error {
 // Should be called with a high-privileged token.
 func (tm *TokenMaintenance) RevokeRootTokens(privilegedToken string) error {
 	// First enumerate all accessors
-	allAccessors := make([]string, 0)
-	_, err := tm.secretClient.ListAccessors(privilegedToken, &allAccessors)
+	allAccessors, err := tm.secretClient.ListTokenAccessors(privilegedToken)
 	if err != nil {
-		return err // secretclient already logged failure
+		return err // secret client already logged failure
 	}
 
-	var selfMetadata secretstoreclient.TokenMetadata
-	_, err = tm.secretClient.LookupSelf(privilegedToken, &selfMetadata)
+	selfMetadata, err := tm.secretClient.LookupToken(privilegedToken)
 	if err != nil {
-		return err // secretclient already logged failure
+		return err // secret client already logged failure
 	}
 	selfAccessor := selfMetadata.Accessor
 
@@ -170,17 +164,16 @@ func (tm *TokenMaintenance) RevokeRootTokens(privilegedToken string) error {
 		if accessor == selfAccessor {
 			continue // don't revoke ourselves
 		}
-		tokenMetadata := secretstoreclient.TokenMetadata{}
-		_, err := tm.secretClient.LookupAccessor(privilegedToken, accessor, &tokenMetadata)
+		tokenMetadata, err := tm.secretClient.LookupTokenAccessor(privilegedToken, accessor)
 		if err != nil {
-			return err // secretclient already logged failure
+			return err // secret client already logged failure
 		}
 		// Search attached policies: revoke root tokens
 		for _, policy := range tokenMetadata.Policies {
 			if policy == "root" {
-				_, err = tm.secretClient.RevokeAccessor(privilegedToken, accessor)
+				err = tm.secretClient.RevokeTokenAccessor(privilegedToken, accessor)
 				if err != nil {
-					return err // secretclient already logged failure
+					return err // secret client already logged failure
 				}
 			}
 		}

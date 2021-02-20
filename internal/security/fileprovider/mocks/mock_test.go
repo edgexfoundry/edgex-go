@@ -21,15 +21,16 @@ import (
 
 	. "github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+
+	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMockInterfaceType(t *testing.T) {
 	// Typecast will fail if doesn't implement interface properly
-	var iface TokenProvider = &MockTokenProvider{}
-	assert.NotNil(t, iface)
+	var provider TokenProvider = &MockTokenProvider{}
+	assert.NotNil(t, provider)
 }
 
 func TestMockRun(t *testing.T) {
@@ -44,9 +45,9 @@ func TestMockRun(t *testing.T) {
 
 func TestMockSetConfiguration(t *testing.T) {
 	p := &MockTokenProvider{}
-	p.On("SetConfiguration", secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.On("SetConfiguration", secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
 
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{})
+	p.SetConfiguration(secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
 
 	p.AssertExpectations(t)
 }

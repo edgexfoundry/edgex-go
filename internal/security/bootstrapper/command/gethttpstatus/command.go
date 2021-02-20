@@ -28,7 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
@@ -56,7 +56,7 @@ func NewCommand(
 
 	cmd := cmd{
 		loggingClient: lc,
-		client:        secretstoreclient.NewRequestor(lc).Insecure(),
+		client:        pkg.NewRequester(lc).Insecure(),
 		configuration: configuration,
 	}
 	var dummy string

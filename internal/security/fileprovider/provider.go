@@ -24,7 +24,8 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
+	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
@@ -40,30 +41,30 @@ type permissionable interface {
 
 // fileTokenProvider stores instance data
 type fileTokenProvider struct {
-	logger        logger.LoggingClient
-	fileOpener    fileioperformer.FileIoPerformer
-	tokenProvider authtokenloader.AuthTokenLoader
-	vaultClient   secretstoreclient.SecretStoreClient
-	secretConfig  secretstoreclient.SecretServiceInfo
-	tokenConfig   config.TokenFileProviderInfo
+	logger            logger.LoggingClient
+	fileOpener        fileioperformer.FileIoPerformer
+	tokenProvider     authtokenloader.AuthTokenLoader
+	secretStoreClient secrets.SecretStoreClient
+	secretStoreConfig secretstoreConfig.SecretStoreInfo
+	tokenConfig       config.TokenFileProviderInfo
 }
 
 // NewTokenProvider creates a new TokenProvider
 func NewTokenProvider(logger logger.LoggingClient,
 	fileOpener fileioperformer.FileIoPerformer,
 	tokenProvider authtokenloader.AuthTokenLoader,
-	vaultClient secretstoreclient.SecretStoreClient) TokenProvider {
+	secretStoreClient secrets.SecretStoreClient) TokenProvider {
 	return &fileTokenProvider{
-		logger:        logger,
-		fileOpener:    fileOpener,
-		tokenProvider: tokenProvider,
-		vaultClient:   vaultClient,
+		logger:            logger,
+		fileOpener:        fileOpener,
+		tokenProvider:     tokenProvider,
+		secretStoreClient: secretStoreClient,
 	}
 }
 
 // Set configuration
-func (p *fileTokenProvider) SetConfiguration(secretConfig secretstoreclient.SecretServiceInfo, tokenConfig config.TokenFileProviderInfo) {
-	p.secretConfig = secretConfig
+func (p *fileTokenProvider) SetConfiguration(secretStoreConfig secretstoreConfig.SecretStoreInfo, tokenConfig config.TokenFileProviderInfo) {
+	p.secretStoreConfig = secretStoreConfig
 	p.tokenConfig = tokenConfig
 }
 
@@ -139,14 +140,14 @@ func (p *fileTokenProvider) Run() error {
 			return err
 		}
 
-		if _, err := p.vaultClient.InstallPolicy(privilegedToken, policyName, string(policyBytes)); err != nil {
+		if err := p.secretStoreClient.InstallPolicy(privilegedToken, policyName, string(policyBytes)); err != nil {
 			p.logger.Error(fmt.Sprintf("failed to install policy %s: %s", policyName, err.Error()))
 			return err
 		}
 
 		var createTokenResponse interface{}
 
-		if _, err = p.vaultClient.CreateToken(privilegedToken, createTokenParameters, &createTokenResponse); err != nil {
+		if createTokenResponse, err = p.secretStoreClient.CreateToken(privilegedToken, createTokenParameters); err != nil {
 			p.logger.Error(fmt.Sprintf("failed to create vault token for service %s: %s", serviceName, err.Error()))
 			return err
 		}

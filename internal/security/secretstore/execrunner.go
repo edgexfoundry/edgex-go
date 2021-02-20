@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2021 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -40,7 +40,7 @@ func NewDefaultExecRunner() ExecRunner {
 	}
 }
 
-// SetStdout allows overriding of stdout capture (for comsuming password generator output)
+// SetStdout allows overriding of stdout capture (for consuming password generator output)
 func (w *execWrapper) SetStdout(stdout io.Writer) {
 	w.Stdout = stdout
 }

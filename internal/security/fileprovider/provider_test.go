@@ -19,18 +19,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	loaderMock "github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader/mocks"
 	fileMock "github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets/mocks"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient"
-	. "github.com/edgexfoundry/edgex-go/internal/security/secretstoreclient/mocks"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
@@ -80,22 +79,18 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 	expectedService2Policy := "{}"
 	expectedService1Parameters := makeMetaServiceName("service1")
 	expectedService2Parameters := makeMetaServiceName("service2")
-	mockSecretStoreClient := &MockSecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service1", expectedService1Policy).Return(http.StatusNoContent, nil)
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service2", expectedService2Policy).Return(http.StatusNoContent, nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).
-		Return(http.StatusOK, nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService2Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).
-		Return(http.StatusOK, nil)
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service1", expectedService1Policy).
+		Return(nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service2", expectedService2Policy).
+		Return(nil)
+	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
+		Return(createTokenResponse(), nil)
+	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService2Parameters).
+		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -115,11 +110,11 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("service1"), service1Buffer.Bytes())
-	assert.Equal(t, expectedTokenFile("service2"), service2Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service2Buffer.Bytes())
 }
 
-func setCreateTokenResponse(retval *interface{}) {
+func createTokenResponse() map[string]interface{} {
 	// Create some kind of fake response to send back from the SecretStoreClient API
 	// Doesn't need to be accurate, as we are not testing the return values from Vault,
 	// just making sure we form the call correctly.
@@ -128,7 +123,7 @@ func setCreateTokenResponse(retval *interface{}) {
 	t["auth"] = make(map[string]interface{})
 	t["auth"].(map[string]interface{})["client_token"] = "s.wOrq9dO9kzOcuvB06CMviJhZ"
 	t["auth"].(map[string]interface{})["accessor"] = "B6oixijqmeR4bsLOJH88Ska9"
-	(*retval) = t
+	return t
 }
 
 func makeMetaServiceName(serviceName string) map[string]interface{} {
@@ -139,9 +134,8 @@ func makeMetaServiceName(serviceName string) map[string]interface{} {
 	return createTokenParameters
 }
 
-func expectedTokenFile(serviceName string) []byte {
-	var tokenResponse interface{}
-	setCreateTokenResponse(&tokenResponse)
+func expectedTokenFile() []byte {
+	tokenResponse := createTokenResponse()
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(tokenResponse)
 	// Debugging note: take care to not write out the buffer or it will disturb the read pointer
@@ -166,16 +160,14 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 
 	expectedService1Policy := `{"path":{"secret/non/standard/location/*":{"capabilities":["list","read"]}}}`
 	expectedService1Parameters := makeMetaServiceName("myservice")
-	mockSecretStoreClient := &MockSecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).Return(http.StatusNoContent, nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).
-		Return(http.StatusOK, nil)
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).
+		Return(nil)
+	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
+		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -193,7 +185,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 
 // TestNoDefaultsCustomTokenParameters
@@ -216,16 +208,14 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 	expectedService1Parameters := make(map[string]interface{})
 	expectedService1Parameters["key1"] = "value1"
 	expectedService1Parameters["meta"] = makeMetaServiceName("myservice")["meta"]
-	mockSecretStoreClient := &MockSecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).Return(http.StatusNoContent, nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).
-		Return(http.StatusOK, nil)
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).
+		Return(nil)
+	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
+		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -243,7 +233,7 @@ func TestNoDefaultsCustomTokenParameters(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 
 // TestTokenUsingDefaults
@@ -256,28 +246,28 @@ func TestTokenUsingDefaults(t *testing.T) {
 	err = runTokensWithDefault("myservice2", "additional-service1", t)
 	require.NoError(t, err)
 	// case to mimic normal service name with two additional services from env list
-	err = runTokensWithDefault("myservice3", "additional-service1,new-servcie-2", t)
+	err = runTokensWithDefault("myservice3", "additional-service1,new-service-2", t)
 	require.NoError(t, err)
 	// case to mimic normal service name with two additional services and empty service name from env list
-	err = runTokensWithDefault("myservice", "additional-service1,,new-servcie-2", t)
+	err = runTokensWithDefault("myservice", "additional-service1,,new-service-2", t)
 	require.NoError(t, err)
 	// case to mimic normal service name with one additional service and leading + trailing commas from env list
 	err = runTokensWithDefault("myservice", ",addtionalservice1,", t)
 	require.NoError(t, err)
-	// case to mimic normal service name with some additional services with special charater names from env list
+	// case to mimic normal service name with some additional services with special character names from env list
 	err = runTokensWithDefault("myservice", "test.service,test~name", t)
 	require.NoError(t, err)
 
 	// Negative cases:
 	// case to mimic normal service name with an invalid service name from env list
-	err = runTokensWithDefault("myservice", "/service1,,\\new-servcie-2", t)
-	require.Error(t, err, "expect error due to invalid servcie name from the list in env")
+	err = runTokensWithDefault("myservice", "/service1,,\\new-service-2", t)
+	require.Error(t, err, "expect error due to invalid service name from the list in env")
 	// case to mimic normal service name with an invalid service name from env list
 	err = runTokensWithDefault("myservice", "../service1", t)
-	require.Error(t, err, "expect error due to invalid servcie name from the list in env")
+	require.Error(t, err, "expect error due to invalid service name from the list in env")
 	// case to mimic normal service name with one additional service and URL unsafe characters from env list
 	err = runTokensWithDefault("myservice", "core:!@%#$&service*()+func[x]", t)
-	require.Error(t, err, "expect error due to invalid servcie name from the list in env")
+	require.Error(t, err, "expect error due to invalid service name from the list in env")
 }
 
 // TestTokenFilePermissions
@@ -297,16 +287,14 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Parameters := makeMetaServiceName("myservice")
-	mockSecretStoreClient := &MockSecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", "{}").Return(http.StatusNoContent, nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).
-		Return(http.StatusOK, nil)
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", "{}").
+		Return(nil)
+	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
+		Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -324,7 +312,7 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile("myservice"), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 }
 func TestErrorLoading1(t *testing.T) {
 	// Arrange
@@ -332,10 +320,10 @@ func TestErrorLoading1(t *testing.T) {
 	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", "tokenpath").Return("atoken", errors.New("an error"))
-	mockSecretStoreClient := &MockSecretStoreClient{}
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: "tokenpath",
 	})
 
@@ -356,10 +344,10 @@ func TestErrorLoading2(t *testing.T) {
 	mockFileIoPerformer.On("OpenFileReader", "", os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(""), errors.New("an error"))
 	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", "tokenpath").Return("atoken", nil)
-	mockSecretStoreClient := &MockSecretStoreClient{}
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: "tokenpath",
 	})
 
@@ -385,20 +373,20 @@ func (wcb *writeCloserBuffer) Close() error {
 	return nil
 }
 
-func (wcb *writeCloserBuffer) Chmod(mode os.FileMode) error {
+func (wcb *writeCloserBuffer) Chmod(_ os.FileMode) error {
 	return nil
 }
 
-func (wcb *writeCloserBuffer) Chown(uid int, gid int) error {
+func (wcb *writeCloserBuffer) Chown(_ int, _ int) error {
 	return nil
 }
 
 func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testing.T) error {
 	// Arrange
 	mockLogger := logger.MockLogger{}
-	oringEnv := os.Getenv(addSecretstoreTokensEnvKey)
+	originalEnv := os.Getenv(addSecretstoreTokensEnvKey)
 	defer func() {
-		_ = os.Setenv(addSecretstoreTokensEnvKey, oringEnv)
+		_ = os.Setenv(addSecretstoreTokensEnvKey, originalEnv)
 	}()
 
 	_ = os.Setenv(addSecretstoreTokensEnvKey, additionalKeysEnv)
@@ -412,14 +400,14 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 
 	// setup expected behaviors for additional env services
 	expectedEnvServiceBufMap := make(map[string]*bytes.Buffer)
-	expectedTokenConfs, errFromEnv := GetTokenConfigFromEnv()
+	expectedTokenConfigs, errFromEnv := GetTokenConfigFromEnv()
 
 	jsonStr := `{"` + serviceName + `"` + `:{"edgex_use_defaults":true}`
 	count := 1
-	for service := range expectedTokenConfs {
+	for service := range expectedTokenConfigs {
 		jsonStr += `,`
 		jsonStr += `"` + service
-		jsonStr += (`"` + `:{"edgex_use_defaults":true}`)
+		jsonStr += `"` + `:{"edgex_use_defaults":true}`
 
 		count++
 	}
@@ -428,7 +416,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(
 		strings.NewReader(jsonStr), nil)
 
-	for service := range expectedTokenConfs {
+	for service := range expectedTokenConfigs {
 		expectedSrvDir := filepath.Join(outputDir, service)
 		expectedSrvFile := filepath.Join(expectedSrvDir, outputFilename)
 		expectedSrvBuf := new(bytes.Buffer)
@@ -445,31 +433,28 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	expectedService1Policy := `{"path":{"secret/edgex/` + serviceName + `/*":{"capabilities":["create","update","delete","list","read"]}}}`
 	expectedService1Parameters := makeDefaultTokenParameters(serviceName)
 	expectedService1Parameters["meta"] = makeMetaServiceName(serviceName)["meta"]
-	mockSecretStoreClient := &MockSecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, expectedService1Policy).Return(http.StatusNoContent, nil)
+	mockSecretStoreClient := &mocks.SecretStoreClient{}
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, expectedService1Policy).
+		Return(nil)
 	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Run(func(args mock.Arguments) {
-			setCreateTokenResponse(args.Get(2).(*interface{}))
-		}).Return(http.StatusOK, nil)
+		Return(createTokenResponse(), nil)
 
 	// setup expected things for additional services from env if any
 
-	for service := range expectedTokenConfs {
+	for service := range expectedTokenConfigs {
 		expectedServicePolicy := `{"path":{"secret/edgex/` + service + `/*":{"capabilities":["create","update","delete","list","read"]}}}`
 		expectedServiceParameters := makeDefaultTokenParameters(service)
 
 		expectedServiceParameters["meta"] = makeMetaServiceName(service)["meta"]
 
-		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, expectedServicePolicy).Return(http.StatusNoContent, nil)
+		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, expectedServicePolicy).
+			Return(nil)
 		mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedServiceParameters, mock.Anything).
-			Run(func(args mock.Arguments) {
-				setCreateTokenResponse(args.Get(2).(*interface{}))
-			}).
-			Return(http.StatusOK, nil)
+			Return(createTokenResponse(), nil)
 	}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreclient.SecretServiceInfo{}, config.TokenFileProviderInfo{
+	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
 		PrivilegedTokenPath: privilegedTokenPath,
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
@@ -493,11 +478,11 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	mockFileIoPerformer.AssertExpectations(t)
 	mockAuthTokenLoader.AssertExpectations(t)
 	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile(serviceName), service1Buffer.Bytes())
+	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
 
-	// verify the expected tokenfiles for additional services from env
-	for service := range expectedTokenConfs {
-		assert.Equal(t, expectedTokenFile(service), expectedEnvServiceBufMap[service].Bytes())
+	// verify the expected token files for additional services from env
+	for service := range expectedTokenConfigs {
+		assert.Equal(t, expectedTokenFile(), expectedEnvServiceBufMap[service].Bytes())
 	}
 
 	return nil
