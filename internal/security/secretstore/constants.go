@@ -1,4 +1,5 @@
 /*******************************************************************************
+ * Copyright 2021 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -18,6 +19,11 @@
 package secretstore
 
 const (
+	// KVSecretsEngineMountPoint is the name of the mount point base for Vault's key-value secrets engine
+	KVSecretsEngineMountPoint = "secret"
+	// ConsulSecretEngineMountPoint is the name of the mount point base for Vault's Consul secrets engine
+	ConsulSecretEngineMountPoint = "consul"
+
 	VaultToken             = "X-Vault-Token"
 	TokenCreatorPolicyName = "privileged-token-creator"
 
