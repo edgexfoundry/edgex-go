@@ -58,7 +58,7 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 	storedKey := intervalStoredKey(interval.Id)
 	_ = conn.Send(MULTI)
 	_ = conn.Send(SET, storedKey, dsJSONBytes)
-	_ = conn.Send(ZADD, IntervalCollection, 0, storedKey)
+	_ = conn.Send(ZADD, IntervalCollection, interval.Modified, storedKey)
 	_ = conn.Send(HSET, IntervalCollectionName, interval.Name, storedKey)
 	_, err = conn.Do(EXEC)
 	if err != nil {
@@ -75,4 +75,27 @@ func intervalByName(conn redis.Conn, name string) (interval models.Interval, edg
 		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return
+}
+
+// allIntervals queries intervals by offset and limit
+func allIntervals(conn redis.Conn, offset, limit int) (intervals []models.Interval, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, edgeXerr := getObjectsByRevRange(conn, IntervalCollection, offset, end)
+	if edgeXerr != nil {
+		return intervals, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	intervals = make([]models.Interval, len(objects))
+	for i, o := range objects {
+		s := models.Interval{}
+		err := json.Unmarshal(o, &s)
+		if err != nil {
+			return []models.Interval{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "interval format parsing failed from the database", err)
+		}
+		intervals[i] = s
+	}
+	return intervals, nil
 }

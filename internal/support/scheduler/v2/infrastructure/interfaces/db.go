@@ -15,4 +15,5 @@ type DBClient interface {
 
 	AddInterval(e model.Interval) (model.Interval, errors.EdgeX)
 	IntervalByName(name string) (model.Interval, errors.EdgeX)
+	AllIntervals(offset int, limit int) ([]model.Interval, errors.EdgeX)
 }
