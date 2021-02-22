@@ -48,7 +48,7 @@ func New(mountPoint string, engineType string) SecretsEngine {
 	return SecretsEngine{mountPoint: mountPoint, engineType: engineType}
 }
 
-// Enable to enable the secrets engine for the secretstore
+// Enable enables the specified secrets engine for the secretstore
 // the rootToken is required and returns error if not provided or invalid token provided
 // also returns error if unsupported / unknown secretsEngineType is used
 func (eng SecretsEngine) Enable(rootToken *string,
@@ -73,16 +73,16 @@ func (eng SecretsEngine) Enable(rootToken *string,
 		case KeyValue:
 			// Enable KV storage version 1 at /v1/{eng.path} path (/v1 prefix supplied by Vault)
 			if err := client.EnableKVSecretEngine(*rootToken, eng.mountPoint, kvVersion); err != nil {
-				return fmt.Errorf("failed to enable KV version 1 secrets engine: %s", err.Error())
+				return fmt.Errorf("failed to enable KV version %s secrets engine: %s", kvVersion, err.Error())
 			}
-			lc.Infof("KeyValue secrets engine enabled")
+			lc.Infof("KeyValue secrets engine with version %s enabled", kvVersion)
 		case Consul:
 			// Enable Consul secrets storage at /consul path
 			if err := client.EnableConsulSecretEngine(*rootToken,
 				eng.mountPoint, defaultConsulTokenLeaseTtl); err != nil {
 				return fmt.Errorf("failed to enable Consul secrets engine: %s", err.Error())
 			}
-			lc.Infof("Consul secrets engine enabled")
+			lc.Infof("Consul secrets engine with config default_ttl = %s enabled", defaultConsulTokenLeaseTtl)
 		default:
 			return fmt.Errorf("Unsupported secrets engine type: %s", eng.engineType)
 		}
