@@ -49,3 +49,18 @@ func IntervalByName(name string, ctx context.Context, dic *di.Container) (dto dt
 	dto = dtos.FromIntervalModelToDTO(interval)
 	return dto, nil
 }
+
+// AllIntervals query the intervals with offset and limit
+func AllIntervals(offset int, limit int, dic *di.Container) (intervalDTOs []dtos.Interval, err errors.EdgeX) {
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	intervals, err := dbClient.AllIntervals(offset, limit)
+	if err != nil {
+		return intervalDTOs, errors.NewCommonEdgeXWrapper(err)
+	}
+	intervalDTOs = make([]dtos.Interval, len(intervals))
+	for i, interval := range intervals {
+		dto := dtos.FromIntervalModelToDTO(interval)
+		intervalDTOs[i] = dto
+	}
+	return intervalDTOs, nil
+}

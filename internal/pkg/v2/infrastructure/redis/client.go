@@ -698,6 +698,18 @@ func (c *Client) IntervalByName(name string) (interval model.Interval, edgeXerr 
 	return
 }
 
+// AllIntervals query intervals with offset and limit
+func (c *Client) AllIntervals(offset int, limit int) (intervals []model.Interval, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	intervals, edgeXerr = allIntervals(conn, offset, limit)
+	if edgeXerr != nil {
+		return intervals, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return intervals, nil
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
