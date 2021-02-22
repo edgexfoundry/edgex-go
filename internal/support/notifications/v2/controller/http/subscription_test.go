@@ -40,7 +40,7 @@ import (
 var (
 	ExampleUUID                = "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
 	testSubscriptionName       = "subscriptionName"
-	testSubscriptionCategories = []string{models.SoftwareHealth}
+	testSubscriptionCategories = []string{"category1", "category2"}
 	testSubscriptionLabels     = []string{"label"}
 	testSubscriptionChannels   = []dtos.Channel{
 		{Type: models.Email, EmailAddresses: []string{"test@example.com"}},
@@ -139,8 +139,6 @@ func TestAddSubscription(t *testing.T) {
 	noCategoriesAndLabels := addSubscriptionRequestData()
 	noCategoriesAndLabels.Subscription.Categories = []string{}
 	noCategoriesAndLabels.Subscription.Labels = []string{}
-	invalidCategory := addSubscriptionRequestData()
-	invalidCategory.Subscription.Categories = []string{unsupportedCategory}
 
 	noReceiver := addSubscriptionRequestData()
 	noReceiver.Subscription.Receiver = ""
@@ -168,7 +166,6 @@ func TestAddSubscription(t *testing.T) {
 		{"Invalid - invalid email address", []requests.AddSubscriptionRequest{invalidEmailAddress}, http.StatusBadRequest},
 		{"Invalid - invalid url", []requests.AddSubscriptionRequest{invalidUrl}, http.StatusBadRequest},
 		{"Invalid - no categories and labels", []requests.AddSubscriptionRequest{noCategoriesAndLabels}, http.StatusBadRequest},
-		{"Invalid - invalid category", []requests.AddSubscriptionRequest{invalidCategory}, http.StatusBadRequest},
 		{"Invalid - no receiver", []requests.AddSubscriptionRequest{noReceiver}, http.StatusBadRequest},
 		{"Invalid - resendInterval is not specified in ISO8601 format", []requests.AddSubscriptionRequest{invalidResendInterval}, http.StatusBadRequest},
 	}
@@ -615,7 +612,7 @@ func TestPatchSubscription(t *testing.T) {
 		Name:           *testReq.Subscription.Name,
 		Channels:       dtos.ToChannelModels(testReq.Subscription.Channels),
 		Receiver:       *testReq.Subscription.Receiver,
-		Categories:     dtos.ToCategoryModels(testReq.Subscription.Categories),
+		Categories:     testReq.Subscription.Categories,
 		Labels:         testReq.Subscription.Labels,
 		Description:    *testReq.Subscription.Description,
 		ResendLimit:    *testReq.Subscription.ResendLimit,

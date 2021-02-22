@@ -26,13 +26,17 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiMetricsRoute, cc.Metrics).Methods(http.MethodGet)
 
 	// Subscription
-	nc := notificationsController.NewSubscriptionController(dic)
-	r.HandleFunc(v2Constant.ApiSubscriptionRoute, nc.AddSubscription).Methods(http.MethodPost)
-	r.HandleFunc(v2Constant.ApiAllSubscriptionRoute, nc.AllSubscriptions).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiSubscriptionByNameRoute, nc.SubscriptionByName).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiSubscriptionByCategoryRoute, nc.SubscriptionsByCategory).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiSubscriptionByLabelRoute, nc.SubscriptionsByLabel).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiSubscriptionByReceiverRoute, nc.SubscriptionsByReceiver).Methods(http.MethodGet)
-	r.HandleFunc(v2Constant.ApiSubscriptionByNameRoute, nc.DeleteSubscriptionByName).Methods(http.MethodDelete)
-	r.HandleFunc(v2Constant.ApiSubscriptionRoute, nc.PatchSubscription).Methods(http.MethodPatch)
+	sc := notificationsController.NewSubscriptionController(dic)
+	r.HandleFunc(v2Constant.ApiSubscriptionRoute, sc.AddSubscription).Methods(http.MethodPost)
+	r.HandleFunc(v2Constant.ApiAllSubscriptionRoute, sc.AllSubscriptions).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByNameRoute, sc.SubscriptionByName).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByCategoryRoute, sc.SubscriptionsByCategory).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByLabelRoute, sc.SubscriptionsByLabel).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByReceiverRoute, sc.SubscriptionsByReceiver).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiSubscriptionByNameRoute, sc.DeleteSubscriptionByName).Methods(http.MethodDelete)
+	r.HandleFunc(v2Constant.ApiSubscriptionRoute, sc.PatchSubscription).Methods(http.MethodPatch)
+
+	// Notification
+	nc := notificationsController.NewNotificationController(dic)
+	r.HandleFunc(v2Constant.ApiNotificationRoute, nc.AddNotification).Methods(http.MethodPost)
 }
