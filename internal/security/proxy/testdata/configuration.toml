@@ -36,9 +36,10 @@ OutputPath = "accessToken.json"
 Name = "acl"
 WhiteList = "admin"
 
-[SecretService]
+[SecretStore]
+Type = "vault"
 Protocol = "https"
-Server = "localhost"
+Host = "localhost"
 Port = 8200
 HealthCheckPath = "v1/sys/health"
 CertPath = "/v1/secret/edgex/edgex-security-proxy-setup"
