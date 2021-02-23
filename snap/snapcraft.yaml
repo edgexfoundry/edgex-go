@@ -153,12 +153,12 @@ apps:
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
-      SECRETSERVICE_SERVER: localhost
+      SECRETSTORE_HOST: localhost
       # environment vars for security-secretstore-setup (aka vault-worker)
-      SECRETSERVICE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res
-      SECRETSERVICE_TOKENPROVIDER: $SNAP/bin/security-file-token-provider
-      SECRETSERVICE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
-      SECRETSERVICE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
+      SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res
+      SECRETSTORE_TOKENPROVIDER: $SNAP/bin/security-file-token-provider
+      SECRETSTORE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
+      SECRETSTORE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
 
       # environment for security-file-token-provider, exec'd by secretstore-setup
       TOKENFILEPROVIDER_PRIVILEGEDTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
@@ -175,7 +175,7 @@ apps:
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     environment:
       INIT_ARG: "--init=true"
-      SECRETSERVICE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -305,7 +305,7 @@ apps:
     adapter: none
     command: bin/security-proxy-setup
     environment:
-      SECRETSERVICE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none

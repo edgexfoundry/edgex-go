@@ -45,7 +45,7 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
 * The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.toml`](res/configuration.toml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug `security-secretstore-setup`, set this to _false_:
 
     ```toml
-    [SecretService]
+    [SecretStore]
     ...
     RevokeRootTokens = false
     ```
