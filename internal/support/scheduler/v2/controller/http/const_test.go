@@ -12,4 +12,6 @@ const (
 	TestIntervalEnd       = "20190802T150405"
 	TestIntervalFrequency = "30ms"
 	TestIntervalRunOnce   = false
+
+	TestIntervalActionName = "TestIntervalAction"
 )
