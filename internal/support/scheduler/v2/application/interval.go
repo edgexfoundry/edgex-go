@@ -64,3 +64,29 @@ func AllIntervals(offset int, limit int, dic *di.Container) (intervalDTOs []dtos
 	}
 	return intervalDTOs, nil
 }
+
+// DeleteIntervalByName delete the interval by name
+func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+
+	// TODO Check the associated intervalAction existence
+	//actions, err := dbClient.IntervalActionsByIntervalName(0, 1, name)
+	//if err != nil {
+	//	return errors.NewCommonEdgeXWrapper(err)
+	//}
+	//if len(actions) > 0 {
+	//	return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the interval when associated intervalAction exists", nil)
+	//}
+
+	// TODO Remove interval from SchedulerQueue
+	//err = sqDeleter.RemoveIntervalInQueue(interval.ID)
+
+	err := dbClient.DeleteIntervalByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

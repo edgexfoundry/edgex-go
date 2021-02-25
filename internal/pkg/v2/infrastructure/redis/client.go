@@ -710,6 +710,19 @@ func (c *Client) AllIntervals(offset int, limit int) (intervals []model.Interval
 	return intervals, nil
 }
 
+// DeleteIntervalByName deletes the interval by name
+func (c *Client) DeleteIntervalByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteIntervalByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the interval with name %s", name), edgeXerr)
+	}
+
+	return nil
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
