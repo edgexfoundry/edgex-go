@@ -15,13 +15,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/infrastructure/redis"
 	v2Interface "github.com/edgexfoundry/edgex-go/internal/pkg/v2/interfaces"
+
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 )
 
 // httpServer defines the contract used to determine whether or not the http httpServer is running.
@@ -49,7 +50,7 @@ func NewDatabase(httpServer httpServer, database interfaces.Database, dBClientIn
 func (d Database) newDBClient(
 	lc logger.LoggingClient,
 	credentials bootstrapConfig.Credentials) (v2Interface.DBClient, error) {
-	databaseInfo := d.database.GetDatabaseInfo()["Primary"]
+	databaseInfo := d.database.GetDatabaseInfo()[v2.Primary]
 	switch databaseInfo.Type {
 	case "redisdb":
 		return redis.NewClient(
@@ -78,7 +79,7 @@ func (d Database) BootstrapHandler(
 	for startupTimer.HasNotElapsed() {
 		var err error
 
-		secrets, err := secretProvider.GetSecrets(d.database.GetDatabaseInfo()["Primary"].Type)
+		secrets, err := secretProvider.GetSecrets(d.database.GetDatabaseInfo()[v2.Primary].Type)
 		if err == nil {
 			credentials = bootstrapConfig.Credentials{
 				Username: secrets[secret.UsernameKey],

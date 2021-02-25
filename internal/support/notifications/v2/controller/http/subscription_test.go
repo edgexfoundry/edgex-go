@@ -50,7 +50,6 @@ var (
 	testSubscriptionResendLimit    = int64(5)
 	testSubscriptionResendInterval = "10s"
 	unsupportedChannelType         = "unsupportedChannelType"
-	unsupportedCategory            = "unsupportedCategory"
 )
 
 func mockDic() *di.Container {

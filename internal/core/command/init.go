@@ -66,19 +66,19 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
 		container.MetadataDeviceClientName: func(get di.Get) interface{} {
-			return metadata.NewDeviceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
+			return metadata.NewDeviceClient(local.New(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + clients.ApiDeviceRoute))
 		},
 		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
 			return errorconcept.NewErrorHandler(lc)
 		},
 		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
-			return V2Clients.NewDeviceClient(configuration.Clients["Metadata"].Url() + V2Routes.ApiDeviceRoute)
+			return V2Clients.NewDeviceClient(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + V2Routes.ApiDeviceRoute)
 		},
 		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
-			return V2Clients.NewDeviceProfileClient(configuration.Clients["Metadata"].Url() + V2Routes.ApiDeviceProfileRoute)
+			return V2Clients.NewDeviceProfileClient(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + V2Routes.ApiDeviceProfileRoute)
 		},
 		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceServiceClient
-			return V2Clients.NewDeviceServiceClient(configuration.Clients["Metadata"].Url() + V2Routes.ApiDeviceServiceRoute)
+			return V2Clients.NewDeviceServiceClient(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + V2Routes.ApiDeviceServiceRoute)
 		},
 		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
 			return V2Clients.NewDeviceServiceCommandClient()

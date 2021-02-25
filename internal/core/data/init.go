@@ -31,6 +31,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/metadata"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
+	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -57,21 +58,21 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	mdc := metadata.NewDeviceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
-	msc := metadata.NewDeviceServiceClient(local.New(configuration.Clients["Metadata"].Url() + clients.ApiDeviceRoute))
+	mdc := metadata.NewDeviceClient(local.New(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + clients.ApiDeviceRoute))
+	msc := metadata.NewDeviceServiceClient(local.New(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + clients.ApiDeviceRoute))
 
 	// For Redis Streams MessageBus, we reuse the Redis instance running for the DB, which may have a password,
 	// so we need to get and use the DB credentials for the MessageBus connection.
 	if configuration.MessageQueue.Type == "redisstreams" {
 		secretProvider := container.SecretProviderFrom(dic.Get)
-		credentials, err := secretProvider.GetSecrets(configuration.Databases["Primary"].Type)
+		credentials, err := secretProvider.GetSecrets(configuration.Databases[contractsV2.Primary].Type)
 		if err != nil {
 			lc.Error(fmt.Sprintf("Error getting DB creds for RedisStreams: %s", err.Error()))
 			return false
 		}
 
 		lc.Info("DB Credentials set for using Redis Streams")
-		configuration.MessageQueue.Optional["Password"] = credentials[secret.PasswordKey]
+		configuration.MessageQueue.Optional[contractsV2.Password] = credentials[secret.PasswordKey]
 	}
 
 	// Create the messaging client
