@@ -15,6 +15,29 @@ type DBClient struct {
 	mock.Mock
 }
 
+// AddNotification provides a mock function with given fields: n
+func (_m *DBClient) AddNotification(n models.Notification) (models.Notification, errors.EdgeX) {
+	ret := _m.Called(n)
+
+	var r0 models.Notification
+	if rf, ok := ret.Get(0).(func(models.Notification) models.Notification); ok {
+		r0 = rf(n)
+	} else {
+		r0 = ret.Get(0).(models.Notification)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(models.Notification) errors.EdgeX); ok {
+		r1 = rf(n)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // AddSubscription provides a mock function with given fields: e
 func (_m *DBClient) AddSubscription(e models.Subscription) (models.Subscription, errors.EdgeX) {
 	ret := _m.Called(e)

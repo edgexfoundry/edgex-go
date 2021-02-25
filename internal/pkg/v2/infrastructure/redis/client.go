@@ -813,3 +813,15 @@ func (c *Client) DeleteSubscriptionByName(name string) errors.EdgeX {
 
 	return nil
 }
+
+// AddNotification adds a new notification
+func (c *Client) AddNotification(notification model.Notification) (model.Notification, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(notification.Id) == 0 {
+		notification.Id = uuid.New().String()
+	}
+
+	return addNotification(conn, notification)
+}
