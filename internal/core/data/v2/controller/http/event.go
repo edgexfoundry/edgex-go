@@ -4,6 +4,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
@@ -26,16 +27,26 @@ import (
 )
 
 type EventController struct {
-	reader io.EventReader
-	dic    *di.Container
+	readers map[string]io.EventReader
+	dic     *di.Container
 }
 
 // NewEventController creates and initializes an EventController
 func NewEventController(dic *di.Container) *EventController {
 	return &EventController{
-		reader: io.NewEventRequestReader(),
-		dic:    dic,
+		readers: make(map[string]io.EventReader),
+		dic:     dic,
 	}
+}
+
+func (ec *EventController) getReader(r *http.Request) io.EventReader {
+	contentType := strings.ToLower(r.Header.Get(clients.ContentType))
+	if reader, ok := ec.readers[contentType]; ok {
+		return reader
+	}
+	reader := io.NewEventRequestReader(contentType)
+	ec.readers[contentType] = reader
+	return reader
 }
 
 func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +66,8 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	deviceName := vars[v2.DeviceName]
 	sourceName := vars[v2.SourceName]
 
-	addEventReqDTO, err := ec.reader.ReadAddEventRequest(r.Body)
+	reader := ec.getReader(r)
+	addEventReqDTO, err := reader.ReadAddEventRequest(r.Body)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)

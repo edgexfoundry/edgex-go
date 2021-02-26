@@ -19,6 +19,7 @@ import (
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
@@ -26,6 +27,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
+	"github.com/fxamacker/cbor/v2"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -83,6 +85,15 @@ var persistedEvent = models.Event{
 	Created:     TestCreatedTime,
 	Origin:      TestOriginTime,
 	Readings:    []models.Reading{persistedReading},
+}
+
+func toByteArray(contentType string, v interface{}) ([]byte, error) {
+	switch strings.ToLower(contentType) {
+	case clients.ContentTypeCBOR:
+		return cbor.Marshal(v)
+	default:
+		return json.Marshal(v)
+	}
 }
 
 func TestAddEvent(t *testing.T) {
@@ -178,41 +189,62 @@ func TestAddEvent(t *testing.T) {
 	tests := []struct {
 		Name               string
 		Request            requests.AddEventRequest
+		RequestContentType string
 		ProfileName        string
 		DeviceName         string
 		ErrorExpected      bool
 		ExpectedStatusCode int
 	}{
-		{"Valid - AddEventRequest", validRequest, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
-		{"Valid - No RequestId", noRequestId, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
-		{"Invalid - Bad RequestId", badRequestId, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Event", noEvent, "", "", true, http.StatusBadRequest},
-		{"Invalid - No Event Id", noEventID, noEventID.Event.ProfileName, noEventID.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - Bad Event Id", badEventID, badEventID.Event.ProfileName, badEventID.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Event DeviceName", noEventDevice, noEventDevice.Event.ProfileName, noEventDevice.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Event ProfileName", noEventProfile, noEventProfile.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Event SourceName", noEventSourceName, noEventSourceName.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Event Origin", noEventOrigin, noEventOrigin.Event.ProfileName, noEventOrigin.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading", noReading, noReading.Event.ProfileName, noReading.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading DeviceName", noReadingDevice, noReadingDevice.Event.ProfileName, noReadingDevice.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading ResourceName", noReadingResourceName, noReadingResourceName.Event.ProfileName, noReadingResourceName.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading ProfileName", noReadingProfileName, noReadingProfileName.Event.ProfileName, noReadingProfileName.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading Origin", noReadingOrigin, noReadingOrigin.Event.ProfileName, noReadingOrigin.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No Reading ValueType", noReadingValueType, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - Invalid Reading ValueType", invalidReadingInvalidValueType, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No SimpleReading Value", noSimpleValue, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading BinaryValue", noBinaryValue, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading MediaType", noBinaryMediaType, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Valid - AddEventRequest JSON", validRequest, clients.ContentTypeJSON, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
+		{"Valid - No RequestId JSON", noRequestId, clients.ContentTypeJSON, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
+		{"Invalid - Bad RequestId JSON", badRequestId, clients.ContentTypeJSON, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event JSON", noEvent, clients.ContentTypeJSON, "", "", true, http.StatusBadRequest},
+		{"Invalid - No Event Id JSON", noEventID, clients.ContentTypeJSON, noEventID.Event.ProfileName, noEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Bad Event Id JSON", badEventID, clients.ContentTypeJSON, badEventID.Event.ProfileName, badEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event DeviceName JSON", noEventDevice, clients.ContentTypeJSON, noEventDevice.Event.ProfileName, noEventDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event ProfileName JSON", noEventProfile, clients.ContentTypeJSON, noEventProfile.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event SourceName JSON", noEventSourceName, clients.ContentTypeJSON, noEventSourceName.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event Origin JSON", noEventOrigin, clients.ContentTypeJSON, noEventOrigin.Event.ProfileName, noEventOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading JSON", noReading, clients.ContentTypeJSON, noReading.Event.ProfileName, noReading.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading DeviceName JSON", noReadingDevice, clients.ContentTypeJSON, noReadingDevice.Event.ProfileName, noReadingDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ResourceName JSON", noReadingResourceName, clients.ContentTypeJSON, noReadingResourceName.Event.ProfileName, noReadingResourceName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ProfileName JSON", noReadingProfileName, clients.ContentTypeJSON, noReadingProfileName.Event.ProfileName, noReadingProfileName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading Origin JSON", noReadingOrigin, clients.ContentTypeJSON, noReadingOrigin.Event.ProfileName, noReadingOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ValueType JSON", noReadingValueType, clients.ContentTypeJSON, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Invalid Reading ValueType JSON", invalidReadingInvalidValueType, clients.ContentTypeJSON, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No SimpleReading Value JSON", noSimpleValue, clients.ContentTypeJSON, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading BinaryValue JSON", noBinaryValue, clients.ContentTypeJSON, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading MediaType JSON", noBinaryMediaType, clients.ContentTypeJSON, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Valid - AddEventRequest CBOR", validRequest, clients.ContentTypeCBOR, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
+		{"Valid - No RequestId CBOR", noRequestId, clients.ContentTypeCBOR, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
+		{"Invalid - Bad RequestId CBOR", badRequestId, clients.ContentTypeCBOR, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event CBOR", noEvent, clients.ContentTypeCBOR, "", "", true, http.StatusBadRequest},
+		{"Invalid - No Event Id CBOR", noEventID, clients.ContentTypeCBOR, noEventID.Event.ProfileName, noEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Bad Event Id CBOR", badEventID, clients.ContentTypeCBOR, badEventID.Event.ProfileName, badEventID.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event DeviceName CBOR", noEventDevice, clients.ContentTypeCBOR, noEventDevice.Event.ProfileName, noEventDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event ProfileName CBOR", noEventProfile, clients.ContentTypeCBOR, noEventProfile.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event SourceName CBOR", noEventSourceName, clients.ContentTypeCBOR, noEventSourceName.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event Origin CBOR", noEventOrigin, clients.ContentTypeCBOR, noEventOrigin.Event.ProfileName, noEventOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading CBOR", noReading, clients.ContentTypeCBOR, noReading.Event.ProfileName, noReading.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading DeviceName CBOR", noReadingDevice, clients.ContentTypeCBOR, noReadingDevice.Event.ProfileName, noReadingDevice.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ResourceName CBOR", noReadingResourceName, clients.ContentTypeCBOR, noReadingResourceName.Event.ProfileName, noReadingResourceName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ProfileName CBOR", noReadingProfileName, clients.ContentTypeCBOR, noReadingProfileName.Event.ProfileName, noReadingProfileName.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading Origin CBOR", noReadingOrigin, clients.ContentTypeCBOR, noReadingOrigin.Event.ProfileName, noReadingOrigin.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Reading ValueType CBOR", noReadingValueType, clients.ContentTypeCBOR, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - Invalid Reading ValueType CBOR", invalidReadingInvalidValueType, clients.ContentTypeCBOR, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No SimpleReading Value CBOR", noSimpleValue, clients.ContentTypeCBOR, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading BinaryValue CBOR", noBinaryValue, clients.ContentTypeCBOR, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No BinaryReading MediaType CBOR", noBinaryMediaType, clients.ContentTypeCBOR, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
-			jsonData, err := json.Marshal(testCase.Request)
+			byteData, err := toByteArray(testCase.RequestContentType, testCase.Request)
 			require.NoError(t, err)
 
-			reader := strings.NewReader(string(jsonData))
-
+			reader := strings.NewReader(string(byteData))
 			req, err := http.NewRequest(http.MethodPost, v2.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
+			req.Header.Set(clients.ContentType, testCase.RequestContentType)
 			req = mux.SetURLVars(req, map[string]string{v2.ProfileName: testCase.ProfileName, v2.DeviceName: testCase.DeviceName, v2.SourceName: testCase.Request.Event.SourceName})
 			require.NoError(t, err)
 
