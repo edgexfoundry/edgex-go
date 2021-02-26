@@ -35,6 +35,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenfilewriter"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -223,13 +224,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	healthOkCh := make(chan struct{})
 	go func() {
 		for {
-			select {
-			case <-ticker.C:
-				if sCode, _ := client.HealthCheck(); sCode == http.StatusOK {
-					close(healthOkCh)
-					ticker.Stop()
-					return
-				}
+			<-ticker.C
+			if sCode, _ := client.HealthCheck(); sCode == http.StatusOK {
+				close(healthOkCh)
+				ticker.Stop()
+				return
 			}
 		}
 	}()
@@ -290,9 +289,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// If configured to do so, create a token issuing token
 	if secretStoreConfig.TokenProviderAdminTokenPath != "" {
-		revokeIssuingTokenFuc, err := makeTokenIssuingToken(lc, configuration, tokenMaintenance, fileOpener, rootToken)
+		revokeIssuingTokenFuc, err := tokenfilewriter.NewWriter(lc, client, fileOpener).
+			CreateAndWrite(rootToken, secretStoreConfig.TokenProviderAdminTokenPath, tokenMaintenance.CreateTokenIssuingToken)
 		if err != nil {
-			lc.Errorf("failed to create token issuing token %s", err.Error())
+			lc.Errorf("failed to create token issuing token: %s", err.Error())
 			os.Exit(1)
 		}
 		if secretStoreConfig.TokenProviderType == OneShotProvider {
@@ -318,16 +318,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Enable KV secret engine
-	if err := secretsengine.New(KVSecretsEngineMountPoint, secretsengine.KeyValue).
+	if err := secretsengine.New(secretsengine.KVSecretsEngineMountPoint, secretsengine.KeyValue).
 		Enable(&rootToken, lc, client); err != nil {
 		lc.Errorf("failed to enable KV secrets engine: %s", err.Error())
-		os.Exit(1)
-	}
-
-	// Enable Consul secret engine
-	if err := secretsengine.New(ConsulSecretEngineMountPoint, secretsengine.Consul).
-		Enable(&rootToken, lc, client); err != nil {
-		lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -422,6 +415,26 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("proxy certificate pair upload was skipped because cert secretStore value(s) were blank")
 	}
 
+	// If Registry Consul ACL feature is enabled, then we need to create and save a Vault token to configure
+	// Consul secret engine access, role operations, and managing Consul agent tokens.
+	registryACLEnabled := os.Getenv(RegistryACLFeatureFlag)
+	if registryACLEnabled == "true" {
+		// Enable Consul secret engine
+		if err := secretsengine.New(secretsengine.ConsulSecretEngineMountPoint, secretsengine.Consul).
+			Enable(&rootToken, lc, client); err != nil {
+			lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
+			os.Exit(1)
+		}
+
+		// generate a management token for Consul secrets engine operations:
+		tokenFileWriter := tokenfilewriter.NewWriter(lc, client, fileOpener)
+		if _, err := tokenFileWriter.CreateAndWrite(rootToken, configuration.SecretStore.ConsulSecretsAdminTokenPath,
+			tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
+			lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
+			os.Exit(1)
+		}
+	}
+
 	lc.Info("Vault init done successfully")
 	return false
 
@@ -467,74 +480,6 @@ func addDBCredential(lc logger.LoggingClient, db string, cred Cred, service stri
 	}
 
 	return err
-}
-
-func makeTokenIssuingToken(
-	lc logger.LoggingClient,
-	configuration *config.ConfigurationStruct,
-	tokenMaintenance *TokenMaintenance,
-	fileOpener fileioperformer.FileIoPerformer,
-	rootToken string) (RevokeFunc, error) {
-
-	configAdminTokenPath := configuration.SecretStore.TokenProviderAdminTokenPath
-	if configAdminTokenPath == "" {
-		err := fmt.Errorf("TokenProviderAdminTokenPath is a required configuration setting")
-		lc.Error(err.Error())
-		return nil, err
-	}
-
-	// Create delegate credential for use by the token provider
-	tokenIssuingToken, revokeIssuingTokenFuc, err := tokenMaintenance.CreateTokenIssuingToken(rootToken)
-	if err != nil {
-		lc.Errorf("failed to create token issuing token %s", err.Error())
-		return nil, err
-	}
-	lc.Info("created token issuing token")
-
-	// Write the token issuing token to disk to pass it to the token provider
-	adminTokenPath, err := filepath.Abs(configAdminTokenPath)
-	if err != nil {
-		lc.Errorf("failed to convert to absolute path %s: %s", configAdminTokenPath, err.Error())
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-	dirOfAdminToken := filepath.Dir(adminTokenPath)
-	err = fileOpener.MkdirAll(dirOfAdminToken, 0700)
-	if err != nil {
-		lc.Errorf("failed to create tokenpath base dir: %s", err.Error())
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-	tokenWriter, err := fileOpener.OpenFileWriter(adminTokenPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-	if err != nil {
-		lc.Errorf("failed to create token issuing file %s: %s", adminTokenPath, err.Error())
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-
-	encoder := json.NewEncoder(tokenWriter)
-	if encoder == nil {
-		err := fmt.Errorf("failed to create token encoder")
-		lc.Error(err.Error())
-		_ = tokenWriter.Close()
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-
-	if err = encoder.Encode(tokenIssuingToken); err != nil {
-		lc.Errorf("failed to write token issuing token: %s", err.Error())
-		_ = tokenWriter.Close()
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-
-	if err = tokenWriter.Close(); err != nil {
-		lc.Errorf("failed to close token issuing file: %s", err.Error())
-		revokeIssuingTokenFuc()
-		return nil, err
-	}
-
-	return revokeIssuingTokenFuc, nil
 }
 
 func loadInitResponse(

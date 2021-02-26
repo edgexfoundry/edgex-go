@@ -36,12 +36,12 @@ For Fuji.DOT/Geneva, all root tokens will be revoked.
 import (
 	"fmt"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 )
-
-type RevokeFunc func()
 
 type TokenMaintenance struct {
 	logging      logger.LoggingClient
@@ -60,7 +60,8 @@ func NewTokenMaintenance(logging logger.LoggingClient, secretClient secrets.Secr
 // allows the holder to create per-service tokens an policies.
 // Requires a root token, returns a function that,
 // if called, with revoke the token
-func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[string]interface{}, RevokeFunc, error) {
+func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[string]interface{},
+	tokencreatable.RevokeFunc, error) {
 
 	err := tm.secretClient.InstallPolicy(rootToken, TokenCreatorPolicyName, TokenCreatorPolicy)
 	if err != nil {
@@ -74,8 +75,7 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 	createTokenParameters["period"] = "1h"
 	createTokenParameters["policies"] = []string{TokenCreatorPolicyName}
 	createTokenParameters["ttl"] = "1h"
-	createTokenResponse := make(map[string]interface{})
-	createTokenResponse, err = tm.secretClient.CreateToken(rootToken, createTokenParameters)
+	createTokenResponse, err := tm.secretClient.CreateToken(rootToken, createTokenParameters)
 	if err != nil {
 		tm.logging.Error(fmt.Sprintf("failed creation of token-issuing-token: %s", err.Error()))
 		return nil, nil, err
