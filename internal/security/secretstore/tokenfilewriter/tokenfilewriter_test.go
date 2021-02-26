@@ -36,7 +36,8 @@ var lc logger.LoggingClient
 var flOpener fileioperformer.FileIoPerformer
 
 func TestMain(m *testing.M) {
-	lc, flOpener = setup()()
+	lc = logger.MockLogger{}
+	flOpener = fileioperformer.NewDefaultFileIoPerformer()
 	os.Exit(m.Run())
 }
 
@@ -172,14 +173,6 @@ func TestFileWriteErrorForConsulSecretEngine(t *testing.T) {
 	_, err := fileWriter.CreateAndWrite(testRootToken, testTokenFilePath,
 		fileWriter.CreateMgmtTokenForConsulSecretsEngine)
 	require.Error(t, err)
-}
-
-func setup() func() (logger.LoggingClient, fileioperformer.FileIoPerformer) {
-	return func() (logger.LoggingClient, fileioperformer.FileIoPerformer) {
-		lc := logger.MockLogger{}
-		flOpener := fileioperformer.NewDefaultFileIoPerformer()
-		return lc, flOpener
-	}
 }
 
 func getCreateTokenResultStub() map[string]interface{} {

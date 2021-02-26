@@ -147,7 +147,8 @@ path "` + secretsengine.ConsulSecretEngineMountPoint + `/roles/*" {
 	// setup new token's properties
 	tokenParams := make(map[string]interface{})
 	tokenParams["type"] = "service"
-	tokenParams["display_name"] = "managing with policy name " + consulSecretsEngineOpsPolicyName
+	// Vault prefixes "token" in front of display_name
+	tokenParams["display_name"] = "for Consul ACL bootstrap"
 	tokenParams["no_parent"] = true
 	tokenParams["period"] = "1h"
 	tokenParams["policies"] = []string{consulSecretsEngineOpsPolicyName}
