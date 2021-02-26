@@ -26,11 +26,11 @@ Type = 'consul'
 
 
 [Clients]
-  [Clients.Notifications]
+  [Clients.edgex-support-notifications]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
-  [Clients.CoreData]
+  [Clients.edgex-core-data]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48080

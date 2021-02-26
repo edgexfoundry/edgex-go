@@ -69,11 +69,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
 			return coredata.NewValueDescriptorClient(
-				local.New(configuration.Clients["CoreData"].Url() + clients.ApiValueDescriptorRoute))
+				local.New(configuration.Clients[clients.CoreDataServiceKey].Url() + clients.ApiValueDescriptorRoute))
 		},
 		container.NotificationsClientName: func(get di.Get) interface{} {
 			return notifications.NewNotificationsClient(
-				local.New(configuration.Clients["Notifications"].Url() + clients.ApiNotificationRoute))
+				local.New(configuration.Clients[clients.SupportNotificationsServiceKey].Url() + clients.ApiNotificationRoute))
 
 		},
 	})
