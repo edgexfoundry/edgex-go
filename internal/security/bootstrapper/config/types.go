@@ -56,6 +56,17 @@ type RegistryInfo struct {
 	Host      string
 	Port      int
 	ReadyPort int
+	ACL       ACLInfo
+}
+
+// ACLInfo defines the fields related to Registry's ACL process
+type ACLInfo struct {
+	// the protocol used for registry's API calls, usually it is different from the protocol of waitFor, i.e. TCP
+	Protocol string
+	// filepath to save the registry's token generated from ACL bootstrapping
+	BootstrapTokenPath string
+	// filepath for the secretstore's token created from secretstore-setup
+	SecretsAdminTokenPath string
 }
 
 // KongDBInfo defines the fields related to

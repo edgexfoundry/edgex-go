@@ -54,6 +54,7 @@ func TestNewCommand(t *testing.T) {
 		{"Good: genPassword command", []string{"genPassword"}, "genPassword", false},
 		{"Good: getHttpStatus command", []string{"getHttpStatus", "--url=http://localhost:55555"}, "getHttpStatus", false},
 		{"Good: waitFor command", []string{"waitFor", "--uri=http://localhost:55555"}, "waitFor", false},
+		{"Good: setupRegistryACL command", []string{"setupRegistryACL"}, "setupRegistryACL", false},
 		{"Bad: unknown command", []string{"unknown"}, "", true},
 		{"Bad: empty command", []string{}, "", true},
 		{"Bad: listenTcp command missing required --port", []string{"listenTcp"}, "", true},
@@ -62,18 +63,20 @@ func TestNewCommand(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		test := tt //capture as local copy
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			// Act
-			command, err := NewCommand(ctx, wg, lc, config, tt.cmdArgs)
+			command, err := NewCommand(ctx, wg, lc, config, test.cmdArgs)
 
 			// Assert
-			if tt.expectedErr {
+			if test.expectedErr {
 				require.Error(t, err)
 				require.Nil(t, command)
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, command)
-				require.Equal(t, tt.expectedCmdName, command.GetCommandName())
+				require.Equal(t, test.expectedCmdName, command.GetCommandName())
 			}
 		})
 	}
