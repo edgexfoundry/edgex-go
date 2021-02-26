@@ -81,7 +81,7 @@ func (w TokenFileWriter) CreateAndWrite(rootToken string, tokenFilePath string,
 		}
 	}()
 
-	// Write the token issuing token to disk to pass it to the token provider
+	// Write the created token to the specified file
 	tokenFileAbsPath, fileErr := filepath.Abs(tokenFilePath)
 	if fileErr != nil {
 		return nil, fmt.Errorf("failed to convert tokenFile to absolute path %s: %s", tokenFilePath, fileErr.Error())
@@ -107,7 +107,7 @@ func (w TokenFileWriter) CreateAndWrite(rootToken string, tokenFilePath string,
 		return nil, fmt.Errorf("failed to close token file: %s", fileErr.Error())
 	}
 
-	w.logClient.Infof("token's written to %s", tokenFilePath)
+	w.logClient.Infof("token is written to %s", tokenFilePath)
 
 	return revokeTokenFunc, nil
 }
@@ -118,8 +118,9 @@ func (w TokenFileWriter) CreateAndWrite(rootToken string, tokenFilePath string,
 // the purpose of Consul ACL's bootstrapping as part of securing Consul process.
 //
 // Requires a root token to create, and returns data/information containing the token,
-// keeping the token without revoking it and hence always returning nil RevokeFunc;
-// also returns non-nil error if anything goes wrong during the creation.
+// keeping the token without revoking it and hence always returning nil RevokeFunc in order to conform to the
+// input type tokencreatable.CreateTokenFunc as its function argument;
+// this function returns non-nil error if anything goes wrong during the creation.
 // this function conforms to the signature of the tokencreatable.CreateTokenFunc type
 // so that it can be passed to CreateAndWrite()
 func (w TokenFileWriter) CreateMgmtTokenForConsulSecretsEngine(rootToken string) (map[string]interface{},

@@ -32,17 +32,21 @@ import (
 	"github.com/edgexfoundry/go-mod-secrets/v2/secrets/mocks"
 )
 
-func TestNewTokenFileWriter(t *testing.T) {
-	lc, flOpener := setup()()
+var lc logger.LoggingClient
+var flOpener fileioperformer.FileIoPerformer
 
+func TestMain(m *testing.M) {
+	lc, flOpener = setup()()
+	os.Exit(m.Run())
+}
+
+func TestNewTokenFileWriter(t *testing.T) {
 	sc := &mocks.SecretStoreClient{}
 	tokenFileWriter := NewWriter(lc, sc, flOpener)
 	require.NotEmpty(t, tokenFileWriter)
 }
 
 func TestCreateMgmtTokenForConsulSecretsEngine(t *testing.T) {
-	lc, flOpener := setup()()
-
 	createTokenResult := getCreateTokenResultStub()
 
 	testRootToken := "testRootToken"
@@ -86,8 +90,6 @@ func TestCreateMgmtTokenForConsulSecretsEngine(t *testing.T) {
 }
 
 func TestCreateAndWriteForConsulSecretEngine(t *testing.T) {
-	lc, flOpener := setup()()
-
 	createTokenResult := getCreateTokenResultStub()
 
 	testInstallPolicyErr := errors.New("install policy error")
@@ -146,10 +148,9 @@ func TestFileWriteErrorForConsulSecretEngine(t *testing.T) {
 	curUser, _ := user.Current()
 	if curUser != nil && curUser.Uid == "0" {
 		// it is root user then we skip this test as root can have permission to write everything
+		t.Log("Skipping this test as it is running as root user")
 		t.Skip()
 	}
-
-	lc, flOpener := setup()()
 
 	createTokenResult := getCreateTokenResultStub()
 
