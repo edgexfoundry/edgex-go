@@ -88,6 +88,9 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 	storedKey := deviceServiceStoredKey(ds.Id)
 	_ = conn.Send(MULTI)
 	edgeXerr = sendAddDeviceServiceCmd(conn, storedKey, ds)
+	if edgeXerr != nil {
+		return ds, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "device service creation failed", err)
