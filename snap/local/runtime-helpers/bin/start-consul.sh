@@ -1,5 +1,36 @@
 #!/bin/bash -e
 
+echo "$(date) deploying the default EdgeX configuration for Consul"
+# the default Consul local configuration is applied to all cases no matter ACL is enabled or not
+# note that Consul's DNS port is disabled based on the securing Consul ADR
+# https://github.com/edgexfoundry/edgex-docs/blob/master/docs_src/design/adr/security/0017-consul-security.md#phase-1
+cat > "$SNAP_DATA/consul/config/consul_default.json" <<EOF
+{
+    "enable_local_script_checks": true,
+    "disable_update_check": true,
+    "ports": {
+      "dns": -1
+    }
+}
+EOF
+
+echo "$(date) ENABLE_REGISTRY_ACL = ${ENABLE_REGISTRY_ACL}"
+
+# if feature flag ENABLE_REGISTRY_ACL is true, then we need to add additional configuration settings to Consul's ACL system
+# according to the securing Consul ADR, we set the "default_policy" to "allow" in Phase 1
+if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
+    echo "$(date) deploying additional ACL configuration for Consul"
+    cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
+{
+    "acl": {
+      "enabled": true,
+      "default_policy": "allow",
+      "enable_token_persistence": true
+    }
+}
+EOF
+fi
+
 # start consul in the background
 "$SNAP/bin/consul" agent \
     -data-dir="$SNAP_DATA/consul/data" \

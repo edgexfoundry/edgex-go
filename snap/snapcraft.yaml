@@ -76,6 +76,8 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
+    environment:
+      ENABLE_REGISTRY_ACL: "true"
     daemon: forking
     plugs: [network, network-bind]
   redis:
@@ -159,6 +161,9 @@ apps:
       SECRETSTORE_TOKENPROVIDER: $SNAP/bin/security-file-token-provider
       SECRETSTORE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
       SECRETSTORE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
+      # registry consul ACL related environment variables:
+      ENABLE_REGISTRY_ACL: "true"
+      SECRETSTORE_CONSULSECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
 
       # environment for security-file-token-provider, exec'd by secretstore-setup
       TOKENFILEPROVIDER_PRIVILEGEDTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
@@ -179,22 +184,36 @@ apps:
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
-  # This is a simple service which calls into vault to retrieve the Redis password and then 
-  # to generate Redis config file for Redis server to start up with credentials and ACL rules. 
-  # Redis can be started once the confFile is created. Once the config file has been generated, 
-  # this service exits. In the Docker version, the customized redis' entrypoint.sh performs 
+  # This is a simple service which calls into vault to retrieve the Redis password and then
+  # to generate Redis config file for Redis server to start up with credentials and ACL rules.
+  # Redis can be started once the confFile is created. Once the config file has been generated,
+  # this service exits. In the Docker version, the customized redis' entrypoint.sh performs
   # the similar actions as described above.
   security-bootstrap-redis:
     adapter: none
     after:
       - security-secretstore-setup
-    command: bin/security-bootstrapper -confdir $SNAP_DATA/config/security-bootstrapper/res configureRedis
+    command: bin/security-bootstrapper -confdir $SNAP_DATA/config/security-bootstrapper/res-bootstrap-redis configureRedis
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
       SECRETSTORE_SERVERNAME: localhost
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
       DATABASECONFIG_NAME: redis.conf
+    daemon: oneshot
+    plugs: [network]
+  # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
+  security-consul-bootstrapper:
+    adapter: none
+    after:
+      - security-secretstore-setup
+    command: bin/setup-consul-acl.sh
+    environment:
+      ENABLE_REGISTRY_ACL: "true"
+      STAGEGATE_REGISTRY_HOST: localhost
+      STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
+      STAGEGATE_REGISTRY_ACL_SENTINELFILEPATH: $SNAP_DATA/consul/config/consul_acl_done
     daemon: oneshot
     plugs: [network]
   core-data:
@@ -305,7 +324,7 @@ apps:
     adapter: none
     command: bin/security-proxy-setup
     environment:
-      SECRETSTORE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
@@ -581,11 +600,14 @@ parts:
                   "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
           ;;
           # For security bootstrapping Redis, we only need the configuration file used for "configureRedis"
-          # as part of the whole "security-bootstrapper". The other parts of security-bootstrapper is only 
-          # for Docker version running in docker-compose file cases.
+          # as part of the whole "security-bootstrapper".
+          # For security bootstrapping Consul (aka consul-bootstrapper), we then need the security-bootstrapper's
+          # toml file and thus here we install both files.
           "security-bootstrapper")
               install -DT "./cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.toml"
+              install -DT "./cmd/security-bootstrapper/res/configuration.toml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res/configuration.toml"
           ;;
           # The security-secrets-config doesn't have a default configuration.toml, but since it shares
           # the same config as proxy-setup, just use that one.
