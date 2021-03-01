@@ -83,10 +83,6 @@ func (s *Service) CheckProxyServiceStatus() error {
 	return s.checkServiceStatus(s.configuration.KongURL.GetProxyBaseURL())
 }
 
-func (s *Service) CheckSecretServiceStatus() error {
-	return s.checkServiceStatus(s.configuration.SecretStore.GetBaseURL())
-}
-
 func (s *Service) checkServiceStatus(path string) error {
 	req, err := http.NewRequest(http.MethodGet, path, nil)
 	if err != nil {
@@ -282,7 +278,7 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	body := &CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
-		Snis: s.configuration.SecretStore.SNIS,
+		Snis: s.configuration.SNIS,
 	}
 	s.loggingClient.Debug("trying to upload cert to proxy server")
 	data, err := json.Marshal(body)

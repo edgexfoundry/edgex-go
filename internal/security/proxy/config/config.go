@@ -26,10 +26,11 @@ import (
 type ConfigurationStruct struct {
 	LogLevel       string
 	RequestTimeout int
+	SNIS           []string
 	KongURL        KongUrlInfo
 	KongAuth       KongAuthInfo
 	KongACL        KongAclInfo
-	SecretStore    SecretStoreInfo
+	SecretStore    bootstrapConfig.SecretStoreInfo
 	Clients        map[string]bootstrapConfig.ClientInfo
 }
 
@@ -69,23 +70,6 @@ type KongAclInfo struct {
 	WhiteList string
 }
 
-type SecretStoreInfo struct {
-	Type            string
-	Protocol        string
-	Host            string
-	Port            int
-	HealthCheckPath string
-	CertPath        string
-	TokenPath       string
-	CACertPath      string
-	SNIS            []string
-}
-
-// GetBaseURL builds and returns the base URL for the SecretStore service
-func (s SecretStoreInfo) GetBaseURL() string {
-	return fmt.Sprintf("%s://%s:%d", s.Protocol, s.Host, s.Port)
-}
-
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct
 // Not needed for this service, so just return false
 func (c *ConfigurationStruct) UpdateFromRaw(_ interface{}) bool {
@@ -107,7 +91,9 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(_ interface{}) bool {
 // GetBootstrap returns the configuration elements required by the bootstrap.
 // Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	return bootstrapConfig.BootstrapConfiguration{}
+	return bootstrapConfig.BootstrapConfiguration{
+		SecretStore: c.SecretStore,
+	}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.

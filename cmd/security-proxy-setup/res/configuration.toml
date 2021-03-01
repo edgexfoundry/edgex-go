@@ -17,6 +17,7 @@
 # This is a TOML config file for edgexsecurity service.
 
 LogLevel = "DEBUG"
+SNIS = [""]
 # RequestTimeout for proxy-setup http client caller
 RequestTimeout = 10
 
@@ -42,11 +43,16 @@ Type = "vault"
 Protocol = "http"
 Host = "localhost"
 Port = 8200
-HealthCheckPath = "v1/sys/health"
-TokenPath = "res/resp-init.json"
-CertPath = ""
-CACertPath = ""
-SNIS = [""]
+Path = "/v1/secret/edgex/edgex-security-proxy-setup/"
+TokenFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
+# Number of attempts to retry retrieving secrets before failing to start the service.
+AdditionalRetryAttempts = 10
+# Amount of time to wait before attempting another retry
+RetryWaitPeriod = "1s"
+  [SecretStore.Authentication]
+  AuthType = "X-Vault-Token"
 
 [Clients]
   [Clients.CoreData]
