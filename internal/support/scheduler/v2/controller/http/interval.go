@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
@@ -105,7 +105,7 @@ func (dc *IntervalController) IntervalByName(w http.ResponseWriter, r *http.Requ
 
 	// URL parameters
 	vars := mux.Vars(r)
-	name := vars[contractsV2.Name]
+	name := vars[v2.Name]
 
 	var response interface{}
 	var statusCode int
@@ -156,6 +156,36 @@ func (dc *IntervalController) AllIntervals(w http.ResponseWriter, r *http.Reques
 			response = responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, intervals)
 			statusCode = http.StatusOK
 		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (dc *IntervalController) DeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteIntervalByName(name, ctx, dc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse(
+			"",
+			"",
+			http.StatusOK)
+		statusCode = http.StatusOK
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)

@@ -99,3 +99,21 @@ func allIntervals(conn redis.Conn, offset, limit int) (intervals []models.Interv
 	}
 	return intervals, nil
 }
+
+// deleteIntervalByName deletes the interval by name
+func deleteIntervalByName(conn redis.Conn, name string) errors.EdgeX {
+	interval, edgeXerr := intervalByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	storedKey := intervalStoredKey(interval.Id)
+	_ = conn.Send(MULTI)
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, IntervalCollection, storedKey)
+	_ = conn.Send(HDEL, IntervalCollectionName, interval.Name)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "interval deletion failed", err)
+	}
+	return nil
+}
