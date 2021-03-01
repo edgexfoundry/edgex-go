@@ -175,7 +175,7 @@ apps:
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     environment:
       INIT_ARG: "--init=true"
-      SECRETSTORE_TOKENPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
