@@ -26,7 +26,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -75,7 +74,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		startupTimer,
 		dic,
 		[]interfaces.BootstrapHandler{
-			handlers.SecureProviderBootstrapHandler,
 			NewBootstrap(
 				insecureSkipVerify,
 				initNeeded,
