@@ -14,6 +14,7 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/fxamacker/cbor/v2"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -85,6 +86,7 @@ func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceNam
 	var data []byte
 	var err error
 
+	// Set default ContentType as JSON if no ContentType specified
 	if len(clients.FromContext(ctx, clients.ContentType)) == 0 {
 		ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
 	}
@@ -96,7 +98,8 @@ func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceNam
 		addEventReq.Event.Readings[index].Versionable = common.NewVersionable()
 	}
 
-	data, err = json.Marshal(addEventReq)
+	//marshal AddEventRequest DTO to byte array per contentType
+	data, err = marshal(addEventReq, clients.FromContext(ctx, clients.ContentType))
 	if err != nil {
 		lc.Error(fmt.Sprintf("error marshaling V2 AddEventRequest DTO: %+v", addEventReq), clients.CorrelationHeader, correlationId)
 		return
@@ -111,6 +114,15 @@ func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceNam
 	} else {
 		lc.Debug(fmt.Sprintf(
 			"V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId))
+	}
+}
+
+func marshal(addEventReq dto.AddEventRequest, contentType string) ([]byte, error) {
+	switch contentType {
+	case clients.ContentTypeCBOR:
+		return cbor.Marshal(addEventReq)
+	default:
+		return json.Marshal(addEventReq)
 	}
 }
 
