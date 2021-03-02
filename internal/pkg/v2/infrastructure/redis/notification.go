@@ -113,3 +113,12 @@ func notificationsByLabel(conn redis.Conn, offset int, limit int, label string) 
 
 	return convertObjectsToNotifications(objects)
 }
+
+// notificationById query notification by id from DB
+func notificationById(conn redis.Conn, id string) (notification models.Notification, edgexErr errors.EdgeX) {
+	edgexErr = getObjectById(conn, notificationStoredKey(id), &notification)
+	if edgexErr != nil {
+		return notification, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	return
+}

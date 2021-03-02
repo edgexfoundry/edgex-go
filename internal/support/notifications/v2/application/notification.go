@@ -17,6 +17,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
+
+	"github.com/google/uuid"
 )
 
 // The AddNotification function accepts the new Notification model from the controller function
@@ -71,4 +73,22 @@ func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (n
 		notifications[i] = dtos.FromNotificationModelToDTO(n)
 	}
 	return notifications, nil
+}
+
+// NotificationById queries notification by ID
+func NotificationById(id string, dic *di.Container) (notification dtos.Notification, edgeXerr errors.EdgeX) {
+	if id == "" {
+		return notification, errors.NewCommonEdgeX(errors.KindContractInvalid, "ID is empty", nil)
+	}
+	if _, err := uuid.Parse(id); err != nil {
+		return notification, errors.NewCommonEdgeX(errors.KindContractInvalid, "ID is not a valid UUID", err)
+	}
+
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	notificationModel, edgeXerr := dbClient.NotificationById(id)
+	if edgeXerr != nil {
+		return notification, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	notification = dtos.FromNotificationModelToDTO(notificationModel)
+	return notification, nil
 }
