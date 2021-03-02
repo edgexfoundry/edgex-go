@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -57,6 +57,7 @@ var testAddEvent = requests.AddEventRequest{
 		Id:          expectedEventId,
 		DeviceName:  TestDeviceName,
 		ProfileName: TestDeviceProfileName,
+		SourceName:  TestSourceName,
 		Origin:      TestOriginTime,
 		Readings:    []dtos.BaseReading{testReading},
 	},
@@ -122,6 +123,8 @@ func TestAddEvent(t *testing.T) {
 	noEventProfile.Event.ProfileName = ""
 	noEventOrigin := validRequest
 	noEventOrigin.Event.Origin = 0
+	noEventSourceName := validRequest
+	noEventSourceName.Event.SourceName = ""
 
 	noReading := validRequest
 	noReading.Event.Readings = []dtos.BaseReading{}
@@ -188,6 +191,7 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - Bad Event Id", badEventID, badEventID.Event.ProfileName, badEventID.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No Event DeviceName", noEventDevice, noEventDevice.Event.ProfileName, noEventDevice.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No Event ProfileName", noEventProfile, noEventProfile.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
+		{"Invalid - No Event SourceName", noEventSourceName, noEventSourceName.Event.ProfileName, noEventProfile.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No Event Origin", noEventOrigin, noEventOrigin.Event.ProfileName, noEventOrigin.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No Reading", noReading, noReading.Event.ProfileName, noReading.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No Reading DeviceName", noReadingDevice, noReadingDevice.Event.ProfileName, noReadingDevice.Event.DeviceName, true, http.StatusBadRequest},
@@ -208,8 +212,8 @@ func TestAddEvent(t *testing.T) {
 
 			reader := strings.NewReader(string(jsonData))
 
-			req, err := http.NewRequest(http.MethodPost, v2.ApiEventProfileNameDeviceNameRoute, reader)
-			req = mux.SetURLVars(req, map[string]string{v2.ProfileName: testCase.ProfileName, v2.DeviceName: testCase.DeviceName})
+			req, err := http.NewRequest(http.MethodPost, v2.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
+			req = mux.SetURLVars(req, map[string]string{v2.ProfileName: testCase.ProfileName, v2.DeviceName: testCase.DeviceName, v2.SourceName: testCase.Request.Event.SourceName})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()

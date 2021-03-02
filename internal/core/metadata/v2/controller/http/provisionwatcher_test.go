@@ -39,7 +39,7 @@ var testProvisionWatcherBlockingIdentifiers = map[string][]string{
 	"port": {"397", "398", "399"},
 }
 var testProvisionWatcherAutoEvents = []dtos.AutoEvent{
-	{Resource: "TestResource", Frequency: "300ms", OnChange: true},
+	{SourceName: "TestResource", Frequency: "300ms", OnChange: true},
 }
 
 func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {

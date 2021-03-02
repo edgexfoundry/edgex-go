@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2020-2021 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package application
 
 import (
@@ -25,6 +30,7 @@ const (
 	testDeviceResourceName = "TestDeviceResource"
 	testDeviceName         = "TestDevice"
 	testProfileName        = "TestProfile"
+	testSourceName         = "testSourceName"
 	testUUIDString         = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
 	testCreatedTime        = 1600666214495
 	testOriginTime         = 1600666185705354000
@@ -35,6 +41,7 @@ const (
 var persistedEvent = models.Event{
 	Id:         testUUIDString,
 	DeviceName: testDeviceName,
+	SourceName: testSourceName,
 	Created:    testCreatedTime,
 	Origin:     testOriginTime,
 	Readings:   buildReadings(),
@@ -136,6 +143,7 @@ func TestValidateEvent(t *testing.T) {
 		Id:          testUUIDString,
 		DeviceName:  testDeviceName,
 		ProfileName: testProfileName,
+		SourceName:  testSourceName,
 		Origin:      testOriginTime,
 		Readings:    buildReadings(),
 	}
@@ -145,13 +153,16 @@ func TestValidateEvent(t *testing.T) {
 		event         models.Event
 		profileName   string
 		deviceName    string
+		sourceName    string
 		errorExpected bool
 	}{
-		{"Valid - profileName/deviceName matches", persistedEvent, testProfileName, testDeviceName, false},
-		{"Invalid - empty profile name", persistedEvent, "", testDeviceName, true},
-		{"Invalid - inconsistent profile name", persistedEvent, "inconsistent", testDeviceName, true},
-		{"Invalid - empty device name", persistedEvent, testProfileName, "", true},
-		{"Invalid - inconsistent profile name", persistedEvent, testProfileName, "inconsistent", true},
+		{"Valid - profileName/deviceName matches", persistedEvent, testProfileName, testDeviceName, testSourceName, false},
+		{"Invalid - empty profile name", persistedEvent, "", testDeviceName, testSourceName, true},
+		{"Invalid - inconsistent profile name", persistedEvent, "inconsistent", testDeviceName, testSourceName, true},
+		{"Invalid - empty device name", persistedEvent, testProfileName, "", testSourceName, true},
+		{"Invalid - inconsistent profile name", persistedEvent, testProfileName, "inconsistent", testSourceName, true},
+		{"Invalid - empty source name", persistedEvent, "", testDeviceName, "", true},
+		{"Invalid - inconsistent source name", persistedEvent, testProfileName, testDeviceName, "inconsistent", true},
 	}
 
 	for _, testCase := range tests {
@@ -164,7 +175,7 @@ func TestValidateEvent(t *testing.T) {
 					return dbClientMock
 				},
 			})
-			err := ValidateEvent(evt, testCase.profileName, testCase.deviceName, context.Background(), dic)
+			err := ValidateEvent(evt, testCase.profileName, testCase.deviceName, testCase.sourceName, context.Background(), dic)
 
 			if testCase.errorExpected {
 				assert.Error(t, err)

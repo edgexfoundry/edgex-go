@@ -512,7 +512,7 @@ components:
         message: ""
         count: 3
 paths:
-  /event/{profileName}/{deviceName}:
+  /event/{profileName}/{deviceName}/{sourceName}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
     - name: profileName
@@ -527,6 +527,12 @@ paths:
       schema:
         type: string
       description: "Uniquely identifies a given device"
+    - name: sourceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "The sourceName is the name of the source that created the Event (ResourceName or CommandName)"
     post:
       summary: "Allows for the ingestion of event/reading data, and the deviceName and profileName of Event must match to the given deviceName and profileName as specified in the path"
       requestBody:
