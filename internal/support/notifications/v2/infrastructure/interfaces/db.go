@@ -23,4 +23,5 @@ type DBClient interface {
 	DeleteSubscriptionByName(name string) errors.EdgeX
 
 	AddNotification(n models.Notification) (models.Notification, errors.EdgeX)
+	NotificationsByCategory(offset, limit int, category string) ([]models.Notification, errors.EdgeX)
 }

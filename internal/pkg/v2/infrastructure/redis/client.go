@@ -838,3 +838,16 @@ func (c *Client) AddNotification(notification model.Notification) (model.Notific
 
 	return addNotification(conn, notification)
 }
+
+// NotificationsByCategory queries notifications by offset, limit and category
+func (c *Client) NotificationsByCategory(offset int, limit int, category string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationsByCategory(conn, offset, limit, category)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d and category %s", offset, limit, category), edgeXerr)
+	}
+	return notifications, nil
+}

@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -36,4 +37,21 @@ func AddNotification(d models.Notification, ctx context.Context, dic *di.Contain
 	// TODO: distribute notification
 
 	return addedNotification.Id, nil
+}
+
+// NotificationsByCategory queries notifications with offset, limit, and category
+func NotificationsByCategory(offset, limit int, category string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+	if category == "" {
+		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	notificationModels, err := dbClient.NotificationsByCategory(offset, limit, category)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, nil
 }

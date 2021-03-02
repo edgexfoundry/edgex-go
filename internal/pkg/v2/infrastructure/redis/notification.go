@@ -72,3 +72,30 @@ func addNotification(conn redis.Conn, notification models.Notification) (models.
 
 	return notification, edgeXerr
 }
+
+// notificationsByCategory queries notifications by offset, limit, and category
+func notificationsByCategory(conn redis.Conn, offset int, limit int, category string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionCategory, category), offset, end)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToNotifications(objects)
+}
+
+func convertObjectsToNotifications(objects [][]byte) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	notifications = make([]models.Notification, len(objects))
+	for i, o := range objects {
+		s := models.Notification{}
+		err := json.Unmarshal(o, &s)
+		if err != nil {
+			return []models.Notification{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "notification format parsing failed from the database", err)
+		}
+		notifications[i] = s
+	}
+	return notifications, nil
+}
