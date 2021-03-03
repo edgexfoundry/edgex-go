@@ -162,6 +162,7 @@ func TestExecute(t *testing.T) {
 				require.Equal(t, interfaces.StatusCodeExitNormal, statusCode)
 				require.FileExists(t, conf.StageGate.Registry.ACL.BootstrapTokenPath)
 				require.FileExists(t, conf.StageGate.Registry.ACL.SecretsAdminTokenPath)
+				require.FileExists(t, localcmd.getSentinelFilePath())
 			}
 		})
 	}

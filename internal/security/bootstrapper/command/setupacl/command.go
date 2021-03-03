@@ -53,6 +53,7 @@ const (
 	defaultRetryTimeout        = 30 * time.Second
 	emptyLeader                = `""`
 	emptyToken                 = ""
+	sentinelFile               = "consul_acl_done"
 )
 
 type cmd struct {
@@ -99,6 +100,14 @@ func NewCommand(
 func (c *cmd) Execute() (statusCode int, err error) {
 	c.loggingClient.Infof("Security bootstrapper running %s", CommandName)
 
+	// need to have a sentinel file to guard against the re-run of the command once we have successfully bootstrap ACL
+	// if we already have a sentinelFile exists then skip this whole process since we already done this
+	// process successfully before, otherwise Consul's ACL bootstrap will cause a panic
+	if c.hasSentinelFile() {
+		c.loggingClient.Info("Registry ACL had been setup successfully already, skip")
+		return
+	}
+
 	if err := c.waitForNonEmptyConsulLeader(); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to wait for Consul leader: %v", err)
 	}
@@ -143,6 +152,14 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	if err := c.configureConsulAccess(secretstoreToken, bootstrapTokenInfo.SecretID); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to configure Consul access: %v", err)
 	}
+
+	// write a sentinel file to indicate Consul ACL bootstrap is done so that we don't bootstrap ACL again,
+	// this is to avoid re-bootstrapping error and that error can cause the snap crash if restart this process
+	if err := c.writeSentinelFile(); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to write sentinel file: %v", err)
+	}
+
+	c.loggingClient.Info("setupRegistryACL successfully done")
 
 	return
 }
@@ -289,6 +306,7 @@ func (c *cmd) getSecretStoreTokenFromFile() (string, error) {
 	}
 
 	tokenJSONFile, err := os.Open(trimmedFilePath)
+	defer func() { tokenJSONFile.Close() }()
 
 	if err != nil {
 		return emptyToken, fmt.Errorf("failed to open secretstore token file: %v", err)
@@ -361,4 +379,33 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, consulToken string)
 		return fmt.Errorf("failed to configure Consul access for secretstore via URL [%s] and status code= %d: %s",
 			configAccessURL, resp.StatusCode, string(body))
 	}
+}
+
+func (c *cmd) writeSentinelFile() error {
+	filePathToSave := c.getSentinelFilePath()
+	fileHandle, err := os.OpenFile(filePathToSave, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	defer func() { fileHandle.Close() }()
+
+	if err != nil {
+		return fmt.Errorf("failed to open sentinel file %s: %v", filePathToSave, err)
+	}
+
+	if _, err := fileHandle.Write([]byte("done")); err != nil {
+		return fmt.Errorf("failed to write out to sentinel file %s: %v", filePathToSave, err)
+	}
+
+	return nil
+}
+
+func (c *cmd) hasSentinelFile() bool {
+	sentinelFilePath := c.getSentinelFilePath()
+	return helper.CheckIfFileExists(sentinelFilePath)
+}
+
+func (c *cmd) getSentinelFilePath() string {
+	// use the same directory as the bootstrap acl token for this sentinel file directory
+	//  as it is the only writable directory in terms of volume mount in docker
+	absPath, _ := filepath.Abs(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
+	sentinelDir := filepath.Dir(absPath)
+	return filepath.Join(sentinelDir, sentinelFile)
 }
