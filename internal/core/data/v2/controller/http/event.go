@@ -53,6 +53,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	profileName := vars[v2.ProfileName]
 	deviceName := vars[v2.DeviceName]
+	sourceName := vars[v2.SourceName]
 
 	addEventReqDTO, err := ec.reader.ReadAddEventRequest(r.Body)
 	if err != nil {
@@ -69,7 +70,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	var statusCode int
 
 	event := requestDTO.AddEventReqToEventModel(addEventReqDTO)
-	err = application.ValidateEvent(event, profileName, deviceName, ctx, ec.dic)
+	err = application.ValidateEvent(event, profileName, deviceName, sourceName, ctx, ec.dic)
 	if err == nil {
 		err = application.AddEvent(event, profileName, deviceName, ctx, ec.dic)
 	}

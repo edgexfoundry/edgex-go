@@ -13,6 +13,7 @@ const (
 	TestOriginTime         = 1600666185705354000
 	TestDeviceResourceName = "TestDeviceResourceName"
 	TestDeviceProfileName  = "TestDeviceProfileName"
+	TestSourceName         = "TestSourceName"
 
 	TestReadingValue           = "45"
 	TestBinaryReadingMediaType = "File"
