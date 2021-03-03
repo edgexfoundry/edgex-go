@@ -24,4 +24,5 @@ type DBClient interface {
 
 	AddNotification(n models.Notification) (models.Notification, errors.EdgeX)
 	NotificationsByCategory(offset, limit int, category string) ([]models.Notification, errors.EdgeX)
+	NotificationsByLabel(offset, limit int, label string) ([]models.Notification, errors.EdgeX)
 }
