@@ -437,7 +437,7 @@ func (c Client) GetSubscriptionByCategoriesLabels(categories []string, labels []
 		args = append(args, db.Subscription+":label:"+label)
 	}
 
-	objects, err := getUnionObjectsByValues(conn, args...)
+	objects, err := getObjectsByValues(conn, args...)
 	if err != nil {
 		return s, err
 	}
