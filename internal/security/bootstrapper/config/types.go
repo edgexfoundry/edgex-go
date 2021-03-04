@@ -67,6 +67,8 @@ type ACLInfo struct {
 	BootstrapTokenPath string
 	// filepath for the secretstore's token created from secretstore-setup
 	SecretsAdminTokenPath string
+	// filepath for the sentinel file to indicate the registry ACL is set up successfully
+	SentinelFilePath string
 }
 
 // KongDBInfo defines the fields related to

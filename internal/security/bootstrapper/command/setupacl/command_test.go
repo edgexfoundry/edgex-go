@@ -126,6 +126,7 @@ func TestExecute(t *testing.T) {
 			// setup token related configs
 			conf.StageGate.Registry.ACL.SecretsAdminTokenPath = filepath.Join(test.adminDir, "secret_token.json")
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
+			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -162,7 +163,7 @@ func TestExecute(t *testing.T) {
 				require.Equal(t, interfaces.StatusCodeExitNormal, statusCode)
 				require.FileExists(t, conf.StageGate.Registry.ACL.BootstrapTokenPath)
 				require.FileExists(t, conf.StageGate.Registry.ACL.SecretsAdminTokenPath)
-				require.FileExists(t, localcmd.getSentinelFilePath())
+				require.FileExists(t, conf.StageGate.Registry.ACL.SentinelFilePath)
 			}
 		})
 	}

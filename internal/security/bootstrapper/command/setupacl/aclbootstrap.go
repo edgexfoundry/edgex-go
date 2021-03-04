@@ -29,10 +29,8 @@ import (
 
 // BootStrapACLTokenInfo is the key portion of the response metadata from consulACLBootstrapAPI
 type BootStrapACLTokenInfo struct {
-	AccessorID string   `json:"AccessorID"`
-	SecretID   string   `json:"SecretID"`
-	Policies   []Policy `json:"Policies"`
-	CreateTime string   `json:"CreateTime"`
+	SecretID string   `json:"SecretID"`
+	Policies []Policy `json:"Policies"`
 }
 
 // Policy is the metadata for ACL policy

@@ -26,6 +26,8 @@ LogLevel = 'INFO'
       BootstrapTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/bootstrap_token.json"
       # this is the filepath for the Vault token created from secretstore-setup
       SecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
+      # this is the filepath for the sentinel file to indicate the registry ACL is set up successfully
+      SentinelFilePath = "/edgex-init/consul-bootstrapper/consul_acl_done"
   [StageGate.KongDb]
     Host = "kong-db"
     Port = 5432
@@ -41,5 +43,5 @@ LogLevel = 'INFO'
 [SecretStore]
 Type = 'vault'
 Protocol = 'http'
-Host = 'edgex-vault'
+Host = 'localhost'
 Port = 8200

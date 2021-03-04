@@ -93,6 +93,7 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
     echo "$(date) failed to set up Consul ACL"
   fi
   set -e
+  # no need to wait for Consul's port since it is in ready state after all ACL stuff
 else
   echo "$(date) Starting edgex-core-consul with ACL disabled ..."
   docker-entrypoint.sh agent \
@@ -101,6 +102,7 @@ else
     -server \
     -client 0.0.0.0 &
   # wait for the consul port
+  # this waitFor is not necessary in the other ACL case, as it is already in the ready state
   echo "$(date) Executing waitFor on Consul with waiting on its own port \
     tcp://${STAGEGATE_REGISTRY_HOST}:${STAGEGATE_REGISTRY_PORT}"
   /edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \

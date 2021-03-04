@@ -39,6 +39,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -55,7 +57,6 @@ const (
 	defaultRetryTimeout        = 30 * time.Second
 	emptyLeader                = `""`
 	emptyToken                 = ""
-	sentinelFile               = "consul_acl_done"
 )
 
 type cmd struct {
@@ -102,7 +103,12 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	// need to have a sentinel file to guard against the re-run of the command once we have successfully bootstrap ACL
 	// if we already have a sentinelFile exists then skip this whole process since we already done this
 	// process successfully before, otherwise Consul's ACL bootstrap will cause a panic
-	if c.hasSentinelFile() {
+	sentinelFileAbsPath, err := filepath.Abs(c.configuration.StageGate.Registry.ACL.SentinelFilePath)
+	if err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to get the absolute path of the sentinel file: %v", err)
+	}
+
+	if helper.CheckIfFileExists(sentinelFileAbsPath) {
 		c.loggingClient.Info("Registry ACL had been setup successfully already, skip")
 		return
 	}
@@ -260,27 +266,16 @@ func (c *cmd) getSecretStoreTokenFromFile() (string, error) {
 		return emptyToken, fmt.Errorf("secretstore token file %s not found", tokenFileAbsPath)
 	}
 
-	type SecretStoreToken struct {
-		Authentication struct {
-			Token string `json:"client_token"`
-		} `json:"auth"`
-	}
-
-	tokenJSONFile, err := os.Open(trimmedFilePath)
-	defer func() { tokenJSONFile.Close() }()
-
+	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
+	tokenLoader := authtokenloader.NewAuthTokenLoader(fileOpener)
+	secretStoreToken, err := tokenLoader.Load(tokenFileAbsPath)
 	if err != nil {
-		return emptyToken, fmt.Errorf("failed to open secretstore token file: %v", err)
-	}
-
-	var tokenData SecretStoreToken
-	if err := json.NewDecoder(tokenJSONFile).Decode(&tokenData); err != nil {
-		return emptyToken, fmt.Errorf("failed to decode secretstore json token file: %v", err)
+		return emptyToken, fmt.Errorf("tokenLoader failed to load secretstore token: %v", err)
 	}
 
 	c.loggingClient.Infof("successfully retrieved secretstore management token from %s", trimmedFilePath)
 
-	return tokenData.Authentication.Token, nil
+	return secretStoreToken, nil
 }
 
 // configureConsulAccess is to enable the Consul config access to the SecretStore via consul/config/access API
@@ -343,30 +338,26 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, bootstrapACLToken s
 }
 
 func (c *cmd) writeSentinelFile() error {
-	filePathToSave := c.getSentinelFilePath()
-	fileHandle, err := os.OpenFile(filePathToSave, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	defer func() { fileHandle.Close() }()
-
+	absPath, err := filepath.Abs(c.configuration.StageGate.Registry.ACL.SentinelFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to open sentinel file %s: %v", filePathToSave, err)
+		return fmt.Errorf("failed to get the absolute path of the sentinel file: %v", err)
 	}
 
-	if _, err := fileHandle.Write([]byte("done")); err != nil {
-		return fmt.Errorf("failed to write out to sentinel file %s: %v", filePathToSave, err)
+	dirToWrite := filepath.Dir(absPath)
+	filePerformer := fileioperformer.NewDefaultFileIoPerformer()
+	if err := filePerformer.MkdirAll(dirToWrite, 0700); err != nil {
+		return fmt.Errorf("failed to create sentinel base dir: %s", err.Error())
+	}
+
+	writer, err := filePerformer.OpenFileWriter(absPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to open file writer %s: %s", absPath, err.Error())
+	}
+	defer func() { _ = writer.Close() }()
+
+	if _, err := writer.Write([]byte("done")); err != nil {
+		return fmt.Errorf("failed to write out to sentinel file %s: %v", absPath, err)
 	}
 
 	return nil
-}
-
-func (c *cmd) hasSentinelFile() bool {
-	sentinelFilePath := c.getSentinelFilePath()
-	return helper.CheckIfFileExists(sentinelFilePath)
-}
-
-func (c *cmd) getSentinelFilePath() string {
-	// use the same directory as the bootstrap acl token for this sentinel file directory
-	//  as it is the only writable directory in terms of volume mount in docker
-	absPath, _ := filepath.Abs(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
-	sentinelDir := filepath.Dir(absPath)
-	return filepath.Join(sentinelDir, sentinelFile)
 }
