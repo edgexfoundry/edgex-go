@@ -97,13 +97,14 @@ func HelpCallback() {
 			"    --confdir     Specify local configuration directory\n"+
 			"\n"+
 			"Commands:\n"+
-			"    help          Show available commands (this text)\n"+
-			"    gate          Do security bootstrapper gating on stages while starting services\n"+
-			"    listenTcp     Start up a TCP listener\n"+
-			"    pingPgDb      Test Postgres database readiness\n"+
-			"    getHttpStatus Do an HTTP GET call to get the status code\n"+
-			"    genPassword   Generate a random password\n"+
-			"    waitfor       Wait for the other services with specified URI(s) to connect:\n"+
-			"                  the URI(s) can be communication protocols like tcp/tcp4/tcp6/http/https or files\n",
+			"    gate              Do security bootstrapper gating on stages while starting services\n"+
+			"    genPassword       Generate a random password\n"+
+			"    getHttpStatus     Do an HTTP GET call to get the status code\n"+
+			"    help              Show available commands (this text)\n"+
+			"    listenTcp         Start up a TCP listener\n"+
+			"    pingPgDb          Test Postgres database readiness\n"+
+			"    setupRegistryACL  Set up registry's ACL and configure the access\n"+
+			"    waitFor           Wait for the other services with specified URI(s) to connect:\n"+
+			"                      the URI(s) can be communication protocols like tcp/tcp4/tcp6/http/https or files\n",
 		os.Args[0])
 }

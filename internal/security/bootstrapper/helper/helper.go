@@ -26,7 +26,7 @@ import (
 // MarkComplete creates a doneFile file
 func MarkComplete(dirPath, doneFile string) error {
 	doneFilePath := filepath.Join(dirPath, doneFile)
-	if !checkIfFileExists(doneFilePath) {
+	if !CheckIfFileExists(doneFilePath) {
 		if err := writeFile(doneFilePath); err != nil {
 			return err
 		}
@@ -48,7 +48,8 @@ func CreateDirectoryIfNotExists(dirName string) (err error) {
 	return
 }
 
-func checkIfFileExists(fileName string) bool {
+// CheckIfFileExists returns true if the specified fileName exists
+func CheckIfFileExists(fileName string) bool {
 	fileInfo, statErr := os.Stat(fileName)
 	if os.IsNotExist(statErr) {
 		return false

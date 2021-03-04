@@ -20,6 +20,14 @@ LogLevel = 'INFO'
     Host = "edgex-core-consul"
     Port = 8500
     ReadyPort = 54324
+    [StageGate.Registry.ACL]
+      Protocol = "http"
+      # this is the filepath for the generated Consul management token from ACL bootstrap
+      BootstrapTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/bootstrap_token.json"
+      # this is the filepath for the Vault token created from secretstore-setup
+      SecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
+      # this is the filepath for the sentinel file to indicate the registry ACL is set up successfully
+      SentinelFilePath = "/edgex-init/consul-bootstrapper/consul_acl_done"
   [StageGate.KongDb]
     Host = "kong-db"
     Port = 5432
@@ -27,3 +35,13 @@ LogLevel = 'INFO'
   [StageGate.WaitFor]
     Timeout = "10s"
     RetryInterval = "1s"
+
+# this configuration is just part of the whole go-mod-bootstrap's secret store to have
+# protocol, host, and port of secretstore using in the security-bootstrapper
+# we are not really using the secret store provider from go-mod-bootstrap in the code
+# also this is needed as snap does not have those environments from env-files
+[SecretStore]
+Type = 'vault'
+Protocol = 'http'
+Host = 'localhost'
+Port = 8200
