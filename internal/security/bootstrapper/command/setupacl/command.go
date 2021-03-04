@@ -59,7 +59,6 @@ const (
 )
 
 type cmd struct {
-	waitGroup     *sync.WaitGroup
 	loggingClient logger.LoggingClient
 	client        internal.HttpCaller
 	configuration *config.ConfigurationStruct
@@ -76,7 +75,6 @@ func NewCommand(
 	conf *config.ConfigurationStruct,
 	args []string) (interfaces.Command, error) {
 	cmd := cmd{
-		waitGroup:     &sync.WaitGroup{},
 		loggingClient: lc,
 		client:        pkg.NewRequester(lc).Insecure(),
 		configuration: conf,
