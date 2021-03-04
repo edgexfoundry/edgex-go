@@ -13,8 +13,10 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	AddInterval(e model.Interval) (model.Interval, errors.EdgeX)
+	AddInterval(interval model.Interval) (model.Interval, errors.EdgeX)
+	IntervalById(id string) (model.Interval, errors.EdgeX)
 	IntervalByName(name string) (model.Interval, errors.EdgeX)
 	AllIntervals(offset int, limit int) ([]model.Interval, errors.EdgeX)
 	DeleteIntervalByName(name string) errors.EdgeX
+	UpdateInterval(interval model.Interval) errors.EdgeX
 }

@@ -7,6 +7,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/bootstrap/container"
@@ -15,6 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -88,5 +90,55 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	return nil
+}
+
+// PatchInterval executes the PATCH operation with the DTO to replace the old data
+func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	var interval models.Interval
+	var edgeXerr errors.EdgeX
+	if dto.Id != nil {
+		interval, edgeXerr = dbClient.IntervalById(*dto.Id)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	} else {
+		interval, edgeXerr = dbClient.IntervalByName(*dto.Name)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != interval.Name {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("interval name '%s' not match the exsting '%s' ", *dto.Name, interval.Name), nil)
+	}
+
+	// TODO Check if the interval still has attached interval actions
+	//stillInUse, err := op.isIntervalStillInUse(to)
+	//if err != nil {
+	//	return err
+	//}
+	//if stillInUse {
+	//	return errors.NewErrIntervalStillInUse(to.Name)
+	//}
+	// TODO Update the Scheduler Queue
+	//err = op.scClient.UpdateIntervalInQueue(op.interval)
+	//if err != nil {
+	//	return err
+	//}
+
+	requests.ReplaceIntervalModelFieldsWithDTO(&interval, dto)
+
+	edgeXerr = dbClient.UpdateInterval(interval)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	lc.Debugf(
+		"Interval patched on DB successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	)
 	return nil
 }
