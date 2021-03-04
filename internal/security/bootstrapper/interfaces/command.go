@@ -22,8 +22,6 @@ const (
 	StatusCodeNoOptionSelected = 1
 	// StatusCodeExitWithError is exit code for error case
 	StatusCodeExitWithError = 2
-	// JSONContentType is the content type for JSON based body/payload
-	JSONContentType = "application/json"
 )
 
 // Command implement the Command pattern

@@ -41,9 +41,9 @@ type Policy struct {
 	Name string `json:"Name"`
 }
 
-// this should only be called once per Consul agent
-func (c *cmd) callConsulACLBootstrapAPI() (*BootStrapACLTokenInfo, error) {
-	aclBootstrapURL, err := c.getAPI_URL(consulACLBootstrapAPI)
+// generateBootStrapACLToken should only be called once per Consul agent
+func (c *cmd) generateBootStrapACLToken() (*BootStrapACLTokenInfo, error) {
+	aclBootstrapURL, err := c.getRegistryApiUrl(consulACLBootstrapAPI)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (c *cmd) callConsulACLBootstrapAPI() (*BootStrapACLTokenInfo, error) {
 	}
 }
 
-func (c *cmd) saveBootstrapToken(tokenInfoToBeSaved *BootStrapACLTokenInfo) error {
+func (c *cmd) saveBootstrapACLToken(tokenInfoToBeSaved *BootStrapACLTokenInfo) error {
 	// Write the token to the specified file
 	tokenFileAbsPath, err := filepath.Abs(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
 	if err != nil {

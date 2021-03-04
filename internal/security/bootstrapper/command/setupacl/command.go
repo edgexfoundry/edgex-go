@@ -36,6 +36,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
@@ -63,7 +65,6 @@ type cmd struct {
 	configuration *config.ConfigurationStruct
 
 	// internal state
-	errs         chan error
 	retryTimeout time.Duration
 }
 
@@ -112,8 +113,8 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to wait for Consul leader: %v", err)
 	}
 
-	var bootstrapTokenInfo *BootStrapACLTokenInfo
-	bootstrapTokenInfo, err = c.callConsulACLBootstrapAPI()
+	var bootstrapACLToken *BootStrapACLTokenInfo
+	bootstrapACLToken, err = c.generateBootStrapACLToken()
 	if err != nil {
 		// although we have a leader, but it is a very very rare chance that we could hit an error on legacy mode
 		// here we will sleep a bit of time and then retry once if there is error on Legacy ACL type of message
@@ -127,7 +128,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 		c.loggingClient.Warnf("found Consul still in ACL legacy mode, will retry once again: %v", err)
 		time.Sleep(5 * time.Second)
-		bootstrapTokenInfo, err = c.callConsulACLBootstrapAPI()
+		bootstrapACLToken, err = c.generateBootStrapACLToken()
 		if err != nil {
 			return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to bootstrap registry's ACL: %v", err)
 		}
@@ -136,8 +137,8 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	c.loggingClient.Info("successfully bootstrap registry ACL")
 
 	// Save the bootstrap token into the file so that it can be used later on
-	if err := c.saveBootstrapToken(bootstrapTokenInfo); err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to save registry's bootstrap token: %v", err)
+	if err := c.saveBootstrapACLToken(bootstrapACLToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to save registry's bootstrap ACL token: %v", err)
 	}
 
 	// retrieve the secretstore (Vault) token from the file produced by secretstore-setup
@@ -148,8 +149,8 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	c.loggingClient.Info("successfully get secretstore token and configuring the registry access for secretestore")
 
-	// configure Consul access with both Vault mgmt token and consul's bootstrap token
-	if err := c.configureConsulAccess(secretstoreToken, bootstrapTokenInfo.SecretID); err != nil {
+	// configure Consul access with both Secret Store token and consul's bootstrap acl token
+	if err := c.configureConsulAccess(secretstoreToken, bootstrapACLToken.SecretID); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to configure Consul access: %v", err)
 	}
 
@@ -169,7 +170,7 @@ func (c *cmd) GetCommandName() string {
 	return CommandName
 }
 
-func (c *cmd) getAPI_URL(api string) (string, error) {
+func (c *cmd) getRegistryApiUrl(api string) (string, error) {
 	apiURL := fmt.Sprintf("%s://%s:%d%s", c.configuration.StageGate.Registry.ACL.Protocol,
 		c.configuration.StageGate.Registry.Host, c.configuration.StageGate.Registry.Port, api)
 	_, err := url.Parse(apiURL)
@@ -183,65 +184,27 @@ func (c *cmd) getAPI_URL(api string) (string, error) {
 // the ordinary http waitFor won't work as the returned http status code from API call is 200 even when Consul's leader
 // is an empty string ("") but we need an non-empty leader; so 200 doesn't mean we have a leader
 func (c *cmd) waitForNonEmptyConsulLeader() error {
-	c.errs = make(chan error, 1)
-	// check Consul whether we have non-empty leader elected before proceed to Consul's ACL bootstrapping process
-	// as it requires non-empty leader to start with
-	go func() {
-		c.checkConsulLeader()
-		c.waitGroup.Wait()
-	}()
-
-	gotLeader := make(chan bool)
-	// a separate goroutine to keep waiting for a leader got elected from the checkConsulLeader goroutine
-	// until retryTimeout is reached otherwise
-	go func() {
-		for {
-			if err := <-c.errs; err != nil {
-				continue
-			}
-			gotLeader <- true
-			close(gotLeader)
-			return
+	timeoutInSec := int(c.retryTimeout.Seconds())
+	timer := startup.NewTimer(timeoutInSec, 1)
+	for timer.HasNotElapsed() {
+		if err := c.getNonEmptyConsulLeader(); err != nil {
+			c.loggingClient.Warnf("error from getting Consul leader API call, will retry it again: %v", err)
+			timer.SleepForInterval()
+			continue
 		}
-	}()
-
-	// block here until either we get a leader, or timeout is reached in which case ACL bootstrapping cannot continue
-	select {
-	case <-gotLeader:
 		c.loggingClient.Info("found Consul leader to bootstrap ACL")
 		return nil
-	case <-time.After(c.retryTimeout):
-		return errors.New("timed out to get non-empty Consul leader")
 	}
+
+	return errors.New("timed out to get non-empty Consul leader")
 }
 
-// checkConsulLeader is a goroutine constantly running if there is an error from API call
-func (c *cmd) checkConsulLeader() {
-	c.waitGroup.Add(1)
-	go func() {
-		defer c.waitGroup.Done()
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		// ticks every second to retry if we receive an error from API call
-		for range ticker.C {
-			if err := c.callConsulLeaderAPI(); err != nil {
-				c.loggingClient.Warnf("error from getting Consul leader API call, will retry it again: %v", err)
-				c.errs <- err
-				continue
-			}
-			// once reached here, we have a leader and terminate this goroutine
-			c.errs <- nil
-			return
-		}
-	}()
-}
-
-// callConsulLeaderAPI makes http request call to get the registry Consul leader
+// getNonEmptyConsulLeader makes http request call to get the registry Consul leader
 // the response of getting leader call could be an empty leader (represented by "")
 // even if the http status code is 200 when Consul is just booting up and
 // it will take a bit of time to elect the raft leader
-func (c *cmd) callConsulLeaderAPI() error {
-	getLeaderURL, err := c.getAPI_URL(consulGetLeaderAPI)
+func (c *cmd) getNonEmptyConsulLeader() error {
+	getLeaderURL, err := c.getRegistryApiUrl(consulGetLeaderAPI)
 	if err != nil {
 		return err
 	}
@@ -322,9 +285,9 @@ func (c *cmd) getSecretStoreTokenFromFile() (string, error) {
 	return tokenData.Authentication.Token, nil
 }
 
-// configureConsulAccess is to enable the Consul config access to Vault via consul/config/access API
+// configureConsulAccess is to enable the Consul config access to the SecretStore via consul/config/access API
 // see the reference: https://www.vaultproject.io/api-docs/secret/consul#configure-access
-func (c *cmd) configureConsulAccess(secretStoreToken string, consulToken string) error {
+func (c *cmd) configureConsulAccess(secretStoreToken string, bootstrapACLToken string) error {
 	configAccessURL := fmt.Sprintf("%s://%s:%d%s", c.configuration.SecretStore.Protocol,
 		c.configuration.SecretStore.Host, c.configuration.SecretStore.Port, consulConfigAccessVaultAPI)
 	_, err := url.Parse(configAccessURL)
@@ -335,13 +298,13 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, consulToken string)
 	c.loggingClient.Debugf("configAccessURL: %s", configAccessURL)
 
 	type ConfigAccess struct {
-		RegistryAddress string `json:"address"`
-		BootstrapToken  string `json:"token"`
+		RegistryAddress   string `json:"address"`
+		BootstrapACLToken string `json:"token"`
 	}
 
 	payload := &ConfigAccess{
-		RegistryAddress: fmt.Sprintf("%s:%d", c.configuration.StageGate.Registry.Host, c.configuration.StageGate.Registry.Port),
-		BootstrapToken:  consulToken,
+		RegistryAddress:   fmt.Sprintf("%s:%d", c.configuration.StageGate.Registry.Host, c.configuration.StageGate.Registry.Port),
+		BootstrapACLToken: bootstrapACLToken,
 	}
 
 	jsonPayload, err := json.Marshal(payload)
@@ -356,7 +319,7 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, consulToken string)
 	}
 
 	req.Header.Add("X-Vault-Token", secretStoreToken)
-	req.Header.Add(clients.ContentType, interfaces.JSONContentType)
+	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to send request for http URL: %w", err)
