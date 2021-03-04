@@ -21,6 +21,8 @@ import (
 	"net/url"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
 )
 
 type ConfigurationStruct struct {
@@ -31,7 +33,7 @@ type ConfigurationStruct struct {
 	KongAuth       KongAuthInfo
 	KongACL        KongAclInfo
 	SecretStore    bootstrapConfig.SecretStoreInfo
-	Clients        map[string]bootstrapConfig.ClientInfo
+	Routes         map[string]models.KongService
 }
 
 type KongUrlInfo struct {
