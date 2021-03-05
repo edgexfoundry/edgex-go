@@ -107,6 +107,29 @@ func (_m *DBClient) DeleteSubscriptionByName(name string) errors.EdgeX {
 	return r0
 }
 
+// NotificationById provides a mock function with given fields: id
+func (_m *DBClient) NotificationById(id string) (models.Notification, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Notification
+	if rf, ok := ret.Get(0).(func(string) models.Notification); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Notification)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // NotificationsByCategory provides a mock function with given fields: offset, limit, category
 func (_m *DBClient) NotificationsByCategory(offset int, limit int, category string) ([]models.Notification, errors.EdgeX) {
 	ret := _m.Called(offset, limit, category)
@@ -123,6 +146,31 @@ func (_m *DBClient) NotificationsByCategory(offset int, limit int, category stri
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
 		r1 = rf(offset, limit, category)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// NotificationsByLabel provides a mock function with given fields: offset, limit, label
+func (_m *DBClient) NotificationsByLabel(offset int, limit int, label string) ([]models.Notification, errors.EdgeX) {
+	ret := _m.Called(offset, limit, label)
+
+	var r0 []models.Notification
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Notification); ok {
+		r0 = rf(offset, limit, label)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Notification)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, label)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

@@ -870,3 +870,28 @@ func (c *Client) NotificationsByCategory(offset int, limit int, category string)
 	}
 	return notifications, nil
 }
+
+// NotificationsByLabel queries notifications by offset, limit and label
+func (c *Client) NotificationsByLabel(offset int, limit int, label string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationsByLabel(conn, offset, limit, label)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d and label %s", offset, limit, label), edgeXerr)
+	}
+	return notifications, nil
+}
+
+// NotificationById gets a notification by id
+func (c *Client) NotificationById(id string) (notification model.Notification, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notification, edgexErr = notificationById(conn, id)
+	if edgexErr != nil {
+		return notification, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("failed to query notification by id %s", id), edgexErr)
+	}
+	return
+}

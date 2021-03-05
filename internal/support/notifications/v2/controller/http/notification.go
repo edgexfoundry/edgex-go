@@ -92,6 +92,35 @@ func (nc *NotificationController) AddNotification(w http.ResponseWriter, r *http
 	pkg.Encode(addResponses, w, lc)
 }
 
+func (nc *NotificationController) NotificationById(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars[v2.Id]
+
+	var response interface{}
+	var statusCode int
+
+	notification, err := application.NotificationById(id, nc.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = responseDTO.NewNotificationResponse("", "", http.StatusOK, notification)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
 func (nc *NotificationController) NotificationsByCategory(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(nc.dic.Get)
 	ctx := r.Context()
@@ -113,6 +142,44 @@ func (nc *NotificationController) NotificationsByCategory(w http.ResponseWriter,
 		statusCode = err.Code()
 	} else {
 		notifications, err := application.NotificationsByCategory(offset, limit, category, nc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (nc *NotificationController) NotificationsByLabel(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := notificationContainer.ConfigurationFrom(nc.dic.Get)
+
+	vars := mux.Vars(r)
+	label := vars[v2.Label]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		notifications, err := application.NotificationsByLabel(offset, limit, label, nc.dic)
 		if err != nil {
 			if errors.Kind(err) != errors.KindEntityDoesNotExist {
 				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)

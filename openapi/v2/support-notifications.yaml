@@ -468,12 +468,24 @@ components:
         format: uuid
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
+    200Example:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        statusCode: 200
+        message: ""
     400Example:
       value:
         apiVersion: "v2"
         requestId: ""
         statusCode: 400
         message: "Bad Request"
+    404Example:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        statusCode: 404
+        message: "Not Found"
     500Example:
       value:
         apiVersion: "v2"
@@ -567,7 +579,7 @@ paths:
                 400Example:
                   $ref: '#/components/examples/400Example'
         '500':
-          description: An unexpected error occurred on the server
+          description: "An unexpected error occurred on the server"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -784,6 +796,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -793,6 +820,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -802,6 +832,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     delete:
       summary: "Deletes a notification by ID and all of its associated transmissions."
       responses:
