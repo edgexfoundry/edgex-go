@@ -26,6 +26,8 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -325,7 +327,12 @@ func TestInitKongService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tk := &KongService{tt.serviceId, "test", 80, "http"}
+			tk := &models.KongService{
+				Name:     tt.serviceId,
+				Protocol: "http",
+				Host:     "test",
+				Port:     80,
+			}
 			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongService(tk)
 
@@ -384,7 +391,7 @@ func TestInitKongRoutes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
-			err = svc.initKongRoutes(&KongRoute{}, tt.path)
+			err = svc.initKongRoutes(&models.KongRoute{}, tt.path)
 			if err != nil && !tt.expectError {
 				t.Error(err)
 			}

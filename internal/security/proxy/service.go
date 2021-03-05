@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
-
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -62,7 +62,7 @@ type Service struct {
 	loggingClient    logger.LoggingClient
 	configuration    *config.ConfigurationStruct
 	additionalRoutes string
-	routes           map[string]*KongRoute
+	routes           map[string]*models.KongRoute
 }
 
 func NewService(
@@ -75,7 +75,7 @@ func NewService(
 		loggingClient:    lc,
 		configuration:    configuration,
 		additionalRoutes: strings.TrimSpace(os.Getenv(AddProxyRoutesEnv)),
-		routes:           make(map[string]*KongRoute),
+		routes:           make(map[string]*models.KongRoute),
 	}
 }
 
@@ -136,27 +136,21 @@ func (s *Service) Init() error {
 			s.additionalRoutes, parseErr.Error()))
 	}
 
-	mergedClients := s.mergeRoutesWith(addRoutesFromEnv)
+	mergedRoutes := s.mergeRoutesWith(addRoutesFromEnv)
 
-	for clientName, client := range mergedClients {
-		serviceParams := &KongService{
-			Name:     strings.ToLower(clientName),
-			Host:     client.Host,
-			Port:     client.Port,
-			Protocol: client.Protocol,
-		}
+	for _, route := range mergedRoutes {
 
-		err := s.initKongService(serviceParams)
+		err := s.initKongService(&route)
 		if err != nil {
 			return err
 		}
 
-		routeParams := &KongRoute{
-			Paths: []string{"/" + strings.ToLower(clientName)},
-			Name:  strings.ToLower(clientName),
+		routeParams := &models.KongRoute{
+			Paths: []string{"/" + strings.ToLower(route.Name)},
+			Name:  strings.ToLower(route.Name),
 		}
 
-		err = s.initKongRoutes(routeParams, strings.ToLower(clientName))
+		err = s.initKongRoutes(routeParams, strings.ToLower(route.Name))
 		if err != nil {
 			return err
 		}
@@ -177,20 +171,20 @@ func (s *Service) Init() error {
 }
 
 // parseAdditionalProxyRoutes is to parse out the value of env AddProxyRoutesEnv
-// into key / value pairs of map [string]bootstrapConfig.ClientInfo
-// where key is service name, and value is the service ClientInfo
+// into key / value pairs of map [string]KongService
+// where key is service name, and value is the service
 // the env should contain the list of comma separated entries with the format of
 // Name.URL to be considered well-formed
 // Name is used as the key of service name
 // URL should be well-formed as protocol://hostName:portNumber
-// and is parsed into bootstrapConfig.ClientInfo structure if valid
+// and is parsed into KongService structure if valid
 // returns error if not valid
-func (s *Service) parseAdditionalProxyRoutes() (map[string]bootstrapConfig.ClientInfo, error) {
-	emptyMap := make(map[string]bootstrapConfig.ClientInfo)
+func (s *Service) parseAdditionalProxyRoutes() (map[string]models.KongService, error) {
+	emptyMap := make(map[string]models.KongService)
 
 	routesFromEnv := strings.Split(s.additionalRoutes, ",")
 
-	additionalClientMap := make(map[string]bootstrapConfig.ClientInfo)
+	additionalRouteMap := make(map[string]models.KongService)
 	for _, rt := range routesFromEnv {
 		route := strings.TrimSpace(rt)
 		// ignore the empty route
@@ -232,35 +226,36 @@ func (s *Service) parseAdditionalProxyRoutes() (map[string]bootstrapConfig.Clien
 				"invalid port, expecting integer as port number for additional kong route %s: %s", port, err.Error())
 		}
 
-		clientInfo := bootstrapConfig.ClientInfo{
+		routeInfo := models.KongService{
+			Name:     serviceName,
 			Protocol: url.Scheme,
 			Host:     hostName,
 			Port:     portNum,
 		}
 
-		additionalClientMap[serviceName] = clientInfo
+		additionalRouteMap[serviceName] = routeInfo
 	}
 
-	return additionalClientMap, nil
+	return additionalRouteMap, nil
 }
 
-func (s *Service) mergeRoutesWith(additional map[string]bootstrapConfig.ClientInfo) map[string]bootstrapConfig.ClientInfo {
+func (s *Service) mergeRoutesWith(additional map[string]models.KongService) map[string]models.KongService {
 	// merging ignores the duplicate keys with the current internal map
 
 	if len(additional) == 0 {
-		return s.configuration.Clients
+		return s.configuration.Routes
 	}
 
-	if len(s.configuration.Clients) == 0 {
+	if len(s.configuration.Routes) == 0 {
 		return additional
 	}
 
-	merged := make(map[string]bootstrapConfig.ClientInfo)
-	for serviceName, client := range s.configuration.Clients {
-		merged[serviceName] = client
+	merged := make(map[string]models.KongService)
+	for serviceName, route := range s.configuration.Routes {
+		merged[serviceName] = route
 	}
 
-	for serviceName, client := range additional {
+	for serviceName, route := range additional {
 		_, exists := merged[serviceName]
 		if exists {
 			s.loggingClient.Warn(fmt.Sprintf(
@@ -268,14 +263,14 @@ func (s *Service) mergeRoutesWith(additional map[string]bootstrapConfig.ClientIn
 					"Ignoring additional", serviceName))
 			continue
 		}
-		merged[serviceName] = client
+		merged[serviceName] = route
 	}
 
 	return merged
 }
 
 func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
-	body := &CertInfo{
+	body := &models.CertInfo{
 		Cert: cp.Cert,
 		Key:  cp.Key,
 		Snis: s.configuration.SNIS,
@@ -322,7 +317,7 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	return nil
 }
 
-func (s *Service) initKongService(service *KongService) error {
+func (s *Service) initKongService(service *models.KongService) error {
 	formVals := url.Values{
 		"name":     {service.Name},
 		"host":     {service.Host},
@@ -360,7 +355,7 @@ func (s *Service) initKongService(service *KongService) error {
 	return nil
 }
 
-func (s *Service) initKongRoutes(r *KongRoute, name string) error {
+func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 	data, err := json.Marshal(r)
 	if err != nil {
 		s.loggingClient.Error(err.Error())
@@ -398,7 +393,7 @@ func (s *Service) initKongRoutes(r *KongRoute, name string) error {
 }
 
 func (s *Service) initACL(name string, whitelist string) error {
-	aclParams := &KongACLPlugin{
+	aclParams := &models.KongACLPlugin{
 		Name:      name,
 		WhiteList: whitelist,
 	}
@@ -483,7 +478,7 @@ func (s *Service) initJWTAuth() error {
 }
 
 func (s *Service) initOAuth2(ttl int) error {
-	oauth2Params := &KongOAuth2Plugin{
+	oauth2Params := &models.KongOAuth2Plugin{
 		Name:                    "oauth2",
 		Scope:                   OAuth2Scopes,
 		MandatoryScope:          "true",
@@ -529,8 +524,8 @@ func (s *Service) initOAuth2(ttl int) error {
 	return nil
 }
 
-func (s *Service) getSvcIDs(path string) (DataCollect, error) {
-	collection := DataCollect{}
+func (s *Service) getSvcIDs(path string) (models.DataCollect, error) {
+	collection := models.DataCollect{}
 
 	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), path}
 	req, err := http.NewRequest(http.MethodGet, strings.Join(tokens, "/"), nil)

@@ -13,7 +13,7 @@
  *
  * @author: Tingyu Zeng, Dell
  *******************************************************************************/
-package proxy
+package models
 
 type KongService struct {
 	Name     string `url:"name,omitempty"`

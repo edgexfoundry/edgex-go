@@ -47,38 +47,45 @@ TokenPath = "res/resp-init.json"
 CACertPath = "res/EdgeXFoundryCA/EdgeXFoundryCA.pem"
 SNIS = ["edgex-kong"]
 
-[Clients]
-  [Clients.CoreData]
+[Routes]
+  [Routes.CoreData]
+  Name = "coredata"
   Protocol = "http"
-  Host = "edgex-core-data"
+  Host = "localhost"
   Port = 48080
-	
-  [Clients.Metadata]
+
+  [Routes.Metadata]
+  Name = "metadata"
   Protocol = "http"
-  Host = "edgex-core-metadata"
+  Host = "localhost"
   Port = 48081
-	
-  [Clients.Command]
+
+  [Routes.Command]
+  Name = "command"
   Protocol = "http"
-  Host = "edgex-core-command"
+  Host = "localhost"
   Port = 48082
-	
-  [Clients.Notifications]
+
+  [Routes.Notifications]
+  Name = "notifications"
   Protocol = "http"
-  Host = "edgex-support-notifications"
+  Host = "localhost"
   Port = 48060
 
-  [Clients.Scheduler]
-  Protocol = 'http'
-  Host = 'edgex-support-scheduler'
+  [Routes.Scheduler]
+  Name = "scheduler"
+  Protocol = "http"
+  Host = "localhost"
   Port = 48085
 
-  [Clients.Rulesengine]
+  [Routes.RulesEngine]
+  Name = "rules"
   Protocol = "http"
-  Host = "edgex-support-rulesengine"
+  Host = "localhost"
   Port = 48075
-	
-  [Clients.Virtualdevice]
+
+  [Routes.VirtualDevice]
+  Name = "ds-virtual"
   Protocol = "http"
-  Host = "edgex-device-virtual"
+  Host = "localhost"
   Port = 49990

@@ -54,38 +54,45 @@ RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = "X-Vault-Token"
 
-[Clients]
-  [Clients.CoreData]
+[Routes]
+  [Routes.CoreData]
+  Name = "coredata"
   Protocol = "http"
   Host = "localhost"
   Port = 48080
 	
-  [Clients.Metadata]
+  [Routes.Metadata]
+  Name = "metadata"
   Protocol = "http"
   Host = "localhost"
   Port = 48081
 	
-  [Clients.Command]
+  [Routes.Command]
+  Name = "command"
   Protocol = "http"
   Host = "localhost"
   Port = 48082
 	
-  [Clients.Notifications]
+  [Routes.Notifications]
+  Name = "notifications"
   Protocol = "http"
   Host = "localhost"
   Port = 48060
 
-  [Clients.Scheduler]
+  [Routes.Scheduler]
+  Name = "scheduler"
   Protocol = "http"
   Host = "localhost"
   Port = 48085
 
-  [Clients.RulesEngine]
+  [Routes.RulesEngine]
+  Name = "rulesengine"
   Protocol = "http"
   Host = "localhost"
   Port = 48075
 	
-  [Clients.VirtualDevice]
+  [Routes.VirtualDevice]
+  Name = "virtualdevice"
   Protocol = "http"
   Host = "localhost"
   Port = 49990
