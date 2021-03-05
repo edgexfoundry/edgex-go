@@ -698,6 +698,18 @@ func (c *Client) IntervalByName(name string) (interval model.Interval, edgeXerr 
 	return
 }
 
+// IntervalById gets a interval by id
+func (c *Client) IntervalById(id string) (interval model.Interval, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	interval, edgeXerr = intervalById(conn, id)
+	if edgeXerr != nil {
+		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
 // AllIntervals query intervals with offset and limit
 func (c *Client) AllIntervals(offset int, limit int) (intervals []model.Interval, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -708,6 +720,13 @@ func (c *Client) AllIntervals(offset int, limit int) (intervals []model.Interval
 		return intervals, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	return intervals, nil
+}
+
+// UpdateInterval updates a interval
+func (c *Client) UpdateInterval(interval model.Interval) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateInterval(conn, interval)
 }
 
 // DeleteIntervalByName deletes the interval by name

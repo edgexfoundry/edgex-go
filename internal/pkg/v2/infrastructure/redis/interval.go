@@ -28,6 +28,18 @@ func intervalStoredKey(id string) string {
 	return CreateKey(IntervalCollection, id)
 }
 
+// sendAddIntervalCmd sends redis command for adding interval
+func sendAddIntervalCmd(conn redis.Conn, storedKey string, interval models.Interval) errors.EdgeX {
+	m, err := json.Marshal(interval)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal interval for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(ZADD, IntervalCollection, interval.Modified, storedKey)
+	_ = conn.Send(HSET, IntervalCollectionName, interval.Name, storedKey)
+	return nil
+}
+
 // addInterval adds a new interval into DB
 func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, errors.EdgeX) {
 	exists, edgeXerr := objectIdExists(conn, intervalStoredKey(interval.Id))
@@ -50,17 +62,13 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 	}
 	interval.Modified = ts
 
-	dsJSONBytes, err := json.Marshal(interval)
-	if err != nil {
-		return interval, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal interval for Redis persistence", err)
-	}
-
 	storedKey := intervalStoredKey(interval.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, storedKey, dsJSONBytes)
-	_ = conn.Send(ZADD, IntervalCollection, interval.Modified, storedKey)
-	_ = conn.Send(HSET, IntervalCollectionName, interval.Name, storedKey)
-	_, err = conn.Do(EXEC)
+	edgeXerr = sendAddIntervalCmd(conn, storedKey, interval)
+	if edgeXerr != nil {
+		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "interval creation failed", err)
 	}
@@ -71,6 +79,15 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 // intervalByName query interval by name from DB
 func intervalByName(conn redis.Conn, name string) (interval models.Interval, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, IntervalCollectionName, name, &interval)
+	if edgeXerr != nil {
+		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
+// intervalById query interval by id from DB
+func intervalById(conn redis.Conn, id string) (interval models.Interval, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectById(conn, intervalStoredKey(id), &interval)
 	if edgeXerr != nil {
 		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -100,6 +117,13 @@ func allIntervals(conn redis.Conn, offset, limit int) (intervals []models.Interv
 	return intervals, nil
 }
 
+// sendDeleteIntervalCmd sends redis command for deleting interval
+func sendDeleteIntervalCmd(conn redis.Conn, storedKey string, interval models.Interval) {
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, IntervalCollection, storedKey)
+	_ = conn.Send(HDEL, IntervalCollectionName, interval.Name)
+}
+
 // deleteIntervalByName deletes the interval by name
 func deleteIntervalByName(conn redis.Conn, name string) errors.EdgeX {
 	interval, edgeXerr := intervalByName(conn, name)
@@ -108,12 +132,33 @@ func deleteIntervalByName(conn redis.Conn, name string) errors.EdgeX {
 	}
 	storedKey := intervalStoredKey(interval.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(DEL, storedKey)
-	_ = conn.Send(ZREM, IntervalCollection, storedKey)
-	_ = conn.Send(HDEL, IntervalCollectionName, interval.Name)
+	sendDeleteIntervalCmd(conn, storedKey, interval)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "interval deletion failed", err)
 	}
+	return nil
+}
+
+// updateInterval updates a interval
+func updateInterval(conn redis.Conn, interval models.Interval) errors.EdgeX {
+	oldInterval, edgeXerr := intervalByName(conn, interval.Name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	interval.Modified = common.MakeTimestamp()
+	storedKey := intervalStoredKey(interval.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteIntervalCmd(conn, storedKey, oldInterval)
+	edgeXerr = sendAddIntervalCmd(conn, storedKey, interval)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "interval update failed", err)
+	}
+
 	return nil
 }

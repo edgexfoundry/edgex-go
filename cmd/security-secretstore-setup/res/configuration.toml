@@ -21,7 +21,7 @@ LogLevel = 'DEBUG'
 [SecretStore]
 Type = "vault"
 Protocol = "http"
-Host = "edgex-vault"
+Host = "localhost"
 Port = 8200
 CertPath = ""
 CaFilePath = ""

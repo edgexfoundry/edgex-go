@@ -32,6 +32,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -71,6 +72,26 @@ func addIntervalRequestData() requests.AddIntervalRequest {
 	}
 
 	return testAddIntervalReq
+}
+
+func updateIntervalRequestData() requests.UpdateIntervalRequest {
+	testUUID := ExampleUUID
+	testIntervalName := TestIntervalName
+	testFrequency := TestIntervalFrequency
+	var req = requests.UpdateIntervalRequest{
+		BaseRequest: common.BaseRequest{
+			RequestId:   ExampleUUID,
+			Versionable: common.NewVersionable(),
+		},
+		Interval: dtos.UpdateInterval{
+			Versionable: common.NewVersionable(),
+			Id:          &testUUID,
+			Name:        &testIntervalName,
+			Frequency:   &testFrequency,
+		},
+	}
+
+	return req
 }
 
 func TestAddInterval(t *testing.T) {
@@ -330,4 +351,127 @@ func TestDeleteIntervalByName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPatchInterval(t *testing.T) {
+	expectedRequestId := ExampleUUID
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	testReq := updateIntervalRequestData()
+	dsModels := models.Interval{
+		Id:        *testReq.Interval.Id,
+		Name:      *testReq.Interval.Name,
+		Frequency: *testReq.Interval.Frequency,
+	}
+
+	valid := testReq
+	dbClientMock.On("IntervalById", *valid.Interval.Id).Return(dsModels, nil)
+	dbClientMock.On("UpdateInterval", mock.Anything).Return(nil)
+	validWithNoReqID := testReq
+	validWithNoReqID.RequestId = ""
+	validWithNoId := testReq
+	validWithNoId.Interval.Id = nil
+	dbClientMock.On("IntervalByName", *validWithNoId.Interval.Name).Return(dsModels, nil)
+	validWithNoName := testReq
+	validWithNoName.Interval.Name = nil
+
+	invalidId := testReq
+	invalidUUID := "invalidUUID"
+	invalidId.Interval.Id = &invalidUUID
+
+	emptyString := ""
+	emptyId := testReq
+	emptyId.Interval.Id = &emptyString
+	emptyName := testReq
+	emptyName.Interval.Id = nil
+	emptyName.Interval.Name = &emptyString
+
+	invalidNoIdAndName := testReq
+	invalidNoIdAndName.Interval.Id = nil
+	invalidNoIdAndName.Interval.Name = nil
+
+	invalidNotFoundId := testReq
+	invalidNotFoundId.Interval.Name = nil
+	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
+	invalidNotFoundId.Interval.Id = &notFoundId
+	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	dbClientMock.On("IntervalById", *invalidNotFoundId.Interval.Id).Return(dsModels, notFoundIdError)
+
+	invalidNotFoundName := testReq
+	invalidNotFoundName.Interval.Id = nil
+	notFoundName := "notFoundName"
+	invalidNotFoundName.Interval.Name = &notFoundName
+	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
+	dbClientMock.On("IntervalByName", *invalidNotFoundName.Interval.Name).Return(dsModels, notFoundNameError)
+
+	dic.Update(di.ServiceConstructorMap{
+		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewIntervalController(dic)
+	require.NotNil(t, controller)
+	tests := []struct {
+		name                 string
+		request              []requests.UpdateIntervalRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+	}{
+		{"Valid", []requests.UpdateIntervalRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no requestId", []requests.UpdateIntervalRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no id", []requests.UpdateIntervalRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - no name", []requests.UpdateIntervalRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - invalid id", []requests.UpdateIntervalRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateIntervalRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty name", []requests.UpdateIntervalRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - no id and name", []requests.UpdateIntervalRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found id", []requests.UpdateIntervalRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found name", []requests.UpdateIntervalRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, v2.ApiIntervalRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchInterval)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+
+		})
+	}
+
 }

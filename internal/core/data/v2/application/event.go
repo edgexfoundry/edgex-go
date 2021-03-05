@@ -28,14 +28,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// ValidateEvent validates if e is a valid event with corresponding device profile name and device name
+// ValidateEvent validates if e is a valid event with corresponding device profile name and device name and source name
 // ValidateEvent throws error when profileName or deviceName doesn't match to e
-func ValidateEvent(e models.Event, profileName string, deviceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
+func ValidateEvent(e models.Event, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if e.ProfileName != profileName {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches %s", e.ProfileName, profileName), nil)
 	}
 	if e.DeviceName != deviceName {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches %s", e.DeviceName, deviceName), nil)
+	}
+	if e.SourceName != sourceName {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's sourceName %s mismatches %s", e.SourceName, sourceName), nil)
 	}
 	return nil
 }

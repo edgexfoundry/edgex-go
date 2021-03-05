@@ -60,6 +60,9 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml .
 # needed for bootstrapping Redis db
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
 
+# copy Consul ACL related configs
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_DIR}/consul-bootstrapper/
+
 # Expose the file directory as a volume since there's long-running state
 VOLUME ${SECURITY_INIT_DIR}
 

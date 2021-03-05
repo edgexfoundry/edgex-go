@@ -15,20 +15,20 @@ type DBClient struct {
 	mock.Mock
 }
 
-// AddInterval provides a mock function with given fields: e
-func (_m *DBClient) AddInterval(e models.Interval) (models.Interval, errors.EdgeX) {
-	ret := _m.Called(e)
+// AddInterval provides a mock function with given fields: interval
+func (_m *DBClient) AddInterval(interval models.Interval) (models.Interval, errors.EdgeX) {
+	ret := _m.Called(interval)
 
 	var r0 models.Interval
 	if rf, ok := ret.Get(0).(func(models.Interval) models.Interval); ok {
-		r0 = rf(e)
+		r0 = rf(interval)
 	} else {
 		r0 = ret.Get(0).(models.Interval)
 	}
 
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(models.Interval) errors.EdgeX); ok {
-		r1 = rf(e)
+		r1 = rf(interval)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -84,6 +84,29 @@ func (_m *DBClient) DeleteIntervalByName(name string) errors.EdgeX {
 	return r0
 }
 
+// IntervalById provides a mock function with given fields: id
+func (_m *DBClient) IntervalById(id string) (models.Interval, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Interval
+	if rf, ok := ret.Get(0).(func(string) models.Interval); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Interval)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // IntervalByName provides a mock function with given fields: name
 func (_m *DBClient) IntervalByName(name string) (models.Interval, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -105,4 +128,20 @@ func (_m *DBClient) IntervalByName(name string) (models.Interval, errors.EdgeX) 
 	}
 
 	return r0, r1
+}
+
+// UpdateInterval provides a mock function with given fields: interval
+func (_m *DBClient) UpdateInterval(interval models.Interval) errors.EdgeX {
+	ret := _m.Called(interval)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.Interval) errors.EdgeX); ok {
+		r0 = rf(interval)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
 }
