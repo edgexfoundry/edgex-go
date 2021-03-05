@@ -327,7 +327,12 @@ func TestInitKongService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tk := &models.KongService{tt.serviceId, "test", 80, "http"}
+			tk := &models.KongService{
+				Name:     tt.serviceId,
+				Protocol: "http",
+				Host:     "test",
+				Port:     80,
+			}
 			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongService(tk)
 
