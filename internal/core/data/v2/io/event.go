@@ -24,7 +24,7 @@ const maxEventSize = int64(25 * 1e6) // 25 MB
 
 // EventReader unmarshals a request body into an Event type
 type EventReader interface {
-	ReadAddEventRequest(reader io.Reader) (dto.AddEventRequest, errors.EdgeX)
+	ReadAddEventRequest(bytes []byte) (dto.AddEventRequest, errors.EdgeX)
 }
 
 // NewRequestReader returns a BodyReader capable of processing the request body
@@ -45,23 +45,12 @@ func NewCborReader() cborEventReader {
 	return cborEventReader{}
 }
 
-// ReadAddEventRequest reads and converts the request's CBOR encoded add event request into an AddEventRequest struct
-func (cborEventReader) ReadAddEventRequest(reader io.Reader) (dto.AddEventRequest, errors.EdgeX) {
+// ReadDataInBytes reads and converts the request's CBOR encoded add event request into an AddEventRequest struct
+func (cborEventReader) ReadAddEventRequest(bytes []byte) (dto.AddEventRequest, errors.EdgeX) {
 	var addEvent dto.AddEventRequest
-	// use LimitReader with maxEventSize to avoid unexpected memory exhaustion
-	bytes, err := ioutil.ReadAll(io.LimitReader(reader, maxEventSize))
-	if err != nil {
-		return addEvent, errors.NewCommonEdgeX(errors.KindIOError, "cbor AddEventRequest I/O reading failed", err)
-	}
-
-	err = cbor.Unmarshal(bytes, &addEvent)
+	err := cbor.Unmarshal(bytes, &addEvent)
 	if err != nil {
 		return addEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "cbor AddEventRequest decoding failed", err)
-	}
-
-	// validate AddEventRequest DTO
-	if err = addEvent.Validate(); err != nil {
-		return addEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "AddEventRequest validation failed", err)
 	}
 
 	return addEvent, nil
@@ -75,12 +64,21 @@ func NewJsonReader() jsonEventReader {
 	return jsonEventReader{}
 }
 
-// ReadAddEventRequest reads and converts the request's JSON encoded add event request into an AddEventRequest struct
-func (jsonEventReader) ReadAddEventRequest(reader io.Reader) (dto.AddEventRequest, errors.EdgeX) {
+// ReadDataInBytes reads and converts the request's JSON encoded add event request into an AddEventRequest struct
+func (jsonEventReader) ReadAddEventRequest(bytes []byte) (dto.AddEventRequest, errors.EdgeX) {
 	var addEvent dto.AddEventRequest
-	err := json.NewDecoder(reader).Decode(&addEvent)
+	err := json.Unmarshal(bytes, &addEvent)
 	if err != nil {
 		return addEvent, errors.NewCommonEdgeX(errors.KindContractInvalid, "event json decoding failed", err)
 	}
 	return addEvent, nil
+}
+
+func ReadDataInBytes(reader io.Reader) ([]byte, errors.EdgeX) {
+	// use LimitReader with maxEventSize to avoid unexpected memory exhaustion
+	bytes, err := ioutil.ReadAll(io.LimitReader(reader, maxEventSize))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", err)
+	}
+	return bytes, nil
 }

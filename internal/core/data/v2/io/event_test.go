@@ -1,12 +1,7 @@
 package io
 
 import (
-	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
@@ -59,12 +54,6 @@ var testAddEvent = dto.AddEventRequest{
 	},
 }
 
-func newRequestWithContentType(contentType string) *http.Request {
-	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader("Test body"))
-	req.Header.Set(clients.ContentType, contentType)
-	return req
-}
-
 func TestNewEventRequestReader(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -97,8 +86,7 @@ func TestJsonSerialization(t *testing.T) {
 			jsonReader := NewEventRequestReader(clients.ContentTypeJSON)
 			byteArray, err := json.Marshal(testCase.targetDTO)
 			require.NoError(t, err, "error occurs during json marshalling")
-			r := ioutil.NopCloser(bytes.NewBuffer(byteArray))
-			_, err = jsonReader.ReadAddEventRequest(r)
+			_, err = jsonReader.ReadAddEventRequest(byteArray)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {
@@ -122,8 +110,7 @@ func TestCborSerialization(t *testing.T) {
 			cborReader := NewEventRequestReader(clients.ContentTypeCBOR)
 			byteArray, err := cbor.Marshal(testCase.targetDTO)
 			require.NoError(t, err, "error occurs during cbor marshalling")
-			r := ioutil.NopCloser(bytes.NewBuffer(byteArray))
-			_, err = cborReader.ReadAddEventRequest(r)
+			_, err = cborReader.ReadAddEventRequest(byteArray)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {

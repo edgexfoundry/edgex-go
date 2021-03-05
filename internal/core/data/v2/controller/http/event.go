@@ -12,10 +12,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
@@ -66,8 +64,17 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	deviceName := vars[v2.DeviceName]
 	sourceName := vars[v2.SourceName]
 
-	reader := ec.getReader(r)
-	addEventReqDTO, err := reader.ReadAddEventRequest(r.Body)
+	var addEventReqDTO requestDTO.AddEventRequest
+
+	bytes, err := io.ReadDataInBytes(r.Body)
+	if err == nil {
+		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
+		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
+		go application.PublishEvent(bytes, profileName, deviceName, sourceName, ctx, ec.dic)
+		// unmarshal bytes to AddEventRequest
+		reader := ec.getReader(r)
+		addEventReqDTO, err = reader.ReadAddEventRequest(bytes)
+	}
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
@@ -84,7 +91,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	event := requestDTO.AddEventReqToEventModel(addEventReqDTO)
 	err = application.ValidateEvent(event, profileName, deviceName, sourceName, ctx, ec.dic)
 	if err == nil {
-		err = application.AddEvent(event, profileName, deviceName, ctx, ec.dic)
+		err = application.AddEvent(event, ctx, ec.dic)
 	}
 
 	if err != nil {
@@ -99,7 +106,6 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 			http.StatusCreated,
 			event.Id)
 		statusCode = http.StatusCreated
-		application.PublishEvent(addEventReqDTO, profileName, deviceName, ctx, ec.dic)
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
