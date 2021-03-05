@@ -7,6 +7,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
@@ -39,46 +41,43 @@ var (
 	testNotificationSeverity    = models.Normal
 )
 
-var testAddNotificationRequest = dtos.Notification{
-	Versionable: common.NewVersionable(),
-	Category:    testNotificationCategory,
-	Content:     testNotificationContent,
-	ContentType: testNotificationContentType,
-	Description: testNotificationDescription,
-	Labels:      testNotificationLabels,
-	Sender:      testNotificationSender,
-	Severity:    testNotificationSeverity,
+func buildTestAddNotificationRequest() requests.AddNotificationRequest {
+	notification := dtos.NewNotification(testNotificationLabels, testNotificationCategory, testNotificationContent,
+		testNotificationSender, testNotificationSeverity)
+	notification.ContentType = testNotificationContentType
+	notification.Description = testNotificationDescription
+	return requests.NewAddNotificationRequest(notification)
 }
 
 func TestAddNotification(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 
-	valid := requests.NewAddNotificationRequest(testAddNotificationRequest)
-	model := dtos.ToNotificationModel(valid.Notification)
+	validRequest := buildTestAddNotificationRequest()
+	model := dtos.ToNotificationModel(validRequest.Notification)
 	dbClientMock.On("AddNotification", model).Return(model, nil)
 
-	noRequestId := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	noRequestId := validRequest
 	noRequestId.RequestId = ""
-	invalidReqId := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	invalidReqId := validRequest
 	invalidReqId.RequestId = "abc"
 
-	noCategoryAndLabels := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	noCategoryAndLabels := validRequest
 	noCategoryAndLabels.Notification.Category = ""
 	noCategoryAndLabels.Notification.Labels = nil
 
-	noContent := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	noContent := validRequest
 	noContent.Notification.Content = ""
 
-	noSender := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	noSender := validRequest
 	noSender.Notification.Sender = ""
 
-	noSeverity := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	noSeverity := validRequest
 	noSeverity.Notification.Severity = ""
-	invalidSeverity := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	invalidSeverity := validRequest
 	invalidSeverity.Notification.Severity = "foo"
 
-	invalidStatus := requests.NewAddNotificationRequest(testAddNotificationRequest)
+	invalidStatus := validRequest
 	invalidStatus.Notification.Status = "foo"
 
 	dic.Update(di.ServiceConstructorMap{
@@ -93,7 +92,7 @@ func TestAddNotification(t *testing.T) {
 		request            []requests.AddNotificationRequest
 		expectedStatusCode int
 	}{
-		{"valid", []requests.AddNotificationRequest{valid}, http.StatusCreated},
+		{"valid", []requests.AddNotificationRequest{validRequest}, http.StatusCreated},
 		{"valid - no request Id", []requests.AddNotificationRequest{noRequestId}, http.StatusCreated},
 		{"invalid, request ID is not an UUID", []requests.AddNotificationRequest{invalidReqId}, http.StatusBadRequest},
 		{"invalid, no category and labels", []requests.AddNotificationRequest{noCategoryAndLabels}, http.StatusBadRequest},
@@ -138,6 +137,72 @@ func TestAddNotification(t *testing.T) {
 					assert.Equal(t, testCase.request[0].RequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+			}
+		})
+	}
+}
+
+func TestNotificationById(t *testing.T) {
+	request := buildTestAddNotificationRequest()
+	notification := dtos.ToNotificationModel(request.Notification)
+	emptyId := ""
+	notFoundId := "1208bbca-8521-434a-a923-66255a68ba00"
+	invalidId := "invalidId"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationById", notification.Id).Return(notification, nil)
+	dbClientMock.On("NotificationById", notFoundId).Return(models.Notification{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "notification doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewNotificationController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		notificationId     string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find notification by ID", notification.Id, false, http.StatusOK},
+		{"Invalid - ID parameter is empty", emptyId, true, http.StatusBadRequest},
+		{"Invalid - ID parameter is not a valid UUID", invalidId, true, http.StatusBadRequest},
+		{"Invalid - notification not found by ID", notFoundId, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiNotificationByIdRoute, testCase.notificationId)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.notificationId})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.NotificationById)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.NotificationResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.notificationId, res.Notification.Id, "ID is not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
 	}
