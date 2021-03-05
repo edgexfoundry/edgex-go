@@ -99,3 +99,17 @@ func convertObjectsToNotifications(objects [][]byte) (notifications []models.Not
 	}
 	return notifications, nil
 }
+
+// notificationsByLabel queries notifications by offset, limit, and label
+func notificationsByLabel(conn redis.Conn, offset int, limit int, label string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionLabel, label), offset, end)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToNotifications(objects)
+}

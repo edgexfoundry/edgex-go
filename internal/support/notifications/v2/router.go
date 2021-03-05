@@ -40,4 +40,5 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	nc := notificationsController.NewNotificationController(dic)
 	r.HandleFunc(v2Constant.ApiNotificationRoute, nc.AddNotification).Methods(http.MethodPost)
 	r.HandleFunc(v2Constant.ApiNotificationByCategoryRoute, nc.NotificationsByCategory).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiNotificationByLabelRoute, nc.NotificationsByLabel).Methods(http.MethodGet)
 }

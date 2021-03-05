@@ -55,3 +55,20 @@ func NotificationsByCategory(offset, limit int, category string, dic *di.Contain
 	}
 	return notifications, nil
 }
+
+// NotificationsByLabel queries notifications with offset, limit, and label
+func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+	if label == "" {
+		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	notificationModels, err := dbClient.NotificationsByLabel(offset, limit, label)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, nil
+}
