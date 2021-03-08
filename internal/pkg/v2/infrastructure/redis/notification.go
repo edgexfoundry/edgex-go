@@ -122,3 +122,17 @@ func notificationById(conn redis.Conn, id string) (notification models.Notificat
 	}
 	return
 }
+
+// notificationsByStatus queries notifications by offset, limit, and status
+func notificationsByStatus(conn redis.Conn, offset int, limit int, status string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionStatus, status), offset, end)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToNotifications(objects)
+}

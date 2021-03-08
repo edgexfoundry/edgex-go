@@ -92,3 +92,20 @@ func NotificationById(id string, dic *di.Container) (notification dtos.Notificat
 	notification = dtos.FromNotificationModelToDTO(notificationModel)
 	return notification, nil
 }
+
+// NotificationsByStatus queries notifications with offset, limit, and status
+func NotificationsByStatus(offset, limit int, status string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+	if status == "" {
+		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	notificationModels, err := dbClient.NotificationsByStatus(offset, limit, status)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, nil
+}
