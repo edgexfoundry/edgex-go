@@ -486,12 +486,58 @@ components:
         requestId: ""
         statusCode: 404
         message: "Not Found"
+    416Example:
+      value:
+        requestId: ""
+        apiVersion: "v2"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v2"
         requestId: ""
         statusCode: 500
         message: "Internal Server Error"
+    AddSubscriptionsExample:
+      value:
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 201
+          id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
+          message: ""
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 409
+          message: "Duplicated"
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 500
+          message: "Internal Server Error"
+    UpdateSubscriptionsExample:
+      value:
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 200
+          message: ""
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 404
+          message: "Not Found"
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 500
+          message: "Internal Server Error"
+    AddNotificationsExample:
+      value:
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 201
+          id: "e77c6ca4-46e9-4b11-b0e9-4bbfe5e8420e"
+          message: ""
+        - apiVersion: "v2"
+          requestId: ""
+          statusCode: 500
+          message: "Internal Server Error"
 paths:
   /cleanup:
     parameters:
@@ -513,6 +559,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /cleanup/age/{age}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -539,6 +588,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -566,6 +618,9 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                AddNotificationsExample:
+                  $ref: '#/components/examples/AddNotificationsExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -627,9 +682,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -638,9 +706,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/age/{age}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -667,6 +736,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -676,6 +748,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -685,6 +760,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/category/{category}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -708,17 +786,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -727,9 +818,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/label/{label}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -753,17 +845,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -772,9 +877,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -852,6 +958,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -861,6 +970,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -870,6 +982,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -893,17 +1008,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -912,9 +1040,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/subscription/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -938,8 +1067,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -947,6 +1076,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -956,6 +1088,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -983,6 +1118,9 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                AddSubscriptionsExample:
+                  $ref: '#/components/examples/AddSubscriptionsExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1031,6 +1169,9 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                UpdateSubscriptionsExample:
+                  $ref: '#/components/examples/UpdateSubscriptionsExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1072,6 +1213,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1080,9 +1245,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription/category/{category}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1106,17 +1272,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1125,9 +1304,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription/label/{label}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1151,17 +1331,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1170,9 +1363,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription/receiver/{receiver}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1196,17 +1390,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1215,9 +1422,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /subscription/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1248,6 +1456,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1257,6 +1468,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     delete:
       summary: "Deletes a subscription according to the given name."
       responses:
@@ -1283,6 +1497,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/id/{id}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1313,6 +1530,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1322,6 +1542,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/age/{age}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1348,6 +1571,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1366,6 +1592,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1383,6 +1612,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiTransmissionsResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1391,9 +1644,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/subscription/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1417,8 +1671,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiTransmissionsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1426,6 +1680,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1435,6 +1704,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1472,9 +1744,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1483,9 +1768,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /transmission/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1509,8 +1795,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiTransmissionsResponse'
-        '404':
-          description: "The requested resource does not exist"
+        '400':
+          description: "Request is in an invalid state"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1518,6 +1804,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1527,6 +1828,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /config:
     get:
       summary: "Returns the current configuration of the service."
