@@ -895,3 +895,16 @@ func (c *Client) NotificationById(id string) (notification model.Notification, e
 	}
 	return
 }
+
+// NotificationsByStatus queries notifications by offset, limit and status
+func (c *Client) NotificationsByStatus(offset int, limit int, status string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationsByStatus(conn, offset, limit, status)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d and status %s", offset, limit, status), edgeXerr)
+	}
+	return notifications, nil
+}
