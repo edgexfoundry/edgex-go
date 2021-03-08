@@ -61,7 +61,6 @@ func addIntervalAction(conn redis.Conn, action models.IntervalAction) (models.In
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, IntervalActionCollection, action.Modified, storedKey)
 	_ = conn.Send(HSET, IntervalActionCollectionName, action.Name, storedKey)
-	_ = conn.Send(HSET, IntervalActionCollectionTarget, action.Target, storedKey)
 	_, err = conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction creation failed", err)

@@ -157,6 +157,7 @@ components:
           description: "Indicates that this interval runs one time - at the time indicated by the start"
           type: boolean
       required:
+        - id
         - name
     IntervalAction:
       description: "Defines the action to be taken at a specified interval."
@@ -180,33 +181,12 @@ components:
         intervalName:
           description: "The name of the interval to which the action is associated."
           type: string
-        host:
-          description: "The host targeted by the action"
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used when the action targets a REST endpoint."
-          type: string
-        parameters:
-          description: "Any parameters required by the action"
-          type: string
-        path:
-          description: "The required path at the targeted host for fulfillment of the action."
-          type: string
-        port:
-          description: "The port to address on the targeted host"
-          type: integer
-        protocol:
-          description: "Identifies the protocol required by the action"
-          type: string
-        publisher:
-          type: string
-        target:
-          description: "The target of the action"
-          type: string
+        address:
+          $ref: '#/components/schemas/Address'
       required:
         - name
         - intervalName
-        - target
+        - address
     UpdateIntervalAction:
       description: "Defines the action to be taken at a specified interval."
       type: object
@@ -223,30 +203,10 @@ components:
         intervalName:
           description: "The name of the interval to which the action is associated."
           type: string
-        host:
-          description: "The host targeted by the action"
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used when the action targets a REST endpoint."
-          type: string
-        parameters:
-          description: "Any parameters required by the action"
-          type: string
-        path:
-          description: "The required path at the targeted host for fulfillment of the action."
-          type: string
-        port:
-          description: "The port to address on the targeted host"
-          type: integer
-        protocol:
-          description: "Identifies the protocol required by the action"
-          type: string
-        publisher:
-          type: string
-        target:
-          description: "The target of the action"
-          type: string
+        address:
+          $ref: '#/components/schemas/Address'
       required:
+        - id
         - name
     IntervalActionResponse:
       allOf:
@@ -410,6 +370,70 @@ components:
         id:
           type: string
           format: uuid
+    Address:
+      description: "The address shows the information indicating how to contact a specific endpoint."
+      type: object
+      properties:
+        type:
+          description: "Indicates which protocol should be used (REST/MQTT)."
+          type: string
+        host:
+          description: "The host targeted by the action."
+          type: string
+        port:
+          description: "The port to address on the targeted host."
+          type: integer
+      required:
+        - type
+        - host
+        - port
+    RESTAddress:
+      description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Address'
+      properties:
+        path:
+          description: "The HTTP path at the targeted host for fulfillment of the action."
+          type: string
+        queryParameters:
+          description: "Query parameters required by the action."
+          type: string
+        httpMethod:
+          description: "Indicates which Http verb should be used for the REST endpoint."
+          type: string
+      required:
+        - httpMethod
+    MQTTAddress:
+      description: "The MQTT address shows the information indicating how to contact a specific endpoint by MQTT protocol."
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Address'
+      properties:
+        publisher:
+          description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
+          type: string
+        topic:
+          description: "The topic to publish to."
+          type: string
+        qos:
+          description: "Determines the quality of service level used to guarantee message delivery."
+          type: integer
+        keepAlive:
+          description: "Maximum time in seconds to allow the connection to the MQTT broker to remain idle."
+          type: integer
+        retained:
+          description: "Determines whether or not the MQTT broker retains the message last published."
+          type: boolean
+        autoReconnect:
+          description: "Reconnect to the broker when the connection failure."
+          type: boolean
+        connectTimeout:
+          description: "The time interval in seconds to allow a connect to complete.."
+          type: integer
+      required:
+        - publisher
+        - topic
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object

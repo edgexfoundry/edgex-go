@@ -29,18 +29,9 @@ import (
 )
 
 func addIntervalActionRequestData() requests.AddIntervalActionRequest {
-	return requests.AddIntervalActionRequest{
-		BaseRequest: common.BaseRequest{
-			RequestId:   ExampleUUID,
-			Versionable: common.NewVersionable(),
-		},
-		Action: dtos.IntervalAction{
-			Versionable:  common.NewVersionable(),
-			Id:           ExampleUUID,
-			Name:         TestIntervalActionName,
-			IntervalName: TestIntervalName,
-		},
-	}
+	restAddress := dtos.NewRESTAddress(TestHost, TestPort, TestHTTPMethod)
+	intervalAction := dtos.NewIntervalAction(TestIntervalActionName, TestIntervalName, restAddress)
+	return requests.NewAddIntervalActionRequest(intervalAction)
 }
 
 func TestAddIntervalAction(t *testing.T) {

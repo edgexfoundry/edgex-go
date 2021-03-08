@@ -14,4 +14,7 @@ const (
 	TestIntervalRunOnce   = false
 
 	TestIntervalActionName = "TestIntervalAction"
+	TestHost               = "localhost"
+	TestPort               = 48089
+	TestHTTPMethod         = "GET"
 )
