@@ -7,21 +7,17 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
-	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -45,7 +41,7 @@ func ValidateEvent(e models.Event, profileName string, deviceName string, source
 
 // The AddEvent function accepts the new event model from the controller functions
 // and invokes addEvent function in the infrastructure layer
-func AddEvent(e models.Event, profileName string, deviceName string, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
+func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	if !configuration.Writable.PersistData {
 		return nil
@@ -73,41 +69,21 @@ func AddEvent(e models.Event, profileName string, deviceName string, ctx context
 	return nil
 }
 
-// PublishEvent publishes incoming AddEventRequest through MessageClient
-func PublishEvent(addEventReq dto.AddEventRequest, profileName string, deviceName string, ctx context.Context, dic *di.Container) {
+// PublishEvent publishes incoming AddEventRequest in the format of []byte through MessageClient
+func PublishEvent(data []byte, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
 	lc := container.LoggingClientFrom(dic.Get)
 	msgClient := dataContainer.MessagingClientFrom(dic.Get)
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	lc.Debug("Putting V2 Event DTO on message queue", clients.CorrelationHeader, correlationId)
+	publishTopic := fmt.Sprintf("%s/%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName, sourceName)
+	lc.Debug(fmt.Sprintf("Publishing V2 AddEventRequest to message queue. Topic: %s", publishTopic), clients.CorrelationHeader, correlationId)
 
-	var data []byte
-	var err error
-
-	if len(clients.FromContext(ctx, clients.ContentType)) == 0 {
-		ctx = context.WithValue(ctx, clients.ContentType, clients.ContentTypeJSON)
-	}
-
-	// Must make sure API Version for embedded DTOs is set since it isn't required by the request,
-	// but is needed when published to Message Bus.
-	addEventReq.Event.Versionable = common.NewVersionable()
-	for index := range addEventReq.Event.Readings {
-		addEventReq.Event.Readings[index].Versionable = common.NewVersionable()
-	}
-
-	data, err = json.Marshal(addEventReq)
-	if err != nil {
-		lc.Error(fmt.Sprintf("error marshaling V2 AddEventRequest DTO: %+v", addEventReq), clients.CorrelationHeader, correlationId)
-		return
-	}
-
-	publishTopic := fmt.Sprintf("%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName)
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
-	err = msgClient.Publish(msgEnvelope, publishTopic)
+	err := msgClient.Publish(msgEnvelope, publishTopic)
 	if err != nil {
 		lc.Error(fmt.Sprintf("Unable to send message for V2 API event. Correlation-id: %s, Profile Name: %s, "+
-			"Device Name: %s, Error: %v", correlationId, profileName, deviceName, err))
+			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err))
 	} else {
 		lc.Debug(fmt.Sprintf(
 			"V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId))

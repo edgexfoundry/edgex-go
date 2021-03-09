@@ -8,7 +8,7 @@ require (
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.13
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.3
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.43
-	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.3
+	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.6
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.3
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.7
 	github.com/fxamacker/cbor/v2 v2.2.0
