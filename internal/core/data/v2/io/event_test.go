@@ -7,51 +7,23 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/fxamacker/cbor/v2"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	ExampleUUID            = "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
 	TestDeviceName         = "TestDevice"
-	TestOriginTime         = 1600666185705354000
 	TestDeviceResourceName = "TestDeviceResourceName"
 	TestDeviceProfileName  = "TestDeviceProfileName"
-	TestReadingValue       = "45"
+	TestReadingValue       = uint8(45)
 )
 
-var expectedEventId = uuid.New().String()
-
-var testReading = dtos.BaseReading{
-	Versionable:  common.NewVersionable(),
-	DeviceName:   TestDeviceName,
-	ResourceName: TestDeviceResourceName,
-	ProfileName:  TestDeviceProfileName,
-	Origin:       TestOriginTime,
-	ValueType:    v2.ValueTypeUint8,
-	SimpleReading: dtos.SimpleReading{
-		Value: TestReadingValue,
-	},
-}
-
-var testAddEvent = dto.AddEventRequest{
-	BaseRequest: common.BaseRequest{
-		Versionable: common.NewVersionable(),
-		RequestId:   ExampleUUID,
-	},
-	Event: dtos.Event{
-		Versionable: common.NewVersionable(),
-		Id:          expectedEventId,
-		DeviceName:  TestDeviceName,
-		ProfileName: TestDeviceProfileName,
-		SourceName:  TestDeviceResourceName,
-		Origin:      TestOriginTime,
-		Readings:    []dtos.BaseReading{testReading},
-	},
+func buildTestAddEvent() dto.AddEventRequest {
+	testEvent := dtos.NewEvent(TestDeviceProfileName, TestDeviceName, TestDeviceResourceName)
+	testEvent.AddSimpleReading(TestDeviceResourceName, v2.ValueTypeUint8, TestReadingValue)
+	return dto.NewAddEventRequest(testEvent)
 }
 
 func TestNewEventRequestReader(t *testing.T) {
@@ -73,6 +45,7 @@ func TestNewEventRequestReader(t *testing.T) {
 }
 
 func TestJsonSerialization(t *testing.T) {
+	var testAddEvent = buildTestAddEvent()
 	tests := []struct {
 		name          string
 		targetDTO     interface{}
@@ -97,6 +70,7 @@ func TestJsonSerialization(t *testing.T) {
 }
 
 func TestCborSerialization(t *testing.T) {
+	var testAddEvent = buildTestAddEvent()
 	tests := []struct {
 		name          string
 		targetDTO     interface{}

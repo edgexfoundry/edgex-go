@@ -17,10 +17,12 @@ import (
 	"github.com/fxamacker/cbor/v2"
 )
 
-// To avoid large data causing unexpected memory exhaustion when decoding CBOR payload, maxEventSize was introduced as
+// To avoid large data causing unexpected memory exhaustion when decoding CBOR payload, defaultMaxEventSize was introduced as
 // a reasonable limit appropriate for handling CBOR payload in edgex-go.  More details could be found at
 // https://github.com/edgexfoundry/edgex-go/issues/2439
-const maxEventSize = int64(25 * 1e6) // 25 MB
+// TODO Make MaxEventSize a service configuration setting, so that users could adjust the limit per systems requirements
+// https://github.com/edgexfoundry/edgex-go/issues/3237
+const defaultMaxEventSize = int64(25 * 1e6) // 25 MB
 
 // EventReader unmarshals a request body into an Event type
 type EventReader interface {
@@ -75,8 +77,8 @@ func (jsonEventReader) ReadAddEventRequest(bytes []byte) (dto.AddEventRequest, e
 }
 
 func ReadDataInBytes(reader io.Reader) ([]byte, errors.EdgeX) {
-	// use LimitReader with maxEventSize to avoid unexpected memory exhaustion
-	bytes, err := ioutil.ReadAll(io.LimitReader(reader, maxEventSize))
+	// use LimitReader with defaultMaxEventSize to avoid unexpected memory exhaustion
+	bytes, err := ioutil.ReadAll(io.LimitReader(reader, defaultMaxEventSize))
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", err)
 	}

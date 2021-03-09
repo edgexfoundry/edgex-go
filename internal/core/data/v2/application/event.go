@@ -76,9 +76,9 @@ func PublishEvent(data []byte, profileName string, deviceName string, sourceName
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	lc.Debug("Publishing V2 AddEventRequest to message queue", clients.CorrelationHeader, correlationId)
-
 	publishTopic := fmt.Sprintf("%s/%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName, sourceName)
+	lc.Debug(fmt.Sprintf("Publishing V2 AddEventRequest to message queue. Topic: %s", publishTopic), clients.CorrelationHeader, correlationId)
+
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
 	err := msgClient.Publish(msgEnvelope, publishTopic)
 	if err != nil {
