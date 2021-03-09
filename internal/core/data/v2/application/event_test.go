@@ -198,12 +198,10 @@ func TestAddEvent(t *testing.T) {
 	tests := []struct {
 		Name          string
 		Persistence   bool
-		profileName   string
-		deviceName    string
 		errorExpected bool
 	}{
-		{"Valid - Add Event with persistence", true, testProfileName, testDeviceName, false},
-		{"Valid - Add Event without persistence", false, testProfileName, testDeviceName, false},
+		{"Valid - Add Event with persistence", true, false},
+		{"Valid - Add Event without persistence", false, false},
 	}
 
 	for _, testCase := range tests {
@@ -223,7 +221,7 @@ func TestAddEvent(t *testing.T) {
 					return dbClientMock
 				},
 			})
-			err := AddEvent(evt, testCase.profileName, testCase.deviceName, context.Background(), dic)
+			err := AddEvent(evt, context.Background(), dic)
 
 			if testCase.errorExpected {
 				assert.Error(t, err)
