@@ -43,4 +43,5 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiNotificationByCategoryRoute, nc.NotificationsByCategory).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiNotificationByLabelRoute, nc.NotificationsByLabel).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiNotificationByStatusRoute, nc.NotificationsByStatus).Methods(http.MethodGet)
+	r.HandleFunc(v2Constant.ApiNotificationByTimeRangeRoute, nc.NotificationsByTimeRange).Methods(http.MethodGet)
 }
