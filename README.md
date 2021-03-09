@@ -13,8 +13,9 @@ They can be launched easily with **docker-compose**.
 The simplest way to get started is to fetch the latest docker-compose.yml and start the EdgeX containers:
 
 ```sh
+release="pre-release" # or "hanoi" for latest
 wget -O docker-compose.yml \
-https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml
+https://raw.githubusercontent.com/edgexfoundry/edgex-compose/master/releases/${release}/docker-compose-${release}.yml
 docker-compose up -d
 ```
 
