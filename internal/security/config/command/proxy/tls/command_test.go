@@ -58,9 +58,9 @@ func TestTLSErrorFileNotFound(t *testing.T) {
 	lc := logger.MockLogger{}
 	config := &config.ConfigurationStruct{}
 	fileNotFoundTestcases := [][]string{
-		{"--incert", "missingcertificate", "--inkey", "missingprivatekey"},       // both files missing
-		{"--incert", "testdata/testCert.pem", "--inkey", "missingprivatekey"},    // key file missing
-		{"--incert", "missingcertificate", "--inkey", "testdata/testCert.prkey"}, // cert file missing
+		{"--incert", "missingcertificate", "--inkey", "missingprivatekey", "--admin_api_jwt", "random"},       // both files missing
+		{"--incert", "testdata/testCert.pem", "--inkey", "missingprivatekey", "--admin_api_jwt", "random"},    // key file missing
+		{"--incert", "missingcertificate", "--inkey", "testdata/testCert.prkey", "--admin_api_jwt", "random"}, // cert file missing
 	}
 
 	for _, args := range fileNotFoundTestcases {
@@ -106,10 +106,12 @@ func TestTLSAddNewCertificate(t *testing.T) {
 			require.NoError(t, err)
 
 			config.KongURL.Server = tsURL.Hostname()
-			config.KongURL.AdminPort, _ = strconv.Atoi(tsURL.Port())
+			config.KongURL.ApplicationPort, _ = strconv.Atoi(tsURL.Port())
 
 			args := []string{
-				"--incert", "testdata/testCert.pem", "--inkey", "testdata/testCert.prkey",
+				"--incert", "testdata/testCert.pem",
+				"--inkey", "testdata/testCert.prkey",
+				"--admin_api_jwt", "random",
 			}
 
 			// Act
@@ -162,7 +164,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 		urlPath := r.URL.EscapedPath()
 		switch r.Method {
 		case http.MethodGet:
-			if urlPath == "/snis" {
+			if urlPath == "/admin/snis" {
 				if listCertOk {
 					w.WriteHeader(http.StatusOK)
 				} else {
@@ -196,7 +198,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								},
 							},
 						},
-						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
+						"next": "https://localhost:8000/admin/certificates?offset=xxxxxxxxxxx",
 					}
 				case twoOrMoreCertCase:
 					jsonResponse = map[string]interface{}{
@@ -243,7 +245,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								},
 							},
 						},
-						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
+						"next": "https://localhost:8000/admin/certificates?offset=xxxxxxxxxxx",
 					}
 				}
 
@@ -252,7 +254,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 				}
 			}
 		case http.MethodPost:
-			if urlPath == "/certificates" {
+			if urlPath == "/admin/certificates" {
 				if postCertOk {
 					w.WriteHeader(http.StatusCreated)
 				} else {
@@ -272,7 +274,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"snis":      builtinSnis,
 							},
 						},
-						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
+						"next": "https://localhost:8000/admin/certificates?offset=xxxxxxxxxxx",
 					}
 				case oneCertCase:
 					jsonResponse = map[string]interface{}{
@@ -292,7 +294,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 								"snis":      builtinSnis,
 							},
 						},
-						"next": "https://localhost:8001/certificates?offset=xxxxxxxxxxx",
+						"next": "https://localhost:8000/admin/certificates?offset=xxxxxxxxxxx",
 					}
 				}
 
@@ -302,7 +304,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 			}
 		case http.MethodDelete:
 			if listCertCase > emptyCertCase && deleteCertOk &&
-				(urlPath == "/certificates/fake-cert-id-01" || urlPath == "/certificates/fake-cert-id-02") {
+				(urlPath == "/admin/certificates/fake-cert-id-01" || urlPath == "/admin/certificates/fake-cert-id-02") {
 				w.WriteHeader(http.StatusNoContent)
 			} else { // other case with non-existing certificate id
 				w.WriteHeader(http.StatusBadRequest)

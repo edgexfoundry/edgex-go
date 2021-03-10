@@ -70,8 +70,8 @@ func TestPostCertExists(t *testing.T) {
 		return
 	}
 	configuration.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	mockLogger := logger.MockLogger{}
@@ -130,9 +130,11 @@ func TestInit(t *testing.T) {
 		return
 	}
 	configuration.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
+
+	configuration.KongAuth.JWTFile = "./testdata/test-jwt"
 
 	mockLogger := logger.MockLogger{}
 
@@ -272,7 +274,7 @@ func TestInitKongService(t *testing.T) {
 			return
 		}
 
-		if r.URL.EscapedPath() != "/services" {
+		if r.URL.EscapedPath() != "/admin/services" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -304,12 +306,12 @@ func TestInitKongService(t *testing.T) {
 	}
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgInvalidPort := cfgOK
-	cfgInvalidPort.KongURL.AdminPort = -1
+	cfgInvalidPort.KongURL.ApplicationPort = -1
 
 	cfgInvalidHost := cfgOK
 	cfgInvalidHost.KongURL.Server = ""
@@ -354,7 +356,7 @@ func TestInitKongRoutes(t *testing.T) {
 			return
 		}
 
-		relativePath := "/services/test/routes"
+		relativePath := "/admin/services/test/routes"
 		if r.URL.EscapedPath() != relativePath {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -371,12 +373,12 @@ func TestInitKongRoutes(t *testing.T) {
 
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgInvalidPort := cfgOK
-	cfgInvalidPort.KongURL.AdminPort = -1
+	cfgInvalidPort.KongURL.ApplicationPort = -1
 
 	tests := []struct {
 		name        string
@@ -392,75 +394,6 @@ func TestInitKongRoutes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
 			err = svc.initKongRoutes(&models.KongRoute{}, tt.path)
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil && tt.expectError {
-				t.Error("error was expected, none occurred")
-			}
-		})
-	}
-}
-
-func TestInitACL(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		recvd := string(body)
-		if recvd == "config.whitelist=testgroup&name=conflict" {
-			w.WriteHeader(http.StatusConflict)
-			return
-		}
-		if recvd != "config.whitelist=testgroup&name=test" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-
-	cfgOK := config.ConfigurationStruct{}
-	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
-	}
-
-	cfgInvalidPort := cfgOK
-	cfgInvalidPort.KongURL.AdminPort = -1
-
-	tests := []struct {
-		name        string
-		config      config.ConfigurationStruct
-		aclName     string
-		whitelist   string
-		expectError bool
-	}{
-		{"aclOK", cfgOK, "test", "testgroup", false},
-		{"aclConflict", cfgOK, "conflict", "testgroup", false},
-		{"aclInvalid", cfgOK, "invalid", "testgroup", true},
-		{"InvalidPort", cfgInvalidPort, "test", "testgroup", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
-			err = svc.initACL(tt.aclName, tt.whitelist)
 			if err != nil && !tt.expectError {
 				t.Error(err)
 			}
@@ -502,12 +435,12 @@ func TestResetProxy(t *testing.T) {
 
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.AdminPort = -1
+	cfgWrongPort.KongURL.ApplicationPort = -1
 
 	tests := []struct {
 		name        string
@@ -540,13 +473,13 @@ func TestGetSvcIDs(t *testing.T) {
 			return
 		}
 
-		if r.URL.EscapedPath() == "/badjson" {
+		if r.URL.EscapedPath() == "/admin/badjson" {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"this is" invalid JSON]`))
 			return
 		}
 
-		if r.URL.EscapedPath() != "/testservice" {
+		if r.URL.EscapedPath() != "/admin/testservice" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -563,12 +496,12 @@ func TestGetSvcIDs(t *testing.T) {
 
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.AdminPort = 123
+	cfgWrongPort.KongURL.ApplicationPort = 123
 
 	validService := "testservice"
 
@@ -627,12 +560,12 @@ func TestInitJWTAuth(t *testing.T) {
 
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.AdminPort = 123
+	cfgWrongPort.KongURL.ApplicationPort = 123
 
 	tests := []struct {
 		name        string

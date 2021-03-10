@@ -31,6 +31,7 @@ type cmd struct {
 	client        internal.HttpCaller
 	configuration *config.ConfigurationStruct
 	username      string
+	jwt           string
 }
 
 func NewCommand(
@@ -49,6 +50,7 @@ func NewCommand(
 	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to delete")
+	flagSet.StringVar(&cmd.jwt, "jwt", "", "The JWT for use when accessing the Kong Admin API")
 
 	err := flagSet.Parse(args)
 	if err != nil {
@@ -56,6 +58,9 @@ func NewCommand(
 	}
 	if cmd.username == "" {
 		return nil, fmt.Errorf("%s proxy deluser: argument --user is required", os.Args[0])
+	}
+	if cmd.jwt == "" {
+		return nil, fmt.Errorf("%s proxy deluser: argument --jwt is required", os.Args[0])
 	}
 
 	return &cmd, err
@@ -68,10 +73,13 @@ func (c *cmd) Execute() (int, error) {
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers", c.username}, "/")
 	c.loggingClient.Info(fmt.Sprintf("deleting consumer (user) on the endpoint of %s", kongURL))
 
+	// Setup request
 	req, err := http.NewRequest(http.MethodDelete, kongURL, nil)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to prepare delete consumer request %s: %w", c.username, err)
 	}
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to send delete consumer request %s: %w", c.username, err)

@@ -25,6 +25,7 @@ type ConfigurationStruct struct {
 	LogLevel    string
 	SecretStore SecretStoreInfo
 	Databases   map[string]Database
+	KongAdmin   KongAdminInfo
 }
 
 type Database struct {
@@ -54,6 +55,13 @@ type SecretStoreInfo struct {
 	PasswordProviderArgs        []string
 	RevokeRootTokens            bool
 	ConsulSecretsAdminTokenPath string
+}
+
+type KongAdminInfo struct {
+	ConfigTemplatePath string
+	ConfigFilePath     string
+	ConfigJWTPath      string
+	ConfigJWTDuration  string
 }
 
 // GetBaseURL builds and returns the base URL for the SecretStore service

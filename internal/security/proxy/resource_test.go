@@ -33,7 +33,7 @@ func TestDelete(t *testing.T) {
 			t.Errorf("expected DELETE request, got %s instead", r.Method)
 		}
 
-		if r.URL.EscapedPath() != "/services/1" {
+		if r.URL.EscapedPath() != "/admin/services/1" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -50,12 +50,12 @@ func TestDelete(t *testing.T) {
 	client := &http.Client{}
 	cfgOK := config.ConfigurationStruct{}
 	cfgOK.KongURL = config.KongUrlInfo{
-		Server:    host,
-		AdminPort: port,
+		Server:          host,
+		ApplicationPort: port,
 	}
 
 	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.AdminPort = 123
+	cfgWrongPort.KongURL.ApplicationPort = 123
 
 	mockLogger := logger.MockLogger{}
 	tests := []struct {

@@ -79,5 +79,11 @@ else
   echo "$(date) failed to kong migrations, returned code = " $code
 fi
 
+echo "$(date) Configuring Kong Admin API..."
+
+# Running "kong config db_import" will return a non-successful error code even though it 
+# has successfully run. This is why we added "|| true" to the end of this call.
+/docker-entrypoint.sh kong config db_import /usr/local/kong/kong.yml || true
+
 echo "$(date) Starting kong ..."
 exec /docker-entrypoint.sh kong docker-start

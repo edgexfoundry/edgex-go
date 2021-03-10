@@ -77,3 +77,8 @@ ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
   Service = "appservice"
   Username = "appservice"
 
+[KongAdmin]
+ConfigTemplatePath = "/res/kong-admin-config.template.yml"
+ConfigFilePath = "/tmp/kong/kong.yml"
+ConfigJWTPath = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
+ConfigJWTDuration = "1h"

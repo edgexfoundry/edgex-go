@@ -1,0 +1,84 @@
+_transform: false
+_format_version: '2.1'
+
+# -----------------------------------------------------------------------------
+# Create Consumers
+# -----------------------------------------------------------------------------
+# Pretty straightforward here - creating users for the gateway.
+# 
+# - gateway: this is the global user that is used for all calls other than 
+#            admin routes
+# - admin: this is the admin user for admin routes only
+# -----------------------------------------------------------------------------
+consumers:
+- username: admin
+- username: gateway
+
+# -----------------------------------------------------------------------------
+# Assign ACL Groups
+# -----------------------------------------------------------------------------
+# Creating and assigning two different ACL groups for gateway consumption.
+# - admin: group for all calls to admin routes
+# -----------------------------------------------------------------------------
+acls:
+- group: admin-group
+  consumer: admin
+- group: gateway-group
+  consumer: gateway
+
+# -----------------------------------------------------------------------------
+# Create JWT Secrets
+# -----------------------------------------------------------------------------
+# Creating JWT secrets for each consumer (user) with EC based public/private 
+# keys. JWT tokens are then generated from the EC keys and the "iss" key that 
+# can be retrieved from "http://localhost:8000/admin/consumers/admin/jwt"
+# -----------------------------------------------------------------------------
+jwt_secrets:
+- secret: required-but-not-used-see-documentation
+  rsa_public_key: |
+    <<INSERT-ADMIN-PUBLIC-KEY>>
+  consumer: admin
+  algorithm: ES256
+  key: <<INSERT-ADMIN-JWT-ISSUER-KEY>>
+
+# -----------------------------------------------------------------------------
+# Create Admin Service
+# -----------------------------------------------------------------------------
+# (placeholder)
+# -----------------------------------------------------------------------------
+services:
+- host: localhost
+  protocol: http
+  port: 8001
+  name: admin-service
+
+# -----------------------------------------------------------------------------
+# Create Admin Loopback Route
+# -----------------------------------------------------------------------------
+# (placeholder)
+# -----------------------------------------------------------------------------
+routes:
+- paths:
+  - /admin
+  name: admin-route
+  service: admin-service
+
+# -----------------------------------------------------------------------------
+# Activate JWT and ACL Plugins
+# -----------------------------------------------------------------------------
+# (placeholder)
+# -----------------------------------------------------------------------------
+plugins:
+- enabled: true
+  name: jwt
+- enabled: true
+  name: acl
+  config:
+    allow:
+    - gateway-group
+- enabled: true
+  name: acl
+  route: admin-route
+  config:
+    allow:
+    - admin-group

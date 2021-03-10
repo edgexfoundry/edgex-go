@@ -27,3 +27,8 @@ const (
 	ConfigProviderEnvVar = "edgex_configuration_provider"
 	WritableKey          = "/Writable"
 )
+
+const (
+	AuthHeaderTitle = "Authorization"
+	BearerLabel     = "Bearer "
+)
