@@ -342,7 +342,7 @@ func (s *Service) initKongService(service *models.KongService) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
-		s.loggingClient.Info(fmt.Sprintf("successful to set up proxy service for %s", service.Name))
+		s.loggingClient.Info(fmt.Sprintf("successful to set up proxy service for `%s` at `%s:%d`", service.Name, service.Host, service.Port))
 		break
 	case http.StatusConflict:
 		s.loggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
@@ -382,7 +382,7 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.routes[name] = r
-		s.loggingClient.Info(fmt.Sprintf("successful to set up route for %s", name))
+		s.loggingClient.Info(fmt.Sprintf("successful to set up route for `%s` at `%v`", name, r.Paths))
 		break
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
