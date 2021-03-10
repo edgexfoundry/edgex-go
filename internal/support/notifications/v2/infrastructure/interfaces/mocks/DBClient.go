@@ -205,6 +205,31 @@ func (_m *DBClient) NotificationsByStatus(offset int, limit int, status string) 
 	return r0, r1
 }
 
+// NotificationsByTimeRange provides a mock function with given fields: start, end, offset, limit
+func (_m *DBClient) NotificationsByTimeRange(start int, end int, offset int, limit int) ([]models.Notification, errors.EdgeX) {
+	ret := _m.Called(start, end, offset, limit)
+
+	var r0 []models.Notification
+	if rf, ok := ret.Get(0).(func(int, int, int, int) []models.Notification); ok {
+		r0 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Notification)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, int, int) errors.EdgeX); ok {
+		r1 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // SubscriptionById provides a mock function with given fields: id
 func (_m *DBClient) SubscriptionById(id string) (models.Subscription, errors.EdgeX) {
 	ret := _m.Called(id)

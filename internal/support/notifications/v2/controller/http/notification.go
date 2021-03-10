@@ -234,3 +234,38 @@ func (nc *NotificationController) NotificationsByStatus(w http.ResponseWriter, r
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := notificationContainer.ConfigurationFrom(nc.dic.Get)
+
+	var response interface{}
+	var statusCode int
+
+	// parse time range (start, end), offset, and limit from incoming request
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		notifications, err := application.NotificationsByTimeRange(start, end, offset, limit, nc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

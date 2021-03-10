@@ -25,6 +25,7 @@ const (
 	NotificationCollectionSender   = NotificationCollection + DBKeySeparator + v2.Sender
 	NotificationCollectionSeverity = NotificationCollection + DBKeySeparator + v2.Severity
 	NotificationCollectionStatus   = NotificationCollection + DBKeySeparator + v2.Status
+	NotificationCollectionCreated  = NotificationCollection + DBKeySeparator + v2.Created
 )
 
 // notificationStoredKey return the notification's stored key which combines the collection name and object id
@@ -56,6 +57,7 @@ func addNotification(conn redis.Conn, notification models.Notification) (models.
 	_ = conn.Send(MULTI)
 	_ = conn.Send(SET, redisKey, notifJSONBytes)
 	_ = conn.Send(ZADD, NotificationCollection, 0, redisKey)
+	_ = conn.Send(ZADD, NotificationCollectionCreated, notification.Created, redisKey)
 	if len(notification.Category) > 0 {
 		_ = conn.Send(ZADD, CreateKey(NotificationCollectionCategory, notification.Category), notification.Modified, redisKey)
 	}
@@ -134,5 +136,14 @@ func notificationsByStatus(conn redis.Conn, offset int, limit int, status string
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}
 
+	return convertObjectsToNotifications(objects)
+}
+
+// notificationsByTimeRange query notifications by time range, offset, and limit
+func notificationsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, NotificationCollectionCreated, start, end, offset, limit)
+	if edgeXerr != nil {
+		return notifications, edgeXerr
+	}
 	return convertObjectsToNotifications(objects)
 }

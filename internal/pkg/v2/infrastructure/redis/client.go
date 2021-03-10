@@ -908,3 +908,16 @@ func (c *Client) NotificationsByStatus(offset int, limit int, status string) (no
 	}
 	return notifications, nil
 }
+
+// NotificationsByTimeRange query notifications by time range, offset, and limit
+func (c *Client) NotificationsByTimeRange(start int, end int, offset int, limit int) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationsByTimeRange(conn, start, end, offset, limit)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query notifications by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), edgeXerr)
+	}
+	return notifications, nil
+}
