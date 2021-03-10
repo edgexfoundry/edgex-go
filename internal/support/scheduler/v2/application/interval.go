@@ -22,11 +22,11 @@ import (
 
 // The AddInterval function accepts the new Interval model from the controller function
 // and then invokes AddInterval function of infrastructure layer to add new Interval
-func AddInterval(d models.Interval, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+func AddInterval(interval models.Interval, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	addedInterval, err := dbClient.AddInterval(d)
+	addedInterval, err := dbClient.AddInterval(interval)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}

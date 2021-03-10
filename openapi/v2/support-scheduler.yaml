@@ -128,6 +128,37 @@ components:
         start:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
+      required:
+        - name
+        - frequency
+    UpdateInterval:
+      description: "Defines the frequency at which some action should occur."
+      type: object
+      properties:
+        apiVersion:
+          type: string
+        id:
+          description: "Uniquely identifies the interval, either id or name should be specified."
+          type: string
+          format: uuid
+        name:
+          description: "Non-database identifier for an interval (*must be unique), either id or name should be specified."
+          type: string
+        start:
+          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
+          type: string
+        end:
+          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
+          type: string
+        frequency:
+          description: "The frequency of the event according ISO 8601"
+          type: string
+        runOnce:
+          description: "Indicates that this interval runs one time - at the time indicated by the start"
+          type: boolean
+      required:
+        - id
+        - name
     IntervalAction:
       description: "Defines the action to be taken at a specified interval."
       type: object
@@ -137,52 +168,50 @@ components:
         created:
           description: "A timestamp indicating when the interval action was created."
           type: integer
-        host:
-          description: "The host targeted by the action"
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used when the action targets a REST endpoint."
-          type: string
+        modified:
+          description: "A timestamp indicating when the interval action was last modified."
+          type: integer
         id:
           description: "Uniquely identifies the interval action"
           type: string
           format: uuid
-        intervalId:
-          description: "The ID of the interval to which the action is associated."
-          type: string
-          format: uuid
-        modified:
-          description: "A timestamp indicating when the interval action was last modified."
-          type: integer
         name:
           description: "Non-database identifier for an interval action"
           type: string
-        parameters:
-          description: "Any parameters required by the action"
+        intervalName:
+          description: "The name of the interval to which the action is associated."
           type: string
-        password:
-          description: "If authentication is required, the password"
+        address:
+          oneOf:
+            - $ref: '#/components/schemas/RESTAddress'
+            - $ref: '#/components/schemas/MQTTAddress'
+      required:
+        - name
+        - intervalName
+        - address
+    UpdateIntervalAction:
+      description: "Defines the action to be taken at a specified interval."
+      type: object
+      properties:
+        apiVersion:
           type: string
-        path:
-          description: "The required path at the targeted host for fulfillment of the action."
+        id:
+          description: "Uniquely identifies the interval action, either id or name should be specified."
           type: string
-        port:
-          description: "The port to address on the targeted host"
-          type: integer
-        protocol:
-          description: "Identifies the protocol required by the action"
+          format: uuid
+        name:
+          description: "Non-database identifier for an interval action, either id or name should be specified."
           type: string
-        publisher:
+        intervalName:
+          description: "The name of the interval to which the action is associated."
           type: string
-        target:
-          description: "The target of the action"
-          type: string
-        topic:
-          description: "When the action supports pub/sub the topic to which a message should be published."
-          type: string
-        user:
-          description: "If authentication is required, the username"
-          type: string
+        address:
+          oneOf:
+            - $ref: '#/components/schemas/RESTAddress'
+            - $ref: '#/components/schemas/MQTTAddress'
+      required:
+        - id
+        - name
     IntervalActionResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -316,28 +345,10 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        end:
-          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
-          type: string
-        frequency:
-          description: "The frequency of the event according ISO 8601"
-          type: string
-        id:
-          description: "Uniquely identifies the interval"
-          type: string
-          format: uuid
-        name:
-          description: "Non-database identifier for an interval (*must be unique)"
-          type: string
-        runOnce:
-          description: "Indicates that this interval runs one time - at the time indicated by the start"
-          type: boolean
-        start:
-          description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
-          type: string
+        interval:
+          $ref: '#/components/schemas/UpdateInterval'
       required:
-      - id
-      - name
+        - interval
     UpdateIntervalResponse:
       allOf:
       - $ref: '#/components/schemas/BaseRequest'
@@ -351,54 +362,10 @@ components:
       - $ref: '#/components/schemas/BaseRequest'
       type: object
       properties:
-        host:
-          description: "The host targeted by the action"
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used when the action targets a REST endpoint."
-          type: string
-        id:
-          description: "Uniquely identifies the interval action"
-          type: string
-          format: uuid
-        intervalId:
-          description: "The ID of the interval to which the action is associated."
-          type: string
-          format: uuid
-        name:
-          description: "Non-database identifier for an interval action"
-          type: string
-        parameters:
-          description: "Any parameters required by the action"
-          type: string
-        password:
-          description: "If authentication is required, the password"
-          type: string
-        path:
-          description: "The required path at the targeted host for fulfillment of the action."
-          type: string
-        port:
-          description: "The port to address on the targeted host"
-          type: integer
-        protocol:
-          description: "Identifies the protocol required by the action"
-          type: string
-        publisher:
-          type: string
-        target:
-          description: "The target of the action"
-          type: string
-        topic:
-          description: "When the action supports pub/sub the topic to which a message should be published."
-          type: string
-        user:
-          description: "If authentication is required, the username"
-          type: string
+        action:
+          $ref: '#/components/schemas/UpdateIntervalAction'
       required:
-      - id
-      - intervalId
-      - name
-      - target
+        - action
     UpdateIntervalActionResponse:
       allOf:
       - $ref: '#/components/schemas/BaseResponse'
@@ -407,6 +374,70 @@ components:
         id:
           type: string
           format: uuid
+    Address:
+      description: "The address shows the information indicating how to contact a specific endpoint."
+      type: object
+      properties:
+        type:
+          description: "Indicates which protocol should be used (REST/MQTT)."
+          type: string
+        host:
+          description: "The host targeted by the action."
+          type: string
+        port:
+          description: "The port to address on the targeted host."
+          type: integer
+      required:
+        - type
+        - host
+        - port
+    RESTAddress:
+      description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
+      allOf:
+        - $ref: '#/components/schemas/Address'
+        - type: object
+          properties:
+            path:
+              description: "The HTTP path at the targeted host for fulfillment of the action."
+              type: string
+            queryParameters:
+              description: "Query parameters required by the action."
+              type: string
+            httpMethod:
+              description: "Indicates which Http verb should be used for the REST endpoint."
+              type: string
+          required:
+            - httpMethod
+    MQTTAddress:
+      description: "The MQTT address shows the information indicating how to contact a specific endpoint by MQTT protocol."
+      allOf:
+        - $ref: '#/components/schemas/Address'
+        - type: object
+          properties:
+            publisher:
+              description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
+              type: string
+            topic:
+              description: "The topic to publish to."
+              type: string
+            qos:
+              description: "Determines the quality of service level used to guarantee message delivery."
+              type: integer
+            keepAlive:
+              description: "Maximum time in seconds to allow the connection to the MQTT broker to remain idle."
+              type: integer
+            retained:
+              description: "Determines whether or not the MQTT broker retains the message last published."
+              type: boolean
+            autoReconnect:
+              description: "Reconnect to the broker when the connection failure."
+              type: boolean
+            connectTimeout:
+              description: "The time interval in seconds to allow a connect to complete.."
+              type: integer
+          required:
+            - publisher
+            - topic
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object

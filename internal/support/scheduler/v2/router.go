@@ -32,4 +32,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiAllIntervalRoute, interval.AllIntervals).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiIntervalByNameRoute, interval.DeleteIntervalByName).Methods(http.MethodDelete)
 	r.HandleFunc(v2Constant.ApiIntervalRoute, interval.PatchInterval).Methods(http.MethodPatch)
+
+	// IntervalAction
+	action := schedulerController.NewIntervalActionController(dic)
+	r.HandleFunc(v2Constant.ApiIntervalActionRoute, action.AddIntervalAction).Methods(http.MethodPost)
 }
