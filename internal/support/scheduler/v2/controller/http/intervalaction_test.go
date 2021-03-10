@@ -35,7 +35,6 @@ func addIntervalActionRequestData() requests.AddIntervalActionRequest {
 }
 
 func TestAddIntervalAction(t *testing.T) {
-	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 
@@ -44,12 +43,12 @@ func TestAddIntervalAction(t *testing.T) {
 	dbClientMock.On("IntervalByName", model.IntervalName).Return(models.Interval{}, nil)
 	dbClientMock.On("AddIntervalAction", model).Return(model, nil)
 
-	noName := addIntervalActionRequestData()
+	noName := valid
 	noName.Action.Name = ""
-	noRequestId := addIntervalActionRequestData()
+	noRequestId := valid
 	noRequestId.RequestId = ""
 
-	duplicatedName := addIntervalActionRequestData()
+	duplicatedName := valid
 	duplicatedName.Action.Name = "duplicatedName"
 	model = dtos.ToIntervalActionModel(duplicatedName.Action)
 	dbClientMock.On("AddIntervalAction", model).Return(model, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("intervalAction name %s already exists", model.Name), nil))
@@ -102,9 +101,6 @@ func TestAddIntervalAction(t *testing.T) {
 				// Assert
 				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, v2.ApiVersion, res[0].ApiVersion, "API Version not as expected")
-				if res[0].RequestId != "" {
-					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
-				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
 			}
 		})

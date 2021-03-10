@@ -138,11 +138,11 @@ components:
         apiVersion:
           type: string
         id:
-          description: "Uniquely identifies the interval"
+          description: "Uniquely identifies the interval, either id or name should be specified."
           type: string
           format: uuid
         name:
-          description: "Non-database identifier for an interval (*must be unique)"
+          description: "Non-database identifier for an interval (*must be unique), either id or name should be specified."
           type: string
         start:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
@@ -182,7 +182,9 @@ components:
           description: "The name of the interval to which the action is associated."
           type: string
         address:
-          $ref: '#/components/schemas/Address'
+          oneOf:
+            - $ref: '#/components/schemas/RESTAddress'
+            - $ref: '#/components/schemas/MQTTAddress'
       required:
         - name
         - intervalName
@@ -194,17 +196,19 @@ components:
         apiVersion:
           type: string
         id:
-          description: "Uniquely identifies the interval action"
+          description: "Uniquely identifies the interval action, either id or name should be specified."
           type: string
           format: uuid
         name:
-          description: "Non-database identifier for an interval action"
+          description: "Non-database identifier for an interval action, either id or name should be specified."
           type: string
         intervalName:
           description: "The name of the interval to which the action is associated."
           type: string
         address:
-          $ref: '#/components/schemas/Address'
+          oneOf:
+            - $ref: '#/components/schemas/RESTAddress'
+            - $ref: '#/components/schemas/MQTTAddress'
       required:
         - id
         - name
@@ -389,51 +393,51 @@ components:
         - port
     RESTAddress:
       description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
-      type: object
       allOf:
         - $ref: '#/components/schemas/Address'
-      properties:
-        path:
-          description: "The HTTP path at the targeted host for fulfillment of the action."
-          type: string
-        queryParameters:
-          description: "Query parameters required by the action."
-          type: string
-        httpMethod:
-          description: "Indicates which Http verb should be used for the REST endpoint."
-          type: string
-      required:
-        - httpMethod
+        - type: object
+          properties:
+            path:
+              description: "The HTTP path at the targeted host for fulfillment of the action."
+              type: string
+            queryParameters:
+              description: "Query parameters required by the action."
+              type: string
+            httpMethod:
+              description: "Indicates which Http verb should be used for the REST endpoint."
+              type: string
+          required:
+            - httpMethod
     MQTTAddress:
       description: "The MQTT address shows the information indicating how to contact a specific endpoint by MQTT protocol."
-      type: object
       allOf:
         - $ref: '#/components/schemas/Address'
-      properties:
-        publisher:
-          description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
-          type: string
-        topic:
-          description: "The topic to publish to."
-          type: string
-        qos:
-          description: "Determines the quality of service level used to guarantee message delivery."
-          type: integer
-        keepAlive:
-          description: "Maximum time in seconds to allow the connection to the MQTT broker to remain idle."
-          type: integer
-        retained:
-          description: "Determines whether or not the MQTT broker retains the message last published."
-          type: boolean
-        autoReconnect:
-          description: "Reconnect to the broker when the connection failure."
-          type: boolean
-        connectTimeout:
-          description: "The time interval in seconds to allow a connect to complete.."
-          type: integer
-      required:
-        - publisher
-        - topic
+        - type: object
+          properties:
+            publisher:
+              description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
+              type: string
+            topic:
+              description: "The topic to publish to."
+              type: string
+            qos:
+              description: "Determines the quality of service level used to guarantee message delivery."
+              type: integer
+            keepAlive:
+              description: "Maximum time in seconds to allow the connection to the MQTT broker to remain idle."
+              type: integer
+            retained:
+              description: "Determines whether or not the MQTT broker retains the message last published."
+              type: boolean
+            autoReconnect:
+              description: "Reconnect to the broker when the connection failure."
+              type: boolean
+            connectTimeout:
+              description: "The time interval in seconds to allow a connect to complete.."
+              type: integer
+          required:
+            - publisher
+            - topic
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
