@@ -55,43 +55,43 @@ RetryWaitPeriod = "1s"
   AuthType = "X-Vault-Token"
 
 [Routes]
-  [Routes.CoreData]
+  [Routes.edgex-core-data]
   Name = "coredata"
   Protocol = "http"
   Host = "localhost"
   Port = 48080
 	
-  [Routes.Metadata]
+  [Routes.edgex-core-metadata]
   Name = "metadata"
   Protocol = "http"
   Host = "localhost"
   Port = 48081
 	
-  [Routes.Command]
+  [Routes.edgex-core-command]
   Name = "command"
   Protocol = "http"
   Host = "localhost"
   Port = 48082
 	
-  [Routes.Notifications]
+  [Routes.edgex-support-notifications]
   Name = "notifications"
   Protocol = "http"
   Host = "localhost"
   Port = 48060
 
-  [Routes.Scheduler]
+  [Routes.edgex-support-scheduler]
   Name = "scheduler"
   Protocol = "http"
   Host = "localhost"
   Port = 48085
 
-  [Routes.RulesEngine]
+  [Routes.rules-engine]
   Name = "rulesengine"
   Protocol = "http"
   Host = "localhost"
   Port = 48075
 	
-  [Routes.VirtualDevice]
+  [Routes.device-virtual]
   Name = "virtualdevice"
   Protocol = "http"
   Host = "localhost"
