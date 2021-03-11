@@ -1,6 +1,6 @@
 From 0510531350ba940eafa289c8b699567ab358c449 Mon Sep 17 00:00:00 2001
 From: Tony Espy <espy@canonical.com>
-Date: Wed, 16 Dec 2020 16:34:55 -0500
+Date: Tue, 9 Mar 2021 19:05:15 -0500
 Subject: [PATCH] optimize snap build for pipeline CI check
 
 This patch is used by the EdgeX CI pipeline builds to
@@ -21,11 +21,11 @@ need to build the finally binary .snap file (and it won't
 work with the patch applied). This further reduces the build
 time.
 ---
- snap/snapcraft.yaml | 461 +-------------------------------------------
- 1 file changed, 2 insertions(+), 459 deletions(-)
+ snap/snapcraft.yaml | 452 +-------------------------------------------
+ 1 file changed, 1 insertion(+), 451 deletions(-)
 
 diff --git a/snap/snapcraft.yaml b/snap/snapcraft.yaml
-index 1e537489..faf42425 100644
+index d8bc12bc..5a5f5fbb 100644
 --- a/snap/snapcraft.yaml
 +++ b/snap/snapcraft.yaml
 @@ -73,78 +73,6 @@ confinement: strict
@@ -107,8 +107,8 @@ index 1e537489..faf42425 100644
    security-secretstore-setup:
      adapter: full
      after: [vault]
-@@ -271,29 +202,6 @@ apps:
-       ExecutorPath: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
+@@ -277,29 +205,6 @@ apps:
+       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
      daemon: simple
      plugs: [network, network-bind]
 -  device-virtual:
@@ -137,7 +137,7 @@ index 1e537489..faf42425 100644
    # helper commands the snap exposes
    security-proxy-setup-cmd:
      adapter: none
-@@ -309,14 +214,6 @@ apps:
+@@ -312,14 +217,6 @@ apps:
      # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
      command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
      plugs: [home, removable-media, network]
@@ -152,7 +152,7 @@ index 1e537489..faf42425 100644
    curl:
      adapter: full
      command: usr/bin/curl
-@@ -325,76 +222,6 @@ apps:
+@@ -328,76 +225,6 @@ apps:
      adapter: full
      command: usr/bin/jq
      plugs: [home, removable-media]
@@ -229,7 +229,7 @@ index 1e537489..faf42425 100644
  
  parts:
    version:
-@@ -402,6 +229,7 @@ parts:
+@@ -405,6 +232,7 @@ parts:
      # as with static-packages part, the source dir is unrelated to this part and is used
      # since it changes rarely and therefore will not trigger a new pull
      source: snap/local/build-helpers
@@ -237,7 +237,7 @@ index 1e537489..faf42425 100644
      override-pull: |
        cd $SNAPCRAFT_PROJECT_DIR
        if [ -f VERSION ]; then
-@@ -428,59 +256,6 @@ parts:
+@@ -431,59 +259,6 @@ parts:
        # setpriv with snapd 2.45 + can be used to drop privileges
        - setpriv
  
@@ -297,14 +297,12 @@ index 1e537489..faf42425 100644
    go-build-helper:
      plugin: dump
      # see comment for static-packages part about specifying a source part here
-@@ -515,70 +290,7 @@ parts:
-       tar -C $SNAPCRAFT_STAGE/go1.15 -xf "$FILE_NAME" --strip-components=1
-     prime:
-       - "-*"
--    after: [go-build-helper]
--
+@@ -496,69 +271,6 @@ parts:
+     plugin: dump
+     source: snap/local/runtime-helpers
+ 
 -  consul:
--    after: [go115]
+-    after: [go-build-helper]
 -    plugin: make
 -    source: https://github.com/hashicorp/consul.git
 -    source-tag: v1.8.4
@@ -326,7 +324,7 @@ index 1e537489..faf42425 100644
 -      fi
 -
 -      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
--      gopartbootstrap github.com/hashicorp/consul 1.15
+-      gopartbootstrap github.com/hashicorp/consul
 -      export GO111MODULES=off
 -      go get -u github.com/kardianos/govendor
 -      govendor install
@@ -365,11 +363,11 @@ index 1e537489..faf42425 100644
 -    source-depth: 1
 -    plugin: make
 -    make-install-var: PREFIX
-+    after: [go-build-helper, static-packages]
- 
+-
    edgex-go:
      source: .
-@@ -629,172 +341,3 @@ parts:
+     plugin: make
+@@ -615,165 +327,3 @@ parts:
        - pkg-config
      stage-packages:
        - libzmq5
@@ -421,14 +419,14 @@ index 1e537489..faf42425 100644
 -
 -  # SECURITY SERVICES PARTS
 -  vault:
--    after: [go115]
+-    after: [go-build-helper]
 -    plugin: make
 -    source: https://github.com/hashicorp/vault.git
 -    source-tag: v1.5.4
 -    source-depth: 1
 -    override-build: |
 -      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
--      gopartbootstrap github.com/hashicorp/vault 1.15
+-      gopartbootstrap github.com/hashicorp/vault
 -      export GO111MODULES=off
 -      make bootstrap
 -      make dev
@@ -471,10 +469,8 @@ index 1e537489..faf42425 100644
 -    source-depth: 1
 -    source-tag: v1.2.1
 -    plugin: make
--    after: [go115]
+-    after: [go-build-helper]
 -    override-build: |
--      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
--      cd $SNAPCRAFT_PART_SRC
 -      # create VERSION file (supposed to be created by jenkins pipeline...)
 -      echo "1.2.1" > ./VERSION
 -      make build
@@ -500,10 +496,8 @@ index 1e537489..faf42425 100644
 -    plugin: make
 -    build-packages: [gcc, git, libzmq3-dev, pkg-config]
 -    stage-packages: [libzmq5]
--    after: [go115]
+-    after: [go-build-helper]
 -    override-build: |
--      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
--      cd $SNAPCRAFT_PART_SRC
 -      make build
 -
 -      # install the service binary, configuration, and license files
@@ -520,11 +514,8 @@ index 1e537489..faf42425 100644
 -    source: https://github.com/emqx/kuiper.git
 -    source-tag: 0.4.1
 -    plugin: make
--    after: [go115]
+-    after: [go-build-helper]
 -    override-build: |
--      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
--
--      cd $SNAPCRAFT_PART_SRC
 -      export BUILD_PATH=$SNAPCRAFT_PART_BUILD
 -      export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
 -      make build_with_edgex
@@ -544,3 +535,4 @@ index 1e537489..faf42425 100644
 -      - libzmq5
 -- 
 2.17.1
+
