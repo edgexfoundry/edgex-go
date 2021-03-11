@@ -68,10 +68,10 @@ func TestNewCommand(t *testing.T) {
 	}
 }
 
-func TestExecute(t *testing.T) {
-	type prepareTestFunc func(aclOkResponse bool, configAccessOkResponse bool, t *testing.T) (*config.ConfigurationStruct,
-		*httptest.Server)
+type prepareTestFunc func(aclOkResponse bool, configAccessOkResponse bool, t *testing.T) (*config.ConfigurationStruct,
+	*httptest.Server)
 
+func TestExecute(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
 	wg := &sync.WaitGroup{}
@@ -169,10 +169,92 @@ func TestExecute(t *testing.T) {
 	}
 }
 
+func TestMultipleExecuteCalls(t *testing.T) {
+	// this test is to simulate the restarting of consul agent multiple times
+	ctx := context.Background()
+	wg := &sync.WaitGroup{}
+	lc := logger.MockLogger{}
+
+	expectedBootstrapTokenID := "22222222-bbbb-3333-cccc-444444444444"
+
+	tests := []struct {
+		name       string
+		adminDir   string
+		prepare    prepareTestFunc
+		numOfTimes int
+	}{
+		{"Good:setupRegistryACL with calling Execute() 2 times", "test1", prepareTestRegistryServer, 2},
+		{"Good:setupRegistryACL with calling Execute() 3 times", "test2", prepareTestRegistryServer, 3},
+	}
+
+	for _, tt := range tests {
+		test := tt // capture as local copy
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			// prepare test
+			conf, testServer := test.prepare(true, true, t)
+			defer testServer.Close()
+			// setup token related configs
+			conf.StageGate.Registry.ACL.SecretsAdminTokenPath = filepath.Join(test.adminDir, "secret_token.json")
+			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
+			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
+
+			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
+			require.NoError(t, err)
+			require.NotNil(t, setupRegistryACL)
+			require.Equal(t, "setupRegistryACL", setupRegistryACL.GetCommandName())
+
+			// create test secret token file
+			if test.adminDir != "" {
+				err = helper.CreateDirectoryIfNotExists(test.adminDir)
+				require.NoError(t, err)
+				err = ioutil.WriteFile(conf.StageGate.Registry.ACL.SecretsAdminTokenPath,
+					[]byte(secretstoreTokenJsonStub), 0600)
+				require.NoError(t, err)
+			}
+
+			// to speed up the test timeout
+			localcmd := setupRegistryACL.(*cmd)
+			localcmd.retryTimeout = 2 * time.Second
+			statusCode, err := setupRegistryACL.Execute()
+
+			defer func() {
+				if test.adminDir == "" {
+					// empty test dir case don't have the directory to clean up
+					_ = os.Remove(conf.StageGate.Registry.ACL.BootstrapTokenPath)
+				} else {
+					_ = os.RemoveAll(test.adminDir)
+				}
+			}()
+
+			require.NoError(t, err)
+			require.Equal(t, interfaces.StatusCodeExitNormal, statusCode)
+			require.FileExists(t, conf.StageGate.Registry.ACL.BootstrapTokenPath)
+			require.FileExists(t, conf.StageGate.Registry.ACL.SecretsAdminTokenPath)
+			require.FileExists(t, conf.StageGate.Registry.ACL.SentinelFilePath)
+
+			for i := 1; i < test.numOfTimes; i++ {
+				statusCode, err = setupRegistryACL.Execute()
+
+				require.NoError(t, err)
+				require.Equal(t, interfaces.StatusCodeExitNormal, statusCode)
+				require.FileExists(t, conf.StageGate.Registry.ACL.BootstrapTokenPath)
+				require.FileExists(t, conf.StageGate.Registry.ACL.SecretsAdminTokenPath)
+				require.FileExists(t, conf.StageGate.Registry.ACL.SentinelFilePath)
+
+				bootstrappedToken, err := localcmd.reconstructBootstrapACLToken()
+				require.NoError(t, err)
+				require.Equal(t, expectedBootstrapTokenID, bootstrappedToken.SecretID)
+			}
+		})
+	}
+}
+
 func prepareTestRegistryServer(aclOkResponse bool, configAccessOkResponse bool, t *testing.T) (*config.ConfigurationStruct,
 	*httptest.Server) {
 	registryTestConf := &config.ConfigurationStruct{}
 
+	testAgentTokenAccessorID := "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 	respCnt := 0
 	testSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.EscapedPath() {
@@ -181,7 +263,7 @@ func prepareTestRegistryServer(aclOkResponse bool, configAccessOkResponse bool, 
 			respCnt++
 			w.WriteHeader(http.StatusOK)
 			var err error
-			if respCnt == 2 {
+			if respCnt >= 2 {
 				_, err = w.Write([]byte("127.0.0.1:12345"))
 			} else {
 				_, err = w.Write([]byte(""))
@@ -192,8 +274,8 @@ func prepareTestRegistryServer(aclOkResponse bool, configAccessOkResponse bool, 
 			if aclOkResponse {
 				w.WriteHeader(http.StatusOK)
 				jsonResponse := map[string]interface{}{
-					"AccessorID":  "bad060a9-0e2b-47ba-98d5-9d622e2322b5",
-					"SecretID":    "7240fdd9-1665-419b-a8c5-5691ca03af7c",
+					"AccessorID":  "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+					"SecretID":    "22222222-bbbb-3333-cccc-444444444444",
 					"Description": "Bootstrap Token (Global Management)",
 					"Policies": []map[string]interface{}{
 						{
@@ -217,6 +299,100 @@ func prepareTestRegistryServer(aclOkResponse bool, configAccessOkResponse bool, 
 			} else {
 				w.WriteHeader(http.StatusForbidden)
 			}
+		case consulCheckAgentAPI:
+			require.Equal(t, http.MethodGet, r.Method)
+			w.WriteHeader(http.StatusOK)
+			jsonResponse := map[string]interface{}{
+				"DebugConfig": map[string]interface{}{
+					"ACLDatacenter":    "dc1",
+					"ACLDefaultPolicy": "allow",
+					"ACLDisabledTTL":   "2m0s",
+					"ACLTokens": map[string]interface{}{
+						"EnablePersistence": true,
+					},
+					"ACLsEnabled": true,
+				},
+			}
+			err := json.NewEncoder(w).Encode(jsonResponse)
+			require.NoError(t, err)
+		case consulListTokensAPI:
+			require.Equal(t, http.MethodGet, r.Method)
+			w.WriteHeader(http.StatusOK)
+			tokens := []map[string]interface{}{
+				{
+					"AccessorID":  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+					"Description": "some other type of agent token",
+				},
+				{
+					"AccessorID":  "00000000-0000-0000-0000-000000000002",
+					"Description": "Anonymous Token",
+				},
+				{
+					"AccessorID":  "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+					"Description": "Bootstrap Token (Global Management)",
+				},
+			}
+			err := json.NewEncoder(w).Encode(tokens)
+			require.NoError(t, err)
+		case consulCreateTokenAPI:
+			require.Equal(t, http.MethodPut, r.Method)
+			w.WriteHeader(http.StatusOK)
+			jsonResponse := map[string]interface{}{
+				"AccessorID":  testAgentTokenAccessorID,
+				"Description": "edgex-core-consul agent token",
+				"Policies": []map[string]interface{}{
+					{
+						"ID":   "00000000-0000-0000-0000-000000000001",
+						"Name": "global-management",
+					},
+					{
+						"ID":   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+						"Name": "node-read policy",
+					},
+				},
+				"Local":       true,
+				"CreateTime":  "2021-03-10T12:25:06.123456-07:00",
+				"Hash":        "UuiRkOQPRCvoRZHRtUxxbrmwZ5crYrOdZ0Z1FTFbTbA=",
+				"CreateIndex": 59,
+				"ModifyIndex": 59,
+			}
+
+			err := json.NewEncoder(w).Encode(jsonResponse)
+			require.NoError(t, err)
+		case fmt.Sprintf(consulTokenRUDAPI, testAgentTokenAccessorID):
+			if r.Method == http.MethodGet {
+				w.WriteHeader(http.StatusOK)
+				jsonResponse := map[string]interface{}{
+					"AccessorID":  testAgentTokenAccessorID,
+					"Description": "edgex-core-consul agent token",
+					"Policies": []map[string]interface{}{
+						{
+							"ID":   "00000000-0000-0000-0000-000000000001",
+							"Name": "global-management",
+						},
+						{
+							"ID":   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+							"Name": "node-read policy",
+						},
+					},
+					"Local":       false,
+					"CreateTime":  "2021-03-10T12:25:06.123456-07:00",
+					"Hash":        "UuiRkOQPRCvoRZHRtUxxbrmwZ5crYrOdZ0Z1FTFbTbA=",
+					"CreateIndex": 59,
+					"ModifyIndex": 59,
+				}
+
+				err := json.NewEncoder(w).Encode(jsonResponse)
+				require.NoError(t, err)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				t.Fatal(fmt.Sprintf("Unexpected method %s to URL %s", r.Method, r.URL.EscapedPath()))
+			}
+		case fmt.Sprintf(consulSetAgentTokenAPI, AgentType):
+			require.Equal(t, http.MethodPut, r.Method)
+
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("agent token set successfully"))
 		default:
 			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
 		}
