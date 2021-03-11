@@ -15,6 +15,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/v2/application"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -26,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -76,15 +79,9 @@ func buildTestSettings() map[string]string {
 }
 
 func buildDeviceCoreCommands(device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
-	coreCommands := make([]dtos.CoreCommand, len(deviceProfile.CoreCommands))
-	for i, c := range deviceProfile.CoreCommands {
-		coreCommands[i] = dtos.CoreCommand{
-			Name: c.Name,
-			Get:  c.Get,
-			Set:  c.Set,
-			Url:  testUrl,
-			Path: testPathPrefix + c.Name,
-		}
+	coreCommands := make([]dtos.CoreCommand, len(deviceProfile.DeviceCommands))
+	for i, c := range deviceProfile.DeviceCommands {
+		coreCommands[i] = application.BuildCoreCommand(device.Name, testUrl, c)
 	}
 	return dtos.DeviceCoreCommand{
 		DeviceName:   device.Name,
@@ -115,27 +112,25 @@ func buildMultiDevicesResponse() responseDTO.MultiDevicesResponse {
 	}
 }
 
-func buildCommands() []dtos.Command {
-	c1 := dtos.Command{
-		Name: "command1",
-		Get:  true,
-		Set:  false,
+func buildDeviceCommands() []dtos.DeviceCommand {
+	c1 := dtos.DeviceCommand{
+		Name:      "command1",
+		ReadWrite: v2.ReadWrite_R,
 	}
-	c2 := dtos.Command{
-		Name: "command2",
-		Get:  true,
-		Set:  false,
+	c2 := dtos.DeviceCommand{
+		Name:      "command2",
+		ReadWrite: v2.ReadWrite_R,
 	}
-	var commands []dtos.Command
+	var commands []dtos.DeviceCommand
 	commands = append(commands, c1, c2)
 	return commands
 }
 
 func buildDeviceProfileResponse() responseDTO.DeviceProfileResponse {
-	commands := buildCommands()
+	commands := buildDeviceCommands()
 	profile := dtos.DeviceProfile{
-		Name:         testProfileName,
-		CoreCommands: commands,
+		Name:           testProfileName,
+		DeviceCommands: commands,
 	}
 	deviceResponse := responseDTO.DeviceProfileResponse{
 		Profile: profile,

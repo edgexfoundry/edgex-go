@@ -50,24 +50,17 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: contractsV2.ValueTypeInt16,
-			ReadWrite: "RW",
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	var testDeviceCommands = []dtos.DeviceCommand{{
-		Name: TestDeviceCommandName,
-		Get: []dtos.ResourceOperation{{
+		Name:      TestDeviceCommandName,
+		ReadWrite: contractsV2.ReadWrite_RW,
+		ResourceOperations: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
 		}},
-		Set: []dtos.ResourceOperation{{
-			DeviceResource: TestDeviceResourceName,
-		}},
-	}}
-	var testCoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Get:  true,
-		Set:  true,
 	}}
 
 	var testDeviceProfileReq = requests.DeviceProfileRequest{
@@ -85,7 +78,6 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			Labels:          testDeviceProfileLabels,
 			DeviceResources: testDeviceResources,
 			DeviceCommands:  testDeviceCommands,
-			CoreCommands:    testCoreCommands,
 		},
 	}
 
@@ -208,9 +200,9 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
-			ReadWrite: "RW",
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noDeviceResourcePropertyType := deviceProfile
@@ -219,24 +211,17 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
-			ReadWrite: "RW",
+		Properties: dtos.ResourceProperties{
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noCommandName := deviceProfile
-	noCommandName.Profile.CoreCommands = []dtos.Command{{
-		Get: true,
-		Set: true,
+	noCommandName.Profile.DeviceCommands = []dtos.DeviceCommand{{
+		ReadWrite: contractsV2.ReadWrite_RW,
 	}}
-	noCommandGet := deviceProfile
-	noCommandGet.Profile.CoreCommands = []dtos.Command{{
+	noCommandReadWrite := deviceProfile
+	noCommandReadWrite.Profile.DeviceCommands = []dtos.DeviceCommand{{
 		Name: TestDeviceCommandName,
-		Get:  false,
-	}}
-	noCommandPut := deviceProfile
-	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Set:  false,
 	}}
 
 	tests := []struct {
@@ -249,8 +234,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 		{"Invalid - No deviceResource name", []requests.DeviceProfileRequest{noDeviceResourceName}},
 		{"Invalid - No deviceResource property type", []requests.DeviceProfileRequest{noDeviceResourcePropertyType}},
 		{"Invalid - No command name", []requests.DeviceProfileRequest{noCommandName}},
-		{"Invalid - No command Get", []requests.DeviceProfileRequest{noCommandGet}},
-		{"Invalid - No command Put", []requests.DeviceProfileRequest{noCommandPut}},
+		{"Invalid - No command readWrite", []requests.DeviceProfileRequest{noCommandReadWrite}},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -351,9 +335,9 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
-			ReadWrite: "RW",
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noDeviceResourcePropertyType := deviceProfileRequest
@@ -362,24 +346,17 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
-			ReadWrite: "RW",
+		Properties: dtos.ResourceProperties{
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noCommandName := deviceProfileRequest
-	noCommandName.Profile.CoreCommands = []dtos.Command{{
-		Get: true,
-		Set: true,
+	noCommandName.Profile.DeviceCommands = []dtos.DeviceCommand{{
+		ReadWrite: contractsV2.ReadWrite_RW,
 	}}
-	noCommandGet := deviceProfileRequest
-	noCommandGet.Profile.CoreCommands = []dtos.Command{{
+	noCommandReadWrite := deviceProfileRequest
+	noCommandReadWrite.Profile.DeviceCommands = []dtos.DeviceCommand{{
 		Name: TestDeviceCommandName,
-		Get:  false,
-	}}
-	noCommandPut := deviceProfileRequest
-	noCommandPut.Profile.CoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Set:  false,
 	}}
 	notFound := deviceProfileRequest
 	notFound.Profile.Name = "testDevice"
@@ -412,8 +389,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 		{"Invalid - No deviceResource name", []requests.DeviceProfileRequest{noDeviceResourceName}, http.StatusBadRequest},
 		{"Invalid - No deviceResource property type", []requests.DeviceProfileRequest{noDeviceResourcePropertyType}, http.StatusBadRequest},
 		{"Invalid - No command name", []requests.DeviceProfileRequest{noCommandName}, http.StatusBadRequest},
-		{"Invalid - No command Get", []requests.DeviceProfileRequest{noCommandGet}, http.StatusBadRequest},
-		{"Invalid - No command Put", []requests.DeviceProfileRequest{noCommandPut}, http.StatusBadRequest},
+		{"Invalid - No command readWrite", []requests.DeviceProfileRequest{noCommandReadWrite}, http.StatusBadRequest},
 		{"Valid - No requestId", []requests.DeviceProfileRequest{noRequestId}, http.StatusOK},
 	}
 	for _, testCase := range tests {
@@ -510,9 +486,9 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
-			ReadWrite: "RW",
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noDeviceResourcePropertyType := deviceProfile
@@ -521,24 +497,17 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
-			ReadWrite: "RW",
+		Properties: dtos.ResourceProperties{
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noCommandName := deviceProfile
-	noCommandName.CoreCommands = []dtos.Command{{
-		Get: true,
-		Set: true,
+	noCommandName.DeviceCommands = []dtos.DeviceCommand{{
+		ReadWrite: contractsV2.ReadWrite_RW,
 	}}
-	noCommandGet := deviceProfile
-	noCommandGet.CoreCommands = []dtos.Command{{
+	noCommandReadWrite := deviceProfile
+	noCommandReadWrite.DeviceCommands = []dtos.DeviceCommand{{
 		Name: TestDeviceCommandName,
-		Get:  false,
-	}}
-	noCommandPut := deviceProfile
-	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Set:  false,
 	}}
 	tests := []struct {
 		name    string
@@ -549,8 +518,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 		{"Invalid - No deviceResource name", noDeviceResourceName},
 		{"Invalid - No deviceResource property type", noDeviceResourcePropertyType},
 		{"Invalid - No command name", noCommandName},
-		{"Invalid - No command Get", noCommandGet},
-		{"Invalid - No command Put", noCommandPut},
+		{"Invalid - No command readWrite", noCommandReadWrite},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -656,9 +624,9 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
+		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
-			ReadWrite: "RW",
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noDeviceResourcePropertyType := deviceProfile
@@ -667,24 +635,17 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 		Description: TestDescription,
 		Tag:         TestTag,
 		Attributes:  testAttributes,
-		Properties: dtos.PropertyValue{
-			ReadWrite: "RW",
+		Properties: dtos.ResourceProperties{
+			ReadWrite: contractsV2.ReadWrite_RW,
 		},
 	}}
 	noCommandName := deviceProfile
-	noCommandName.CoreCommands = []dtos.Command{{
-		Get: true,
-		Set: true,
+	noCommandName.DeviceCommands = []dtos.DeviceCommand{{
+		ReadWrite: contractsV2.ReadWrite_RW,
 	}}
-	noCommandGet := deviceProfile
-	noCommandGet.CoreCommands = []dtos.Command{{
+	noCommandReadWrite := deviceProfile
+	noCommandReadWrite.DeviceCommands = []dtos.DeviceCommand{{
 		Name: TestDeviceCommandName,
-		Get:  false,
-	}}
-	noCommandPut := deviceProfile
-	noCommandPut.CoreCommands = []dtos.Command{{
-		Name: TestDeviceCommandName,
-		Set:  false,
 	}}
 	notFound := deviceProfile
 	notFound.Name = "testDevice"
@@ -717,8 +678,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 		{"Invalid - No deviceResource name", noDeviceResourceName, http.StatusBadRequest},
 		{"Invalid - No deviceResource property type", noDeviceResourcePropertyType, http.StatusBadRequest},
 		{"Invalid - No command name", noCommandName, http.StatusBadRequest},
-		{"Invalid - No command Get", noCommandGet, http.StatusBadRequest},
-		{"Invalid - No command Put", noCommandPut, http.StatusBadRequest},
+		{"Invalid - No command readWrite", noCommandReadWrite, http.StatusBadRequest},
 		{"Not found", notFound, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
