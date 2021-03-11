@@ -752,7 +752,7 @@ components:
           description: "Indicate the visibility of any command via Core Command."
         readWrite:
           type: string
-          description: "Read/Write Permissions set for this property. Optional: R, W, RW"
+          description: "Read/Write Permissions set for this DeviceCommand. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
         resourceOperations:
           type: array
           items:
@@ -770,7 +770,7 @@ components:
           description: "ValueDescriptor Type of property after transformations. Optional: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, bool, string, binary, uint8array, uint16array, uint32array, uint64array, int8array, int16array, int32array, int64array, float32array, float64array, boolarray."
         readWrite:
           type: string
-          description: "Read/Write Permissions set for this property. Optional: R, W, RW"
+          description: "Read/Write Permissions set for this ResourceProperties. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
         units:
           type: string
           description: A string which describes the measurement units associated with a property value  Examples include "deg/s", "degreesFarenheit", "G", or "% Relative Humidity"
