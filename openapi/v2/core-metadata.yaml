@@ -750,12 +750,16 @@ components:
         isHidden:
           type: boolean
           description: "Indicate the visibility of any command via Core Command."
+        readWrite:
+          type: string
+          description: "Read/Write Permissions set for this property. Optional: R, W, RW"
         resourceOperations:
           type: array
           items:
             $ref: '#/components/schemas/ResourceOperation'
       required:
         - name
+        - readWrite
         - resourceOperations
     ResourceProperties:
       description: "Defines constraints with regard to the range of acceptable values assigned to an event reading and defined as a property within a device profile."
@@ -801,8 +805,8 @@ components:
           type: string
           description: A string value used to indicate the type of binary data if Type=binary
       required:
-        - type
-        - readwrite
+        - valueType
+        - readWrite
     ProtocolProperties:
       type: object
       additionalProperties:
