@@ -47,7 +47,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 		}
-		commands := BuildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile.DeviceCommands)
+		commands := BuildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
 
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
@@ -88,7 +88,7 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	commands := BuildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile.DeviceCommands)
+	commands := BuildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
 
 	deviceCoreCommand = dtos.DeviceCoreCommand{
 		DeviceName:   deviceResponse.Device.Name,
@@ -98,28 +98,44 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	return deviceCoreCommand, nil
 }
 
-func buildCoreCommand(deviceName string, serviceUrl string, deviceCommand dtos.DeviceCommand) dtos.CoreCommand {
+func commandPath(deviceName, cmdName string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, cmdName)
+}
+func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string) dtos.CoreCommand {
 	cmd := dtos.CoreCommand{
-		Name: deviceCommand.Name,
+		Name: cmdName,
 		Url:  serviceUrl,
-		Path: fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, deviceCommand.Name),
+		Path: commandPath(deviceName, cmdName),
 	}
-	if strings.Contains(deviceCommand.ReadWrite, V2Routes.ReadWrite_R) {
+	if strings.Contains(readWrite, V2Routes.ReadWrite_R) {
 		cmd.Get = true
 	}
-	if strings.Contains(deviceCommand.ReadWrite, V2Routes.ReadWrite_W) {
+	if strings.Contains(readWrite, V2Routes.ReadWrite_W) {
 		cmd.Set = true
 	}
 	return cmd
 }
 
-func BuildCoreCommands(deviceName string, serviceUrl string, deviceCommands []dtos.DeviceCommand) []dtos.CoreCommand {
-	var commands []dtos.CoreCommand
-	for _, c := range deviceCommands {
+func BuildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) []dtos.CoreCommand {
+	commandMap := make(map[string]dtos.CoreCommand)
+	// Build commands from device commands
+	for _, c := range profile.DeviceCommands {
 		if c.IsHidden {
 			continue
 		}
-		commands = append(commands, buildCoreCommand(deviceName, serviceUrl, c))
+		commandMap[c.Name] = buildCoreCommand(deviceName, serviceUrl, c.Name, c.ReadWrite)
+	}
+	// Build commands from device resource
+	for _, r := range profile.DeviceResources {
+		if _, ok := commandMap[r.Name]; ok || r.IsHidden {
+			continue
+		}
+		commandMap[r.Name] = buildCoreCommand(deviceName, serviceUrl, r.Name, r.Properties.ReadWrite)
+	}
+	// Convert command map to slice
+	var commands []dtos.CoreCommand
+	for _, cmd := range commandMap {
+		commands = append(commands, cmd)
 	}
 	return commands
 }
