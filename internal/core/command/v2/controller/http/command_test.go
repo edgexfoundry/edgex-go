@@ -79,10 +79,7 @@ func buildTestSettings() map[string]string {
 }
 
 func buildDeviceCoreCommands(device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
-	coreCommands := make([]dtos.CoreCommand, len(deviceProfile.DeviceCommands))
-	for i, c := range deviceProfile.DeviceCommands {
-		coreCommands[i] = application.BuildCoreCommand(device.Name, testUrl, c)
-	}
+	coreCommands := application.BuildCoreCommands(device.Name, testUrl, deviceProfile.DeviceCommands)
 	return dtos.DeviceCoreCommand{
 		DeviceName:   device.Name,
 		ProfileName:  deviceProfile.Name,

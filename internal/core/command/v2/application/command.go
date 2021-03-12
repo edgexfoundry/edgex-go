@@ -47,13 +47,8 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 		}
-		var commands []dtos.CoreCommand
-		for _, c := range deviceProfileResponse.Profile.DeviceCommands {
-			if c.IsHidden {
-				continue
-			}
-			commands = append(commands, BuildCoreCommand(device.Name, serviceUrl, c))
-		}
+		commands := BuildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile.DeviceCommands)
+
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
 			ProfileName:  device.ProfileName,
@@ -93,13 +88,8 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	var commands []dtos.CoreCommand
-	for _, c := range deviceProfileResponse.Profile.DeviceCommands {
-		if c.IsHidden {
-			continue
-		}
-		commands = append(commands, BuildCoreCommand(deviceResponse.Device.Name, serviceUrl, c))
-	}
+	commands := BuildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile.DeviceCommands)
+
 	deviceCoreCommand = dtos.DeviceCoreCommand{
 		DeviceName:   deviceResponse.Device.Name,
 		ProfileName:  deviceResponse.Device.ProfileName,
@@ -108,11 +98,11 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	return deviceCoreCommand, nil
 }
 
-func BuildCoreCommand(deviceName string, serviceUrl string, deviceCommand dtos.DeviceCommand) dtos.CoreCommand {
+func buildCoreCommand(deviceName string, serviceUrl string, deviceCommand dtos.DeviceCommand) dtos.CoreCommand {
 	cmd := dtos.CoreCommand{
 		Name: deviceCommand.Name,
 		Url:  serviceUrl,
-		Path: fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, V2Routes.Command, deviceCommand.Name),
+		Path: fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, deviceCommand.Name),
 	}
 	if strings.Contains(deviceCommand.ReadWrite, V2Routes.ReadWrite_R) {
 		cmd.Get = true
@@ -121,6 +111,17 @@ func BuildCoreCommand(deviceName string, serviceUrl string, deviceCommand dtos.D
 		cmd.Set = true
 	}
 	return cmd
+}
+
+func BuildCoreCommands(deviceName string, serviceUrl string, deviceCommands []dtos.DeviceCommand) []dtos.CoreCommand {
+	var commands []dtos.CoreCommand
+	for _, c := range deviceCommands {
+		if c.IsHidden {
+			continue
+		}
+		commands = append(commands, buildCoreCommand(deviceName, serviceUrl, c))
+	}
+	return commands
 }
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also

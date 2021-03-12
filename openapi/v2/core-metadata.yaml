@@ -59,7 +59,7 @@ components:
           description: OnChange indicates whether the device service will generate an event only, if the reading value is different from the previous one. If true, only generate events when readings change
         sourceName:
           type: string
-          description: SourceName indicates the name of the resource in the device profile which describes the event to generate
+          description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
       required:
         - frequency
         - resource
@@ -391,7 +391,7 @@ components:
           type: string
         isHidden:
           type: boolean
-          description: "Indicate the visibility of any resource via Core Command."
+          description: "Indicate the visibility of the DeviceResource via a CoreCommand."
         tag:
           type: string
         properties:
@@ -749,7 +749,7 @@ components:
           type: string
         isHidden:
           type: boolean
-          description: "Indicate the visibility of any command via Core Command."
+          description: "Indicate the visibility of the DeviceCommand via a CoreCommand."
         readWrite:
           type: string
           description: "Read/Write Permissions set for this DeviceCommand. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
