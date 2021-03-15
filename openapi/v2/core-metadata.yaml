@@ -57,9 +57,9 @@ components:
         onChange:
           type: boolean
           description: OnChange indicates whether the device service will generate an event only, if the reading value is different from the previous one. If true, only generate events when readings change
-        resource:
+        sourceName:
           type: string
-          description: Resource indicates the name of the resource in the device profile which describes the event to generate
+          description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
       required:
         - frequency
         - resource
@@ -106,28 +106,6 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
-    Command:
-      type: object
-      properties:
-        created:
-          type: integer
-          description: Created is a timestamp indicating when the entity was created.
-        modified:
-          type: integer
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          description: Command name (unique on the profile). Must name a DeviceCommand or a DeviceResource in this profile
-        get:
-          type: boolean
-          description: Get Command enabled. At least one of Get and Set must be present
-        set:
-          type: boolean
-          description: Set Command enabled. At least one of Get and Set must be present
-      required:
-        - name
     Device:
       type: object
       properties:
@@ -322,11 +300,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceCommand'
-        coreCommands:
-          type: array
-          description: List of commands to Get/Set information for devices associated with this profile
-          items:
-            $ref: '#/components/schemas/Command'
     CreateDeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
@@ -356,11 +329,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceCommand'
-        coreCommands:
-          type: array
-          description: List of commands to Get/Set information for devices associated with this profile
-          items:
-            $ref: '#/components/schemas/Command'
       required:
         - name
         - deviceResources
@@ -397,11 +365,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceCommand'
-        coreCommands:
-          type: array
-          description: List of commands to Get/Set information for devices associated with this profile
-          items:
-            $ref: '#/components/schemas/Command'
     DeviceProfileResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -426,10 +389,13 @@ components:
           type: string
         name:
           type: string
+        isHidden:
+          type: boolean
+          description: "Indicate the visibility of the DeviceResource via a CoreCommand."
         tag:
           type: string
         properties:
-          $ref: '#/components/schemas/PropertyValue'
+          $ref: '#/components/schemas/ResourceProperties'
         attributes:
           type: object
           description: Each Device Service should define required and optional keys
@@ -781,17 +747,21 @@ components:
       properties:
         name:
           type: string
-        get:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResourceOperation'
-        set:
+        isHidden:
+          type: boolean
+          description: "Indicate the visibility of the DeviceCommand via a CoreCommand."
+        readWrite:
+          type: string
+          description: "Read/Write Permissions set for this DeviceCommand. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
+        resourceOperations:
           type: array
           items:
             $ref: '#/components/schemas/ResourceOperation'
       required:
         - name
-    PropertyValue:
+        - readWrite
+        - resourceOperations
+    ResourceProperties:
       description: "Defines constraints with regard to the range of acceptable values assigned to an event reading and defined as a property within a device profile."
       type: object
       properties:
@@ -800,7 +770,7 @@ components:
           description: "ValueDescriptor Type of property after transformations. Optional: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, bool, string, binary, uint8array, uint16array, uint32array, uint64array, int8array, int16array, int32array, int64array, float32array, float64array, boolarray."
         readWrite:
           type: string
-          description: "Read/Write Permissions set for this property. Optional: R, W, RW"
+          description: "Read/Write Permissions set for this ResourceProperties. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
         units:
           type: string
           description: A string which describes the measurement units associated with a property value  Examples include "deg/s", "degreesFarenheit", "G", or "% Relative Humidity"
@@ -835,8 +805,8 @@ components:
           type: string
           description: A string value used to indicate the type of binary data if Type=binary
       required:
-        - type
-        - readwrite
+        - valueType
+        - readWrite
     ProtocolProperties:
       type: object
       additionalProperties:
@@ -845,14 +815,10 @@ components:
       description: "Defines an operation of which a device is capable."
       type: object
       properties:
-        index:
-          type: string
-        operation:
-          type: string
         deviceResource:
           type: string
           description: The replacement of Object field. Must name a DeviceResource in this profile
-        parameter:
+        defaultValue:
           type: string
           description: If present, should be compatible with the Type field of the named DeviceResource
         mappings:
@@ -1096,7 +1062,7 @@ components:
             autoEvents:
               - frequency: 300ms
                 onChange: true
-                resource: CurrentHumidity
+                sourceName: CurrentHumidity
             protocols:
               modbus-tcp:
                 host: localhost
@@ -1138,14 +1104,10 @@ components:
                   units: "On/Off"
             deviceCommands:
               - name: "Switch"
-                get:
-                  - { deviceResource: "SwitchButton" }
-                set:
-                  - { deviceResource: "SwitchButton", parameter: "false" }
-            coreCommands:
-              - name: "Switch"
-                get: true
-                set: true
+                readWrite: "RW"
+                resourceOperations:
+                  - deviceResource: "SwitchButton"
+                    DefaultValue: "false"
     AddProvisionWatcherRequest:
       value:
         - requestId: "fb34e122-84d6-4c4c-a0ba-ac181021dc6b"
@@ -1190,7 +1152,7 @@ components:
             autoEvents:
               - frequency: "10s"
                 onChange: false
-                resource: "Bool"
+                sourceName: "Bool"
             protocols:
               - other:
                   Address: "device-virtual-bool-01"
@@ -1213,10 +1175,10 @@ components:
             autoEvents:
               - frequency: "20s"
                 onChange: false
-                resource: "Uint8"
+                sourceName: "Uint8"
               - frequency: "20s"
                 onChange: false
-                resource: "Uint16"
+                sourceName: "Uint16"
             protocols:
               - other:
                   Address: "device-virtual-uint-01"
@@ -1247,22 +1209,10 @@ components:
                 defaultValue: "0"
           deviceCommands:
             - name: "Float32"
-              get:
-                - index: "1"
-                  operation: "get"
-                  deviceResource: "Float32"
-              set:
-                - index: "1"
-                  operation: "set"
-                  deviceResource: "Float32"
-                  parameter: "false"
-          coreCommands:
-            - id: "c75d4e0a-aedc-41f5-a8c8-79aa3376818a"
-              name: "Float32"
-              created: 1601012840000
-              modified: 1601012840000
-              get: true
-              set: true
+              readWrite: "RW"
+              resourceOperations:
+                - deviceResource: "Float32"
+                  defaultValue: "0.0123"
         - apiVersion: "v2"
           id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
           name: "Device-Modbus-Profile"
@@ -1282,22 +1232,10 @@ components:
                 defaultValue: "0"
           deviceCommands:
             - name: "Float32"
-              get:
-                - index: "1"
-                  operation: "get"
-                  deviceResource: "Float32"
-              set:
-                - index: "1"
-                  operation: "set"
-                  deviceResource: "Float32"
-                  parameter: "false"
-          coreCommands:
-            - id: "f200df81-7d9f-4227-b6af-011396f5204f"
-              name: "Float32"
-              created: 1601012840000
-              modified: 1601012840000
-              get: true
-              set: true
+              readWrite: "RW"
+              resourceOperations:
+                - deviceResource: "1"
+                  defaultValue: "false"
     GetAllProvisionWatchersResponse:
       value:
         apiVersion: "v2"
@@ -1324,7 +1262,7 @@ components:
             service: "device-virtual"
             adminState: "UNLOCKED"
             autoEvents:
-              - resource: "Bool"
+              - sourceName: "Bool"
                 frequency: "10s"
                 onChange: false
           - apiVersion: "v2"
@@ -1423,7 +1361,7 @@ paths:
                   autoEvents:
                     - frequency: "100ms"
                       onChange: true
-                      resource: "CurrentHumidity"
+                      sourceName: "CurrentHumidity"
                 - id: "771de9f4-b5a3-4eba-b5e7-ec6e14fa3de7"
                   name: "AWS IOT Button2"
                   description: "Home automation system"
@@ -1620,7 +1558,7 @@ paths:
                   autoEvents:
                     - frequency: "10s"
                       onChange: false
-                      resource: "Bool"
+                      sourceName: "Bool"
                   protocols:
                     - other:
                         Address: "device-virtual-bool-01"
@@ -2132,22 +2070,9 @@ paths:
                       defaultValue: "0"
                 deviceCommands:
                   - name: "Float32"
-                    get:
-                      - index: "1"
-                        operation: "get"
-                        deviceResource: "Float32"
-                    set:
-                      - index: "1"
-                        operation: "set"
-                        deviceResource: "Float32"
-                        parameter: "false"
-                coreCommands:
-                  - id: "c75d4e0a-aedc-41f5-a8c8-79aa3376818a"
-                    name: "Float32"
-                    created: 1601012840000
-                    modified: 1601012840000
-                    get: true
-                    set: true
+                    readWrite: "RW"
+                    resourceOperations:
+                      - deviceResource: "Float32"
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -2919,7 +2844,7 @@ paths:
                   service: "device-virtual"
                   adminState: "UNLOCKED"
                   autoEvents:
-                    - resource: "Bool"
+                    - sourceName: "Bool"
                       frequency: "10s"
                       onChange: false
         '400':

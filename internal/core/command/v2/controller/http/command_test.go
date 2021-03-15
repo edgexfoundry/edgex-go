@@ -15,6 +15,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/v2/application"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -26,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -75,22 +78,25 @@ func buildTestSettings() map[string]string {
 	return settings
 }
 
-func buildDeviceCoreCommands(device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
-	coreCommands := make([]dtos.CoreCommand, len(deviceProfile.CoreCommands))
-	for i, c := range deviceProfile.CoreCommands {
-		coreCommands[i] = dtos.CoreCommand{
-			Name: c.Name,
-			Get:  c.Get,
-			Set:  c.Set,
-			Url:  testUrl,
-			Path: testPathPrefix + c.Name,
-		}
-	}
-	return dtos.DeviceCoreCommand{
-		DeviceName:   device.Name,
-		ProfileName:  deviceProfile.Name,
-		CoreCommands: coreCommands,
-	}
+func buildDeviceCoreCommands(t *testing.T, device dtos.Device, deviceProfile dtos.DeviceProfile) dtos.DeviceCoreCommand {
+	dcMock := &mocks.DeviceClient{}
+	dpcMock := &mocks.DeviceProfileClient{}
+	dcMock.On("DeviceByName", context.Background(), device.Name).
+		Return(responseDTO.NewDeviceResponse("", "", http.StatusOK, device), nil)
+	dpcMock.On("DeviceProfileByName", context.Background(), deviceProfile.Name).
+		Return(responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile), nil)
+	dic := NewMockDIC()
+	dic.Update(di.ServiceConstructorMap{
+		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} {
+			return dcMock
+		},
+		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} {
+			return dpcMock
+		},
+	})
+	commands, err := application.CommandsByDeviceName(device.Name, dic)
+	require.NoError(t, err)
+	return commands
 }
 
 func buildDeviceResponse() responseDTO.DeviceResponse {
@@ -115,27 +121,25 @@ func buildMultiDevicesResponse() responseDTO.MultiDevicesResponse {
 	}
 }
 
-func buildCommands() []dtos.Command {
-	c1 := dtos.Command{
-		Name: "command1",
-		Get:  true,
-		Set:  false,
+func buildDeviceCommands() []dtos.DeviceCommand {
+	c1 := dtos.DeviceCommand{
+		Name:      "command1",
+		ReadWrite: v2.ReadWrite_R,
 	}
-	c2 := dtos.Command{
-		Name: "command2",
-		Get:  true,
-		Set:  false,
+	c2 := dtos.DeviceCommand{
+		Name:      "command2",
+		ReadWrite: v2.ReadWrite_R,
 	}
-	var commands []dtos.Command
+	var commands []dtos.DeviceCommand
 	commands = append(commands, c1, c2)
 	return commands
 }
 
 func buildDeviceProfileResponse() responseDTO.DeviceProfileResponse {
-	commands := buildCommands()
+	commands := buildDeviceCommands()
 	profile := dtos.DeviceProfile{
-		Name:         testProfileName,
-		CoreCommands: commands,
+		Name:           testProfileName,
+		DeviceCommands: commands,
 	}
 	deviceResponse := responseDTO.DeviceProfileResponse{
 		Profile: profile,
@@ -171,8 +175,8 @@ func buildEventResponse() responseDTO.EventResponse {
 func TestAllCommands(t *testing.T) {
 	expectedMultiDevicesResponse := buildMultiDevicesResponse()
 	expectedDeviceProfileResponse := buildDeviceProfileResponse()
-	deviceCoreCommand1 := buildDeviceCoreCommands(expectedMultiDevicesResponse.Devices[0], expectedDeviceProfileResponse.Profile)
-	deviceCoreCommand2 := buildDeviceCoreCommands(expectedMultiDevicesResponse.Devices[1], expectedDeviceProfileResponse.Profile)
+	deviceCoreCommand1 := buildDeviceCoreCommands(t, expectedMultiDevicesResponse.Devices[0], expectedDeviceProfileResponse.Profile)
+	deviceCoreCommand2 := buildDeviceCoreCommands(t, expectedMultiDevicesResponse.Devices[1], expectedDeviceProfileResponse.Profile)
 	expectedMultiDeviceCoreCommandsResponse := responseDTO.MultiDeviceCoreCommandsResponse{
 		DeviceCoreCommands: []dtos.DeviceCoreCommand{deviceCoreCommand1, deviceCoreCommand2},
 	}
@@ -257,7 +261,7 @@ func TestCommandsByDeviceName(t *testing.T) {
 
 	expectedDeviceResponse := buildDeviceResponse()
 	expectedDeviceProfileResponse := buildDeviceProfileResponse()
-	expectedDeviceCoreCommand := buildDeviceCoreCommands(expectedDeviceResponse.Device, expectedDeviceProfileResponse.Profile)
+	expectedDeviceCoreCommand := buildDeviceCoreCommands(t, expectedDeviceResponse.Device, expectedDeviceProfileResponse.Profile)
 
 	dcMock := &mocks.DeviceClient{}
 	dcMock.On("DeviceByName", context.Background(), testDeviceName).Return(expectedDeviceResponse, nil)

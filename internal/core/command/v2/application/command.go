@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -46,16 +47,8 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 		}
-		commands := make([]dtos.CoreCommand, len(deviceProfileResponse.Profile.CoreCommands))
-		for index, c := range deviceProfileResponse.Profile.CoreCommands {
-			commands[index] = dtos.CoreCommand{
-				Name: c.Name,
-				Get:  c.Get,
-				Set:  c.Set,
-				Url:  serviceUrl,
-				Path: fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, device.Name, c.Name),
-			}
-		}
+		commands := buildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
+
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
 			ProfileName:  device.ProfileName,
@@ -95,22 +88,56 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	commands := make([]dtos.CoreCommand, len(deviceProfileResponse.Profile.CoreCommands))
-	for i, c := range deviceProfileResponse.Profile.CoreCommands {
-		commands[i] = dtos.CoreCommand{
-			Name: c.Name,
-			Get:  c.Get,
-			Set:  c.Set,
-			Url:  serviceUrl,
-			Path: fmt.Sprintf("%s/%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceResponse.Device.Name, V2Routes.Command, c.Name),
-		}
-	}
+	commands := buildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
+
 	deviceCoreCommand = dtos.DeviceCoreCommand{
 		DeviceName:   deviceResponse.Device.Name,
 		ProfileName:  deviceResponse.Device.ProfileName,
 		CoreCommands: commands,
 	}
 	return deviceCoreCommand, nil
+}
+
+func commandPath(deviceName, cmdName string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, cmdName)
+}
+func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string) dtos.CoreCommand {
+	cmd := dtos.CoreCommand{
+		Name: cmdName,
+		Url:  serviceUrl,
+		Path: commandPath(deviceName, cmdName),
+	}
+	if strings.Contains(readWrite, V2Routes.ReadWrite_R) {
+		cmd.Get = true
+	}
+	if strings.Contains(readWrite, V2Routes.ReadWrite_W) {
+		cmd.Set = true
+	}
+	return cmd
+}
+
+func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) []dtos.CoreCommand {
+	commandMap := make(map[string]dtos.CoreCommand)
+	// Build commands from device commands
+	for _, c := range profile.DeviceCommands {
+		if c.IsHidden {
+			continue
+		}
+		commandMap[c.Name] = buildCoreCommand(deviceName, serviceUrl, c.Name, c.ReadWrite)
+	}
+	// Build commands from device resource
+	for _, r := range profile.DeviceResources {
+		if _, ok := commandMap[r.Name]; ok || r.IsHidden {
+			continue
+		}
+		commandMap[r.Name] = buildCoreCommand(deviceName, serviceUrl, r.Name, r.Properties.ReadWrite)
+	}
+	// Convert command map to slice
+	var commands []dtos.CoreCommand
+	for _, cmd := range commandMap {
+		commands = append(commands, cmd)
+	}
+	return commands
 }
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also
