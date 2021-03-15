@@ -95,8 +95,8 @@ func NewCommand(
 }
 
 // Execute implements Command and runs this command
-// command setupRegistryACL sets up the ACL system of the registry, Consul in this case, preparing for generating
-// Consul's agent tokens later on
+// command setupRegistryACL sets up the ACL system of the registry, Consul in this case, bootstrap ACL system,
+// configure Consul access for the secret store, create agent token, and set up the agent token to agent
 func (c *cmd) Execute() (statusCode int, err error) {
 	c.loggingClient.Infof("Security bootstrapper running %s", CommandName)
 
@@ -108,13 +108,22 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to get the absolute path of the sentinel file: %v", err)
 	}
 
-	if helper.CheckIfFileExists(sentinelFileAbsPath) {
-		c.loggingClient.Info("Registry ACL had been setup successfully already, skip")
-		return
-	}
-
+	// a non-empty leader is a prerequisite for any agent related API operations
 	if err := c.waitForNonEmptyConsulLeader(); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to wait for Consul leader: %v", err)
+	}
+
+	if helper.CheckIfFileExists(sentinelFileAbsPath) {
+		// although we may have done setup ACL successfully already previous times,
+		// if token persistence is not enabled, we have to re-set agent token every time agent is restarted,
+		// i.e., when this subcommand is called every time, regardless whether it is first time or not
+		if err := c.setupAgentToken(nil); err != nil {
+			return interfaces.StatusCodeExitWithError, fmt.Errorf("on 2nd time or later, failed to set up agent token: %v", err)
+		}
+
+		c.loggingClient.Info("setupRegistryACL successfully done")
+
+		return
 	}
 
 	var bootstrapACLToken *BootStrapACLTokenInfo
@@ -164,6 +173,11 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to write sentinel file: %v", err)
 	}
 
+	// set up agent token to agent for the first time
+	if err := c.setupAgentToken(bootstrapACLToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to set up agent token: %v", err)
+	}
+
 	c.loggingClient.Info("setupRegistryACL successfully done")
 
 	return
@@ -172,6 +186,82 @@ func (c *cmd) Execute() (statusCode int, err error) {
 // GetCommandName returns the name of this command
 func (c *cmd) GetCommandName() string {
 	return CommandName
+}
+
+// setupAgentToken is to set up the agent token using the inputToken to the running agent if haven't set up yet
+// if the inputToken is nil then it will try to reconstruct from the saved file
+func (c *cmd) setupAgentToken(inputToken *BootStrapACLTokenInfo) error {
+	var err error
+	setupAlreadyPrevious := false
+	bootstrapACLToken := inputToken
+	if inputToken == nil {
+		// this may be the case that re-run with a different configuration like token persistence is changed
+		// reconstruct the bootstrapACLToken from the file
+		bootstrapACLToken, err = c.reconstructBootstrapACLToken()
+		if err != nil {
+			return fmt.Errorf("failed to reconstruct bootstrap ACL token: %v", err)
+		}
+		setupAlreadyPrevious = true
+	}
+
+	persistent, err := c.isACLTokenPersistent(bootstrapACLToken.SecretID)
+	if err != nil {
+		return fmt.Errorf("failed to check the agent token persistence: %v", err)
+	}
+
+	// if property token persistence is not enabled, we have to re-set agent token every time agent is restarted
+	// i.e., when this subcommand is called, regardless whether it is first time or not
+	// furthermore, we also need to set agent token if it is the first time to set up the registry ACL
+	if !persistent || !setupAlreadyPrevious {
+		agentToken, err := c.createAgentToken(*bootstrapACLToken)
+		if err != nil {
+			return fmt.Errorf("setupAgentToken failed: %v", err)
+		}
+		err = c.setAgentToken(*bootstrapACLToken, agentToken, AgentType)
+		if err != nil {
+			return fmt.Errorf("failed to set agent token: %v", err)
+		}
+
+		c.loggingClient.Info("successfully set up agent token into agent")
+	} else {
+		// we had already done all necessary setups
+		c.loggingClient.Info("setupAgentToken had been done before and agent token is persistent, skip")
+	}
+
+	return nil
+}
+
+// reconstructBootstrapACLToken reads bootstrap ACL token from the saved file and reconstruct it into BootStrapACLTokenInfo
+func (c *cmd) reconstructBootstrapACLToken() (*BootStrapACLTokenInfo, error) {
+	bootstrapTokenFilePath := strings.TrimSpace(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
+	if len(bootstrapTokenFilePath) == 0 {
+		return nil, errors.New("required StageGate_Registry_ACL_BootstrapTokenPath from configuration is empty")
+	}
+
+	tokenFileAbsPath, err := filepath.Abs(bootstrapTokenFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert tokenFile to absolute path %s: %v", bootstrapTokenFilePath, err)
+	}
+
+	// make sure we have the file
+	if exists := helper.CheckIfFileExists(tokenFileAbsPath); !exists {
+		return nil, fmt.Errorf("registry bootstrap ACL token file %s not found", tokenFileAbsPath)
+	}
+
+	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
+	tokenReader, err := fileOpener.OpenFileReader(tokenFileAbsPath, os.O_RDONLY, 0400)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file reader: %v", err)
+	}
+
+	var bootstrapACLToken BootStrapACLTokenInfo
+	if err := json.NewDecoder(tokenReader).Decode(&bootstrapACLToken); err != nil {
+		return nil, fmt.Errorf("failed to parse token data into BootStrapACLTokenInfo: %v", err)
+	}
+
+	c.loggingClient.Infof("successfully reconstructed bootstrap ACL token from %s", bootstrapTokenFilePath)
+
+	return &bootstrapACLToken, nil
 }
 
 func (c *cmd) getRegistryApiUrl(api string) (string, error) {
@@ -196,7 +286,7 @@ func (c *cmd) waitForNonEmptyConsulLeader() error {
 			timer.SleepForInterval()
 			continue
 		}
-		c.loggingClient.Info("found Consul leader to bootstrap ACL")
+		c.loggingClient.Info("found Consul leader to set up ACL")
 		return nil
 	}
 
@@ -252,7 +342,7 @@ func (c *cmd) getNonEmptyConsulLeader() error {
 func (c *cmd) getSecretStoreTokenFromFile() (string, error) {
 	trimmedFilePath := strings.TrimSpace(c.configuration.StageGate.Registry.ACL.SecretsAdminTokenPath)
 	if len(trimmedFilePath) == 0 {
-		return emptyToken, errors.New("required StageGate_Registry_SecretsAdminTokenPath from configuration is empty")
+		return emptyToken, errors.New("required StageGate_Registry_ACL_SecretsAdminTokenPath from configuration is empty")
 	}
 
 	tokenFileAbsPath, err := filepath.Abs(trimmedFilePath)
