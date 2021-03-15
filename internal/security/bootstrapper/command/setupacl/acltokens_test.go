@@ -42,15 +42,15 @@ func TestIsACLTokenPersistent(t *testing.T) {
 
 	tests := []struct {
 		name                 string
-		bootstrapToken       *string
+		bootstrapToken       string
 		enablePersist        bool
 		checkAgentOkResponse bool
 		expectedErr          bool
 	}{
-		{"Good:persist enabled ok response", &testBootstrapToken, true, true, false},
-		{"Good:persist disabled ok response", &testBootstrapToken, false, true, false},
-		{"Bad:persist check bad response", &testBootstrapToken, false, false, true},
-		{"Bad:nil bootstrap token", nil, false, false, true},
+		{"Good:persist enabled ok response", testBootstrapToken, true, true, false},
+		{"Good:persist disabled ok response", testBootstrapToken, false, true, false},
+		{"Bad:persist check bad response", testBootstrapToken, false, false, true},
+		{"Bad:empty bootstrap token", "", false, false, true},
 	}
 
 	for _, tt := range tests {
@@ -100,18 +100,18 @@ func TestCreateAgentToken(t *testing.T) {
 
 	tests := []struct {
 		name                        string
-		bootstrapToken              *BootStrapACLTokenInfo
+		bootstrapToken              BootStrapACLTokenInfo
 		listTokensOkResponse        bool
 		listTokensRetriesOkResponse bool
 		createTokenOkResponse       bool
 		readTokenOkResponse         bool
 		expectedErr                 bool
 	}{
-		{"Good:agent token ok response", &testBootstrapToken, true, true, true, true, false},
-		{"Bad:list tokens bad response", &testBootstrapToken, false, false, true, true, true},
-		{"Bad:create token bad response", &testBootstrapToken, true, true, false, true, true},
-		{"Bad:read token bad response", &testBootstrapToken, true, true, true, false, true},
-		{"Bad:nil bootstrap token", nil, false, false, false, true, true},
+		{"Good:agent token ok response", testBootstrapToken, true, true, true, true, false},
+		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, true, true},
+		{"Bad:create token bad response", testBootstrapToken, true, true, false, true, true},
+		{"Bad:read token bad response", testBootstrapToken, true, true, true, false, true},
+		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, true, true},
 	}
 
 	for _, tt := range tests {
@@ -175,15 +175,15 @@ func TestSetAgentTokenToAgent(t *testing.T) {
 
 	tests := []struct {
 		name                    string
-		bootstrapToken          *BootStrapACLTokenInfo
-		agentToken              *string
+		bootstrapToken          BootStrapACLTokenInfo
+		agentToken              string
 		setAgentTokenOkResponse bool
 		expectedErr             bool
 	}{
-		{"Good:set agent token ok response", &testBootstrapToken, &testAgentToken, true, false},
-		{"Bad:set agent token bad response", &testBootstrapToken, &testAgentToken, false, true},
-		{"Bad:nil bootstrap token", nil, &testAgentToken, false, true},
-		{"Bad:nil agent token", &testBootstrapToken, nil, false, true},
+		{"Good:set agent token ok response", testBootstrapToken, testAgentToken, true, false},
+		{"Bad:set agent token bad response", testBootstrapToken, testAgentToken, false, true},
+		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, testAgentToken, false, true},
+		{"Bad:empty agent token", testBootstrapToken, "", false, true},
 	}
 
 	for _, tt := range tests {

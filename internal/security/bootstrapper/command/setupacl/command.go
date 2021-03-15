@@ -188,7 +188,8 @@ func (c *cmd) GetCommandName() string {
 	return CommandName
 }
 
-// setupAgentToken is to set up the agent token to the running agent if haven't set up yet
+// setupAgentToken is to set up the agent token using the inputToken to the running agent if haven't set up yet
+// if the inputToken is nil then it will try to reconstruct from the saved file
 func (c *cmd) setupAgentToken(inputToken *BootStrapACLTokenInfo) error {
 	var err error
 	setupAlreadyPrevious := false
@@ -203,7 +204,7 @@ func (c *cmd) setupAgentToken(inputToken *BootStrapACLTokenInfo) error {
 		setupAlreadyPrevious = true
 	}
 
-	persistent, err := c.isACLTokenPersistent(&bootstrapACLToken.SecretID)
+	persistent, err := c.isACLTokenPersistent(bootstrapACLToken.SecretID)
 	if err != nil {
 		return fmt.Errorf("failed to check the agent token persistence: %v", err)
 	}
@@ -212,11 +213,11 @@ func (c *cmd) setupAgentToken(inputToken *BootStrapACLTokenInfo) error {
 	// i.e., when this subcommand is called, regardless whether it is first time or not
 	// furthermore, we also need to set agent token if it is the first time to set up the registry ACL
 	if !persistent || !setupAlreadyPrevious {
-		agentToken, err := c.createAgentToken(bootstrapACLToken)
+		agentToken, err := c.createAgentToken(*bootstrapACLToken)
 		if err != nil {
 			return fmt.Errorf("setupAgentToken failed: %v", err)
 		}
-		err = c.setAgentToken(bootstrapACLToken, &agentToken, AgentType)
+		err = c.setAgentToken(*bootstrapACLToken, agentToken, AgentType)
 		if err != nil {
 			return fmt.Errorf("failed to set agent token: %v", err)
 		}

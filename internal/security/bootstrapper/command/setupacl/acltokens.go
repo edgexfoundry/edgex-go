@@ -61,8 +61,8 @@ const (
 // once ACL rules are enforced, this call requires at least agent read permission and hence we use
 // the bootstrap ACL token as that's the only token available before creating an agent token
 // this determines whether we need to re-set the agent token every time Consul agent is restarted
-func (c *cmd) isACLTokenPersistent(bootstrapACLToken *string) (bool, error) {
-	if bootstrapACLToken == nil || len(*bootstrapACLToken) == 0 {
+func (c *cmd) isACLTokenPersistent(bootstrapACLToken string) (bool, error) {
+	if len(bootstrapACLToken) == 0 {
 		return false, errors.New("bootstrap ACL token is required for checking agent properties")
 	}
 
@@ -76,7 +76,7 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken *string) (bool, error) {
 		return false, fmt.Errorf("Failed to prepare checkAgent request for http URL: %w", err)
 	}
 
-	req.Header.Add(consulTokenHeader, *bootstrapACLToken)
+	req.Header.Add(consulTokenHeader, bootstrapACLToken)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("Failed to send checkAgent request for http URL: %w", err)
@@ -120,8 +120,8 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken *string) (bool, error) {
 // this call requires ACL read/write permission and hence we use the bootstrap ACL token
 // it checks whether there is an agent token already existing and re-uses it if so
 // otherwise creates a new agent token
-func (c *cmd) createAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (string, error) {
-	if bootstrapACLToken == nil {
+func (c *cmd) createAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
+	if len(bootstrapACLToken.SecretID) == 0 {
 		return emptyToken, errors.New("bootstrap ACL token is required for creating agent token")
 	}
 
@@ -167,7 +167,7 @@ func (c *cmd) createAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (string
 // getEdgeXAgentToken lists tokens and find the matched agent token by the expected key pattern
 // it returns the first matched agent token if many tokens actually are matched
 // it returns empty token if no matching found
-func (c *cmd) getEdgeXAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (string, error) {
+func (c *cmd) getEdgeXAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
 	listTokensURL, err := c.getRegistryApiUrl(consulListTokensAPI)
 	if err != nil {
 		return emptyToken, err
@@ -231,7 +231,7 @@ func (c *cmd) getEdgeXAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (stri
 
 // readTokenID reads the tokenID (i.e. SecretID) by given accessorID
 // it returns the token's SecretID if found, otherwise empty string
-func (c *cmd) readTokenIDBy(bootstrapACLToken *BootStrapACLTokenInfo, accessorID string) (string, error) {
+func (c *cmd) readTokenIDBy(bootstrapACLToken BootStrapACLTokenInfo, accessorID string) (string, error) {
 	if len(accessorID) == 0 {
 		return emptyToken, errors.New("accessorID is required and cannot be empty")
 	}
@@ -282,7 +282,7 @@ func (c *cmd) readTokenIDBy(bootstrapACLToken *BootStrapACLTokenInfo, accessorID
 
 // insertNewAgentToken creates a new Consul token
 // it returns the token's ID and error if any error occurs
-func (c *cmd) insertNewAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (string, error) {
+func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
 	createTokenURL, err := c.getRegistryApiUrl(consulCreateTokenAPI)
 	if err != nil {
 		return emptyToken, err
@@ -352,13 +352,13 @@ func (c *cmd) insertNewAgentToken(bootstrapACLToken *BootStrapACLTokenInfo) (str
 }
 
 // setAgentToken sets the ACL token currently in use by the agent
-func (c *cmd) setAgentToken(bootstrapACLToken *BootStrapACLTokenInfo, agentTokenID *string,
+func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenID string,
 	tokenType AgentTokenType) error {
-	if bootstrapACLToken == nil {
+	if len(bootstrapACLToken.SecretID) == 0 {
 		return errors.New("bootstrap ACL token is required for setting agent token")
 	}
 
-	if agentTokenID == nil || len(*agentTokenID) == 0 {
+	if len(agentTokenID) == 0 {
 		return errors.New("agent token ID is required for setting agent token")
 	}
 
@@ -372,7 +372,7 @@ func (c *cmd) setAgentToken(bootstrapACLToken *BootStrapACLTokenInfo, agentToken
 	}
 
 	setToken := &SetAgentToken{
-		Token: *agentTokenID,
+		Token: agentTokenID,
 	}
 	jsonPayload, err := json.Marshal(setToken)
 	if err != nil {
