@@ -47,7 +47,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 		}
-		commands := BuildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
+		commands := buildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
 
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
@@ -88,7 +88,7 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	commands := BuildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
+	commands := buildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
 
 	deviceCoreCommand = dtos.DeviceCoreCommand{
 		DeviceName:   deviceResponse.Device.Name,
@@ -116,7 +116,7 @@ func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string) dtos.Co
 	return cmd
 }
 
-func BuildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) []dtos.CoreCommand {
+func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) []dtos.CoreCommand {
 	commandMap := make(map[string]dtos.CoreCommand)
 	// Build commands from device commands
 	for _, c := range profile.DeviceCommands {

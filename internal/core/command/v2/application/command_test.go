@@ -68,7 +68,7 @@ func TestBuildCoreCommands(t *testing.T) {
 		{Name: resource5, Get: true, Set: true, Path: commandPath(testDeviceName, resource5), Url: testServiceUrl},
 	}
 
-	result := BuildCoreCommands(testDeviceName, testServiceUrl, profile)
+	result := buildCoreCommands(testDeviceName, testServiceUrl, profile)
 
 	assert.ElementsMatch(t, expectedCoreCommand, result)
 }
