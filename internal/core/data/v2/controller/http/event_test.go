@@ -38,7 +38,6 @@ var expectedCorrelationId = uuid.New().String()
 var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
-	Versionable:  common.NewVersionable(),
 	DeviceName:   TestDeviceName,
 	ResourceName: TestDeviceResourceName,
 	ProfileName:  TestDeviceProfileName,

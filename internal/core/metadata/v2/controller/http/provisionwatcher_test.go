@@ -75,7 +75,6 @@ func buildTestUpdateProvisionWatcherRequest() requests.UpdateProvisionWatcherReq
 			Versionable: common.NewVersionable(),
 		},
 		ProvisionWatcher: dtos.UpdateProvisionWatcher{
-			Versionable:         common.NewVersionable(),
 			Id:                  &testUUID,
 			Name:                &testName,
 			Labels:              testProvisionWatcherLabels,
