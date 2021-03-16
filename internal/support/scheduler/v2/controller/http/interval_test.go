@@ -83,10 +83,9 @@ func updateIntervalRequestData() requests.UpdateIntervalRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Interval: dtos.UpdateInterval{
-			Versionable: common.NewVersionable(),
-			Id:          &testUUID,
-			Name:        &testIntervalName,
-			Frequency:   &testFrequency,
+			Id:        &testUUID,
+			Name:      &testIntervalName,
+			Frequency: &testFrequency,
 		},
 	}
 

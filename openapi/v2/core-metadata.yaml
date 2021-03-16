@@ -53,7 +53,7 @@ components:
       properties:
         frequency:
           type: string
-          description: Frequency indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ms", "s", "m" or "h" representing milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
+          description: Frequency indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
         onChange:
           type: boolean
           description: OnChange indicates whether the device service will generate an event only, if the reading value is different from the previous one. If true, only generate events when readings change

@@ -24,9 +24,6 @@ components:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
       properties:
-        apiVersion:
-          description: "A version number shows the API version in DTOs."
-          type: string
         id:
           description: "The unique identifier for the reading"
           type: string
@@ -138,6 +135,9 @@ components:
         profileName:
           description: "The name of the device profile from which the event originated"
           type: string
+        sourceName:
+          description: "SourceName indicates the name of the resource or device command in the device profile which describes the event to generate"
+          type: string
         created:
           description: "A Unix timestamp indicating when (if) the event was initially persisted to a database."
           type: integer
@@ -162,6 +162,7 @@ components:
         - id
         - deviceName
         - profileName
+        - sourceName
         - origin
         - readings
     ErrorResponse:
@@ -365,6 +366,7 @@ components:
           id: "040bd523-ec33-440d-9d72-e5813a465f37"
           deviceName: "device-001"
           profileName: "profile-001"
+          sourceName: "source-1"
           created: 1594876281221
           origin: 1602168089665565300
           tags:
@@ -372,8 +374,7 @@ components:
             Latitude: "29.630771"
             Longitude: "-95.377603"
           readings:
-            - apiVersion: "v2"
-              created: 1594876281221
+            - created: 1594876281221
               deviceName: "device-001"
               resourceName: "resource-001"
               profileName: "profile-001"
@@ -382,8 +383,7 @@ components:
               origin: 1602168089665565300
               valueType: "Float32"
               value: "39.5"
-            - apiVersion: "v2"
-              create: 1594876281221
+            - create: 1594876281221
               deviceName: "device-001"
               resourceName: "resource-001"
               profileName: "profile-001"
@@ -402,6 +402,7 @@ components:
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
             deviceName: "device-001"
             profileName: "profile-001"
+            sourceName: "source-1"
             created: 1594876281221
             origin: 1602168089665565300
             tags:
@@ -409,8 +410,7 @@ components:
               Latitude: "29.630771"
               Longitude: "-95.377603"
             readings:
-              - apiVersion: "v2"
-                created: 1594876281221
+              - created: 1594876281221
                 deviceName: "device-001"
                 resourceName: "resource-001"
                 profileName: "profile-001"
@@ -419,8 +419,7 @@ components:
                 origin: 1602168089665565300
                 valueType: "Float32"
                 value: "39.5"
-              - apiVersion: "v2"
-                create: 1594876281221
+              - create: 1594876281221
                 deviceName: "device-001"
                 resourceName: "resource-001"
                 profileName: "profile-001"
@@ -432,11 +431,11 @@ components:
             created: 1594877691305
             deviceName: "device-002"
             profileName: "profile-002"
+            sourceName: "source-2"
             id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
             origin: 1602168089665565300
             readings:
-              - apiVersion: "v2"
-                created: 1594879337014
+              - created: 1594879337014
                 deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
@@ -448,11 +447,12 @@ components:
           - apiVersion: "v2"
             created: 1594983105886
             deviceName: "device-002"
+            profileName: "profile-002"
+            sourceName: "source-3"
             id: "d5471d59-2810-419a-8744-18eb8fa03465"
             origin: 1602168089665565300
             readings:
-              - apiVersion: "v2"
-                created: 594983105886
+              - created: 594983105886
                 deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
@@ -467,8 +467,7 @@ components:
         statusCode: 200
         message: ""
         readings:
-          - apiVersion: "v2"
-            created: 1594876281221
+          - created: 1594876281221
             deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
@@ -476,8 +475,7 @@ components:
             origin: 1602168089665565300
             valueType: "Float32"
             value: "39.5"
-          - apiVersion: "v2"
-            created: 1594876281221
+          - created: 1594876281221
             deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
@@ -485,8 +483,7 @@ components:
             origin: 1602168089665565300
             valueType: "Int8"
             value: "75" 
-          - apiVersion: "v2"
-            created: 1594879337014
+          - created: 1594879337014
             deviceName: "device-002"
             resourceName: "resource-002"
             profileName: "profile-002"
@@ -495,8 +492,7 @@ components:
             valueType: "Binary"
             binaryValue: "83010203"
             mediaType: "image"
-          - apiVersion: "v2"
-            created: 594983105886
+          - created: 594983105886
             deviceName: "device-002"
             resourceName: "resource-002"
             profileName: "profile-002"
@@ -554,8 +550,7 @@ paths:
                   Latitude: "29.630771"
                   Longitude: "-95.377603"
                 readings:
-                  - apiVersion: v2
-                    deviceName: device-002
+                  - deviceName: device-002
                     resourceName: resource-002
                     profileName: profile-002
                     id: 7003cacc-0e00-4676-977c-4e58b9612abd

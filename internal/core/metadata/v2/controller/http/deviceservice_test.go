@@ -63,7 +63,6 @@ func buildTestUpdateDeviceServiceRequest() requests.UpdateDeviceServiceRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Service: dtos.UpdateDeviceService{
-			Versionable: common.NewVersionable(),
 			Id:          &testUUID,
 			Name:        &testDeviceServiceName,
 			Labels:      testDeviceServiceLabels,

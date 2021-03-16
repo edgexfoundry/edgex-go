@@ -89,7 +89,6 @@ func updateSubscriptionRequestData() requests.UpdateSubscriptionRequest {
 	testName := testSubscriptionName
 	testDescription := testSubscriptionDescription
 	subscription := dtos.UpdateSubscription{
-		Versionable:    common.NewVersionable(),
 		Id:             &testUUID,
 		Name:           &testName,
 		Channels:       testSubscriptionChannels,
