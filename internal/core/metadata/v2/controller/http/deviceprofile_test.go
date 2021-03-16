@@ -69,7 +69,6 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Profile: dtos.DeviceProfile{
-			Versionable:     common.NewVersionable(),
 			Id:              ExampleUUID,
 			Name:            TestDeviceProfileName,
 			Manufacturer:    TestManufacturer,

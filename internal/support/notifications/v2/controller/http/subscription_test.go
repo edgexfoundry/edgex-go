@@ -72,7 +72,6 @@ func mockDic() *di.Container {
 
 func addSubscriptionRequestData() requests.AddSubscriptionRequest {
 	subscription := dtos.Subscription{
-		Versionable:    common.NewVersionable(),
 		Name:           testSubscriptionName,
 		Categories:     testSubscriptionCategories,
 		Labels:         testSubscriptionLabels,

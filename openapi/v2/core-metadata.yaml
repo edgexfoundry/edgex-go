@@ -109,8 +109,6 @@ components:
     Device:
       type: object
       properties:
-        apiVersion:
-          type: string
         id:
           type: string
           format: uuid
@@ -263,8 +261,6 @@ components:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
       properties:
-        apiVersion:
-          type: string
         id:
           type: string
           format: uuid
@@ -423,8 +419,6 @@ components:
       description: "A DeviceService is responsible for proxying connectivity between a set of devices and the EdgeX Foundry core services."
       type: object
       properties:
-        apiVersion:
-          type: string
         created:
           type: integer
           description: Created is a timestamp indicating when the entity was created.
@@ -538,8 +532,6 @@ components:
       description: "A ProvisionWatcher defines the filtering criteria for device auto discovery."
       type: object
       properties:
-        apiVersion:
-          type: string
         id:
           type: string
           format: uuid
@@ -1134,8 +1126,7 @@ components:
         statusCode: 200
         message: ""
         devices:
-          - apiVersion: "v2"
-            id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
+          - id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
             name: "Random-Boolean-Device"
             description: "Example of Device Virtual"
             created: 1600927134931
@@ -1157,8 +1148,7 @@ components:
               - other:
                   Address: "device-virtual-bool-01"
                   Port: "300"
-          - apiVersion: "v2"
-            id: "03bd5ce0-b967-4165-a335-775fea604142"
+          - id: "03bd5ce0-b967-4165-a335-775fea604142"
             name: "Random-UnsignedInteger-Device"
             description: "Example of Device Virtual"
             created: 1600927134949
@@ -1190,8 +1180,7 @@ components:
         statusCode: 200
         message: ""
         profiles:
-        - apiVersion: "v2"
-          id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
+        - id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
           name: "Device-Virtual-Profile"
           description: "Example of Device-Virtual"
           created: 1600927134904
@@ -1213,8 +1202,7 @@ components:
               resourceOperations:
                 - deviceResource: "Float32"
                   defaultValue: "0.0123"
-        - apiVersion: "v2"
-          id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
+        - id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
           name: "Device-Modbus-Profile"
           description: "Example of Device-Modbus"
           created: 1600927134904
@@ -1243,8 +1231,7 @@ components:
         statusCode: 200
         message: ""
         provisionwatchers:
-          - apiVersion: "v2"
-            id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
+          - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
             name: "virtual-watcher"
             created: 1600927134890
             modified: 1600927134890
@@ -1265,8 +1252,7 @@ components:
               - sourceName: "Bool"
                 frequency: "10s"
                 onChange: false
-          - apiVersion: "v2"
-            id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
+          - id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
             name: "simple-watcher"
             created: 0
             modified: 0
@@ -1540,7 +1526,6 @@ paths:
                 statusCode: 200
                 message: ""
                 device:
-                  apiVersion: "v2"
                   id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
                   name: "Random-Boolean-Device"
                   description: "Example of Device Virtual"
@@ -2051,7 +2036,6 @@ paths:
                statusCode: 200
                message: ""
                profile:
-                apiVersion: "v2"
                 id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
                 name: ""
                 description: "Example of Device-Virtual"
@@ -2464,8 +2448,7 @@ paths:
                 statusCode: 200
                 message: ""
                 services:
-                  - apiVersion: "v2"
-                    id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
+                  - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                     name: "device-virtual"
                     created: 1600927134890
                     modified: 1600927134890
@@ -2528,7 +2511,6 @@ paths:
                 statusCode: 200
                 message: ""
                 service:
-                  apiVersion: "v2"
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "device-virtual"
                   description: "Example"
@@ -2825,7 +2807,6 @@ paths:
                 statusCode: 200
                 message: ""
                 provisionwatcher:
-                  apiVersion: "v2"
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "virtual-watcher"
                   created: 1600927134890

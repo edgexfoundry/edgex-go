@@ -101,8 +101,6 @@ components:
       description: "Defines the frequency at which some action should occur."
       type: object
       properties:
-        apiVersion:
-          type: string
         created:
           description: "A timestamp indicating when the interval was created."
           type: integer
@@ -135,8 +133,6 @@ components:
       description: "Defines the frequency at which some action should occur."
       type: object
       properties:
-        apiVersion:
-          type: string
         id:
           description: "Uniquely identifies the interval, either id or name should be specified."
           type: string
@@ -163,8 +159,6 @@ components:
       description: "Defines the action to be taken at a specified interval."
       type: object
       properties:
-        apiVersion:
-          type: string
         created:
           description: "A timestamp indicating when the interval action was created."
           type: integer
@@ -193,8 +187,6 @@ components:
       description: "Defines the action to be taken at a specified interval."
       type: object
       properties:
-        apiVersion:
-          type: string
         id:
           description: "Uniquely identifies the interval action, either id or name should be specified."
           type: string
