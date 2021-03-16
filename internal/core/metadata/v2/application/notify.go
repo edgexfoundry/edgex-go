@@ -72,7 +72,7 @@ func deleteDeviceCallback(ctx context.Context, dic *di.Container, device models.
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", device.ServiceName, err)
 	}
-	response, err := deviceServiceCallbackClient.DeleteDeviceCallback(ctx, device.Id)
+	response, err := deviceServiceCallbackClient.DeleteDeviceCallback(ctx, device.Name)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for deleting device %s, err: %v", device.Name, err)
 		return
@@ -158,7 +158,7 @@ func deleteProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw m
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
 	}
-	response, err := deviceServiceCallbackClient.DeleteProvisionWatcherCallback(ctx, pw.Id)
+	response, err := deviceServiceCallbackClient.DeleteProvisionWatcherCallback(ctx, pw.Name)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for deleting provision watcher %s, err: %v", pw.Name, err)
 		return
