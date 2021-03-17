@@ -69,6 +69,16 @@ type ACLInfo struct {
 	SecretsAdminTokenPath string
 	// filepath for the sentinel file to indicate the registry ACL is set up successfully
 	SentinelFilePath string
+	// filepath to save the registry's token created for management purposes
+	ManagementTokenPath string
+	// the roles for registry role-based access control list
+	Roles map[string]ACLRoleInfo
+}
+
+// ACLRoleInfo defines the fields related to Registry's ACL roles
+type ACLRoleInfo struct {
+	// the details about the role
+	Description string
 }
 
 // KongDBInfo defines the fields related to

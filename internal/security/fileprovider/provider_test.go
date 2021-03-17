@@ -430,11 +430,22 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
-	expectedService1Policy := `{"path":{"secret/edgex/` + serviceName + `/*":{"capabilities":["create","update","delete","list","read"]}}}`
+	policy := map[string]interface{}{
+		"path": map[string]interface{}{
+			"secret/edgex/" + serviceName + "/*": map[string]interface{}{
+				"capabilities": []string{"create", "update", "delete", "list", "read"},
+			},
+			"consul/creds/" + serviceName: map[string]interface{}{
+				"capabilities": []string{"read"},
+			},
+		},
+	}
+	expectedService1Policy, err := json.Marshal(&policy)
+	require.NoError(t, err)
 	expectedService1Parameters := makeDefaultTokenParameters(serviceName)
 	expectedService1Parameters["meta"] = makeMetaServiceName(serviceName)["meta"]
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, expectedService1Policy).
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, string(expectedService1Policy)).
 		Return(nil)
 	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
 		Return(createTokenResponse(), nil)
@@ -442,12 +453,24 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	// setup expected things for additional services from env if any
 
 	for service := range expectedTokenConfigs {
-		expectedServicePolicy := `{"path":{"secret/edgex/` + service + `/*":{"capabilities":["create","update","delete","list","read"]}}}`
+		policy := map[string]interface{}{
+			"path": map[string]interface{}{
+				"secret/edgex/" + service + "/*": map[string]interface{}{
+					"capabilities": []string{"create", "update", "delete", "list", "read"},
+				},
+				"consul/creds/" + service: map[string]interface{}{
+					"capabilities": []string{"read"},
+				},
+			},
+		}
+		expectedServicePolicy, err := json.Marshal(&policy)
+		require.NoError(t, err)
+
 		expectedServiceParameters := makeDefaultTokenParameters(service)
 
 		expectedServiceParameters["meta"] = makeMetaServiceName(service)["meta"]
 
-		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, expectedServicePolicy).
+		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, string(expectedServicePolicy)).
 			Return(nil)
 		mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedServiceParameters, mock.Anything).
 			Return(createTokenResponse(), nil)
@@ -462,7 +485,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	})
 
 	// Act
-	err := p.Run()
+	err = p.Run()
 
 	if errFromEnv != nil {
 		return errFromEnv

@@ -126,32 +126,9 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return
 	}
 
-	var bootstrapACLToken *BootStrapACLTokenInfo
-	bootstrapACLToken, err = c.generateBootStrapACLToken()
+	bootstrapACLToken, err := c.createBootstrapACLToken()
 	if err != nil {
-		// although we have a leader, but it is a very very rare chance that we could hit an error on legacy mode
-		// here we will sleep a bit of time and then retry once if there is error on Legacy ACL type of message
-		// because Consul is still on its way to initialize the new ACL system internally
-		// for the details of this issue, see related issue on Consul's Github website:
-		// https://github.com/hashicorp/consul/issues/5218#issuecomment-457212336
-		if !strings.Contains(err.Error(), consulLegacyACLModeError) {
-			// other type of ACL bootstrapping error, cannot continue
-			return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to bootstrap registry's ACL: %v", err)
-		}
-
-		c.loggingClient.Warnf("found Consul still in ACL legacy mode, will retry once again: %v", err)
-		time.Sleep(5 * time.Second)
-		bootstrapACLToken, err = c.generateBootStrapACLToken()
-		if err != nil {
-			return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to bootstrap registry's ACL: %v", err)
-		}
-	}
-
-	c.loggingClient.Info("successfully bootstrap registry ACL")
-
-	// Save the bootstrap token into the file so that it can be used later on
-	if err := c.saveBootstrapACLToken(bootstrapACLToken); err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to save registry's bootstrap ACL token: %v", err)
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to create bootstrap ACL token: %v", err)
 	}
 
 	// retrieve the secretstore (Vault) token from the file produced by secretstore-setup
@@ -160,22 +137,31 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to retrieve secretstore token: %v", err)
 	}
 
-	c.loggingClient.Info("successfully get secretstore token and configuring the registry access for secretestore")
-
 	// configure Consul access with both Secret Store token and consul's bootstrap acl token
 	if err := c.configureConsulAccess(secretstoreToken, bootstrapACLToken.SecretID); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to configure Consul access: %v", err)
+	}
+
+	c.loggingClient.Info("successfully get secretstore token and configuring the registry access for secretestore")
+
+	// create all ACL token roles for EdgeX services defined in configuration (static)
+	if err := c.createEdgeXACLTokenRoles(bootstrapACLToken.SecretID, secretstoreToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to createEdgeXACLTokenRoles: %v", err)
+	}
+
+	// set up agent token to agent for the first time
+	if err := c.setupAgentToken(bootstrapACLToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to set up agent token: %v", err)
+	}
+
+	if err := c.saveACLTokens(bootstrapACLToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to save ACL tokens: %v", err)
 	}
 
 	// write a sentinel file to indicate Consul ACL bootstrap is done so that we don't bootstrap ACL again,
 	// this is to avoid re-bootstrapping error and that error can cause the snap crash if restart this process
 	if err := c.writeSentinelFile(); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to write sentinel file: %v", err)
-	}
-
-	// set up agent token to agent for the first time
-	if err := c.setupAgentToken(bootstrapACLToken); err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to set up agent token: %v", err)
 	}
 
 	c.loggingClient.Info("setupRegistryACL successfully done")
@@ -186,6 +172,72 @@ func (c *cmd) Execute() (statusCode int, err error) {
 // GetCommandName returns the name of this command
 func (c *cmd) GetCommandName() string {
 	return CommandName
+}
+
+func (c *cmd) createBootstrapACLToken() (*BootStrapACLTokenInfo, error) {
+	bootstrapACLToken, err := c.generateBootStrapACLToken()
+	if err != nil {
+		// although we have a leader, but it is a very very rare chance that we could hit an error on legacy mode
+		// here we will sleep a bit of time and then retry once if there is error on Legacy ACL type of message
+		// because Consul is still on its way to initialize the new ACL system internally
+		// for the details of this issue, see related issue on Consul's Github website:
+		// https://github.com/hashicorp/consul/issues/5218#issuecomment-457212336
+		if !strings.Contains(err.Error(), consulLegacyACLModeError) {
+			// other type of ACL bootstrapping error, cannot continue
+			return nil, fmt.Errorf("failed to bootstrap registry's ACL: %v", err)
+		}
+
+		c.loggingClient.Warnf("found Consul still in ACL legacy mode, will retry once again: %v", err)
+		time.Sleep(5 * time.Second)
+		bootstrapACLToken, err = c.generateBootStrapACLToken()
+		if err != nil {
+			return nil, fmt.Errorf("failed to bootstrap registry's ACL: %v", err)
+		}
+	}
+
+	c.loggingClient.Info("successfully bootstrap registry ACL")
+
+	return bootstrapACLToken, nil
+}
+
+func (c *cmd) saveACLTokens(bootstrapACLToken *BootStrapACLTokenInfo) error {
+	// Save the bootstrap ACL token into json file so that it can be used later on
+	if err := c.saveBootstrapACLToken(bootstrapACLToken); err != nil {
+		return fmt.Errorf("failed to save registry's bootstrap ACL token: %v", err)
+	}
+
+	return nil
+}
+
+// createEdgeXACLTokenRoles creates secret store roles that can be used for genearting registry tokens
+// via Consul secret engine API /consul/creds/[role_name] later on for all EdgeX microservices
+func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken string) error {
+	edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, edgeXServicePolicyName, edgeXPolicyRules)
+	if err != nil {
+		return fmt.Errorf("failed to create edgex service policy: %v", err)
+	}
+
+	roleNames := c.configuration.StageGate.Registry.ACL.GetACLRoleNames()
+	if len(roleNames) == 0 {
+		c.loggingClient.Warn("found no ACL role names defined in configuration, skip create ACL roles")
+		return nil
+	}
+
+	for _, roleName := range roleNames {
+		// create roles based on the service keys as the role names
+		// in phase 2, we are using the same policy rule for all services
+		edgexACLTokenRole := NewRegistryRole(roleName, ClientType, []Policy{
+			*edgexServicePolicy,
+			// localUse set to false as some EdgeX services may be running in a different node
+		}, false)
+
+		// fail all if any one of the role creation failed
+		if err := c.createRole(secretstoreToken, edgexACLTokenRole); err != nil {
+			return fmt.Errorf("failed to create edgex role: %v", err)
+		}
+	}
+
+	return nil
 }
 
 // setupAgentToken is to set up the agent token using the inputToken to the running agent if haven't set up yet
