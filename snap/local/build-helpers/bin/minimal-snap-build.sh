@@ -25,7 +25,9 @@ echo "====================================================="
 ls -al $WORKSPACE/snap | true
 echo "====================================================="
 
-sudo snap install yq --channel=v4/stable
+#sudo snap install yq --channel=v4/stable
+
+sudo apt-get update && sudo apt-get install yq
 
 CURRDIR=$(pwd)
 SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
