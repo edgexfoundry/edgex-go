@@ -17,7 +17,7 @@
 edgeXBuildGoParallel(
     project: 'edgex-go',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
-    testScript: 'echo test',
+    testScript: 'make test',
     buildScript: 'echo build',
     buildImage: false,
     publishSwaggerDocs: true,
