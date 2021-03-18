@@ -17,9 +17,11 @@
 edgeXBuildGoParallel(
     project: 'edgex-go',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
-    testScript: 'make test',
-    buildScript: 'make build',
+    testScript: 'echo test',
+    buildScript: 'echo build',
+    buildImage: false,
     publishSwaggerDocs: true,
     swaggerApiFolders: ['openapi/v1', 'openapi/v2'],
-    buildSnap: true
+    buildSnap: true,
+    arch: ['amd64']
 )
