@@ -18,11 +18,8 @@ echo "SNAP DEBUG"
 env | sort
 mount
 df -h
-ls -al /w | true
-ls -al /w/workspace | true
-ls -al /w/workspace/edgex-go | true
-ls -al /w/workspace/edgex-go/$BUILD_NUMBER | true
-ls -al $(pwd)/snap | true
+ls -alR .
+ls -al $(pwd)/snap || true
 echo "====================================================="
 
 sudo snap install yq --channel=v4/stable
