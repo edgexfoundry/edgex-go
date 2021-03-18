@@ -18,7 +18,8 @@ echo "SNAP DEBUG"
 env | sort
 mount
 df -h
-ls -alR .
+echo "====================================================="
+ls -alR /w
 ls -al $(pwd)/snap || true
 echo "====================================================="
 
