@@ -24,9 +24,7 @@ ls -al /w/workspace/edgex-go/$BUILD_NUMBER | true
 ls -al $(pwd)/snap | true
 echo "====================================================="
 
-#sudo snap install yq --channel=v4/stable
-
-sudo apt-get update && sudo apt-get install yq
+sudo snap install yq --channel=v4/stable
 
 CURRDIR=$(pwd)
 SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
