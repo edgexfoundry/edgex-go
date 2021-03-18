@@ -23,7 +23,9 @@ ls -alR /w
 ls -al $(pwd)/snap || true
 echo "====================================================="
 
-sudo snap install yq --channel=v4/stable
+#sudo snap install yq --channel=v4/stable
+sudo curl -s "https://github.com/mikefarah/yq/releases/download/v4.6.1/yq_linux_amd64" -o /usr/local/bin/yq
+sudo chmod +x /usr/local/bin/yq
 
 CURRDIR=$(pwd)
 SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
