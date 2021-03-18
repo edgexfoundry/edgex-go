@@ -13,6 +13,18 @@
 # work with the patch applied). This further reduces the build
 # time.
 
+echo "====================================================="
+echo "SNAP DEBUG"
+mount
+echo "====================================================="
+df -h
+echo "====================================================="
+pwd
+ls -al ./snap | true
+echo "====================================================="
+ls -al $WORKSPACE/snap | true
+echo "====================================================="
+
 sudo snap install yq --channel=v4/stable
 
 CURRDIR=$(pwd)
