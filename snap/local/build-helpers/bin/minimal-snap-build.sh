@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 #
 # This script is used by the LF's CI/CD build pipeline to
 # optimize the snap CI check run for pull requests. When
@@ -16,13 +16,12 @@
 echo "====================================================="
 echo "SNAP DEBUG"
 mount
-echo "====================================================="
 df -h
-echo "====================================================="
-pwd
-ls -al ./snap | true
-echo "====================================================="
-ls -al $WORKSPACE/snap | true
+ls -al /w | true
+ls -al /w/workspace | true
+ls -al /w/workspace/edgex-go | true
+ls -al /w/workspace/edgex-go/$BUILD_NUMBER | true
+ls -al $(pwd)/snap | true
 echo "====================================================="
 
 #sudo snap install yq --channel=v4/stable
