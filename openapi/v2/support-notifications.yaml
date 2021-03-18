@@ -73,21 +73,51 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
-    Channel:
-      description: "Defines the transport supported for a given notification."
+    Address:
+      description: "The address shows the information indicating how to contact a specific endpoint."
       type: object
       properties:
-        emailAddresses:
-          description: "If the transport is EMAIL, one or more email addresses that should receive the notification."
-          type: array
-          items:
-            type: string
         type:
-          description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL"
+          description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL."
           type: string
-        url:
-          description: "If the transport is REST, the target URL to which the notification will be posted."
+        host:
+          description: "The host targeted by the action. Only required when type is REST."
           type: string
+        port:
+          description: "The port to address on the targeted host. Only required when type is REST."
+          type: integer
+      required:
+        - type
+    RESTAddress:
+      description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
+      allOf:
+        - $ref: '#/components/schemas/Address'
+        - type: object
+          properties:
+            path:
+              description: "The HTTP path at the targeted host for fulfillment of the action."
+              type: string
+            queryParameters:
+              description: "Query parameters required by the action."
+              type: string
+            httpMethod:
+              description: "Indicates which Http verb should be used for the REST endpoint."
+              type: string
+          required:
+            - httpMethod
+    EmailAddress:
+      description: "The EmailAddress identifies an array of email addresses to which notifications are delivered."
+      allOf:
+        - $ref: '#/components/schemas/Address'
+        - type: object
+          properties:
+            emailAddresses:
+              description: "Recipients who are interested in receiving notifications."
+              type: array
+              items:
+                type: string
+          required:
+            - emailAddresses
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -230,7 +260,9 @@ components:
           description: "Indicates how this subscription is capable of receiving notifications."
           type: array
           items:
-            $ref: '#/components/schemas/Channel'
+            anyOf:
+              - $ref: '#/components/schemas/RESTAddress'
+              - $ref: '#/components/schemas/EmailAddress'
         categories:
           description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
           type: array
@@ -264,7 +296,9 @@ components:
           description: "Indicates how this subscription is capable of receiving notifications."
           type: array
           items:
-            $ref: '#/components/schemas/Channel'
+            anyOf:
+              - $ref: '#/components/schemas/RESTAddress'
+              - $ref: '#/components/schemas/EmailAddress'
         categories:
           description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
           type: array
@@ -306,7 +340,9 @@ components:
           description: "Indicates how this subscription is capable of receiving notifications."
           type: array
           items:
-            $ref: '#/components/schemas/Channel'
+            anyOf:
+              - $ref: '#/components/schemas/RESTAddress'
+              - $ref: '#/components/schemas/EmailAddress'
         categories:
           description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
           type: array
@@ -352,7 +388,9 @@ components:
       type: object
       properties:
         channel:
-          $ref: '#/components/schemas/Channel'
+          oneOf:
+            - $ref: '#/components/schemas/RESTAddress'
+            - $ref: '#/components/schemas/EmailAddress'
         created:
           description: "A timestamp indicating when the transmission was created."
           type: integer

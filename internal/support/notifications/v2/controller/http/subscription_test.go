@@ -42,8 +42,9 @@ var (
 	testSubscriptionName       = "subscriptionName"
 	testSubscriptionCategories = []string{"category1", "category2"}
 	testSubscriptionLabels     = []string{"label"}
-	testSubscriptionChannels   = []dtos.Channel{
-		{Type: models.Email, EmailAddresses: []string{"test@example.com"}},
+	testSubscriptionChannels   = []dtos.Address{
+		dtos.NewEmailAddress([]string{"test@example.com"}),
+		dtos.NewRESTAddress("host", 123, http.MethodPost),
 	}
 	testSubscriptionDescription    = "description"
 	testSubscriptionReceiver       = "receiver"
@@ -120,17 +121,17 @@ func TestAddSubscription(t *testing.T) {
 	model = dtos.ToSubscriptionModel(duplicatedName.Subscription)
 	dbClientMock.On("AddSubscription", model).Return(model, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("subscription name %s already exists", model.Name), nil))
 
-	invalidChannelType := addSubscriptionRequestData()
-	invalidChannelType.Subscription.Channels = []dtos.Channel{
-		{Type: unsupportedChannelType, EmailAddresses: []string{"test@example.com"}},
+	unsupportedChannelType := addSubscriptionRequestData()
+	unsupportedChannelType.Subscription.Channels = []dtos.Address{
+		dtos.NewMQTTAddress("mqtt-broker", 1883, "publisher", "topic"),
 	}
 	invalidEmailAddress := addSubscriptionRequestData()
-	invalidEmailAddress.Subscription.Channels = []dtos.Channel{
-		{Type: models.Email, EmailAddresses: []string{"test.example.com"}},
+	invalidEmailAddress.Subscription.Channels = []dtos.Address{
+		dtos.NewEmailAddress([]string{"test.example.com"}),
 	}
-	invalidUrl := addSubscriptionRequestData()
-	invalidUrl.Subscription.Channels = []dtos.Channel{
-		{Type: models.Rest, Url: "http127.0.0.1"},
+	invalidHTTPMethod := addSubscriptionRequestData()
+	invalidHTTPMethod.Subscription.Channels = []dtos.Address{
+		dtos.NewRESTAddress("host", 123, "foo"),
 	}
 
 	noCategoriesAndLabels := addSubscriptionRequestData()
@@ -159,9 +160,9 @@ func TestAddSubscription(t *testing.T) {
 		{"Valid - no request Id", []requests.AddSubscriptionRequest{noRequestId}, http.StatusCreated},
 		{"Invalid - no name", []requests.AddSubscriptionRequest{noName}, http.StatusBadRequest},
 		{"Invalid - duplicated name", []requests.AddSubscriptionRequest{duplicatedName}, http.StatusConflict},
-		{"Invalid - invalid channel type", []requests.AddSubscriptionRequest{invalidChannelType}, http.StatusBadRequest},
+		{"Invalid - unsupported channel type", []requests.AddSubscriptionRequest{unsupportedChannelType}, http.StatusBadRequest},
 		{"Invalid - invalid email address", []requests.AddSubscriptionRequest{invalidEmailAddress}, http.StatusBadRequest},
-		{"Invalid - invalid url", []requests.AddSubscriptionRequest{invalidUrl}, http.StatusBadRequest},
+		{"Invalid - invalid HTTP method", []requests.AddSubscriptionRequest{invalidHTTPMethod}, http.StatusBadRequest},
 		{"Invalid - no categories and labels", []requests.AddSubscriptionRequest{noCategoriesAndLabels}, http.StatusBadRequest},
 		{"Invalid - no receiver", []requests.AddSubscriptionRequest{noReceiver}, http.StatusBadRequest},
 		{"Invalid - resendInterval is not specified in ISO8601 format", []requests.AddSubscriptionRequest{invalidResendInterval}, http.StatusBadRequest},
@@ -607,7 +608,7 @@ func TestPatchSubscription(t *testing.T) {
 	subscriptionModel := models.Subscription{
 		Id:             *testReq.Subscription.Id,
 		Name:           *testReq.Subscription.Name,
-		Channels:       dtos.ToChannelModels(testReq.Subscription.Channels),
+		Channels:       dtos.ToAddressModels(testReq.Subscription.Channels),
 		Receiver:       *testReq.Subscription.Receiver,
 		Categories:     testReq.Subscription.Categories,
 		Labels:         testReq.Subscription.Labels,
