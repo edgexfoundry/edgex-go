@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 #
 # This script is used by the LF's CI/CD build pipeline to
 # optimize the snap CI check run for pull requests. When
@@ -15,6 +15,7 @@
 
 echo "====================================================="
 echo "SNAP DEBUG"
+env | sort
 mount
 df -h
 ls -al /w | true
