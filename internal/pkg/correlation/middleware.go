@@ -15,12 +15,17 @@ var LoggingClient logger.LoggingClient
 
 func ManageHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hdr := r.Header.Get(clients.CorrelationHeader)
-		if hdr == "" {
-			hdr = uuid.New().String()
+		correlationID := r.Header.Get(clients.CorrelationHeader)
+		if correlationID == "" {
+			correlationID = uuid.New().String()
 		}
-		ctx := context.WithValue(r.Context(), clients.CorrelationHeader, hdr)
+		ctx := context.WithValue(r.Context(), clients.CorrelationHeader, correlationID)
+
+		contentType := r.Header.Get(clients.ContentType)
+		ctx = context.WithValue(ctx, clients.ContentType, contentType)
+
 		r = r.WithContext(ctx)
+
 		next.ServeHTTP(w, r)
 	})
 }
