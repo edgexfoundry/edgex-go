@@ -13,40 +13,34 @@
 # work with the patch applied). This further reduces the build
 # time.
 
-echo "====================================================="
-echo "SNAP DEBUG"
-env | sort
-mount
-df -h
-echo "====================================================="
-ls -alR /w
-ls -al $(pwd)/snap || true
-echo "====================================================="
+# echo "====================================================="
+# echo "SNAP DEBUG"
+# env | sort
+# mount
+# df -h
+# echo "====================================================="
+# ls -alR /w
+# ls -al $(pwd)/snap || true
+# echo "====================================================="
 
-#sudo snap install yq --devmode --channel=v4/stable
-
-echo "Installing YQ from GITHUB"
-YQ_VERSION=${YQ_VERSION:-v4.6.1}
-sudo curl "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" -o /usr/local/bin/yq
-sudo chmod +x /usr/local/bin/yq
-ls -al /usr/local/bin/yq
+sudo snap install yq --devmode --channel=v4/stable
 
 CURRDIR=$(pwd)
 SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
 
 # remove first chunk of apps
-yq e -P -i 'del(.apps.consul,.apps.redis,.apps.postgres,.apps.kong-daemon,.apps.vault,.apps.vault-cli)' "$SNAPCRAFT_YAML"
+sudo yq e -P -i 'del(.apps.consul,.apps.redis,.apps.postgres,.apps.kong-daemon,.apps.vault,.apps.vault-cli)' "$SNAPCRAFT_YAML"
 
 # remove second chunk of apps
-yq e -P -i 'del(.apps.device-virtual,.apps.app-service-configurable)' "$SNAPCRAFT_YAML"
+sudo yq e -P -i 'del(.apps.device-virtual,.apps.app-service-configurable)' "$SNAPCRAFT_YAML"
 
 # remove third chunk of apps
-yq e -P -i 'del(.apps.redis-cli,.apps.consul-cli)' "$SNAPCRAFT_YAML"
+sudo yq e -P -i 'del(.apps.redis-cli,.apps.consul-cli)' "$SNAPCRAFT_YAML"
 
 # remove fourth chunk of apps
-yq e -P -i 'del(.apps.kong,.apps.psql,.apps.psql-any,.apps.createdb,.apps.kuiper,.apps.kuiper-cli)' "$SNAPCRAFT_YAML"
+sudo yq e -P -i 'del(.apps.kong,.apps.psql,.apps.psql-any,.apps.createdb,.apps.kuiper,.apps.kuiper-cli)' "$SNAPCRAFT_YAML"
 
 # remove unwanted parts
-yq e -P -i 'del(.parts.snapcraft-preload,.parts.postgres,.parts.consul,.parts.redis,.parts.kong,.parts.vault,.parts.device-virtual-go,.parts.kuiper)' "$SNAPCRAFT_YAML"
+sudo yq e -P -i 'del(.parts.snapcraft-preload,.parts.postgres,.parts.consul,.parts.redis,.parts.kong,.parts.vault,.parts.device-virtual-go,.parts.kuiper)' "$SNAPCRAFT_YAML"
 
 
