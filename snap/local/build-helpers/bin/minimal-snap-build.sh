@@ -23,6 +23,8 @@ ls -alR /w
 ls -al $(pwd)/snap || true
 echo "====================================================="
 
+sudo mount -o remount,exec /tmp
+
 sudo snap install yq --devmode --channel=v4/stable
 
 # YQ_VERSION=${YQ_VERSION:-v4.6.1}
