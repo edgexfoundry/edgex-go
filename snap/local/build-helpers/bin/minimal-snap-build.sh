@@ -23,13 +23,13 @@ ls -alR /w
 ls -al $(pwd)/snap || true
 echo "====================================================="
 
-sudo mount -o remount,exec /tmp
+#sudo snap install yq --devmode --channel=v4/stable
 
-sudo snap install yq --devmode --channel=v4/stable
-
-# YQ_VERSION=${YQ_VERSION:-v4.6.1}
-# sudo curl -s "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" -o /usr/local/bin/yq
-# sudo chmod +x /usr/local/bin/yq
+echo "Installing YQ from GITHUB"
+YQ_VERSION=${YQ_VERSION:-v4.6.1}
+sudo curl "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" -o /usr/local/bin/yq
+sudo chmod +x /usr/local/bin/yq
+ls -al /usr/local/bin/yq
 
 CURRDIR=$(pwd)
 SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
