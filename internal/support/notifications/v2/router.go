@@ -7,6 +7,7 @@ package v2
 import (
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/v2/controller/http"
 	notificationsController "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/controller/http"
 
@@ -44,4 +45,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiNotificationByLabelRoute, nc.NotificationsByLabel).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiNotificationByStatusRoute, nc.NotificationsByStatus).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiNotificationByTimeRangeRoute, nc.NotificationsByTimeRange).Methods(http.MethodGet)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 }
