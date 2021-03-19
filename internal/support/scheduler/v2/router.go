@@ -7,6 +7,7 @@ package v2
 import (
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/v2/controller/http"
 	schedulerController "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/controller/http"
 
@@ -36,4 +37,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	// IntervalAction
 	action := schedulerController.NewIntervalActionController(dic)
 	r.HandleFunc(v2Constant.ApiIntervalActionRoute, action.AddIntervalAction).Methods(http.MethodPost)
+
+	r.Use(correlation.ManageHeader)
+	r.Use(correlation.OnResponseComplete)
+	r.Use(correlation.OnRequestBegin)
 }
