@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultTokenPolicy(t *testing.T) {
@@ -28,11 +28,21 @@ func TestDefaultTokenPolicy(t *testing.T) {
 
 	// Assert
 	bytes, err := json.Marshal(policies)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+	require.NotEmpty(t, bytes)
 
-	expected := `{"path":{"secret/edgex/service-name/*":{"capabilities":["create","update","delete","list","read"]}}}`
-	actual := string(bytes)
-	assert.Equal(t, expected, actual)
+	expected := map[string]interface{}{
+		"path": map[string]interface{}{
+			"secret/edgex/service-name/*": map[string]interface{}{
+				"capabilities": []string{"create", "update", "delete", "list", "read"},
+			},
+			"consul/creds/service-name": map[string]interface{}{
+				"capabilities": []string{"read"},
+			},
+		},
+	}
+
+	require.Equal(t, expected, policies)
 }
 
 func TestDefaultTokenParameters(t *testing.T) {
@@ -41,9 +51,9 @@ func TestDefaultTokenParameters(t *testing.T) {
 
 	// Assert
 	bytes, err := json.Marshal(parameters)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expected := `{"display_name":"service-name","no_parent":true,"period":"1h","policies":["edgex-service-service-name"],"ttl":"1h"}`
 	actual := string(bytes)
-	assert.Equal(t, expected, actual)
+	require.Equal(t, expected, actual)
 }

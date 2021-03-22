@@ -17,10 +17,18 @@
 package fileprovider
 
 func makeDefaultTokenPolicy(serviceName string) map[string]interface{} {
+	// protected path for secret/
 	protectedPath := "secret/edgex/" + serviceName + "/*"
 	capabilities := []string{"create", "update", "delete", "list", "read"}
 	acl := map[string]interface{}{"capabilities": capabilities}
-	pathObject := map[string]interface{}{protectedPath: acl}
+	// path for consul tokens
+	registryCredsPath := "consul/creds/" + serviceName
+	registryCredsCapabilities := []string{"read"}
+	registryCredsACL := map[string]interface{}{"capabilities": registryCredsCapabilities}
+	pathObject := map[string]interface{}{
+		protectedPath:     acl,
+		registryCredsPath: registryCredsACL,
+	}
 	retval := map[string]interface{}{"path": pathObject}
 	return retval
 
@@ -29,9 +37,12 @@ func makeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 			"path": {
 			  "secret/edgex/service-name/*": {
 				"capabilities": [ "create", "update", "delete", "list", "read" ]
+			  },
+			  "consul/creds/service-name": {
+				"capabilities": [ "read" ]
 			  }
 			}
-		  }
+		}
 	*/
 }
 

@@ -105,6 +105,10 @@ func (p *fileTokenProvider) Run() error {
 		if serviceConfig.UseDefaults {
 			p.logger.Info(fmt.Sprintf("using policy/token defaults for service %s", serviceName))
 			servicePolicy = makeDefaultTokenPolicy(serviceName)
+			defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
+			for pathKey, policy := range defaultPolicyPaths {
+				servicePolicy["path"].(map[string]interface{})[pathKey] = policy
+			}
 			createTokenParameters = makeDefaultTokenParameters(serviceName)
 		}
 
@@ -195,15 +199,8 @@ func (p *fileTokenProvider) Run() error {
 			}
 		}
 
-		encoder := json.NewEncoder(writeCloser)
-		if encoder == nil {
-			_ = writeCloser.Close()
-			err = fmt.Errorf("unable to create JSON output encoder")
-			return err
-		}
-
 		// Write resulting token
-		if err := encoder.Encode(createTokenResponse); err != nil {
+		if err := json.NewEncoder(writeCloser).Encode(createTokenResponse); err != nil {
 			_ = writeCloser.Close()
 			p.logger.Error(fmt.Sprintf("failed to write token file: %s", err.Error()))
 			return err

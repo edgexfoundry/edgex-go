@@ -23,11 +23,28 @@ LogLevel = 'INFO'
     [StageGate.Registry.ACL]
       Protocol = "http"
       # this is the filepath for the generated Consul management token from ACL bootstrap
-      BootstrapTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/bootstrap_token.json"
+      BootstrapTokenPath = "/tmp/edgex/secrets/consul-acl-token/bootstrap_token.json"
       # this is the filepath for the Vault token created from secretstore-setup
       SecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
       # this is the filepath for the sentinel file to indicate the registry ACL is set up successfully
       SentinelFilePath = "/edgex-init/consul-bootstrapper/consul_acl_done"
+      # this is the filepath for the created Consul management token
+      ManagementTokenPath = "/tmp/edgex/secrets/consul-acl-token/mgmt_token.json"
+      
+      # this section contains the list of registry roles for EdgeX services
+      # the service keys are the role names
+      [StageGate.Registry.ACL.Roles]
+        [StageGate.Registry.ACL.Roles.edgex-core-data]
+          Description = "role for coredata"
+        [StageGate.Registry.ACL.Roles.edgex-core-metadata]
+          Description = "role for metadata"
+        [StageGate.Registry.ACL.Roles.edgex-core-command]
+          Description = "role for command"
+        [StageGate.Registry.ACL.Roles.edgex-support-notifications]
+          Description = "role for notifications"
+        [StageGate.Registry.ACL.Roles.edgex-support-scheduler]
+          Description = "role for scheduler"
+          
   [StageGate.KongDb]
     Host = "kong-db"
     Port = 5432
