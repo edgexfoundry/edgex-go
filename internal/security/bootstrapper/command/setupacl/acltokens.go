@@ -56,6 +56,24 @@ const (
 	consulTokenRUDAPI = "/v1/acl/token/%s"
 )
 
+// CreateRegistryToken is the structure to create a new registry token
+type CreateRegistryToken struct {
+	Description string   `json:"Description"`
+	Policies    []Policy `json:"Policies"`
+	Local       bool     `json:"Local"`
+	TTL         *string  `json:"ExpirationTTL,omitempty"`
+}
+
+// NewCreateRegistryToken instantiates a new CreateRegistryToken with a given inputs
+func NewCreateRegistryToken(description string, policies []Policy, local bool, timeToLive *string) CreateRegistryToken {
+	return CreateRegistryToken{
+		Description: description,
+		Policies:    policies,
+		Local:       local,
+		TTL:         timeToLive,
+	}
+}
+
 // isACLTokenPersistent checks Consul agent's configuration property for EnablePersistence of ACLTokens
 // it returns true if the token persistence is enabled; false otherwise
 // once ACL rules are enforced, this call requires at least agent read permission and hence we use
@@ -283,72 +301,21 @@ func (c *cmd) readTokenIDBy(bootstrapACLToken BootStrapACLTokenInfo, accessorID 
 // insertNewAgentToken creates a new Consul token
 // it returns the token's ID and error if any error occurs
 func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
-	createTokenURL, err := c.getRegistryApiUrl(consulCreateTokenAPI)
-	if err != nil {
-		return emptyToken, err
-	}
-
-	// payload struct for creating a new token
-	type CreateToken struct {
-		Description string   `json:"Description"`
-		Policies    []Policy `json:"Policies"`
-		Local       bool     `json:"Local"`
-		TTL         *string  `json:"ExpirationTTL,omitempty"`
-	}
-
 	unlimitedDuration := "0s"
-	createToken := &CreateToken{
-		Description: "edgex-core-consul agent token",
-		// uses global mgmt policy in Phase 1
-		Policies: bootstrapACLToken.Policies,
-		// only applies to the local agent as of today's use cases (no need to be replicated to other agents)
-		Local: true,
-		// never expired, based on Phase 1 or 2 from ADR
-		TTL: &unlimitedDuration,
-	}
-
-	jsonPayload, err := json.Marshal(createToken)
-	c.loggingClient.Tracef("payload: %v", createToken)
+	createToken := NewCreateRegistryToken("edgex-core-consul agent token", bootstrapACLToken.Policies, true, &unlimitedDuration)
+	newTokenInfo, err := c.createNewToken(bootstrapACLToken.SecretID, createToken)
 	if err != nil {
-		return emptyToken, fmt.Errorf("Failed to marshal CreatToken JSON string payload: %v", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPut, createTokenURL, bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		return emptyToken, fmt.Errorf("Failed to prepare creat a new token request for http URL: %w", err)
-	}
-
-	req.Header.Add(consulTokenHeader, bootstrapACLToken.SecretID)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return emptyToken, fmt.Errorf("Failed to send create a new token request for http URL: %w", err)
-	}
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	createTokenResp, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return emptyToken, fmt.Errorf("Failed to read create a new token response body: %w", err)
+		return emptyToken, fmt.Errorf("failed to insert new edgex agent token: %v", err)
 	}
 
 	var parsedTokenResponse map[string]interface{}
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		if err := json.NewDecoder(bytes.NewReader(createTokenResp)).Decode(&parsedTokenResponse); err != nil {
-			return emptyToken, fmt.Errorf("Failed to decode create token response body: %v", err)
-		}
-
-		c.loggingClient.Info("successfully created a new agent token")
-
-		return fmt.Sprintf("%s", parsedTokenResponse["SecretID"]), nil
-	default:
-		return emptyToken, fmt.Errorf("failed to create a new token via URL [%s] and status code= %d: %s",
-			consulCreateTokenAPI, resp.StatusCode, string(createTokenResp))
+	if err := json.NewDecoder(strings.NewReader(newTokenInfo)).Decode(&parsedTokenResponse); err != nil {
+		return emptyToken, fmt.Errorf("Failed to decode create token info: %v", err)
 	}
+
+	c.loggingClient.Info("successfully created a new agent token")
+
+	return fmt.Sprintf("%s", parsedTokenResponse["SecretID"]), nil
 }
 
 // setAgentToken sets the ACL token currently in use by the agent
@@ -410,4 +377,53 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 	}
 
 	return nil
+}
+
+// createNewToken creates a new token based on the provided inputs
+// it returns the whole json string containing the token and thus can be written to the file later
+func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegistryToken) (string, error) {
+	if len(bootstrapACLTokenID) == 0 {
+		return emptyToken, fmt.Errorf("bootstrap token ID cannot be empty")
+	}
+
+	createTokenURL, err := c.getRegistryApiUrl(consulCreateTokenAPI)
+	if err != nil {
+		return emptyToken, err
+	}
+
+	jsonPayload, err := json.Marshal(&createToken)
+	c.loggingClient.Tracef("payload: %v", createToken)
+	if err != nil {
+		return emptyToken, fmt.Errorf("Failed to marshal CreatRegistryToken JSON string payload: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPut, createTokenURL, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return emptyToken, fmt.Errorf("Failed to prepare creat a new token request for http URL: %w", err)
+	}
+
+	req.Header.Add(consulTokenHeader, bootstrapACLTokenID)
+	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return emptyToken, fmt.Errorf("Failed to send create a new token request for http URL: %w", err)
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	createTokenResp, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return emptyToken, fmt.Errorf("Failed to read create a new token response body: %w", err)
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		c.loggingClient.Info("successfully created a new registry token")
+		return string(createTokenResp), nil
+	default:
+		return emptyToken, fmt.Errorf("failed to create a new token via URL [%s] and status code= %d: %s",
+			consulCreateTokenAPI, resp.StatusCode, string(createTokenResp))
+	}
 }

@@ -17,15 +17,11 @@ package setupacl
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -68,7 +64,7 @@ func TestNewCommand(t *testing.T) {
 	}
 }
 
-type prepareTestFunc func(aclOkResponse bool, configAccessOkResponse bool, t *testing.T) (*config.ConfigurationStruct,
+type prepareTestFunc func(serverOptions serverOptions, t *testing.T) (*config.ConfigurationStruct,
 	*httptest.Server)
 
 func TestExecute(t *testing.T) {
@@ -89,7 +85,7 @@ func TestExecute(t *testing.T) {
 		{"Bad:setupRegistryACL with bootstrap ACL API failed response from server", "test2",
 			prepareTestRegistryServer, false, false, true},
 		{"Bad:setupRegistryACL with non-existing server", "test3",
-			func(_ bool, _ bool, _ *testing.T) (*config.ConfigurationStruct, *httptest.Server) {
+			func(_ serverOptions, _ *testing.T) (*config.ConfigurationStruct, *httptest.Server) {
 				return &config.ConfigurationStruct{
 					StageGate: config.StageGateInfo{
 						Registry: config.RegistryInfo{
@@ -100,7 +96,7 @@ func TestExecute(t *testing.T) {
 					}}, httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 			}, false, false, true},
 		{"Bad:setupRegistryACL with empty api protocol", "test4",
-			func(_ bool, _ bool, _ *testing.T) (*config.ConfigurationStruct, *httptest.Server) {
+			func(_ serverOptions, _ *testing.T) (*config.ConfigurationStruct, *httptest.Server) {
 				return &config.ConfigurationStruct{
 					StageGate: config.StageGateInfo{
 						Registry: config.RegistryInfo{
@@ -121,12 +117,28 @@ func TestExecute(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			// prepare test
-			conf, testServer := test.prepare(test.aclOkResponse, test.configAccessOkResponse, t)
+			testSrvOptions := serverOptions{
+				aclBootstrapOkResponse:  test.aclOkResponse,
+				configAccessOkResponse:  test.configAccessOkResponse,
+				enablePersistence:       true,
+				consulCheckAgentOk:      true,
+				listTokensOk:            true,
+				listTokensWithRetriesOk: true,
+				createTokenOk:           true,
+				readTokenOk:             true,
+				setAgentTokenOk:         true,
+				readPolicyByNameOk:      true,
+				policyAlreadyExists:     true,
+				createNewPolicyOk:       true,
+				createRoleOk:            true,
+			}
+			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
 			// setup token related configs
 			conf.StageGate.Registry.ACL.SecretsAdminTokenPath = filepath.Join(test.adminDir, "secret_token.json")
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
+			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -192,12 +204,28 @@ func TestMultipleExecuteCalls(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			// prepare test
-			conf, testServer := test.prepare(true, true, t)
+			testSrvOptions := serverOptions{
+				aclBootstrapOkResponse:  true,
+				configAccessOkResponse:  true,
+				enablePersistence:       true,
+				consulCheckAgentOk:      true,
+				listTokensOk:            true,
+				listTokensWithRetriesOk: true,
+				createTokenOk:           true,
+				readTokenOk:             true,
+				setAgentTokenOk:         true,
+				readPolicyByNameOk:      true,
+				policyAlreadyExists:     true,
+				createNewPolicyOk:       true,
+				createRoleOk:            true,
+			}
+			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
 			// setup token related configs
 			conf.StageGate.Registry.ACL.SecretsAdminTokenPath = filepath.Join(test.adminDir, "secret_token.json")
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
+			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -250,165 +278,17 @@ func TestMultipleExecuteCalls(t *testing.T) {
 	}
 }
 
-func prepareTestRegistryServer(aclOkResponse bool, configAccessOkResponse bool, t *testing.T) (*config.ConfigurationStruct,
+func prepareTestRegistryServer(testSrvOptions serverOptions, t *testing.T) (*config.ConfigurationStruct,
 	*httptest.Server) {
-	registryTestConf := &config.ConfigurationStruct{}
-
-	testAgentTokenAccessorID := "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	respCnt := 0
-	testSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.EscapedPath() {
-		case consulGetLeaderAPI:
-			require.Equal(t, http.MethodGet, r.Method)
-			respCnt++
-			w.WriteHeader(http.StatusOK)
-			var err error
-			if respCnt >= 2 {
-				_, err = w.Write([]byte("127.0.0.1:12345"))
-			} else {
-				_, err = w.Write([]byte(""))
-			}
-			require.NoError(t, err)
-		case consulACLBootstrapAPI:
-			require.Equal(t, http.MethodPut, r.Method)
-			if aclOkResponse {
-				w.WriteHeader(http.StatusOK)
-				jsonResponse := map[string]interface{}{
-					"AccessorID":  "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-					"SecretID":    "22222222-bbbb-3333-cccc-444444444444",
-					"Description": "Bootstrap Token (Global Management)",
-					"Policies": []map[string]interface{}{
-						{
-							"ID":   "00000000-0000-0000-0000-000000000001",
-							"Name": "global-management",
-						},
-					},
-					"Local":      false,
-					"CreateTime": "2021-03-01T10:34:20.843397-07:00",
-				}
-				err := json.NewEncoder(w).Encode(jsonResponse)
-				require.NoError(t, err)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte("The ACL system is currently in legacy mode."))
-			}
-		case consulConfigAccessVaultAPI:
-			require.Equal(t, http.MethodPost, r.Method)
-			if configAccessOkResponse {
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-			}
-		case consulCheckAgentAPI:
-			require.Equal(t, http.MethodGet, r.Method)
-			w.WriteHeader(http.StatusOK)
-			jsonResponse := map[string]interface{}{
-				"DebugConfig": map[string]interface{}{
-					"ACLDatacenter":    "dc1",
-					"ACLDefaultPolicy": "allow",
-					"ACLDisabledTTL":   "2m0s",
-					"ACLTokens": map[string]interface{}{
-						"EnablePersistence": true,
-					},
-					"ACLsEnabled": true,
-				},
-			}
-			err := json.NewEncoder(w).Encode(jsonResponse)
-			require.NoError(t, err)
-		case consulListTokensAPI:
-			require.Equal(t, http.MethodGet, r.Method)
-			w.WriteHeader(http.StatusOK)
-			tokens := []map[string]interface{}{
-				{
-					"AccessorID":  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
-					"Description": "some other type of agent token",
-				},
-				{
-					"AccessorID":  "00000000-0000-0000-0000-000000000002",
-					"Description": "Anonymous Token",
-				},
-				{
-					"AccessorID":  "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
-					"Description": "Bootstrap Token (Global Management)",
-				},
-			}
-			err := json.NewEncoder(w).Encode(tokens)
-			require.NoError(t, err)
-		case consulCreateTokenAPI:
-			require.Equal(t, http.MethodPut, r.Method)
-			w.WriteHeader(http.StatusOK)
-			jsonResponse := map[string]interface{}{
-				"AccessorID":  testAgentTokenAccessorID,
-				"Description": "edgex-core-consul agent token",
-				"Policies": []map[string]interface{}{
-					{
-						"ID":   "00000000-0000-0000-0000-000000000001",
-						"Name": "global-management",
-					},
-					{
-						"ID":   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-						"Name": "node-read policy",
-					},
-				},
-				"Local":       true,
-				"CreateTime":  "2021-03-10T12:25:06.123456-07:00",
-				"Hash":        "UuiRkOQPRCvoRZHRtUxxbrmwZ5crYrOdZ0Z1FTFbTbA=",
-				"CreateIndex": 59,
-				"ModifyIndex": 59,
-			}
-
-			err := json.NewEncoder(w).Encode(jsonResponse)
-			require.NoError(t, err)
-		case fmt.Sprintf(consulTokenRUDAPI, testAgentTokenAccessorID):
-			if r.Method == http.MethodGet {
-				w.WriteHeader(http.StatusOK)
-				jsonResponse := map[string]interface{}{
-					"AccessorID":  testAgentTokenAccessorID,
-					"Description": "edgex-core-consul agent token",
-					"Policies": []map[string]interface{}{
-						{
-							"ID":   "00000000-0000-0000-0000-000000000001",
-							"Name": "global-management",
-						},
-						{
-							"ID":   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-							"Name": "node-read policy",
-						},
-					},
-					"Local":       false,
-					"CreateTime":  "2021-03-10T12:25:06.123456-07:00",
-					"Hash":        "UuiRkOQPRCvoRZHRtUxxbrmwZ5crYrOdZ0Z1FTFbTbA=",
-					"CreateIndex": 59,
-					"ModifyIndex": 59,
-				}
-
-				err := json.NewEncoder(w).Encode(jsonResponse)
-				require.NoError(t, err)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-				t.Fatal(fmt.Sprintf("Unexpected method %s to URL %s", r.Method, r.URL.EscapedPath()))
-			}
-		case fmt.Sprintf(consulSetAgentTokenAPI, AgentType):
-			require.Equal(t, http.MethodPut, r.Method)
-
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("agent token set successfully"))
-		default:
-			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
-		}
-	}))
-	tsURL, err := url.Parse(testSrv.URL)
-	require.NoError(t, err)
-	portNum, _ := strconv.Atoi(tsURL.Port())
-	registryTestConf.StageGate.Registry.ACL.Protocol = tsURL.Scheme
-	registryTestConf.StageGate.Registry.Host = tsURL.Hostname()
-	registryTestConf.StageGate.Registry.Port = portNum
-	registryTestConf.StageGate.WaitFor.Timeout = "1m"
-	registryTestConf.StageGate.WaitFor.RetryInterval = "1s"
-	// for the sake of simplicity, we use the same test server as the secret store server
-	registryTestConf.SecretStore.Protocol = tsURL.Scheme
-	registryTestConf.SecretStore.Host = tsURL.Hostname()
-	registryTestConf.SecretStore.Port = portNum
-
-	return registryTestConf, testSrv
+	testSrv := newRegistryTestServer(testSrvOptions)
+	conf := testSrv.getRegistryServerConf(t)
+	testRoles := make(map[string]config.ACLRoleInfo)
+	testRoles["Role1"] = config.ACLRoleInfo{
+		Description: "test for role 1",
+	}
+	testRoles["Role2"] = config.ACLRoleInfo{
+		Description: "test for role 2",
+	}
+	conf.StageGate.Registry.ACL.Roles = testRoles
+	return conf, testSrv.server
 }
