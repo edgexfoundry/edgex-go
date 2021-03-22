@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +58,9 @@ const (
 	defaultRetryTimeout        = 30 * time.Second
 	emptyLeader                = `""`
 	emptyToken                 = ""
+
+	// environment variable contains a comma separated list of registry role names to be added
+	addRegistryRolesEnvKey = "ADD_REGISTRY_ACL_ROLES"
 )
 
 type cmd struct {
@@ -65,7 +69,8 @@ type cmd struct {
 	configuration *config.ConfigurationStruct
 
 	// internal state
-	retryTimeout time.Duration
+	retryTimeout           time.Duration
+	bootstrapACLTokenCache *BootStrapACLTokenInfo
 }
 
 // NewCommand creates a new cmd and parses through options if any
@@ -114,11 +119,9 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	}
 
 	if helper.CheckIfFileExists(sentinelFileAbsPath) {
-		// although we may have done setup ACL successfully already previous times,
-		// if token persistence is not enabled, we have to re-set agent token every time agent is restarted,
-		// i.e., when this subcommand is called every time, regardless whether it is first time or not
-		if err := c.setupAgentToken(nil); err != nil {
-			return interfaces.StatusCodeExitWithError, fmt.Errorf("on 2nd time or later, failed to set up agent token: %v", err)
+		// run through any needed to be re-set up on every restart of this call
+		if err := c.reSetup(); err != nil {
+			return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to re-setup registry ACL: %v", err)
 		}
 
 		c.loggingClient.Info("setupRegistryACL successfully done")
@@ -144,7 +147,6 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	c.loggingClient.Info("successfully get secretstore token and configuring the registry access for secretestore")
 
-	// create all ACL token roles for EdgeX services defined in configuration (static)
 	if err := c.createEdgeXACLTokenRoles(bootstrapACLToken.SecretID, secretstoreToken); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to createEdgeXACLTokenRoles: %v", err)
 	}
@@ -172,6 +174,44 @@ func (c *cmd) Execute() (statusCode int, err error) {
 // GetCommandName returns the name of this command
 func (c *cmd) GetCommandName() string {
 	return CommandName
+}
+
+// reSetup calls when anything is running 2nd time or later, in order to re-set up the registry ACL
+func (c *cmd) reSetup() error {
+	// although we may have done setup ACL successfully already previous times,
+	// if token persistence is not enabled, we have to re-set agent token every time agent is restarted,
+	// i.e., when this subcommand is called every time, regardless whether it is first time or not
+	if err := c.setupAgentToken(nil); err != nil {
+		return fmt.Errorf("on 2nd time or later, failed to re-set up agent token: %v", err)
+	}
+
+	// set up roles for both static and dynamic again in case there're changes
+	if err := c.reSetupEdgeXACLTokenRoles(); err != nil {
+		return fmt.Errorf("on 2nd time or later, failed to re-set up roles: %v", err)
+	}
+
+	return nil
+}
+
+func (c *cmd) reSetupEdgeXACLTokenRoles() error {
+	bootstrapACLToken, err := c.reconstructBootstrapACLToken()
+	if err != nil {
+		return fmt.Errorf("failed to reconstruct bootstrap ACL token: %v", err)
+	} else if len(bootstrapACLToken.SecretID) == 0 {
+		return errors.New("bootstrapACLToken.SecretID is empty")
+	}
+
+	// retrieve the secretstore (Vault) token from the file produced by secretstore-setup
+	secretstoreToken, err := c.getSecretStoreTokenFromFile()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve secretstore token: %v", err)
+	}
+
+	if err := c.createEdgeXACLTokenRoles(bootstrapACLToken.SecretID, secretstoreToken); err != nil {
+		return fmt.Errorf("failed to create EdgeX roles: %v", err)
+	}
+
+	return nil
 }
 
 func (c *cmd) createBootstrapACLToken() (*BootStrapACLTokenInfo, error) {
@@ -217,13 +257,13 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 		return fmt.Errorf("failed to create edgex service policy: %v", err)
 	}
 
-	roleNames := c.configuration.StageGate.Registry.ACL.GetACLRoleNames()
-	if len(roleNames) == 0 {
-		c.loggingClient.Warn("found no ACL role names defined in configuration, skip create ACL roles")
-		return nil
+	roleNames, err := c.getUniqueRoleNames()
+	if err != nil {
+		return fmt.Errorf("failed to get unique role names: %v", err)
 	}
 
-	for _, roleName := range roleNames {
+	// create registry roles for EdgeX
+	for roleName := range roleNames {
 		// create roles based on the service keys as the role names
 		// in phase 2, we are using the same policy rule for all services
 		edgexACLTokenRole := NewRegistryRole(roleName, ClientType, []Policy{
@@ -238,6 +278,91 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 	}
 
 	return nil
+}
+
+func (c *cmd) getUniqueRoleNames() (map[string]struct{}, error) {
+	roleNamesFromConfig := c.configuration.StageGate.Registry.ACL.GetACLRoleNames()
+	if len(roleNamesFromConfig) == 0 {
+		return nil, errors.New("no ACL role names defined in configuration")
+	}
+
+	// there may be some role names to be added, and we want to add only unique role names
+	// use empty struct{} as value so that there is no really memory allocated for values
+	rolesFromConfig := make(map[string]struct{})
+	for _, roleName := range roleNamesFromConfig {
+		rolesFromConfig[roleName] = struct{}{}
+	}
+
+	rolesFromEnv, err := getUniqueRolesFromEnv()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get unique roles from env: %v", err)
+	}
+
+	// merge roles from config and from env
+	uniqueRoleNames := c.mergeUniqueRoles(rolesFromConfig, rolesFromEnv)
+
+	c.loggingClient.Infof("successfully got unique role names, total size=%d", len(uniqueRoleNames))
+
+	return uniqueRoleNames, nil
+}
+
+func (c *cmd) mergeUniqueRoles(configRoles, envRoles map[string]struct{}) map[string]struct{} {
+	if len(envRoles) == 0 {
+		return configRoles
+	}
+
+	uniqueRoleNames := make(map[string]struct{})
+	for key, val := range configRoles {
+		uniqueRoleNames[key] = val
+	}
+
+	c.loggingClient.Infof("Adding role names from environment variable %s", addRegistryRolesEnvKey)
+	for roleName, val := range envRoles {
+		if _, exists := uniqueRoleNames[roleName]; exists {
+			c.loggingClient.Warnf("the service key %s from env already exists in config roles, skip", roleName)
+			continue
+		}
+		uniqueRoleNames[roleName] = val
+	}
+
+	return uniqueRoleNames
+}
+
+func getUniqueRolesFromEnv() (map[string]struct{}, error) {
+	uniqueRolesEnv := make(map[string]struct{})
+	// read a list of service keys as role names from environment variable if any
+	addRoleList := os.Getenv(addRegistryRolesEnvKey)
+	if len(strings.TrimSpace(addRoleList)) == 0 {
+		return uniqueRolesEnv, nil
+	}
+
+	// the list of service keys is comma-separated
+	serviceKeyList := strings.Split(addRoleList, ",")
+
+	// regex for valid service key as role name
+	// the service key eventually becomes part of the URL to Vault's create/read registry role APIs call
+	// according to the specs, the registry role name can only contain the followings:
+	// alphanumeric characters, dashes -, and underscores _
+	// also role name must be unique
+	// we also limit the the length of the name up to 512 characters
+	roleNameValidateRegx := regexp.MustCompile(`^[\w\-\_]{1,512}$`)
+
+	// do name validation before add it to the final list
+	for _, serviceKey := range serviceKeyList {
+		roleName := strings.ToLower(strings.TrimSpace(serviceKey))
+		if len(roleName) == 0 {
+			// skipping the empty cases, ie. treating it as no role
+			continue
+		}
+
+		if !roleNameValidateRegx.MatchString(roleName) {
+			return nil, fmt.Errorf("invalid service key as registry role name %s from env %s", roleName, addRegistryRolesEnvKey)
+		}
+
+		uniqueRolesEnv[roleName] = struct{}{}
+	}
+
+	return uniqueRolesEnv, nil
 }
 
 // setupAgentToken is to set up the agent token using the inputToken to the running agent if haven't set up yet
@@ -285,6 +410,11 @@ func (c *cmd) setupAgentToken(inputToken *BootStrapACLTokenInfo) error {
 
 // reconstructBootstrapACLToken reads bootstrap ACL token from the saved file and reconstruct it into BootStrapACLTokenInfo
 func (c *cmd) reconstructBootstrapACLToken() (*BootStrapACLTokenInfo, error) {
+	if c.bootstrapACLTokenCache != nil {
+		// re-use the cached one
+		return c.bootstrapACLTokenCache, nil
+	}
+
 	bootstrapTokenFilePath := strings.TrimSpace(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
 	if len(bootstrapTokenFilePath) == 0 {
 		return nil, errors.New("required StageGate_Registry_ACL_BootstrapTokenPath from configuration is empty")
@@ -310,6 +440,9 @@ func (c *cmd) reconstructBootstrapACLToken() (*BootStrapACLTokenInfo, error) {
 	if err := json.NewDecoder(tokenReader).Decode(&bootstrapACLToken); err != nil {
 		return nil, fmt.Errorf("failed to parse token data into BootStrapACLTokenInfo: %v", err)
 	}
+
+	// cache it for later use
+	c.bootstrapACLTokenCache = &bootstrapACLToken
 
 	c.loggingClient.Infof("successfully reconstructed bootstrap ACL token from %s", bootstrapTokenFilePath)
 
