@@ -13,7 +13,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gomodule/redigo/redis"
@@ -82,12 +81,12 @@ func allIntervalActions(conn redis.Conn, offset, limit int) (intervalActions []m
 
 	intervalActions = make([]models.IntervalAction, len(objects))
 	for i, o := range objects {
-		dto := dtos.IntervalAction{}
-		err := json.Unmarshal(o, &dto)
+		action := models.IntervalAction{}
+		err := json.Unmarshal(o, &action)
 		if err != nil {
 			return []models.IntervalAction{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction format parsing failed from the database", err)
 		}
-		intervalActions[i] = dtos.ToIntervalActionModel(dto)
+		intervalActions[i] = action
 	}
 	return intervalActions, nil
 }
