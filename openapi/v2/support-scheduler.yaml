@@ -877,64 +877,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /intervalaction/target/{target}:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: target
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The target of an interval action"
-    get:
-      summary: "Returns a paginated list of all interval actions associated with the specified target."
-      parameters:
-        - $ref: '#/components/parameters/offsetParam'
-        - $ref: '#/components/parameters/limitParam'
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/IntervalActionResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ErrorResponse'
-    delete:
-      summary: "Deletes all interval actions associated with the specified target."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IntervalActionResponse'
-        '500':
-          description: "An unexpected error occurred on the server"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /config:
     get:
       summary: "Returns the current configuration of the service."

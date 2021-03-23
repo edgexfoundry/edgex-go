@@ -61,6 +61,31 @@ func (_m *DBClient) AddIntervalAction(e models.IntervalAction) (models.IntervalA
 	return r0, r1
 }
 
+// AllIntervalActions provides a mock function with given fields: offset, limit
+func (_m *DBClient) AllIntervalActions(offset int, limit int) ([]models.IntervalAction, errors.EdgeX) {
+	ret := _m.Called(offset, limit)
+
+	var r0 []models.IntervalAction
+	if rf, ok := ret.Get(0).(func(int, int) []models.IntervalAction); ok {
+		r0 = rf(offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.IntervalAction)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int) errors.EdgeX); ok {
+		r1 = rf(offset, limit)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // AllIntervals provides a mock function with given fields: offset, limit
 func (_m *DBClient) AllIntervals(offset int, limit int) ([]models.Interval, errors.EdgeX) {
 	ret := _m.Called(offset, limit)

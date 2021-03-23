@@ -753,6 +753,18 @@ func (c *Client) AddIntervalAction(action model.IntervalAction) (model.IntervalA
 	return addIntervalAction(conn, action)
 }
 
+// AllIntervalActions query intervalActions with offset and limit
+func (c *Client) AllIntervalActions(offset int, limit int) (intervalActions []model.IntervalAction, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	intervalActions, edgeXerr = allIntervalActions(conn, offset, limit)
+	if edgeXerr != nil {
+		return intervalActions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return intervalActions, nil
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
