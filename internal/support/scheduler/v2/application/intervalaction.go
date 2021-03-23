@@ -14,6 +14,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -39,4 +40,19 @@ func AddIntervalAction(action models.IntervalAction, ctx context.Context, dic *d
 		correlation.FromContext(ctx))
 
 	return addedAction.Id, nil
+}
+
+// AllIntervalActions query the intervalActions with offset and limit
+func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActionDTOs []dtos.IntervalAction, err errors.EdgeX) {
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	intervalActions, err := dbClient.AllIntervalActions(offset, limit)
+	if err != nil {
+		return intervalActionDTOs, errors.NewCommonEdgeXWrapper(err)
+	}
+	intervalActionDTOs = make([]dtos.IntervalAction, len(intervalActions))
+	for i, action := range intervalActions {
+		dto := dtos.FromIntervalActionModelToDTO(action)
+		intervalActionDTOs[i] = dto
+	}
+	return intervalActionDTOs, nil
 }

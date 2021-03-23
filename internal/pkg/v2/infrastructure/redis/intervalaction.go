@@ -13,15 +13,15 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	"github.com/gomodule/redigo/redis"
 )
 
 const (
-	IntervalActionCollection       = "ss|ia"
-	IntervalActionCollectionName   = IntervalActionCollection + DBKeySeparator + v2.Name
-	IntervalActionCollectionTarget = IntervalActionCollection + DBKeySeparator + v2.Target
+	IntervalActionCollection     = "ss|ia"
+	IntervalActionCollectionName = IntervalActionCollection + DBKeySeparator + v2.Name
 )
 
 // intervalActionStoredKey return the intervalAction's stored key which combines the collection name and object id
@@ -67,4 +67,27 @@ func addIntervalAction(conn redis.Conn, action models.IntervalAction) (models.In
 	}
 
 	return action, edgeXerr
+}
+
+// allIntervalActions queries intervalActions by offset and limit
+func allIntervalActions(conn redis.Conn, offset, limit int) (intervalActions []models.IntervalAction, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, edgeXerr := getObjectsByRevRange(conn, IntervalActionCollection, offset, end)
+	if edgeXerr != nil {
+		return intervalActions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	intervalActions = make([]models.IntervalAction, len(objects))
+	for i, o := range objects {
+		dto := dtos.IntervalAction{}
+		err := json.Unmarshal(o, &dto)
+		if err != nil {
+			return []models.IntervalAction{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction format parsing failed from the database", err)
+		}
+		intervalActions[i] = dtos.ToIntervalActionModel(dto)
+	}
+	return intervalActions, nil
 }
