@@ -70,7 +70,7 @@ echo "$(date) ENABLE_REGISTRY_ACL = ${ENABLE_REGISTRY_ACL}"
 
 if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
   echo "$(date) Starting edgex-core-consul with ACL enabled ..."
-  exec docker-entrypoint.sh agent \
+  docker-entrypoint.sh agent \
     -ui \
     -bootstrap \
     -server \
@@ -96,7 +96,7 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
   # no need to wait for Consul's port since it is in ready state after all ACL stuff
 else
   echo "$(date) Starting edgex-core-consul with ACL disabled ..."
-  exec docker-entrypoint.sh agent \
+  docker-entrypoint.sh agent \
     -ui \
     -bootstrap \
     -server \
