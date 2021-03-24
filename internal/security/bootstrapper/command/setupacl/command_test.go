@@ -17,11 +17,14 @@ package setupacl
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -273,6 +276,88 @@ func TestMultipleExecuteCalls(t *testing.T) {
 				bootstrappedToken, err := localcmd.reconstructBootstrapACLToken()
 				require.NoError(t, err)
 				require.Equal(t, expectedBootstrapTokenID, bootstrappedToken.SecretID)
+			}
+		})
+	}
+}
+
+func TestGetUniqueRoleNames(t *testing.T) {
+	ctx := context.Background()
+	wg := &sync.WaitGroup{}
+	lc := logger.MockLogger{}
+
+	testConfigOneRole := make(map[string]config.ACLRoleInfo)
+	testConfigOneRole["testRole1"] = config.ACLRoleInfo{Description: "role1"}
+
+	// random number of roles between 2 and 4
+	numOfConfigRoles := rand.Intn(1)*3 + 2
+	testConfigMultipleRoles := make(map[string]config.ACLRoleInfo)
+	for i := 0; i < numOfConfigRoles; i++ {
+		roleName := "testRole" + strconv.Itoa(i+1)
+		testConfigMultipleRoles[roleName] = config.ACLRoleInfo{Description: "role for " + roleName}
+	}
+
+	emptyAddRoleEnv := ""
+
+	tests := []struct {
+		name              string
+		configRoles       map[string]config.ACLRoleInfo
+		addRolesFromEnv   string
+		expectedNumRoles  int
+		spotTestRoleNames []string
+		expectedError     bool
+	}{
+		{"Ok:getUniqueRoles with 1 config role only", testConfigOneRole, emptyAddRoleEnv, 1, []string{"testrole1"}, false},
+		{"Ok:getUniqueRoles with multiple config roles", testConfigMultipleRoles, emptyAddRoleEnv, numOfConfigRoles,
+			[]string{"testrole1", "testrole2"}, false},
+		{"Ok:getUniqueRoles with 1 config role and 1 added role from env", testConfigOneRole, "envrole-1", 2,
+			[]string{"testrole1", "envrole-1"}, false},
+		{"Ok:getUniqueRoles with 1 config role and multiple added roles from env", testConfigOneRole,
+			"envrole-1, envrole-2, envrole-3", 4, []string{"testrole1", "envrole-1", "envrole-3"}, false},
+		{"Ok:getUniqueRoles with multiple config roles and 1 added role from env", testConfigMultipleRoles, "envrole-1",
+			numOfConfigRoles + 1, []string{"testrole1", "testrole2", "envrole-1"}, false},
+		{"Ok:getUniqueRoles with multiple config roles and multiple added roles from env", testConfigMultipleRoles,
+			"envrole-1, envrole-2, envrole-3", numOfConfigRoles + 3, []string{"testrole1", "testrole2", "envrole-1", "envrole-2"}, false},
+		{"Ok:getUniqueRoles with duplicate roles", testConfigMultipleRoles,
+			"envrole-1, testrole2, envrole-1", numOfConfigRoles + 1, []string{"testrole1", "testrole2", "envrole-1"}, false},
+		{"Ok:getUniqueRoles with empty role name", testConfigMultipleRoles,
+			" , envrole-1,", numOfConfigRoles + 1, []string{"testrole1", "testrole2", "envrole-1"}, false},
+		{"Bad:getUniqueRoles with invalid role name: space", testConfigMultipleRoles,
+			"a role for,", numOfConfigRoles, []string{"testrole1", "testrole2"}, true},
+		{"Bad:getUniqueRoles with invalid role name: special characters", testConfigMultipleRoles,
+			"$Role , ~arole!,^@#%*&=+|/;:.", numOfConfigRoles, []string{"testrole1", "testrole2"}, true},
+		{"Bad:getUniqueRoles with invalid role name: invalid []<>(){}", testConfigMultipleRoles,
+			"[],< >,(), {}", numOfConfigRoles, []string{"testrole1", "testrole2"}, true},
+		{"Bad:getUniqueRoles with empty config role", make(map[string]config.ACLRoleInfo), emptyAddRoleEnv, 0, nil, true},
+		{"Bad:getUniqueRoles with nil config role", nil, emptyAddRoleEnv, 0, nil, true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// prepare test
+			err := os.Setenv(addRegistryRolesEnvKey, test.addRolesFromEnv)
+			require.NoError(t, err)
+			conf := &config.ConfigurationStruct{}
+			conf.StageGate.Registry.ACL.Roles = test.configRoles
+
+			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
+			require.NoError(t, err)
+			require.NotNil(t, setupRegistryACL)
+			require.Equal(t, "setupRegistryACL", setupRegistryACL.GetCommandName())
+
+			localcmd := setupRegistryACL.(*cmd)
+			actualRoleNames, err := localcmd.getUniqueRoleNames()
+
+			if test.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.expectedNumRoles, len(actualRoleNames))
+				for _, checkRoleName := range test.spotTestRoleNames {
+					if _, exists := actualRoleNames[checkRoleName]; !exists {
+						require.Fail(t, fmt.Sprintf("missing the expected role name: %s", checkRoleName))
+					}
+				}
 			}
 		})
 	}
