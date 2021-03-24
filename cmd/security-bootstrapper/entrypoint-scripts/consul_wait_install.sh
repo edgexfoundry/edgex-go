@@ -70,7 +70,7 @@ echo "$(date) ENABLE_REGISTRY_ACL = ${ENABLE_REGISTRY_ACL}"
 
 if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
   echo "$(date) Starting edgex-core-consul with ACL enabled ..."
-  docker-entrypoint.sh agent \
+  exec docker-entrypoint.sh agent \
     -ui \
     -bootstrap \
     -server \
@@ -96,7 +96,7 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
   # no need to wait for Consul's port since it is in ready state after all ACL stuff
 else
   echo "$(date) Starting edgex-core-consul with ACL disabled ..."
-  docker-entrypoint.sh agent \
+  exec docker-entrypoint.sh agent \
     -ui \
     -bootstrap \
     -server \
@@ -111,7 +111,7 @@ else
 fi
 
 # Signal that Consul is ready for services blocked waiting on Consul
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec consul /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_REGISTRY_READYPORT}" --host="${STAGEGATE_REGISTRY_HOST}"
 if [ $? -ne 0 ]; then
     echo "$(date) failed to gating the consul ready port, exits"

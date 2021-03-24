@@ -93,7 +93,7 @@ done
 echo "$(date) ${STAGEGATE_KONGDB_HOST} is initialized"
 
 # Signal that Postgres is ready for services blocked waiting on Postgres
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec postgres /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_KONGDB_READYPORT}" --host="${STAGEGATE_KONGDB_HOST}"
 if [ $? -ne 0 ]; then
   echo "$(date) failed to gating the postgres ready port, exits"
