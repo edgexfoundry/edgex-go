@@ -36,7 +36,7 @@ echo "$(date) Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
 chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
 
 # Signal tokens ready port for other services waiting on
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}"
 if [ $? -ne 0 ]; then
   echo "$(date) failed to gating the tokens ready port"

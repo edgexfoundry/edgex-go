@@ -111,7 +111,7 @@ else
 fi
 
 # Signal that Consul is ready for services blocked waiting on Consul
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec consul /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_REGISTRY_READYPORT}" --host="${STAGEGATE_REGISTRY_HOST}"
 if [ $? -ne 0 ]; then
     echo "$(date) failed to gating the consul ready port, exits"
