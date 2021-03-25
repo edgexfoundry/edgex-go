@@ -111,13 +111,13 @@ components:
         - $ref: '#/components/schemas/Address'
         - type: object
           properties:
-            emailAddresses:
+            recipients:
               description: "Recipients who are interested in receiving notifications."
               type: array
               items:
                 type: string
           required:
-            - emailAddresses
+            - recipients
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -171,7 +171,7 @@ components:
       type: object
       properties:
         category:
-          description: "Categorizes the notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          description: "Categorizes the notification."
         content:
           description: "The actual content to be sent as the body of the notification."
           type: string
@@ -264,7 +264,7 @@ components:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
         categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          description: "Links the subscription to one or more categories of notification."
           type: array
           items:
             type: string
@@ -300,7 +300,7 @@ components:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
         categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          description: "Links the subscription to one or more categories of notification."
           type: array
           items:
             type: string
@@ -344,7 +344,7 @@ components:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
         categories:
-          description: "Links the subscription to one or more categories of notification. Must be one of three values: SECURITY, HW_HEALTH, SW_HEALTH"
+          description: "Links the subscription to one or more categories of notification."
           type: array
           items:
             type: string
@@ -536,6 +536,28 @@ components:
         requestId: ""
         statusCode: 500
         message: "Internal Server Error"
+    SubscriptionRequestExample:
+      value:
+        - apiVersion: "v2"
+          requestId: "6f52dc3c-5548-4142-baa6-052ac4bece93"
+          subscription:
+            name: subscriptionA
+            channels:
+              - type: EMAIL
+                recipients:
+                  - 123@gamil.com
+                  - abc@gamil.com
+              - type: REST
+                host: 123.123.0.1
+                port: 123
+                httpMethod: GET
+            categories:
+              - daily-notify
+            labels:
+              - daily
+            receiver: receiverA
+            resendLimit: 0
+            resendInterval: 1h
     AddSubscriptionsExample:
       value:
         - apiVersion: "v2"
@@ -576,6 +598,58 @@ components:
           requestId: ""
           statusCode: 500
           message: "Internal Server Error"
+    SubscriptionResponseExample:
+      value:
+        apiVersion: v2
+        requestId: ''
+        message: ''
+        statusCode: 200
+        subscription:
+          id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
+          name: subscriptionB
+          channels:
+            - type: EMAIL
+              recipients:
+                - 123@gamil.com
+                - abc@gamil.com
+            - type: REST
+              host: 123.123.0.1
+              port: 123
+              httpMethod: GET
+          receiver: receiverA
+          categories:
+            - daily-notify
+          labels:
+            - daily
+          created: 1616659630356
+          modified: 1616660213552
+          resendInterval: 1h
+    MultiSubscriptionsResponseExample:
+      value:
+        apiVersion: "v2"
+        requestId: ""
+        message: ""
+        statusCode: 200
+        subscriptions:
+            - id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
+              name: subscriptionB
+              channels:
+                - type: EMAIL
+                  recipients:
+                    - 123@gamil.com
+                    - abc@gamil.com
+                - type: REST
+                  host: 123.123.0.1
+                  port: 123
+                  httpMethod: GET
+              receiver: receiverA
+              categories:
+                - daily-notify
+              labels:
+                - daily
+              created: 1616659630356
+              modified: 1616660213552
+              resendInterval: 1h
 paths:
   /cleanup:
     parameters:
@@ -1142,6 +1216,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddSubscriptionRequest'
+            examples:
+              SubscriptionRequestExample:
+                $ref: '#/components/examples/SubscriptionRequestExample'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1193,6 +1270,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/UpdateSubscriptionRequest'
+            examples:
+              SubscriptionRequestExample:
+                $ref: '#/components/examples/SubscriptionRequestExample'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -1251,6 +1331,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
+              examples:
+                MultiSubscriptionsResponseExample:
+                  $ref: '#/components/examples/MultiSubscriptionsResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1310,6 +1393,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
+              examples:
+                MultiSubscriptionsResponseExample:
+                  $ref: '#/components/examples/MultiSubscriptionsResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1369,6 +1455,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
+              examples:
+                MultiSubscriptionsResponseExample:
+                  $ref: '#/components/examples/MultiSubscriptionsResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1428,6 +1517,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiSubscriptionsResponse'
+              examples:
+                MultiSubscriptionsResponseExample:
+                  $ref: '#/components/examples/MultiSubscriptionsResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1485,6 +1577,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubscriptionResponse'
+              examples:
+                SubscriptionResponseExample:
+                  $ref: '#/components/examples/SubscriptionResponseExample'
         '404':
           description: "The requested resource does not exist"
           headers:
