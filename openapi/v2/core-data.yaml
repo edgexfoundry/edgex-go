@@ -442,7 +442,7 @@ components:
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
                 origin: 1602168089665565300
                 valueType: "Binary"
-                binaryValue: "83010203"
+                binaryValue: [12,34]
                 mediaType: "image"
           - apiVersion: "v2"
             created: 1594983105886
@@ -490,7 +490,7 @@ components:
             id: "71c601d9-cb56-453a-8c75-54461e444713"
             origin: 1602168089665565300
             valueType: "Binary"
-            binaryValue: "83010203"
+            binaryValue: [12,34]
             mediaType: "image"
           - created: 594983105886
             deviceName: "device-002"
