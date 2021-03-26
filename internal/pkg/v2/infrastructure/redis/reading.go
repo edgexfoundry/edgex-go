@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -20,7 +20,7 @@ import (
 
 const (
 	ReadingsCollection             = "cd|rd"
-	ReadingsCollectionCreated      = ReadingsCollection + DBKeySeparator + v2.Created
+	ReadingsCollectionOrigin       = ReadingsCollection + DBKeySeparator + v2.Origin
 	ReadingsCollectionDeviceName   = ReadingsCollection + DBKeySeparator + v2.Device + DBKeySeparator + v2.Name
 	ReadingsCollectionResourceName = ReadingsCollection + DBKeySeparator + v2.ResourceName
 )
@@ -55,7 +55,7 @@ func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 		storedKey := readingStoredKey(r.Id)
 		_ = conn.Send(UNLINK, storedKey)
 		_ = conn.Send(ZREM, ReadingsCollection, storedKey)
-		_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
+		_ = conn.Send(ZREM, ReadingsCollectionOrigin, storedKey)
 		_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceName, r.DeviceName), storedKey)
 		_ = conn.Send(ZREM, CreateKey(ReadingsCollectionResourceName, r.ResourceName), storedKey)
 		queriesInQueue++
@@ -122,9 +122,9 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	// use the SET command to save reading as blob
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, ReadingsCollection, 0, storedKey)
-	_ = conn.Send(ZADD, ReadingsCollectionCreated, baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Created, storedKey)
-	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionResourceName, baseReading.ResourceName), baseReading.Created, storedKey)
+	_ = conn.Send(ZADD, ReadingsCollectionOrigin, baseReading.Origin, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Origin, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionResourceName, baseReading.ResourceName), baseReading.Origin, storedKey)
 
 	return reading, nil
 }
@@ -141,7 +141,7 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	_ = conn.Send(MULTI)
 	_ = conn.Send(UNLINK, storedKey)
 	_ = conn.Send(ZREM, ReadingsCollection, storedKey)
-	_ = conn.Send(ZREM, ReadingsCollectionCreated, storedKey)
+	_ = conn.Send(ZREM, ReadingsCollectionOrigin, storedKey)
 	_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceName, r.DeviceName), storedKey)
 	_ = conn.Send(ZREM, CreateKey(ReadingsCollectionResourceName, r.ResourceName), storedKey)
 	_, err := conn.Do(EXEC)
@@ -153,9 +153,6 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 }
 
 func checkReadingValue(b *models.BaseReading) errors.EdgeX {
-	if b.Created == 0 {
-		b.Created = common.MakeTimestamp()
-	}
 	// check if id is a valid uuid
 	if b.Id == "" {
 		b.Id = uuid.New().String()
@@ -184,7 +181,7 @@ func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Read
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
 	}
-	objects, err := getObjectsBySomeRange(conn, ZREVRANGE, ReadingsCollectionCreated, offset, end)
+	objects, err := getObjectsBySomeRange(conn, ZREVRANGE, ReadingsCollectionOrigin, offset, end)
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -222,7 +219,7 @@ func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (
 
 // readingsByTimeRange query readings by time range, offset, and limit
 func readingsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionCreated, start, end, offset, limit)
+	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionOrigin, start, end, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr
 	}

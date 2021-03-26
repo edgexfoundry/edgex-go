@@ -28,11 +28,8 @@ components:
           description: "The unique identifier for the reading"
           type: string
           format: uuid
-        created:
-          description: "A Unix timestamp indicating when (if) the reading was initially persisted to a database."
-          type: integer
         origin:
-          description: "A Unix timestamp indicating when the reading was originated at the source device (can support nanoseconds)"
+          description: "A Unix timestamp (nanoseconds) indicating when the reading was originated at the source device"
           type: integer
         deviceName:
           description: "The name of the device from which the reading originated"
@@ -138,11 +135,8 @@ components:
         sourceName:
           description: "SourceName indicates the name of the resource or device command in the device profile which describes the event to generate"
           type: string
-        created:
-          description: "A Unix timestamp indicating when (if) the event was initially persisted to a database."
-          type: integer
         origin:
-          description: "A Unix timestamp indicating when the event was originated at the source device (can support nanoseconds)"
+          description: "A Unix timestamp (nanoseconds) indicating when the event was originated at the source device"
           type: integer
         readings:
           description: "One or more readings captured at the time of the event"
@@ -367,15 +361,13 @@ components:
           deviceName: "device-001"
           profileName: "profile-001"
           sourceName: "source-1"
-          created: 1594876281221
           origin: 1602168089665565300
           tags:
             Gateway: "HoustonStore-000123"
             Latitude: "29.630771"
             Longitude: "-95.377603"
           readings:
-            - created: 1594876281221
-              deviceName: "device-001"
+            - deviceName: "device-001"
               resourceName: "resource-001"
               profileName: "profile-001"
               id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
@@ -403,15 +395,13 @@ components:
             deviceName: "device-001"
             profileName: "profile-001"
             sourceName: "source-1"
-            created: 1594876281221
             origin: 1602168089665565300
             tags:
               Gateway: "HoustonStore-000123"
               Latitude: "29.630771"
               Longitude: "-95.377603"
             readings:
-              - created: 1594876281221
-                deviceName: "device-001"
+              - deviceName: "device-001"
                 resourceName: "resource-001"
                 profileName: "profile-001"
                 id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
@@ -428,15 +418,13 @@ components:
                 valueType: "Int8"
                 value: "75"
           - apiVersion: "v2"
-            created: 1594877691305
             deviceName: "device-002"
             profileName: "profile-002"
             sourceName: "source-2"
             id: "73fc4f9c-2d64-4920-addb-b1f33a8f8514"
             origin: 1602168089665565300
             readings:
-              - created: 1594879337014
-                deviceName: "device-002"
+              - deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
                 id: "71c601d9-cb56-453a-8c75-54461e444713"
@@ -445,15 +433,13 @@ components:
                 binaryValue: "83010203"
                 mediaType: "image"
           - apiVersion: "v2"
-            created: 1594983105886
             deviceName: "device-002"
             profileName: "profile-002"
             sourceName: "source-3"
             id: "d5471d59-2810-419a-8744-18eb8fa03465"
             origin: 1602168089665565300
             readings:
-              - created: 594983105886
-                deviceName: "device-002"
+              - deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
                 id: "7003cacc-0e00-4676-977c-4e58b9612abd"
@@ -467,24 +453,21 @@ components:
         statusCode: 200
         message: ""
         readings:
-          - created: 1594876281221
-            deviceName: "device-001"
+          - deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
             id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "39.5"
-          - created: 1594876281221
-            deviceName: "device-001"
+          - deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
             id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
             origin: 1602168089665565300
             valueType: "Int8"
             value: "75" 
-          - created: 1594879337014
-            deviceName: "device-002"
+          - deviceName: "device-002"
             resourceName: "resource-002"
             profileName: "profile-002"
             id: "71c601d9-cb56-453a-8c75-54461e444713"
@@ -492,8 +475,7 @@ components:
             valueType: "Binary"
             binaryValue: "83010203"
             mediaType: "image"
-          - created: 594983105886
-            deviceName: "device-002"
+          - deviceName: "device-002"
             resourceName: "resource-002"
             profileName: "profile-002"
             id: "7003cacc-0e00-4676-977c-4e58b9612abd"
@@ -543,6 +525,7 @@ paths:
                 apiVersion: v2
                 deviceName: device-002
                 profileName: profile-002
+                sourceName: resource-002,
                 id: d5471d59-2810-419a-8744-18eb8fa03465
                 origin: 1602168089665565300
                 tags:
@@ -615,7 +598,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given the entire range of events sorted by created descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given the entire range of events sorted by origin descending, returns a portion of that range according to the offset and limit parameters."
       responses:
         '200':
           description: "OK"
@@ -833,7 +816,7 @@ paths:
                   $ref: '#/components/examples/500Example'
   /event/device/name/{name}:
     get:
-      summary: "Given the entire range of events sorted by created descending, returns a portion of that range according to the device name, offset and limit parameters."
+      summary: "Given the entire range of events sorted by origin descending, returns a portion of that range according to the device name, offset and limit parameters."
       parameters:
         - $ref: '#/components/parameters/correlatedRequestHeader'
         - name: name
@@ -940,17 +923,17 @@ paths:
       required: true
       schema:
         type: integer
-      description: "Unix timestamp indicating the start of a date/time range"
+      description: "Unix timestamp (nanoseconds) indicating the start of a date/time range"
     - name: end
       in: path
       required: true
       schema:
         type: integer
-      description: "Unix timestamp indicating the end of a date/time range"
+      description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Return a paginated range of events sorted by created descending with a create date inside the specified start/end values."
+      summary: "Return a paginated range of events sorted by origin descending with a create date inside the specified start/end values."
       responses:
         '200':
           description: "OK"
@@ -1012,7 +995,7 @@ paths:
       required: true
       schema:
         type: integer
-      description: "Age in milliseconds since created timestamp for a given event"
+      description: "Age in nanoseconds since origin timestamp for a given event"
     delete:
       summary: "Remove all old events (and associated readings) based on delimiting age"
       responses:
@@ -1060,7 +1043,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given the entire range of readings sorted by created descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved."
+      summary: "Given the entire range of readings sorted by origin descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved."
       responses:
         '200':
           description: "OK"
@@ -1202,7 +1185,7 @@ paths:
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given a range of readings from the specified device sorted by created descending, returns a portion of that range according to the device name, offset and limit parameters."
+      summary: "Given a range of readings from the specified device sorted by origin descending, returns a portion of that range according to the device name, offset and limit parameters."
       responses:
         '200':
           description: "OK"
@@ -1328,13 +1311,13 @@ paths:
         required: true
         schema:
           type: integer
-        description: "Unix timestamp indicating the start of a date/time range"
+        description: "Unix timestamp (nanoseconds) indicating the start of a date/time range"
       - name: end
         in: path
         required: true
         schema:
           type: integer
-        description: "Unix timestamp indicating the end of a date/time range"
+        description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:

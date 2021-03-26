@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,19 +9,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
-
 	"github.com/gomodule/redigo/redis"
 )
 
 const (
 	EventsCollection           = "cd|evt"
-	EventsCollectionCreated    = EventsCollection + DBKeySeparator + v2.Created
+	EventsCollectionOrigin     = EventsCollection + DBKeySeparator + v2.Origin
 	EventsCollectionDeviceName = EventsCollection + DBKeySeparator + v2.Device + DBKeySeparator + v2.Name
 	EventsCollectionReadings   = EventsCollection + DBKeySeparator + "readings"
 )
@@ -54,7 +53,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 		_ = conn.Send(UNLINK, storedKey)
 		_ = conn.Send(UNLINK, CreateKey(EventsCollectionReadings, e.Id))
 		_ = conn.Send(ZREM, EventsCollection, storedKey)
-		_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
+		_ = conn.Send(ZREM, EventsCollectionOrigin, storedKey)
 		_ = conn.Send(ZREM, CreateKey(EventsCollectionDeviceName, e.DeviceName), storedKey)
 		queriesInQueue++
 
@@ -105,9 +104,9 @@ func (c *Client) DeleteEventsByAge(age int64) (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	expireTimestamp := utils.MakeTimestamp() - age
+	expireTimestamp := time.Now().UnixNano() - age
 
-	eventIds, readingIds, err := getEventReadingIdsByKeyScoreRange(conn, EventsCollectionCreated, "0", strconv.FormatInt(expireTimestamp, 10))
+	eventIds, readingIds, err := getEventReadingIdsByKeyScoreRange(conn, EventsCollectionOrigin, "0", strconv.FormatInt(expireTimestamp, 10))
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -133,15 +132,10 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	}
 	edgeXerr = nil
 
-	if e.Created == 0 {
-		e.Created = common.MakeTimestamp()
-	}
-
 	event := models.Event{
 		Id:          e.Id,
 		DeviceName:  e.DeviceName,
 		ProfileName: e.ProfileName,
-		Created:     e.Created,
 		Origin:      e.Origin,
 		Tags:        e.Tags,
 	}
@@ -155,9 +149,9 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 	_ = conn.Send(MULTI)
 	// use the SET command to save event as blob
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, EventsCollection, e.Created, storedKey)
-	_ = conn.Send(ZADD, EventsCollectionCreated, e.Created, storedKey)
-	_ = conn.Send(ZADD, CreateKey(EventsCollectionDeviceName, e.DeviceName), e.Created, storedKey)
+	_ = conn.Send(ZADD, EventsCollection, e.Origin, storedKey)
+	_ = conn.Send(ZADD, EventsCollectionOrigin, e.Origin, storedKey)
+	_ = conn.Send(ZADD, CreateKey(EventsCollectionDeviceName, e.DeviceName), e.Origin, storedKey)
 
 	// add reading ids as sorted set under each event id
 	// sort by the order provided by device service
@@ -208,7 +202,7 @@ func deleteEventById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	_ = conn.Send(UNLINK, storedKey)
 	_ = conn.Send(UNLINK, CreateKey(EventsCollectionReadings, e.Id))
 	_ = conn.Send(ZREM, EventsCollection, storedKey)
-	_ = conn.Send(ZREM, EventsCollectionCreated, storedKey)
+	_ = conn.Send(ZREM, EventsCollectionOrigin, storedKey)
 	_ = conn.Send(ZREM, CreateKey(EventsCollectionDeviceName, e.DeviceName), storedKey)
 
 	res, err := redis.Values(conn.Do(EXEC))
@@ -288,7 +282,7 @@ func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (ev
 
 // eventsByTimeRange query events by time range, offset, and limit
 func eventsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionCreated, start, end, offset, limit)
+	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionOrigin, start, end, offset, limit)
 	if edgeXerr != nil {
 		return events, edgeXerr
 	}
