@@ -479,13 +479,11 @@ components:
     400Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 400
         message: "Bad Request"
     500Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 500
         message: "Internal Server Error"
 paths:

@@ -309,52 +309,41 @@ components:
   examples:
     200Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
     202Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 202
-        message: ""
     400Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 400
         message: "Bad Request" 
     404Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 404
         message: "Not Found"
     409Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 409
         message: "Data Duplicate"
     416Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 416
         message: "Range Not Satisfiable"
     500Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 500
         message: "Interval Server Error" 
     EventExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         event:
           apiVersion: "v2"
           id: "040bd523-ec33-440d-9d72-e5813a465f37"
@@ -385,10 +374,8 @@ components:
               value: "75"
     AllEventsExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         events: 
           - apiVersion: "v2"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
@@ -448,10 +435,8 @@ components:
                 value: "12.2"
     AllReadingsExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         readings:
           - deviceName: "device-001"
             resourceName: "resource-001"
@@ -484,10 +469,8 @@ components:
             value: "12.2"
     CountExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         count: 3
 paths:
   /event/{profileName}/{deviceName}/{sourceName}:
@@ -551,10 +534,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                requestId: ""
                 apiVersion: "v2"
                 statusCode: 201
-                message: ""
                 id: "d5471d59-2810-419a-8744-18eb8fa03465"
         '400':
           description: "Request is in an invalid state"

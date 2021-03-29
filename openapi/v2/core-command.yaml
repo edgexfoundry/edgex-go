@@ -366,27 +366,22 @@ components:
     400Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 400
         message: "Bad Request"
     416Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 416
         message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 500
         message: "Internal Server Error"
     DeviceCoreCommandExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         deviceCoreCommand:
           - deviceName: "testDevice"
             profileName: "testProfile"
@@ -401,10 +396,8 @@ components:
                 url: "http://localhost:48082"
     MultiDeviceCoreCommandsExample:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 200
-        message: ""
         deviceCoreCommands:
           - deviceName: "testDevice1"
             profileName: "testProfile"

@@ -509,37 +509,30 @@ components:
     200Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 200
-        message: ""
     400Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 400
         message: "Bad Request"
     404Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 404
         message: "Not Found"
     416Example:
       value:
-        requestId: ""
         apiVersion: "v2"
         statusCode: 416
         message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 500
         message: "Internal Server Error"
     SubscriptionRequestExample:
       value:
         - apiVersion: "v2"
-          requestId: "6f52dc3c-5548-4142-baa6-052ac4bece93"
           subscription:
             name: subscriptionA
             channels:
@@ -561,48 +554,36 @@ components:
     AddSubscriptionsExample:
       value:
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 201
           id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
-          message: ""
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 409
           message: "Duplicated"
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 500
           message: "Internal Server Error"
     UpdateSubscriptionsExample:
       value:
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 200
-          message: ""
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 404
           message: "Not Found"
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 500
           message: "Internal Server Error"
     AddNotificationsExample:
       value:
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 201
           id: "e77c6ca4-46e9-4b11-b0e9-4bbfe5e8420e"
           message: ""
         - apiVersion: "v2"
-          requestId: ""
           statusCode: 500
           message: "Internal Server Error"
     SubscriptionResponseExample:
       value:
         apiVersion: v2
-        requestId: ''
-        message: ''
         statusCode: 200
         subscription:
           id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
@@ -627,8 +608,6 @@ components:
     MultiSubscriptionsResponseExample:
       value:
         apiVersion: "v2"
-        requestId: ""
-        message: ""
         statusCode: 200
         subscriptions:
             - id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
