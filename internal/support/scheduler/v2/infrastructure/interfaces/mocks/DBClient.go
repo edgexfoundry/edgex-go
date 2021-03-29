@@ -148,6 +148,29 @@ func (_m *DBClient) DeleteIntervalByName(name string) errors.EdgeX {
 	return r0
 }
 
+// IntervalActionById provides a mock function with given fields: id
+func (_m *DBClient) IntervalActionById(id string) (models.IntervalAction, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.IntervalAction
+	if rf, ok := ret.Get(0).(func(string) models.IntervalAction); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.IntervalAction)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // IntervalActionByName provides a mock function with given fields: name
 func (_m *DBClient) IntervalActionByName(name string) (models.IntervalAction, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -224,6 +247,22 @@ func (_m *DBClient) UpdateInterval(interval models.Interval) errors.EdgeX {
 	var r0 errors.EdgeX
 	if rf, ok := ret.Get(0).(func(models.Interval) errors.EdgeX); ok {
 		r0 = rf(interval)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
+// UpdateIntervalAction provides a mock function with given fields: action
+func (_m *DBClient) UpdateIntervalAction(action models.IntervalAction) errors.EdgeX {
+	ret := _m.Called(action)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.IntervalAction) errors.EdgeX); ok {
+		r0 = rf(action)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
