@@ -90,3 +90,12 @@ func allIntervalActions(conn redis.Conn, offset, limit int) (intervalActions []m
 	}
 	return intervalActions, nil
 }
+
+// intervalActionByName query intervalAction by name from DB
+func intervalActionByName(conn redis.Conn, name string) (action models.IntervalAction, edgeXerr errors.EdgeX) {
+	edgeXerr = getObjectByHash(conn, IntervalActionCollectionName, name, &action)
+	if edgeXerr != nil {
+		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}

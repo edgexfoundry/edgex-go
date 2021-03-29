@@ -132,6 +132,29 @@ func (_m *DBClient) DeleteIntervalByName(name string) errors.EdgeX {
 	return r0
 }
 
+// IntervalActionByName provides a mock function with given fields: name
+func (_m *DBClient) IntervalActionByName(name string) (models.IntervalAction, errors.EdgeX) {
+	ret := _m.Called(name)
+
+	var r0 models.IntervalAction
+	if rf, ok := ret.Get(0).(func(string) models.IntervalAction); ok {
+		r0 = rf(name)
+	} else {
+		r0 = ret.Get(0).(models.IntervalAction)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(name)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // IntervalById provides a mock function with given fields: id
 func (_m *DBClient) IntervalById(id string) (models.Interval, errors.EdgeX) {
 	ret := _m.Called(id)

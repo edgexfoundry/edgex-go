@@ -20,9 +20,12 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+
+	"github.com/gorilla/mux"
 )
 
 type IntervalActionController struct {
@@ -120,6 +123,35 @@ func (ic *IntervalActionController) AllIntervalActions(w http.ResponseWriter, r 
 			response = responseDTO.NewMultiIntervalActionsResponse("", "", http.StatusOK, intervalActions)
 			statusCode = http.StatusOK
 		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}
+
+func (ic *IntervalActionController) IntervalActionByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(ic.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	name := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	action, err := application.IntervalActionByName(name, ctx, ic.dic)
+	if err != nil {
+		if errors.Kind(err) != errors.KindEntityDoesNotExist {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		}
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = responseDTO.NewIntervalActionResponse("", "", http.StatusOK, action)
+		statusCode = http.StatusOK
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
