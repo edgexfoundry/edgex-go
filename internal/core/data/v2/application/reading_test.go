@@ -60,10 +60,10 @@ func TestReadingsByTimeRange(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("ReadingsByTimeRange", int(readings[0].GetBaseReading().Created), int(readings[4].GetBaseReading().Created), 0, 10).Return(readings, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 0, 10).Return([]models.Reading{readings[3], readings[2], readings[1]}, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 1, 2).Return([]models.Reading{readings[2], readings[1]}, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
+	dbClientMock.On("ReadingsByTimeRange", int(readings[0].GetBaseReading().Origin), int(readings[4].GetBaseReading().Origin), 0, 10).Return(readings, nil)
+	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 0, 10).Return([]models.Reading{readings[3], readings[2], readings[1]}, nil)
+	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 1, 2).Return([]models.Reading{readings[2], readings[1]}, nil)
+	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -81,10 +81,10 @@ func TestReadingsByTimeRange(t *testing.T) {
 		expectedCount      int
 		expectedStatusCode int
 	}{
-		{"Valid - all readings", int(readings[0].GetBaseReading().Created), int(readings[4].GetBaseReading().Created), 0, 10, false, "", 5, http.StatusOK},
-		{"Valid - readings trimmed by latest and oldest", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 0, 10, false, "", 3, http.StatusOK},
-		{"Valid - readings trimmed by latest and oldest and skipped first", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 1, 2, false, "", 2, http.StatusOK},
-		{"Invalid - bounds out of range", int(readings[1].GetBaseReading().Created), int(readings[3].GetBaseReading().Created), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - all readings", int(readings[0].GetBaseReading().Origin), int(readings[4].GetBaseReading().Origin), 0, 10, false, "", 5, http.StatusOK},
+		{"Valid - readings trimmed by latest and oldest", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 0, 10, false, "", 3, http.StatusOK},
+		{"Valid - readings trimmed by latest and oldest and skipped first", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 1, 2, false, "", 2, http.StatusOK},
+		{"Invalid - bounds out of range", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
