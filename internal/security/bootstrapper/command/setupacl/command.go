@@ -33,6 +33,8 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/tokencleaner"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
@@ -42,6 +44,8 @@ import (
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -57,7 +61,6 @@ const (
 	consulLegacyACLModeError   = "The ACL system is currently in legacy mode"
 	defaultRetryTimeout        = 30 * time.Second
 	emptyLeader                = `""`
-	emptyToken                 = ""
 
 	// environment variable contains a comma separated list of registry role names to be added
 	addRegistryRolesEnvKey = "ADD_REGISTRY_ACL_ROLES"
@@ -71,6 +74,7 @@ type cmd struct {
 	// internal state
 	retryTimeout           time.Duration
 	bootstrapACLTokenCache *BootStrapACLTokenInfo
+	secretstoreTokenCache  string
 }
 
 // NewCommand creates a new cmd and parses through options if any
@@ -135,7 +139,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	}
 
 	// retrieve the secretstore (Vault) token from the file produced by secretstore-setup
-	secretstoreToken, err := c.getSecretStoreTokenFromFile()
+	secretstoreToken, err := c.retrieveSecretStoreTokenFromFile()
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to retrieve secretstore token: %v", err)
 	}
@@ -160,6 +164,10 @@ func (c *cmd) Execute() (statusCode int, err error) {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to save ACL tokens: %v", err)
 	}
 
+	if err := c.setupEdgeXAccessTokens(secretstoreToken); err != nil {
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to generate EdgeX access tokens: %v", err)
+	}
+
 	// write a sentinel file to indicate Consul ACL bootstrap is done so that we don't bootstrap ACL again,
 	// this is to avoid re-bootstrapping error and that error can cause the snap crash if restart this process
 	if err := c.writeSentinelFile(); err != nil {
@@ -176,6 +184,131 @@ func (c *cmd) GetCommandName() string {
 	return CommandName
 }
 
+func (c *cmd) getSecretStoreClient() (secrets.SecretStoreClient, error) {
+	clientConfig := types.SecretConfig{
+		Type:     c.configuration.SecretStore.Type,
+		Protocol: c.configuration.SecretStore.Protocol,
+		Host:     c.configuration.SecretStore.Host,
+		Port:     c.configuration.SecretStore.Port,
+	}
+
+	secretstoreClient, err := secrets.NewSecretStoreClient(clientConfig, c.loggingClient, c.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SecretStoreClient: %v", err)
+	}
+
+	c.loggingClient.Info("SecretStoreClient created")
+
+	return secretstoreClient, nil
+}
+
+func (c *cmd) getRegistryBaseURL() (string, error) {
+	baseURL := fmt.Sprintf("%s://%s:%d", c.configuration.StageGate.Registry.ACL.Protocol,
+		c.configuration.StageGate.Registry.Host, c.configuration.StageGate.Registry.Port)
+	_, err := url.Parse(baseURL)
+	if err != nil {
+		return "", err
+	}
+	return baseURL, nil
+}
+
+func (c *cmd) reSetupEdgeXAccessTokens() error {
+	// clean up the old tokens if any
+	baseURL, err := c.getRegistryBaseURL()
+	if err != nil {
+		return fmt.Errorf("failed to get base URL: %v", err)
+	}
+
+	bootstrapACLToken, err := c.reconstructBootstrapACLToken()
+	if err != nil {
+		return err
+	}
+
+	tokenCleaner, err := tokencleaner.NewTokenCleaner(baseURL,
+		c.configuration.StageGate.Registry.ACL.TokenBaseDir,
+		c.configuration.StageGate.Registry.ACL.TokenFileName,
+		c.loggingClient,
+		c.client)
+	if err != nil {
+		c.loggingClient.Warnf("found issue with creating a new instance of token cleaner, will skip: %v", err)
+	} else if tokenCleaner != nil {
+		if err := tokenCleaner.ScrubOldTokens(bootstrapACLToken.SecretID); err != nil {
+			c.loggingClient.Warnf("found issues while scrubbing the old tokens, will continue it: %v", err)
+		}
+
+		c.loggingClient.Info("token cleaner done with scrubbing old tokens")
+	}
+
+	secretstoreToken, err := c.getSecretStoreToken()
+	if err != nil {
+		return err
+	}
+
+	if err := c.setupEdgeXAccessTokens(secretstoreToken); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *cmd) setupEdgeXAccessTokens(secretstoreToken string) error {
+	secretstoreClient, err := c.getSecretStoreClient()
+	if err != nil {
+		return fmt.Errorf("cannot get SecretStoreClient for generateConsulToken: %v", err)
+	}
+
+	roleNames, err := c.getUniqueRoleNames()
+	if err != nil {
+		return fmt.Errorf("failed to get unique role names: %v", err)
+	}
+
+	for roleName := range roleNames {
+		consulToken, err := secretstoreClient.GenerateConsulToken(secretstoreToken, roleName)
+		if err != nil {
+			return fmt.Errorf("failed to generate consul token for service %s: %v", roleName, err)
+		}
+
+		if err := c.saveAccessToken(roleName, consulToken); err != nil {
+			return fmt.Errorf("failed to save consul token for service %s: %v", roleName, err)
+		}
+	}
+
+	c.loggingClient.Info("successfully set up EdgeX access tokens")
+
+	return nil
+}
+
+func (c *cmd) saveAccessToken(roleName, tokenToSave string) error {
+	path := filepath.Join(c.configuration.StageGate.Registry.ACL.TokenBaseDir, roleName,
+		c.configuration.StageGate.Registry.ACL.TokenFileName)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	if err := helper.CreateDirectoryIfNotExists(filepath.Dir(absPath)); err != nil {
+		return err
+	}
+
+	tokenFile, err := os.OpenFile(absPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = tokenFile.Close() }()
+
+	_, err = tokenFile.WriteString(tokenToSave)
+
+	if err != nil {
+		return fmt.Errorf("failed to save access token for service %s: %v", roleName, err)
+	}
+
+	c.loggingClient.Infof("successfully saved access token for service [%s]", roleName)
+
+	return nil
+}
+
 // reSetup calls when anything is running 2nd time or later, in order to re-set up the registry ACL
 func (c *cmd) reSetup() error {
 	// although we may have done setup ACL successfully already previous times,
@@ -190,6 +323,10 @@ func (c *cmd) reSetup() error {
 		return fmt.Errorf("on 2nd time or later, failed to re-set up roles: %v", err)
 	}
 
+	if err := c.reSetupEdgeXAccessTokens(); err != nil {
+		return fmt.Errorf("on 2nd time or later, failed to re-set up access tokens: %v", err)
+	}
+
 	return nil
 }
 
@@ -201,8 +338,7 @@ func (c *cmd) reSetupEdgeXACLTokenRoles() error {
 		return errors.New("bootstrapACLToken.SecretID is empty")
 	}
 
-	// retrieve the secretstore (Vault) token from the file produced by secretstore-setup
-	secretstoreToken, err := c.getSecretStoreTokenFromFile()
+	secretstoreToken, err := c.getSecretStoreToken()
 	if err != nil {
 		return fmt.Errorf("failed to retrieve secretstore token: %v", err)
 	}
@@ -524,28 +660,41 @@ func (c *cmd) getNonEmptyConsulLeader() error {
 	}
 }
 
-func (c *cmd) getSecretStoreTokenFromFile() (string, error) {
+func (c *cmd) getSecretStoreToken() (string, error) {
+	if len(c.secretstoreTokenCache) > 0 {
+		return c.secretstoreTokenCache, nil
+	}
+
+	if secretStoreToken, err := c.retrieveSecretStoreTokenFromFile(); err == nil {
+		c.secretstoreTokenCache = secretStoreToken
+		return secretStoreToken, nil
+	} else {
+		return share.EmptyToken, err
+	}
+}
+
+func (c *cmd) retrieveSecretStoreTokenFromFile() (string, error) {
 	trimmedFilePath := strings.TrimSpace(c.configuration.StageGate.Registry.ACL.SecretsAdminTokenPath)
 	if len(trimmedFilePath) == 0 {
-		return emptyToken, errors.New("required StageGate_Registry_ACL_SecretsAdminTokenPath from configuration is empty")
+		return share.EmptyToken, errors.New("required StageGate_Registry_ACL_SecretsAdminTokenPath from configuration is empty")
 	}
 
 	tokenFileAbsPath, err := filepath.Abs(trimmedFilePath)
 	if err != nil {
-		return emptyToken, fmt.Errorf("failed to convert tokenFile to absolute path %s: %v", trimmedFilePath, err)
+		return share.EmptyToken, fmt.Errorf("failed to convert tokenFile to absolute path %s: %v", trimmedFilePath, err)
 	}
 
 	// since the secretstore token is created by another service, secretstore-setup,
 	// so here we want to make sure we have the file
 	if exists := helper.CheckIfFileExists(tokenFileAbsPath); !exists {
-		return emptyToken, fmt.Errorf("secretstore token file %s not found", tokenFileAbsPath)
+		return share.EmptyToken, fmt.Errorf("secretstore token file %s not found", tokenFileAbsPath)
 	}
 
 	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
 	tokenLoader := authtokenloader.NewAuthTokenLoader(fileOpener)
 	secretStoreToken, err := tokenLoader.Load(tokenFileAbsPath)
 	if err != nil {
-		return emptyToken, fmt.Errorf("tokenLoader failed to load secretstore token: %v", err)
+		return share.EmptyToken, fmt.Errorf("tokenLoader failed to load secretstore token: %v", err)
 	}
 
 	c.loggingClient.Infof("successfully retrieved secretstore management token from %s", trimmedFilePath)

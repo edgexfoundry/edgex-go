@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 )
 
@@ -114,7 +115,7 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 		return nil, fmt.Errorf("failed to prepare create a new policy request for http URL: %w", err)
 	}
 
-	req.Header.Add(consulTokenHeader, tokenID)
+	req.Header.Add(share.ConsulTokenHeader, tokenID)
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -159,7 +160,7 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 		return nil, fmt.Errorf("Failed to prepare readPolicyByName request for http URL: %w", err)
 	}
 
-	req.Header.Add(consulTokenHeader, tokenID)
+	req.Header.Add(share.ConsulTokenHeader, tokenID)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send readPolicyByName request for http URL: %w", err)

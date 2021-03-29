@@ -69,6 +69,10 @@ type ACLInfo struct {
 	SecretsAdminTokenPath string
 	// filepath for the sentinel file to indicate the registry ACL is set up successfully
 	SentinelFilePath string
+	// output base directory for the consul tokens
+	TokenBaseDir string
+	// output token file name
+	TokenFileName string
 	// filepath to save the registry's token created for management purposes
 	ManagementTokenPath string
 	// the roles for registry role-based access control list

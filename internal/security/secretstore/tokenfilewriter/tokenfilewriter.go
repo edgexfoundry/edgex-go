@@ -136,6 +136,11 @@ path "` + secretsengine.ConsulSecretEngineMountPoint + `/roles/*" {
     capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# allow to create consul token based on role name
+path "` + secretsengine.ConsulSecretEngineMountPoint + `/creds/*" {
+    capabilities = ["read"]
+}
+
 `
 
 	if err := w.secretClient.InstallPolicy(rootToken,
