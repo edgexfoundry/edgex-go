@@ -25,6 +25,7 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,6 +168,69 @@ func TestAllIntervalActions(t *testing.T) {
 				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestIntervalActionByName(t *testing.T) {
+	action := dtos.ToIntervalActionModel(addIntervalActionRequestData().Action)
+	emptyName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("IntervalActionByName", action.Name).Return(action, nil)
+	dbClientMock.On("IntervalActionByName", notFoundName).Return(models.IntervalAction{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "intervalAction doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewIntervalActionController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		actionName         string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - find intervalAction by name", action.Name, false, http.StatusOK},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - intervalAction not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiIntervalActionByNameRoute, testCase.actionName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.actionName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.IntervalActionByName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.IntervalActionResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.actionName, res.Action.Name, "Name not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

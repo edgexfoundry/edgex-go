@@ -56,3 +56,17 @@ func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActio
 	}
 	return intervalActionDTOs, nil
 }
+
+// IntervalActionByName query the intervalAction by name
+func IntervalActionByName(name string, ctx context.Context, dic *di.Container) (dto dtos.IntervalAction, edgeXerr errors.EdgeX) {
+	if name == "" {
+		return dto, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	action, edgeXerr := dbClient.IntervalActionByName(name)
+	if edgeXerr != nil {
+		return dto, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	dto = dtos.FromIntervalActionModelToDTO(action)
+	return dto, nil
+}

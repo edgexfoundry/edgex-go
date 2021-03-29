@@ -765,6 +765,18 @@ func (c *Client) AllIntervalActions(offset int, limit int) (intervalActions []mo
 	return intervalActions, nil
 }
 
+// IntervalActionByName gets a intervalAction by name
+func (c *Client) IntervalActionByName(name string) (action model.IntervalAction, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	action, edgeXerr = intervalActionByName(conn, name)
+	if edgeXerr != nil {
+		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
