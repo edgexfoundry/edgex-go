@@ -777,6 +777,19 @@ func (c *Client) IntervalActionByName(name string) (action model.IntervalAction,
 	return
 }
 
+// DeleteIntervalActionByName deletes the intervalAction by name
+func (c *Client) DeleteIntervalActionByName(name string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteIntervalActionByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the intervalAction with name %s", name), edgeXerr)
+	}
+
+	return nil
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()

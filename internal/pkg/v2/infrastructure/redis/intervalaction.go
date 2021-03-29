@@ -99,3 +99,26 @@ func intervalActionByName(conn redis.Conn, name string) (action models.IntervalA
 	}
 	return
 }
+
+// sendDeleteIntervalActionCmd sends redis command for deleting intervalAction
+func sendDeleteIntervalActionCmd(conn redis.Conn, storedKey string, action models.IntervalAction) {
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, IntervalActionCollection, storedKey)
+	_ = conn.Send(HDEL, IntervalActionCollectionName, action.Name)
+}
+
+// deleteIntervalActionByName deletes the intervalAction by name
+func deleteIntervalActionByName(conn redis.Conn, name string) errors.EdgeX {
+	action, edgeXerr := intervalActionByName(conn, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	storedKey := intervalActionStoredKey(action.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteIntervalActionCmd(conn, storedKey, action)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction deletion failed", err)
+	}
+	return nil
+}

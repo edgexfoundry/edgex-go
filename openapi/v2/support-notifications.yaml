@@ -657,7 +657,7 @@ paths:
     delete:
       summary: "Deletes all notifications and the corresponding transmissions."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
@@ -686,7 +686,7 @@ paths:
     delete:
       summary: "Deletes notifications which have age and is less than the specified one, where the age of Notification is calculated by subtracting its last modification timestamp from the current timestamp. Note that the corresponding transmissions will also be deleted."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
@@ -834,7 +834,7 @@ paths:
     delete:
       summary: "Deletes the processed notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding transmissions will also be deleted.  Please notice that this API is only for processed notifications (status = PROCESSED). If the deletion purpose includes each kind of notifications, please refer to /cleanup API."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
@@ -1056,7 +1056,7 @@ paths:
     delete:
       summary: "Deletes a notification by ID and all of its associated transmissions."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
@@ -1607,7 +1607,7 @@ paths:
     delete:
       summary: "Deletes a subscription according to the given name."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
@@ -1690,7 +1690,7 @@ paths:
     delete:
       summary: "Deletes the processed transmissions if the current timestamp minus their last modification timestamp is less than the age parameter."
       responses:
-        '204':
+        '200':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
