@@ -42,7 +42,6 @@ var persistedEvent = models.Event{
 	Id:         testUUIDString,
 	DeviceName: testDeviceName,
 	SourceName: testSourceName,
-	Created:    testCreatedTime,
 	Origin:     testOriginTime,
 	Readings:   buildReadings(),
 }
@@ -53,8 +52,7 @@ func buildReadings() []models.Reading {
 	r1 := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks,
-			Origin:       testOriginTime,
+			Origin:       ticks,
 			DeviceName:   testDeviceName,
 			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
@@ -66,8 +64,7 @@ func buildReadings() []models.Reading {
 	r2 := models.BinaryReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks + 20,
-			Origin:       testOriginTime,
+			Origin:       ticks + 20,
 			DeviceName:   testDeviceName,
 			ResourceName: testDeviceResourceName,
 			ProfileName:  "FileDataProfile",
@@ -79,8 +76,7 @@ func buildReadings() []models.Reading {
 	r3 := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks + 30,
-			Origin:       testOriginTime,
+			Origin:       ticks + 30,
 			DeviceName:   testDeviceName,
 			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
@@ -92,8 +88,7 @@ func buildReadings() []models.Reading {
 	r4 := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks + 40,
-			Origin:       testOriginTime,
+			Origin:       ticks + 40,
 			DeviceName:   testDeviceName,
 			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
@@ -105,8 +100,7 @@ func buildReadings() []models.Reading {
 	r5 := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
-			Created:      ticks + 50,
-			Origin:       testOriginTime,
+			Origin:       ticks + 50,
 			DeviceName:   testDeviceName,
 			ResourceName: testDeviceResourceName,
 			ProfileName:  "TempProfile",
@@ -397,20 +391,20 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 func TestEventsByTimeRange(t *testing.T) {
 	event1 := persistedEvent
 	event2 := persistedEvent
-	event2.Created = event2.Created + 20
+	event2.Origin = event2.Origin + 20
 	event3 := persistedEvent
-	event3.Created = event3.Created + 30
+	event3.Origin = event3.Origin + 30
 	event4 := persistedEvent
-	event4.Created = event4.Created + 40
+	event4.Origin = event4.Origin + 40
 	event5 := persistedEvent
-	event5.Created = event5.Created + 50
+	event5.Origin = event5.Origin + 50
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("EventsByTimeRange", int(event1.Created), int(event5.Created), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 1, 2).Return([]models.Event{event3, event2}, nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Created), int(event4.Created), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
+	dbClientMock.On("EventsByTimeRange", int(event1.Origin), int(event5.Origin), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 1, 2).Return([]models.Event{event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -428,10 +422,10 @@ func TestEventsByTimeRange(t *testing.T) {
 		expectedCount      int
 		expectedStatusCode int
 	}{
-		{"Valid - all events", int(event1.Created), int(event5.Created), 0, 10, false, "", 5, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest", int(event2.Created), int(event4.Created), 0, 10, false, "", 3, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Created), int(event4.Created), 1, 2, false, "", 2, http.StatusOK},
-		{"Invalid - bounds out of range", int(event2.Created), int(event4.Created), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - all events", int(event1.Origin), int(event5.Origin), 0, 10, false, "", 5, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest", int(event2.Origin), int(event4.Origin), 0, 10, false, "", 3, http.StatusOK},
+		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Origin), int(event4.Origin), 1, 2, false, "", 2, http.StatusOK},
+		{"Invalid - bounds out of range", int(event2.Origin), int(event4.Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -67,7 +67,6 @@ var testAddEvent = requests.AddEventRequest{
 var persistedReading = models.SimpleReading{
 	BaseReading: models.BaseReading{
 		Id:           ExampleUUID,
-		Created:      TestCreatedTime,
 		Origin:       TestOriginTime,
 		DeviceName:   TestDeviceName,
 		ResourceName: TestDeviceResourceName,
@@ -81,7 +80,6 @@ var persistedEvent = models.Event{
 	Id:          expectedEventId,
 	DeviceName:  TestDeviceName,
 	ProfileName: TestDeviceProfileName,
-	Created:     TestCreatedTime,
 	Origin:      TestOriginTime,
 	Readings:    []models.Reading{persistedReading},
 }
