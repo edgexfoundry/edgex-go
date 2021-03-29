@@ -228,15 +228,29 @@ func readingsByTimeRange(conn redis.Conn, start int, end int, offset int, limit 
 
 func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	readings = make([]models.Reading, len(objects))
+	var alias struct {
+		ValueType string
+	}
 	for i, in := range objects {
-		// as V2 APi doesn't deal with BinaryReading at this moment, convert to SimpleReading here
-		// Shall update the logic here when working on BinaryReading in the future
-		sr := models.SimpleReading{}
-		err := json.Unmarshal(in, &sr)
+		err := json.Unmarshal(in, &alias)
 		if err != nil {
 			return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "reading format parsing failed from the database", err)
 		}
-		readings[i] = sr
+		if alias.ValueType == v2.ValueTypeBinary {
+			var binaryReading models.BinaryReading
+			err = json.Unmarshal(in, &binaryReading)
+			if err != nil {
+				return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "binary reading format parsing failed from the database", err)
+			}
+			readings[i] = binaryReading
+		} else {
+			var simpleReading models.SimpleReading
+			err = json.Unmarshal(in, &simpleReading)
+			if err != nil {
+				return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "simple reading format parsing failed from the database", err)
+			}
+			readings[i] = simpleReading
+		}
 	}
 	return readings, nil
 }
