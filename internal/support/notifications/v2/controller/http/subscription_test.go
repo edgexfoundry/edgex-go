@@ -33,7 +33,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -619,8 +618,7 @@ func TestPatchSubscription(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("SubscriptionById", *valid.Subscription.Id).Return(subscriptionModel, nil)
-	dbClientMock.On("DeleteSubscriptionByName", *valid.Subscription.Name).Return(nil)
-	dbClientMock.On("AddSubscription", mock.Anything).Return(subscriptionModel, nil)
+	dbClientMock.On("UpdateSubscription", subscriptionModel).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq

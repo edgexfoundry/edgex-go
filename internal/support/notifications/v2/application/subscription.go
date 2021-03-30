@@ -155,12 +155,7 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 
 	requests.ReplaceSubscriptionModelFieldsWithDTO(&subscription, dto)
 
-	edgexErr = dbClient.DeleteSubscriptionByName(subscription.Name)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
-	}
-
-	_, edgexErr = dbClient.AddSubscription(subscription)
+	edgexErr = dbClient.UpdateSubscription(subscription)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)
 	}
