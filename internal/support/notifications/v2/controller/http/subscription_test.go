@@ -569,7 +569,7 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 		subscriptionName   string
 		expectedStatusCode int
 	}{
-		{"Valid - delete subscription by name", subscription.Name, http.StatusNoContent},
+		{"Valid - delete subscription by name", subscription.Name, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, http.StatusBadRequest},
 		{"Invalid - subscription not found by name", notFoundName, http.StatusNotFound},
 	}
@@ -592,7 +592,7 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
-			if testCase.expectedStatusCode == http.StatusNoContent {
+			if testCase.expectedStatusCode == http.StatusOK {
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			} else {
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")

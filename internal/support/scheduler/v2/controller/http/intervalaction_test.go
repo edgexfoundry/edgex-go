@@ -236,3 +236,58 @@ func TestIntervalActionByName(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteIntervalActionByName(t *testing.T) {
+	action := dtos.ToIntervalActionModel(addIntervalActionRequestData().Action)
+	noName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteIntervalActionByName", action.Name).Return(nil)
+	dbClientMock.On("DeleteIntervalActionByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "intervalAction doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewIntervalActionController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		actionName         string
+		expectedStatusCode int
+	}{
+		{"Valid - intervalAction by name", action.Name, http.StatusOK},
+		{"Invalid - name parameter is empty", noName, http.StatusBadRequest},
+		{"Invalid - intervalAction not found by name", notFoundName, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiIntervalActionByNameRoute, testCase.actionName)
+			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.actionName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteIntervalActionByName)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.expectedStatusCode == http.StatusOK {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}

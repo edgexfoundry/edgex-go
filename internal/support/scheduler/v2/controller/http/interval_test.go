@@ -326,7 +326,7 @@ func TestDeleteIntervalByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			reqPath := fmt.Sprintf("%s/%s", v2.ApiIntervalByNameRoute, testCase.intervalName)
-			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.intervalName})
 			require.NoError(t, err)
 

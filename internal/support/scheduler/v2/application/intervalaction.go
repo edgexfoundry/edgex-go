@@ -70,3 +70,28 @@ func IntervalActionByName(name string, ctx context.Context, dic *di.Container) (
 	dto = dtos.FromIntervalActionModelToDTO(action)
 	return dto, nil
 }
+
+// DeleteIntervalActionByName delete the intervalAction by name
+func DeleteIntervalActionByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	if name == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+	}
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+
+	// TODO check scheduler queue
+	//inMemory, err := scClient.QueryIntervalActionByName(name)
+	//if err != nil {
+	//	return errors.NewErrIntervalNotFound(name)
+	//}
+	// TODO remove from the scheduler queue
+	//err = scClient.RemoveIntervalActionQueue(inMemory.ID)
+	//if err != nil {
+	//	return errors.NewErrDbNotFound()
+	//}
+
+	err := dbClient.DeleteIntervalActionByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

@@ -23,4 +23,5 @@ type DBClient interface {
 	AddIntervalAction(e model.IntervalAction) (model.IntervalAction, errors.EdgeX)
 	AllIntervalActions(offset int, limit int) ([]model.IntervalAction, errors.EdgeX)
 	IntervalActionByName(name string) (model.IntervalAction, errors.EdgeX)
+	DeleteIntervalActionByName(name string) errors.EdgeX
 }

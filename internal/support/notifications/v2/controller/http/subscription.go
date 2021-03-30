@@ -289,8 +289,8 @@ func (sc *SubscriptionController) DeleteSubscriptionByName(w http.ResponseWriter
 		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
 		statusCode = err.Code()
 	} else {
-		response = commonDTO.NewBaseResponse("", "", http.StatusNoContent)
-		statusCode = http.StatusNoContent
+		response = commonDTO.NewBaseResponse("", "", http.StatusOK)
+		statusCode = http.StatusOK
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
