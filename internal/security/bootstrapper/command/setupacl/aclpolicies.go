@@ -46,18 +46,18 @@ const (
 		policy = "write"
 	}
 	service "" {
-  		policy = "read"
+		policy = "write"
 	}
-	service_prefix "edgex" {
-  		policy = "write"
+	service_prefix "" {
+		policy = "write"
 	}
 	# allow key value store put
 	# once the default_policy is switched to "deny",
 	# this is needed if wants to allow updating Key/Value configuration
 	key "" {
-  		policy = "read"
+		policy = "write"
 	}
-	key_prefix "edgex" {
+	key_prefix "" {
 		policy = "write"
 	}
 	`

@@ -17,11 +17,13 @@ Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the Core Command Microservice'
 Timeout = 45000
+ConfigAccessTokenFile = '/tmp/edgex/secrets/edgex-core-command/consul-token'  #ignored in non-secure mode
 
 [Registry]
 Host = 'localhost'
 Port = 8500
 Type = 'consul'
+AccessTokenFile = '/tmp/edgex/secrets/edgex-core-command/consul-token'  #ignored in non-secure mode
 
 [Clients]
   [Clients.edgex-core-metadata]
