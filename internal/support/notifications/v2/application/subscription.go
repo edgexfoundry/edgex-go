@@ -155,6 +155,10 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 
 	requests.ReplaceSubscriptionModelFieldsWithDTO(&subscription, dto)
 
+	if len(subscription.Categories) == 0 && len(subscription.Labels) == 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription categories and labels can not be both empty", nil)
+	}
+
 	edgexErr = dbClient.UpdateSubscription(subscription)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)
