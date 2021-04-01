@@ -356,20 +356,20 @@ func TestPatchInterval(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	testReq := updateIntervalRequestData()
-	dsModels := models.Interval{
+	model := models.Interval{
 		Id:        *testReq.Interval.Id,
 		Name:      *testReq.Interval.Name,
 		Frequency: *testReq.Interval.Frequency,
 	}
 
 	valid := testReq
-	dbClientMock.On("IntervalById", *valid.Interval.Id).Return(dsModels, nil)
+	dbClientMock.On("IntervalById", *valid.Interval.Id).Return(model, nil)
 	dbClientMock.On("UpdateInterval", mock.Anything).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
 	validWithNoId.Interval.Id = nil
-	dbClientMock.On("IntervalByName", *validWithNoId.Interval.Name).Return(dsModels, nil)
+	dbClientMock.On("IntervalByName", *validWithNoId.Interval.Name).Return(model, nil)
 	validWithNoName := testReq
 	validWithNoName.Interval.Name = nil
 
@@ -393,14 +393,14 @@ func TestPatchInterval(t *testing.T) {
 	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
 	invalidNotFoundId.Interval.Id = &notFoundId
 	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
-	dbClientMock.On("IntervalById", *invalidNotFoundId.Interval.Id).Return(dsModels, notFoundIdError)
+	dbClientMock.On("IntervalById", *invalidNotFoundId.Interval.Id).Return(model, notFoundIdError)
 
 	invalidNotFoundName := testReq
 	invalidNotFoundName.Interval.Id = nil
 	notFoundName := "notFoundName"
 	invalidNotFoundName.Interval.Name = &notFoundName
 	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
-	dbClientMock.On("IntervalByName", *invalidNotFoundName.Interval.Name).Return(dsModels, notFoundNameError)
+	dbClientMock.On("IntervalByName", *invalidNotFoundName.Interval.Name).Return(model, notFoundNameError)
 
 	dic.Update(di.ServiceConstructorMap{
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -432,7 +432,7 @@ func TestPatchInterval(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(jsonData))
-			req, err := http.NewRequest(http.MethodPost, v2.ApiIntervalRoute, reader)
+			req, err := http.NewRequest(http.MethodPatch, v2.ApiIntervalRoute, reader)
 			require.NoError(t, err)
 
 			// Act

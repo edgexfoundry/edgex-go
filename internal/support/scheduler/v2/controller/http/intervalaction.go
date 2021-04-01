@@ -184,3 +184,51 @@ func (ic *IntervalActionController) DeleteIntervalActionByName(w http.ResponseWr
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (ic *IntervalActionController) PatchIntervalAction(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(ic.dic.Get)
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	reqDTOs, err := ic.reader.ReadUpdateIntervalActionRequest(r.Body)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse(
+			"",
+			err.Message(),
+			err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
+
+	var responses []interface{}
+	for _, dto := range reqDTOs {
+		var response interface{}
+		reqId := dto.RequestId
+		err := application.PatchIntervalAction(dto.Action, ctx, ic.dic)
+		if err != nil {
+			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"",
+				http.StatusOK)
+		}
+		responses = append(responses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.Encode(responses, w, lc)
+}

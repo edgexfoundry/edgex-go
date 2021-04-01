@@ -7,9 +7,11 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -93,5 +95,57 @@ func DeleteIntervalActionByName(name string, ctx context.Context, dic *di.Contai
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	return nil
+}
+
+// PatchIntervalAction executes the PATCH operation with the DTO to replace the old data
+func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	var action models.IntervalAction
+	var edgeXerr errors.EdgeX
+	if dto.Id != nil {
+		action, edgeXerr = dbClient.IntervalActionById(*dto.Id)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	} else {
+		action, edgeXerr = dbClient.IntervalActionByName(*dto.Name)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+	if dto.Name != nil && *dto.Name != action.Name {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("interval name '%s' not match the exsting '%s' ", *dto.Name, action.Name), nil)
+	}
+
+	// checks the interval existence by name
+	_, edgeXerr = dbClient.IntervalByName(*dto.IntervalName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	requests.ReplaceIntervalActionModelFieldsWithDTO(&action, dto)
+
+	//// TODO Validate the IntervalAction does not exist in the scheduler queue
+	//_, err = scClient.QueryIntervalActionByName(to.Name)
+	//if err == nil {
+	//	// it's found we need to really update it
+	//	err = scClient.UpdateIntervalActionQueue(to)
+	//	if err != nil {
+	//		return errors.NewErrIntervalActionNotFound(to.Name)
+	//	}
+	//}
+
+	edgeXerr = dbClient.UpdateIntervalAction(action)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	lc.Debugf(
+		"IntervalAction patched on DB successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	)
 	return nil
 }
