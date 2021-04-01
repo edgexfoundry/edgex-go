@@ -55,8 +55,9 @@ func (d Database) newDBClient(
 	case "redisdb":
 		return redis.NewClient(
 			db.Configuration{
-				Host: databaseInfo.Host,
-				Port: databaseInfo.Port,
+				Host:     databaseInfo.Host,
+				Port:     databaseInfo.Port,
+				Password: credentials.Password,
 			},
 			lc)
 	default:
