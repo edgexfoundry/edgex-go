@@ -68,7 +68,7 @@ components:
           type: object
           title: service
           description: "Map of service(key) and configuration(value)"
-      example: { "apiVersion":"v2", "requestId": "e6e8a2f4-eb14-4649-9e2b-175247911369","statusCode": 200, "message": "",
+      example: { "apiVersion":"v2","statusCode": 200,
                  "edgex-core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
       required:
         - config
@@ -290,7 +290,6 @@ components:
     500Example:
       value:
         apiVersion: "v2"
-        requestId: ""
         statusCode: 500
         message: "Internal Server Error"
 paths:
