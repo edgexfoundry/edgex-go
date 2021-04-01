@@ -214,6 +214,7 @@ apps:
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
       STAGEGATE_REGISTRY_ACL_SENTINELFILEPATH: $SNAP_DATA/consul/config/consul_acl_done
+      STAGEGATE_REGISTRY_ACL_TOKENBASEDIR: $SNAP_DATA/secrets
     daemon: oneshot
     plugs: [network]
   core-data:

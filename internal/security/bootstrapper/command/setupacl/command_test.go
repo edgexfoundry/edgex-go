@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -134,6 +135,7 @@ func TestExecute(t *testing.T) {
 				policyAlreadyExists:     true,
 				createNewPolicyOk:       true,
 				createRoleOk:            true,
+				consulCredsApiCallOk:    true,
 			}
 			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
@@ -142,6 +144,8 @@ func TestExecute(t *testing.T) {
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
 			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
+			conf.StageGate.Registry.ACL.TokenBaseDir = test.adminDir
+			conf.StageGate.Registry.ACL.TokenFileName = "consul-token"
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -165,6 +169,10 @@ func TestExecute(t *testing.T) {
 				if test.adminDir == "" {
 					// empty test dir case don't have the directory to clean up
 					_ = os.Remove(conf.StageGate.Registry.ACL.BootstrapTokenPath)
+					for roleName := range conf.StageGate.Registry.ACL.Roles {
+						curDir, _ := os.Getwd()
+						_ = os.Remove(filepath.Join(curDir, strings.ToLower(roleName)))
+					}
 				} else {
 					_ = os.RemoveAll(test.adminDir)
 				}
@@ -221,6 +229,7 @@ func TestMultipleExecuteCalls(t *testing.T) {
 				policyAlreadyExists:     true,
 				createNewPolicyOk:       true,
 				createRoleOk:            true,
+				consulCredsApiCallOk:    true,
 			}
 			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
@@ -229,6 +238,8 @@ func TestMultipleExecuteCalls(t *testing.T) {
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
 			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
+			conf.StageGate.Registry.ACL.TokenBaseDir = test.adminDir
+			conf.StageGate.Registry.ACL.TokenFileName = "test-consul-token"
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -253,6 +264,10 @@ func TestMultipleExecuteCalls(t *testing.T) {
 				if test.adminDir == "" {
 					// empty test dir case don't have the directory to clean up
 					_ = os.Remove(conf.StageGate.Registry.ACL.BootstrapTokenPath)
+					for roleName := range conf.StageGate.Registry.ACL.Roles {
+						curDir, _ := os.Getwd()
+						_ = os.Remove(filepath.Join(curDir, strings.ToLower(roleName)))
+					}
 				} else {
 					_ = os.RemoveAll(test.adminDir)
 				}
