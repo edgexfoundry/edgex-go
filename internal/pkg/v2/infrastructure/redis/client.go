@@ -790,6 +790,25 @@ func (c *Client) DeleteIntervalActionByName(name string) errors.EdgeX {
 	return nil
 }
 
+// IntervalActionById gets a intervalAction by id
+func (c *Client) IntervalActionById(id string) (action model.IntervalAction, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	action, edgeXerr = intervalActionById(conn, id)
+	if edgeXerr != nil {
+		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return
+}
+
+// UpdateIntervalAction updates a intervalAction
+func (c *Client) UpdateIntervalAction(action model.IntervalAction) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateIntervalAction(conn, action)
+}
+
 // AddSubscription adds a new subscription
 func (c *Client) AddSubscription(subscription model.Subscription) (model.Subscription, errors.EdgeX) {
 	conn := c.Pool.Get()
