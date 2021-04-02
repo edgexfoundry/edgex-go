@@ -31,6 +31,25 @@ func subscriptionStoredKey(id string) string {
 	return CreateKey(SubscriptionCollection, id)
 }
 
+// sendAddSubscriptionCmd sends redis command for adding subscription
+func sendAddSubscriptionCmd(conn redis.Conn, storedKey string, subscription models.Subscription) errors.EdgeX {
+	m, err := json.Marshal(subscription)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal subscription for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(ZADD, SubscriptionCollection, 0, storedKey)
+	_ = conn.Send(HSET, SubscriptionCollectionName, subscription.Name, storedKey)
+	for _, category := range subscription.Categories {
+		_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionCategory, string(category)), subscription.Modified, storedKey)
+	}
+	for _, label := range subscription.Labels {
+		_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionLabel, label), subscription.Modified, storedKey)
+	}
+	_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionReceiver, subscription.Receiver), subscription.Modified, storedKey)
+	return nil
+}
+
 // addSubscription adds a new subscription into DB
 func addSubscription(conn redis.Conn, subscription models.Subscription) (models.Subscription, errors.EdgeX) {
 	exists, edgeXerr := objectIdExists(conn, subscriptionStoredKey(subscription.Id))
@@ -53,24 +72,13 @@ func addSubscription(conn redis.Conn, subscription models.Subscription) (models.
 	}
 	subscription.Modified = ts
 
-	dsJSONBytes, err := json.Marshal(subscription)
-	if err != nil {
-		return subscription, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal subscription for Redis persistence", err)
-	}
-
-	redisKey := subscriptionStoredKey(subscription.Id)
+	storedKey := subscriptionStoredKey(subscription.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, redisKey, dsJSONBytes)
-	_ = conn.Send(ZADD, SubscriptionCollection, 0, redisKey)
-	_ = conn.Send(HSET, SubscriptionCollectionName, subscription.Name, redisKey)
-	for _, category := range subscription.Categories {
-		_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionCategory, string(category)), subscription.Modified, redisKey)
+	edgeXerr = sendAddSubscriptionCmd(conn, storedKey, subscription)
+	if edgeXerr != nil {
+		return subscription, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	for _, label := range subscription.Labels {
-		_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionLabel, label), subscription.Modified, redisKey)
-	}
-	_ = conn.Send(ZADD, CreateKey(SubscriptionCollectionReceiver, subscription.Receiver), subscription.Modified, redisKey)
-	_, err = conn.Do(EXEC)
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "subscription creation failed", err)
 	}
@@ -210,6 +218,28 @@ func deleteSubscription(conn redis.Conn, subscription models.Subscription) error
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "subscription deletion failed", err)
+	}
+	return nil
+}
+
+// updateSubscription updates an subscription
+func updateSubscription(conn redis.Conn, subscription models.Subscription) errors.EdgeX {
+	oldSubscription, edgeXerr := subscriptionByName(conn, subscription.Name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	subscription.Modified = common.MakeTimestamp()
+	storedKey := intervalActionStoredKey(subscription.Id)
+
+	_ = conn.Send(MULTI)
+	sendDeleteSubscriptionCmd(conn, storedKey, oldSubscription)
+	edgeXerr = sendAddSubscriptionCmd(conn, storedKey, subscription)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "subscription update failed", err)
 	}
 	return nil
 }
