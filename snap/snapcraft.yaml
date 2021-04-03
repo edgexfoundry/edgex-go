@@ -217,6 +217,20 @@ apps:
       STAGEGATE_REGISTRY_ACL_TOKENBASEDIR: $SNAP_DATA/secrets
     daemon: oneshot
     plugs: [network]
+  # this is a long-running service/process to renew Vault's management token that is used to generate Consul tokens
+  # for EdgeX services
+  security-mgmt-token-renewer:
+    adapter: full
+    after:
+      - security-consul-bootstrapper
+    command: bin/renew_mgmt_token.sh
+    environment:
+      ENABLE_REGISTRY_ACL: "true"
+      SECRETSTORE_HOST: localhost
+      SECRETSTORE_PORT: 8200
+      STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
+    daemon: simple
+    plugs: [network, network-bind]
   core-data:
     adapter: full
     after:

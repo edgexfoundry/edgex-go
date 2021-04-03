@@ -48,7 +48,7 @@ fi
 
 # make sure the config file is present before redis server starts up
 if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
-  ehco "$(date) Error: conf file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
+  echo "$(date) Error: conf file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
   exit 1
 else
   # before using the generated config file we need to change the ownership to redis:redis

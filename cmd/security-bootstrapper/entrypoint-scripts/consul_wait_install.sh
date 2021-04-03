@@ -35,6 +35,50 @@ vault_ready()
   fi
 }
 
+# function to self-renew Consul secrets engine's Vault management token
+# the self-renew occurs after its TTL < 10% of its period
+renewToken()
+{
+    mgmt_token="$1"
+
+    lookup_url="http://${SECRETSTORE_HOST}:${SECRETSTORE_PORT}/v1/auth/token/lookup-self"
+    renew_url="http://${SECRETSTORE_HOST}:${SECRETSTORE_PORT}/v1/auth/token/renew-self"
+
+    # loop forever for token-renewal process
+    while true; do
+        echo "$(date) checking Vault management token's TTL with ${lookup_url} ..."
+        # self lookup token's period and remaining life (ttl)
+        response=$(curl -s -w "__STATUS_CODE__=%{http_code}" -H "Cache-Control: no-cache" \
+            -H "X-Vault-Token:${mgmt_token}" "${lookup_url}")
+        status_code="${response#*__STATUS_CODE__=}"
+        json_data="${response%__STATUS_CODE__=*}"
+        if [ "${status_code}" -eq 200 ]; then
+            # caluclate the amount of time to sleep before renew the token
+            # the self-renew will occur when its TTL < 10% of its period
+            wait_time=$(echo "${json_data}" | jq -r '.data.ttl-.data.period/10')
+            if [ "${wait_time}" -gt 0 ]; then
+                echo "$(date) management token will be renewed after ${wait_time} seconds"
+                sleep "${wait_time}"
+            else
+                # alredy below the threshold: no wait, just renew it if hasn't expired yet
+                echo "$(date) management token's TTL is lower than 10%"
+            fi
+            echo "$(date) try to renew management token with ${renew_url}:"
+            renew_status_code=$(curl -X POST -s -o /dev/null -w "%{http_code}" -H "X-Vault-Token:${mgmt_token}" "${renew_url}")
+            if [ "${renew_status_code}" -eq 200 ]; then
+              echo "$(date)   successfully renewed management token"
+            else
+              echo "$(date)   ERROR: unable to renew management token, status code = ${renew_status_code}"
+            fi
+        else
+            echo "$(date) ERROR: failed to lookup-self for management token due to token already expired or insufficient permission, cannot renew it. Please re-generate a new management token."
+            return 1
+        fi
+    done
+
+    echo "$(date) renewToken process done"
+}
+
 # env settings are populated from env files of docker-compose
 
 echo "Script for waiting security bootstrapping on Consul"
@@ -91,7 +135,22 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
   setupACL_code=$?
   if [ "${setupACL_code}" -ne 0 ]; then
     echo "$(date) failed to set up Consul ACL"
+  else
+    # kick off the token renewal process
+    echo "$(date) launching vault management token renewal process:"
+    if [ -f "${STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH}" ]; then
+      mgmt_token=$(jq -r '.auth.client_token' "${STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH}")
+      parsing_token_ret_code=$?
+      if [ "${parsing_token_ret_code}" -eq 0 ]; then
+        renewToken "${mgmt_token}" &
+      else
+        "$(date) ERROR: cannot parse token from file ${STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH}, unexpected JSON schema"
+      fi
+    else
+      echo "$(date) ERROR: token file ${STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH} does not exist, cannot renew token"
+    fi
   fi
+
   set -e
   # no need to wait for Consul's port since it is in ready state after all ACL stuff
 else

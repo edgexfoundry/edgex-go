@@ -52,3 +52,5 @@ until [ -n "$(curl -s $CONSUL_URL | jq -r '. | length')" ] &&
     [ "$(curl -s $CONSUL_URL | jq -r '. | length')" -gt "0" ] ; do
     sleep 1
 done
+
+echo "Consul started successfully"
