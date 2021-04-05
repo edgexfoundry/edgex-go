@@ -41,6 +41,8 @@ LogLevel = 'INFO'
       # this section contains the list of registry roles for EdgeX services
       # the service keys are the role names
       [StageGate.Registry.ACL.Roles]
+        [StageGate.Registry.ACL.Roles.appservice-rules-engine]
+          Description = "role for application service of rules engine"
         [StageGate.Registry.ACL.Roles.edgex-core-data]
           Description = "role for coredata"
         [StageGate.Registry.ACL.Roles.edgex-core-metadata]
@@ -51,6 +53,8 @@ LogLevel = 'INFO'
           Description = "role for notifications"
         [StageGate.Registry.ACL.Roles.edgex-support-scheduler]
           Description = "role for scheduler"
+        [StageGate.Registry.ACL.Roles.edgex-sys-mgmt-agent]
+          Description = "role for system management agent"
           
   [StageGate.KongDb]
     Host = "kong-db"
