@@ -56,7 +56,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 		cancel,
 		f,
 		securitySecretsConfigServiceKey,
-		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
+		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,
 		dic,

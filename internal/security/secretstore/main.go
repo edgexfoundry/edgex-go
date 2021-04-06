@@ -73,7 +73,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		cancel,
 		f,
 		clients.SecuritySecretStoreSetupServiceKey,
-		internal.ConfigStemSecurity+internal.ConfigMajorVersion,
+		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,
 		dic,

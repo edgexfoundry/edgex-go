@@ -64,7 +64,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		cancel,
 		f,
 		clients.CoreCommandServiceKey,
-		internal.ConfigStemCore+internal.ConfigMajorVersion,
+		internal.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,

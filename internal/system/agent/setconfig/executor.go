@@ -16,11 +16,13 @@ package setconfig
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-configuration/v2/configuration"
 	"github.com/edgexfoundry/go-mod-configuration/v2/pkg/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -65,7 +67,7 @@ func (e executor) Do(service string, sc requests.SetConfigRequest) responses.Set
 			Host:     e.configuration.Registry.Host,
 			Port:     e.configuration.Registry.Port,
 			Type:     e.configuration.Registry.Type,
-			BasePath: internal.ConfigStemCore + internal.ConfigMajorVersion + service,
+			BasePath: filepath.Join(internal.ConfigStemCore, bootstrapConfig.ConfigVersion, service),
 		})
 	if err != nil {
 		return createErrorResponse("unable to create new registry client")
