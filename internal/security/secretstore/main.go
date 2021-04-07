@@ -77,6 +77,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<
 		configuration,
 		startupTimer,
 		dic,
+		false,
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
 		},

@@ -66,6 +66,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		configuration,
 		startupTimer,
 		dic,
+		// would need to change to true and add secretstore config in future once we have Consul access tightened up
+		// and thus required access token
+		false,
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(router).BootstrapHandler,
 			httpServer.BootstrapHandler,

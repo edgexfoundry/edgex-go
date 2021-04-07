@@ -18,13 +18,11 @@ Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the EdgeX Core Metadata Microservice'
 Timeout = 5000
-ConfigAccessTokenFile = '/tmp/edgex/secrets/edgex-core-metadata/consul-token'  #ignored in non-secure mode
 
 [Registry]
 Host = 'localhost'
 Port = 8500
 Type = 'consul'
-AccessTokenFile = '/tmp/edgex/secrets/edgex-core-metadata/consul-token'  #ignored in non-secure mode
 
 [Clients]
   [Clients.edgex-support-notifications]

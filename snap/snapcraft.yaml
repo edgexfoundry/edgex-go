@@ -221,7 +221,7 @@ apps:
     adapter: full
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
@@ -229,8 +229,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-data/secrets-token.json
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-data/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-data/consul-token
     daemon: simple
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
@@ -241,7 +239,7 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
@@ -249,8 +247,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-metadata/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-metadata/consul-token
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -258,7 +254,7 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
@@ -266,8 +262,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-command/secrets-token.json
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-command/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-core-command/consul-token
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -275,7 +269,7 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
@@ -283,8 +277,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-notifications/secrets-token.json
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-support-notifications/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-support-notifications/consul-token
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -292,7 +284,7 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
@@ -300,8 +292,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-support-scheduler/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-support-scheduler/consul-token
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -309,7 +299,7 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
@@ -317,8 +307,6 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-sys-mgmt-agent/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/edgex-sys-mgmt-agent/consul-token
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
@@ -336,7 +324,7 @@ apps:
   app-service-configurable:
     adapter: full
     after:
-      # have consul token generated first for this service
+      # have consul role generated first for this service
       - security-consul-bootstrapper
     command: >-
       bin/app-service-configurable -cp -r -s
@@ -346,8 +334,6 @@ apps:
     environment:
       BINDING_PUBLISHTOPIC: events
       EDGEX_SECURITY_SECRET_STORE: "false"
-      SERVICE_CONFIGACCESSTOKENFILE: $SNAP_DATA/secrets/appservice-rules-engine/consul-token
-      REGISTRY_ACCESSTOKENFILE: $SNAP_DATA/secrets/appservice-rules-engine/consul-token
     plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
