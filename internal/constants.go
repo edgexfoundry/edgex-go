@@ -20,7 +20,6 @@ const (
 	ConfigFileName            = "configuration.toml"
 	ConfigStemCore            = "edgex/core/"
 	ConfigStemSecurity        = "edgex/security/"
-	ConfigMajorVersion        = "1.0/"
 	LogDurationKey            = "duration"
 )
 
