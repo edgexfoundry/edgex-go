@@ -121,7 +121,7 @@ func TestAddDeviceService(t *testing.T) {
 		{
 			"Request with duplicate service name",
 			true,
-			buildTestDBClient(dsModels[0], errors.KindDuplicateName, ""),
+			buildTestDBClient(dsModels[0], errors.KindDuplicateName, "duplicate service name error"),
 			[]requests.AddDeviceServiceRequest{validReq},
 			http.StatusConflict,
 		},
