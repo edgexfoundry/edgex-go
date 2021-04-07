@@ -777,6 +777,19 @@ func (c *Client) IntervalActionByName(name string) (action model.IntervalAction,
 	return
 }
 
+// IntervalActionsByIntervalName query intervalActions by offset, limit and intervalName
+func (c *Client) IntervalActionsByIntervalName(offset int, limit int, intervalName string) (actions []model.IntervalAction, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	actions, edgeXerr = intervalActionsByIntervalName(conn, offset, limit, intervalName)
+	if edgeXerr != nil {
+		return actions, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query actions by offset %d, limit %d and intervalName %s", offset, limit, intervalName), edgeXerr)
+	}
+	return actions, nil
+}
+
 // DeleteIntervalActionByName deletes the intervalAction by name
 func (c *Client) DeleteIntervalActionByName(name string) errors.EdgeX {
 	conn := c.Pool.Get()

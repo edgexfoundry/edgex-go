@@ -194,6 +194,31 @@ func (_m *DBClient) IntervalActionByName(name string) (models.IntervalAction, er
 	return r0, r1
 }
 
+// IntervalActionsByIntervalName provides a mock function with given fields: offset, limit, IntervalName
+func (_m *DBClient) IntervalActionsByIntervalName(offset int, limit int, IntervalName string) ([]models.IntervalAction, errors.EdgeX) {
+	ret := _m.Called(offset, limit, IntervalName)
+
+	var r0 []models.IntervalAction
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.IntervalAction); ok {
+		r0 = rf(offset, limit, IntervalName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.IntervalAction)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, IntervalName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // IntervalById provides a mock function with given fields: id
 func (_m *DBClient) IntervalById(id string) (models.Interval, errors.EdgeX) {
 	ret := _m.Called(id)

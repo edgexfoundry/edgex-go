@@ -69,6 +69,8 @@ type IntervalActionInfo struct {
 	Target string
 	// Action target parameters
 	Parameters string
+	// Action target request body
+	RequestBody string
 	// Action target API path
 	Path string
 	// Associated Schedule for the Event

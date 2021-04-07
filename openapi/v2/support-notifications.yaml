@@ -95,10 +95,10 @@ components:
         - type: object
           properties:
             path:
-              description: "The HTTP path at the targeted host for fulfillment of the action."
+              description: "The HTTP path at the targeted host for fulfillment of the notification."
               type: string
-            queryParameters:
-              description: "Query parameters required by the action."
+            requestBody:
+              description: "The HTTP request body required by the notification."
               type: string
             httpMethod:
               description: "Indicates which Http verb should be used for the REST endpoint."

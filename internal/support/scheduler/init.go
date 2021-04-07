@@ -24,6 +24,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application/scheduler"
+	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/bootstrap/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -69,12 +72,35 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	ticker := time.NewTicker(time.Duration(configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
 	StartTicker(ticker, lc, configuration)
 
+	// V2 Scheduler
+	schedulerClient := scheduler.NewClient(lc, configuration)
+	dic.Update(di.ServiceConstructorMap{
+		v2SchedulerContainer.SchedulerClientInterfaceName: func(get di.Get) interface{} {
+			return schedulerClient
+		},
+	})
+
+	err = application.LoadIntervalToScheduler(dic)
+	if err != nil {
+		lc.Errorf("Failed to load interval to scheduler %v", err)
+		return false
+	}
+
+	err = application.LoadIntervalActionToScheduler(dic)
+	if err != nil {
+		lc.Errorf("Failed to load interval to scheduler %v", err)
+		return false
+	}
+
+	schedulerClient.StartTicker()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		<-ctx.Done()
 		StopTicker(ticker)
+		schedulerClient.StopTicker()
 	}()
 
 	return true

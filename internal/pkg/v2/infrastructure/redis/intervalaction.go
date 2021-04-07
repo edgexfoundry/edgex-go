@@ -20,8 +20,9 @@ import (
 )
 
 const (
-	IntervalActionCollection     = "ss|ia"
-	IntervalActionCollectionName = IntervalActionCollection + DBKeySeparator + v2.Name
+	IntervalActionCollection             = "ss|ia"
+	IntervalActionCollectionName         = IntervalActionCollection + DBKeySeparator + v2.Name
+	IntervalActionCollectionIntervalName = IntervalActionCollection + DBKeySeparator + v2.Interval + DBKeySeparator + v2.Name
 )
 
 // intervalActionStoredKey return the intervalAction's stored key which combines the collection name and object id
@@ -38,6 +39,7 @@ func sendAddIntervalActionCmd(conn redis.Conn, storedKey string, action models.I
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, IntervalActionCollection, action.Modified, storedKey)
 	_ = conn.Send(HSET, IntervalActionCollectionName, action.Name, storedKey)
+	_ = conn.Send(ZADD, CreateKey(IntervalActionCollectionIntervalName, action.IntervalName), action.Modified, storedKey)
 	return nil
 }
 
@@ -114,6 +116,7 @@ func sendDeleteIntervalActionCmd(conn redis.Conn, storedKey string, action model
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, IntervalActionCollection, storedKey)
 	_ = conn.Send(HDEL, IntervalActionCollectionName, action.Name)
+	_ = conn.Send(ZREM, CreateKey(IntervalActionCollectionIntervalName, action.IntervalName), storedKey)
 }
 
 // deleteIntervalActionByName deletes the intervalAction by name
@@ -161,4 +164,27 @@ func updateIntervalAction(conn redis.Conn, action models.IntervalAction) errors.
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction update failed", err)
 	}
 	return nil
+}
+
+// intervalActionsByIntervalName query actions by offset, limit and intervalName
+func intervalActionsByIntervalName(conn redis.Conn, offset int, limit int, intervalName string) (actions []models.IntervalAction, edgeXerr errors.EdgeX) {
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
+	objects, err := getObjectsByRevRange(conn, CreateKey(IntervalActionCollectionIntervalName, intervalName), offset, end)
+	if err != nil {
+		return actions, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	actions = make([]models.IntervalAction, len(objects))
+	for i, in := range objects {
+		action := models.IntervalAction{}
+		err := json.Unmarshal(in, &action)
+		if err != nil {
+			return actions, errors.NewCommonEdgeX(errors.KindDatabaseError, "intervalAction format parsing failed from the database", err)
+		}
+		actions[i] = action
+	}
+	return actions, nil
 }
