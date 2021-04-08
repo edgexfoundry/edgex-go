@@ -135,7 +135,6 @@ func TestExecute(t *testing.T) {
 				policyAlreadyExists:     true,
 				createNewPolicyOk:       true,
 				createRoleOk:            true,
-				consulCredsApiCallOk:    true,
 			}
 			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
@@ -144,8 +143,6 @@ func TestExecute(t *testing.T) {
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
 			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
-			conf.StageGate.Registry.ACL.TokenBaseDir = test.adminDir
-			conf.StageGate.Registry.ACL.TokenFileName = "consul-token"
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)
@@ -229,7 +226,6 @@ func TestMultipleExecuteCalls(t *testing.T) {
 				policyAlreadyExists:     true,
 				createNewPolicyOk:       true,
 				createRoleOk:            true,
-				consulCredsApiCallOk:    true,
 			}
 			conf, testServer := test.prepare(testSrvOptions, t)
 			defer testServer.Close()
@@ -238,8 +234,6 @@ func TestMultipleExecuteCalls(t *testing.T) {
 			conf.StageGate.Registry.ACL.BootstrapTokenPath = filepath.Join(test.adminDir, "bootstrap_token.json")
 			conf.StageGate.Registry.ACL.SentinelFilePath = filepath.Join(test.adminDir, "sentinel_test_file")
 			conf.StageGate.Registry.ACL.ManagementTokenPath = filepath.Join(test.adminDir, "mgmt_token.json")
-			conf.StageGate.Registry.ACL.TokenBaseDir = test.adminDir
-			conf.StageGate.Registry.ACL.TokenFileName = "test-consul-token"
 
 			setupRegistryACL, err := NewCommand(ctx, wg, lc, conf, []string{})
 			require.NoError(t, err)

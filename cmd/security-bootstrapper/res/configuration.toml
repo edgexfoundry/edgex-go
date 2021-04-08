@@ -29,12 +29,6 @@ LogLevel = 'INFO'
       # this is the filepath for the sentinel file to indicate the registry ACL is set up successfully
       SentinelFilePath = "/edgex-init/consul-bootstrapper/consul_acl_done"
 
-      # this is the output base directory for generated consul tokens
-      # the token is actually put underneath each service key's subdirectory like "edgex-core-data/"
-      TokenBaseDir = "/tmp/edgex/secrets"
-      # the access token file name for all services
-      TokenFileName = "consul-token"
-
       # this is the filepath for the created Consul management token
       ManagementTokenPath = "/tmp/edgex/secrets/consul-acl-token/mgmt_token.json"
       
