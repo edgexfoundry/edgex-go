@@ -28,6 +28,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-configuration/v2/configuration"
 	"github.com/edgexfoundry/go-mod-configuration/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	requests "github.com/edgexfoundry/go-mod-core-contracts/v2/requests/configuration"
 	responses "github.com/edgexfoundry/go-mod-core-contracts/v2/responses/configuration"
@@ -65,7 +66,7 @@ func (e executor) Do(service string, sc requests.SetConfigRequest) responses.Set
 	e.loggingClient.Debug(fmt.Sprintf("value %s to use for config updated", sc.Value))
 
 	secretProvider := bootstrapContainer.SecretProviderFrom(e.dic.Get)
-	accessToken, err := secretProvider.GetAccessToken(e.configuration.Registry.Type, service)
+	accessToken, err := secretProvider.GetAccessToken(e.configuration.Registry.Type, clients.SystemManagementAgentServiceKey)
 	if err != nil {
 		return createErrorResponse(fmt.Errorf("failed to get Configuration Provider of type `%s` access token: %w",
 			e.configuration.Registry.Type, err).Error())
