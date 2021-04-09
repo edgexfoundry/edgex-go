@@ -60,6 +60,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 		configuration,
 		startupTimer,
 		dic,
+		false,
 		[]interfaces.BootstrapHandler{
 			serviceHandler.BootstrapHandler,
 		},

@@ -31,10 +31,12 @@ RUN make cmd/sys-mgmt-executor/sys-mgmt-executor
 # Get the Docker-in-Docker image layered-in now.
 FROM docker:20.10.0
 
-RUN apk add --no-cache bash
-
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell'
+      copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell, Copyright (c) 2021: Intel Corporation'
+
+# consul token needs to be security-bootstrappable and for security-bootstrappable, dumb-init is required
+RUN apk add --update --no-cache bash dumb-init py3-pip curl && \
+      pip install docker-compose==1.23.2
 
 ENV APP_PORT=48090
 #expose system mgmt agent port
@@ -46,10 +48,6 @@ COPY --from=builder /edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/con
 
 # Copy over the golang "executor" executable.
 COPY --from=builder /edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
-
-RUN apk --no-cache add py3-pip
-RUN pip install docker-compose==1.23.2
-RUN apk --no-cache add curl
 
 ENTRYPOINT ["/sys-mgmt-agent"]
 CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]

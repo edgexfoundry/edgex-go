@@ -64,18 +64,14 @@
       }
     }
   },
-  "edgex-application-service": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/appservice/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+  "app-rules-engine": {
+    "edgex_use_defaults": true
+  },
+  "device-virtual": {
+    "edgex_use_defaults": true
+  },
+  "device-rest": {
+    "edgex_use_defaults": true
   },
   "edgex-sys-mgmt-agent": {
     "edgex_use_defaults": true

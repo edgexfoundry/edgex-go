@@ -68,8 +68,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		configuration,
 		startupTimer,
 		dic,
+		true,
 		[]interfaces.BootstrapHandler{
-			handlers.SecureProviderBootstrapHandler,
 			database.NewDatabase(httpServer, configuration).BootstrapHandler,
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,

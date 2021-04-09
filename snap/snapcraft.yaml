@@ -221,6 +221,8 @@ apps:
     adapter: full
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
@@ -237,6 +239,8 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
@@ -250,6 +254,8 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
@@ -263,6 +269,8 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
@@ -276,6 +284,8 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
@@ -289,18 +299,23 @@ apps:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-sys-mgmt-agent/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
     adapter: none
     after:
       - security-bootstrap-redis
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
       - security-proxy-setup
       - core-data
       - core-metadata
@@ -308,9 +323,13 @@ apps:
     daemon: simple
     environment:
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/device-virtual/secrets-token.json
     plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
+    after:
+      # This generates the consul role for this service before the service starts
+      - security-consul-bootstrapper
     command: >-
       bin/app-service-configurable -cp -r -s
       -confdir $SNAP_DATA/config/app-service-configurable/res
@@ -318,7 +337,7 @@ apps:
     daemon: simple
     environment:
       BINDING_PUBLISHTOPIC: events
-      EDGEX_SECURITY_SECRET_STORE: "false"
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/app-rules-engine/secrets-token.json
     plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
