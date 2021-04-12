@@ -49,9 +49,6 @@ type serverOptions struct {
 	policyAlreadyExists     bool
 	createNewPolicyOk       bool
 	createRoleOk            bool
-	readTokenSelfOk         bool
-	deleteTokenOk           bool
-	consulCredsApiCallOk    bool
 }
 
 func newRegistryTestServer(respOpts serverOptions) *registryTestServer {
@@ -298,46 +295,6 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 			} else {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("Invalid Policy: A Policy with Name " + edgeXServicePolicyName + " already exists"))
-			}
-		case fmt.Sprintf("/v1/consul/creds/%s", pathBase):
-			require.Equal(t, http.MethodGet, r.Method)
-			if registry.serverOptions.consulCredsApiCallOk {
-				w.WriteHeader(http.StatusOK)
-				jsonResponse := map[string]interface{}{
-					"data": map[string]interface{}{
-						"token": "test-token",
-					},
-				}
-
-				err := json.NewEncoder(w).Encode(jsonResponse)
-				require.NoError(t, err)
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte("permission denied"))
-			}
-		case "/v1/acl/token/self":
-			require.Equal(t, http.MethodGet, r.Method)
-			if registry.serverOptions.readTokenSelfOk {
-				w.WriteHeader(http.StatusOK)
-				jsonResponse := map[string]interface{}{
-					"AccessorID": "xxxxxx",
-					"SecretID":   "test-token",
-				}
-
-				err := json.NewEncoder(w).Encode(jsonResponse)
-				require.NoError(t, err)
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte("permission denied"))
-			}
-		case "/v1/acl/token/test-token":
-			require.Equal(t, http.MethodDelete, r.Method)
-			if registry.serverOptions.deleteTokenOk {
-				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte("true"))
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-				_, _ = w.Write([]byte("permission denied"))
 			}
 		default:
 			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
