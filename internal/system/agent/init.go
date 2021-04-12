@@ -102,7 +102,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				logging)
 		},
 		container.SetConfigInterfaceName: func(get di.Get) interface{} {
-			return setconfig.New(setconfig.NewExecutor(bootstrapContainer.LoggingClientFrom(get), configuration))
+			return setconfig.New(setconfig.NewExecutor(bootstrapContainer.LoggingClientFrom(get), configuration, dic))
 		},
 	})
 

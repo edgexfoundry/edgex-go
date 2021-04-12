@@ -136,6 +136,7 @@ func addEvent(conn redis.Conn, e models.Event) (addedEvent models.Event, edgeXer
 		Id:          e.Id,
 		DeviceName:  e.DeviceName,
 		ProfileName: e.ProfileName,
+		SourceName:  e.SourceName,
 		Origin:      e.Origin,
 		Tags:        e.Tags,
 	}
