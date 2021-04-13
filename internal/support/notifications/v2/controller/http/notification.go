@@ -269,3 +269,30 @@ func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+func (nc *NotificationController) DeleteNotificationById(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	id := vars[v2.Id]
+
+	var response interface{}
+	var statusCode int
+
+	err := application.DeleteNotificationById(id, nc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		response = commonDTO.NewBaseResponse("", "", http.StatusOK)
+		statusCode = http.StatusOK
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

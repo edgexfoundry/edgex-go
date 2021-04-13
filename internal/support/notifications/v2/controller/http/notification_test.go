@@ -480,3 +480,58 @@ func TestNotificationsByTimeRange(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteNotificationById(t *testing.T) {
+	notification := dtos.ToNotificationModel(buildTestAddNotificationRequest().Notification)
+	noId := ""
+	notFoundId := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeleteNotificationById", notification.Id).Return(nil)
+	dbClientMock.On("DeleteNotificationById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewNotificationController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		notificationId     string
+		expectedStatusCode int
+	}{
+		{"Valid - delete notification by id", notification.Id, http.StatusOK},
+		{"Invalid - id parameter is empty", noId, http.StatusBadRequest},
+		{"Invalid - notification not found by id", notFoundId, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			reqPath := fmt.Sprintf("%s/%s", v2.ApiNotificationByIdRoute, testCase.notificationId)
+			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{v2.Id: testCase.notificationId})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteNotificationById)
+			handler.ServeHTTP(recorder, req)
+			var res common.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+			if testCase.expectedStatusCode == http.StatusOK {
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
