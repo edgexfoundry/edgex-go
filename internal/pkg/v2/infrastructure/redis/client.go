@@ -995,3 +995,16 @@ func (c *Client) NotificationsByTimeRange(start int, end int, offset int, limit 
 	}
 	return notifications, nil
 }
+
+// DeleteNotificationById deletes a notification by id
+func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	edgeXerr := deleteNotificationById(conn, id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete the notification with id %s", id), edgeXerr)
+	}
+
+	return nil
+}

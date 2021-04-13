@@ -147,3 +147,30 @@ func notificationsByTimeRange(conn redis.Conn, start int, end int, offset int, l
 	}
 	return convertObjectsToNotifications(objects)
 }
+
+// deleteNotificationById deletes the notification by id
+func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
+	notification, edgexErr := notificationById(conn, id)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	storedKey := notificationStoredKey(notification.Id)
+	_ = conn.Send(MULTI)
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, NotificationCollection, storedKey)
+	_ = conn.Send(ZREM, NotificationCollectionCreated, storedKey)
+	if len(notification.Category) > 0 {
+		_ = conn.Send(ZREM, CreateKey(NotificationCollectionCategory, notification.Category), storedKey)
+	}
+	for _, label := range notification.Labels {
+		_ = conn.Send(ZREM, CreateKey(NotificationCollectionLabel, label), storedKey)
+	}
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSender, notification.Sender), storedKey)
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSeverity, string(notification.Severity)), storedKey)
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionStatus, string(notification.Status)), storedKey)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification deletion failed", err)
+	}
+	return nil
+}

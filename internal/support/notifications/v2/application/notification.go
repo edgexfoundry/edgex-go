@@ -123,3 +123,16 @@ func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di
 	}
 	return notifications, nil
 }
+
+// DeleteNotificationById deletes the notification by id
+func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
+	if id == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	err := dbClient.DeleteNotificationById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
