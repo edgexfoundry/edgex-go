@@ -46,62 +46,62 @@ func TestReset(t *testing.T) {
 	lc := logger.NewMockClient()
 
 	// init reset
-	testContext := ScheduleContext{}
-	testContext.Reset(testInterval, lc)
+	executor := Executor{}
+	executor.Reset(testInterval, lc)
 
-	if testInterval.Name != testContext.Interval.Name {
-		t.Fatalf(TestUnexpectedMsgFormatStr, testContext.Interval.Name, testInterval.Name)
+	if testInterval.Name != executor.Interval.Name {
+		t.Fatalf(TestUnexpectedMsgFormatStr, executor.Interval.Name, testInterval.Name)
 	}
 
-	if testContext.MaxIterations != 1 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testContext.MaxIterations, 1)
+	if executor.MaxIterations != 1 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, executor.MaxIterations, 1)
 	}
 
 	// run times, current and max iteration
 	testInterval.RunOnce = false
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.MaxIterations != 0 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testContext.MaxIterations, 0)
+	if executor.MaxIterations != 0 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, executor.MaxIterations, 0)
 	}
 
-	if testContext.CurrentIterations != 0 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testContext.CurrentIterations, 0)
+	if executor.CurrentIterations != 0 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, executor.CurrentIterations, 0)
 	}
 
 	// start time
-	if testContext.StartTime == (time.Time{}) {
+	if executor.StartTime == (time.Time{}) {
 		t.Fatalf(TestUnexpectedMsg)
 	}
 
 	testInterval.Start = "20180101T010101"
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.StartTime.Year() != 2018 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testContext.StartTime.Year(), 2018)
+	if executor.StartTime.Year() != 2018 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, executor.StartTime.Year(), 2018)
 	}
 
 	// end time
-	if testContext.EndTime == (time.Time{}) {
+	if executor.EndTime == (time.Time{}) {
 		t.Error(TestUnexpectedMsg)
 	}
 
 	testInterval.End = "20170101T010101"
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.EndTime.Year() != 2017 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, testContext.EndTime.Year(), 2017)
+	if executor.EndTime.Year() != 2017 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForIntVal, executor.EndTime.Year(), 2017)
 	}
 
 	// frequency
-	if testContext.Frequency.Hours() != 24 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForFloatVal, testContext.Frequency.Hours(), 24.0)
+	if executor.Frequency.Hours() != 24 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForFloatVal, executor.Frequency.Hours(), 24.0)
 	}
 
 	testInterval.Frequency = "60s"
-	testContext.Reset(testInterval, lc)
-	if testContext.Frequency.Seconds() != 60 {
-		t.Fatalf(TestUnexpectedMsgFormatStrForFloatVal, testContext.Frequency.Seconds(), 60.0)
+	executor.Reset(testInterval, lc)
+	if executor.Frequency.Seconds() != 60 {
+		t.Fatalf(TestUnexpectedMsgFormatStrForFloatVal, executor.Frequency.Seconds(), 60.0)
 	}
 
 	// re-init time
@@ -109,33 +109,33 @@ func TestReset(t *testing.T) {
 	testInterval.End = ""
 	testInterval.RunOnce = true
 
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
 	// next time
-	if testContext.StartTime != testContext.NextTime {
+	if executor.StartTime != executor.NextTime {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	if testContext.NextTime.Unix() > time.Now().Unix() {
+	if executor.NextTime.Unix() > time.Now().Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
 	testInterval.RunOnce = false
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.StartTime.Unix() > testContext.NextTime.Unix() {
+	if executor.StartTime.Unix() > executor.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
 	testInterval.Start = "20180101T010101"
 	testInterval.Frequency = "24h"
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.StartTime.Unix() > testContext.NextTime.Unix() {
+	if executor.StartTime.Unix() > executor.NextTime.Unix() {
 		t.Error(TestUnexpectedMsg)
 	}
 
-	if testContext.NextTime.Unix() < time.Now().Unix() {
+	if executor.NextTime.Unix() < time.Now().Unix() {
 		t.Fatalf(TestUnexpectedMsg)
 	}
 
@@ -153,20 +153,20 @@ func TestIsComplete(t *testing.T) {
 	lc := logger.NewMockClient()
 
 	// init reset
-	testContext := ScheduleContext{}
-	testContext.Reset(testInterval, lc)
+	executor := Executor{}
+	executor.Reset(testInterval, lc)
 
-	if !testContext.IsComplete() {
-		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, testContext.IsComplete(), true)
+	if !executor.IsComplete() {
+		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, executor.IsComplete(), true)
 	}
 
 	testInterval.Start = "20180101T010101"
 	testInterval.Frequency = "24h"
 	testInterval.RunOnce = false
-	testContext.Reset(testInterval, lc)
+	executor.Reset(testInterval, lc)
 
-	if testContext.IsComplete() {
-		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, testContext.IsComplete(), false)
+	if executor.IsComplete() {
+		t.Fatalf(TestUnexpectedMsgFormatStrForBoolVal, executor.IsComplete(), false)
 	}
 }
 

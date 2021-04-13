@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
@@ -20,7 +21,6 @@ import (
 )
 
 const (
-	ContentTypeKey       = "Content-Type"
 	ContentTypeJsonValue = "application/json; charset=utf-8"
 	ContentLengthKey     = "Content-Length"
 )
@@ -93,7 +93,7 @@ func getHttpRequest(
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "create new request occurs error", err)
 	}
 
-	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
+	req.Header.Set(clients.ContentType, ContentTypeJsonValue)
 
 	if len(params) > 0 {
 		req.Header.Set(ContentLengthKey, strconv.Itoa(len(params)))

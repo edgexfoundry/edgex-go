@@ -11,10 +11,10 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
-// SchedulerClientInterfaceName contains the name of the interfaces.SchedulerClient implementation in the DIC.
-var SchedulerClientInterfaceName = di.TypeInstanceToName((*interfaces.SchedulerClient)(nil))
+// SchedulerManagerName contains the name of the interfaces.SchedulerManager implementation in the DIC.
+var SchedulerManagerName = di.TypeInstanceToName((*interfaces.SchedulerManager)(nil))
 
-// SchedulerClientFrom helper function queries the DIC and returns the interfaces.SchedulerClient implementation.
-func SchedulerClientFrom(get di.Get) interfaces.SchedulerClient {
-	return get(SchedulerClientInterfaceName).(interfaces.SchedulerClient)
+// SchedulerManagerFrom helper function queries the DIC and returns the interfaces.SchedulerManager implementation.
+func SchedulerManagerFrom(get di.Get) interfaces.SchedulerManager {
+	return get(SchedulerManagerName).(interfaces.SchedulerManager)
 }

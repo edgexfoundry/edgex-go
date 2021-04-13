@@ -60,13 +60,13 @@ func updateIntervalActionRequestData() requests.UpdateIntervalActionRequest {
 func TestAddIntervalAction(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	schedulerClientMock := &dbMock.SchedulerClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 
 	valid := addIntervalActionRequestData()
 	model := dtos.ToIntervalActionModel(valid.Action)
 	dbClientMock.On("IntervalByName", model.IntervalName).Return(models.Interval{}, nil)
 	dbClientMock.On("AddIntervalAction", model).Return(model, nil)
-	schedulerClientMock.On("AddIntervalAction", model).Return(nil)
+	schedulerManagerMock.On("AddIntervalAction", model).Return(nil)
 
 	noName := valid
 	noName.Action.Name = ""
@@ -82,8 +82,8 @@ func TestAddIntervalAction(t *testing.T) {
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerClientInterfaceName: func(get di.Get) interface{} {
-			return schedulerClientMock
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 	controller := NewIntervalActionController(dic)
@@ -270,16 +270,16 @@ func TestDeleteIntervalActionByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	schedulerClientMock := &dbMock.SchedulerClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 	dbClientMock.On("DeleteIntervalActionByName", action.Name).Return(nil)
-	schedulerClientMock.On("DeleteIntervalActionByName", action.Name).Return(nil)
+	schedulerManagerMock.On("DeleteIntervalActionByName", action.Name).Return(nil)
 	dbClientMock.On("DeleteIntervalActionByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "intervalAction doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerClientInterfaceName: func(get di.Get) interface{} {
-			return schedulerClientMock
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 
@@ -327,7 +327,7 @@ func TestPatchIntervalAction(t *testing.T) {
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	schedulerClientMock := &dbMock.SchedulerClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 	testReq := updateIntervalActionRequestData()
 	model := models.IntervalAction{
 		Id:           *testReq.Action.Id,
@@ -340,7 +340,7 @@ func TestPatchIntervalAction(t *testing.T) {
 	dbClientMock.On("IntervalActionById", *valid.Action.Id).Return(model, nil)
 	dbClientMock.On("IntervalByName", *valid.Action.IntervalName).Return(models.Interval{}, nil)
 	dbClientMock.On("UpdateIntervalAction", model).Return(nil)
-	schedulerClientMock.On("UpdateIntervalAction", model).Return(nil)
+	schedulerManagerMock.On("UpdateIntervalAction", model).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
@@ -388,8 +388,8 @@ func TestPatchIntervalAction(t *testing.T) {
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerClientInterfaceName: func(get di.Get) interface{} {
-			return schedulerClientMock
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 	controller := NewIntervalActionController(dic)

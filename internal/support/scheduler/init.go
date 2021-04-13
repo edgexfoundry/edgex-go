@@ -73,10 +73,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	StartTicker(ticker, lc, configuration)
 
 	// V2 Scheduler
-	schedulerClient := scheduler.NewClient(lc, configuration)
+	schedulerManager := scheduler.NewManager(lc, configuration)
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.SchedulerClientInterfaceName: func(get di.Get) interface{} {
-			return schedulerClient
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManager
 		},
 	})
 
@@ -92,7 +92,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		return false
 	}
 
-	schedulerClient.StartTicker()
+	schedulerManager.StartTicker()
 
 	wg.Add(1)
 	go func() {
@@ -100,7 +100,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 		<-ctx.Done()
 		StopTicker(ticker)
-		schedulerClient.StopTicker()
+		schedulerManager.StopTicker()
 	}()
 
 	return true

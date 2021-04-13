@@ -25,14 +25,14 @@ import (
 // and then invokes AddInterval function of infrastructure layer to add new Interval
 func AddInterval(interval models.Interval, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerClient := v2SchedulerContainer.SchedulerClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
 	addedInterval, err := dbClient.AddInterval(interval)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
-	err = schedulerClient.AddInterval(interval)
+	err = schedulerManager.AddInterval(interval)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -78,7 +78,7 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerClient := v2SchedulerContainer.SchedulerClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 
 	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, name)
 	if err != nil {
@@ -92,7 +92,7 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	err = schedulerClient.DeleteIntervalByName(name)
+	err = schedulerManager.DeleteIntervalByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -102,7 +102,7 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 // PatchInterval executes the PATCH operation with the DTO to replace the old data
 func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerClient := v2SchedulerContainer.SchedulerClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
 	var interval models.Interval
@@ -136,7 +136,7 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	edgeXerr = schedulerClient.UpdateInterval(interval)
+	edgeXerr = schedulerManager.UpdateInterval(interval)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -150,7 +150,7 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 
 func LoadIntervalToScheduler(dic *di.Container) errors.EdgeX {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerClient := v2SchedulerContainer.SchedulerClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	// Load intervals from config to DB
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 	for i := range configuration.Intervals {
@@ -178,7 +178,7 @@ func LoadIntervalToScheduler(dic *di.Container) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	for _, interval := range intervals {
-		err = schedulerClient.AddInterval(dtos.ToIntervalModel(interval))
+		err = schedulerManager.AddInterval(dtos.ToIntervalModel(interval))
 		if err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
 		}

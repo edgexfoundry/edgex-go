@@ -10,7 +10,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
-type SchedulerClient interface {
+type SchedulerManager interface {
 	StartTicker()
 	StopTicker()
 

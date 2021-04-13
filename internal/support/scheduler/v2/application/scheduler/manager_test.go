@@ -7,4 +7,4 @@ package scheduler
 
 import "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/infrastructure/interfaces"
 
-var _ interfaces.SchedulerClient = &Client{}
+var _ interfaces.SchedulerManager = &manager{}
