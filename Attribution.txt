@@ -41,9 +41,6 @@ https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
 mattn/go-xmpp (BSD-3) https://github.com/mattn/go-xmpp
 https://github.com/mattn/go-xmpp/blob/master/LICENSE
 
-BurntSushi/toml (MIT) https://github.com/BurntSushi/toml
-https://github.com/BurntSushi/toml/blob/master/COPYING
-
 mitchellh/consulstructure (MIT) https://github.com/mitchellh/consulstructure
 https://github.com/mitchellh/consulstructure/blob/master/LICENSE
 
