@@ -35,7 +35,7 @@ import (
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
 func TestPostCertExists(t *testing.T) {

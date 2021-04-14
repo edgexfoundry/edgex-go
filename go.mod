@@ -2,10 +2,9 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
-	github.com/BurntSushi/toml v0.3.1
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.32
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.34
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.5
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.64
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.8
@@ -17,6 +16,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.12
 	github.com/lib/pq v1.9.0
+	github.com/pelletier/go-toml v1.9.0
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
 	github.com/stretchr/testify v1.7.0
