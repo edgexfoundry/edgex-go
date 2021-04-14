@@ -121,9 +121,11 @@ func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic
 	}
 
 	// checks the interval existence by name
-	_, edgeXerr = dbClient.IntervalByName(*dto.IntervalName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	if dto.IntervalName != nil {
+		_, edgeXerr = dbClient.IntervalByName(*dto.IntervalName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
 	}
 
 	requests.ReplaceIntervalActionModelFieldsWithDTO(&action, dto)
