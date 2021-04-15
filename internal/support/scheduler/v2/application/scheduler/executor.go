@@ -6,9 +6,11 @@
 package scheduler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
@@ -29,8 +31,9 @@ type Executor struct {
 }
 
 // Initialize initialize the Executor with interval. This function should be invoked after adding or updating the interval.
-func (executor *Executor) Initialize(interval models.Interval, lc logger.LoggingClient) {
+func (executor *Executor) Initialize(interval models.Interval, lc logger.LoggingClient) errors.EdgeX {
 	executor.Interval = interval
+	currentTime := time.Now()
 
 	// run times, current and max iteration
 	if executor.Interval.RunOnce {
@@ -42,14 +45,14 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 
 	// start and end time
 	if executor.Interval.Start == "" {
-		executor.StartTime = time.Now()
+		executor.StartTime = currentTime
 	} else {
 		t, err := time.Parse(TIMELAYOUT, executor.Interval.Start)
 		if err != nil {
-			lc.Error("parse time error, the original time string is : " + executor.Interval.Start)
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the StartTime string %s", executor.Interval.End), err)
+		} else {
+			executor.StartTime = t
 		}
-
-		executor.StartTime = t
 	}
 
 	if executor.Interval.End == "" {
@@ -58,28 +61,30 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 	} else {
 		t, err := time.Parse(TIMELAYOUT, executor.Interval.End)
 		if err != nil {
-			lc.Error("parse time error, the original time string is : " + executor.Interval.End)
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the EndTime string %s", executor.Interval.End), err)
+		} else {
+			executor.EndTime = t
 		}
-
-		executor.EndTime = t
-	}
-
-	// frequency and next time
-	nowBenchmark := time.Now().Unix()
-	if !executor.Interval.RunOnce {
-		frequency, err := time.ParseDuration(executor.Interval.Frequency)
-		if err != nil {
-			lc.Error("interval parse frequency error  %v", err.Error())
-		}
-		executor.Frequency = frequency
 	}
 
 	executor.NextTime = executor.StartTime
-	if executor.StartTime.Unix() <= nowBenchmark && !executor.Interval.RunOnce {
+
+	// Parse frequency when RunOnce is false because we can use frequency or runOnce but not both
+	if !executor.Interval.RunOnce {
+		frequency, err := time.ParseDuration(executor.Interval.Frequency)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "interval parse frequency error", err)
+		} else {
+			executor.Frequency = frequency
+		}
+
+		// Increase the NextTime by interval frequency when StartTime small than the CurrentTime
+		nowBenchmark := currentTime.Unix()
 		for executor.NextTime.Unix() <= nowBenchmark {
 			executor.NextTime = executor.NextTime.Add(executor.Frequency)
 		}
 	}
+	return nil
 }
 
 func (executor *Executor) IsComplete() bool {

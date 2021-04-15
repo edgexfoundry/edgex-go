@@ -18,7 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
-	queueV1 "gopkg.in/eapache/queue.v1"
+	"gopkg.in/eapache/queue.v1"
 )
 
 type manager struct {
@@ -27,7 +27,7 @@ type manager struct {
 	config                *config.ConfigurationStruct
 	once                  sync.Once
 	mutex                 sync.Mutex
-	executorQueue         *queueV1.Queue
+	executorQueue         *queue.Queue
 	intervalToExecutorMap map[string]*Executor
 	actionToIntervalMap   map[string]string
 }
@@ -37,7 +37,7 @@ func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) int
 		ticker:                time.NewTicker(time.Duration(config.ScheduleIntervalTime) * time.Millisecond),
 		lc:                    lc,
 		config:                config,
-		executorQueue:         queueV1.New(),
+		executorQueue:         queue.New(),
 		intervalToExecutorMap: make(map[string]*Executor),
 		actionToIntervalMap:   make(map[string]string),
 	}
@@ -62,7 +62,7 @@ func (m *manager) triggerInterval() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			m.lc.Error("trigger interval error : " + err.(string))
+			m.lc.Errorf("trigger interval error : %v ", err)
 		}
 	}()
 
@@ -107,7 +107,7 @@ func (m *manager) execute(
 	defer wg.Done()
 	defer func() {
 		if err := recover(); err != nil {
-			m.lc.Error("interval execution error : %v", err)
+			m.lc.Errorf("interval execution error : %v", err)
 		}
 	}()
 
