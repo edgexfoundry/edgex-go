@@ -23,6 +23,7 @@ type manager struct {
 	ticker                *time.Ticker
 	lc                    logger.LoggingClient
 	config                *config.ConfigurationStruct
+	once                  sync.Once
 	mutex                 sync.Mutex
 	executorQueue         *queueV1.Queue
 	intervalToExecutorMap map[string]*Executor
@@ -41,11 +42,13 @@ func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) int
 }
 
 func (m *manager) StartTicker() {
-	go func() {
-		for range m.ticker.C {
-			m.triggerInterval()
-		}
-	}()
+	m.once.Do(func() {
+		go func() {
+			for range m.ticker.C {
+				m.triggerInterval()
+			}
+		}()
+	})
 }
 
 func (m *manager) StopTicker() {

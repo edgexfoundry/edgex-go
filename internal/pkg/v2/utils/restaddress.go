@@ -20,11 +20,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
-const (
-	ContentTypeJsonValue = "application/json; charset=utf-8"
-	ContentLengthKey     = "Content-Length"
-)
-
 // SendRequestWithAddress sends request or message according to Address type(REST, MQTT, EMAIL, ...)
 func SendRequestWithAddress(lc logger.LoggingClient, address models.Address) error {
 	switch address.GetBaseAddress().Type {
@@ -93,10 +88,13 @@ func getHttpRequest(
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "create new request occurs error", err)
 	}
 
-	req.Header.Set(clients.ContentType, ContentTypeJsonValue)
+	if address.ContentType == "" {
+		address.ContentType = clients.ContentTypeJSON
+	}
+	req.Header.Set(clients.ContentType, address.ContentType)
 
 	if len(params) > 0 {
-		req.Header.Set(ContentLengthKey, strconv.Itoa(len(params)))
+		req.Header.Set(clients.ContentLength, strconv.Itoa(len(params)))
 	}
 
 	return req, nil
