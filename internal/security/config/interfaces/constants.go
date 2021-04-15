@@ -15,4 +15,8 @@ const (
 	RS256 string = "RS256"
 	// ES256 JWT Alt ES256
 	ES256 string = "ES256"
+	// Authorization is the standard authorization header for http authentication
+	Authorization = "Authorization"
+	// Bearer is the standard spec. for using token authentication
+	Bearer = "Bearer "
 )

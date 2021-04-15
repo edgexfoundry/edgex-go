@@ -65,7 +65,6 @@ func (r *Resource) Remove(path string) error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 		r.loggingClient.Info(fmt.Sprintf("successful to delete %s at %s", r.name, path))
-		break
 	default:
 		e := fmt.Sprintf("failed to delete %s at %s with errocode %d.", r.name, path, resp.StatusCode)
 		r.loggingClient.Error(e)

@@ -9,9 +9,11 @@ package adduser
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"testing"
 
@@ -113,6 +115,9 @@ func TestAddUserJWT(t *testing.T) {
 		"--public_key", publicKey,
 		"--jwt", jwt,
 	})
+
+	defer func() { _ = os.Remove(jwtFile) }()
+
 	require.NoError(t, err)
 
 	// Execute command "addUser w/JWT"
@@ -185,6 +190,9 @@ func TestAddUserOAuth2(t *testing.T) {
 		"--redirect_uris", redirectUris,
 		"--jwt", jwt,
 	})
+
+	defer func() { _ = os.Remove(jwtFile) }()
+
 	require.NoError(t, err)
 
 	// Execute command "addUser w/JWT"
@@ -193,4 +201,11 @@ func TestAddUserOAuth2(t *testing.T) {
 	// Assert execution return
 	require.NoError(t, err)
 	require.Equal(t, interfaces.StatusCodeExitNormal, code)
+}
+
+func prepareJWTFile(t *testing.T, jwtData string) string {
+	jwtFile := "testJwtFile"
+	err := ioutil.WriteFile(jwtFile, []byte(jwtData), 0600)
+	require.NoError(t, err)
+	return jwtFile
 }

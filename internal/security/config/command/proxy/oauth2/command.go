@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
@@ -101,7 +102,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	}
 
 	// Add header values
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
 
 	// Execute the request

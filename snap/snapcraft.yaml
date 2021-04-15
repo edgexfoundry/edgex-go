@@ -176,11 +176,13 @@ apps:
     adapter: none
     after:
       - security-secretstore-setup
+      - security-consul-bootstrapper
       - kong-daemon
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     environment:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -344,6 +346,7 @@ apps:
     command: bin/security-proxy-setup
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
