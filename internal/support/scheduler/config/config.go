@@ -22,20 +22,20 @@ import (
 
 // Configuration V2 for the Support Scheduler Service
 type ConfigurationStruct struct {
-	Writable        WritableInfo
-	Clients         map[string]bootstrapConfig.ClientInfo
-	Databases       map[string]bootstrapConfig.Database
-	Registry        bootstrapConfig.RegistryInfo
-	Service         bootstrapConfig.ServiceInfo
-	Intervals       map[string]IntervalInfo
-	IntervalActions map[string]IntervalActionInfo
-	SecretStore     bootstrapConfig.SecretStoreInfo
+	Writable             WritableInfo
+	Clients              map[string]bootstrapConfig.ClientInfo
+	Databases            map[string]bootstrapConfig.Database
+	Registry             bootstrapConfig.RegistryInfo
+	Service              bootstrapConfig.ServiceInfo
+	Intervals            map[string]IntervalInfo
+	IntervalActions      map[string]IntervalActionInfo
+	SecretStore          bootstrapConfig.SecretStoreInfo
+	ScheduleIntervalTime int
 }
 
 type WritableInfo struct {
-	ScheduleIntervalTime int
-	LogLevel             string
-	InsecureSecrets      bootstrapConfig.InsecureSecrets
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 type IntervalInfo struct {

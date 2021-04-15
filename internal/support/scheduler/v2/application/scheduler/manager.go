@@ -6,7 +6,6 @@
 package scheduler
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -32,7 +31,7 @@ type manager struct {
 
 func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) interfaces.SchedulerManager {
 	return &manager{
-		ticker:                time.NewTicker(time.Duration(config.Writable.ScheduleIntervalTime) * time.Millisecond),
+		ticker:                time.NewTicker(time.Duration(config.ScheduleIntervalTime) * time.Millisecond),
 		lc:                    lc,
 		config:                config,
 		executorQueue:         queueV1.New(),
@@ -71,10 +70,13 @@ func (m *manager) triggerInterval() {
 	var wg sync.WaitGroup
 
 	for i := 0; i < m.executorQueue.Length(); i++ {
-		if m.executorQueue.Peek().(*Executor) != nil {
-			executor := m.executorQueue.Remove().(*Executor)
+		if m.executorQueue.Peek() != nil {
+			executor, ok := m.executorQueue.Remove().(*Executor)
+			if !ok {
+				m.lc.Error("the queue element is not a Executor")
+			}
 			if executor.MarkedDeleted {
-				m.lc.Debug("the interval with name : " + executor.Interval.Name + " be marked as deleted, removing it.")
+				m.lc.Debugf("the interval %s be marked as deleted, removing it.", executor.Interval.Name)
 				continue // really delete from the queue
 			} else {
 				if executor.NextTime.Unix() <= nowEpoch {
@@ -105,7 +107,7 @@ func (m *manager) execute(
 		}
 	}()
 
-	m.lc.Debug(fmt.Sprintf("%d action need to be executed with interval %s.", len(executor.IntervalActionsMap), executor.Interval.Name))
+	m.lc.Debugf("%d action need to be executed with interval %s.", len(executor.IntervalActionsMap), executor.Interval.Name)
 
 	// execute interval action one by one
 	for _, action := range executor.IntervalActionsMap {

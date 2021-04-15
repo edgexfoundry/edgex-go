@@ -57,7 +57,7 @@ func (m *manager) AddInterval(interval models.Interval) errors.EdgeX {
 	executor.Reset(interval, m.lc)
 	m.addInterval(interval, &executor)
 
-	m.lc.Info(fmt.Sprintf("added the interval with name : %s into the scheduler queue", interval.Name))
+	m.lc.Infof("added the interval with name : %s into the scheduler queue", interval.Name)
 	return nil
 }
 
@@ -72,14 +72,14 @@ func (m *manager) UpdateInterval(interval models.Interval) errors.EdgeX {
 	}
 	executor.Reset(interval, m.lc)
 
-	m.lc.Info(fmt.Sprintf("updated the interval with name: %s in the scheduler queue", interval.Name))
+	m.lc.Infof("updated the interval with name: %s in the scheduler queue", interval.Name)
 	return nil
 }
 
 func (m *manager) DeleteIntervalByName(intervalName string) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	m.lc.Debug(fmt.Sprintf("removing the interval with name: %s ", intervalName))
+	m.lc.Debugf("removing the interval with name: %s ", intervalName)
 
 	sc, exists := m.intervalToExecutorMap[intervalName]
 	if !exists {
@@ -88,7 +88,7 @@ func (m *manager) DeleteIntervalByName(intervalName string) errors.EdgeX {
 	}
 	m.deleteInterval(sc)
 
-	m.lc.Info(fmt.Sprintf("removed the interval with id: %s from the scheduler queue", intervalName))
+	m.lc.Infof("removed the interval with id: %s from the scheduler queue", intervalName)
 	return nil
 }
 
@@ -136,16 +136,16 @@ func (m *manager) AddIntervalAction(action models.IntervalAction) errors.EdgeX {
 
 	m.addIntervalAction(sc, action)
 
-	m.lc.Info(fmt.Sprintf("added the intervalAction with name: %s to interal: %s into the queue",
+	m.lc.Infof("added the intervalAction with name: %s to interal: %s into the queue",
 		action.Name,
-		action.IntervalName))
+		action.IntervalName)
 	return nil
 }
 
 func (m *manager) UpdateIntervalAction(action models.IntervalAction) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	m.lc.Debug(fmt.Sprintf("updating the intervalAction with name: %s ", action.Name))
+	m.lc.Debugf("updating the intervalAction with name: %s ", action.Name)
 
 	currentExecutor, exists := m.intervalToExecutorMap[action.IntervalName]
 	if !exists {
@@ -182,7 +182,7 @@ func (m *manager) UpdateIntervalAction(action models.IntervalAction) errors.Edge
 func (m *manager) DeleteIntervalActionByName(actionName string) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	m.lc.Debug("removing the action with name: %s", actionName)
+	m.lc.Debugf("removing the action with name: %s", actionName)
 
 	intervalName, exists := m.actionToIntervalMap[actionName]
 	if !exists {
@@ -199,6 +199,6 @@ func (m *manager) DeleteIntervalActionByName(actionName string) errors.EdgeX {
 	delete(sc.IntervalActionsMap, actionName)
 	delete(m.actionToIntervalMap, actionName)
 
-	m.lc.Info(fmt.Sprintf("removed the action with name: %s", actionName))
+	m.lc.Infof("removed the action with name: %s", actionName)
 	return nil
 }

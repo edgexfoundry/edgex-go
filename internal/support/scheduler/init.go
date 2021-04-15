@@ -69,7 +69,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		return false
 	}
 
-	ticker := time.NewTicker(time.Duration(configuration.Writable.ScheduleIntervalTime) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(configuration.ScheduleIntervalTime) * time.Millisecond)
 	StartTicker(ticker, lc, configuration)
 
 	// V2 Scheduler
