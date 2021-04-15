@@ -146,7 +146,8 @@ func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic
 	return nil
 }
 
-func LoadIntervalActionToScheduler(dic *di.Container) errors.EdgeX {
+// LoadIntervalActionToSchedulerManager loads intervalActions to SchedulerManager before running the interval job
+func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
 	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	// Load intervalActions from config to DB

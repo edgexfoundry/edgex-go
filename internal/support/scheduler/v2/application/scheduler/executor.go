@@ -28,7 +28,8 @@ type Executor struct {
 	MarkedDeleted      bool
 }
 
-func (executor *Executor) Reset(interval models.Interval, lc logger.LoggingClient) {
+// Initialize initialize the Executor with interval. This function should be invoked after adding or updating the interval.
+func (executor *Executor) Initialize(interval models.Interval, lc logger.LoggingClient) {
 	executor.Interval = interval
 
 	// run times, current and max iteration

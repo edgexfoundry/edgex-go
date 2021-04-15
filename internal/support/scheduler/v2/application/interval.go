@@ -148,7 +148,8 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 	return nil
 }
 
-func LoadIntervalToScheduler(dic *di.Container) errors.EdgeX {
+// LoadIntervalToSchedulerManager loads intervals to SchedulerManager before running the interval job
+func LoadIntervalToSchedulerManager(dic *di.Container) errors.EdgeX {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
 	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	// Load intervals from config to DB

@@ -54,7 +54,7 @@ func (m *manager) AddInterval(interval models.Interval) errors.EdgeX {
 		IntervalActionsMap: make(map[string]models.IntervalAction),
 		MarkedDeleted:      false,
 	}
-	executor.Reset(interval, m.lc)
+	executor.Initialize(interval, m.lc)
 	m.addInterval(interval, &executor)
 
 	m.lc.Infof("added the interval with name : %s into the scheduler queue", interval.Name)
@@ -70,7 +70,7 @@ func (m *manager) UpdateInterval(interval models.Interval) errors.EdgeX {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid,
 			fmt.Sprintf("the executor with name %s does not exist", interval.Name), nil)
 	}
-	executor.Reset(interval, m.lc)
+	executor.Initialize(interval, m.lc)
 
 	m.lc.Infof("updated the interval with name: %s in the scheduler queue", interval.Name)
 	return nil

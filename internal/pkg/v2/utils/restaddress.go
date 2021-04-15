@@ -16,26 +16,16 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
-// SendRequestWithAddress sends request or message according to Address type(REST, MQTT, EMAIL, ...)
-func SendRequestWithAddress(lc logger.LoggingClient, address models.Address) error {
-	switch address.GetBaseAddress().Type {
-	case v2.REST:
-		restAddress := address.(models.RESTAddress)
-		err := sendRESTRequest(lc, restAddress)
-		if err != nil {
-			return errors.NewCommonEdgeXWrapper(err)
-		}
-	default:
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "Unsupported address type", nil)
-	}
-	return nil
+var methods = map[string]struct{}{
+	http.MethodGet: {}, http.MethodHead: {}, http.MethodPost: {}, http.MethodPut: {}, http.MethodPatch: {},
+	http.MethodDelete: {}, http.MethodTrace: {}, http.MethodConnect: {},
 }
 
-func sendRESTRequest(lc logger.LoggingClient, address models.RESTAddress) errors.EdgeX {
+// SendRequestWithRESTAddress sends request with REST address
+func SendRequestWithRESTAddress(lc logger.LoggingClient, address models.RESTAddress) errors.EdgeX {
 	executingUrl := getUrlStr(address)
 
 	req, err := getHttpRequest(address.HTTPMethod, executingUrl, address)
@@ -58,10 +48,6 @@ func getUrlStr(address models.RESTAddress) string {
 }
 
 func validMethod(method string) bool {
-	var methods = map[string]struct{}{
-		http.MethodGet: {}, http.MethodHead: {}, http.MethodPost: {}, http.MethodPut: {}, http.MethodPatch: {},
-		http.MethodDelete: {}, http.MethodTrace: {}, http.MethodConnect: {},
-	}
 	_, contains := methods[strings.ToUpper(method)]
 	return contains
 }

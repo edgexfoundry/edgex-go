@@ -14,6 +14,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/infrastructure/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 
 	queueV1 "gopkg.in/eapache/queue.v1"
 )
@@ -73,7 +76,8 @@ func (m *manager) triggerInterval() {
 		if m.executorQueue.Peek() != nil {
 			executor, ok := m.executorQueue.Remove().(*Executor)
 			if !ok {
-				m.lc.Error("the queue element is not a Executor")
+				m.lc.Error("fail to cast the queue element to Executor")
+				continue
 			}
 			if executor.MarkedDeleted {
 				m.lc.Debugf("the interval %s be marked as deleted, removing it.", executor.Interval.Name)
@@ -103,7 +107,7 @@ func (m *manager) execute(
 	defer wg.Done()
 	defer func() {
 		if err := recover(); err != nil {
-			m.lc.Error("interval execution error : " + err.(string))
+			m.lc.Error("interval execution error : %v", err)
 		}
 	}()
 
@@ -111,15 +115,10 @@ func (m *manager) execute(
 
 	// execute interval action one by one
 	for _, action := range executor.IntervalActionsMap {
-		m.lc.Debugf(
-			"the action with name: %s belongs to interval: %s will be executing!", action.Name, executor.Interval.Name)
-
-		err := utils.SendRequestWithAddress(m.lc, action.Address)
-		if err != nil {
-			m.lc.Errorf("fail to execute the interval action, err: %v", err)
+		edgeXerr := m.executeAction(action)
+		if edgeXerr != nil {
+			m.lc.Errorf("fail to execute the interval action, err: %v", edgeXerr)
 		}
-
-		m.lc.Debugf("success to execute the action %s with interval %s", action.Name, executor.Interval.Name)
 	}
 
 	executor.UpdateNextTime()
@@ -133,4 +132,25 @@ func (m *manager) execute(
 	}
 
 	return
+}
+
+func (m *manager) executeAction(action models.IntervalAction) errors.EdgeX {
+	m.lc.Debugf("the action with name: %s belongs to interval: %s will be executing!", action.Name, action.IntervalName)
+
+	switch action.Address.GetBaseAddress().Type {
+	case v2.REST:
+		restAddress, ok := action.Address.(models.RESTAddress)
+		if !ok {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
+		}
+		err := utils.SendRequestWithRESTAddress(m.lc, restAddress)
+		if err != nil {
+			m.lc.Errorf("fail to send request with RESTAddress, err: %v", err)
+		}
+	default:
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "Unsupported address type", nil)
+	}
+
+	m.lc.Debugf("success to execute the action %s with interval %s", action.Name, action.IntervalName)
+	return nil
 }
