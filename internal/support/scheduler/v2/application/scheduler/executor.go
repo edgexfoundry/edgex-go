@@ -50,9 +50,8 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 		t, err := time.Parse(TIMELAYOUT, executor.Interval.Start)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the StartTime string %s", executor.Interval.End), err)
-		} else {
-			executor.StartTime = t
 		}
+		executor.StartTime = t
 	}
 
 	if executor.Interval.End == "" {
@@ -62,9 +61,8 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 		t, err := time.Parse(TIMELAYOUT, executor.Interval.End)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the EndTime string %s", executor.Interval.End), err)
-		} else {
-			executor.EndTime = t
 		}
+		executor.EndTime = t
 	}
 
 	executor.NextTime = executor.StartTime
@@ -74,11 +72,10 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 		frequency, err := time.ParseDuration(executor.Interval.Frequency)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, "interval parse frequency error", err)
-		} else {
-			executor.Frequency = frequency
 		}
+		executor.Frequency = frequency
 
-		// Increase the NextTime by interval frequency when StartTime small than the CurrentTime
+		// Increase the NextTime by interval frequency when NextTime small than the CurrentTime
 		nowBenchmark := currentTime.Unix()
 		for executor.NextTime.Unix() <= nowBenchmark {
 			executor.NextTime = executor.NextTime.Add(executor.Frequency)
@@ -87,16 +84,19 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 	return nil
 }
 
+// IsComplete checks whether the Executor is complete
 func (executor *Executor) IsComplete() bool {
 	return executor.isComplete(time.Now())
 }
 
+// UpdateIterations increase the CurrentIterations times if the Executor not complete
 func (executor *Executor) UpdateIterations() {
 	if !executor.IsComplete() {
 		executor.CurrentIterations += 1
 	}
 }
 
+// UpdateNextTime increase the NextTime by frequency if the Executor not complete
 func (executor *Executor) UpdateNextTime() {
 	if !executor.IsComplete() {
 		executor.NextTime = executor.NextTime.Add(executor.Frequency)
@@ -104,8 +104,8 @@ func (executor *Executor) UpdateNextTime() {
 }
 
 func (executor *Executor) isComplete(time time.Time) bool {
-	complete := (executor.StartTime.Unix() < time.Unix() && executor.Interval.RunOnce) ||
-		(executor.NextTime.Unix() > executor.EndTime.Unix()) ||
-		((executor.MaxIterations != 0) && (executor.CurrentIterations >= executor.MaxIterations))
-	return complete
+	ranOnce := executor.StartTime.Unix() < time.Unix() && executor.Interval.RunOnce
+	expired := executor.NextTime.Unix() > executor.EndTime.Unix()
+	iterationLimitReached := (executor.MaxIterations != 0) && (executor.CurrentIterations >= executor.MaxIterations)
+	return ranOnce || expired || iterationLimitReached
 }

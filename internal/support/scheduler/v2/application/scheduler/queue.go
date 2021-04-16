@@ -12,42 +12,19 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
-func (m *manager) addInterval(interval models.Interval, sc *Executor) {
-	m.intervalToExecutorMap[interval.Name] = sc
-	m.executorQueue.Add(sc)
+func (m *manager) addIntervalAction(e *Executor, action models.IntervalAction) {
+	e.IntervalActionsMap[action.Name] = action
+	m.actionToIntervalMap[action.Name] = e.Interval.Name
 }
 
-func (m *manager) deleteInterval(sc *Executor) {
-	delete(m.intervalToExecutorMap, sc.Interval.Name)
-	// Mark as Deleted and scheduler will remove it from the queue
-	sc.MarkedDeleted = true
-}
-
-func (m *manager) addIntervalAction(sc *Executor, action models.IntervalAction) {
-	sc.IntervalActionsMap[action.Name] = action
-	m.actionToIntervalMap[action.Name] = sc.Interval.Name
-}
-
-func (m *manager) IntervalByName(intervalName string) (models.Interval, errors.EdgeX) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	sc, exists := m.intervalToExecutorMap[intervalName]
-	if !exists {
-		return models.Interval{},
-			errors.NewCommonEdgeX(errors.KindContractInvalid,
-				fmt.Sprintf("the executor with name %s does not exist", intervalName), nil)
-	}
-	return sc.Interval, nil
-}
-
+// AddInterval adds a new interval executor to the SchedulerManager's job queue
 func (m *manager) AddInterval(interval models.Interval) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	if _, exists := m.intervalToExecutorMap[interval.Name]; exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name : %s already exists", interval.Name), nil)
+		return errors.NewCommonEdgeX(errors.KindStatusConflict,
+			fmt.Sprintf("the executor with interval name : %s already exists", interval.Name), nil)
 	}
 
 	executor := Executor{
@@ -58,95 +35,75 @@ func (m *manager) AddInterval(interval models.Interval) errors.EdgeX {
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	m.addInterval(interval, &executor)
 
-	m.lc.Infof("added the interval with name : %s into the scheduler queue", interval.Name)
+	m.intervalToExecutorMap[interval.Name] = &executor
+	m.executorQueue.Add(&executor)
+
+	m.lc.Infof("added interval %s executor into the scheduler queue", interval.Name)
 	return nil
 }
 
+// UpdateInterval updates interval executor to the SchedulerManager's job queue
 func (m *manager) UpdateInterval(interval models.Interval) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	executor, exists := m.intervalToExecutorMap[interval.Name]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name %s does not exist", interval.Name), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("the executor with interval name %s does not exist", interval.Name), nil)
 	}
 	err := executor.Initialize(interval, m.lc)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	m.lc.Infof("updated the interval with name: %s in the scheduler queue", interval.Name)
+	m.lc.Infof("updated the interval %s executor in the scheduler queue", interval.Name)
 	return nil
 }
 
+// DeleteIntervalByName deletes interval executor by intervalName
 func (m *manager) DeleteIntervalByName(intervalName string) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.lc.Debugf("removing the interval with name: %s ", intervalName)
 
-	sc, exists := m.intervalToExecutorMap[intervalName]
+	executor, exists := m.intervalToExecutorMap[intervalName]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name %s does not exist", intervalName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("the executor with interval name %s does not exist", intervalName), nil)
 	}
-	m.deleteInterval(sc)
 
-	m.lc.Infof("removed the interval with id: %s from the scheduler queue", intervalName)
+	delete(m.intervalToExecutorMap, executor.Interval.Name)
+	// Mark as Deleted and scheduler will remove it from the queue
+	executor.MarkedDeleted = true
+
+	m.lc.Infof("removed the interval %s executor from the scheduler queue", intervalName)
 	return nil
 }
 
-func (m *manager) IntervalActionByName(actionName string) (action models.IntervalAction, err errors.EdgeX) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	intervalName, exists := m.actionToIntervalMap[actionName]
-	if !exists {
-		return action,
-			errors.NewCommonEdgeX(errors.KindContractInvalid,
-				fmt.Sprintf("scheduler could not find interval name with interval action name : %s", actionName), nil)
-	}
-
-	sc, exists := m.intervalToExecutorMap[intervalName]
-	if !exists {
-		return action,
-			errors.NewCommonEdgeX(errors.KindContractInvalid,
-				fmt.Sprintf("the executor with name %s does not exist", intervalName), nil)
-	}
-
-	action, exists = sc.IntervalActionsMap[actionName]
-	if !exists {
-		return action,
-			errors.NewCommonEdgeX(errors.KindContractInvalid,
-				fmt.Sprintf("scheduler could not find interval action with interval action name : %s", actionName), nil)
-	}
-	return action, nil
-}
-
+// AddIntervalAction adds intervalAction to the specified executor
 func (m *manager) AddIntervalAction(action models.IntervalAction) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	if _, exists := m.actionToIntervalMap[action.Name]; exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
+		return errors.NewCommonEdgeX(errors.KindStatusConflict,
 			fmt.Sprintf("the action with name : %s already exists", action.Name), nil)
 	}
 	// Ensure we have an existing Interval
-	sc, exists := m.intervalToExecutorMap[action.IntervalName]
+	executor, exists := m.intervalToExecutorMap[action.IntervalName]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name %s does not exist", action.IntervalName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("the executor with interval name %s does not exist", action.IntervalName), nil)
 	}
 
-	m.addIntervalAction(sc, action)
+	m.addIntervalAction(executor, action)
 
-	m.lc.Infof("added the intervalAction with name: %s to interal: %s into the queue",
-		action.Name,
-		action.IntervalName)
+	m.lc.Infof("added the intervalAction %s to interval %s executor", action.Name, action.IntervalName)
 	return nil
 }
 
+// UpdateIntervalAction updates intervalAction to the specified executor
 func (m *manager) UpdateIntervalAction(action models.IntervalAction) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -154,14 +111,14 @@ func (m *manager) UpdateIntervalAction(action models.IntervalAction) errors.Edge
 
 	currentExecutor, exists := m.intervalToExecutorMap[action.IntervalName]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name %s does not exist", action.IntervalName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("the executor with interval name %s does not exist", action.IntervalName), nil)
 	}
 
 	// if the interval action switched interval
 	previousIntervalName, exists := m.actionToIntervalMap[action.Name]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
 			fmt.Sprintf("there is no mapping from interval action name : %s to interval", action.Name), nil)
 	}
 	interval := currentExecutor.Interval
@@ -180,10 +137,11 @@ func (m *manager) UpdateIntervalAction(action models.IntervalAction) errors.Edge
 		currentExecutor.IntervalActionsMap[action.Name] = action
 	}
 
-	m.lc.Infof("updated the intervalAction with name: %s to interval name:  %s", action.Name, interval.Name)
+	m.lc.Infof("updated the intervalAction %s to interval %s executor", action.Name, interval.Name)
 	return nil
 }
 
+// DeleteIntervalActionByName deletes the intervalAction by name
 func (m *manager) DeleteIntervalActionByName(actionName string) errors.EdgeX {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -191,17 +149,17 @@ func (m *manager) DeleteIntervalActionByName(actionName string) errors.EdgeX {
 
 	intervalName, exists := m.actionToIntervalMap[actionName]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
 			fmt.Sprintf("could not find interval name with action name : %s", actionName), nil)
 	}
 
-	sc, exists := m.intervalToExecutorMap[intervalName]
+	executor, exists := m.intervalToExecutorMap[intervalName]
 	if !exists {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid,
-			fmt.Sprintf("the executor with name %s does not exist", intervalName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("the executor with interval name %s does not exist", intervalName), nil)
 	}
 
-	delete(sc.IntervalActionsMap, actionName)
+	delete(executor.IntervalActionsMap, actionName)
 	delete(m.actionToIntervalMap, actionName)
 
 	m.lc.Infof("removed the action with name: %s", actionName)

@@ -379,6 +379,9 @@ components:
         port:
           description: "The port to address on the targeted host."
           type: integer
+        contentType:
+          description: "Indicates which request contentType should be used (i.e. text/html, application/json), the default is application/json"
+          type: string
       required:
         - type
         - host

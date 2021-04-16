@@ -22,14 +22,15 @@ import (
 
 // Configuration V2 for the Support Scheduler Service
 type ConfigurationStruct struct {
-	Writable             WritableInfo
-	Clients              map[string]bootstrapConfig.ClientInfo
-	Databases            map[string]bootstrapConfig.Database
-	Registry             bootstrapConfig.RegistryInfo
-	Service              bootstrapConfig.ServiceInfo
-	Intervals            map[string]IntervalInfo
-	IntervalActions      map[string]IntervalActionInfo
-	SecretStore          bootstrapConfig.SecretStoreInfo
+	Writable        WritableInfo
+	Clients         map[string]bootstrapConfig.ClientInfo
+	Databases       map[string]bootstrapConfig.Database
+	Registry        bootstrapConfig.RegistryInfo
+	Service         bootstrapConfig.ServiceInfo
+	Intervals       map[string]IntervalInfo
+	IntervalActions map[string]IntervalActionInfo
+	SecretStore     bootstrapConfig.SecretStoreInfo
+	// ScheduleIntervalTime is a time(Millisecond) to create a ticker to delay the scheduler loop
 	ScheduleIntervalTime int
 }
 

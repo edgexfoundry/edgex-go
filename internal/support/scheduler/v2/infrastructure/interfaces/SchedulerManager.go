@@ -14,12 +14,10 @@ type SchedulerManager interface {
 	StartTicker()
 	StopTicker()
 
-	IntervalByName(intervalName string) (models.Interval, errors.EdgeX)
 	AddInterval(interval models.Interval) errors.EdgeX
 	UpdateInterval(interval models.Interval) errors.EdgeX
 	DeleteIntervalByName(name string) errors.EdgeX
 
-	IntervalActionByName(name string) (models.IntervalAction, errors.EdgeX)
 	AddIntervalAction(intervalAction models.IntervalAction) errors.EdgeX
 	UpdateIntervalAction(intervalAction models.IntervalAction) errors.EdgeX
 	DeleteIntervalActionByName(name string) errors.EdgeX

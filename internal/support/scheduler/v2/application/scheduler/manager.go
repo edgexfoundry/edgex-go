@@ -32,6 +32,7 @@ type manager struct {
 	actionToIntervalMap   map[string]string
 }
 
+// NewManager creates a new scheduler manager for running the interval job
 func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) interfaces.SchedulerManager {
 	return &manager{
 		ticker:                time.NewTicker(time.Duration(config.ScheduleIntervalTime) * time.Millisecond),
@@ -43,6 +44,7 @@ func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) int
 	}
 }
 
+// StartTicker starts infinite loop with ticker to trigger the interval job
 func (m *manager) StartTicker() {
 	m.once.Do(func() {
 		go func() {
@@ -53,25 +55,18 @@ func (m *manager) StartTicker() {
 	})
 }
 
+// StopTicker stops to trigger the interval job by stopping the ticker
 func (m *manager) StopTicker() {
 	m.ticker.Stop()
 }
 
 func (m *manager) triggerInterval() {
-	nowEpoch := time.Now().Unix()
-
-	defer func() {
-		if err := recover(); err != nil {
-			m.lc.Errorf("trigger interval error : %v ", err)
-		}
-	}()
-
 	if m.executorQueue.Length() == 0 {
 		return
 	}
 
 	var wg sync.WaitGroup
-
+	nowEpoch := time.Now().Unix()
 	for i := 0; i < m.executorQueue.Length(); i++ {
 		if m.executorQueue.Peek() != nil {
 			executor, ok := m.executorQueue.Remove().(*Executor)
@@ -105,11 +100,6 @@ func (m *manager) execute(
 	executor *Executor,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
-	defer func() {
-		if err := recover(); err != nil {
-			m.lc.Errorf("interval execution error : %v", err)
-		}
-	}()
 
 	m.lc.Debugf("%d action need to be executed with interval %s.", len(executor.IntervalActionsMap), executor.Interval.Name)
 
