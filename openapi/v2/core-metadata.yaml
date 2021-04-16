@@ -399,6 +399,13 @@ components:
             type: string
       required:
         - name
+    DeviceResourceResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        resource:
+          $ref: '#/components/schemas/DeviceResource'
     DeviceResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -2053,7 +2060,7 @@ paths:
                   - description: "Generate random float32 value"
                     name: "Float32"
                     properties:
-                      type: "Float32"
+                      valueType: "Float32"
                       readWrite: "RW"
                       defaultValue: "0"
                 deviceCommands:
@@ -2292,6 +2299,78 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /deviceresource/profile/{profileName}/resource/{resourceName}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: profileName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device profile"
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device resource"
+    get:
+      summary: "Returns a device resource for the given profileName and resourceName."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResourceResponse'
+              example:
+                apiVersion: "v2"
+                statusCode: 200
+                resource:
+                  name: "float32-value"
+                  description: "random float32 value"
+                  properties:
+                    valueType: "Float32"
+                    readWrite: "R"
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "Internal Server Error"
           headers:

@@ -191,5 +191,8 @@ https://github.com/mattn/go-isatty/blob/master/LICENSE
 golang.org/x/sys (Unspecified) https://github.com/golang/sys
 https://github.com/golang/sys/blob/master/LICENSE
 
+golang.org/x/text (Unspecified) https://github.com/golang/text
+https://github.com/golang/text/blob/master/LICENSE
+
 github.com/gorilla/websocket (BSD-2) https://github.com/gorilla/websocket
 https://github.com/gorilla/websocket/blob/master/LICENSE
