@@ -40,6 +40,10 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2Constant.ApiDeviceProfileByManufacturerRoute, dc.DeviceProfilesByManufacturer).Methods(http.MethodGet)
 	r.HandleFunc(v2Constant.ApiDeviceProfileByManufacturerAndModelRoute, dc.DeviceProfilesByManufacturerAndModel).Methods(http.MethodGet)
 
+	// Device Resource
+	dr := metadataController.NewDeviceResourceController(dic)
+	r.HandleFunc(v2Constant.ApiDeviceResourceByProfileAndResourceRoute, dr.DeviceResourceByProfileNameAndResourceName).Methods(http.MethodGet)
+
 	// Device Service
 	ds := metadataController.NewDeviceServiceController(dic)
 	r.HandleFunc(v2Constant.ApiDeviceServiceRoute, ds.AddDeviceService).Methods(http.MethodPost)
