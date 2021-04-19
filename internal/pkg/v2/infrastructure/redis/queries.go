@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,12 +8,14 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 )
 
 func getObjectById(conn redis.Conn, id string, out interface{}) errors.EdgeX {
@@ -168,4 +170,37 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 	}
 
 	return uint32(count), nil
+}
+
+// unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
+func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	args := redis.Args{}
+	cacheSet := uuid.New().String()
+	args = append(args, cacheSet)
+	args = append(args, strconv.Itoa(len(redisKeys)))
+	for _, key := range redisKeys {
+		args = args.Add(key)
+	}
+	_, err := conn.Do("ZUNIONSTORE", args...)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute ZINTERSTORE command with args %v", args), err)
+	}
+	storeKeys, err := redis.Values(conn.Do("ZREVRANGE", cacheSet, 0, -1))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query storeKeys", err)
+	}
+	if len(storeKeys) == 0 {
+		return nil, nil
+	}
+	if end >= len(storeKeys) {
+		storeKeys = storeKeys[offset:]
+	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
+		storeKeys = storeKeys[offset : end+1]
+	}
+	objects, err := redis.ByteSlices(conn.Do("MGET", storeKeys...))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "query objects from database failed", err)
+	}
+
+	return objects, nil
 }
