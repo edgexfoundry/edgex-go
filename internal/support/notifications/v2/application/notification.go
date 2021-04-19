@@ -136,3 +136,24 @@ func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
 	}
 	return nil
 }
+
+// NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
+func NotificationsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+	if subscriptionName == "" {
+		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	subscription, err := dbClient.SubscriptionByName(subscriptionName)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+	notificationModels, err := dbClient.NotificationsByCategoriesAndLabels(offset, limit, subscription.Categories, subscription.Labels)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(err)
+	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, nil
+}

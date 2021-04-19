@@ -535,3 +535,77 @@ func TestDeleteNotificationById(t *testing.T) {
 		})
 	}
 }
+
+func TestNotificationsBySubscriptionName(t *testing.T) {
+	subscription := models.Subscription{
+		Name:       testSubscriptionName,
+		Categories: testSubscriptionCategories,
+		Labels:     testSubscriptionLabels,
+	}
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
+	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 20, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
+	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 1, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewNotificationController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		subscriptionName   string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - get notifications without offset, and limit", "", "", subscription.Name, false, http.StatusOK},
+		{"Valid - get notifications with offset, and limit", "0", "1", subscription.Name, false, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", subscription.Name, true, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", subscription.Name, true, http.StatusBadRequest},
+		{"Invalid - empty subscriptionName", "1", "0", "", true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiNotificationBySubscriptionNameRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{v2.Name: testCase.subscriptionName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.NotificationsBySubscriptionName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiNotificationsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}

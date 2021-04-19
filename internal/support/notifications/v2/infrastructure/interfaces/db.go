@@ -30,4 +30,5 @@ type DBClient interface {
 	NotificationsByStatus(offset, limit int, status string) ([]models.Notification, errors.EdgeX)
 	NotificationsByTimeRange(start int, end int, offset int, limit int) ([]models.Notification, errors.EdgeX)
 	DeleteNotificationById(id string) errors.EdgeX
+	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX)
 }
