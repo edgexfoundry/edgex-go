@@ -296,3 +296,42 @@ func (nc *NotificationController) DeleteNotificationById(w http.ResponseWriter, 
 	utils.WriteHttpHeader(w, ctx, statusCode)
 	pkg.Encode(response, w, lc)
 }
+
+// NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
+func (nc *NotificationController) NotificationsBySubscriptionName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	config := notificationContainer.ConfigurationFrom(nc.dic.Get)
+
+	vars := mux.Vars(r)
+	subscriptionName := vars[v2.Name]
+
+	var response interface{}
+	var statusCode int
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		statusCode = err.Code()
+	} else {
+		notifications, err := application.NotificationsBySubscriptionName(offset, limit, subscriptionName, nc.dic)
+		if err != nil {
+			if errors.Kind(err) != errors.KindEntityDoesNotExist {
+				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+			}
+			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
+			statusCode = err.Code()
+		} else {
+			response = responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+			statusCode = http.StatusOK
+		}
+	}
+
+	utils.WriteHttpHeader(w, ctx, statusCode)
+	pkg.Encode(response, w, lc)
+}

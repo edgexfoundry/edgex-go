@@ -996,6 +996,19 @@ func (c *Client) NotificationsByTimeRange(start int, end int, offset int, limit 
 	return notifications, nil
 }
 
+// NotificationsByCategoriesAndLabels queries notifications by offset, limit, categories and labels
+func (c *Client) NotificationsByCategoriesAndLabels(offset int, limit int, categories []string, labels []string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationsByCategoriesAndLabels(conn, offset, limit, categories, labels)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d, categories %v and labels %v", offset, limit, categories, labels), edgeXerr)
+	}
+	return notifications, nil
+}
+
 // DeleteNotificationById deletes a notification by id
 func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
 	conn := c.Pool.Get()
