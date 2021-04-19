@@ -412,7 +412,7 @@ components:
           description: "Indicates how many time resend has been attempted for the transmission."
           type: integer
         status:
-          description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, TRXESCALATED"
+          description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, ESCALATED"
           type: string
       required:
         - channel
@@ -424,7 +424,7 @@ components:
       type: object
       properties:
         status:
-          description: "Indicates the success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, TRXESCALATED"
+          description: "Indicates the success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, ESCALATED"
           type: string
         response:
           description: "Records any response received when attempting the transmission. An HTTP error or SMTP failure will be logged here."
