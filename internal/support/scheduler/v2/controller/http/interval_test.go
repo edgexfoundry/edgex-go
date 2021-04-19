@@ -32,7 +32,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -96,10 +95,12 @@ func TestAddInterval(t *testing.T) {
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 
 	valid := addIntervalRequestData()
 	model := dtos.ToIntervalModel(valid.Interval)
 	dbClientMock.On("AddInterval", model).Return(model, nil)
+	schedulerManagerMock.On("AddInterval", model).Return(nil)
 
 	noName := addIntervalRequestData()
 	noName.Interval.Name = ""
@@ -114,6 +115,9 @@ func TestAddInterval(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 	controller := NewIntervalController(dic)
@@ -303,11 +307,18 @@ func TestDeleteIntervalByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 	dbClientMock.On("DeleteIntervalByName", interval.Name).Return(nil)
+	dbClientMock.On("IntervalActionsByIntervalName", 0, 1, interval.Name).Return([]models.IntervalAction{}, nil)
 	dbClientMock.On("DeleteIntervalByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "interval doesn't exist in the database", nil))
+	dbClientMock.On("IntervalActionsByIntervalName", 0, 1, notFoundName).Return([]models.IntervalAction{}, nil)
+	schedulerManagerMock.On("DeleteIntervalByName", interval.Name).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 
@@ -355,6 +366,7 @@ func TestPatchInterval(t *testing.T) {
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	schedulerManagerMock := &dbMock.SchedulerManager{}
 	testReq := updateIntervalRequestData()
 	model := models.Interval{
 		Id:        *testReq.Interval.Id,
@@ -364,7 +376,9 @@ func TestPatchInterval(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("IntervalById", *valid.Interval.Id).Return(model, nil)
-	dbClientMock.On("UpdateInterval", mock.Anything).Return(nil)
+	dbClientMock.On("IntervalActionsByIntervalName", 0, 1, *valid.Interval.Name).Return([]models.IntervalAction{}, nil)
+	dbClientMock.On("UpdateInterval", model).Return(nil)
+	schedulerManagerMock.On("UpdateInterval", model).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
@@ -405,6 +419,9 @@ func TestPatchInterval(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManagerMock
 		},
 	})
 	controller := NewIntervalController(dic)

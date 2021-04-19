@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/bootstrap/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -24,13 +25,17 @@ import (
 // and then invokes AddInterval function of infrastructure layer to add new Interval
 func AddInterval(interval models.Interval, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
 	addedInterval, err := dbClient.AddInterval(interval)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
-
+	err = schedulerManager.AddInterval(interval)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
 	lc.Debugf("Interval created on DB successfully. Interval ID: %s, Correlation-ID: %s ",
 		addedInterval.Id,
 		correlation.FromContext(ctx))
@@ -73,20 +78,21 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 
-	// TODO Check the associated intervalAction existence
-	//actions, err := dbClient.IntervalActionsByIntervalName(0, 1, name)
-	//if err != nil {
-	//	return errors.NewCommonEdgeXWrapper(err)
-	//}
-	//if len(actions) > 0 {
-	//	return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the interval when associated intervalAction exists", nil)
-	//}
+	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(actions) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the interval when associated intervalAction exists", nil)
+	}
 
-	// TODO Remove interval from SchedulerQueue
-	//err = sqDeleter.RemoveIntervalInQueue(interval.ID)
-
-	err := dbClient.DeleteIntervalByName(name)
+	err = dbClient.DeleteIntervalByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = schedulerManager.DeleteIntervalByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -96,6 +102,7 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 // PatchInterval executes the PATCH operation with the DTO to replace the old data
 func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
 	var interval models.Interval
@@ -115,23 +122,21 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("interval name '%s' not match the exsting '%s' ", *dto.Name, interval.Name), nil)
 	}
 
-	// TODO Check if the interval still has attached interval actions
-	//stillInUse, err := op.isIntervalStillInUse(to)
-	//if err != nil {
-	//	return err
-	//}
-	//if stillInUse {
-	//	return errors.NewErrIntervalStillInUse(to.Name)
-	//}
-	// TODO Update the Scheduler Queue
-	//err = op.scClient.UpdateIntervalInQueue(op.interval)
-	//if err != nil {
-	//	return err
-	//}
+	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, interval.Name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(actions) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to patch the interval when associated intervalAction exists", nil)
+	}
 
 	requests.ReplaceIntervalModelFieldsWithDTO(&interval, dto)
 
 	edgeXerr = dbClient.UpdateInterval(interval)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	edgeXerr = schedulerManager.UpdateInterval(interval)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -140,5 +145,45 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 		"Interval patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
+	return nil
+}
+
+// LoadIntervalToSchedulerManager loads intervals to SchedulerManager before running the interval job
+func LoadIntervalToSchedulerManager(dic *di.Container) errors.EdgeX {
+	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
+	// Load intervals from config to DB
+	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
+	for i := range configuration.Intervals {
+		interval := models.Interval{
+			Name:      configuration.Intervals[i].Name,
+			Start:     configuration.Intervals[i].Start,
+			End:       configuration.Intervals[i].End,
+			Frequency: configuration.Intervals[i].Frequency,
+			RunOnce:   configuration.Intervals[i].RunOnce,
+		}
+		_, err := dbClient.IntervalByName(interval.Name)
+		if errors.Kind(err) == errors.KindEntityDoesNotExist {
+			_, err = dbClient.AddInterval(interval)
+			if err != nil {
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+		} else if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+
+	// Load intervals from DB to scheduler
+	intervals, err := AllIntervals(0, -1, dic)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	for _, interval := range intervals {
+		err = schedulerManager.AddInterval(dtos.ToIntervalModel(interval))
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+
 	return nil
 }

@@ -1,5 +1,6 @@
-[Writable]
 ScheduleIntervalTime = 500
+
+[Writable]
 LogLevel = 'INFO'
     [Writable.InsecureSecrets]
         [Writable.InsecureSecrets.DB]

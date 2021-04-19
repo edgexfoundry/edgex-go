@@ -30,12 +30,13 @@ type ConfigurationStruct struct {
 	Intervals       map[string]IntervalInfo
 	IntervalActions map[string]IntervalActionInfo
 	SecretStore     bootstrapConfig.SecretStoreInfo
+	// ScheduleIntervalTime is a time(Millisecond) to create a ticker to delay the scheduler loop
+	ScheduleIntervalTime int
 }
 
 type WritableInfo struct {
-	ScheduleIntervalTime int
-	LogLevel             string
-	InsecureSecrets      bootstrapConfig.InsecureSecrets
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 type IntervalInfo struct {
@@ -69,6 +70,8 @@ type IntervalActionInfo struct {
 	Target string
 	// Action target parameters
 	Parameters string
+	// Action target request body
+	RequestBody string
 	// Action target API path
 	Path string
 	// Associated Schedule for the Event

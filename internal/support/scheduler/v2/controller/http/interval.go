@@ -85,13 +85,6 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 				newId)
 		}
 		addResponses = append(addResponses, response)
-
-		// TODO Push the new interval into scheduler queue
-		//interval.ID = newId
-		//err = scClient.AddIntervalToQueue(interval)
-		//if err != nil {
-		//	return "", err
-		//}
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)

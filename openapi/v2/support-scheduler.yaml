@@ -379,6 +379,9 @@ components:
         port:
           description: "The port to address on the targeted host."
           type: integer
+        contentType:
+          description: "Indicates which request contentType should be used (i.e. text/html, application/json), the default is application/json"
+          type: string
       required:
         - type
         - host
@@ -392,8 +395,8 @@ components:
             path:
               description: "The HTTP path at the targeted host for fulfillment of the action."
               type: string
-            queryParameters:
-              description: "Query parameters required by the action."
+            requestBody:
+              description: "The HTTP request body required by the action."
               type: string
             httpMethod:
               description: "Indicates which Http verb should be used for the REST endpoint."

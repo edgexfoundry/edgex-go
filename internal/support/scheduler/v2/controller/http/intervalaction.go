@@ -85,9 +85,6 @@ func (ic *IntervalActionController) AddIntervalAction(w http.ResponseWriter, r *
 				newId)
 		}
 		addResponses = append(addResponses, response)
-
-		// TODO Add the new IntervalAction into scheduler queue
-		//err = scClient.AddIntervalActionToQueue(intervalAction)
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
