@@ -5,7 +5,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.38
-	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.6
+	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.71
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.10
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.4
