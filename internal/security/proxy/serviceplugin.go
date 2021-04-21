@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
@@ -78,7 +79,7 @@ func (s *Service) getServicePluginIDBy(serviceName, pluginName string) (string, 
 		return "", fmt.Errorf("failed to create get request for %s: %w", servicePluginURL, err)
 	}
 
-	req.Header.Add(Authorization, Bearer+s.bearerToken)
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -133,7 +134,7 @@ func (s *Service) deleteServicePlugin(serviceName, pluginID string) error {
 		return fmt.Errorf("failed to create delete request for %s: %w", deleteServicePluginURL, err)
 	}
 
-	req.Header.Add(Authorization, Bearer+s.bearerToken)
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -206,7 +207,7 @@ func (s *Service) createConsulTokenHeaderForServicePlugin(serviceName, pluginNam
 		return fmt.Errorf("failed to create POST request for %s: %w", servicePluginURL, err)
 	}
 
-	req.Header.Add(Authorization, Bearer+s.bearerToken)
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 	req.Header.Add(clients.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)

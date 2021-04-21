@@ -157,7 +157,6 @@ func (s *Service) Init() error {
 		// in order to add the consul token header for that service
 		// see details on https://docs.konghq.com/hub/kong-inc/request-transformer/#enabling-the-plugin-on-a-service
 		if serviceKey == edgeXCoreConsulServiceKey {
-			// s.enableRequestTransformerPlugin(&route)
 			s.loggingClient.Infof("try to enable service plugin for %s", edgeXCoreConsulServiceKey)
 			if err := s.addConsulTokenHeaderTo(&route); err != nil {
 				s.loggingClient.Errorf("failed to enable service plugin for %s: %v", edgeXCoreConsulServiceKey, err)
