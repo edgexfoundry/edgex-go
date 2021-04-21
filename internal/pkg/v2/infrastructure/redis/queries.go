@@ -191,7 +191,14 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 }
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
-func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	if limit == 0 {
+		return [][]byte{}, nil
+	}
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
 	args := redis.Args{}
 	cacheSet := uuid.New().String()
 	args = append(args, cacheSet)
@@ -210,7 +217,7 @@ func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...strin
 	if len(storeKeys) == 0 {
 		return nil, nil
 	}
-	if end >= len(storeKeys) {
+	if end >= len(storeKeys) || end == -1 {
 		storeKeys = storeKeys[offset:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		storeKeys = storeKeys[offset : end+1]

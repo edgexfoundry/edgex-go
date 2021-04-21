@@ -33,6 +33,27 @@ func notificationStoredKey(id string) string {
 	return CreateKey(NotificationCollection, id)
 }
 
+// sendAddNotificationCmd sends redis command for adding notification
+func sendAddNotificationCmd(conn redis.Conn, storedKey string, n models.Notification) errors.EdgeX {
+	m, err := json.Marshal(n)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal notification for Redis persistence", err)
+	}
+	_ = conn.Send(SET, storedKey, m)
+	_ = conn.Send(ZADD, NotificationCollection, 0, storedKey)
+	_ = conn.Send(ZADD, NotificationCollectionCreated, n.Created, storedKey)
+	if len(n.Category) > 0 {
+		_ = conn.Send(ZADD, CreateKey(NotificationCollectionCategory, n.Category), n.Modified, storedKey)
+	}
+	for _, label := range n.Labels {
+		_ = conn.Send(ZADD, CreateKey(NotificationCollectionLabel, label), n.Modified, storedKey)
+	}
+	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSender, n.Sender), n.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSeverity, string(n.Severity)), n.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(NotificationCollectionStatus, string(n.Status)), n.Modified, storedKey)
+	return nil
+}
+
 // addNotification adds a new notification into DB
 func addNotification(conn redis.Conn, notification models.Notification) (models.Notification, errors.EdgeX) {
 	exists, edgeXerr := objectIdExists(conn, notificationStoredKey(notification.Id))
@@ -48,26 +69,13 @@ func addNotification(conn redis.Conn, notification models.Notification) (models.
 	}
 	notification.Modified = ts
 
-	notifJSONBytes, err := json.Marshal(notification)
-	if err != nil {
-		return notification, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal notification for Redis persistence", err)
-	}
-
-	redisKey := notificationStoredKey(notification.Id)
+	storedKey := notificationStoredKey(notification.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(SET, redisKey, notifJSONBytes)
-	_ = conn.Send(ZADD, NotificationCollection, 0, redisKey)
-	_ = conn.Send(ZADD, NotificationCollectionCreated, notification.Created, redisKey)
-	if len(notification.Category) > 0 {
-		_ = conn.Send(ZADD, CreateKey(NotificationCollectionCategory, notification.Category), notification.Modified, redisKey)
+	edgeXerr = sendAddNotificationCmd(conn, storedKey, notification)
+	if edgeXerr != nil {
+		return notification, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	for _, label := range notification.Labels {
-		_ = conn.Send(ZADD, CreateKey(NotificationCollectionLabel, label), notification.Modified, redisKey)
-	}
-	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSender, notification.Sender), notification.Modified, redisKey)
-	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSeverity, string(notification.Severity)), notification.Modified, redisKey)
-	_ = conn.Send(ZADD, CreateKey(NotificationCollectionStatus, string(notification.Status)), notification.Modified, redisKey)
-	_, err = conn.Do(EXEC)
+	_, err := conn.Do(EXEC)
 	if err != nil {
 		edgeXerr = errors.NewCommonEdgeX(errors.KindDatabaseError, "notification creation failed", err)
 	}
@@ -136,6 +144,22 @@ func notificationsByTimeRange(conn redis.Conn, startTime int, endTime int, offse
 	return convertObjectsToNotifications(objects)
 }
 
+// sendDeleteNotificationCmd sends redis command to delete a notification
+func sendDeleteNotificationCmd(conn redis.Conn, storedKey string, n models.Notification) {
+	_ = conn.Send(DEL, storedKey)
+	_ = conn.Send(ZREM, NotificationCollection, storedKey)
+	_ = conn.Send(ZREM, NotificationCollectionCreated, storedKey)
+	if len(n.Category) > 0 {
+		_ = conn.Send(ZREM, CreateKey(NotificationCollectionCategory, n.Category), storedKey)
+	}
+	for _, label := range n.Labels {
+		_ = conn.Send(ZREM, CreateKey(NotificationCollectionLabel, label), storedKey)
+	}
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSender, n.Sender), storedKey)
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSeverity, string(n.Severity)), storedKey)
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionStatus, string(n.Status)), storedKey)
+}
+
 // deleteNotificationById deletes the notification by id
 func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	notification, edgexErr := notificationById(conn, id)
@@ -144,18 +168,7 @@ func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	}
 	storedKey := notificationStoredKey(notification.Id)
 	_ = conn.Send(MULTI)
-	_ = conn.Send(DEL, storedKey)
-	_ = conn.Send(ZREM, NotificationCollection, storedKey)
-	_ = conn.Send(ZREM, NotificationCollectionCreated, storedKey)
-	if len(notification.Category) > 0 {
-		_ = conn.Send(ZREM, CreateKey(NotificationCollectionCategory, notification.Category), storedKey)
-	}
-	for _, label := range notification.Labels {
-		_ = conn.Send(ZREM, CreateKey(NotificationCollectionLabel, label), storedKey)
-	}
-	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSender, notification.Sender), storedKey)
-	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSeverity, string(notification.Severity)), storedKey)
-	_ = conn.Send(ZREM, CreateKey(NotificationCollectionStatus, string(notification.Status)), storedKey)
+	sendDeleteNotificationCmd(conn, storedKey, notification)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification deletion failed", err)
@@ -163,14 +176,29 @@ func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	return nil
 }
 
+// updateNotification updates a notification
+func updateNotification(conn redis.Conn, n models.Notification) errors.EdgeX {
+	oldNotification, edgeXerr := notificationById(conn, n.Id)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	n.Modified = common.MakeTimestamp()
+	storedKey := notificationStoredKey(n.Id)
+
+	_ = conn.Send(MULTI)
+	sendDeleteNotificationCmd(conn, storedKey, oldNotification)
+	edgeXerr = sendAddNotificationCmd(conn, storedKey, n)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification update failed", err)
+	}
+	return nil
+}
+
 func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, categories []string, labels []string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	if limit == 0 {
-		return
-	}
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
 	var redisKeys []string
 	for _, c := range categories {
 		redisKeys = append(redisKeys, CreateKey(NotificationCollectionCategory, c))
@@ -179,7 +207,7 @@ func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, 
 		redisKeys = append(redisKeys, CreateKey(NotificationCollectionLabel, label))
 	}
 
-	objects, err := unionObjectsByKeys(conn, offset, end, redisKeys...)
+	objects, err := unionObjectsByKeys(conn, offset, limit, redisKeys...)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}

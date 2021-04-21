@@ -190,13 +190,13 @@ func handleFailedTransmission(
 	config notificationsConfig.ConfigurationStruct) {
 
 	n := t.Notification
-	if t.ResendCount >= config.Writable.ResendLimit {
+	if t.ResendCount >= config.ResendLimit {
 		lc.Error("Too many transmission resend attempts!  Giving up on transmission: " + t.ID + ", for notification: " + n.Slug)
 	}
 	if t.Status == models.Failed && n.Status != models.Escalated {
 		lc.Debug("Handling failed transmission for: " + t.ID + " for notification: " + t.Notification.Slug + ", resends so far: " + strconv.Itoa(t.ResendCount))
 		if n.Severity == models.Critical {
-			if t.ResendCount < config.Writable.ResendLimit {
+			if t.ResendCount < config.ResendLimit {
 				time.AfterFunc(time.Second*5, func() {
 					criticalSeverityResend(t, lc, dbClient, config)
 				})

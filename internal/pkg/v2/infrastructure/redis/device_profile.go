@@ -292,7 +292,7 @@ func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int
 	if offset > len(commonIds) {
 		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
 	}
-	if end >= len(commonIds) {
+	if end >= len(commonIds) || end == -1 {
 		commonIds = commonIds[offset:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		commonIds = commonIds[offset : end+1]
