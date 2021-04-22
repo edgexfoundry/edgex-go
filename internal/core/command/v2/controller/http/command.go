@@ -17,9 +17,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+
 	"github.com/gorilla/mux"
 )
 
@@ -96,6 +98,18 @@ func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http
 	pkg.Encode(response, w, lc)
 }
 
+func parseGetCommandParameters(r *http.Request) (dsReturnEvent string, dsPushEvent string, err errors.EdgeX) {
+	dsReturnEvent = utils.ParseQueryStringToString(r, v2.ReturnEvent, v2.ValueYes)
+	dsPushEvent = utils.ParseQueryStringToString(r, v2.PushEvent, v2.ValueNo)
+	if dsReturnEvent != v2.ValueYes && dsReturnEvent != v2.ValueNo {
+		return "", "", errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid query parameter", nil)
+	}
+	if dsPushEvent != v2.ValueYes && dsPushEvent != v2.ValueNo {
+		return "", "", errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid query parameter", nil)
+	}
+	return dsReturnEvent, dsReturnEvent, nil
+}
+
 func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(cc.dic.Get)
 	ctx := r.Context()
@@ -108,6 +122,15 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 
 	// Query params
 	queryParams := r.URL.RawQuery
+	dsReturnEvent, _, err := parseGetCommandParameters(r)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
 
 	var response interface{}
 	var statusCode int
@@ -124,6 +147,10 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 	}
 
 	utils.WriteHttpHeader(w, ctx, statusCode)
+	if dsReturnEvent == v2.ValueNo && statusCode == http.StatusOK {
+		// If dsReturnEvent is no, there will be no content returned in the http response
+		return
+	}
 	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }

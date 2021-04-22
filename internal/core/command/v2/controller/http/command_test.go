@@ -375,6 +375,8 @@ func TestIssueGetCommand(t *testing.T) {
 		{"Invalid - execute read command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, true, http.StatusBadRequest},
 		{"Invalid - empty device name", "", nonExistName, testQueryStrings, true, http.StatusBadRequest},
 		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, true, http.StatusBadRequest},
+		{"Invalid - invalid ds-pushevent paramter", testDeviceName, "", "ds-pushevent=123", true, http.StatusBadRequest},
+		{"Invalid - invalid ds-returnevent paramter", testDeviceName, "", "ds-returnevent=123", true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
