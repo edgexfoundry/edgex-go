@@ -40,16 +40,6 @@ Type = 'consul'
     Frequency = '24h'
 
 [IntervalActions]
-    [IntervalActions.ScrubPushed]
-    Name = 'scrub-pushed-events'
-    Host = 'localhost'
-    Port = 48080
-    Protocol = 'http'
-    Method = 'DELETE'
-    Target = 'core-data'
-    Path = '/api/v1/event/scrub'
-    Interval = 'midnight'
-
     [IntervalActions.ScrubAged]
     Name = 'scrub-aged-events'
     Host = 'localhost'
@@ -57,7 +47,7 @@ Type = 'consul'
     Protocol = 'http'
     Method = 'DELETE'
     Target = 'core-data'
-    Path = '/api/v1/event/removeold/age/604800000'
+    Path = '/api/v2/event/age/604800000000000' # Remove events older than 7 days
     Interval = 'midnight'
 
 [SecretStore]
