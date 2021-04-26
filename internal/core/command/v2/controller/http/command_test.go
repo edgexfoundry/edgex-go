@@ -167,9 +167,7 @@ func buildEvent() dtos.Event {
 }
 
 func buildEventResponse() responseDTO.EventResponse {
-	return responseDTO.EventResponse{
-		Event: buildEvent(),
-	}
+	return responseDTO.NewEventResponse("", "", http.StatusOK, buildEvent())
 }
 
 func TestAllCommands(t *testing.T) {
@@ -342,9 +340,9 @@ func TestIssueGetCommand(t *testing.T) {
 	dscMock.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(expectedDeviceServiceResponse, nil)
 
 	dsccMock := &mocks.DeviceServiceCommandClient{}
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings).Return(expectedEventResponse, nil)
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "").Return(expectedEventResponse, nil)
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings).Return(responseDTO.EventResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to query device service by name", nil))
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings).Return(&expectedEventResponse, nil)
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "").Return(&expectedEventResponse, nil)
+	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings).Return(&responseDTO.EventResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to query device service by name", nil))
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{

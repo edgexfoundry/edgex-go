@@ -6,6 +6,7 @@
 package http
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 
@@ -102,10 +103,10 @@ func validateGetCommandParameters(r *http.Request) (err errors.EdgeX) {
 	dsReturnEvent := utils.ParseQueryStringToString(r, v2.ReturnEvent, v2.ValueYes)
 	dsPushEvent := utils.ParseQueryStringToString(r, v2.PushEvent, v2.ValueNo)
 	if dsReturnEvent != v2.ValueYes && dsReturnEvent != v2.ValueNo {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid query parameter", nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsReturnEvent, v2.ValueYes, v2.ValueNo), nil)
 	}
 	if dsPushEvent != v2.ValueYes && dsPushEvent != v2.ValueNo {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid query parameter", nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsPushEvent, v2.ValueYes, v2.ValueNo), nil)
 	}
 	return nil
 }
