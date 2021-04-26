@@ -6,6 +6,7 @@
 package http
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 
@@ -17,9 +18,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
+
 	"github.com/gorilla/mux"
 )
 
@@ -96,6 +99,18 @@ func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http
 	pkg.Encode(response, w, lc)
 }
 
+func validateGetCommandParameters(r *http.Request) (err errors.EdgeX) {
+	dsReturnEvent := utils.ParseQueryStringToString(r, v2.ReturnEvent, v2.ValueYes)
+	dsPushEvent := utils.ParseQueryStringToString(r, v2.PushEvent, v2.ValueNo)
+	if dsReturnEvent != v2.ValueYes && dsReturnEvent != v2.ValueNo {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsReturnEvent, v2.ValueYes, v2.ValueNo), nil)
+	}
+	if dsPushEvent != v2.ValueYes && dsPushEvent != v2.ValueNo {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsPushEvent, v2.ValueYes, v2.ValueNo), nil)
+	}
+	return nil
+}
+
 func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(cc.dic.Get)
 	ctx := r.Context()
@@ -108,24 +123,32 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 
 	// Query params
 	queryParams := r.URL.RawQuery
-
-	var response interface{}
-	var statusCode int
-
-	event, err := application.IssueGetCommandByName(deviceName, commandName, queryParams, cc.dic)
+	err := validateGetCommandParameters(r)
 	if err != nil {
 		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = responseDTO.NewEventResponse("", "", http.StatusOK, event)
-		statusCode = http.StatusOK
+		errResponses := commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response, err := application.IssueGetCommandByName(deviceName, commandName, queryParams, cc.dic)
+	if err != nil {
+		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
+		errResponses := commonDTO.NewBaseResponse("", err.Message(), err.Code())
+		utils.WriteHttpHeader(w, ctx, err.Code())
+		pkg.Encode(errResponses, w, lc)
+		return
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	// If dsReturnEvent is no, there will be no content returned in the http response
+	if response != nil {
+		pkg.Encode(response, w, lc)
+	}
 }
 
 func (cc *CommandController) IssueSetCommandByName(w http.ResponseWriter, r *http.Request) {

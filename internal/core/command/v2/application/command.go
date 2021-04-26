@@ -11,12 +11,14 @@ import (
 	"strings"
 
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	V2Container "github.com/edgexfoundry/go-mod-bootstrap/v2/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	V2Routes "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 )
 
 // AllCommands query commands by offset, and limit
@@ -142,46 +144,46 @@ func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.Device
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also
 // referenced by name.
-func IssueGetCommandByName(deviceName string, commandName string, queryParams string, dic *di.Container) (event dtos.Event, err errors.EdgeX) {
+func IssueGetCommandByName(deviceName string, commandName string, queryParams string, dic *di.Container) (res *responses.EventResponse, err errors.EdgeX) {
 	if deviceName == "" {
-		return event, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name cannot be empty", nil)
+		return res, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name cannot be empty", nil)
 	}
 
 	if commandName == "" {
-		return event, errors.NewCommonEdgeX(errors.KindContractInvalid, "command name cannot be empty", nil)
+		return res, errors.NewCommonEdgeX(errors.KindContractInvalid, "command name cannot be empty", nil)
 	}
 
 	// retrieve device information through Metadata DeviceClient
 	dc := V2Container.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return event, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
 	}
 	deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
 	if err != nil {
-		return event, errors.NewCommonEdgeXWrapper(err)
+		return res, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// retrieve device service information through Metadata DeviceClient
 	dsc := V2Container.MetadataDeviceServiceClientFrom(dic.Get)
 	if dsc == nil {
-		return event, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceServiceClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceServiceClient returned", nil)
 	}
 	deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
 	if err != nil {
-		return event, errors.NewCommonEdgeXWrapper(err)
+		return res, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// Issue command by passing the base address of device service into DeviceServiceCommandClient
 	dscc := V2Container.DeviceServiceCommandClientFrom(dic.Get)
 	if dscc == nil {
-		return event, errors.NewCommonEdgeX(errors.KindClientError, "nil DeviceServiceCommandClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil DeviceServiceCommandClient returned", nil)
 	}
-	eventResponse, err := dscc.GetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams)
+	res, err = dscc.GetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams)
 	if err != nil {
-		return event, errors.NewCommonEdgeXWrapper(err)
+		return res, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	return eventResponse.Event, nil
+	return res, nil
 }
 
 // IssueSetCommandByName issues the specified set(write) command referenced by the command name to the device/sensor, also

@@ -40,7 +40,7 @@ import (
 )
 
 var testDeviceProfileLabels = []string{"MODBUS", "TEMP"}
-var testAttributes = map[string]string{
+var testAttributes = map[string]interface{}{
 	"TestAttribute": "TestAttributeValue",
 }
 
