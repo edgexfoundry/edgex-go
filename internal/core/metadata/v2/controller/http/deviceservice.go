@@ -19,7 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
@@ -53,15 +52,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 
 	addDeviceServiceDTOs, err := dc.reader.ReadAddDeviceServiceRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		// Encode and send the resp body as JSON format
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 	deviceServices := requestDTO.AddDeviceServiceReqToDeviceServiceModels(addDeviceServiceDTOs)
@@ -98,29 +89,19 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 func (dc *DeviceServiceController) DeviceServiceByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	deviceService, err := application.DeviceServiceByName(name, ctx, dc.dic)
 	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = responseDTO.NewDeviceServiceResponse("", "", http.StatusOK, deviceService)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewDeviceServiceResponse("", "", http.StatusOK, deviceService)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
@@ -136,14 +117,7 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 
 	updateDeviceServiceDTOs, err := dc.reader.ReadUpdateDeviceServiceRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
@@ -175,66 +149,41 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	err := application.DeleteDeviceServiceByName(name, ctx, dc.dic)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = commonDTO.NewBaseResponse(
-			"",
-			"",
-			http.StatusOK)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
-
-	var labels = []string{}
-	var response interface{}
-	var statusCode int
 
 	// parse URL query string for offset, limit, and labels
 	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		deviceServices, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
-		if err != nil {
-			if errors.Kind(err) != errors.KindEntityDoesNotExist {
-				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			}
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-			statusCode = err.Code()
-		} else {
-			response = responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
-			statusCode = http.StatusOK
-		}
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	deviceServices, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }

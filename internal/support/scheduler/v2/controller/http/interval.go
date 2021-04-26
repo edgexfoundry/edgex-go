@@ -19,7 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
@@ -53,14 +52,7 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 
 	addIntervalDTOs, err := dc.reader.ReadAddIntervalRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 	Intervals := requestDTO.AddIntervalReqToIntervalModels(addIntervalDTOs)
@@ -73,16 +65,9 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse(
-				reqId,
-				err.Message(),
-				err.Code())
+			response = commonDTO.NewBaseResponse(reqId, err.Message(), err.Code())
 		} else {
-			response = commonDTO.NewBaseWithIdResponse(
-				reqId,
-				"",
-				http.StatusCreated,
-				newId)
+			response = commonDTO.NewBaseWithIdResponse(reqId, "", http.StatusCreated, newId)
 		}
 		addResponses = append(addResponses, response)
 	}
@@ -94,94 +79,60 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 func (dc *IntervalController) IntervalByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[v2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	interval, err := application.IntervalByName(name, ctx, dc.dic)
 	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = responseDTO.NewIntervalResponse("", "", http.StatusOK, interval)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewIntervalResponse("", "", http.StatusOK, interval)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (dc *IntervalController) AllIntervals(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(dc.dic.Get)
-
-	var response interface{}
-	var statusCode int
 
 	// parse URL query string for offset, limit, and labels
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		intervals, err := application.AllIntervals(offset, limit, dc.dic)
-		if err != nil {
-			if errors.Kind(err) != errors.KindEntityDoesNotExist {
-				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			}
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-			statusCode = err.Code()
-		} else {
-			response = responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, intervals)
-			statusCode = http.StatusOK
-		}
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	intervals, err := application.AllIntervals(offset, limit, dc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, intervals)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (dc *IntervalController) DeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[v2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	err := application.DeleteIntervalByName(name, ctx, dc.dic)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = commonDTO.NewBaseResponse(
-			"",
-			"",
-			http.StatusOK)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
@@ -197,14 +148,7 @@ func (dc *IntervalController) PatchInterval(w http.ResponseWriter, r *http.Reque
 
 	reqDTOs, err := dc.reader.ReadUpdateIntervalRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
@@ -216,15 +160,9 @@ func (dc *IntervalController) PatchInterval(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse(
-				reqId,
-				err.Message(),
-				err.Code())
+			response = commonDTO.NewBaseResponse(reqId, err.Message(), err.Code())
 		} else {
-			response = commonDTO.NewBaseResponse(
-				reqId,
-				"",
-				http.StatusOK)
+			response = commonDTO.NewBaseResponse(reqId, "", http.StatusOK)
 		}
 		responses = append(responses, response)
 	}
