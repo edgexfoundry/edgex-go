@@ -301,8 +301,19 @@ func (c *cmd) readTokenIDBy(bootstrapACLToken BootStrapACLTokenInfo, accessorID 
 // insertNewAgentToken creates a new Consul token
 // it returns the token's ID and error if any error occurs
 func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
+	// get a policy for this agent token to associate with
+	edgexAgentPolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLToken.SecretID,
+		"edgex-agent-policy",
+		edgeXPolicyRules)
+	if err != nil {
+		return share.EmptyToken, fmt.Errorf("failed to create edgex agent policy: %v", err)
+	}
+
 	unlimitedDuration := "0s"
-	createToken := NewCreateRegistryToken("edgex-core-consul agent token", bootstrapACLToken.Policies, true, &unlimitedDuration)
+	createToken := NewCreateRegistryToken("edgex-core-consul agent token",
+		[]Policy{
+			*edgexAgentPolicy,
+		}, true, &unlimitedDuration)
 	newTokenInfo, err := c.createNewToken(bootstrapACLToken.SecretID, createToken)
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("failed to insert new edgex agent token: %v", err)

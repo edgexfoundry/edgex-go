@@ -6,6 +6,7 @@ echo "$(date) deploying the default EdgeX configuration for Consul"
 # https://github.com/edgexfoundry/edgex-docs/blob/master/docs_src/design/adr/security/0017-consul-security.md#phase-1
 cat > "$SNAP_DATA/consul/config/consul_default.json" <<EOF
 {
+    "node_name": "edgex-core-consul",
     "enable_local_script_checks": true,
     "disable_update_check": true,
     "ports": {
@@ -24,7 +25,7 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
 {
     "acl": {
       "enabled": true,
-      "default_policy": "allow",
+      "default_policy": "deny",
       "enable_token_persistence": true
     }
 }
@@ -43,12 +44,10 @@ fi
 # and not when bootstrapping
 # see https://github.com/hashicorp/consul/issues/4380
 
-# to actually test if consul is ready, we simply check to see if consul 
-# itself shows up in it's service catalog
-# also note we don't have a timeout here because we use start-timeout for this
-# daemon so systemd will kill us if we take too long waiting for this
-CONSUL_URL=http://localhost:8500/v1/catalog/service/consul
-until [ -n "$(curl -s $CONSUL_URL | jq -r '. | length')" ] && 
-    [ "$(curl -s $CONSUL_URL | jq -r '. | length')" -gt "0" ] ; do
-    sleep 1
-done
+# Note: we no longer loop trying to connect to consul here as it is already
+# taken care by security-consul-bootstrapper, in which it actually waits for
+# the consul leader being elected
+# see details in https://github.com/edgexfoundry/edgex-go/blob/master/internal/security/bootstrapper/command/setupacl/command.go#L117-L131
+# this is to avoid the chicken-and-egg problem when it is running in "deny" policy mode
+# as the consul token being required for the service checking API to be able to talk to consul
+# in tandem with non-blocking startup of security-consul-bootstrapper
