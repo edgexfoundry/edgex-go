@@ -50,6 +50,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 )
 
@@ -107,18 +108,7 @@ func GetTokenConfigFromEnv() (TokenConfFile, error) {
 	// the list of service names is comma-separated
 	tokenConfigFromEnv := make(TokenConfFile)
 	serviceNameList := strings.Split(addTokenList, ",")
-	// regex for valid service name as key
-	// the service name eventually becomes part of the URL to Vault's API call
-	// Based upon the RFC 3986: https://tools.ietf.org/html/rfc3986#page-12,
-	// the following characters are reserved characters for URI's and thus NOT allowed:
-	// gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-	// sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
-	// backslash (\) also is not allowed due to being as a delimiter for URI directory in Windows
-	// percent symbol (%) also is not allowed due to being used to encode the reserved characters in URI
-	// and the regular alphanumeric characters like A to Z, a to z, 0 to 9, underscore (_),
-	// -, ~, ^,  {, }, |, <, >, . are allowed.
-	// and the the length of the name is upto 512 characters
-	serviceNameRegx := regexp.MustCompile(`^[\w. \~\^\-\|\<\>\{\}]{1,512}$`)
+	serviceNameRegx := regexp.MustCompile(secretstore.ServiceNameValidationRegx)
 
 	for _, name := range serviceNameList {
 		serviceName := strings.TrimSpace(name)
