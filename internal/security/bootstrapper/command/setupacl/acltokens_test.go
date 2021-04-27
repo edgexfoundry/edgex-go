@@ -98,13 +98,15 @@ func TestCreateAgentToken(t *testing.T) {
 		listTokensRetriesOkResponse bool
 		createTokenOkResponse       bool
 		readTokenOkResponse         bool
+		policyAlreadyExists         bool
 		expectedErr                 bool
 	}{
-		{"Good:agent token ok response", testBootstrapToken, true, true, true, true, false},
-		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, true, true},
-		{"Bad:create token bad response", testBootstrapToken, true, true, false, true, true},
-		{"Bad:read token bad response", testBootstrapToken, true, true, true, false, true},
-		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, true, true},
+		{"Good:agent token ok response 1st time", testBootstrapToken, true, true, true, true, false, false},
+		{"Good:agent token ok response 2nd time or later", testBootstrapToken, true, true, true, true, true, false},
+		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, true, false, true},
+		{"Bad:create token bad response", testBootstrapToken, true, true, false, true, false, true},
+		{"Bad:read token bad response", testBootstrapToken, true, true, true, false, false, true},
+		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, true, false, true},
 	}
 
 	for _, tt := range tests {
@@ -113,9 +115,12 @@ func TestCreateAgentToken(t *testing.T) {
 			t.Parallel()
 			// prepare test
 			responseOpts := serverOptions{
-				listTokensOk:  test.listTokensOkResponse,
-				createTokenOk: test.createTokenOkResponse,
-				readTokenOk:   test.readTokenOkResponse,
+				listTokensOk:        test.listTokensOkResponse,
+				createTokenOk:       test.createTokenOkResponse,
+				readTokenOk:         test.readTokenOkResponse,
+				policyAlreadyExists: test.policyAlreadyExists,
+				readPolicyByNameOk:  true,
+				createNewPolicyOk:   true,
 			}
 			testSrv := newRegistryTestServer(responseOpts)
 			conf := testSrv.getRegistryServerConf(t)
