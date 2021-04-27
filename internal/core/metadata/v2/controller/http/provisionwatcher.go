@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
@@ -51,15 +50,7 @@ func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter
 
 	addProvisionWatcherDTOs, err := pwc.reader.ReadAddProvisionWatcherRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		// Encode and send the resp body as JSON format
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 	provisionWatchers := requestDTO.AddProvisionWatcherReqToProvisionWatcherModels(addProvisionWatcherDTOs)
@@ -96,170 +87,110 @@ func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter
 func (pwc *ProvisionWatcherController) ProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	provisionWatcher, err := application.ProvisionWatcherByName(name, pwc.dic)
 	if err != nil {
-		if errors.Kind(err) != errors.KindEntityDoesNotExist {
-			lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		}
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = responseDTO.NewProvisionWatcherResponse("", "", http.StatusOK, provisionWatcher)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewProvisionWatcherResponse("", "", http.StatusOK, provisionWatcher)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (pwc *ProvisionWatcherController) ProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
 
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		provisionWatchers, err := application.ProvisionWatchersByServiceName(offset, limit, name, pwc.dic)
-		if err != nil {
-			if errors.Kind(err) != errors.KindEntityDoesNotExist {
-				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			}
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-			statusCode = err.Code()
-		} else {
-			response = responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
-			statusCode = http.StatusOK
-		}
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	provisionWatchers, err := application.ProvisionWatchersByServiceName(offset, limit, name, pwc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (pwc *ProvisionWatcherController) ProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
 
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		provisionWatchers, err := application.ProvisionWatchersByProfileName(offset, limit, name, pwc.dic)
-		if err != nil {
-			if errors.Kind(err) != errors.KindEntityDoesNotExist {
-				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			}
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-			statusCode = err.Code()
-		} else {
-			response = responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
-			statusCode = http.StatusOK
-		}
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	provisionWatchers, err := application.ProvisionWatchersByProfileName(offset, limit, name, pwc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (pwc *ProvisionWatcherController) AllProvisionWatchers(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
-
-	var response interface{}
-	var statusCode int
 
 	// parse URL query string for offset, limit
 	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		provisionWatchers, err := application.AllProvisionWatchers(offset, limit, labels, pwc.dic)
-		if err != nil {
-			if errors.Kind(err) != errors.KindEntityDoesNotExist {
-				lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-			}
-			lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-			response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-			statusCode = err.Code()
-		} else {
-			response = responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
-			statusCode = http.StatusOK
-		}
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	provisionWatchers, err := application.AllProvisionWatchers(offset, limit, labels, pwc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
 func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	vars := mux.Vars(r)
 	name := vars[contractsV2.Name]
 
-	var response interface{}
-	var statusCode int
-
 	err := application.DeleteProvisionWatcherByName(ctx, name, pwc.dic)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse("", err.Message(), err.Code())
-		statusCode = err.Code()
-	} else {
-		response = commonDTO.NewBaseResponse(
-			"",
-			"",
-			http.StatusOK)
-		statusCode = http.StatusOK
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, statusCode)
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
 
@@ -275,14 +206,7 @@ func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWrit
 
 	updateProvisionWatcherDTOs, err := pwc.reader.ReadUpdateProvisionWatcherRequest(r.Body)
 	if err != nil {
-		lc.Error(err.Error(), clients.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), clients.CorrelationHeader, correlationId)
-		errResponses := commonDTO.NewBaseResponse(
-			"",
-			err.Message(),
-			err.Code())
-		utils.WriteHttpHeader(w, ctx, err.Code())
-		pkg.Encode(errResponses, w, lc)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
