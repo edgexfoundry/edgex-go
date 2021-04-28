@@ -51,8 +51,12 @@ import (
 )
 
 const (
-	addKnownSecretsEnv = "ADD_KNOWN_SECRETS"
-	redisSecretName    = "redisdb"
+	addKnownSecretsEnv   = "ADD_KNOWN_SECRETS"
+	redisSecretName      = "redisdb"
+	knownSecretSeparator = ","
+	serviceListBegin     = "["
+	serviceListEnd       = "]"
+	serviceListSeparator = ";"
 )
 
 var validKnownSecrets = map[string]bool{redisSecretName: true}
@@ -476,37 +480,53 @@ func getKnownSecretsToAdd() (map[string][]string, error) {
 	}
 
 	serviceNameRegx := regexp.MustCompile(ServiceNameValidationRegx)
-	knownSecrets := strings.Split(addKnownSecretsValue, ",")
+	knownSecrets := strings.Split(addKnownSecretsValue, knownSecretSeparator)
 	for _, secretSpec := range knownSecrets {
 		// each secretSpec has format of "<secretName>[<serviceName>;<serviceName>; ...]"
-		secretItems := strings.Split(secretSpec, "[")
+		secretItems := strings.Split(secretSpec, serviceListBegin)
 		if len(secretItems) != 2 {
-			return nil, fmt.Errorf("invalid specification for %s environment vaiable: Format of value '%s' is invalid. Missing or too many '['", addKnownSecretsEnv, secretSpec)
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Format of value '%s' is invalid. Missing or too many '%s'",
+				addKnownSecretsEnv,
+				secretSpec,
+				serviceListBegin)
 		}
 
 		secretName := strings.TrimSpace(secretItems[0])
 
 		_, valid := validKnownSecrets[secretName]
 		if !valid {
-			return nil, fmt.Errorf("invalid specification for %s environment vaiable: '%s' is not a known secret", addKnownSecretsEnv, secretName)
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: '%s' is not a known secret",
+				addKnownSecretsEnv,
+				secretName)
 		}
 
 		serviceNameList := secretItems[1]
-		if !strings.Contains(serviceNameList, "]") {
-			return nil, fmt.Errorf("invalid specification for %s environment vaiable: Service list for '%s' missing closing ']'", addKnownSecretsEnv, secretName)
+		if !strings.Contains(serviceNameList, serviceListEnd) {
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Service list for '%s' missing closing '%s'",
+				addKnownSecretsEnv,
+				secretName,
+				serviceListEnd)
 		}
 
-		serviceNameList = strings.TrimSpace(strings.Replace(serviceNameList, "]", "", 1))
+		serviceNameList = strings.TrimSpace(strings.Replace(serviceNameList, serviceListEnd, "", 1))
 		if len(serviceNameList) == 0 {
-			return nil, fmt.Errorf("invalid specification for %s environment vaiable: Service name list for '%s' is empty.", addKnownSecretsEnv, secretName)
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Service name list for '%s' is empty.",
+				addKnownSecretsEnv,
+				secretName)
 		}
 
-		serviceNames := strings.Split(serviceNameList, ";")
+		serviceNames := strings.Split(serviceNameList, serviceListSeparator)
 		for index := range serviceNames {
 			serviceNames[index] = strings.TrimSpace(serviceNames[index])
 
 			if !serviceNameRegx.MatchString(serviceNames[index]) {
-				return nil, fmt.Errorf("invalid specification for %s environment vaiable: Service name '%s' has invalid characters.", addKnownSecretsEnv, serviceNames[index])
+				return nil, fmt.Errorf(
+					"invalid specification for %s environment vaiable: Service name '%s' has invalid characters.",
+					addKnownSecretsEnv, serviceNames[index])
 			}
 		}
 
