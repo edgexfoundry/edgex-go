@@ -59,17 +59,17 @@ const (
 	serviceListSeparator = ";"
 )
 
-var validKnownSecrets = map[string]bool{redisSecretName: true}
-
 type Bootstrap struct {
 	insecureSkipVerify bool
 	vaultInterval      int
+	validKnownSecrets  map[string]bool
 }
 
 func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
+		validKnownSecrets:  map[string]bool{redisSecretName: true},
 	}
 }
 
@@ -336,7 +336,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
-	knownSecretsToAdd, err := getKnownSecretsToAdd()
+	knownSecretsToAdd, err := b.getKnownSecretsToAdd()
 	if err != nil {
 		lc.Error(err.Error())
 		os.Exit(1)
@@ -468,7 +468,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 }
 
-func getKnownSecretsToAdd() (map[string][]string, error) {
+func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 	// Process the env var for adding known secrets to the specified services' secret stores.
 	// Format of the env var value is:
 	//   "<secretName>[<serviceName>;<serviceName>; ...], <secretName>[<serviceName>;<serviceName>; ...], ..."
@@ -494,7 +494,7 @@ func getKnownSecretsToAdd() (map[string][]string, error) {
 
 		secretName := strings.TrimSpace(secretItems[0])
 
-		_, valid := validKnownSecrets[secretName]
+		_, valid := b.validKnownSecrets[secretName]
 		if !valid {
 			return nil, fmt.Errorf(
 				"invalid specification for %s environment vaiable: '%s' is not a known secret",

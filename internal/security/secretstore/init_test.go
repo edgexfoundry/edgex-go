@@ -108,10 +108,12 @@ func TestGetKnownSecretsToAdd(t *testing.T) {
 		{"invalid service name", "redisdb[service-%1]", nil, "Service name 'service-%1' has invalid characters"},
 	}
 
+	b := NewBootstrap(false, 10)
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_ = os.Setenv(addKnownSecretsEnv, test.envValue)
-			actual, err := getKnownSecretsToAdd()
+			actual, err := b.getKnownSecretsToAdd()
 			if test.expected == nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), test.expectedErrorContains)
