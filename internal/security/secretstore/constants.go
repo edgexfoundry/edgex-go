@@ -19,6 +19,19 @@
 package secretstore
 
 const (
+	// ServiceNameValidationRegx is regex string for valid service name as key
+	// the service name eventually becomes part of the URL to Vault's API call
+	// Based upon the RFC 3986: https://tools.ietf.org/html/rfc3986#page-12,
+	// the following characters are reserved characters for URI's and thus NOT allowed:
+	// gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+	// sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+	// backslash (\) also is not allowed due to being as a delimiter for URI directory in Windows
+	// percent symbol (%) also is not allowed due to being used to encode the reserved characters in URI
+	// and the regular alphanumeric characters like A to Z, a to z, 0 to 9, underscore (_),
+	// -, ~, ^,  {, }, |, <, >, . are allowed.
+	// and the the length of the name is upto 512 characters
+	ServiceNameValidationRegx = `^[\w. \~\^\-\|\<\>\{\}]{1,512}$`
+
 	// this is a feature key to indicate whether to enable Registry Consul's ACL or not
 	RegistryACLFeatureFlag = "ENABLE_REGISTRY_ACL"
 

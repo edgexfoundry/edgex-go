@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -49,15 +50,26 @@ import (
 	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
 )
 
+const (
+	addKnownSecretsEnv   = "ADD_KNOWN_SECRETS"
+	redisSecretName      = "redisdb"
+	knownSecretSeparator = ","
+	serviceListBegin     = "["
+	serviceListEnd       = "]"
+	serviceListSeparator = ";"
+)
+
 type Bootstrap struct {
 	insecureSkipVerify bool
 	vaultInterval      int
+	validKnownSecrets  map[string]bool
 }
 
 func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
+		validKnownSecrets:  map[string]bool{redisSecretName: true},
 	}
 }
 
@@ -324,6 +336,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
+	knownSecretsToAdd, err := b.getKnownSecretsToAdd()
+	if err != nil {
+		lc.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// credential creation
 	gen := NewPasswordGenerator(lc, secretStoreConfig.PasswordProvider, secretStoreConfig.PasswordProviderArgs)
 	cred := NewCred(httpCaller, rootToken, gen, secretStoreConfig.GetBaseURL(), lc)
@@ -349,6 +367,16 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	redis5Pair := UserPasswordPair{
 		User:     "redis5",
 		Password: redis5Password,
+	}
+
+	// Add any additional services that need the known DB secret
+	services, ok := knownSecretsToAdd[redisSecretName]
+	if ok {
+		for _, service := range services {
+			configuration.Databases[service] = config.Database{
+				Service: service,
+			}
+		}
 	}
 
 	for _, info := range configuration.Databases {
@@ -438,6 +466,77 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	lc.Info("Vault init done successfully")
 	return false
 
+}
+
+func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
+	// Process the env var for adding known secrets to the specified services' secret stores.
+	// Format of the env var value is:
+	//   "<secretName>[<serviceName>;<serviceName>; ...], <secretName>[<serviceName>;<serviceName>; ...], ..."
+	knownSecretsToAdd := map[string][]string{}
+
+	addKnownSecretsValue := strings.TrimSpace(os.Getenv(addKnownSecretsEnv))
+	if len(addKnownSecretsValue) == 0 {
+		return knownSecretsToAdd, nil
+	}
+
+	serviceNameRegx := regexp.MustCompile(ServiceNameValidationRegx)
+	knownSecrets := strings.Split(addKnownSecretsValue, knownSecretSeparator)
+	for _, secretSpec := range knownSecrets {
+		// each secretSpec has format of "<secretName>[<serviceName>;<serviceName>; ...]"
+		secretItems := strings.Split(secretSpec, serviceListBegin)
+		if len(secretItems) != 2 {
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Format of value '%s' is invalid. Missing or too many '%s'",
+				addKnownSecretsEnv,
+				secretSpec,
+				serviceListBegin)
+		}
+
+		secretName := strings.TrimSpace(secretItems[0])
+
+		_, valid := b.validKnownSecrets[secretName]
+		if !valid {
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: '%s' is not a known secret",
+				addKnownSecretsEnv,
+				secretName)
+		}
+
+		serviceNameList := secretItems[1]
+		if !strings.Contains(serviceNameList, serviceListEnd) {
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Service list for '%s' missing closing '%s'",
+				addKnownSecretsEnv,
+				secretName,
+				serviceListEnd)
+		}
+
+		serviceNameList = strings.TrimSpace(strings.Replace(serviceNameList, serviceListEnd, "", 1))
+		if len(serviceNameList) == 0 {
+			return nil, fmt.Errorf(
+				"invalid specification for %s environment vaiable: Service name list for '%s' is empty.",
+				addKnownSecretsEnv,
+				secretName)
+		}
+
+		serviceNames := strings.Split(serviceNameList, serviceListSeparator)
+		for index := range serviceNames {
+			serviceNames[index] = strings.TrimSpace(serviceNames[index])
+
+			if !serviceNameRegx.MatchString(serviceNames[index]) {
+				return nil, fmt.Errorf(
+					"invalid specification for %s environment vaiable: Service name '%s' has invalid characters.",
+					addKnownSecretsEnv, serviceNames[index])
+			}
+		}
+
+		// This supports listing known secret multiple times.
+		// Same service name listed twice is not an issue since the add logic checks if the secret is already present.
+		existingServices := knownSecretsToAdd[secretName]
+		knownSecretsToAdd[secretName] = append(existingServices, serviceNames...)
+	}
+
+	return knownSecretsToAdd, nil
 }
 
 // XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
