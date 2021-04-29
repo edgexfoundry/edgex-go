@@ -44,10 +44,10 @@ Type = 'consul'
   Type = 'redisdb'
 
 [MessageQueue]
-Protocol = 'tcp'
-Host = '*'
-Port = 5563
-Type = 'zero'
+Protocol = 'redis'
+Host = 'localhost'
+Port = 6379
+Type = 'redisstreams'
 Topic = 'events'
 PublishTopicPrefix = 'edgex/events' # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
 [MessageQueue.Optional]
