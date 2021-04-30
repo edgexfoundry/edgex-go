@@ -670,16 +670,16 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=kong-2.0.5.xenial.amd64.deb
-          FILE_HASH=450223a011dba0d6eeb6a192be368e7bcd45a5dc063c743ed6f3d37eb95237b8
+          FILE_NAME=kong_2.3.3_amd64.deb
+          FILE_HASH=c30cdf5ffac9c0921699c1b3ee549daa032dc8bbbb348a4d1d5aebf5c8c2faa7
           ;;
         arm64)
-          FILE_NAME=kong-2.0.5.xenial.arm64.deb
-          FILE_HASH=15aa5fb2eb0c992afa277b09cb03b3b940df9704ab9e8d93327a72c0cb87eb09
+          FILE_NAME=kong_2.3.3_arm64.deb
+          FILE_HASH=54066ca600dd9873b812ca7e1b98012c23b808c8773a61006d021b3deebbb335
           ;;
       esac
       # download the archive, failing on ssl cert problems
-      curl -L https://bintray.com/kong/kong-deb/download_file?file_path=$FILE_NAME -o $FILE_NAME
+      curl -L https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME -o $FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
       dpkg -x $FILE_NAME $SNAPCRAFT_PART_INSTALL
@@ -689,6 +689,11 @@ parts:
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
       cp $SNAPCRAFT_PART_INSTALL/etc/kong/kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
+
+      # kong 2.2.0 change the default user to "kong" which breaks
+      # under confinement so explicitly set user to "root root"
+      sed -i -e 's/#nginx_user = kong kong/nginx_user = root root/' \
+        $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
 
       # by default the Kong deb contains an absolute symlink @ /usr/local/openresty/bin/openresty which points to /usr/local/openresty/nginx/sbin/nginx
       # because the review-tools for the snap store do not currently allow using absolute symlinks that point outside of the snap
