@@ -88,11 +88,7 @@ func addSubscription(conn redis.Conn, subscription models.Subscription) (models.
 
 // allSubscriptions queries subscriptions by offset and limit
 func allSubscriptions(conn redis.Conn, offset, limit int) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, edgeXerr := getObjectsBySomeRange(conn, ZREVRANGE, SubscriptionCollection, offset, end)
+	objects, edgeXerr := getObjectsByRevRange(conn, SubscriptionCollection, offset, limit)
 	if edgeXerr != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -130,11 +126,7 @@ func subscriptionByName(conn redis.Conn, name string) (subscription models.Subsc
 
 // subscriptionsByCategory queries subscriptions by offset, limit, and category
 func subscriptionsByCategory(conn redis.Conn, offset int, limit int, category string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionCategory, category), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionCategory, category), offset, limit)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -144,11 +136,7 @@ func subscriptionsByCategory(conn redis.Conn, offset int, limit int, category st
 
 // subscriptionsByLabel queries subscriptions by offset, limit, and label
 func subscriptionsByLabel(conn redis.Conn, offset int, limit int, label string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionLabel, label), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionLabel, label), offset, limit)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -158,11 +146,7 @@ func subscriptionsByLabel(conn redis.Conn, offset int, limit int, label string) 
 
 // subscriptionsByReceiver queries subscriptions by offset, limit, and receiver
 func subscriptionsByReceiver(conn redis.Conn, offset int, limit int, receiver string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionReceiver, receiver), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(SubscriptionCollectionReceiver, receiver), offset, limit)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
 	}

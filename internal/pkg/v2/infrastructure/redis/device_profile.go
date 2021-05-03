@@ -208,11 +208,7 @@ func deleteDeviceProfileByName(conn redis.Conn, name string) errors.EdgeX {
 
 // deviceProfilesByLabels query device profile with offset and limit
 func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceProfileCollection, labels, offset, end)
+	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceProfileCollection, labels, offset, limit)
 	if edgeXerr != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -231,11 +227,7 @@ func deviceProfilesByLabels(conn redis.Conn, offset int, limit int, labels []str
 
 // deviceProfilesByModel query device profiles by offset, limit and model
 func deviceProfilesByModel(conn redis.Conn, offset int, limit int, model string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionModel, model), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionModel, model), offset, limit)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -254,11 +246,7 @@ func deviceProfilesByModel(conn redis.Conn, offset int, limit int, model string)
 
 // deviceProfilesByManufacturer query device profiles by offset, limit and manufacturer
 func deviceProfilesByManufacturer(conn redis.Conn, offset int, limit int, manufacturer string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionManufacturer, manufacturer), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceProfileCollectionManufacturer, manufacturer), offset, limit)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -277,6 +265,9 @@ func deviceProfilesByManufacturer(conn redis.Conn, offset int, limit int, manufa
 
 // deviceProfilesByManufacturerAndModel query device profiles by offset, limit, manufacturer and model
 func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int, manufacturer string, model string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
+	if limit == 0 {
+		return
+	}
 	end := offset + limit - 1
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit

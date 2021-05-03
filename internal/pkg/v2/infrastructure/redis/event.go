@@ -257,11 +257,7 @@ func eventById(conn redis.Conn, id string) (event models.Event, edgeXerr errors.
 }
 
 func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, EventsCollection, offset, end)
+	objects, err := getObjectsByRevRange(conn, EventsCollection, offset, limit)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -270,11 +266,7 @@ func (c *Client) allEvents(conn redis.Conn, offset int, limit int) (events []mod
 
 // eventsByDeviceName query events by offset, limit and device name
 func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (events []models.Event, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(EventsCollectionDeviceName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(EventsCollectionDeviceName, name), offset, limit)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -282,8 +274,8 @@ func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (ev
 }
 
 // eventsByTimeRange query events by time range, offset, and limit
-func eventsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionOrigin, start, end, offset, limit)
+func eventsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionOrigin, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return events, edgeXerr
 	}

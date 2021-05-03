@@ -96,11 +96,7 @@ func intervalById(conn redis.Conn, id string) (interval models.Interval, edgeXer
 
 // allIntervals queries intervals by offset and limit
 func allIntervals(conn redis.Conn, offset, limit int) (intervals []models.Interval, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, edgeXerr := getObjectsByRevRange(conn, IntervalCollection, offset, end)
+	objects, edgeXerr := getObjectsByRevRange(conn, IntervalCollection, offset, limit)
 	if edgeXerr != nil {
 		return intervals, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}

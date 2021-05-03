@@ -177,11 +177,7 @@ func readingsByEventId(conn redis.Conn, eventId string) (readings []models.Readi
 }
 
 func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsBySomeRange(conn, ZREVRANGE, ReadingsCollectionOrigin, offset, end)
+	objects, err := getObjectsByRevRange(conn, ReadingsCollectionOrigin, offset, limit)
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -191,11 +187,7 @@ func allReadings(conn redis.Conn, offset int, limit int) (readings []models.Read
 
 // readingsByResourceName query readings by offset, limit, and resource name
 func readingsByResourceName(conn redis.Conn, offset int, limit int, resourceName string) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), offset, limit)
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -205,11 +197,7 @@ func readingsByResourceName(conn redis.Conn, offset int, limit int, resourceName
 
 // readingsByDeviceName query readings by offset, limit, and device name
 func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionDeviceName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionDeviceName, name), offset, limit)
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -218,8 +206,8 @@ func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (
 }
 
 // readingsByTimeRange query readings by time range, offset, and limit
-func readingsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionOrigin, start, end, offset, limit)
+func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionOrigin, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr
 	}

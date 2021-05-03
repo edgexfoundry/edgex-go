@@ -81,11 +81,7 @@ func addIntervalAction(conn redis.Conn, action models.IntervalAction) (models.In
 
 // allIntervalActions queries intervalActions by offset and limit
 func allIntervalActions(conn redis.Conn, offset, limit int) (intervalActions []models.IntervalAction, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, edgeXerr := getObjectsByRevRange(conn, IntervalActionCollection, offset, end)
+	objects, edgeXerr := getObjectsByRevRange(conn, IntervalActionCollection, offset, limit)
 	if edgeXerr != nil {
 		return intervalActions, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -168,11 +164,7 @@ func updateIntervalAction(conn redis.Conn, action models.IntervalAction) errors.
 
 // intervalActionsByIntervalName query actions by offset, limit and intervalName
 func intervalActionsByIntervalName(conn redis.Conn, offset int, limit int, intervalName string) (actions []models.IntervalAction, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(IntervalActionCollectionIntervalName, intervalName), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(IntervalActionCollectionIntervalName, intervalName), offset, limit)
 	if err != nil {
 		return actions, errors.NewCommonEdgeXWrapper(err)
 	}

@@ -44,6 +44,7 @@ func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.Lo
 	pkg.Encode(errResponses, w, lc)
 }
 
+// ParseGetAllObjectsRequestQueryString parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid.
 func ParseGetAllObjectsRequestQueryString(r *http.Request, minOffset int, maxOffset int, minLimit int, maxLimit int) (offset int, limit int, labels []string, err errors.EdgeX) {
 	offset, err = ParseQueryStringToInt(r, contractsV2.Offset, contractsV2.DefaultOffset, minOffset, maxOffset)
 	if err != nil {
@@ -53,6 +54,11 @@ func ParseGetAllObjectsRequestQueryString(r *http.Request, minOffset int, maxOff
 	limit, err = ParseQueryStringToInt(r, contractsV2.Limit, contractsV2.DefaultLimit, minLimit, maxLimit)
 	if err != nil {
 		return offset, limit, labels, err
+	}
+
+	// Use maxLimit to specify the supported maximum size.
+	if limit == -1 {
+		limit = maxLimit
 	}
 
 	labels = ParseQueryStringToStrings(r, contractsV2.Labels, contractsV2.CommaSeparator)
@@ -67,6 +73,10 @@ func ParseQueryStringToInt(r *http.Request, queryStringKey string, defaultValue 
 	// first check if specified min is bigger than max, throw error for such case
 	if min > max {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("specified min %v is bigger than specified max %v", min, max), nil)
+	}
+	// defaultValue should not greater than maximum
+	if defaultValue > max {
+		defaultValue = max
 	}
 	var result = defaultValue
 	var parsingErr error
