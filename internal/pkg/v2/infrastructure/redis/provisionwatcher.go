@@ -104,11 +104,7 @@ func provisionWatcherByName(conn redis.Conn, name string) (provisionWatcher mode
 
 // provisionWatchersByServiceName query provision watchers by offset, limit and service name
 func provisionWatchersByServiceName(conn redis.Conn, offset int, limit int, name string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionServiceName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionServiceName, name), offset, limit)
 	if err != nil {
 		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -128,11 +124,7 @@ func provisionWatchersByServiceName(conn redis.Conn, offset int, limit int, name
 
 // provisionWatchersByProfileName query provision watchers by offset, limit and profile name
 func provisionWatchersByProfileName(conn redis.Conn, offset int, limit int, name string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionProfileName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(ProvisionWatcherCollectionProfileName, name), offset, limit)
 	if err != nil {
 		return []models.ProvisionWatcher{}, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -152,11 +144,7 @@ func provisionWatchersByProfileName(conn redis.Conn, offset int, limit int, name
 
 // provisionWatchersByLabels query provision watchers by offset, limit and labels
 func provisionWatchersByLabels(conn redis.Conn, offset int, limit int, labels []string) (provisionWatchers []models.ProvisionWatcher, edgexErr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { // -1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, ProvisionWatcherCollection, labels, offset, end)
+	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, ProvisionWatcherCollection, labels, offset, limit)
 	if err != nil {
 		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
 	}

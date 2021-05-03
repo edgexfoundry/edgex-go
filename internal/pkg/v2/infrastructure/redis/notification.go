@@ -77,11 +77,7 @@ func addNotification(conn redis.Conn, notification models.Notification) (models.
 
 // notificationsByCategory queries notifications by offset, limit, and category
 func notificationsByCategory(conn redis.Conn, offset int, limit int, category string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionCategory, category), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionCategory, category), offset, limit)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -104,11 +100,7 @@ func convertObjectsToNotifications(objects [][]byte) (notifications []models.Not
 
 // notificationsByLabel queries notifications by offset, limit, and label
 func notificationsByLabel(conn redis.Conn, offset int, limit int, label string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionLabel, label), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionLabel, label), offset, limit)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -127,11 +119,7 @@ func notificationById(conn redis.Conn, id string) (notification models.Notificat
 
 // notificationsByStatus queries notifications by offset, limit, and status
 func notificationsByStatus(conn redis.Conn, offset int, limit int, status string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionStatus, status), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionStatus, status), offset, limit)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -140,8 +128,8 @@ func notificationsByStatus(conn redis.Conn, offset int, limit int, status string
 }
 
 // notificationsByTimeRange query notifications by time range, offset, and limit
-func notificationsByTimeRange(conn redis.Conn, start int, end int, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, NotificationCollectionCreated, start, end, offset, limit)
+func notificationsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, NotificationCollectionCreated, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return notifications, edgeXerr
 	}
@@ -176,6 +164,9 @@ func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 }
 
 func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, categories []string, labels []string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	if limit == 0 {
+		return
+	}
 	end := offset + limit - 1
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit

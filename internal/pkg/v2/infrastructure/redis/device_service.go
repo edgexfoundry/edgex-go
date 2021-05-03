@@ -166,11 +166,7 @@ func deleteDeviceServiceByName(conn redis.Conn, name string) errors.EdgeX {
 
 // deviceServicesByLabels query multiple device services from DB per labels
 func deviceServicesByLabels(conn redis.Conn, offset int, limit int, labels []string) (deviceServices []models.DeviceService, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceServiceCollection, labels, offset, end)
+	objects, err := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceServiceCollection, labels, offset, limit)
 	if err != nil {
 		return deviceServices, errors.NewCommonEdgeXWrapper(err)
 	}

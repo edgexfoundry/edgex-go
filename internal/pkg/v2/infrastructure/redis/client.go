@@ -484,14 +484,14 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) (events 
 }
 
 // EventsByTimeRange query events by time range, offset, and limit
-func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) (events []model.Event, edgeXerr errors.EdgeX) {
+func (c *Client) EventsByTimeRange(startTime int, endTime int, offset int, limit int) (events []model.Event, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	events, edgeXerr = eventsByTimeRange(conn, start, end, offset, limit)
+	events, edgeXerr = eventsByTimeRange(conn, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return events, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query events by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), edgeXerr)
+			fmt.Sprintf("fail to query events by time range %v ~ %v, offset %d, and limit %d", startTime, endTime, offset, limit), edgeXerr)
 	}
 	return events, nil
 }

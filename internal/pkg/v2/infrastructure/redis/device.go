@@ -172,11 +172,7 @@ func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
 
 // devicesByServiceName query devices by offset, limit and name
 func devicesByServiceName(conn redis.Conn, offset int, limit int, name string) (devices []models.Device, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceCollectionServiceName, name), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceCollectionServiceName, name), offset, limit)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -195,11 +191,7 @@ func devicesByServiceName(conn redis.Conn, offset int, limit int, name string) (
 
 // devicesByLabels query devices with offset, limit and labels
 func devicesByLabels(conn redis.Conn, offset int, limit int, labels []string) (devices []models.Device, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceCollection, labels, offset, end)
+	objects, edgeXerr := getObjectsByLabelsAndSomeRange(conn, ZREVRANGE, DeviceCollection, labels, offset, limit)
 	if edgeXerr != nil {
 		return devices, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -218,11 +210,7 @@ func devicesByLabels(conn redis.Conn, offset int, limit int, labels []string) (d
 
 // devicesByProfileName query devices by offset, limit and profile name
 func devicesByProfileName(conn redis.Conn, offset int, limit int, profileName string) (devices []models.Device, edgeXerr errors.EdgeX) {
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
-	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceCollectionProfileName, profileName), offset, end)
+	objects, err := getObjectsByRevRange(conn, CreateKey(DeviceCollectionProfileName, profileName), offset, limit)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)
 	}
