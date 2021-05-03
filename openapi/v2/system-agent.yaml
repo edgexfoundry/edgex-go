@@ -270,6 +270,16 @@ components:
         version:
           description: "The latest version supported by the service."
           type: string
+    ConfigResponse:
+      description: "Provides a response containing the configuration for the targeted service."
+      type: object
+      properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+        config:
+          description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
+          type: object
   parameters:
     correlatedRequestHeader:
       in: header
@@ -293,35 +303,6 @@ components:
         statusCode: 500
         message: "Internal Server Error"
 paths:
-  /batch:
-    parameters:
-      - $ref: '#/components/parameters/correlatedRequestHeader'
-    post:
-      servers:
-        - url:  http://localhost:48082/api
-      summary: "Accepts an arbitrary number of RequestEnvelope instances. Each RequestEnvelope has a 'content' property that holds a specific request type. This endpoint is operation agnostic will route the request to the appropriate handler implementation within the service. Version is not denoted as part of the route since it is included as a property on each RequestEnvelope."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/RequestEnvelope'
-      responses:
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/ResponseEnvelope'
   /config/settings:
     post:
       summary: "Update the configuration for the targeted service."
@@ -367,60 +348,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /config:
-    post:
-      summary: "Retrieves the current configuration of the targeted service."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/GetConfigRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/GetConfigRequest'
-
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetConfigResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/GetConfigResponse'
-        '400':
-          description: "Bad request"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /health:
     post:
       summary: "Obtain health information from the targeted service."
@@ -457,60 +384,6 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/HealthResponse'
-        '400':
-          description: "Bad request"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: "Internal Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /metrics:
-    post:
-      summary: "Obtain metrics information from the targeted service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/MetricsRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/MetricsRequest'
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetricsResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/MetricsResponse'
         '400':
           description: "Bad request"
           headers:
@@ -583,6 +456,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /config:
+    get:
+      summary: "Returns the current configuration of the service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+              example:
+                apiVersion: "v2"
+                config:
+                  Writeable:
+                    ResendLimit: 2
+                    LogLevel: "INFO"
+                  Clients:
+                    edge-core-command:
+                      Host: "edgex-core-command"
+                      Port: 48082
+                      Protocol: "http"
+                    edge-core-data:
+                      Host: "edgex-core-data"
+                      Port: 48080
+                      Protocol: "http"
+                    edge-core-metadata:
+                      Host: "edgex-core-metadata"
+                      Port: 48081
+                      Protocol: "http"
+                    edge-support-scheduler:
+                      Host: "edgex-support-scheduler"
+                      Port: 48085
+                      Protocol: "http"
+                    edge-support-notifications:
+                      Host: "edgex-support-notifications"
+                      Port: 48060
+                      Protocol: "http"
+                  Service:
+                    BootTimeout: 30000
+                    CheckInterval: "10s"
+                    Host: "edgex-core-data"
+                    Port: 48090
+                    SeverBindAddr: ""
+                    Protocol: "http"
+                    StartupMsg: "This is the System Management Agent Service"
+                    MaxResultCount: 50000
+                    Timeout: 20000
+                  ExecutorPath: "../sys-mgmt-executor/sys-mgmt-executor"
+                  MetricsMechanism: "direct-service"
+                  Registry:
+                    Host: "edgex-core-consul"
+                    Port: 8500
+                    Type: "consul"
+                  FormatSpecifier: "%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])"
+                  SecretStore:
+                    Type: "vault"
+                    Host: "localhost"
+                    Port: 8200
+                    Path: "v1/secret/edgex/sys-mgmt-agent/"
+                    Protocol: "http"
+                    Namespace: ""
+                    RootCaCertPath: ""
+                    ServerName: ""
+                    Authentication:
+                      AuthType: "X-Vault-Token"
+                      AuthToken: ""
+                    AdditionalRetryAttempts: 10
+                    RetryWaitPeriod: "1s"
+                    TokenFile: "/vault/config/assets/resp-init.json"
+        '500':
+          description: "Interval Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /metrics:
+    get:
+      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+              example:
+                apiVersion: "v2"
+                metrics:
+                  memAlloc: 877192
+                  memFrees: 2248915
+                  memLiveObjects: 6522
+                  memMallocs: 2255437
+                  memSys: 72876280
+                  memTotalAlloc: 203821192
+                  cpuBusyAvg: 2.2521221920656003
+        '500':
+          description: "Interval Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
@@ -626,7 +619,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v2"
-                version: "2.0.0-dev.13"
+                version: "2.0.0-dev.1"
         '500':
           description: "Interval Server Error"
           headers:

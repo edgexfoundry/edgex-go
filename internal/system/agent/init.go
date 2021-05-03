@@ -26,6 +26,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -51,6 +52,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
+	v2.LoadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
 
