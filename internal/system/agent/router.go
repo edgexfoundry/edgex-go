@@ -70,13 +70,6 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 		func(w http.ResponseWriter, r *http.Request) {
 			healthHandler(w, r, bootstrapContainer.LoggingClientFrom(dic.Get), bootstrapContainer.RegistryFrom(dic.Get))
 		}).Methods(http.MethodGet)
-	// TODO: temporarily resolves the health check critical issue in Consul
-	r.PathPrefix("/api/v2").Subrouter().HandleFunc(
-		"/ping",
-		func(w http.ResponseWriter, _ *http.Request) {
-			w.Header().Set(clients.ContentType, clients.ContentTypeText)
-			_, _ = w.Write([]byte("pong"))
-		}).Methods(http.MethodGet)
 
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
