@@ -63,6 +63,7 @@ type Service struct {
 	configuration    *config.ConfigurationStruct
 	additionalRoutes string
 	routes           map[string]*models.KongRoute
+	bearerToken      string
 }
 
 func NewService(
@@ -80,7 +81,7 @@ func NewService(
 }
 
 func (s *Service) CheckProxyServiceStatus() error {
-	return s.checkServiceStatus(s.configuration.KongURL.GetProxyBaseURL())
+	return s.checkServiceStatus(s.configuration.KongURL.GetProxyStatusURL())
 }
 
 func (s *Service) checkServiceStatus(path string) error {
@@ -126,7 +127,13 @@ func (s *Service) ResetProxy() error {
 }
 
 func (s *Service) Init() error {
-	// no cert pair to post internally any more
+
+	// Read in JWT
+	jwtBytes, err := ioutil.ReadFile(s.configuration.KongAuth.JWTFile)
+	if err != nil {
+		return fmt.Errorf("failed to read config template: %w", err)
+	}
+	s.bearerToken = string(jwtBytes)
 
 	addRoutesFromEnv, parseErr := s.parseAdditionalProxyRoutes()
 
@@ -154,16 +161,6 @@ func (s *Service) Init() error {
 		if err != nil {
 			return err
 		}
-	}
-
-	err := s.initAuthMethod(s.configuration.KongAuth.Name, s.configuration.KongAuth.TokenTTL)
-	if err != nil {
-		return err
-	}
-
-	err = s.initACL(s.configuration.KongACL.Name, s.configuration.KongACL.WhiteList)
-	if err != nil {
-		return err
 	}
 
 	s.loggingClient.Info("finishing initialization for reverse proxy")
@@ -330,6 +327,7 @@ func (s *Service) initKongService(service *models.KongService) error {
 	if err != nil {
 		return fmt.Errorf("failed to construct http POST form request: %s %s", service.Name, err.Error())
 	}
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
 
 	resp, err := s.client.Do(req)
@@ -369,6 +367,7 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 		s.loggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
 
 	resp, err := s.client.Do(req)
@@ -386,46 +385,6 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 		break
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
-		s.loggingClient.Error(e)
-		return errors.New(e)
-	}
-	return nil
-}
-
-func (s *Service) initACL(name string, whitelist string) error {
-	aclParams := &models.KongACLPlugin{
-		Name:      name,
-		WhiteList: whitelist,
-	}
-	// The type above is largely useless but I'm leaving it for now as otherwise there'd be no way to know
-	// where or why the second field below is "config.whitelist"
-	formVals := url.Values{
-		"name":             {aclParams.Name},
-		"config.whitelist": {aclParams.WhiteList},
-	}
-	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
-	if err != nil {
-		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
-		s.loggingClient.Error(e)
-		return err
-	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		e := fmt.Sprintf("failed to set up acl -- %s", err.Error())
-		s.loggingClient.Error(e)
-		return err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		s.loggingClient.Info("acl set up successfully")
-		break
-	default:
-		e := fmt.Sprintf("failed to set up acl with errorcode %d", resp.StatusCode)
 		s.loggingClient.Error(e)
 		return errors.New(e)
 	}

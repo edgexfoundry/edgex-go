@@ -27,16 +27,14 @@ AdminPort = 8001
 AdminPortSSL = 8444
 ApplicationPort = 8000
 ApplicationPortSSL = 8443
+StatusPort = 8100
 
 [KongAuth]
 Name = "jwt"
 TokenTTL = 0
 Resource = "coredata"
 OutputPath = "accessToken.json"
-
-[KongACL]
-Name = "acl"
-WhiteList = "admin"
+JWTFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
 
 [SecretStore]
 Type = "vault"

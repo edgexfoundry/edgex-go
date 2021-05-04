@@ -47,9 +47,10 @@ func delUserWithArgs(t *testing.T, args []string) {
 	// Arrange
 	lc := logger.MockLogger{}
 	config := &config.ConfigurationStruct{}
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.EscapedPath() {
-		case "/consumers/someuser":
+		case "/admin/consumers/someuser":
 			require.Equal(t, "DELETE", r.Method)
 			w.WriteHeader(http.StatusNoContent)
 		default:
@@ -57,11 +58,12 @@ func delUserWithArgs(t *testing.T, args []string) {
 		}
 	}))
 	defer ts.Close()
+
 	tsURL, err := url.Parse(ts.URL)
 	require.NoError(t, err)
 
 	config.KongURL.Server = tsURL.Hostname()
-	config.KongURL.AdminPort, _ = strconv.Atoi(tsURL.Port())
+	config.KongURL.ApplicationPort, _ = strconv.Atoi(tsURL.Port())
 
 	// Act
 	command, err := NewCommand(lc, config, args)
@@ -78,5 +80,6 @@ func delUserWithArgs(t *testing.T, args []string) {
 func TestDelUser(t *testing.T) {
 	delUserWithArgs(t, []string{
 		"--user", "someuser",
+		"--jwt", "someRandomJWT",
 	})
 }

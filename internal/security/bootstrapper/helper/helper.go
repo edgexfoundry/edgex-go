@@ -17,6 +17,7 @@ package helper
 
 import (
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -60,4 +61,19 @@ func CheckIfFileExists(fileName string) bool {
 func writeFile(aFileName string) error {
 	timestamp := []byte(strconv.FormatInt(time.Now().Unix(), 10))
 	return ioutil.WriteFile(aFileName, timestamp, 0400)
+}
+
+// GenerateRandomString will return a randomized string of characters at the
+// length specified via input variable `n`
+func GenerateRandomString(n int) string {
+	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	if n > 0 {
+		s := make([]rune, n)
+		for i := range s {
+			s[i] = letters[rand.Intn(len(letters))]
+		}
+		return string(s)
+	}
+	return string("")
 }

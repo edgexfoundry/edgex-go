@@ -29,10 +29,13 @@ func TestOauth2BadArguments(t *testing.T) {
 	// Arrange
 	lc := logger.MockLogger{}
 	config := &config.ConfigurationStruct{}
+
+	// Setup test cases
 	badArgTestcases := [][]string{
-		{},                        // missing arg --client_id
+		{},                        // missing all required arguments
 		{"-badarg"},               // invalid arg
-		{"--client_id", "someid"}, // missing --client_secret
+		{"--client_id", "someid"}, // missing --client_secret & --admin_api_jwt
+		{"--client_id", "someid", "--client_secret", "somesecret"}, // missing --admin_api_jwt
 	}
 
 	for _, args := range badArgTestcases {
@@ -53,6 +56,7 @@ func TestOauth2Generate(t *testing.T) {
 	args := []string{
 		"--client_id", "myid",
 		"--client_secret", "mysecret",
+		"--jwt", "randomJWT",
 	}
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"net/url"
+	"path"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 
@@ -31,7 +32,6 @@ type ConfigurationStruct struct {
 	SNIS           []string
 	KongURL        KongUrlInfo
 	KongAuth       KongAuthInfo
-	KongACL        KongAclInfo
 	SecretStore    bootstrapConfig.SecretStoreInfo
 	Routes         map[string]models.KongService
 }
@@ -42,14 +42,25 @@ type KongUrlInfo struct {
 	AdminPortSSL       int
 	ApplicationPort    int
 	ApplicationPortSSL int
+	StatusPort         int
 }
 
 func (k KongUrlInfo) GetProxyBaseURL() string {
 	baseUrl := &url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%v", k.Server, k.AdminPort),
+		Host:   fmt.Sprintf("%s:%v", k.Server, k.ApplicationPort),
 	}
+	baseUrl.Path = path.Join(baseUrl.Path, "admin")
 	return baseUrl.String()
+}
+
+func (k KongUrlInfo) GetProxyStatusURL() string {
+	statusUrl := &url.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s:%v", k.Server, k.StatusPort),
+	}
+	statusUrl.Path = path.Join(statusUrl.Path, "status")
+	return statusUrl.String()
 }
 
 func (k KongUrlInfo) GetSecureURL() string {
@@ -57,6 +68,7 @@ func (k KongUrlInfo) GetSecureURL() string {
 		Scheme: "https",
 		Host:   fmt.Sprintf("%s:%v", k.Server, k.ApplicationPortSSL),
 	}
+	secureUrl.Path = path.Join(secureUrl.Path, "admin")
 	return secureUrl.String()
 }
 
@@ -65,11 +77,7 @@ type KongAuthInfo struct {
 	TokenTTL   int
 	Resource   string
 	OutputPath string
-}
-
-type KongAclInfo struct {
-	Name      string
-	WhiteList string
+	JWTFile    string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct

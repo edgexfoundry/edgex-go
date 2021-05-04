@@ -77,6 +77,7 @@ func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	configuration := container.ConfigurationFrom(dic.Get)
 	secretStoreConfig := configuration.SecretStore
+	kongAdminConfig := configuration.KongAdmin
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	//step 1: boot up secretstore general steps same as other EdgeX microservice
@@ -461,6 +462,36 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
 			os.Exit(1)
 		}
+	}
+
+	// Configure Kong Admin API
+	//
+	// For context - this process doesn't actually talk to Kong, it creates the configuration
+	// file and JWT necessary in order for the Kong process to bootstrap itself with a properly
+	// locked down Admin API and enable security-proxy-setup with the JWT in order to setup
+	// the services/routes as configured.
+	//
+	// The reason why this code exists in the Secret Store setup is a matter of timing and
+	// file permissions. This process has to occur before Kong is started, and cannot be executed
+	// by the Kong entrypoint script because that executes as the Kong user. The JWT created
+	// needs to be used by the security-proxy-setup process, so needs to be created before.
+	// Since Secret Store setup runs prior to both of these, it made sense to logically drop them
+	// here, especially if we're going to incorporate ties in to the Secret Store at a later
+	// time.
+	//
+	// As of now, the private key that is generated for the "admin" group in Kong never
+	// gets saved to disk out of memory. This could change in the future and be placed into
+	// the Secret Store if we need to regenerate the JWT on the fly after setup has occurred.
+	//
+	lc.Info("Starting the Kong Admin API config file creation")
+
+	// Get an instance of KongAdminAPI and map the paths from configuration.toml
+	ka := NewKongAdminAPI(kongAdminConfig)
+
+	// Setup Kong Admin API loopback configuration
+	err = ka.Setup()
+	if err != nil {
+		lc.Errorf("failed to configure the Kong Admin API: %s", err.Error())
 	}
 
 	lc.Info("Vault init done successfully")
