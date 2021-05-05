@@ -113,6 +113,7 @@ func TestAddUserJWT(t *testing.T) {
 		"--public_key", publicKey,
 		"--jwt", jwt,
 	})
+
 	require.NoError(t, err)
 
 	// Execute command "addUser w/JWT"
@@ -185,6 +186,7 @@ func TestAddUserOAuth2(t *testing.T) {
 		"--redirect_uris", redirectUris,
 		"--jwt", jwt,
 	})
+
 	require.NoError(t, err)
 
 	// Execute command "addUser w/JWT"

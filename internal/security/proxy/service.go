@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
- * Copyright 2020 Intel Corp.
+ * Copyright 2021 Intel Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -46,6 +46,8 @@ const (
 
 	// AddProxyRoutesEnv is the environment variable name for adding the additional Kong routes for app services
 	AddProxyRoutesEnv = "ADD_PROXY_ROUTE"
+
+	edgeXCoreConsulServiceKey = "edgex-core-consul"
 )
 
 type CertError struct {
@@ -99,7 +101,6 @@ func (s *Service) checkServiceStatus(path string) error {
 	switch resp.StatusCode {
 	case http.StatusOK:
 		s.loggingClient.Info(fmt.Sprintf("the service on %s is up successfully", path))
-		break
 	default:
 		err = fmt.Errorf("unexpected http status %v %s", resp.StatusCode, path)
 		s.loggingClient.Error(err.Error())
@@ -145,11 +146,24 @@ func (s *Service) Init() error {
 
 	mergedRoutes := s.mergeRoutesWith(addRoutesFromEnv)
 
-	for _, route := range mergedRoutes {
+	for serviceKey, route := range mergedRoutes {
 
 		err := s.initKongService(&route)
 		if err != nil {
 			return err
+		}
+
+		// if it is edgex-core-consul service; then we need to enable the request transformer plugin
+		// in order to add the consul token header for that service
+		// see details on https://docs.konghq.com/hub/kong-inc/request-transformer/#enabling-the-plugin-on-a-service
+		if serviceKey == edgeXCoreConsulServiceKey {
+			s.loggingClient.Infof("try to enable service plugin for %s", edgeXCoreConsulServiceKey)
+			if err := s.addConsulTokenHeaderTo(&route); err != nil {
+				s.loggingClient.Errorf("failed to enable service plugin for %s: %v", edgeXCoreConsulServiceKey, err)
+				return err
+			}
+
+			s.loggingClient.Infof("service plugin for %s enabled", edgeXCoreConsulServiceKey)
 		}
 
 		routeParams := &models.KongRoute{
@@ -295,7 +309,6 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.loggingClient.Info("successfully added certificate to the reverse proxy")
-		break
 	default:
 		b, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -328,7 +341,7 @@ func (s *Service) initKongService(service *models.KongService) error {
 		return fmt.Errorf("failed to construct http POST form request: %s %s", service.Name, err.Error())
 	}
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+	req.Header.Add(clients.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -341,10 +354,8 @@ func (s *Service) initKongService(service *models.KongService) error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
 		s.loggingClient.Info(fmt.Sprintf("successful to set up proxy service for `%s` at `%s:%d`", service.Name, service.Host, service.Port))
-		break
 	case http.StatusConflict:
 		s.loggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
-		break
 	default:
 		err = fmt.Errorf("proxy service for %s returned status %d", service.Name, resp.StatusCode)
 		s.loggingClient.Error(err.Error())
@@ -361,6 +372,7 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 	}
 	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), ServicesPath, name, "routes"}
 
+	// Create routes associated to a specific service
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	if err != nil {
 		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
@@ -382,7 +394,6 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.routes[name] = r
 		s.loggingClient.Info(fmt.Sprintf("successful to set up route for `%s` at `%v`", name, r.Paths))
-		break
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
 		s.loggingClient.Error(e)
@@ -414,7 +425,7 @@ func (s *Service) initJWTAuth() error {
 		s.loggingClient.Error(e)
 		return err
 	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+	req.Header.Add(clients.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -427,7 +438,6 @@ func (s *Service) initJWTAuth() error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.loggingClient.Info("successful to set up jwt authentication")
-		break
 	default:
 		e := fmt.Sprintf("failed to set up jwt authentication with errorcode %d", resp.StatusCode)
 		s.loggingClient.Error(e)
@@ -461,7 +471,7 @@ func (s *Service) initOAuth2(ttl int) error {
 		s.loggingClient.Error(e)
 		return err
 	}
-	req.Header.Add(clients.ContentType, "application/x-www-form-urlencoded")
+	req.Header.Add(clients.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -474,7 +484,6 @@ func (s *Service) initOAuth2(ttl int) error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.loggingClient.Info("successful to set up oauth2 authentication")
-		break
 	default:
 		e := fmt.Sprintf("failed to set up oauth2 authentication with errorcode %d", resp.StatusCode)
 		s.loggingClient.Error(e)
@@ -506,7 +515,6 @@ func (s *Service) getSvcIDs(path string) (models.DataCollect, error) {
 		if err = json.NewDecoder(resp.Body).Decode(&collection); err != nil {
 			return collection, err
 		}
-		break
 	default:
 		e := fmt.Sprintf("failed to get list of %s with HTTP error code %d", path, resp.StatusCode)
 		s.loggingClient.Error(e)

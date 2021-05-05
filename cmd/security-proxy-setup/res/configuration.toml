@@ -1,5 +1,6 @@
 #################################################################################
 # Copyright 2019 Dell Inc.
+# Copyright 2021 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -20,6 +21,7 @@ LogLevel = "DEBUG"
 SNIS = [""]
 # RequestTimeout for proxy-setup http client caller
 RequestTimeout = 10
+AccessTokenFile = "/tmp/edgex/secrets/consul-acl-token/bootstrap_token.json"
 
 [KongURL]
 Server = "127.0.0.1"
@@ -94,3 +96,9 @@ RetryWaitPeriod = "1s"
   Protocol = "http"
   Host = "localhost"
   Port = 49990
+
+  [Routes.edgex-core-consul]
+  Name = "consul"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 8500

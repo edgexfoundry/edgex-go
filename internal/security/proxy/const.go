@@ -25,4 +25,5 @@ const (
 	VaultToken       = "X-Vault-Token"
 	OAuth2GrantType  = "client_credentials"
 	OAuth2Scopes     = "all"
+	URLEncodedForm   = "application/x-www-form-urlencoded"
 )
