@@ -4,9 +4,9 @@ require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/OneOfOne/xxhash v1.2.8
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.38
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.42
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.7
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.76
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.77
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.11
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.5
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.17
