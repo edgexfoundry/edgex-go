@@ -17,7 +17,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.15-alpine3.12
+ARG BUILDER_BASE=golang:1.16-alpine3.12
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
