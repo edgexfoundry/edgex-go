@@ -656,7 +656,9 @@ parts:
       done
 
       # For securing Kong's admin APIs, we also need to install kong-admin-config's template yml
-      # into secretstore-setup service
+      # into secretstore-setup service because secretstore-setup uses it to create a JWT file that
+      # proxy-setup can later on enable Kong's JWT plugin on admin API route hence secure it with
+      # JWT authentication and authorization
       install -DT "./cmd/security-secretstore-setup/res/kong-admin-config.template.yml" \
         "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/kong-admin-config.template.yml"
 
