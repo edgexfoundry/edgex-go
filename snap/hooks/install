@@ -42,24 +42,24 @@ if [ ! -f "$SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.te
         "$SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml"
 fi
 
-# handle app-service-configurable's various profiles:
-# 1. ensure all the directories from app-service-configurable exist
+# handle app-service-configurable's rules-engine profile
+# 1. create the directory
 # 2. copy the config files from $SNAP into $SNAP_DATA
-# 3. replace the various env vars that might be in that config file with their
-#    "current" symlink equivalent
 mkdir -p "$SNAP_DATA/config/app-service-configurable/res/rules-engine"
-RULES_ENGINE_PROFILE_CONFIG="config/app-service-configurable/res/rules-engine/configuration.toml"
 if [ ! -f "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG" ]; then
-    cp "$SNAP/$RULES_ENGINE_PROFILE_CONFIG" "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG"
-    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
-        -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
-        -e "s@\$SNAP@$SNAP_CURRENT@g" \
-        "$SNAP_DATA/$RULES_ENGINE_PROFILE_CONFIG"
+    cp "$SNAP/config/res/rules-engine/configuration.toml" \
+       "$SNAP_DATA/config/app-service-configurable/res/rules-engine/configuration.toml"
 fi
 
-# handle device-virtual device profiles
+# handle device-virtual devices and device profiles
+mkdir -p "$SNAP_DATA/config/device-virtual/res/devices"
+cp "$SNAP/config/device-virtual/res/devices/devices.toml" \
+   "$SNAP_DATA/config/device-virtual/res/devices/devices.toml"
+
+mkdir -p "$SNAP_DATA/config/device-virtual/res/profiles"
 for profileType in bool float int uint binary; do
-    cp "$SNAP/config/device-virtual/res/device.virtual.$profileType.yaml" "$SNAP_DATA/config/device-virtual/res/device.virtual.$profileType.yaml"
+    cp "$SNAP/config/device-virtual/res/profiles/device.virtual.$profileType.yaml" \
+       "$SNAP_DATA/config/device-virtual/res/profiles/device.virtual.$profileType.yaml"
 done
 
 # create kuiper directories in $SNAP_DATA
