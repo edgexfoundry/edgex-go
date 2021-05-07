@@ -34,25 +34,22 @@ func sendNotificationViaChannel(lc logger.LoggingClient, n models.Notification, 
 			return transRecord, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 		}
 		transRecord.Response, err = utils.SendRequestWithRESTAddress(lc, n.Content, n.ContentType, restAddress)
-		if err != nil {
-			transRecord.Status = models.Failed
-			transRecord.Response = err.Error()
-		}
-		transRecord.Sent = common.MakeTimestamp()
 	case v2.EMAIL:
 		emailAddress, ok := channel.(models.EmailAddress)
 		if !ok {
 			return transRecord, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to EmailAddress", nil)
 		}
 		transRecord.Response, err = utils.SendEmailWithAddress(lc, n.Content, n.ContentType, emailAddress)
-		if err != nil {
-			transRecord.Status = models.Failed
-			transRecord.Response = err.Error()
-		}
-		transRecord.Sent = common.MakeTimestamp()
 	default:
 		transRecord.Response = fmt.Sprintf("unsupported address type: %s", channel.GetBaseAddress().Type)
+		return transRecord, nil
 	}
+
+	if err != nil {
+		transRecord.Status = models.Failed
+		transRecord.Response = err.Error()
+	}
+	transRecord.Sent = common.MakeTimestamp()
 	return transRecord, nil
 }
 
@@ -98,6 +95,7 @@ func criticalSend(dic *di.Container, n models.Notification, sub models.Subscript
 	}
 	for i := 1; i <= resendLimit; i++ {
 		time.Sleep(resendInterval)
+		lc.Warn("fail to send the critical notification. Retry to send again...")
 
 		record, err := sendNotificationViaChannel(lc, n, trans.Channel)
 		if err != nil {
@@ -111,7 +109,6 @@ func criticalSend(dic *di.Container, n models.Notification, sub models.Subscript
 			return trans, errors.NewCommonEdgeXWrapper(err)
 		}
 		if trans.Status == models.Failed {
-			lc.Warn("fail to send the critical notification. Retry to send again...")
 			continue
 		}
 		lc.Debugf("success to send the critical notification to %s with address %v, transmission Id: %s", trans.SubscriptionName, trans.Channel.GetBaseAddress(), trans.Id)
