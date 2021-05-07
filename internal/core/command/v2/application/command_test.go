@@ -6,6 +6,7 @@
 package application
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
@@ -31,12 +32,12 @@ func TestBuildCoreCommands(t *testing.T) {
 	profile := dtos.DeviceProfile{
 		Name: "testProfile",
 		DeviceResources: []dtos.DeviceResource{
-			{Name: resource1, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_R}},
-			{Name: resource2, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_W}},
-			{Name: resource3, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_RW}},
-			{Name: resource4, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_RW}, IsHidden: true},
-			{Name: resource5, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_RW}},
-			{Name: resource6, Properties: dtos.ResourceProperties{ReadWrite: v2.ReadWrite_RW}},
+			{Name: resource1, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeString, ReadWrite: v2.ReadWrite_R}},
+			{Name: resource2, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeInt16, ReadWrite: v2.ReadWrite_W}},
+			{Name: resource3, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeBool, ReadWrite: v2.ReadWrite_RW}},
+			{Name: resource4, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeString, ReadWrite: v2.ReadWrite_RW}, IsHidden: true},
+			{Name: resource5, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeInt16, ReadWrite: v2.ReadWrite_RW}},
+			{Name: resource6, Properties: dtos.ResourceProperties{ValueType: v2.ValueTypeBool, ReadWrite: v2.ReadWrite_RW}},
 		},
 		DeviceCommands: []dtos.DeviceCommand{
 			{
@@ -60,15 +61,38 @@ func TestBuildCoreCommands(t *testing.T) {
 		},
 	}
 	expectedCoreCommand := []dtos.CoreCommand{
-		{Name: command1, Get: true, Path: commandPath(testDeviceName, command1), Url: testServiceUrl},
-		{Name: resource6, Get: true, Set: true, Path: commandPath(testDeviceName, resource6), Url: testServiceUrl},
-		{Name: resource1, Get: true, Path: commandPath(testDeviceName, resource1), Url: testServiceUrl},
-		{Name: resource2, Set: true, Path: commandPath(testDeviceName, resource2), Url: testServiceUrl},
-		{Name: resource3, Get: true, Set: true, Path: commandPath(testDeviceName, resource3), Url: testServiceUrl},
-		{Name: resource5, Get: true, Set: true, Path: commandPath(testDeviceName, resource5), Url: testServiceUrl},
+		{
+			Name: command1, Get: true, Path: commandPath(testDeviceName, command1), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{
+				{ResourceName: resource1, ValueType: v2.ValueTypeString},
+				{ResourceName: resource2, ValueType: v2.ValueTypeInt16},
+				{ResourceName: resource3, ValueType: v2.ValueTypeBool},
+			},
+		},
+		{
+			Name: resource6, Get: true, Set: true, Path: commandPath(testDeviceName, resource6), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{{ResourceName: resource6, ValueType: v2.ValueTypeBool}},
+		},
+		{
+			Name: resource1, Get: true, Path: commandPath(testDeviceName, resource1), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{{ResourceName: resource1, ValueType: v2.ValueTypeString}},
+		},
+		{
+			Name: resource2, Set: true, Path: commandPath(testDeviceName, resource2), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{{ResourceName: resource2, ValueType: v2.ValueTypeInt16}},
+		},
+		{
+			Name: resource3, Get: true, Set: true, Path: commandPath(testDeviceName, resource3), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{{ResourceName: resource3, ValueType: v2.ValueTypeBool}},
+		},
+		{
+			Name: resource5, Get: true, Set: true, Path: commandPath(testDeviceName, resource5), Url: testServiceUrl,
+			Parameters: []dtos.CoreCommandParameter{{ResourceName: resource5, ValueType: v2.ValueTypeInt16}},
+		},
 	}
 
-	result := buildCoreCommands(testDeviceName, testServiceUrl, profile)
+	result, err := buildCoreCommands(testDeviceName, testServiceUrl, profile)
+	require.NoError(t, err)
 
 	assert.ElementsMatch(t, expectedCoreCommand, result)
 }
