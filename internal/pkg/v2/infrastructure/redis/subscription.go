@@ -213,7 +213,7 @@ func updateSubscription(conn redis.Conn, subscription models.Subscription) error
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 	subscription.Modified = common.MakeTimestamp()
-	storedKey := intervalActionStoredKey(subscription.Id)
+	storedKey := subscriptionStoredKey(subscription.Id)
 
 	_ = conn.Send(MULTI)
 	sendDeleteSubscriptionCmd(conn, storedKey, oldSubscription)
