@@ -38,7 +38,7 @@ var (
 	}
 	testSubscriptionDescription    = "description"
 	testSubscriptionReceiver       = "receiver"
-	testSubscriptionResendLimit    = int64(5)
+	testSubscriptionResendLimit    = 5
 	testSubscriptionResendInterval = "10s"
 	unsupportedChannelType         = "unsupportedChannelType"
 )
@@ -47,6 +47,8 @@ func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
 		notificationContainer.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
+				ResendLimit:    2,
+				ResendInterval: "1s",
 				Writable: config.WritableInfo{
 					LogLevel: "DEBUG",
 				},

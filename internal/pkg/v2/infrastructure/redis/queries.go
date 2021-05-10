@@ -191,7 +191,24 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 }
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
-func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	return objectsByKeys(conn, "ZUNIONSTORE", offset, limit, redisKeys...)
+}
+
+// intersectionObjectsByKeys returns the keys of the set resulting from the intersection of all the given sets.
+func intersectionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	return objectsByKeys(conn, "ZINTERSTORE", offset, limit, redisKeys...)
+}
+
+// objectsByKeys returns the keys of the set resulting from the all the given sets. The data set method could be ZINTERSTORE or ZUNIONSTORE
+func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	if limit == 0 {
+		return [][]byte{}, nil
+	}
+	end := offset + limit - 1
+	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
+		end = limit
+	}
 	args := redis.Args{}
 	cacheSet := uuid.New().String()
 	args = append(args, cacheSet)
@@ -199,9 +216,9 @@ func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...strin
 	for _, key := range redisKeys {
 		args = args.Add(key)
 	}
-	_, err := conn.Do("ZUNIONSTORE", args...)
+	_, err := conn.Do(setMethod, args...)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute ZINTERSTORE command with args %v", args), err)
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute %s command with args %v", setMethod, args), err)
 	}
 	storeKeys, err := redis.Values(conn.Do("ZREVRANGE", cacheSet, 0, -1))
 	if err != nil {
@@ -210,7 +227,7 @@ func unionObjectsByKeys(conn redis.Conn, offset int, end int, redisKeys ...strin
 	if len(storeKeys) == 0 {
 		return nil, nil
 	}
-	if end >= len(storeKeys) {
+	if end >= len(storeKeys) || end == -1 {
 		storeKeys = storeKeys[offset:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		storeKeys = storeKeys[offset : end+1]

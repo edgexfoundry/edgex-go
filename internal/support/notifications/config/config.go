@@ -27,10 +27,13 @@ type ConfigurationStruct struct {
 	Service     bootstrapConfig.ServiceInfo
 	Smtp        SmtpInfo
 	SecretStore bootstrapConfig.SecretStoreInfo
+	// ResendLimit is the default retry limit for attempts to send notifications.
+	ResendLimit int
+	// ResendInterval is the default interval of resending the notification. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
+	ResendInterval string
 }
 
 type WritableInfo struct {
-	ResendLimit     int
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 }

@@ -285,6 +285,9 @@ components:
         resendInterval:
           description: "The interval in ISO 8691 format of resending the notification."
           type: string
+        adminState:
+          description: Admin state (locked/unlocked)
+          type: string
     CreateSubscription:
       description: "Create address information for a party interested in receiving notifications."
       type: object
@@ -321,10 +324,14 @@ components:
         resendInterval:
           description: "The interval in ISO 8691 format of resending the notification."
           type: string
+        adminState:
+          description: Admin state (locked/unlocked)
+          type: string
       required:
         - name
         - channels
         - receiver
+        - adminState
     UpdateSubscription:
       description: "Update address information for a party interested in receiving notifications."
       type: object
@@ -364,6 +371,9 @@ components:
           type: integer
         resendInterval:
           description: "The interval in ISO 8691 format of resending the notification."
+          type: string
+        adminState:
+          description: Admin state (locked/unlocked)
           type: string
     SubscriptionResponse:
       allOf:
@@ -551,6 +561,7 @@ components:
             receiver: receiverA
             resendLimit: 0
             resendInterval: 1h
+            adminState: UNLOCKED
     AddSubscriptionsExample:
       value:
         - apiVersion: "v2"
@@ -605,6 +616,7 @@ components:
           created: 1616659630356
           modified: 1616660213552
           resendInterval: 1h
+          adminState: UNLOCKED
     MultiSubscriptionsResponseExample:
       value:
         apiVersion: "v2"
@@ -629,6 +641,7 @@ components:
               created: 1616659630356
               modified: 1616660213552
               resendInterval: 1h
+              adminState: UNLOCKED
 paths:
   /cleanup:
     parameters:

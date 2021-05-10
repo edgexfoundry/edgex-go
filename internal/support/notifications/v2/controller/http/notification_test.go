@@ -56,6 +56,9 @@ func TestAddNotification(t *testing.T) {
 	validRequest := buildTestAddNotificationRequest()
 	model := dtos.ToNotificationModel(validRequest.Notification)
 	dbClientMock.On("AddNotification", model).Return(model, nil)
+	model.Status = models.Processed
+	dbClientMock.On("UpdateNotification", model).Return(nil)
+	dbClientMock.On("SubscriptionsByCategoriesAndLabels", 0, -1, []string{testNotificationCategory}, testNotificationLabels).Return([]models.Subscription{}, nil)
 
 	noRequestId := validRequest
 	noRequestId.RequestId = ""

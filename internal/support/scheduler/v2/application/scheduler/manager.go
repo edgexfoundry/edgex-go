@@ -133,7 +133,7 @@ func (m *manager) executeAction(action models.IntervalAction) errors.EdgeX {
 		if !ok {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 		}
-		err := utils.SendRequestWithRESTAddress(m.lc, restAddress)
+		_, err := utils.SendRequestWithRESTAddress(m.lc, action.Content, action.ContentType, restAddress)
 		if err != nil {
 			m.lc.Errorf("fail to send request with RESTAddress, err: %v", err)
 		}

@@ -162,9 +162,8 @@ func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 					Host: configuration.IntervalActions[i].Host,
 					Port: configuration.IntervalActions[i].Port,
 				},
-				Path:        configuration.IntervalActions[i].Path,
-				RequestBody: configuration.IntervalActions[i].RequestBody,
-				HTTPMethod:  configuration.IntervalActions[i].Method,
+				Path:       configuration.IntervalActions[i].Path,
+				HTTPMethod: configuration.IntervalActions[i].Method,
 			},
 		}
 		_, err := dbClient.IntervalActionByName(action.Name)
