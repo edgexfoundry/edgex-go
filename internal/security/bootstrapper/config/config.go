@@ -74,6 +74,11 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 	return nil
 }
 
+// GetMessageBusInfo returns empty bootstrapConfig.MessageBusInfo since this is not used.
+func (c *ConfigurationStruct) GetMessageBusInfo() bootstrapConfig.MessageBusInfo {
+	return bootstrapConfig.MessageBusInfo{}
+}
+
 // GetRoleNames gets the slice of the keys (i.e. the service keys) from map Roles as ACL role names
 func (acl ACLInfo) GetACLRoleNames() []string {
 	roleNames := make([]string, 0, len(acl.Roles))

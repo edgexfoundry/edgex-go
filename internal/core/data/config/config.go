@@ -11,17 +11,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package config
 
 import (
-	"fmt"
-
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 )
 
 type ConfigurationStruct struct {
 	Writable     WritableInfo
-	MessageQueue MessageQueueInfo
+	MessageQueue bootstrapConfig.MessageBusInfo
 	Clients      map[string]bootstrapConfig.ClientInfo
 	Databases    map[string]bootstrapConfig.Database
 	Registry     bootstrapConfig.RegistryInfo
@@ -38,33 +37,6 @@ type WritableInfo struct {
 	LogLevel                   string
 	ChecksumAlgo               string
 	InsecureSecrets            bootstrapConfig.InsecureSecrets
-}
-
-// MessageQueueInfo provides parameters related to connecting to a message queue
-type MessageQueueInfo struct {
-	// Host is the hostname or IP address of the broker, if applicable.
-	Host string
-	// Port defines the port on which to access the message queue.
-	Port int
-	// Protocol indicates the protocol to use when accessing the message queue.
-	Protocol string
-	// Indicates the message queue platform being used.
-	Type string
-	// Indicates the topic the data is published/subscribed
-	// TODO this configuration shall be removed once v1 API is deprecated.
-	Topic string
-	// Indicates the topic prefix the data is published to. Note that /<device-profile-name>/<device-name> will be
-	// added to this Publish Topic prefix as the complete publish topic
-	PublishTopicPrefix string
-	// Provides additional configuration properties which do not fit within the existing field.
-	// Typically the key is the name of the configuration property and the value is a string representation of the
-	// desired value for the configuration property.
-	Optional map[string]string
-}
-
-// URL constructs a URL from the protocol, host and port and returns that as a string.
-func (m MessageQueueInfo) URL() string {
-	return fmt.Sprintf("%s://%s:%v", m.Protocol, m.Host, m.Port)
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -129,4 +101,9 @@ func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Datab
 // GetInsecureSecrets returns the service's InsecureSecrets.
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return c.Writable.InsecureSecrets
+}
+
+// GetMessageBusInfo returns the service's MessageQueue configuration.
+func (c *ConfigurationStruct) GetMessageBusInfo() bootstrapConfig.MessageBusInfo {
+	return c.MessageQueue
 }
