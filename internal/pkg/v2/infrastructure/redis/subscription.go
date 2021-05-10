@@ -237,7 +237,7 @@ func subscriptionsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, 
 		redisKeys = append(redisKeys, CreateKey(SubscriptionCollectionLabel, label))
 	}
 
-	objects, err := unionObjectsByKeys(conn, offset, limit, redisKeys...)
+	objects, err := intersectionObjectsByKeys(conn, offset, limit, redisKeys...)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
 	}

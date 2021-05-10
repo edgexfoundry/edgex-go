@@ -192,6 +192,16 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
 func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	return objectsByKeys(conn, "ZUNIONSTORE", offset, limit, redisKeys...)
+}
+
+// intersectionObjectsByKeys returns the keys of the set resulting from the intersection of all the given sets.
+func intersectionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
+	return objectsByKeys(conn, "ZINTERSTORE", offset, limit, redisKeys...)
+}
+
+// objectsByKeys returns the keys of the set resulting from the all the given sets. The data set method could be ZINTERSTORE or ZUNIONSTORE
+func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
 	if limit == 0 {
 		return [][]byte{}, nil
 	}
@@ -206,9 +216,9 @@ func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...str
 	for _, key := range redisKeys {
 		args = args.Add(key)
 	}
-	_, err := conn.Do("ZUNIONSTORE", args...)
+	_, err := conn.Do(setMethod, args...)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute ZINTERSTORE command with args %v", args), err)
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute %s command with args %v", setMethod, args), err)
 	}
 	storeKeys, err := redis.Values(conn.Do("ZREVRANGE", cacheSet, 0, -1))
 	if err != nil {
