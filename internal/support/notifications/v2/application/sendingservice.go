@@ -94,6 +94,8 @@ func criticalSend(dic *di.Container, n models.Notification, sub models.Subscript
 		return trans, errors.NewCommonEdgeXWrapper(err)
 	}
 	for i := 1; i <= resendLimit; i++ {
+		// Since this sending process is triggered for the critical notification which is failed to send to the subscription at the first time,
+		// so we wait seconds and retry to send the notification again.
 		time.Sleep(resendInterval)
 		lc.Warn("fail to send the critical notification. Retry to send again...")
 
