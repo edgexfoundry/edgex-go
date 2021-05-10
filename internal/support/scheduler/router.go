@@ -221,6 +221,5 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 		}).Methods(http.MethodDelete)
 
 	r.Use(correlation.ManageHeader)
-	r.Use(correlation.OnResponseComplete)
-	r.Use(correlation.OnRequestBegin)
+	r.Use(correlation.LoggingMiddleware(bootstrapContainer.LoggingClientFrom(dic.Get)))
 }

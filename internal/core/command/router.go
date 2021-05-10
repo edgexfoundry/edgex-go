@@ -63,8 +63,7 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	loadDeviceRoutes(b, dic)
 
 	r.Use(correlation.ManageHeader)
-	r.Use(correlation.OnResponseComplete)
-	r.Use(correlation.OnRequestBegin)
+	r.Use(correlation.LoggingMiddleware(bootstrapContainer.LoggingClientFrom(dic.Get)))
 }
 
 func loadDeviceRoutes(b *mux.Router, dic *di.Container) {
