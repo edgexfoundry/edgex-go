@@ -80,7 +80,7 @@ func (d Database) BootstrapHandler(
 	for startupTimer.HasNotElapsed() {
 		var err error
 
-		secrets, err := secretProvider.GetSecrets(d.database.GetDatabaseInfo()[v2.Primary].Type)
+		secrets, err := secretProvider.GetSecret(d.database.GetDatabaseInfo()[v2.Primary].Type)
 		if err == nil {
 			credentials = bootstrapConfig.Credentials{
 				Username: secrets[secret.UsernameKey],

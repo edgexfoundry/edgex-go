@@ -68,7 +68,7 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 
 	for startupTimer.HasNotElapsed() {
 		// retrieve database credentials from secretstore
-		secrets, err := secretProvider.GetSecrets(config.Databases[v2.Primary].Type)
+		secrets, err := secretProvider.GetSecret(config.Databases[v2.Primary].Type)
 		if err == nil {
 			credentials.Username = secrets[secret.UsernameKey]
 			credentials.Password = secrets[secret.PasswordKey]
