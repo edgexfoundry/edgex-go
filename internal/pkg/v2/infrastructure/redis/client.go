@@ -933,6 +933,19 @@ func (c *Client) DeleteSubscriptionByName(name string) errors.EdgeX {
 	return nil
 }
 
+// SubscriptionsByCategoriesAndLabels queries subscriptions by offset, limit, categories and labels
+func (c *Client) SubscriptionsByCategoriesAndLabels(offset int, limit int, categories []string, labels []string) (subscriptions []model.Subscription, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	subscriptions, edgeXerr = subscriptionsByCategoriesAndLabels(conn, offset, limit, categories, labels)
+	if edgeXerr != nil {
+		return subscriptions, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
+			fmt.Sprintf("fail to query subscriptions by offset %d, limit %d, categories %v and labels %v", offset, limit, categories, labels), edgeXerr)
+	}
+	return subscriptions, nil
+}
+
 // AddNotification adds a new notification
 func (c *Client) AddNotification(notification model.Notification) (model.Notification, errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -1033,4 +1046,30 @@ func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
 	}
 
 	return nil
+}
+
+// UpdateNotification updates a notification
+func (c *Client) UpdateNotification(n model.Notification) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateNotification(conn, n)
+}
+
+// AddTransmission adds a new transmission
+func (c *Client) AddTransmission(t model.Transmission) (model.Transmission, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	if len(t.Id) == 0 {
+		t.Id = uuid.New().String()
+	}
+
+	return addTransmission(conn, t)
+}
+
+// UpdateTransmission updates a transmission
+func (c *Client) UpdateTransmission(trans model.Transmission) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	return updateTransmission(conn, trans)
 }

@@ -49,8 +49,10 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
 		}
-		commands := buildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
-
+		commands, err := buildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
+		if err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
 			ProfileName:  device.ProfileName,
@@ -90,7 +92,10 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	commands := buildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
+	commands, err := buildCoreCommands(deviceResponse.Device.Name, serviceUrl, deviceProfileResponse.Profile)
+	if err != nil {
+		return deviceCoreCommand, errors.NewCommonEdgeXWrapper(err)
+	}
 
 	deviceCoreCommand = dtos.DeviceCoreCommand{
 		DeviceName:   deviceResponse.Device.Name,
@@ -103,11 +108,12 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 func commandPath(deviceName, cmdName string) string {
 	return fmt.Sprintf("%s/%s/%s/%s", V2Routes.ApiDeviceRoute, V2Routes.Name, deviceName, cmdName)
 }
-func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string) dtos.CoreCommand {
+func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string, parameters []dtos.CoreCommandParameter) dtos.CoreCommand {
 	cmd := dtos.CoreCommand{
-		Name: cmdName,
-		Url:  serviceUrl,
-		Path: commandPath(deviceName, cmdName),
+		Name:       cmdName,
+		Url:        serviceUrl,
+		Path:       commandPath(deviceName, cmdName),
+		Parameters: parameters,
 	}
 	if strings.Contains(readWrite, V2Routes.ReadWrite_R) {
 		cmd.Get = true
@@ -118,28 +124,62 @@ func buildCoreCommand(deviceName, serviceUrl, cmdName, readWrite string) dtos.Co
 	return cmd
 }
 
-func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) []dtos.CoreCommand {
+func deviceResourcesByName(resources []dtos.DeviceResource, name string) (res dtos.DeviceResource, exists bool) {
+	for _, resource := range resources {
+		if resource.Name == name {
+			exists = true
+			res = resource
+			break
+		}
+	}
+	return res, exists
+}
+
+// coreCommandParameters creates command parameters by mapping the resourceOperation to corresponding resourceName and valueType
+func coreCommandParameters(resourceOperations []dtos.ResourceOperation, resources []dtos.DeviceResource) ([]dtos.CoreCommandParameter, errors.EdgeX) {
+	parameters := make([]dtos.CoreCommandParameter, len(resourceOperations))
+	for i, ro := range resourceOperations {
+		r, exists := deviceResourcesByName(resources, ro.DeviceResource)
+		if !exists {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device command's resource %s doesn't match any deivce resource", ro.DeviceResource), nil)
+		}
+		parameters[i] = dtos.CoreCommandParameter{
+			ResourceName: r.Name,
+			ValueType:    r.Properties.ValueType,
+		}
+	}
+	return parameters, nil
+}
+
+func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.DeviceProfile) ([]dtos.CoreCommand, errors.EdgeX) {
 	commandMap := make(map[string]dtos.CoreCommand)
 	// Build commands from device commands
 	for _, c := range profile.DeviceCommands {
 		if c.IsHidden {
 			continue
 		}
-		commandMap[c.Name] = buildCoreCommand(deviceName, serviceUrl, c.Name, c.ReadWrite)
+		parameters, err := coreCommandParameters(c.ResourceOperations, profile.DeviceResources)
+		if err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
+		commandMap[c.Name] = buildCoreCommand(deviceName, serviceUrl, c.Name, c.ReadWrite, parameters)
 	}
 	// Build commands from device resource
 	for _, r := range profile.DeviceResources {
 		if _, ok := commandMap[r.Name]; ok || r.IsHidden {
 			continue
 		}
-		commandMap[r.Name] = buildCoreCommand(deviceName, serviceUrl, r.Name, r.Properties.ReadWrite)
+		parameters := []dtos.CoreCommandParameter{
+			{ResourceName: r.Name, ValueType: r.Properties.ValueType},
+		}
+		commandMap[r.Name] = buildCoreCommand(deviceName, serviceUrl, r.Name, r.Properties.ReadWrite, parameters)
 	}
 	// Convert command map to slice
 	var commands []dtos.CoreCommand
 	for _, cmd := range commandMap {
 		commands = append(commands, cmd)
 	}
-	return commands
+	return commands, nil
 }
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also

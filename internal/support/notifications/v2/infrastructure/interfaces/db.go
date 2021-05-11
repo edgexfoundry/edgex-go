@@ -22,6 +22,7 @@ type DBClient interface {
 	SubscriptionsByReceiver(offset, limit int, receiver string) ([]models.Subscription, errors.EdgeX)
 	DeleteSubscriptionByName(name string) errors.EdgeX
 	UpdateSubscription(s models.Subscription) errors.EdgeX
+	SubscriptionsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Subscription, errors.EdgeX)
 
 	AddNotification(n models.Notification) (models.Notification, errors.EdgeX)
 	NotificationById(id string) (models.Notification, errors.EdgeX)
@@ -31,4 +32,8 @@ type DBClient interface {
 	NotificationsByTimeRange(start int, end int, offset int, limit int) ([]models.Notification, errors.EdgeX)
 	DeleteNotificationById(id string) errors.EdgeX
 	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX)
+	UpdateNotification(s models.Notification) errors.EdgeX
+
+	AddTransmission(trans models.Transmission) (models.Transmission, errors.EdgeX)
+	UpdateTransmission(trans models.Transmission) errors.EdgeX
 }

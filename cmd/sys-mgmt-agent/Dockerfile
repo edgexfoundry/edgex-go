@@ -22,6 +22,8 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
+
 # Build the SMA executable.
 RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
 

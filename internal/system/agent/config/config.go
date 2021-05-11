@@ -95,8 +95,3 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return nil
 }
-
-// GetMessageBusInfo returns empty bootstrapConfig.MessageBusInfo since this is not used.
-func (c *ConfigurationStruct) GetMessageBusInfo() bootstrapConfig.MessageBusInfo {
-	return bootstrapConfig.MessageBusInfo{}
-}

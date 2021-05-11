@@ -13,7 +13,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
@@ -23,11 +22,11 @@ import (
 
 // The AddNotification function accepts the new Notification model from the controller function
 // and then invokes AddNotification function of infrastructure layer to add new Notification
-func AddNotification(d models.Notification, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+func AddNotification(n models.Notification, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
 	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	addedNotification, edgeXerr := dbClient.AddNotification(d)
+	addedNotification, edgeXerr := dbClient.AddNotification(n)
 	if edgeXerr != nil {
 		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -36,7 +35,7 @@ func AddNotification(d models.Notification, ctx context.Context, dic *di.Contain
 		addedNotification.Id,
 		correlation.FromContext(ctx))
 
-	// TODO: distribute notification
+	go asyncDistributeNotification(dic, addedNotification)
 
 	return addedNotification.Id, nil
 }

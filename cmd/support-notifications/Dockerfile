@@ -32,6 +32,8 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
+
+RUN go mod tidy
 RUN make cmd/support-notifications/support-notifications
 
 FROM alpine:3.12

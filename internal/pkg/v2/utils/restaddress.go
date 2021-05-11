@@ -25,22 +25,21 @@ var methods = map[string]struct{}{
 }
 
 // SendRequestWithRESTAddress sends request with REST address
-func SendRequestWithRESTAddress(lc logger.LoggingClient, address models.RESTAddress) errors.EdgeX {
+func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, contentType string, address models.RESTAddress) (res string, err errors.EdgeX) {
 	executingUrl := getUrlStr(address)
 
-	req, err := getHttpRequest(address.HTTPMethod, executingUrl, address)
+	req, err := getHttpRequest(address.HTTPMethod, executingUrl, content, contentType)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, "fail to create http request", err)
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to create http request", err)
 	}
 
 	client := &http.Client{}
-	responseBytes, err := sendRequestAndGetResponse(client, req)
+	res, err = sendRequestAndGetResponse(client, req)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, "fail to send http request", err)
+		return "", errors.NewCommonEdgeXWrapper(err)
 	}
-	responseStr := string(responseBytes)
-	lc.Debugf("execution returns response content : %s", responseStr)
-	return nil
+	lc.Debugf("success to send rest request with address %v", address.BaseAddress)
+	return res, nil
 }
 
 func getUrlStr(address models.RESTAddress) string {
@@ -55,13 +54,13 @@ func validMethod(method string) bool {
 func getHttpRequest(
 	httpMethod string,
 	executingUrl string,
-	address models.RESTAddress) (*http.Request, errors.EdgeX) {
+	content string, contentType string) (*http.Request, errors.EdgeX) {
 	if !validMethod(httpMethod) {
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("net/http: invalid method %q", httpMethod), nil)
 	}
 
 	var body []byte
-	params := strings.TrimSpace(address.RequestBody)
+	params := strings.TrimSpace(content)
 
 	if len(params) > 0 {
 		body = []byte(params)
@@ -74,10 +73,10 @@ func getHttpRequest(
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "create new request occurs error", err)
 	}
 
-	if address.ContentType == "" {
-		address.ContentType = clients.ContentTypeJSON
+	if contentType == "" {
+		contentType = clients.ContentTypeJSON
 	}
-	req.Header.Set(clients.ContentType, address.ContentType)
+	req.Header.Set(clients.ContentType, contentType)
 
 	if len(params) > 0 {
 		req.Header.Set(clients.ContentLength, strconv.Itoa(len(params)))
@@ -86,11 +85,11 @@ func getHttpRequest(
 	return req, nil
 }
 
-func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, errors.EdgeX) {
+func sendRequestAndGetResponse(client *http.Client, req *http.Request) (res string, edgeXerr errors.EdgeX) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return []byte{}, errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)
 	}
 
 	defer resp.Body.Close()
@@ -98,8 +97,10 @@ func sendRequestAndGetResponse(client *http.Client, req *http.Request) ([]byte, 
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return []byte{}, errors.NewCommonEdgeX(errors.KindServerError, "fail to read the response body", err)
+		return "", errors.NewCommonEdgeX(errors.KindIOError, "fail to read the response body", err)
 	}
-
-	return bodyBytes, nil
+	if resp.StatusCode >= http.StatusBadRequest {
+		return "", errors.NewCommonEdgeX(errors.KindMapping(resp.StatusCode), fmt.Sprintf("request failed, status code: %d, err: %s", resp.StatusCode, string(bodyBytes)), nil)
+	}
+	return string(bodyBytes), nil
 }

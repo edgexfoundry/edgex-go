@@ -227,3 +227,19 @@ func updateSubscription(conn redis.Conn, subscription models.Subscription) error
 	}
 	return nil
 }
+
+func subscriptionsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, categories []string, labels []string) (subscriptions []models.Subscription, edgeXerr errors.EdgeX) {
+	var redisKeys []string
+	for _, c := range categories {
+		redisKeys = append(redisKeys, CreateKey(SubscriptionCollectionCategory, c))
+	}
+	for _, label := range labels {
+		redisKeys = append(redisKeys, CreateKey(SubscriptionCollectionLabel, label))
+	}
+
+	objects, err := intersectionObjectsByKeys(conn, offset, limit, redisKeys...)
+	if err != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(err)
+	}
+	return convertObjectsToSubscriptions(objects)
+}

@@ -52,40 +52,40 @@ ARCH=$(shell uname -m)
 build: $(MICROSERVICES)
 
 cmd/core-metadata/core-metadata:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
 	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
 
 cmd/core-command/core-command:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-command
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
 
 cmd/support-notifications/support-notifications:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
 
 cmd/sys-mgmt-agent/sys-mgmt-agent:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
 cmd/support-scheduler/support-scheduler:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/security-proxy-setup/security-proxy-setup:
-	$(GOCGO) build $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
+	$(GO) build $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
 
 cmd/security-secretstore-setup/security-secretstore-setup:
-	$(GOCGO) build $(GOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
+	$(GO) build $(GOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
 
 cmd/security-file-token-provider/security-file-token-provider:
-	$(GOCGO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
+	$(GO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
 cmd/secrets-config/secrets-config:
-	$(GOCGO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
+	$(GO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
 
 cmd/security-bootstrapper/security-bootstrapper:
-	$(GOCGO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
+	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
 clean:
 	rm -f $(MICROSERVICES)
