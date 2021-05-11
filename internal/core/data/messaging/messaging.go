@@ -22,7 +22,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	messaging2 "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
+	bootstrapMessaging "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
@@ -36,8 +36,8 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
 
 	messageBusInfo.AuthMode = strings.ToLower(strings.TrimSpace(messageBusInfo.AuthMode))
-	if len(messageBusInfo.AuthMode) > 0 && messageBusInfo.AuthMode != messaging2.AuthModeNone {
-		if err := messaging2.SetOptionsAuthData(&messageBusInfo, lc, dic); err != nil {
+	if len(messageBusInfo.AuthMode) > 0 && messageBusInfo.AuthMode != bootstrapMessaging.AuthModeNone {
+		if err := bootstrapMessaging.SetOptionsAuthData(&messageBusInfo, lc, dic); err != nil {
 			lc.Error(err.Error())
 			return false
 		}
