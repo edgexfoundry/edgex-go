@@ -31,6 +31,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
 RUN make cmd/security-file-token-provider/security-file-token-provider \
   cmd/security-secretstore-setup/security-secretstore-setup
 

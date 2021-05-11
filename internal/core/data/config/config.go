@@ -102,8 +102,3 @@ func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Datab
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return c.Writable.InsecureSecrets
 }
-
-// GetMessageBusInfo returns the service's MessageQueue configuration.
-func (c *ConfigurationStruct) GetMessageBusInfo() bootstrapConfig.MessageBusInfo {
-	return c.MessageQueue
-}

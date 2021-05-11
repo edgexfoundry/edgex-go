@@ -12,6 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package data
 
 import (
@@ -22,11 +23,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"

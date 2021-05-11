@@ -33,6 +33,8 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
+
+RUN go mod tidy
 RUN make cmd/support-scheduler/support-scheduler
 
 FROM alpine:3.12
