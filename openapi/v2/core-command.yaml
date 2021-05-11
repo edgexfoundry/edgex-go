@@ -55,6 +55,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreCommand'
+    CoreCommandParameter:
+      description: "Indicate the core command expected readings or parameters. For Get command, it describes the expected readings. For Set command, it describes the parameters in the payload."
+      type: object
+      properties:
+        resourceName:
+          type: string
+        valueType:
+          type: string
     CoreCommand:
       type: object
       properties:
@@ -68,6 +76,10 @@ components:
           type: string
         url:
           type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreCommandParameter'
     DeviceCoreCommandResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -390,10 +402,12 @@ components:
                 get: true
                 path: "/api/v2/device/name/testDevice/command/coolingpoint1"
                 url: "http://localhost:48082"
+                parameters: [ {"resourceName":"resource1","valueType":"Int32"} ]
               - name: "coolingpoint2"
                 set: true
                 path: "/api/v2/device/name/testDevice/command/coolingpoint2"
                 url: "http://localhost:48082"
+                parameters: [ {"resourceName":"resource5","valueType":"String"},{"resourceName":"resource6","valueType":"Bool"}  ]
     MultiDeviceCoreCommandsExample:
       value:
         apiVersion: "v2"
@@ -406,10 +420,12 @@ components:
               get: true
               path: "/api/v2/device/name/testDevice1/command/coolingpoint1"
               url: "http://localhost:48082"
+              parameters: [ {"resourceName":"resource1","valueType":"Int32"} ]
             - name: "coolingpoint2"
               set: true
               path: "/api/v2/device/name/testDevice1/command/coolingpoint2"
               url: "http://localhost:48082"
+              parameters: [ {"resourceName":"resource2","valueType":"Int16"},{"resourceName":"resource3","valueType":"Int32"}  ]
           - deviceName: "testDevice2"
             profileName: "testProfile"
             coreCommands:
@@ -417,10 +433,12 @@ components:
               get: true
               path: "/api/v2/device/name/testDevice2/command/coolingpoint1"
               url: "http://localhost:48082"
+              parameters: [ {"resourceName":"resource4","valueType":"Int32"} ]
             - name: "coolingpoint2"
               set: true
               path: "/api/v2/device/name/testDevice2/command/coolingpoint2"
               url: "http://localhost:48082"
+              parameters: [ {"resourceName":"resource5","valueType":"String"},{"resourceName":"resource6","valueType":"Bool"}  ]
 paths:
   /device/name/{name}/{command}:
     parameters:
