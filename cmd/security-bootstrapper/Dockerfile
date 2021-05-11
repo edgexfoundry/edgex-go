@@ -32,6 +32,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
 RUN make cmd/security-bootstrapper/security-bootstrapper
 
 FROM alpine:3.12

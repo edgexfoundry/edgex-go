@@ -31,6 +31,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
 RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
 
 FROM alpine:3.12

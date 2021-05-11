@@ -24,5 +24,10 @@ var MessagingClientName = di.TypeInstanceToName((*messaging.MessageClient)(nil))
 
 // MessagingClientFrom helper function queries the DIC and returns the messaging client.
 func MessagingClientFrom(get di.Get) messaging.MessageClient {
-	return get(MessagingClientName).(messaging.MessageClient)
+	client, ok := get(MessagingClientName).(messaging.MessageClient)
+	if !ok {
+		return nil
+	}
+
+	return client
 }

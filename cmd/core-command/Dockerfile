@@ -34,6 +34,7 @@ RUN go mod download
 
 COPY . .
 
+RUN go mod tidy
 RUN make cmd/core-command/core-command
 
 FROM alpine:3.12

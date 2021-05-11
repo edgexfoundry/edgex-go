@@ -33,6 +33,8 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
+
+RUN go mod tidy
 RUN make cmd/core-metadata/core-metadata
 
 #Next image - Copy built Go binary into new workspace
