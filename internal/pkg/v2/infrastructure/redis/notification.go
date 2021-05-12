@@ -40,7 +40,7 @@ func sendAddNotificationCmd(conn redis.Conn, storedKey string, n models.Notifica
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal notification for Redis persistence", err)
 	}
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, NotificationCollection, 0, storedKey)
+	_ = conn.Send(ZADD, NotificationCollection, n.Modified, storedKey)
 	_ = conn.Send(ZADD, NotificationCollectionCreated, n.Created, storedKey)
 	if len(n.Category) > 0 {
 		_ = conn.Send(ZADD, CreateKey(NotificationCollectionCategory, n.Category), n.Modified, storedKey)
@@ -212,4 +212,143 @@ func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, 
 		return notifications, errors.NewCommonEdgeXWrapper(err)
 	}
 	return convertObjectsToNotifications(objects)
+}
+
+// notificationAndTransmissionStoreKeys return the store keys of the notification and transmission that are older than age.
+func notificationAndTransmissionStoreKeys(conn redis.Conn, age int64) ([]string, []string, errors.EdgeX) {
+	expireTimestamp := common.MakeTimestamp() - age
+
+	ncStoreKeys, err := redis.Strings(conn.Do(ZRANGEBYSCORE, NotificationCollection, 0, expireTimestamp))
+	if err != nil {
+		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve nitification storeKeys by %s failed", NotificationCollection), err)
+	}
+
+	var transStoreKeys []string
+	for _, ncStoreKey := range ncStoreKeys {
+		keys, err := redis.Strings(conn.Do(ZRANGE, CreateKey(TransmissionCollectionNotificationId, idFromStoredKey(ncStoreKey)), 0, -1))
+		if err != nil {
+			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "fail to retrieve transmission storeKeys", err)
+		}
+		transStoreKeys = append(transStoreKeys, keys...)
+	}
+
+	return ncStoreKeys, transStoreKeys, nil
+}
+
+// asyncDeleteNotificationByStoreKeys deletes all notifications with given storeKeys. This function is implemented to be run as a
+// separate goroutine in the background to achieve better performance, so this function return nothing.  When
+// encountering any errors during deletion, this function will simply log the error.
+func (c *Client) asyncDeleteNotificationByStoreKeys(storeKeys []string) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	objects, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(storeKeys))
+	if edgeXerr != nil {
+		c.loggingClient.Errorf("Deleted notifications failed while retrieving objects by storeKeys, %v", edgeXerr)
+		return
+	}
+
+	// cmdSize is used to count the notification deletion command
+	cmdSize := 0
+	// start the transaction before iteration
+	_ = conn.Send(MULTI)
+	// iterate each notifications for deletion in batch
+	for i, o := range objects {
+		nc := models.Notification{}
+		err := json.Unmarshal(o, &nc)
+		if err != nil {
+			c.loggingClient.Errorf("unable to marshal notification.  Err: %s", err.Error())
+			continue
+		}
+		sendDeleteNotificationCmd(conn, notificationStoredKey(nc.Id), nc)
+		cmdSize++
+
+		if cmdSize >= c.BatchSize {
+			_, err = conn.Do(EXEC)
+			if err != nil {
+				c.loggingClient.Errorf("unable to execute batch notification deletion, %v", err)
+				continue
+			}
+			// reset cmdSize to zero if EXEC is successfully executed without error
+			cmdSize = 0
+			// rerun another transaction when iteration is not finished
+			if i < len(objects)-1 {
+				_ = conn.Send(MULTI)
+			}
+		}
+	}
+
+	// Iteration is finished but there are commands need to execute
+	if cmdSize > 0 {
+		_, err := conn.Do(EXEC)
+		if err != nil {
+			c.loggingClient.Errorf("unable to execute batch notification deletion, %v", err)
+		}
+	}
+}
+
+// asyncDeleteTransmissionByStoreKeys deletes all transmissions with given storeKeys. This function is implemented to be run as a
+// separate goroutine in the background to achieve better performance, so this function return nothing.  When
+// encountering any errors during deletion, this function will simply log the error.
+func (c *Client) asyncDeleteTransmissionByStoreKeys(storeKeys []string) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	objects, edgeXerr := getObjectsByIds(conn, common.ConvertStringsToInterfaces(storeKeys))
+	if edgeXerr != nil {
+		c.loggingClient.Errorf("Deleted transmissions failed while retrieving objects by storeKeys, %v", edgeXerr)
+		return
+	}
+
+	// cmdSize is used to count the transmission deletion command
+	cmdSize := 0
+	// start the transaction before iteration
+	_ = conn.Send(MULTI)
+	// iterate each notifications for deletion in batch
+	for i, o := range objects {
+		trans := models.Transmission{}
+		err := json.Unmarshal(o, &trans)
+		if err != nil {
+			c.loggingClient.Errorf("unable to marshal transmission.  Err: %s", err.Error())
+			continue
+		}
+		sendDeleteTransmissionCmd(conn, transmissionStoredKey(trans.Id), trans)
+		cmdSize++
+
+		if cmdSize >= c.BatchSize {
+			_, err = conn.Do(EXEC)
+			if err != nil {
+				c.loggingClient.Errorf("unable to execute batch transmission deletion, %v", err)
+				continue
+			}
+			// reset cmdSize to zero if EXEC is successfully executed without error
+			cmdSize = 0
+			// rerun another transaction when iteration is not finished
+			if i < len(objects)-1 {
+				_ = conn.Send(MULTI)
+			}
+		}
+	}
+
+	// Iteration is finished but there are commands need to execute
+	if cmdSize > 0 {
+		_, err := conn.Do(EXEC)
+		if err != nil {
+			c.loggingClient.Errorf("unable to execute batch transmission deletion, %v", err)
+		}
+	}
+}
+
+// CleanupNotificationsByAge deletes notifications and their corresponding transmissions that are older than age.
+// This function is implemented to starts up two goroutines to delete transmissions and notifications in the background to achieve better performance.
+func (c *Client) CleanupNotificationsByAge(age int64) (err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go c.asyncDeleteNotificationByStoreKeys(ncStoreKeys)
+	go c.asyncDeleteTransmissionByStoreKeys(transStoreKeys)
+	return nil
 }

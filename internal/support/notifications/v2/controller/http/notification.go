@@ -8,6 +8,7 @@ package http
 import (
 	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
@@ -20,6 +21,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
@@ -242,5 +244,47 @@ func (nc *NotificationController) NotificationsBySubscriptionName(w http.Respons
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
+}
+
+// CleanupNotificationsByAge deletes notifications which have age and is less than the specified one, where the age of Notification is calculated by subtracting its last modification timestamp from the current timestamp. Note that the corresponding transmissions will also be deleted.
+func (nc *NotificationController) CleanupNotificationsByAge(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	age, parsingErr := strconv.ParseInt(vars[v2.Age], 10, 64)
+	if parsingErr != nil {
+		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "age format parsing failed", parsingErr)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	err := application.CleanupNotificationsByAge(age, nc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
+	// encode and send out the response
+	pkg.Encode(response, w, lc)
+}
+
+// CleanupNotifications deletes all notifications and the corresponding transmissions.
+func (nc *NotificationController) CleanupNotifications(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+
+	// Use zero as the age to delete all
+	err := application.CleanupNotificationsByAge(0, nc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
+	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }

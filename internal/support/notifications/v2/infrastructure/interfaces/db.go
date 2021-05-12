@@ -33,6 +33,7 @@ type DBClient interface {
 	DeleteNotificationById(id string) errors.EdgeX
 	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX)
 	UpdateNotification(s models.Notification) errors.EdgeX
+	CleanupNotificationsByAge(age int64) errors.EdgeX
 
 	AddTransmission(trans models.Transmission) (models.Transmission, errors.EdgeX)
 	UpdateTransmission(trans models.Transmission) errors.EdgeX

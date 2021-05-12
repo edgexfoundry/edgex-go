@@ -109,6 +109,22 @@ func (_m *DBClient) AllSubscriptions(offset int, limit int) ([]models.Subscripti
 	return r0, r1
 }
 
+// CleanupNotificationsByAge provides a mock function with given fields: age
+func (_m *DBClient) CleanupNotificationsByAge(age int64) errors.EdgeX {
+	ret := _m.Called(age)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(int64) errors.EdgeX); ok {
+		r0 = rf(age)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // CloseSession provides a mock function with given fields:
 func (_m *DBClient) CloseSession() {
 	_m.Called()
