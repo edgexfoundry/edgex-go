@@ -235,7 +235,7 @@ func notificationAndTransmissionStoreKeys(conn redis.Conn, age int64) ([]string,
 	return ncStoreKeys, transStoreKeys, nil
 }
 
-// asyncDeleteReadingsByIds deletes all notifications with given storeKeys. This function is implemented to be run as a
+// asyncDeleteNotificationByStoreKeys deletes all notifications with given storeKeys. This function is implemented to be run as a
 // separate goroutine in the background to achieve better performance, so this function return nothing.  When
 // encountering any errors during deletion, this function will simply log the error.
 func (c *Client) asyncDeleteNotificationByStoreKeys(storeKeys []string) {
