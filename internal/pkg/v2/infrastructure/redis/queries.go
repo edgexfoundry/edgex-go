@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -238,4 +239,10 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 	}
 
 	return objects, nil
+}
+
+// idFromStoredKey extracts Id from the store key
+func idFromStoredKey(storeKey string) string {
+	substrings := strings.Split(storeKey, DBKeySeparator)
+	return substrings[len(substrings)-1]
 }
