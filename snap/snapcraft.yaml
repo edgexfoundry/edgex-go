@@ -124,7 +124,15 @@ apps:
       KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "localhost:8001, localhost:8444 ssl"
-      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+      KONG_STATUS_LISTEN: "localhost:8100"
+      # The DNS order was modified because of an issue with a Windows based host DNS issue.
+      # Keeping the default order would cause the first API request to Kong's admin API much longer time to connect for
+      # taking something minimum of 20 seconds to complete, and then others would complete as expected.
+      # Moreover, changing the DNS order did not impact those non-Windows based systems,
+      # so implementing it across the board seemed pretty low risk.
+      # The work-around that was found in one of the documented issues was to remove the SRV record check
+      # by manipulating the Kong DNS checking order via environment variable. Once we did that,
+      # the prolonged connecting issue went away.
       KONG_DNS_ORDER: "LAST,A,CNAME"
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
