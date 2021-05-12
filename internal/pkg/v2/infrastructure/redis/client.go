@@ -1073,3 +1073,15 @@ func (c *Client) UpdateTransmission(trans model.Transmission) errors.EdgeX {
 	defer conn.Close()
 	return updateTransmission(conn, trans)
 }
+
+// TransmissionById gets a transmission by id
+func (c *Client) TransmissionById(id string) (trans model.Transmission, edgexErr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	trans, edgexErr = transmissionById(conn, id)
+	if edgexErr != nil {
+		return trans, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("failed to query transmission by id %s", id), edgexErr)
+	}
+	return
+}

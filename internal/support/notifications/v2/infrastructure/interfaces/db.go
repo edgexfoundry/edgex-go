@@ -37,4 +37,5 @@ type DBClient interface {
 
 	AddTransmission(trans models.Transmission) (models.Transmission, errors.EdgeX)
 	UpdateTransmission(trans models.Transmission) errors.EdgeX
+	TransmissionById(id string) (models.Transmission, errors.EdgeX)
 }

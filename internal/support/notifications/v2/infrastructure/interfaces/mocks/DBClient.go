@@ -456,6 +456,29 @@ func (_m *DBClient) SubscriptionsByReceiver(offset int, limit int, receiver stri
 	return r0, r1
 }
 
+// TransmissionById provides a mock function with given fields: id
+func (_m *DBClient) TransmissionById(id string) (models.Transmission, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 models.Transmission
+	if rf, ok := ret.Get(0).(func(string) models.Transmission); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(models.Transmission)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // UpdateNotification provides a mock function with given fields: s
 func (_m *DBClient) UpdateNotification(s models.Notification) errors.EdgeX {
 	ret := _m.Called(s)
