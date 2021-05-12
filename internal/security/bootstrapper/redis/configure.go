@@ -38,7 +38,7 @@ import (
 func Configure(ctx context.Context,
 	cancel context.CancelFunc,
 	flags flags.Common) {
-	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapRedisKey)
+	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapperRedisKey)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -56,7 +56,7 @@ func Configure(ctx context.Context,
 		ctx,
 		cancel,
 		flags,
-		clients.SecurityBootstrapRedisKey,
+		clients.SecurityBootstrapperRedisKey,
 		internal.ConfigStemCore,
 		configuration,
 		nil,

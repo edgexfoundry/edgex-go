@@ -33,27 +33,27 @@ Port = 8500
 Type = 'consul'
 
 [Clients]
-  [Clients.edgex-support-notifications]
+  [Clients.support-notifications]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
 
-  [Clients.edgex-core-command]
+  [Clients.core-command]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48082
 
-  [Clients.edgex-core-metadata]
+  [Clients.core-metadata]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48081
 
-  [Clients.edgex-core-data]
+  [Clients.core-data]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48080
 
-  [Clients.edgex-support-scheduler]
+  [Clients.support-scheduler]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48085

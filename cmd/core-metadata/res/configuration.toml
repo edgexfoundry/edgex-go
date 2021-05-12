@@ -25,15 +25,15 @@ Port = 8500
 Type = 'consul'
 
 [Clients]
-  [Clients.edgex-support-notifications]
+  [Clients.support-notifications]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
-  [Clients.edgex-core-data]
+
+  [Clients.core-data]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48080
-
 
 [Databases]
   [Databases.Primary]

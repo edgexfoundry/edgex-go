@@ -25,4 +25,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+replace (
+	github.com/edgexfoundry/go-mod-bootstrap/v2 => ../MODS/go-mod-bootstrap
+	github.com/edgexfoundry/go-mod-core-contracts/v2 => ../MODS/go-mod-core-contracts
+)
+
 go 1.16
