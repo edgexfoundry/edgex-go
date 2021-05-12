@@ -32,9 +32,6 @@ const (
 	// and the the length of the name is upto 512 characters
 	ServiceNameValidationRegx = `^[\w. \~\^\-\|\<\>\{\}]{1,512}$`
 
-	// this is a feature key to indicate whether to enable Registry Consul's ACL or not
-	RegistryACLFeatureFlag = "ENABLE_REGISTRY_ACL"
-
 	VaultToken             = "X-Vault-Token"
 	TokenCreatorPolicyName = "privileged-token-creator"
 
