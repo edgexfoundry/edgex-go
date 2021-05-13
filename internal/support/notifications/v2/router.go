@@ -53,6 +53,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	// Transmission
 	trans := notificationsController.NewTransmissionController(dic)
 	r.HandleFunc(v2.ApiTransmissionByIdRoute, trans.TransmissionById).Methods(http.MethodGet)
+	r.HandleFunc(v2.ApiTransmissionByTimeRangeRoute, trans.TransmissionsByTimeRange).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
