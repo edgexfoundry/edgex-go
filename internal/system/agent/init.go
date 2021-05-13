@@ -18,7 +18,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/clients"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
@@ -27,14 +30,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/getconfig"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/setconfig"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2"
-
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application"
+	v2Direct "github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/direct"
+	v2Executor "github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/executor"
+	v2Container "github.com/edgexfoundry/edgex-go/internal/system/agent/v2/container"
 	contracts "github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/general"
-	"github.com/gorilla/mux"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -83,6 +85,18 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				)
 			case executor.MetricsMechanism:
 				return executor.NewMetrics(executor.CommandExecutor, logging, configuration.ExecutorPath)
+			default:
+				panic("unsupported metrics mechanism " + container.MetricsInterfaceName)
+			}
+		},
+		v2Container.V2MetricsInterfaceName: func(get di.Get) interface{} {
+			lc := bootstrapContainer.LoggingClientFrom(get)
+			switch configuration.MetricsMechanism {
+			case application.DirectMechanism:
+				rc := bootstrapContainer.RegistryFrom(get)
+				return v2Direct.NewMetrics(lc, rc, configuration)
+			case application.ExecutorMechanism:
+				return v2Executor.NewMetrics(v2Executor.CommandExecutor, lc, configuration.ExecutorPath)
 			default:
 				panic("unsupported metrics mechanism " + container.MetricsInterfaceName)
 			}

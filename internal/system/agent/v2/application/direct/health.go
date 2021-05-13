@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package application
+package direct
 
 import (
 	"fmt"
