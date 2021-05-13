@@ -72,14 +72,6 @@ components:
                  "core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
       required:
         - config
-    HealthRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      properties:
-        service:
-          description: "The services from which to obtain health information."
-          type: string
-          example: "core-data"
     HealthResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -92,44 +84,16 @@ components:
             type: string
           example:
             core-data: healthy
-    MetricsRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      properties:
-        service:
-          description: "The service from which to obtain metrics."
-          type: string
-          example: "core-data"
-    MetricsResponse:
+    MultiMetricsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
+      description: "Response containing the metrics information for the targeted services."
       properties:
-        executor:
-          description: "The type of executor used to process the retrieve the metrics"
-          type: string
-          example: "docker"
-        operation:
-          description: "The type of operation performed"
-          type: string
-          example: "metrics"
-        service:
-          description: "The service associated with the metrics"
-          type: string
-          example: "core-data"
-        result:
-          description: "The metric information retrieved from the targeted service"
+        metrics:
           type: object
-          properties:
-            cpuBusyAvg:
-              type: integer
-            cpuUsedPercent:
-              type: integer
-            memoryUsed:
-              type: integer
-            raw:
-              additionalProperties: true
-              type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MetricsResponse'
     OperationRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -160,17 +124,6 @@ components:
           description: "The type of executor which processed the operation"
           type: string
           example: "docker"
-    PingResponse:
-      type: object
-      properties:
-        apiVersion:
-          description: "A version number shows the API version in DTOs."
-          type: string
-          example: v2
-        timestamp:
-          description: "Outputs the current server timestamp in RFC1123 format"
-          example: "Mon, 02 Jan 2006 15:04:05 MST"
-          type: string
     RequestEnvelope:
       description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
       type: object
@@ -260,6 +213,17 @@ components:
           example: "core-command"
       required:
         - service
+    PingResponse:
+      type: object
+      properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+          example: v2
+        timestamp:
+          description: "Outputs the current server timestamp in RFC1123 format"
+          example: "Mon, 02 Jan 2006 15:04:05 MST"
+          type: string
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -281,6 +245,37 @@ components:
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
+    MetricsResponse:
+      description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
+      type: object
+      properties:
+        apiVersion:
+          description: "A version number shows the API version in DTOs."
+          type: string
+        metrics:
+          type: object
+          properties:
+            memAlloc:
+              description: "Alloc is bytes of allocated heap objects."
+              type: integer
+            memFrees:
+              description: "Frees is the cumulative count of heap objects freed."
+              type: integer
+            memLiveObjects:
+              description: "The number of live objects is Mallocs - Frees."
+              type: integer
+            memMallocs:
+              description: "The cumulative count of heap objects allocated."
+              type: integer
+            memSys:
+              description: "The total bytes of memory obtained from the OS."
+              type: integer
+            memTotalAlloc:
+              description: "Cumulative bytes allocated for heap objects."
+              type: integer
+            cpuBusyAvg:
+              description: "Indicates the average level of CPU utilization"
+              type: number
   parameters:
     correlatedRequestHeader:
       in: header
@@ -371,6 +366,53 @@ paths:
                 $ref: '#/components/schemas/HealthResponse'
         '400':
           description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /metrics/{services}:
+    get:
+      summary: "Obtain metrics information from the targeted service(s)."
+      parameters:
+        - name: services
+          in: path
+          description: A comma-separated list of EdgeX service names to query for metrics.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiMetricsResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: "Not Found"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
