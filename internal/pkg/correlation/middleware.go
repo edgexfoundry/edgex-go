@@ -2,16 +2,14 @@ package correlation
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/google/uuid"
 )
-
-var LoggingClient logger.LoggingClient
 
 func ManageHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,23 +28,18 @@ func ManageHeader(next http.Handler) http.Handler {
 	})
 }
 
-func OnResponseComplete(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		begin := time.Now()
-		next.ServeHTTP(w, r)
-		correlationId := FromContext(r.Context())
-		if LoggingClient != nil {
-			LoggingClient.Trace("Response complete", clients.CorrelationHeader, correlationId, internal.LogDurationKey, time.Since(begin).String())
-		}
-	})
-}
-
-func OnRequestBegin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		correlationId := FromContext(r.Context())
-		if LoggingClient != nil {
-			LoggingClient.Trace("Begin request", clients.CorrelationHeader, correlationId, "path", r.URL.Path)
-		}
-		next.ServeHTTP(w, r)
-	})
+func LoggingMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if lc.LogLevel() == models.TraceLog {
+				begin := time.Now()
+				correlationId := FromContext(r.Context())
+				lc.Trace("Begin request", clients.CorrelationHeader, correlationId, "path", r.URL.Path)
+				next.ServeHTTP(w, r)
+				lc.Trace("Response complete", clients.CorrelationHeader, correlationId, "duration", time.Since(begin).String())
+			} else {
+				next.ServeHTTP(w, r)
+			}
+		})
+	}
 }
