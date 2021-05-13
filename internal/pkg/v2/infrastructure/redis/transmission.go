@@ -133,3 +133,22 @@ func transmissionsByTimeRange(conn redis.Conn, startTime int, endTime int, offse
 	}
 	return transmissions, nil
 }
+
+// allTransmissions queries transmissions by offset and limit
+func allTransmissions(conn redis.Conn, offset, limit int) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByRevRange(conn, TransmissionCollection, offset, limit)
+	if edgeXerr != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	transmissions = make([]models.Transmission, len(objects))
+	for i, o := range objects {
+		trans := models.Transmission{}
+		err := json.Unmarshal(o, &trans)
+		if err != nil {
+			return transmissions, errors.NewCommonEdgeX(errors.KindDatabaseError, "transmission format parsing failed from the database", err)
+		}
+		transmissions[i] = trans
+	}
+	return transmissions, nil
+}

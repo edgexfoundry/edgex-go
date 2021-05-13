@@ -28,15 +28,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTransmissionById(t *testing.T) {
+func transmissionData() models.Transmission {
 	transmissionId := "1208bbca-8521-434a-a923-66255a68ba11"
 	notificationId := "1208bbca-8521-434a-a923-66255a68ba22"
-	trans := models.Transmission{
+	return models.Transmission{
 		Id:               transmissionId,
 		SubscriptionName: testSubscriptionName,
 		Channel:          models.RESTAddress{},
 		NotificationId:   notificationId,
 	}
+}
+
+func TestTransmissionById(t *testing.T) {
+	trans := transmissionData()
 	emptyId := ""
 	notFoundId := "1208bbca-8521-434a-a923-000000000000"
 	invalidId := "invalidId"
@@ -163,6 +167,76 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Transmissions), "Transmission count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestAllTransmissions(t *testing.T) {
+	trans := transmissionData()
+	transmissions := []models.Transmission{trans, trans, trans}
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("AllTransmissions", 0, 20).Return(transmissions, nil)
+	dbClientMock.On("AllTransmissions", 1, 2).Return([]models.Transmission{transmissions[1], transmissions[2]}, nil)
+	dbClientMock.On("AllTransmissions", 4, 1).Return([]models.Transmission{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewTransmissionController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedCount      int
+		expectedStatusCode int
+	}{
+		{"Valid - get transmissions without offset and limit", "", "", false, 3, http.StatusOK},
+		{"Valid - get transmissions with offset and limit", "1", "2", false, 2, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", true, 0, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, v2.ApiAllTransmissionRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(v2.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(v2.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AllTransmissions)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res common.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiTransmissionsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, v2.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Transmissions), "Transmission count is not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
