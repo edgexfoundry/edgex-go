@@ -69,7 +69,7 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 
 	// Parse frequency when RunOnce is false because we can use frequency or runOnce but not both
 	if !executor.Interval.RunOnce {
-		frequency, err := time.ParseDuration(executor.Interval.Frequency)
+		frequency, err := time.ParseDuration(executor.Interval.Interval)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, "interval parse frequency error", err)
 		}

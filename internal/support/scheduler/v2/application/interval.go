@@ -156,11 +156,11 @@ func LoadIntervalToSchedulerManager(dic *di.Container) errors.EdgeX {
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 	for i := range configuration.Intervals {
 		interval := models.Interval{
-			Name:      configuration.Intervals[i].Name,
-			Start:     configuration.Intervals[i].Start,
-			End:       configuration.Intervals[i].End,
-			Frequency: configuration.Intervals[i].Frequency,
-			RunOnce:   configuration.Intervals[i].RunOnce,
+			Name:     configuration.Intervals[i].Name,
+			Start:    configuration.Intervals[i].Start,
+			End:      configuration.Intervals[i].End,
+			Interval: configuration.Intervals[i].Interval,
+			RunOnce:  configuration.Intervals[i].RunOnce,
 		}
 		_, err := dbClient.IntervalByName(interval.Name)
 		if errors.Kind(err) == errors.KindEntityDoesNotExist {

@@ -47,7 +47,7 @@ type IntervalInfo struct {
 	// End time in ISO 8601 format YYYYMMDD'T'HHmmss
 	End string
 	// Periodicity of the schedule
-	Frequency string
+	Interval string
 	// Cron style regular expression indicating how often the action under schedule should occur.
 	// Use either runOnce, frequency or cron and not all.
 	Cron string
