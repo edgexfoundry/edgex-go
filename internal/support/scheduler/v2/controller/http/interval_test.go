@@ -60,12 +60,12 @@ func addIntervalRequestData() requests.AddIntervalRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Interval: dtos.Interval{
-			Id:        ExampleUUID,
-			Name:      TestIntervalName,
-			Start:     TestIntervalStart,
-			End:       TestIntervalEnd,
-			Frequency: TestIntervalFrequency,
-			RunOnce:   TestIntervalRunOnce,
+			Id:       ExampleUUID,
+			Name:     TestIntervalName,
+			Start:    TestIntervalStart,
+			End:      TestIntervalEnd,
+			Interval: TestIntervalFrequency,
+			RunOnce:  TestIntervalRunOnce,
 		},
 	}
 
@@ -82,9 +82,9 @@ func updateIntervalRequestData() requests.UpdateIntervalRequest {
 			Versionable: common.NewVersionable(),
 		},
 		Interval: dtos.UpdateInterval{
-			Id:        &testUUID,
-			Name:      &testIntervalName,
-			Frequency: &testFrequency,
+			Id:       &testUUID,
+			Name:     &testIntervalName,
+			Interval: &testFrequency,
 		},
 	}
 
@@ -369,9 +369,9 @@ func TestPatchInterval(t *testing.T) {
 	schedulerManagerMock := &dbMock.SchedulerManager{}
 	testReq := updateIntervalRequestData()
 	model := models.Interval{
-		Id:        *testReq.Interval.Id,
-		Name:      *testReq.Interval.Name,
-		Frequency: *testReq.Interval.Frequency,
+		Id:       *testReq.Interval.Id,
+		Name:     *testReq.Interval.Name,
+		Interval: *testReq.Interval.Interval,
 	}
 
 	valid := testReq
