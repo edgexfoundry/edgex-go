@@ -49,6 +49,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2.ApiNotificationBySubscriptionNameRoute, nc.NotificationsBySubscriptionName).Methods(http.MethodGet)
 	r.HandleFunc(v2.ApiNotificationCleanupByAgeRoute, nc.CleanupNotificationsByAge).Methods(http.MethodDelete)
 	r.HandleFunc(v2.ApiNotificationCleanupRoute, nc.CleanupNotifications).Methods(http.MethodDelete)
+	r.HandleFunc(v2.ApiNotificationByAgeRoute, nc.DeleteProcessedNotificationsByAge).Methods(http.MethodDelete)
 
 	// Transmission
 	trans := notificationsController.NewTransmissionController(dic)
