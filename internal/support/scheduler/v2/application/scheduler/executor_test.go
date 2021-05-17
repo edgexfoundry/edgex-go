@@ -25,12 +25,12 @@ func TestInitialize(t *testing.T) {
 		intervalName      string
 		startTime         string
 		endTime           string
-		frequency         string
+		interval          string
 		runOnce           bool
 		expectedErrorKind errors.ErrKind
 	}{
 		{"run once", "midnight", "20000101T000000", "", "24h", true, ""},
-		{"run with frequency", "midnight", "20000101T000000", "22000101T000000", "24h", false, ""},
+		{"run with interval", "midnight", "20000101T000000", "22000101T000000", "24h", false, ""},
 		{"run without startTime ", "midnight", "", "22000101T000000", "24h", false, ""},
 		{"wrong startTime string format", "midnight", "20000101T", "", "24h", false, errors.KindContractInvalid},
 		{"wrong endTime string format", "midnight", "", "20000101T", "24h", false, errors.KindContractInvalid},
@@ -42,7 +42,7 @@ func TestInitialize(t *testing.T) {
 			interval := models.Interval{
 				Name:  testCase.intervalName,
 				Start: testCase.startTime, End: testCase.endTime,
-				Frequency: testCase.frequency, RunOnce: testCase.runOnce,
+				Interval: testCase.interval, RunOnce: testCase.runOnce,
 			}
 			executor := Executor{}
 

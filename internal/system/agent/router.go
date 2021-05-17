@@ -74,8 +74,7 @@ func loadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(clients.ApiVersionRoute, pkg.VersionHandler).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
-	r.Use(correlation.OnResponseComplete)
-	r.Use(correlation.OnRequestBegin)
+	r.Use(correlation.LoggingMiddleware(bootstrapContainer.LoggingClientFrom(dic.Get)))
 }
 
 // metricsHandler implements a controller to execute a metrics request.

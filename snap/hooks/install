@@ -36,6 +36,12 @@ for service in security-file-token-provider security-proxy-setup security-secret
     fi
 done
 
+# install the template config yaml file for securing Kong's admin APIs in security-secretstore-setup service
+if [ ! -f "$SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml" ]; then
+    cp "$SNAP/config/security-secretstore-setup/res/kong-admin-config.template.yml" \
+        "$SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml"
+fi
+
 # handle app-service-configurable's various profiles:
 # 1. ensure all the directories from app-service-configurable exist
 # 2. copy the config files from $SNAP into $SNAP_DATA

@@ -207,7 +207,7 @@ func loadConfigIntervals(
 			Name:       intervals[i].Name,
 			Start:      intervals[i].Start,
 			End:        intervals[i].End,
-			Frequency:  intervals[i].Frequency,
+			Frequency:  intervals[i].Interval,
 			Cron:       intervals[i].Cron,
 			RunOnce:    intervals[i].RunOnce,
 		}
