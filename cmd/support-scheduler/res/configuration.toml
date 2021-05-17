@@ -37,7 +37,7 @@ Type = 'consul'
     [Intervals.Midnight]
     Name = 'midnight'
     Start = '20180101T000000'
-    Frequency = '24h'
+    Interval = '24h'
 
 [IntervalActions]
     [IntervalActions.ScrubAged]

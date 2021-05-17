@@ -495,6 +495,31 @@ func (_m *DBClient) TransmissionById(id string) (models.Transmission, errors.Edg
 	return r0, r1
 }
 
+// TransmissionsByTimeRange provides a mock function with given fields: start, end, offset, limit
+func (_m *DBClient) TransmissionsByTimeRange(start int, end int, offset int, limit int) ([]models.Transmission, errors.EdgeX) {
+	ret := _m.Called(start, end, offset, limit)
+
+	var r0 []models.Transmission
+	if rf, ok := ret.Get(0).(func(int, int, int, int) []models.Transmission); ok {
+		r0 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Transmission)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, int, int) errors.EdgeX); ok {
+		r1 = rf(start, end, offset, limit)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // UpdateNotification provides a mock function with given fields: s
 func (_m *DBClient) UpdateNotification(s models.Notification) errors.EdgeX {
 	ret := _m.Called(s)
