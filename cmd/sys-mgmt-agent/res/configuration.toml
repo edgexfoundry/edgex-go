@@ -64,7 +64,7 @@ Protocol = 'http'
 Host = 'localhost'
 Port = 8200
 Path = '/v1/secret/edgex/sys-mgmt-agent/'
-TokenFile = '/vault/config/assets/resp-init.json'
+TokenFile = '/tmp/edgex/secrets/sys-mgmt-agent/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
 # Number of attempts to retry retrieving secrets before failing to start the service.

@@ -36,15 +36,15 @@ Name = "jwt"
 TokenTTL = 0
 Resource = "coredata"
 OutputPath = "accessToken.json"
-JWTFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
+JWTFile = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 
 [SecretStore]
 Type = "vault"
 Protocol = "http"
 Host = "localhost"
 Port = 8200
-Path = "/v1/secret/edgex/edgex-security-proxy-setup/"
-TokenFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/secrets-token.json"
+Path = "/v1/secret/edgex/security-proxy-setup/"
+TokenFile = "/tmp/edgex/secrets/security-proxy-setup/secrets-token.json"
 RootCaCertPath = ""
 ServerName = ""
 # Number of attempts to retry retrieving secrets before failing to start the service.

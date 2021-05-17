@@ -48,8 +48,8 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/notifications/'
-TokenFile = '/vault/config/assets/resp-init.json'
+Path = '/v1/secret/edgex/support-notifications/'
+TokenFile = '/tmp/edgex/secrets/support-notifications/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
 # Number of attempts to retry retrieving secrets before failing to start the service.

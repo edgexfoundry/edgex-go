@@ -55,8 +55,8 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/scheduler/'
-TokenFile = '/vault/config/assets/resp-init.json'
+Path = '/v1/secret/edgex/support-scheduler/'
+TokenFile = '/tmp/edgex/secrets/support-scheduler/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
 # Number of attempts to retry retrieving secrets before failing to start the service.

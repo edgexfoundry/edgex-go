@@ -80,5 +80,5 @@ ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
 [KongAdmin]
 ConfigTemplatePath = "/res/kong-admin-config.template.yml"
 ConfigFilePath = "/tmp/kong/kong.yml"
-ConfigJWTPath = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
+ConfigJWTPath = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 ConfigJWTDuration = "1h"
