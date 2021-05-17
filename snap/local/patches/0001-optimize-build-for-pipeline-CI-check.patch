@@ -39,7 +39,7 @@ index d8bc12bc..5a5f5fbb 100644
 -    plugs: [network, network-bind]
 -  redis:
 -    adapter: full
--    after: [security-bootstrap-redis]
+-    after: [security-bootstrapper-redis]
 -    command: bin/redis-server $CONFIG_FILE $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
 -    environment:
 -      DIR_OPT: "--dir $SNAP_DATA/redis"
@@ -114,7 +114,7 @@ index d8bc12bc..5a5f5fbb 100644
 -  device-virtual:
 -    adapter: none
 -    after:
--      - security-bootstrap-redis
+-      - security-bootstrapper-redis
 -      - security-proxy-setup
 -      - core-data
 -      - core-metadata

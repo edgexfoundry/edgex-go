@@ -393,9 +393,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
-	// security-bootstrap-redis uses the path /v1/secret/edgex/bootstrap-redis/ and go-mod-bootstrap
+	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
 	// with append the DB type (redisdb)
-	err = addDBCredential(lc, "bootstrap-redis", cred, "redisdb", redis5Pair)
+	err = addDBCredential(lc, "security-bootstrapper-redis", cred, "redisdb", redis5Pair)
 	if err != nil {
 		lc.Error(err.Error())
 		os.Exit(1)
