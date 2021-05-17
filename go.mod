@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.12
-	github.com/lib/pq v1.10.1
+	github.com/lib/pq v1.10.2
 	github.com/pelletier/go-toml v1.9.1
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
