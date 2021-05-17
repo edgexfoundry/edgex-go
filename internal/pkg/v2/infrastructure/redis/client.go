@@ -1085,3 +1085,16 @@ func (c *Client) TransmissionById(id string) (trans model.Transmission, edgexErr
 	}
 	return
 }
+
+// TransmissionsByTimeRange query transmissions by time range, offset, and limit
+func (c *Client) TransmissionsByTimeRange(start int, end int, offset int, limit int) (transmissions []model.Transmission, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	transmissions, err = transmissionsByTimeRange(conn, start, end, offset, limit)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query transmissions by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), err)
+	}
+	return transmissions, nil
+}

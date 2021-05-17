@@ -139,6 +139,10 @@ func ParseTimeRangeOffsetLimit(r *http.Request, minOffset int, maxOffset int, mi
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
+	// Use maxLimit to specify the supported maximum size.
+	if limit == -1 {
+		limit = maxLimit
+	}
 
 	return start, end, offset, limit, nil
 }
