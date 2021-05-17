@@ -13,8 +13,6 @@ import (
 	"strings"
 	"testing"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	contractsV2 "github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
@@ -27,6 +25,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/infrastructure/interfaces/mocks"
 )
 
 var testProvisionWatcherName = "TestProvisionWatcher"
@@ -39,7 +40,7 @@ var testProvisionWatcherBlockingIdentifiers = map[string][]string{
 	"port": {"397", "398", "399"},
 }
 var testProvisionWatcherAutoEvents = []dtos.AutoEvent{
-	{SourceName: "TestResource", Frequency: "300ms", OnChange: true},
+	{SourceName: "TestResource", Interval: "300ms", OnChange: true},
 }
 
 func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {

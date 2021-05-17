@@ -35,7 +35,7 @@ var testDeviceLabels = []string{"MODBUS", "TEMP"}
 
 func buildTestDeviceRequest() requests.AddDeviceRequest {
 	var testAutoEvents = []dtos.AutoEvent{
-		{SourceName: "TestResource", Frequency: "300ms", OnChange: true},
+		{SourceName: "TestResource", Interval: "300ms", OnChange: true},
 	}
 	var testProtocols = map[string]dtos.ProtocolProperties{
 		"modbus-ip": {
@@ -78,7 +78,7 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	testLastConnected := int64(123546789)
 	testNotify := false
 	var testAutoEvents = []dtos.AutoEvent{
-		{SourceName: "TestResource", Frequency: "300ms", OnChange: true},
+		{SourceName: "TestResource", Interval: "300ms", OnChange: true},
 	}
 	var testProtocols = map[string]dtos.ProtocolProperties{
 		"modbus-ip": {

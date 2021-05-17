@@ -76,8 +76,6 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
-    environment:
-      ENABLE_REGISTRY_ACL: "true"
     daemon: forking
     plugs: [network, network-bind]
   redis:
@@ -108,6 +106,8 @@ apps:
     adapter: full
     after:
       - postgres
+      # to ensure kong.yml is ready for kong to process as the file is set up from security-secretstore-setup
+      - security-secretstore-setup
     command: bin/kong-daemon.sh
     command-chain:
       - bin/perl5lib-launch.sh
@@ -115,12 +115,23 @@ apps:
     daemon: forking
     environment:
       KONG_CONF: $SNAP_DATA/config/security-proxy-setup/kong.conf
+      KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
       KONG_LOGS_DIR: $SNAP_COMMON/logs
       KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
       KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
       KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "localhost:8001, localhost:8444 ssl"
+      KONG_STATUS_LISTEN: "localhost:8100"
+      # The DNS order was modified because of an issue with a Windows based host DNS issue.
+      # Keeping the default order would cause the first API request to Kong's admin API much longer time to connect for
+      # taking something minimum of 20 seconds to complete, and then others would complete as expected.
+      # Moreover, changing the DNS order did not impact those non-Windows based systems,
+      # so implementing it across the board seemed pretty low risk.
+      # The work-around that was found in one of the documented issues was to remove the SRV record check
+      # by manipulating the Kong DNS checking order via environment variable. Once we did that,
+      # the prolonged connecting issue went away.
+      KONG_DNS_ORDER: "LAST,A,CNAME"
       LC_ALL: C.UTF-8
       LANG: C.UTF-8
     start-timeout: 15m
@@ -162,13 +173,17 @@ apps:
       SECRETSTORE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
       SECRETSTORE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
       # registry consul ACL related environment variables:
-      ENABLE_REGISTRY_ACL: "true"
       SECRETSTORE_CONSULSECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
 
       # environment for security-file-token-provider, exec'd by secretstore-setup
       TOKENFILEPROVIDER_PRIVILEGEDTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
       TOKENFILEPROVIDER_CONFIGFILE: $SNAP_DATA/config/security-file-token-provider/res/token-config.json
       TOKENFILEPROVIDER_OUTPUTDIR: $SNAP_DATA/secrets
+
+      # securing Kong's admin API plugin related environment variables:
+      KONGADMIN_CONFIGTEMPLATEPATH: $SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml
+      KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
+      KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
 
     start-timeout: 15m
     plugs: [network]
@@ -183,6 +198,7 @@ apps:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
       ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -211,7 +227,6 @@ apps:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
     environment:
-      ENABLE_REGISTRY_ACL: "true"
       STAGEGATE_REGISTRY_HOST: localhost
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
@@ -347,6 +362,7 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
       ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
@@ -642,6 +658,13 @@ parts:
           esac
 
       done
+
+      # For securing Kong's admin APIs, we also need to install kong-admin-config's template yml
+      # into secretstore-setup service because secretstore-setup uses it to create a JWT file that
+      # proxy-setup can later on enable Kong's JWT plugin on admin API route hence secure it with
+      # JWT authentication and authorization
+      install -DT "./cmd/security-secretstore-setup/res/kong-admin-config.template.yml" \
+        "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/kong-admin-config.template.yml"
 
       install -DT "./Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/Attribution.txt"
       install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/LICENSE"

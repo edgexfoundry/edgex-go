@@ -44,11 +44,11 @@ func testManager() interfaces.SchedulerManager {
 
 func intervalData() models.Interval {
 	return models.Interval{
-		Name:      testIntervalName,
-		Start:     "",
-		End:       "",
-		Frequency: "10s",
-		RunOnce:   false,
+		Name:     testIntervalName,
+		Start:    "",
+		End:      "",
+		Interval: "10s",
+		RunOnce:  false,
 	}
 }
 
@@ -70,8 +70,8 @@ func TestManager_AddInterval(t *testing.T) {
 	invalidStartTime.Start = "20060102T"
 	invalidEndTime := intervalData()
 	invalidEndTime.End = "20060102T"
-	invalidFrequency := intervalData()
-	invalidFrequency.Frequency = "10"
+	invalidInterval := intervalData()
+	invalidInterval.Interval = "10"
 
 	tests := []struct {
 		name              string
@@ -83,7 +83,7 @@ func TestManager_AddInterval(t *testing.T) {
 		{"interval exists", intervalExists, interval, errors.KindStatusConflict},
 		{"invalid start time format", testManager(), invalidStartTime, errors.KindContractInvalid},
 		{"invalid end time format", testManager(), invalidEndTime, errors.KindContractInvalid},
-		{"invalid frequency format", testManager(), invalidFrequency, errors.KindContractInvalid},
+		{"invalid interval format", testManager(), invalidInterval, errors.KindContractInvalid},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -107,8 +107,8 @@ func TestManager_UpdateInterval(t *testing.T) {
 	invalidStartTime.Start = "20060102T"
 	invalidEndTime := intervalData()
 	invalidEndTime.End = "20060102T"
-	invalidFrequency := intervalData()
-	invalidFrequency.Frequency = "10"
+	invalidInterval := intervalData()
+	invalidInterval.Interval = "10"
 
 	tests := []struct {
 		name              string
@@ -120,7 +120,7 @@ func TestManager_UpdateInterval(t *testing.T) {
 		{"interval not found", testManager(), interval, errors.KindEntityDoesNotExist},
 		{"invalid start time format", m, invalidStartTime, errors.KindContractInvalid},
 		{"invalid end time format", m, invalidEndTime, errors.KindContractInvalid},
-		{"invalid frequency format", m, invalidFrequency, errors.KindContractInvalid},
+		{"invalid interval format", m, invalidInterval, errors.KindContractInvalid},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

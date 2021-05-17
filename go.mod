@@ -6,7 +6,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.52
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.8
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.83
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.89
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.15
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.7
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.21
@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/imdario/mergo v0.3.12
-	github.com/lib/pq v1.10.1
+	github.com/lib/pq v1.10.2
 	github.com/pelletier/go-toml v1.9.1
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v0.0.0-20180505203441-b41be1df6967
