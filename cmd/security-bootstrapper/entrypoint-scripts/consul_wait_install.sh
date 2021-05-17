@@ -66,53 +66,35 @@ export CONSUL_LOCAL_CONFIG
 
 echo "$(date) CONSUL_LOCAL_CONFIG: ${CONSUL_LOCAL_CONFIG}"
 
-echo "$(date) ENABLE_REGISTRY_ACL = ${ENABLE_REGISTRY_ACL}"
+echo "$(date) Starting edgex-core-consul with ACL enabled ..."
+docker-entrypoint.sh agent \
+  -ui \
+  -bootstrap \
+  -server \
+  -config-file=/edgex-init/consul-bootstrapper/config_consul_acl.json \
+  -client 0.0.0.0 &
+# wait for the secretstore tokens ready as we need the token for bootstrapping
+echo "$(date) Executing waitFor on Consul with waiting on TokensReadyPort \
+  tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
+  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
-if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
-  echo "$(date) Starting edgex-core-consul with ACL enabled ..."
-  docker-entrypoint.sh agent \
-    -ui \
-    -bootstrap \
-    -server \
-    -config-file=/edgex-init/consul-bootstrapper/config_consul_acl.json \
-    -client 0.0.0.0 &
-  # wait for the secretstore tokens ready as we need the token for bootstrapping
-  echo "$(date) Executing waitFor on Consul with waiting on TokensReadyPort \
-    tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-  /edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
-    -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
-    -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
-
-  # we don't want to exit out the whole Consul process when ACL bootstrapping failed, just that
-  # Consul won't have ACL to be used
-  set +e
-  # call setupRegistryACL bootstrapping command, containing both ACL bootstrapping and re-configure consul access steps
-  /edgex-init/security-bootstrapper --confdir=/edgex-init/res setupRegistryACL
-  setupACL_code=$?
-  if [ "${setupACL_code}" -ne 0 ]; then
-    echo "$(date) failed to set up Consul ACL"
-  fi
-
-  # we need to grant the permission for proxy setup to read consul's token path so as to retrieve consul's token from it
-  echo "$(date) Changing ownership of consul token path to ${EDGEX_USER}:${EDGEX_GROUP}"
-  chown -Rh "${EDGEX_USER}":"${EDGEX_GROUP}" "${STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH}"
-  set -e
-  # no need to wait for Consul's port since it is in ready state after all ACL stuff
-else
-  echo "$(date) Starting edgex-core-consul with ACL disabled ..."
-  docker-entrypoint.sh agent \
-    -ui \
-    -bootstrap \
-    -server \
-    -client 0.0.0.0 &
-  # wait for the consul port
-  # this waitFor is not necessary in the other ACL case, as it is already in the ready state
-  echo "$(date) Executing waitFor on Consul with waiting on its own port \
-    tcp://${STAGEGATE_REGISTRY_HOST}:${STAGEGATE_REGISTRY_PORT}"
-  /edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
-    -uri tcp://"${STAGEGATE_REGISTRY_HOST}":"${STAGEGATE_REGISTRY_PORT}" \
-    -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
+# we don't want to exit out the whole Consul process when ACL bootstrapping failed, just that
+# Consul won't have ACL to be used
+set +e
+# call setupRegistryACL bootstrapping command, containing both ACL bootstrapping and re-configure consul access steps
+/edgex-init/security-bootstrapper --confdir=/edgex-init/res setupRegistryACL
+setupACL_code=$?
+if [ "${setupACL_code}" -ne 0 ]; then
+  echo "$(date) failed to set up Consul ACL"
 fi
+
+# we need to grant the permission for proxy setup to read consul's token path so as to retrieve consul's token from it
+echo "$(date) Changing ownership of consul token path to ${EDGEX_USER}:${EDGEX_GROUP}"
+chown -Rh "${EDGEX_USER}":"${EDGEX_GROUP}" "${STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH}"
+set -e
+# no need to wait for Consul's port since it is in ready state after all ACL stuff
 
 # Signal that Consul is ready for services blocked waiting on Consul
 exec su-exec consul /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \

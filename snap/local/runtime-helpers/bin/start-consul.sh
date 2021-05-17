@@ -15,13 +15,8 @@ cat > "$SNAP_DATA/consul/config/consul_default.json" <<EOF
 }
 EOF
 
-echo "$(date) ENABLE_REGISTRY_ACL = ${ENABLE_REGISTRY_ACL}"
-
-# if feature flag ENABLE_REGISTRY_ACL is true, then we need to add additional configuration settings to Consul's ACL system
-# according to the securing Consul ADR, we set the "default_policy" to "allow" in Phase 1
-if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
-    echo "$(date) deploying additional ACL configuration for Consul"
-    cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
+echo "$(date) deploying additional ACL configuration for Consul"
+cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
 {
     "acl": {
       "enabled": true,
@@ -30,7 +25,6 @@ if [ "${ENABLE_REGISTRY_ACL}" == "true" ]; then
     }
 }
 EOF
-fi
 
 # start consul in the background
 "$SNAP/bin/consul" agent \

@@ -444,24 +444,21 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("proxy certificate pair upload was skipped because cert secretStore value(s) were blank")
 	}
 
-	// If Registry Consul ACL feature is enabled, then we need to create and save a Vault token to configure
+	// create and save a Vault token to configure
 	// Consul secret engine access, role operations, and managing Consul agent tokens.
-	registryACLEnabled := os.Getenv(RegistryACLFeatureFlag)
-	if registryACLEnabled == "true" {
-		// Enable Consul secret engine
-		if err := secretsengine.New(secretsengine.ConsulSecretEngineMountPoint, secretsengine.Consul).
-			Enable(&rootToken, lc, client); err != nil {
-			lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
-			os.Exit(1)
-		}
+	// Enable Consul secret engine
+	if err := secretsengine.New(secretsengine.ConsulSecretEngineMountPoint, secretsengine.Consul).
+		Enable(&rootToken, lc, client); err != nil {
+		lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
+		os.Exit(1)
+	}
 
-		// generate a management token for Consul secrets engine operations:
-		tokenFileWriter := tokenfilewriter.NewWriter(lc, client, fileOpener)
-		if _, err := tokenFileWriter.CreateAndWrite(rootToken, configuration.SecretStore.ConsulSecretsAdminTokenPath,
-			tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
-			lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
-			os.Exit(1)
-		}
+	// generate a management token for Consul secrets engine operations:
+	tokenFileWriter := tokenfilewriter.NewWriter(lc, client, fileOpener)
+	if _, err := tokenFileWriter.CreateAndWrite(rootToken, configuration.SecretStore.ConsulSecretsAdminTokenPath,
+		tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
+		lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
+		os.Exit(1)
 	}
 
 	// Configure Kong Admin API
