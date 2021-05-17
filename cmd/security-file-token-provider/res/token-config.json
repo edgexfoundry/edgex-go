@@ -1,5 +1,5 @@
 {
-  "edgex-core-command": {
+  "core-command": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -12,7 +12,7 @@
       }
     }
   },
-  "edgex-core-data": {
+  "core-data": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -25,7 +25,7 @@
       }
     }
   },
-  "edgex-core-metadata": {
+  "core-metadata": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -38,7 +38,7 @@
       }
     }
   },
-  "edgex-security-bootstrap-redis": {
+  "security-bootstrap-redis": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -51,7 +51,7 @@
       }
     }
   },
-  "edgex-support-notifications": {
+  "support-notifications": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -73,10 +73,10 @@
   "device-rest": {
     "edgex_use_defaults": true
   },
-  "edgex-sys-mgmt-agent": {
+  "sys-mgmt-agent": {
     "edgex_use_defaults": true
   },
-  "edgex-support-scheduler": {
+  "support-scheduler": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -89,7 +89,7 @@
       }
     }
   },
-  "edgex-security-secretstore-setup": {
+  "security-secretstore-setup": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
@@ -114,10 +114,10 @@
       }
     }
   },
-  "edgex-security-proxy-setup": {
+  "security-proxy-setup": {
     "edgex_use_defaults": true
   },
-  "edgex-security-file-token-provider": {
+  "security-file-token-provider": {
     "edgex_use_defaults": true
   }
 }
