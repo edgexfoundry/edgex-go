@@ -35,7 +35,7 @@ func AddNotification(n models.Notification, ctx context.Context, dic *di.Contain
 		addedNotification.Id,
 		correlation.FromContext(ctx))
 
-	go asyncDistributeNotification(dic, addedNotification)
+	go distribute(dic, addedNotification)
 
 	return addedNotification.Id, nil
 }

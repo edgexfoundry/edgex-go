@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
@@ -18,73 +17,24 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/models"
 )
 
-// sendNotificationViaChannel sends notification via address and return the transmission record. The record status should be SENT or FAILED.
-func sendNotificationViaChannel(lc logger.LoggingClient, n models.Notification, channel models.Address) (transRecord models.TransmissionRecord, err errors.EdgeX) {
-	transRecord.Status = models.Sent
-	switch channel.GetBaseAddress().Type {
-	case v2.REST:
-		restAddress, ok := channel.(models.RESTAddress)
-		if !ok {
-			return transRecord, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
-		}
-		transRecord.Response, err = utils.SendRequestWithRESTAddress(lc, n.Content, n.ContentType, restAddress)
-	case v2.EMAIL:
-		emailAddress, ok := channel.(models.EmailAddress)
-		if !ok {
-			return transRecord, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to EmailAddress", nil)
-		}
-		transRecord.Response, err = utils.SendEmailWithAddress(lc, n.Content, n.ContentType, emailAddress)
-	default:
-		transRecord.Response = fmt.Sprintf("unsupported address type: %s", channel.GetBaseAddress().Type)
-		return transRecord, nil
-	}
-
-	if err != nil {
-		transRecord.Status = models.Failed
-		transRecord.Response = err.Error()
-	}
-	transRecord.Sent = common.MakeTimestamp()
-	return transRecord, nil
-}
-
-// normalSend handles the notification transmission
-func normalSend(dic *di.Container, n models.Notification, trans models.Transmission) (models.Transmission, errors.EdgeX) {
+// firstSend sends the notification and return the transmission
+func firstSend(dic *di.Container, n models.Notification, trans models.Transmission) models.Transmission {
 	lc := container.LoggingClientFrom(dic.Get)
 
-	record, err := sendNotificationViaChannel(lc, n, trans.Channel)
-	if err != nil {
-		return trans, errors.NewCommonEdgeXWrapper(err)
-	}
+	record := sendNotificationViaChannel(dic, n, trans.Channel)
 	trans.Records = append(trans.Records, record)
 	trans.Status = record.Status
-	lc.Debugf("send the notification to %s with address %v, transmission status %s", trans.SubscriptionName, trans.Channel.GetBaseAddress(), trans.Status)
-	return trans, nil
+	lc.Debugf("sent the notification to %s with address %v, transmission status %s", trans.SubscriptionName, trans.Channel.GetBaseAddress(), trans.Status)
+	return trans
 }
 
-func resendLimitAndInterval(config *config.ConfigurationStruct, sub models.Subscription) (int, time.Duration, errors.EdgeX) {
-	resendLimit := config.ResendLimit
-	if sub.ResendLimit > 0 {
-		resendLimit = sub.ResendLimit
-	}
-	resendInterval := config.ResendInterval
-	if sub.ResendInterval != "" {
-		resendInterval = sub.ResendInterval
-	}
-	resendIntervalDuration, err := time.ParseDuration(resendInterval)
-	if err != nil {
-		return 0, time.Second, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to parse resendInterval", err)
-	}
-	return resendLimit, resendIntervalDuration, nil
-}
-
-// criticalSend handles the Critical notification Transmission
-func criticalSend(dic *di.Container, n models.Notification, sub models.Subscription, trans models.Transmission) (models.Transmission, errors.EdgeX) {
+// reSend sends the Critical notification and return the transmission
+func reSend(dic *di.Container, n models.Notification, sub models.Subscription, trans models.Transmission) (models.Transmission, errors.EdgeX) {
 	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 	config := notificationContainer.ConfigurationFrom(dic.Get)
@@ -99,10 +49,7 @@ func criticalSend(dic *di.Container, n models.Notification, sub models.Subscript
 		time.Sleep(resendInterval)
 		lc.Warn("fail to send the critical notification. Retry to send again...")
 
-		record, err := sendNotificationViaChannel(lc, n, trans.Channel)
-		if err != nil {
-			return trans, errors.NewCommonEdgeXWrapper(err)
-		}
+		record := sendNotificationViaChannel(dic, n, trans.Channel)
 		trans.ResendCount = trans.ResendCount + 1
 		trans.Status = record.Status
 		trans.Records = append(trans.Records, record)
@@ -126,6 +73,22 @@ func criticalSend(dic *di.Container, n models.Notification, sub models.Subscript
 	return trans, nil
 }
 
+func resendLimitAndInterval(config *config.ConfigurationStruct, sub models.Subscription) (int, time.Duration, errors.EdgeX) {
+	resendLimit := config.Writable.ResendLimit
+	if sub.ResendLimit > 0 {
+		resendLimit = sub.ResendLimit
+	}
+	resendInterval := config.Writable.ResendInterval
+	if sub.ResendInterval != "" {
+		resendInterval = sub.ResendInterval
+	}
+	resendIntervalDuration, err := time.ParseDuration(resendInterval)
+	if err != nil {
+		return 0, time.Second, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to parse resendInterval", err)
+	}
+	return resendLimit, resendIntervalDuration, nil
+}
+
 // escalatedSend handle the escalated notification for the ESCALATION subscription
 func escalatedSend(dic *di.Container, n models.Notification, trans models.Transmission) errors.EdgeX {
 	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
@@ -144,7 +107,7 @@ func escalatedSend(dic *di.Container, n models.Notification, trans models.Transm
 	}
 
 	for _, address := range sub.Channels {
-		go asyncHandleNotification(dic, escalated, sub, address)
+		go transmit(dic, escalated, sub, address)
 	}
 	return nil
 }
@@ -156,4 +119,28 @@ func escalatedNotification(n models.Notification, trans models.Transmission) mod
 	n.ContentType = clients.ContentTypeText
 	n.Status = models.Escalated
 	return n
+}
+
+// sendNotificationViaChannel sends notification via address and return the transmission record. The record status should be SENT or FAILED.
+func sendNotificationViaChannel(dic *di.Container, n models.Notification, channel models.Address) (transRecord models.TransmissionRecord) {
+	var err errors.EdgeX
+	transRecord.Status = models.Sent
+	switch channel.GetBaseAddress().Type {
+	case v2.REST:
+		restSender := v2NotificationsContainer.RESTSenderFrom(dic.Get)
+		transRecord.Response, err = restSender.Send(n.Content, n.ContentType, channel)
+	case v2.EMAIL:
+		emailSender := v2NotificationsContainer.EmailSenderFrom(dic.Get)
+		transRecord.Response, err = emailSender.Send(n.Content, n.ContentType, channel)
+	default:
+		transRecord.Response = fmt.Sprintf("unsupported address type: %s", channel.GetBaseAddress().Type)
+		return transRecord
+	}
+
+	if err != nil {
+		transRecord.Status = models.Failed
+		transRecord.Response = err.Error()
+	}
+	transRecord.Sent = common.MakeTimestamp()
+	return transRecord
 }

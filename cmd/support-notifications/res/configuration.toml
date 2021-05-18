@@ -1,8 +1,7 @@
-ResendLimit = 2
-ResendInterval = '5s'
-
 [Writable]
 LogLevel = 'INFO'
+ResendLimit = 2
+ResendInterval = '5s'
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"

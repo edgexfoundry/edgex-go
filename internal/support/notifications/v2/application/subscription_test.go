@@ -47,10 +47,10 @@ func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
 		notificationContainer.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
-				ResendLimit:    2,
-				ResendInterval: "1s",
 				Writable: config.WritableInfo{
-					LogLevel: "DEBUG",
+					LogLevel:       "DEBUG",
+					ResendLimit:    2,
+					ResendInterval: "1s",
 				},
 				Service: bootstrapConfig.ServiceInfo{
 					MaxResultCount: 30,
