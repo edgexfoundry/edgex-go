@@ -6,10 +6,12 @@
 package http
 
 import (
+	"math"
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
+	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/application"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -32,21 +34,44 @@ func NewTransmissionController(dic *di.Container) *TransmissionController {
 }
 
 // TransmissionById queries transmission by ID
-func (nc *TransmissionController) TransmissionById(w http.ResponseWriter, r *http.Request) {
-	lc := container.LoggingClientFrom(nc.dic.Get)
+func (tc *TransmissionController) TransmissionById(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(tc.dic.Get)
 	ctx := r.Context()
 
 	// URL parameters
 	vars := mux.Vars(r)
 	id := vars[v2.Id]
 
-	trans, err := application.TransmissionById(id, nc.dic)
+	trans, err := application.TransmissionById(id, tc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
 	response := responseDTO.NewTransmissionResponse("", "", http.StatusOK, trans)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
+}
+
+// TransmissionsByTimeRange allows querying of transmissions by their creation timestamp within a given time range, sorted in descending order. Results are paginated.
+func (tc *TransmissionController) TransmissionsByTimeRange(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(tc.dic.Get)
+	ctx := r.Context()
+	config := notificationContainer.ConfigurationFrom(tc.dic.Get)
+
+	// parse time range (start, end), offset, and limit from incoming request
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	transmissions, err := application.TransmissionsByTimeRange(start, end, offset, limit, tc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

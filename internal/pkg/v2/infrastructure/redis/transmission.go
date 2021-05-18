@@ -23,6 +23,7 @@ const (
 	TransmissionCollectionStatus           = TransmissionCollection + DBKeySeparator + v2.Status
 	TransmissionCollectionSubscriptionName = TransmissionCollection + DBKeySeparator + v2.Subscription + DBKeySeparator + v2.Name
 	TransmissionCollectionNotificationId   = TransmissionCollection + DBKeySeparator + v2.Notification + DBKeySeparator + v2.Id
+	TransmissionCollectionCreated          = TransmissionCollection + DBKeySeparator + v2.Created
 )
 
 // notificationStoredKey return the transmission's stored key which combines the collection name and object id
@@ -47,6 +48,7 @@ func sendAddTransmissionCmd(conn redis.Conn, storedKey string, trans models.Tran
 	}
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(ZADD, TransmissionCollection, trans.Modified, storedKey)
+	_ = conn.Send(ZADD, TransmissionCollectionCreated, trans.Created, storedKey)
 	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionStatus, string(trans.Status)), trans.Modified, storedKey)
 	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionSubscriptionName, trans.SubscriptionName), trans.Modified, storedKey)
 	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionNotificationId, trans.NotificationId), trans.Modified, storedKey)
@@ -86,6 +88,7 @@ func addTransmission(conn redis.Conn, trans models.Transmission) (models.Transmi
 func sendDeleteTransmissionCmd(conn redis.Conn, storedKey string, trans models.Transmission) {
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(ZREM, TransmissionCollection, storedKey)
+	_ = conn.Send(ZREM, TransmissionCollectionCreated, storedKey)
 	_ = conn.Send(ZREM, CreateKey(TransmissionCollectionStatus, string(trans.Status)), storedKey)
 	_ = conn.Send(ZREM, CreateKey(TransmissionCollectionSubscriptionName, trans.SubscriptionName), storedKey)
 	_ = conn.Send(ZREM, CreateKey(TransmissionCollectionNotificationId, trans.NotificationId), storedKey)
@@ -111,4 +114,22 @@ func updateTransmission(conn redis.Conn, trans models.Transmission) errors.EdgeX
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "transmission update failed", err)
 	}
 	return nil
+}
+
+// transmissionsByTimeRange query transmissions by time range, offset, and limit
+func transmissionsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, TransmissionCollectionCreated, startTime, endTime, offset, limit)
+	if edgeXerr != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	transmissions = make([]models.Transmission, len(objects))
+	for i, o := range objects {
+		trans := models.Transmission{}
+		err := json.Unmarshal(o, &trans)
+		if err != nil {
+			return transmissions, errors.NewCommonEdgeX(errors.KindDatabaseError, "transmission format parsing failed from the database", err)
+		}
+		transmissions[i] = trans
+	}
+	return transmissions, nil
 }

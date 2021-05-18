@@ -76,8 +76,6 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
-    environment:
-      ENABLE_REGISTRY_ACL: "true"
     daemon: forking
     plugs: [network, network-bind]
   redis:
@@ -175,7 +173,6 @@ apps:
       SECRETSTORE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
       SECRETSTORE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
       # registry consul ACL related environment variables:
-      ENABLE_REGISTRY_ACL: "true"
       SECRETSTORE_CONSULSECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
 
       # environment for security-file-token-provider, exec'd by secretstore-setup
@@ -230,7 +227,6 @@ apps:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
     environment:
-      ENABLE_REGISTRY_ACL: "true"
       STAGEGATE_REGISTRY_HOST: localhost
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
