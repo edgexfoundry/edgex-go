@@ -1,9 +1,9 @@
 {
-  "edgex-core-command": {
+  "core-command": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/metadata/redisdb": {
+        "secret/edgex/core-command/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -12,11 +12,11 @@
       }
     }
   },
-  "edgex-core-data": {
+  "core-data": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/coredata/redisdb": {
+        "secret/edgex/core-data/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -25,11 +25,11 @@
       }
     }
   },
-  "edgex-core-metadata": {
+  "core-metadata": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/metadata/redisdb": {
+        "secret/edgex/core-metadata/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -38,11 +38,11 @@
       }
     }
   },
-  "edgex-security-bootstrap-redis": {
+  "security-bootstrapper-redis": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/bootstrap-redis/redisdb": {
+        "secret/edgex/security-bootstrapper-redis/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -51,11 +51,11 @@
       }
     }
   },
-  "edgex-support-notifications": {
+  "support-notifications": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/notifications/redisdb": {
+        "secret/edgex/support-notifications/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -73,14 +73,14 @@
   "device-rest": {
     "edgex_use_defaults": true
   },
-  "edgex-sys-mgmt-agent": {
+  "sys-mgmt-agent": {
     "edgex_use_defaults": true
   },
-  "edgex-support-scheduler": {
+  "support-scheduler": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/scheduler/redisdb": {
+        "secret/edgex/support-scheduler/redisdb": {
           "capabilities": [
             "list",
             "read"
@@ -89,11 +89,11 @@
       }
     }
   },
-  "edgex-security-secretstore-setup": {
+  "security-secretstore-setup": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/edgex-security-proxy-setup/kong-tls": {
+        "secret/edgex/security-proxy-setup/kong-tls": {
           "capabilities": [
             "list",
             "read",
@@ -114,10 +114,10 @@
       }
     }
   },
-  "edgex-security-proxy-setup": {
+  "security-proxy-setup": {
     "edgex_use_defaults": true
   },
-  "edgex-security-file-token-provider": {
+  "security-file-token-provider": {
     "edgex_use_defaults": true
   }
 }

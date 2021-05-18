@@ -36,15 +36,15 @@ Name = "jwt"
 TokenTTL = 0
 Resource = "coredata"
 OutputPath = "accessToken.json"
-JWTFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
+JWTFile = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 
 [SecretStore]
 Type = "vault"
 Protocol = "http"
 Host = "localhost"
 Port = 8200
-Path = "/v1/secret/edgex/edgex-security-proxy-setup/"
-TokenFile = "/tmp/edgex/secrets/edgex-security-proxy-setup/secrets-token.json"
+Path = "/v1/secret/edgex/security-proxy-setup/"
+TokenFile = "/tmp/edgex/secrets/security-proxy-setup/secrets-token.json"
 RootCaCertPath = ""
 ServerName = ""
 # Number of attempts to retry retrieving secrets before failing to start the service.
@@ -55,31 +55,31 @@ RetryWaitPeriod = "1s"
   AuthType = "X-Vault-Token"
 
 [Routes]
-  [Routes.edgex-core-data]
+  [Routes.core-data]
   Name = "coredata"
   Protocol = "http"
   Host = "localhost"
   Port = 48080
 	
-  [Routes.edgex-core-metadata]
+  [Routes.core-metadata]
   Name = "metadata"
   Protocol = "http"
   Host = "localhost"
   Port = 48081
 	
-  [Routes.edgex-core-command]
+  [Routes.core-command]
   Name = "command"
   Protocol = "http"
   Host = "localhost"
   Port = 48082
 	
-  [Routes.edgex-support-notifications]
+  [Routes.support-notifications]
   Name = "notifications"
   Protocol = "http"
   Host = "localhost"
   Port = 48060
 
-  [Routes.edgex-support-scheduler]
+  [Routes.support-scheduler]
   Name = "scheduler"
   Protocol = "http"
   Host = "localhost"
@@ -97,7 +97,7 @@ RetryWaitPeriod = "1s"
   Host = "localhost"
   Port = 49990
 
-  [Routes.edgex-core-consul]
+  [Routes.core-consul]
   Name = "consul"
   Protocol = "http"
   Host = "localhost"

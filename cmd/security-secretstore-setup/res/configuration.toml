@@ -53,32 +53,31 @@ ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
   [Databases.local]
   Username = "admin"
 
+  [Databases.command]
+  Service = "core-command"
+  Username = "core-command"
+
   [Databases.metadata]
-  Service = "metadata"
-  Username = "meta"
+  Service = "core-metadata"
+  Username = "core-metadata"
 
   [Databases.coredata]
-  Service = "coredata"
-  Username = "core"
+  Service = "core-data"
+  Username = "core-data"
 
   [Databases.rulesengine]
-  Service = "rulesengine"
-  Username = "rulesengine"
+  Service = "app-rules-engine"
+  Username = "app-rules-engine"
 
   [Databases.notifications]
-  Service = "notifications"
-  Username = "notifications"
+  Service = "support-notifications"
+  Username = "support-notifications"
 
   [Databases.scheduler]
-  Service = "scheduler"
-  Username = "scheduler"
-
-  [Databases.application-service]
-  Service = "appservice"
-  Username = "appservice"
-
+  Service = "support-scheduler"
+  Username = "support-scheduler"
 [KongAdmin]
 ConfigTemplatePath = "/res/kong-admin-config.template.yml"
 ConfigFilePath = "/tmp/kong/kong.yml"
-ConfigJWTPath = "/tmp/edgex/secrets/edgex-security-proxy-setup/kong-admin-jwt"
+ConfigJWTPath = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 ConfigJWTDuration = "1h"

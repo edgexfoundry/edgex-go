@@ -25,15 +25,15 @@ Port = 8500
 Type = 'consul'
 
 [Clients]
-  [Clients.edgex-support-notifications]
+  [Clients.support-notifications]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48060
-  [Clients.edgex-core-data]
+
+  [Clients.core-data]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48080
-
 
 [Databases]
   [Databases.Primary]
@@ -58,8 +58,8 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/metadata/'
-TokenFile = '/vault/config/assets/resp-init.json'
+Path = '/v1/secret/edgex/core-metadata/'
+TokenFile = '/tmp/edgex/secrets/core-metadata/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
 # Number of attempts to retry retrieving secrets before failing to start the service.

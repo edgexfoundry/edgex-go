@@ -30,7 +30,7 @@ Port = 8500
 Type = 'consul'
 
 [Clients]
-  [Clients.edgex-core-metadata]
+  [Clients.core-metadata]
   Protocol = 'http'
   Host = 'localhost'
   Port = 48081
@@ -69,8 +69,8 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/coredata/'
-TokenFile = '/vault/config/assets/resp-init.json'
+Path = '/v1/secret/edgex/core-data/'
+TokenFile = '/tmp/edgex/secrets/core-data/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
 # Number of attempts to retry retrieving secrets before failing to start the service.

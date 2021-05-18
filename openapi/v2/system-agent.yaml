@@ -57,7 +57,7 @@ components:
       properties:
         service:
           type: string
-          example: edgex-core-data
+          example: core-data
     GetConfigResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -69,7 +69,7 @@ components:
           title: service
           description: "Map of service(key) and configuration(value)"
       example: { "apiVersion":"v2","statusCode": 200,
-                 "edgex-core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
+                 "core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
       required:
         - config
     HealthRequest:
@@ -79,7 +79,7 @@ components:
         service:
           description: "The services from which to obtain health information."
           type: string
-          example: "edgex-core-data"
+          example: "core-data"
     HealthResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -91,7 +91,7 @@ components:
           additionalProperties:
             type: string
           example:
-            edgex-core-data: healthy
+            core-data: healthy
     MetricsRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -99,7 +99,7 @@ components:
         service:
           description: "The service from which to obtain metrics."
           type: string
-          example: "edgex-core-data"
+          example: "core-data"
     MetricsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -116,7 +116,7 @@ components:
         service:
           description: "The service associated with the metrics"
           type: string
-          example: "edgex-core-data"
+          example: "core-data"
         result:
           description: "The metric information retrieved from the targeted service"
           type: object
@@ -142,7 +142,7 @@ components:
         service:
           description: "The service to which to apply the action."
           type: string
-          example: "edgex-core-data"
+          example: "core-data"
     OperationResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -234,7 +234,7 @@ components:
         service:
           description: "Updates the target service's configuration"
           type: string
-          example: "edgex-core-data"
+          example: "core-data"
         configuration:
           description: "Service's configuration"
           type: array
@@ -257,7 +257,7 @@ components:
         service:
           description: "The service which the update was applied"
           type: string
-          example: "edgex-core-command"
+          example: "core-command"
       required:
         - service
     VersionResponse:

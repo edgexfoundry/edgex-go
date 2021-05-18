@@ -80,7 +80,7 @@ apps:
     plugs: [network, network-bind]
   redis:
     adapter: full
-    after: [security-bootstrap-redis]
+    after: [security-bootstrapper-redis]
     command: bin/redis-server $CONFIG_FILE $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
     environment:
       DIR_OPT: "--dir $SNAP_DATA/redis"
@@ -183,7 +183,7 @@ apps:
       # securing Kong's admin API plugin related environment variables:
       KONGADMIN_CONFIGTEMPLATEPATH: $SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
-      KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
+      KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
 
     start-timeout: 15m
     plugs: [network]
@@ -196,9 +196,9 @@ apps:
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     environment:
       INIT_ARG: "--init=true"
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
       ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
-      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
+      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     daemon: oneshot
     start-timeout: 15m
     plugs: [network]
@@ -207,7 +207,7 @@ apps:
   # Redis can be started once the confFile is created. Once the config file has been generated,
   # this service exits. In the Docker version, the customized redis' entrypoint.sh performs
   # the similar actions as described above.
-  security-bootstrap-redis:
+  security-bootstrapper-redis:
     adapter: none
     after:
       - security-secretstore-setup
@@ -215,7 +215,7 @@ apps:
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
       SECRETSTORE_SERVERNAME: localhost
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-bootstrap-redis/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-bootstrapper-redis/secrets-token.json
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
       DATABASECONFIG_NAME: redis.conf
     daemon: oneshot
@@ -236,7 +236,7 @@ apps:
   core-data:
     adapter: full
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -244,7 +244,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-data/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
@@ -254,7 +254,7 @@ apps:
   core-metadata:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -262,14 +262,14 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-metadata/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
   core-command:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -277,14 +277,14 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-core-command/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-notifications:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -292,14 +292,14 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-notifications/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -307,14 +307,14 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-support-scheduler/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
   sys-mgmt-agent:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -323,13 +323,13 @@ apps:
       - bin/security-secret-store-env-var.sh
     environment:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-sys-mgmt-agent/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
     adapter: none
     after:
-      - security-bootstrap-redis
+      - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -360,9 +360,9 @@ apps:
     adapter: none
     command: bin/security-proxy-setup
     environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/secrets-token.json
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
       ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
-      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/edgex-security-proxy-setup/kong-admin-jwt
+      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
