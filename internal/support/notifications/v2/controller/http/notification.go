@@ -288,3 +288,28 @@ func (nc *NotificationController) CleanupNotifications(w http.ResponseWriter, r 
 	// encode and send out the response
 	pkg.Encode(response, w, lc)
 }
+
+// DeleteProcessedNotificationsByAge deletes the processed notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding transmissions will also be deleted.
+// Please notice that this API is only for processed notifications (status = PROCESSED). If the deletion purpose includes each kind of notifications, please refer to /cleanup API.
+func (nc *NotificationController) DeleteProcessedNotificationsByAge(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	age, parsingErr := strconv.ParseInt(vars[v2.Age], 10, 64)
+	if parsingErr != nil {
+		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "age format parsing failed", parsingErr)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	err := application.DeleteProcessedNotificationsByAge(age, nc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
+	// encode and send out the response
+	pkg.Encode(response, w, lc)
+}
