@@ -158,11 +158,23 @@ func NotificationsBySubscriptionName(offset, limit int, subscriptionName string,
 }
 
 // CleanupNotificationsByAge invokes the infrastructure layer function to remove notifications that are older than age. And the corresponding transmissions will also be deleted
-// Age is supposed in milliseconds since created timestamp.
+// Age is supposed in milliseconds since modified timestamp.
 func CleanupNotificationsByAge(age int64, dic *di.Container) errors.EdgeX {
 	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
 
 	err := dbClient.CleanupNotificationsByAge(age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// DeleteProcessedNotificationsByAge invokes the infrastructure layer function to remove processed notifications that are older than age. And the corresponding transmissions will also be deleted
+// Age is supposed in milliseconds since modified timestamp.
+func DeleteProcessedNotificationsByAge(age int64, dic *di.Container) errors.EdgeX {
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteProcessedNotificationsByAge(age)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

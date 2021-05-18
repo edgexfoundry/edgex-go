@@ -215,10 +215,10 @@ func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, 
 }
 
 // notificationAndTransmissionStoreKeys return the store keys of the notification and transmission that are older than age.
-func notificationAndTransmissionStoreKeys(conn redis.Conn, age int64) ([]string, []string, errors.EdgeX) {
+func notificationAndTransmissionStoreKeys(conn redis.Conn, collectionKey string, age int64) ([]string, []string, errors.EdgeX) {
 	expireTimestamp := common.MakeTimestamp() - age
 
-	ncStoreKeys, err := redis.Strings(conn.Do(ZRANGEBYSCORE, NotificationCollection, 0, expireTimestamp))
+	ncStoreKeys, err := redis.Strings(conn.Do(ZRANGEBYSCORE, collectionKey, 0, expireTimestamp))
 	if err != nil {
 		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve nitification storeKeys by %s failed", NotificationCollection), err)
 	}
@@ -344,7 +344,22 @@ func (c *Client) asyncDeleteTransmissionByStoreKeys(storeKeys []string) {
 func (c *Client) CleanupNotificationsByAge(age int64) (err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
-	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, age)
+	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, NotificationCollection, age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go c.asyncDeleteNotificationByStoreKeys(ncStoreKeys)
+	go c.asyncDeleteTransmissionByStoreKeys(transStoreKeys)
+	return nil
+}
+
+// DeleteProcessedNotificationsByAge deletes processed notifications and their corresponding transmissions that are older than age.
+// This function is implemented to starts up two goroutines to delete transmissions and notifications in the background to achieve better performance.
+func (c *Client) DeleteProcessedNotificationsByAge(age int64) (err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	collectionKey := CreateKey(NotificationCollectionStatus, models.Processed)
+	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, collectionKey, age)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
