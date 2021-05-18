@@ -3147,7 +3147,7 @@ paths:
                   SecretStore:
                     Host: "edgex-vault"
                     Port: 8200
-                    Path: "v1/secret/edgex/metadata/"
+                    Path: "v1/secret/edgex/core-metadata/"
                     Protocol: "http"
                     Namespace: ""
                     RootCaCertPath: ""
@@ -3157,7 +3157,7 @@ paths:
                       AuthToken: ""
                     AdditionalRetryAttempts: 10
                     RetryWaitPeriod: "1s"
-                    TokenFile: "/vault/config/assets/resp-init.json"
+                    TokenFile: "/tmp/edgex/secrets/core-metadata/secrets-token.json"
         '500':
           description: "Internal Server Error"
           headers:

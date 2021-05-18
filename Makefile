@@ -49,7 +49,10 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 ARCH=$(shell uname -m)
 
-build: $(MICROSERVICES)
+build: tidy $(MICROSERVICES)
+
+tidy:
+	go mod tidy
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -91,6 +94,7 @@ clean:
 	rm -f $(MICROSERVICES)
 
 test:
+	go mod tidy
 	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 	GO111MODULE=on go vet ./...
 	gofmt -l .

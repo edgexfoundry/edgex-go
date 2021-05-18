@@ -1434,7 +1434,7 @@ paths:
                   SecretStore:
                     Host: "edgex-vault"
                     Port: 8200
-                    Path: "v1/secret/edgex/coredata/"
+                    Path: "v1/secret/edgex/core-data/"
                     Protocol: "http"
                     Namespace: ""
                     RootCaCertPath: ""
@@ -1444,7 +1444,7 @@ paths:
                       AuthToken: ""  
                     AdditionalRetryAttempts: 10
                     RetryWaitPeriod: "1s"
-                    TokenFile: "/tmp/edgex/secrets/edgex-core-data/secrets-token.json"
+                    TokenFile: "/tmp/edgex/secrets/core-data/secrets-token.json"
                   Startup:
                     Duration: 30
                     Interval: 1

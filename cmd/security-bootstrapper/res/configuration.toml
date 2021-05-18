@@ -37,17 +37,17 @@ LogLevel = 'INFO'
       [StageGate.Registry.ACL.Roles]
         [StageGate.Registry.ACL.Roles.app-rules-engine]
           Description = "role for application service of rules engine"
-        [StageGate.Registry.ACL.Roles.edgex-core-data]
+        [StageGate.Registry.ACL.Roles.core-data]
           Description = "role for coredata"
-        [StageGate.Registry.ACL.Roles.edgex-core-metadata]
+        [StageGate.Registry.ACL.Roles.core-metadata]
           Description = "role for metadata"
-        [StageGate.Registry.ACL.Roles.edgex-core-command]
+        [StageGate.Registry.ACL.Roles.core-command]
           Description = "role for command"
-        [StageGate.Registry.ACL.Roles.edgex-support-notifications]
+        [StageGate.Registry.ACL.Roles.support-notifications]
           Description = "role for notifications"
-        [StageGate.Registry.ACL.Roles.edgex-support-scheduler]
+        [StageGate.Registry.ACL.Roles.support-scheduler]
           Description = "role for scheduler"
-        [StageGate.Registry.ACL.Roles.edgex-sys-mgmt-agent]
+        [StageGate.Registry.ACL.Roles.sys-mgmt-agent]
           Description = "role for system management agent"
         [StageGate.Registry.ACL.Roles.device-virtual]
           Description = "role for device virtual service"
