@@ -9,14 +9,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
-
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/direct"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/container"
 )
 
 type AgentController struct {
@@ -28,12 +30,29 @@ func NewAgentController(dic *di.Container) *AgentController {
 }
 
 func (c *AgentController) GetHealth(w http.ResponseWriter, r *http.Request) {
-	lc := container.LoggingClientFrom(c.dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 
 	vars := mux.Vars(r)
-	services := strings.Split(vars["services"], ",")
+	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
 
-	health := application.GetHealth(services, container.RegistryFrom(c.dic.Get))
+	health := direct.GetHealth(services, bootstrapContainer.RegistryFrom(c.dic.Get))
 	res := responses.NewHealthResponse("", "", http.StatusOK, health)
+	pkg.Encode(res, w, lc)
+}
+
+func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
+	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
+	ctx := r.Context()
+	vars := mux.Vars(r)
+	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
+
+	metricsImpl := container.V2MetricsFrom(c.dic.Get)
+	res, err := metricsImpl.Get(ctx, services)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(res, w, lc)
 }

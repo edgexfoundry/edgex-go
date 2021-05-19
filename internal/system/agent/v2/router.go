@@ -29,6 +29,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 
 	ac := smaController.NewAgentController(dic)
 	r.HandleFunc(v2.ApiHealthRoute, ac.GetHealth).Methods(http.MethodGet)
+	r.HandleFunc(v2.ApiMultiMetricsRoute, ac.GetMetrics).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
