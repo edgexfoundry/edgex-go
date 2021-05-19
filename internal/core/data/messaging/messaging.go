@@ -50,6 +50,11 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 				Port:     messageBusInfo.Port,
 				Protocol: messageBusInfo.Protocol,
 			},
+			SubscribeHost: types.HostInfo{
+				Host:     messageBusInfo.Host,
+				Port:     messageBusInfo.Port,
+				Protocol: messageBusInfo.Protocol,
+			},
 			Type:     messageBusInfo.Type,
 			Optional: messageBusInfo.Optional,
 		})
