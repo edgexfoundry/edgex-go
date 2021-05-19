@@ -30,11 +30,9 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-
-	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc) {
 	startupTimer := startup.NewStartUpTimer(clients.SecurityFileTokenProviderServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,

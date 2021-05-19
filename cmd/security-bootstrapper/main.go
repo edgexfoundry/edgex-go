@@ -19,7 +19,6 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper"
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -29,5 +28,5 @@ func main() {
 	_ = os.Unsetenv("EDGEX_PROFILE")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	bootstrapper.Main(ctx, cancel, mux.NewRouter(), nil)
+	bootstrapper.Main(ctx, cancel)
 }

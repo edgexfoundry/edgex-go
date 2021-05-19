@@ -35,7 +35,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 	startupTimer := startup.NewStartUpTimer(clients.SystemManagementAgentServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
@@ -71,6 +71,5 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 			NewBootstrap(router).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
-			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		})
 }

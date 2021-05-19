@@ -22,15 +22,10 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/metadata"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
 
 	"github.com/gorilla/mux"
 )
@@ -49,30 +44,10 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
-	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
-
-	mdc := metadata.NewDeviceClient(local.New(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + clients.ApiDeviceRoute))
-	msc := metadata.NewDeviceServiceClient(local.New(configuration.Clients[clients.CoreMetaDataServiceKey].Url() + clients.ApiDeviceRoute))
-
-	chEvents := make(chan interface{}, 100)
-	// initialize event handlers
-	initEventHandlers(lc, chEvents, mdc, msc, configuration)
-
-	dic.Update(di.ServiceConstructorMap{
-		dataContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
-			return mdc
-		},
-		dataContainer.EventsChannelName: func(get di.Get) interface{} {
-			return chEvents
-		},
-		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
-			return errorconcept.NewErrorHandler(lc)
-		},
-	})
 
 	if configuration.MessageQueue.SubscribeEnabled {
 		err := application.SubscribeEvents(ctx, dic)

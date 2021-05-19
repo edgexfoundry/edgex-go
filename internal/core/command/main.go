@@ -22,7 +22,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
@@ -37,7 +36,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 	startupTimer := startup.NewStartUpTimer(clients.CoreCommandServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
@@ -70,12 +69,10 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			database.NewDatabase(httpServer, configuration).BootstrapHandler,
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(clients.CoreCommandServiceKey, edgex.Version).BootstrapHandler,
-			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		})
 
 	// code here!

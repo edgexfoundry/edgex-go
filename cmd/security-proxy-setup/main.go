@@ -19,11 +19,9 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	proxy.Main(ctx, cancel, mux.NewRouter(), nil)
+	proxy.Main(ctx, cancel)
 }

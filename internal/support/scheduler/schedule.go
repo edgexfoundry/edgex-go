@@ -18,11 +18,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	contract "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	queueV1 "gopkg.in/eapache/queue.v1"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
+)
+
+const (
+	ContentLengthKey = "Content-Length"
 )
 
 // the interval specific shared variables
@@ -47,26 +52,6 @@ func StartTicker(ticker *time.Ticker, lc logger.LoggingClient, configuration *co
 
 func StopTicker(ticker *time.Ticker) {
 	ticker.Stop()
-}
-
-// utility function
-func clearQueue() {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	for intervalQueue.Length() > 0 {
-		intervalQueue.Remove()
-	}
-}
-
-func clearMaps() {
-	intervalIdToContextMap = make(map[string]*IntervalContext)        // map : interval id -> interval context
-	intervalNameToContextMap = make(map[string]*IntervalContext)      // map : interval name -> interval context
-	intervalNameToIdMap = make(map[string]string)                     // map : interval name -> interval id
-	intervalActionIdToIntervalMap = make(map[string]string)           // map : interval action id -> interval id
-	intervalActionNameToIntervalMap = make(map[string]string)         // map : interval action name -> interval id
-	intervalActionNameToIntervalActionIdMap = make(map[string]string) // map : interval action name -> interval actionId
-
 }
 
 func addIntervalOperation(interval contract.Interval, context *IntervalContext) {
@@ -97,11 +82,6 @@ type QueueClient struct {
 }
 
 // NewClient
-func NewSchedulerQueueClient(lc logger.LoggingClient) *QueueClient {
-	return &QueueClient{
-		loggingClient: lc,
-	}
-}
 
 func (qc *QueueClient) Connect() (string, error) {
 	return "alive..", nil
@@ -555,7 +535,7 @@ func getHttpRequest(
 		return nil, err
 	}
 
-	req.Header.Set(ContentTypeKey, ContentTypeJsonValue)
+	req.Header.Set(clients.ContentType, clients.ContentTypeJSON)
 
 	if len(params) > 0 {
 		req.Header.Set(ContentLengthKey, strconv.Itoa(len(params)))

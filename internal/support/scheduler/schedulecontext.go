@@ -14,6 +14,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
+const (
+	SchedulerTimeFormat = "20060102T150405"
+)
+
 type IntervalContext struct {
 	Interval           models.Interval
 	IntervalActionsMap map[string]models.IntervalAction
@@ -46,7 +50,7 @@ func (sc *IntervalContext) Reset(interval models.Interval, lc logger.LoggingClie
 	if sc.Interval.Start == "" {
 		sc.StartTime = time.Now()
 	} else {
-		t, err := time.Parse(TIMELAYOUT, sc.Interval.Start)
+		t, err := time.Parse(SchedulerTimeFormat, sc.Interval.Start)
 		if err != nil {
 			lc.Error("parse time error, the original time string is : " + sc.Interval.Start)
 		}
@@ -58,7 +62,7 @@ func (sc *IntervalContext) Reset(interval models.Interval, lc logger.LoggingClie
 		// use max time
 		sc.EndTime = time.Unix(1<<63-62135596801, 999999999)
 	} else {
-		t, err := time.Parse(TIMELAYOUT, sc.Interval.End)
+		t, err := time.Parse(SchedulerTimeFormat, sc.Interval.End)
 		if err != nil {
 			lc.Error("parse time error, the original time string is : " + sc.Interval.End)
 		}
