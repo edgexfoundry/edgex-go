@@ -187,6 +187,22 @@ func (_m *DBClient) DeleteProcessedNotificationsByAge(age int64) errors.EdgeX {
 	return r0
 }
 
+// DeleteProcessedTransmissionsByAge provides a mock function with given fields: age
+func (_m *DBClient) DeleteProcessedTransmissionsByAge(age int64) errors.EdgeX {
+	ret := _m.Called(age)
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(int64) errors.EdgeX); ok {
+		r0 = rf(age)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // DeleteSubscriptionByName provides a mock function with given fields: name
 func (_m *DBClient) DeleteSubscriptionByName(name string) errors.EdgeX {
 	ret := _m.Called(name)
