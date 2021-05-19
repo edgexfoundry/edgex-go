@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/direct"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/direct/config"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/container"
 )
 
@@ -55,4 +56,21 @@ func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(res, w, lc)
+}
+
+func (c *AgentController) GetConfigs(w http.ResponseWriter, r *http.Request) {
+	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
+
+	configs, err := config.GetConfigs(ctx, services, c.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(configs, w, lc)
 }
