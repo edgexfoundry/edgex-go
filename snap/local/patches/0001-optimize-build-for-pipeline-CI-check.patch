@@ -215,7 +215,7 @@ index d8bc12bc..5a5f5fbb 100644
 -      KUIPER_CONSOLE_LOG: "true"
 -      KUIPER_REST_PORT: 48075
 -      EDGEX_SERVER: localhost
--      EDGEX_SERVICE_SERVER: http://localhost:48080
+-      EDGEX_SERVICE_SERVER: http://localhost:59880
 -      EDGEX_TOPIC: events
 -      EDGEX_PROTOCOL: tcp
 -      EDGEX_PORT: 5566

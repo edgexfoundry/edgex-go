@@ -5,7 +5,7 @@ info:
   version: 2.x
   
 servers:
-  - url: http://localhost:48082/api/v2
+  - url: http://localhost:59882/api/v2
     description: URL for local development and testing
   
 components:
@@ -401,12 +401,12 @@ components:
               - name: "coolingpoint1"
                 get: true
                 path: "/api/v2/device/name/testDevice/command/coolingpoint1"
-                url: "http://localhost:48082"
+                url: "http://localhost:59882"
                 parameters: [ {"resourceName":"resource1","valueType":"Int32"} ]
               - name: "coolingpoint2"
                 set: true
                 path: "/api/v2/device/name/testDevice/command/coolingpoint2"
-                url: "http://localhost:48082"
+                url: "http://localhost:59882"
                 parameters: [ {"resourceName":"resource5","valueType":"String"},{"resourceName":"resource6","valueType":"Bool"}  ]
     MultiDeviceCoreCommandsExample:
       value:
@@ -419,12 +419,12 @@ components:
             - name: "coolingpoint1"
               get: true
               path: "/api/v2/device/name/testDevice1/command/coolingpoint1"
-              url: "http://localhost:48082"
+              url: "http://localhost:59882"
               parameters: [ {"resourceName":"resource1","valueType":"Int32"} ]
             - name: "coolingpoint2"
               set: true
               path: "/api/v2/device/name/testDevice1/command/coolingpoint2"
-              url: "http://localhost:48082"
+              url: "http://localhost:59882"
               parameters: [ {"resourceName":"resource2","valueType":"Int16"},{"resourceName":"resource3","valueType":"Int32"}  ]
           - deviceName: "testDevice2"
             profileName: "testProfile"
@@ -432,12 +432,12 @@ components:
             - name: "coolingpoint1"
               get: true
               path: "/api/v2/device/name/testDevice2/command/coolingpoint1"
-              url: "http://localhost:48082"
+              url: "http://localhost:59882"
               parameters: [ {"resourceName":"resource4","valueType":"Int32"} ]
             - name: "coolingpoint2"
               set: true
               path: "/api/v2/device/name/testDevice2/command/coolingpoint2"
-              url: "http://localhost:48082"
+              url: "http://localhost:59882"
               parameters: [ {"resourceName":"resource5","valueType":"String"},{"resourceName":"resource6","valueType":"Bool"}  ]
 paths:
   /device/name/{name}/{command}:

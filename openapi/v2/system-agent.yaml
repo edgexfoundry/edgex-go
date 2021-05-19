@@ -5,7 +5,7 @@ info:
   version: 2.x
 
 servers:
-  - url: "http://localhost:48090/api/v2"
+  - url: "http://localhost:58890/api/v2"
     description: "URL for local development and testing"
 
 components:
@@ -519,29 +519,29 @@ paths:
                   Clients:
                     edge-core-command:
                       Host: "edgex-core-command"
-                      Port: 48082
+                      Port: 59882
                       Protocol: "http"
                     edge-core-data:
                       Host: "edgex-core-data"
-                      Port: 48080
+                      Port: 59880
                       Protocol: "http"
                     edge-core-metadata:
                       Host: "edgex-core-metadata"
-                      Port: 48081
+                      Port: 59881
                       Protocol: "http"
                     edge-support-scheduler:
                       Host: "edgex-support-scheduler"
-                      Port: 48085
+                      Port: 59861
                       Protocol: "http"
                     edge-support-notifications:
                       Host: "edgex-support-notifications"
-                      Port: 48060
+                      Port: 59860
                       Protocol: "http"
                   Service:
                     BootTimeout: 30000
                     CheckInterval: "10s"
                     Host: "edgex-core-data"
-                    Port: 48090
+                    Port: 58890
                     SeverBindAddr: ""
                     Protocol: "http"
                     StartupMsg: "This is the System Management Agent Service"

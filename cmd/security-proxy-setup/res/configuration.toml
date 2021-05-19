@@ -59,31 +59,31 @@ RetryWaitPeriod = "1s"
   Name = "coredata"
   Protocol = "http"
   Host = "localhost"
-  Port = 48080
+  Port = 59880
 	
   [Routes.core-metadata]
   Name = "metadata"
   Protocol = "http"
   Host = "localhost"
-  Port = 48081
+  Port = 59881
 	
   [Routes.core-command]
   Name = "command"
   Protocol = "http"
   Host = "localhost"
-  Port = 48082
+  Port = 59882
 	
   [Routes.support-notifications]
   Name = "notifications"
   Protocol = "http"
   Host = "localhost"
-  Port = 48060
+  Port = 59860
 
   [Routes.support-scheduler]
   Name = "scheduler"
   Protocol = "http"
   Host = "localhost"
-  Port = 48085
+  Port = 59861
 
   [Routes.rules-engine]
   Name = "rulesengine"

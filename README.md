@@ -35,7 +35,7 @@ As part of Ireland release, the `security-secrets-setup` service is no more as i
 When security features are enabled, additional steps are required to access the resources of EdgeX.
 
 1. The user needs to create an access token and associate every REST request with the access token. 
-2. The exported external ports (such as 48080, 48081 etc.) will be inaccessible for security purposes. Instead, all REST requests need to go through the proxy. The proxy will redirect the request to the individual microservices on behalf of the user.
+2. The exported external ports (such as 59880, 59881 etc.) will be inaccessible for security purposes. Instead, all REST requests need to go through the proxy. The proxy will redirect the request to the individual microservices on behalf of the user.
 
 Sample steps to create an access token and use the token to access EdgeX resources can be found here: [Security Components](SECURITY.md)
 

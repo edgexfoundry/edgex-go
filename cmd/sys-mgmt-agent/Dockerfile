@@ -40,7 +40,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 RUN apk add --update --no-cache bash dumb-init py3-pip curl && \
       pip install docker-compose==1.23.2
 
-ENV APP_PORT=48090
+ENV APP_PORT=58890
 #expose system mgmt agent port
 EXPOSE $APP_PORT
 

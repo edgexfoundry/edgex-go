@@ -3,7 +3,7 @@ info:
   title: core-command
   version: 1.2.1
 servers:
-- url: http://localhost:48082/api
+- url: http://localhost:59882/api
 paths:
   /v1/config:
     get:

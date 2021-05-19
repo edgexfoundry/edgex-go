@@ -5,7 +5,7 @@ info:
   version: 2.x
   
 servers:
-  - url: http://localhost:48080/api/v2
+  - url: http://localhost:59880/api/v2
     description: URL for local development and testing
   
 components:
@@ -1403,7 +1403,7 @@ paths:
                       Protocol: "http"
                     Metadata:
                       Host: "edgex-core-metadata"
-                      Port: 48081
+                      Port: 59881
                       Protocol: "http"
                   Databases:
                     Primary:
@@ -1425,7 +1425,7 @@ paths:
                     BootTimeout: 30000
                     CheckInterval: "10s"
                     Host: "edgex-core-data"
-                    Port: 48080
+                    Port: 59880
                     SeverBindAddr: ""
                     Protocol: "http"
                     StartupMsg: "This is the Core Data Microservice"
