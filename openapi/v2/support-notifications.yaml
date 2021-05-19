@@ -422,7 +422,7 @@ components:
           description: "Indicates how many time resend has been attempted for the transmission."
           type: integer
         status:
-          description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, ESCALATED"
+          description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, RESENDING, ESCALATED"
           type: string
       required:
         - channel
