@@ -51,6 +51,8 @@ Type = 'redis'
 AuthMode = 'usernamepassword'  # required for redis messagebus (secure or insecure).
 SecretName = 'redisdb'
 PublishTopicPrefix = 'edgex/events' # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
+SubscribeEnabled = true
+SubscribeTopic = "edgex/events/#"  # required for subscribing to Events from MessageBus
   [MessageQueue.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   # Client Identifiers
