@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/application/channel"
 	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/gorilla/mux"
@@ -47,10 +46,8 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-
-	restSender := channel.NewRESTSender(lc)
-	emailSender := channel.NewEmailSender(lc)
+	restSender := channel.NewRESTSender(dic)
+	emailSender := channel.NewEmailSender(dic)
 	dic.Update(di.ServiceConstructorMap{
 		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
 			return restSender

@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	senderMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/application/channel/mocks"
 	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
-	mocks "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/infrastructure/interfaces/mocks"
+	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
@@ -60,7 +61,7 @@ var testAddress2 = models.RESTAddress{
 
 func TestFirstSend(t *testing.T) {
 	dic := mockDic()
-	restSender := &mocks.ChannelSender{}
+	restSender := &senderMock.Sender{}
 
 	tests := []struct {
 		name          string
@@ -73,7 +74,7 @@ func TestFirstSend(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			sub.Channels = []models.Address{testCase.address}
-			restSender.On("Send", notification.Content, notification.ContentType, testCase.address).Return("", testCase.expectedError)
+			restSender.On("Send", notification, testCase.address).Return("", testCase.expectedError)
 			dic.Update(di.ServiceConstructorMap{
 				v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
 					return restSender
@@ -97,14 +98,14 @@ func TestFirstSend(t *testing.T) {
 func TestReSend(t *testing.T) {
 	dic := mockDic()
 	config := notificationContainer.ConfigurationFrom(dic.Get)
-	dbClientMock := &mocks.DBClient{}
+	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateTransmission", mock.Anything).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
 		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
-	restSender := &mocks.ChannelSender{}
+	restSender := &senderMock.Sender{}
 
 	tests := []struct {
 		name          string
@@ -117,7 +118,7 @@ func TestReSend(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			sub.Channels = []models.Address{testCase.address}
-			restSender.On("Send", notification.Content, notification.ContentType, testCase.address).Return("", testCase.expectedError)
+			restSender.On("Send", notification, testCase.address).Return("", testCase.expectedError)
 			dic.Update(di.ServiceConstructorMap{
 				v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
 					return restSender

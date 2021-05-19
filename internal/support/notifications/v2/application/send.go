@@ -128,10 +128,10 @@ func sendNotificationViaChannel(dic *di.Container, n models.Notification, channe
 	switch channel.GetBaseAddress().Type {
 	case v2.REST:
 		restSender := v2NotificationsContainer.RESTSenderFrom(dic.Get)
-		transRecord.Response, err = restSender.Send(n.Content, n.ContentType, channel)
+		transRecord.Response, err = restSender.Send(n, channel)
 	case v2.EMAIL:
 		emailSender := v2NotificationsContainer.EmailSenderFrom(dic.Get)
-		transRecord.Response, err = emailSender.Send(n.Content, n.ContentType, channel)
+		transRecord.Response, err = emailSender.Send(n, channel)
 	default:
 		transRecord.Response = fmt.Sprintf("unsupported address type: %s", channel.GetBaseAddress().Type)
 		return transRecord
