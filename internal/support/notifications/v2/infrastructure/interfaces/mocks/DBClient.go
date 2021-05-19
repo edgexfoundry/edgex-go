@@ -109,6 +109,31 @@ func (_m *DBClient) AllSubscriptions(offset int, limit int) ([]models.Subscripti
 	return r0, r1
 }
 
+// AllTransmissions provides a mock function with given fields: offset, limit
+func (_m *DBClient) AllTransmissions(offset int, limit int) ([]models.Transmission, errors.EdgeX) {
+	ret := _m.Called(offset, limit)
+
+	var r0 []models.Transmission
+	if rf, ok := ret.Get(0).(func(int, int) []models.Transmission); ok {
+		r0 = rf(offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Transmission)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int) errors.EdgeX); ok {
+		r1 = rf(offset, limit)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // CleanupNotificationsByAge provides a mock function with given fields: age
 func (_m *DBClient) CleanupNotificationsByAge(age int64) errors.EdgeX {
 	ret := _m.Called(age)

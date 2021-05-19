@@ -46,3 +46,17 @@ func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di
 	}
 	return transmissions, nil
 }
+
+// AllTransmissions queries transmissions by offset and limit
+func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	models, err := dbClient.AllTransmissions(offset, limit)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	}
+	transmissions = make([]dtos.Transmission, len(models))
+	for i, trans := range models {
+		transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
+	}
+	return transmissions, nil
+}

@@ -1098,3 +1098,17 @@ func (c *Client) TransmissionsByTimeRange(start int, end int, offset int, limit 
 	}
 	return transmissions, nil
 }
+
+// AllTransmissions returns multiple transmissions per query criteria, including
+// offset: The number of items to skip before starting to collect the result set.
+// limit: The maximum number of items to return.
+func (c *Client) AllTransmissions(offset int, limit int) ([]model.Transmission, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	transmission, err := allTransmissions(conn, offset, limit)
+	if err != nil {
+		return transmission, errors.NewCommonEdgeXWrapper(err)
+	}
+	return transmission, nil
+}
