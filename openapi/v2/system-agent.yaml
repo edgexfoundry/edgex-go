@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
   title: Edgex Foundry - System Management Agent API
-  description: This is the definition of the API for the System Management Agent service in the EdgeX Foundry IOT microservice platform. System Management Agent is responsible for management of EdgeX microservices and supported infrastructure.
+  description: "This is the definition of the API for the System Management Agent service in the EdgeX Foundry IOT microservice platform. System Management Agent is responsible for management of EdgeX microservices and supported infrastructure."
   version: 2.x
 
 servers:
   - url: "http://localhost:48090/api/v2"
-    description: URL for local development and testing
+    description: "URL for local development and testing"
 
 components:
   schemas:
@@ -94,6 +94,16 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/MetricsResponse'
+    MultiConfigsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      description: "Response containing the configuration for the targeted service(s)."
+      properties:
+        metrics:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ConfigResponse'
     OperationRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -298,65 +308,21 @@ components:
         apiVersion: "v2"
         statusCode: 500
         message: "Internal Server Error"
+
 paths:
-  /config/settings:
-    post:
-      summary: "Update the configuration for the targeted service."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/SetConfigRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/SetConfigRequest'
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SetConfigResponse'
-        '207':
-          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/SetConfigResponse'
-        '400':
-          description: "Bad request"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /health/{services}:
     get:
       summary: "Obtain health information from the targeted service."
       parameters:
         - name: services
           in: path
-          description: A comma-separated list of EdgeX service names to query for health.
+          description: "A comma-separated list of EdgeX service names to query for health."
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: OK
+          description: "OK"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -388,13 +354,13 @@ paths:
       parameters:
         - name: services
           in: path
-          description: A comma-separated list of EdgeX service names to query for metrics.
+          description: "A comma-separated list of EdgeX service names to query for metrics."
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: OK
+          description: "OK"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -402,6 +368,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiMetricsResponse'
+        '400':
+          description: "Bad request"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: "Not Found"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /configs/{services}:
+    get:
+      summary: "Obtain configuration from the targeted service(s)."
+      parameters:
+        - name: services
+          in: path
+          description: "A comma-separated list of EdgeX service names to query for metrics."
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiConfigsResponse'
         '400':
           description: "Bad request"
           headers:
