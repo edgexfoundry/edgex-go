@@ -47,11 +47,11 @@ func sendAddTransmissionCmd(conn redis.Conn, storedKey string, trans models.Tran
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal transmission for Redis persistence", err)
 	}
 	_ = conn.Send(SET, storedKey, m)
-	_ = conn.Send(ZADD, TransmissionCollection, trans.Modified, storedKey)
+	_ = conn.Send(ZADD, TransmissionCollection, trans.Created, storedKey)
 	_ = conn.Send(ZADD, TransmissionCollectionCreated, trans.Created, storedKey)
-	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionStatus, string(trans.Status)), trans.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionSubscriptionName, trans.SubscriptionName), trans.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionNotificationId, trans.NotificationId), trans.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionStatus, string(trans.Status)), trans.Created, storedKey)
+	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionSubscriptionName, trans.SubscriptionName), trans.Created, storedKey)
+	_ = conn.Send(ZADD, CreateKey(TransmissionCollectionNotificationId, trans.NotificationId), trans.Created, storedKey)
 	return nil
 }
 
@@ -68,7 +68,6 @@ func addTransmission(conn redis.Conn, trans models.Transmission) (models.Transmi
 	if trans.Created == 0 {
 		trans.Created = ts
 	}
-	trans.Modified = ts
 
 	storedKey := transmissionStoredKey(trans.Id)
 	_ = conn.Send(MULTI)
@@ -100,7 +99,6 @@ func updateTransmission(conn redis.Conn, trans models.Transmission) errors.EdgeX
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	trans.Modified = common.MakeTimestamp()
 	storedKey := transmissionStoredKey(trans.Id)
 
 	_ = conn.Send(MULTI)
@@ -122,16 +120,8 @@ func transmissionsByTimeRange(conn redis.Conn, startTime int, endTime int, offse
 	if edgeXerr != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	transmissions = make([]models.Transmission, len(objects))
-	for i, o := range objects {
-		trans := models.Transmission{}
-		err := json.Unmarshal(o, &trans)
-		if err != nil {
-			return transmissions, errors.NewCommonEdgeX(errors.KindDatabaseError, "transmission format parsing failed from the database", err)
-		}
-		transmissions[i] = trans
-	}
-	return transmissions, nil
+
+	return objectsToTransmissions(objects)
 }
 
 // allTransmissions queries transmissions by offset and limit
@@ -141,6 +131,20 @@ func allTransmissions(conn redis.Conn, offset, limit int) (transmissions []model
 		return transmissions, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
+	return objectsToTransmissions(objects)
+}
+
+// transmissionsByStatus queries transmissions by offset, limit, and status
+func transmissionsByStatus(conn redis.Conn, offset int, limit int, status string) (transmissions []models.Transmission, err errors.EdgeX) {
+	objects, err := getObjectsByRevRange(conn, CreateKey(TransmissionCollectionStatus, status), offset, limit)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return objectsToTransmissions(objects)
+}
+
+func objectsToTransmissions(objects [][]byte) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
 	transmissions = make([]models.Transmission, len(objects))
 	for i, o := range objects {
 		trans := models.Transmission{}

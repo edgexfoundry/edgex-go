@@ -1112,3 +1112,16 @@ func (c *Client) AllTransmissions(offset int, limit int) ([]model.Transmission, 
 	}
 	return transmission, nil
 }
+
+// TransmissionsByStatus queries transmissions by offset, limit and status
+func (c *Client) TransmissionsByStatus(offset int, limit int, status string) (transmissions []model.Transmission, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	transmissions, err = transmissionsByStatus(conn, offset, limit, status)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query transmissions by offset %d, limit %d and status %s", offset, limit, status), err)
+	}
+	return transmissions, nil
+}

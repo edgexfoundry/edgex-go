@@ -97,3 +97,29 @@ func (tc *TransmissionController) AllTransmissions(w http.ResponseWriter, r *htt
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
+
+// TransmissionsByStatus allows retrieval of the transmissions associated with the specified status. Ordered by create timestamp descending.
+func (tc *TransmissionController) TransmissionsByStatus(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(tc.dic.Get)
+	ctx := r.Context()
+	config := notificationContainer.ConfigurationFrom(tc.dic.Get)
+
+	vars := mux.Vars(r)
+	status := vars[v2.Status]
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	transmissions, err := application.TransmissionsByStatus(offset, limit, status, tc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
+}

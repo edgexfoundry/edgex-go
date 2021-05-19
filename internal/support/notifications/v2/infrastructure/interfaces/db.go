@@ -41,4 +41,5 @@ type DBClient interface {
 	TransmissionById(id string) (models.Transmission, errors.EdgeX)
 	TransmissionsByTimeRange(start int, end int, offset int, limit int) ([]models.Transmission, errors.EdgeX)
 	AllTransmissions(offset int, limit int) ([]models.Transmission, errors.EdgeX)
+	TransmissionsByStatus(offset, limit int, status string) ([]models.Transmission, errors.EdgeX)
 }
