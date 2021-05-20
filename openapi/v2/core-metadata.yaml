@@ -4,7 +4,7 @@ info:
   description: "This is the definition of the API for the Core Metadata service in the EdgeX Foundry IOT microservice platform. Core Metadata is responsible for all information related to provisioned devices and their associated services."
   version: 2.x
 servers:
-  - url: 'http://localhost:48081/api/v2'
+  - url: 'http://localhost:59881/api/v2'
     description: URL for local development and testing
 components:
   schemas:
@@ -3108,11 +3108,11 @@ paths:
                   Clients:
                     CoreData:
                       Host: "edgex-core-data"
-                      Port: 48080
+                      Port: 59880
                       Protocol: "http"
                     Notifications:
                       Host: "edgex-support-notifications"
-                      Port: 48060
+                      Port: 59860
                       Protocol: "http"
                   Databases:
                     Primary:
@@ -3138,7 +3138,7 @@ paths:
                     BootTimeout: 30000
                     CheckInterval: "10s"
                     Host: "edgex-core-metadata"
-                    Port: 48081
+                    Port: 59881
                     SeverBindAddr: ""
                     Protocol: "http"
                     StartupMsg: "This is the EdgeX Core Metadata Microservice"

@@ -20,7 +20,7 @@ BootTimeout = 30000
 CheckInterval = '10s'
 Host = 'localhost'
 ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-Port = 48090
+Port = 58890
 Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the System Management Agent Service'
@@ -36,27 +36,27 @@ Type = 'consul'
   [Clients.support-notifications]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48060
+  Port = 59860
 
   [Clients.core-command]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48082
+  Port = 59882
 
   [Clients.core-metadata]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48081
+  Port = 59881
 
   [Clients.core-data]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48080
+  Port = 59880
 
   [Clients.support-scheduler]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48085
+  Port = 59861
 
 [SecretStore]
 Type = 'vault'

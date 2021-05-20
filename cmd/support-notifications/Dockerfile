@@ -43,7 +43,7 @@ RUN apk add --update --no-cache ca-certificates dumb-init
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium, Copyright (c) 2021: Intel Corporation'
 
-ENV APP_PORT=48060
+ENV APP_PORT=59860
 #expose support notifications port
 EXPOSE $APP_PORT
 

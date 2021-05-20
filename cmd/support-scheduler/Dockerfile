@@ -44,7 +44,7 @@ RUN apk add --update --no-cache dumb-init
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2021: Intel Corporation'
 
-ENV APP_PORT=48085
+ENV APP_PORT=59861
 #expose support scheduler port
 EXPOSE $APP_PORT
 

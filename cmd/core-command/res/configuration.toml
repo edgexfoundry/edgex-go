@@ -12,7 +12,7 @@ BootTimeout = 30000
 CheckInterval = '10s'
 Host = 'localhost'
 ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-Port = 48082
+Port = 59882
 Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the Core Command Microservice'
@@ -27,7 +27,7 @@ Type = 'consul'
   [Clients.core-metadata]
   Protocol = 'http'
   Host = 'localhost'
-  Port = 48081
+  Port = 59881
 
 [Databases]
   [Databases.Primary]

@@ -44,7 +44,7 @@ FROM alpine:3.12
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium'
 
-ENV APP_PORT=48080
+ENV APP_PORT=59880
 #expose core data port
 EXPOSE $APP_PORT
 
