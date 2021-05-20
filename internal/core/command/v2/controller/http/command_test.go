@@ -47,7 +47,7 @@ const (
 	testDeviceServiceName = "testDeviceService"
 	testCommandName       = "testCommand"
 	testPathPrefix        = v2.ApiDeviceRoute + "/" + v2.Name + "/" + testDeviceName + "/" + v2.Command + "/"
-	testUrl               = "http://localhost:48082"
+	testUrl               = "http://localhost:59882"
 	testBaseAddress       = "http://localhost:49990"
 	testQueryStrings      = "a=1&b=2&ds-pushevent=no"
 )

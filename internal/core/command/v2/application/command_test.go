@@ -17,7 +17,7 @@ import (
 
 const (
 	testDeviceName = "testDeviceName"
-	testServiceUrl = "http://localhost:48082"
+	testServiceUrl = "http://localhost:59882"
 	resource1      = "str1_R"
 	resource2      = "str2_W"
 	resource3      = "str3_RW"

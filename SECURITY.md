@@ -40,13 +40,13 @@ Once EdgeX is up and running, the following steps are required to access EdgeX r
     `eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0`.  
     Yours will differ from this one.
 
-2. The exported external ports (such as 48080, 48081 etc.) will be inaccessible for security reasons.
+2. The exported external ports (such as 59880, 59881 etc.) will be inaccessible for security reasons.
 Instead, all the REST requests need to go through the proxy, and the proxy will redirect the request to individual microservice on behalf of the user.
 
     E.g, if we need to send a request to the ping endpoint of coredata, without security this would look like:
 
     ```sh
-    curl http://{coredata-microservice-ip}:48080/api/v1/ping
+    curl http://{coredata-microservice-ip}:59880/api/v1/ping
     ```
 
     With security services enabled, the request would look like this:

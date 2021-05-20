@@ -52,31 +52,31 @@ SNIS = ["edgex-kong"]
   Name = "coredata"
   Protocol = "http"
   Host = "localhost"
-  Port = 48080
+  Port = 59880
 
   [Routes.Metadata]
   Name = "metadata"
   Protocol = "http"
   Host = "localhost"
-  Port = 48081
+  Port = 59881
 
   [Routes.Command]
   Name = "command"
   Protocol = "http"
   Host = "localhost"
-  Port = 48082
+  Port = 59882
 
   [Routes.Notifications]
   Name = "notifications"
   Protocol = "http"
   Host = "localhost"
-  Port = 48060
+  Port = 59860
 
   [Routes.Scheduler]
   Name = "scheduler"
   Protocol = "http"
   Host = "localhost"
-  Port = 48085
+  Port = 59861
 
   [Routes.RulesEngine]
   Name = "rules"

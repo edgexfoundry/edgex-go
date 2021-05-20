@@ -175,22 +175,22 @@ func TestInit(t *testing.T) {
 		},
 		{
 			name:               "add one duplicate route",
-			proxyRouteEnvValue: "CoreData.http://edgex-core-data:48080",
+			proxyRouteEnvValue: "CoreData.http://edgex-core-data:59880",
 			expectNumRoutes:    7,
 		},
 		{
 			name:               "add one unique, one duplicate route",
-			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080",
+			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:59880",
 			expectNumRoutes:    8,
 		},
 		{
 			name:               "add one unique, multiple duplicate routes",
-			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
+			proxyRouteEnvValue: "testServcie.https://edgex-test-servcie1:12345, CoreData.http://edgex-core-data:59880, Command.https://edgex-core-command:59882",
 			expectNumRoutes:    8,
 		},
 		{
 			name:               "add two unique, multiple duplicate routes",
-			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346, CoreData.http://edgex-core-data:48080, Command.https://edgex-core-command:48082",
+			proxyRouteEnvValue: "testService1.http://127.0.0.1:12345, testService2.http://edgex-testService2:12346, CoreData.http://edgex-core-data:59880, Command.https://edgex-core-command:59882",
 			expectNumRoutes:    9,
 		},
 		// invalid syntax tests:

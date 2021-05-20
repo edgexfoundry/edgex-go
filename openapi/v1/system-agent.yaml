@@ -3,7 +3,7 @@ info:
   title: system-agent
   version: 1.2.1
 servers:
-- url: http://localhost:48090/api
+- url: http://localhost:58890/api
 paths:
   /v1/config/{services}:
     get:

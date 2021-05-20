@@ -14,7 +14,7 @@ BootTimeout = 30000
 CheckInterval = '10s'
 Host = 'localhost'
 ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-Port = 48085
+Port = 59861
 Protocol = 'http'
 MaxResultCount = 50000
 StartupMsg = 'This is the Support Scheduler Microservice'
@@ -43,7 +43,7 @@ Type = 'consul'
     [IntervalActions.ScrubAged]
     Name = 'scrub-aged-events'
     Host = 'localhost'
-    Port = 48080
+    Port = 59880
     Protocol = 'http'
     Method = 'DELETE'
     Target = 'core-data'
