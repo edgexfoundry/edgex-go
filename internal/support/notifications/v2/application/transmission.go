@@ -85,3 +85,16 @@ func DeleteProcessedTransmissionsByAge(age int64, dic *di.Container) errors.Edge
 	}
 	return nil
 }
+
+// TransmissionsBySubscriptionName queries transmissions with offset, limit, and subscription name
+func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+	if subscriptionName == "" {
+		return transmissions, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
+	}
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	transModels, err := dbClient.TransmissionsBySubscriptionName(offset, limit, subscriptionName)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	}
+	return dtos.FromTransmissionModelsToDTOs(transModels), nil
+}

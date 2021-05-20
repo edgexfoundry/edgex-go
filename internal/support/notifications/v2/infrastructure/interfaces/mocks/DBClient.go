@@ -561,6 +561,31 @@ func (_m *DBClient) TransmissionsByStatus(offset int, limit int, status string) 
 	return r0, r1
 }
 
+// TransmissionsBySubscriptionName provides a mock function with given fields: offset, limit, subscriptionName
+func (_m *DBClient) TransmissionsBySubscriptionName(offset int, limit int, subscriptionName string) ([]models.Transmission, errors.EdgeX) {
+	ret := _m.Called(offset, limit, subscriptionName)
+
+	var r0 []models.Transmission
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Transmission); ok {
+		r0 = rf(offset, limit, subscriptionName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Transmission)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, subscriptionName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // TransmissionsByTimeRange provides a mock function with given fields: start, end, offset, limit
 func (_m *DBClient) TransmissionsByTimeRange(start int, end int, offset int, limit int) ([]models.Transmission, errors.EdgeX) {
 	ret := _m.Called(start, end, offset, limit)

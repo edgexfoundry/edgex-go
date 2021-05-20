@@ -1125,3 +1125,16 @@ func (c *Client) TransmissionsByStatus(offset int, limit int, status string) (tr
 	}
 	return transmissions, nil
 }
+
+// TransmissionsBySubscriptionName queries transmissions by offset, limit and subscription name
+func (c *Client) TransmissionsBySubscriptionName(offset int, limit int, subscriptionName string) (transmissions []model.Transmission, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	transmissions, err = transmissionsBySubscriptionName(conn, offset, limit, subscriptionName)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query transmissions by offset %d, limit %d and subscription name %s", offset, limit, subscriptionName), err)
+	}
+	return transmissions, nil
+}

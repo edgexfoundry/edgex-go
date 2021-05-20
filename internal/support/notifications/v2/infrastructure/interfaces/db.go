@@ -43,4 +43,5 @@ type DBClient interface {
 	AllTransmissions(offset int, limit int) ([]models.Transmission, errors.EdgeX)
 	TransmissionsByStatus(offset, limit int, status string) ([]models.Transmission, errors.EdgeX)
 	DeleteProcessedTransmissionsByAge(age int64) errors.EdgeX
+	TransmissionsBySubscriptionName(offset, limit int, subscriptionName string) ([]models.Transmission, errors.EdgeX)
 }
