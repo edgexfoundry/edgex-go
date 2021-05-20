@@ -1680,7 +1680,7 @@ paths:
           type: integer
         description: "Indicates the age of a transmission in ticks"
     delete:
-      summary: "Deletes the processed transmissions if the current timestamp minus their last modification timestamp is less than the age parameter."
+      summary: "Deletes the processed transmissions if the current timestamp minus their created timestamp is less than the age parameter."
       responses:
         '200':
           description: "Delete successful"

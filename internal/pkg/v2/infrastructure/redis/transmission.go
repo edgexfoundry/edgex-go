@@ -156,3 +156,37 @@ func objectsToTransmissions(objects [][]byte) (transmissions []models.Transmissi
 	}
 	return transmissions, nil
 }
+
+// DeleteProcessedTransmissionsByAge deletes the processed transmissions((ACKNOWLEDGED, SENT, ESCALATED) that are older than age.
+// This function is implemented to starts up goroutines to delete processed transmissions in the background to achieve better performance.
+func (c *Client) DeleteProcessedTransmissionsByAge(age int64) (err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	acknowledgedStoreKeys, err := transmissionStoreKeys(conn, CreateKey(TransmissionCollectionStatus, models.Acknowledged), age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	sentStoreKeys, err := transmissionStoreKeys(conn, CreateKey(TransmissionCollectionStatus, models.Sent), age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	escalatedStoreKeys, err := transmissionStoreKeys(conn, CreateKey(TransmissionCollectionStatus, models.Escalated), age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	go c.asyncDeleteTransmissionByStoreKeys(acknowledgedStoreKeys)
+	go c.asyncDeleteTransmissionByStoreKeys(sentStoreKeys)
+	go c.asyncDeleteTransmissionByStoreKeys(escalatedStoreKeys)
+	return nil
+}
+
+// transmissionStoreKeys return the store keys of the transmission that are older than age.
+func transmissionStoreKeys(conn redis.Conn, collectionKey string, age int64) ([]string, errors.EdgeX) {
+	expireTimestamp := common.MakeTimestamp() - age
+
+	storeKeys, err := redis.Strings(conn.Do(ZRANGEBYSCORE, collectionKey, 0, expireTimestamp))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve transmission storeKeys by %s failed", collectionKey), err)
+	}
+	return storeKeys, nil
+}

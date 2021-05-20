@@ -73,3 +73,15 @@ func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) 
 	}
 	return dtos.FromTransmissionModelsToDTOs(transModels), nil
 }
+
+// DeleteProcessedTransmissionsByAge invokes the infrastructure layer function to remove the processed transmissions that are older than age.
+// Age is supposed in milliseconds since created timestamp.
+func DeleteProcessedTransmissionsByAge(age int64, dic *di.Container) errors.EdgeX {
+	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+
+	err := dbClient.DeleteProcessedTransmissionsByAge(age)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}

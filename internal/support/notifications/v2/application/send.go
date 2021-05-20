@@ -50,14 +50,20 @@ func reSend(dic *di.Container, n models.Notification, sub models.Subscription, t
 		lc.Warn("fail to send the critical notification. Retry to send again...")
 
 		record := sendNotificationViaChannel(dic, n, trans.Channel)
+		if record.Status == models.Failed {
+			// fail to transmit the notification, keep resending
+			trans.Status = models.RESENDING
+		} else {
+			trans.Status = record.Status
+		}
 		trans.ResendCount = trans.ResendCount + 1
-		trans.Status = record.Status
 		trans.Records = append(trans.Records, record)
 		err = dbClient.UpdateTransmission(trans)
 		if err != nil {
 			return trans, errors.NewCommonEdgeXWrapper(err)
 		}
-		if trans.Status == models.Failed {
+
+		if trans.Status == models.RESENDING {
 			continue
 		}
 		lc.Debugf("success to send the critical notification to %s with address %v, transmission Id: %s", trans.SubscriptionName, trans.Channel.GetBaseAddress(), trans.Id)

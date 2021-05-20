@@ -54,7 +54,7 @@ func transmit(dic *di.Container, n models.Notification, sub models.Subscription,
 	trans = firstSend(dic, n, trans)
 	trans, err := dbClient.AddTransmission(trans)
 	if err != nil {
-		lc.Errorf(err.Message())
+		lc.Error(err.Message())
 		return trans, errors.NewCommonEdgeXWrapper(err)
 	}
 
@@ -65,6 +65,13 @@ func transmit(dic *di.Container, n models.Notification, sub models.Subscription,
 
 	// Resend the critical notification if the transmission is failed.
 	if n.Severity == models.Critical && trans.Status == models.Failed {
+		// Change the transmission status to RESENDING which means this transmission process is resending the notification and should not be removed.
+		trans.Status = models.RESENDING
+		err = dbClient.UpdateTransmission(trans)
+		if err != nil {
+			lc.Error(err.Message())
+			return trans, errors.NewCommonEdgeXWrapper(err)
+		}
 		trans, err = reSend(dic, n, sub, trans)
 		if err != nil {
 			lc.Errorf("fail to handle the critical notification sending for the subscription %s with address %v, err: %v", sub.Name, address.GetBaseAddress(), err)
