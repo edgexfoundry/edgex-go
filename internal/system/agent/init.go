@@ -20,6 +20,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/gorilla/mux"
 
@@ -52,7 +53,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
-func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
@@ -81,7 +82,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					logging,
 					container.GeneralClientsFrom(get),
 					bootstrapContainer.RegistryFrom(get),
-					configuration.Service.Protocol,
+					config.DefaultHttpProtocol,
 				)
 			case executor.MetricsMechanism:
 				return executor.NewMetrics(executor.CommandExecutor, logging, configuration.ExecutorPath)
@@ -114,7 +115,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					container.GeneralClientsFrom(get),
 					bootstrapContainer.RegistryFrom(get),
 					logging,
-					configuration.Service.Protocol),
+					config.DefaultHttpProtocol),
 				logging)
 		},
 		container.SetConfigInterfaceName: func(get di.Get) interface{} {

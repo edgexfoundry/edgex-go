@@ -506,8 +506,12 @@ func execute(
 			lc.Error("create new request occurs error : " + err.Error())
 		}
 
+		// Note this is V1 code that will be removed soon.
+		// Change is so code will compile, but not worried about error checking.
+		timeout, _ := time.ParseDuration(configuration.Service.RequestTimeout)
+
 		client := &http.Client{
-			Timeout: time.Duration(configuration.Service.Timeout) * time.Millisecond,
+			Timeout: timeout,
 		}
 		responseBytes, statusCode, err := sendRequestAndGetResponse(client, req)
 		responseStr := string(responseBytes)

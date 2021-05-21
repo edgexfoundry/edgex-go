@@ -6,6 +6,7 @@
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
 ExecutorPath = '../sys-mgmt-executor/sys-mgmt-executor'
+FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
 
 # The MetricsMechanism setting can be one of the following options:
 # MetricsMechanism = 'executor'
@@ -16,16 +17,14 @@ ResendLimit = 2
 LogLevel = 'INFO'
 
 [Service]
-BootTimeout = 30000
-CheckInterval = '10s'
+HealthCheckInterval = '10s'
 Host = 'localhost'
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
 Port = 58890
-Protocol = 'http'
-MaxResultCount = 50000
+ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
 StartupMsg = 'This is the System Management Agent Service'
-Timeout = 20000
-FormatSpecifier = '%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])'
+MaxResultCount = 50000
+MaxRequestSize = 0 # Not curently used.
+RequestTimeout = '20s'
 
 [Registry]
 Host = 'localhost'

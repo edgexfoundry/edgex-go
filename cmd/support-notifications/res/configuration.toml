@@ -10,15 +10,14 @@ ResendInterval = '5s'
       password = ""
 
 [Service]
-BootTimeout = 30000
-CheckInterval = '10s'
+HealthCheckInterval = '10s'
 Host = 'localhost'
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
 Port = 59860
-Protocol = 'http'
-MaxResultCount = 500000
+ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
 StartupMsg = 'This is the Support Notifications Microservice'
-Timeout = 5000
+MaxResultCount = 50000
+MaxRequestSize = 0 # Not curently used.
+RequestTimeout = '5s'
 
 [Registry]
 Host = 'localhost'

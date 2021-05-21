@@ -36,9 +36,8 @@ import (
 )
 
 const (
-	mockProtocol = "http"
-	mockHost     = "127.0.0.1"
-	mockPort     = 66666
+	mockHost = "127.0.0.1"
+	mockPort = 66666
 
 	testProfileName       = "testProfile"
 	testResourceName      = "testResource"
@@ -58,7 +57,6 @@ func NewMockDIC() *di.Container {
 		commandContainer.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Service: bootstrapConfig.ServiceInfo{
-					Protocol:       mockProtocol,
 					Host:           mockHost,
 					Port:           mockPort,
 					MaxResultCount: 20,
