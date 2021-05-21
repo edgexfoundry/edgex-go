@@ -3,7 +3,7 @@ info:
   title: support-scheduler
   version: 1.2.1
 servers:
-- url: http://localhost:59861/api
+- url: http://localhost:48085/api
 paths:
   /v1/config:
     get:
