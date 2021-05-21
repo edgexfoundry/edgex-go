@@ -144,6 +144,16 @@ func transmissionsByStatus(conn redis.Conn, offset int, limit int, status string
 	return objectsToTransmissions(objects)
 }
 
+// transmissionsBySubscriptionName queries transmissions by offset, limit, and subscription name
+func transmissionsBySubscriptionName(conn redis.Conn, offset int, limit int, subscriptionName string) (transmissions []models.Transmission, err errors.EdgeX) {
+	objects, err := getObjectsByRevRange(conn, CreateKey(TransmissionCollectionSubscriptionName, subscriptionName), offset, limit)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return objectsToTransmissions(objects)
+}
+
 func objectsToTransmissions(objects [][]byte) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
 	transmissions = make([]models.Transmission, len(objects))
 	for i, o := range objects {
