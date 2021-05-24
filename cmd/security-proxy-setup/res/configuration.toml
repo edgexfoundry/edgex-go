@@ -89,13 +89,13 @@ RetryWaitPeriod = "1s"
   Name = "rulesengine"
   Protocol = "http"
   Host = "localhost"
-  Port = 48075
+  Port = 59720
 	
   [Routes.device-virtual]
   Name = "virtualdevice"
   Protocol = "http"
   Host = "localhost"
-  Port = 49990
+  Port = 59900
 
   [Routes.core-consul]
   Name = "consul"
