@@ -31,6 +31,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(v2.ApiHealthRoute, ac.GetHealth).Methods(http.MethodGet)
 	r.HandleFunc(v2.ApiMultiMetricsRoute, ac.GetMetrics).Methods(http.MethodGet)
 	r.HandleFunc(v2.ApiMultiConfigsRoute, ac.GetConfigs).Methods(http.MethodGet)
+	r.HandleFunc(v2.ApiOperationRoute, ac.PostOperations).Methods(http.MethodPost)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
