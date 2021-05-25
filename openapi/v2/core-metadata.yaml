@@ -3155,8 +3155,6 @@ paths:
                     Authentication:
                       AuthType: "X-Vault-Token"
                       AuthToken: ""
-                    AdditionalRetryAttempts: 10
-                    RetryWaitPeriod: "1s"
                     TokenFile: "/tmp/edgex/secrets/core-metadata/secrets-token.json"
         '500':
           description: "Internal Server Error"

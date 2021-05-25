@@ -1442,8 +1442,6 @@ paths:
                     Authentication:
                       AuthType: "X-Vault-Token"  
                       AuthToken: ""  
-                    AdditionalRetryAttempts: 10
-                    RetryWaitPeriod: "1s"
                     TokenFile: "/tmp/edgex/secrets/core-data/secrets-token.json"
                   Startup:
                     Duration: 30

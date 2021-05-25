@@ -24,8 +24,6 @@ Path = '/v1/secret/edgex/security-bootstrapper-redis/'
 TokenFile = '/tmp/edgex/secrets/security-bootstrapper-redis/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
-AdditionalRetryAttempts = 10
-RetryWaitPeriod = '1s'
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
 
