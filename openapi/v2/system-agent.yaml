@@ -49,29 +49,6 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
-    GetConfigRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      description: "Retrieves the current configuration for the targeted service."
-      type: object
-      properties:
-        service:
-          type: string
-          example: core-data
-    GetConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "Provides a response containing the configuration for the targeted service."
-      type: object
-      properties:
-        additionalProperties:
-          type: object
-          title: service
-          description: "Map of service(key) and configuration(value)"
-      example: { "apiVersion":"v2","statusCode": 200,
-                 "core-data" : {"Clients" : {"Logging" : {"Host" : "localhost", "Port" : "48061" , "Protocol":"http"}}}}
-      required:
-        - config
     HealthResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -113,116 +90,10 @@ components:
           description: "The operation to execute on the service."
           type: string
           enum: [start, stop, restart]
-        service:
+        serviceName:
           description: "The service to which to apply the action."
           type: string
           example: "core-data"
-    OperationResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      additionalProperties: true
-      properties:
-        operation:
-          description: "The operation executed on the targeted service"
-          type: string
-          example: "start"
-        service:
-          description: "The name of the targeted service"
-          type: string
-          example: edgex-redis
-        executor:
-          description: "The type of executor which processed the operation"
-          type: string
-          example: "docker"
-    RequestEnvelope:
-      description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled request type instance. This is the specific, semantically identifiable request -- such as an AddDeviceRequest."
-        strategy:
-          type: string
-          description: "Indicates the expectation of whether a response should be produced synchronously or asynchronously. If asynchronously, desire for either a polling or push/callback should be provided. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the request instance contained in the 'content' property."
-        version:
-          description: "Explicitly defines major-only version number of request DTO."
-          type: string
-          example: "2"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    ResponseEnvelope:
-      description: "A wrapper type for use when receiving a response from the /batch endpoint. Each individual response type in the HTTP response should be wrapped in an envelope to facilitate unmarshaling by the client. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped response. This should be recapitulated from the originating request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
-        strategy:
-          type: string
-          description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the response instance contained in the 'content' property."
-        version:
-          description: "Explicitly defines major-only version number of response DTO."
-          type: string
-          example: "2"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    SetConfigRequest:
-      description: "A request associated with the /config endpoint."
-      allOf:
-        - $ref: '#/components/schemas/BaseRequest'
-      type: object
-      properties:
-        service:
-          description: "Updates the target service's configuration"
-          type: string
-          example: "core-data"
-        configuration:
-          description: "Service's configuration"
-          type: array
-          items:
-            properties:
-              key:
-                description: "Path of the configuration to update"
-                type: string
-                example: "Writable.LogLevel"
-              value:
-                description: "New value to which the configuration should be updated"
-                type: string
-                example: "DEBUG"
-    SetConfigResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "Provides a response containing the configuration for the targeted service."
-      type: object
-      properties:
-        service:
-          description: "The service which the update was applied"
-          type: string
-          example: "core-command"
-      required:
-        - service
     PingResponse:
       type: object
       properties:
@@ -456,15 +327,6 @@ paths:
                   items:
                     $ref: '#/components/schemas/OperationRequest'
       responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OperationResponse'
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
@@ -477,7 +339,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/OperationResponse'
+                    - $ref: '#/components/schemas/BaseResponse'
         '400':
           description: "Bad request"
           headers:
