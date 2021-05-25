@@ -74,10 +74,14 @@ func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error
 			conn, err := redis.Dial(
 				"tcp", connectionString, opts...,
 			)
-			if err != nil {
-				return nil, fmt.Errorf("Could not dial Redis: %s", err)
+			if err == nil {
+				_, err = conn.Do("PING")
+				if err == nil {
+					return conn, nil
+				}
 			}
-			return conn, nil
+
+			return nil, fmt.Errorf("could not dial Redis: %s", err)
 		}
 		// Default the batch size to 1,000 if not set
 		batchSize := 1000
