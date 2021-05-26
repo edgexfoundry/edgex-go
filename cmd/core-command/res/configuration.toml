@@ -42,7 +42,7 @@ Protocol = 'http'
 Host = 'localhost'
 Port = 8200
 # Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
-Path = '/v1/secret/edgex/core-command/'
+Path = 'core-command/'
 TokenFile = '/tmp/edgex/secrets/core-command/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
