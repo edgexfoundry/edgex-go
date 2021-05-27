@@ -97,20 +97,20 @@ func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
 	// Parse messageTopic by the pattern `edgex/events/<device-profile-name>/<device-name>/<source-name>`
 	fields := strings.Split(messageTopic, "/")
 	if len(fields) != 5 {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid messag topic %s", messageTopic), nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid message topic %s", messageTopic), nil)
 	}
 	profileName := fields[2]
 	deviceName := fields[3]
 	sourceName := fields[4]
 	// Check whether the event fields match the message topic
 	if e.ProfileName != profileName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches %s", e.ProfileName, profileName), nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches with the name %s received in topic", e.ProfileName, profileName), nil)
 	}
 	if e.DeviceName != deviceName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches %s", e.DeviceName, deviceName), nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches with the name %s received in topic", e.DeviceName, deviceName), nil)
 	}
 	if e.SourceName != sourceName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's sourceName %s mismatches %s", e.SourceName, sourceName), nil)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's sourceName %s mismatches with the name %s received in topic", e.SourceName, sourceName), nil)
 	}
 	return nil
 }
