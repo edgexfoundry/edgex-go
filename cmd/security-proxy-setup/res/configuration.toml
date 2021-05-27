@@ -56,43 +56,49 @@ RetryWaitPeriod = "1s"
 
 [Routes]
   [Routes.core-data]
-  Name = "coredata"
+  Name = "core-data"
   Protocol = "http"
   Host = "localhost"
   Port = 59880
 	
   [Routes.core-metadata]
-  Name = "metadata"
+  Name = "core-metadata"
   Protocol = "http"
   Host = "localhost"
   Port = 59881
 	
   [Routes.core-command]
-  Name = "command"
+  Name = "core-command"
   Protocol = "http"
   Host = "localhost"
   Port = 59882
 	
   [Routes.support-notifications]
-  Name = "notifications"
+  Name = "support-notifications"
   Protocol = "http"
   Host = "localhost"
   Port = 59860
 
   [Routes.support-scheduler]
-  Name = "scheduler"
+  Name = "support-scheduler"
   Protocol = "http"
   Host = "localhost"
   Port = 59861
 
+  [Routes.sys-mgmt-agent]
+  Name = "sys-mgmt-agent"
+  Protocol = "http"
+  Host = "localhost"
+  Port = 58890
+
   [Routes.rules-engine]
-  Name = "rulesengine"
+  Name = "rules-engine"
   Protocol = "http"
   Host = "localhost"
   Port = 59720
 	
   [Routes.device-virtual]
-  Name = "virtualdevice"
+  Name = "device-virtual"
   Protocol = "http"
   Host = "localhost"
   Port = 59900
