@@ -62,13 +62,9 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/sys-mgmt-agent/'
+Path = 'sys-mgmt-agent/'
 TokenFile = '/tmp/edgex/secrets/sys-mgmt-agent/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
-# Number of attempts to retry retrieving secrets before failing to start the service.
-AdditionalRetryAttempts = 10
-# Amount of time to wait before attempting another retry
-RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
