@@ -105,6 +105,10 @@ func (m *manager) execute(
 
 	// execute interval action one by one
 	for _, action := range executor.IntervalActionsMap {
+		if action.AdminState == models.Locked {
+			m.lc.Debugf("interval action %s is locked, skip the job execution", action.Name)
+			continue
+		}
 		edgeXerr := m.executeAction(action)
 		if edgeXerr != nil {
 			m.lc.Errorf("fail to execute the interval action, err: %v", edgeXerr)

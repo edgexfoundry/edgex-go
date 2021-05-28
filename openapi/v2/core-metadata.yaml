@@ -51,9 +51,9 @@ components:
     AutoEvent:
       type: object
       properties:
-        frequency:
+        interval:
           type: string
-          description: Frequency indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
+          description: Interval indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
         onChange:
           type: boolean
           description: OnChange indicates whether the device service will generate an event only, if the reading value is different from the previous one. If true, only generate events when readings change
@@ -61,7 +61,7 @@ components:
           type: string
           description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
       required:
-        - frequency
+        - interval
         - resource
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
@@ -1058,7 +1058,7 @@ components:
             serviceName: Google Home device service
             profileName: Google Home profile
             autoEvents:
-              - frequency: 300ms
+              - interval: 300ms
                 onChange: true
                 sourceName: CurrentHumidity
             protocols:
@@ -1077,7 +1077,7 @@ components:
               labels:
                 - "home"
               autoEvents:
-                - frequency: "100ms"
+                - interval: "100ms"
                   onChange: true
                   sourceName: "CurrentHumidity"
             - id: "771de9f4-b5a3-4eba-b5e7-ec6e14fa3de7"
@@ -1165,7 +1165,7 @@ components:
             serviceName: "device-virtual"
             profileName: "Random-Boolean-Device"
             autoEvents:
-              - frequency: "10s"
+              - interval: "10s"
                 onChange: false
                 sourceName: "Bool"
             protocols:
@@ -1187,10 +1187,10 @@ components:
             serviceName: "device-virtual"
             profileName: "Random-Boolean-Device"
             autoEvents:
-              - frequency: "20s"
+              - interval: "20s"
                 onChange: false
                 sourceName: "Uint8"
-              - frequency: "20s"
+              - interval: "20s"
                 onChange: false
                 sourceName: "Uint16"
             protocols:
@@ -1274,7 +1274,7 @@ components:
             adminState: "UNLOCKED"
             autoEvents:
               - sourceName: "Bool"
-                frequency: "10s"
+                interval: "10s"
                 onChange: false
           - id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
             name: "simple-watcher"
@@ -1552,7 +1552,7 @@ paths:
                   serviceName: "device-virtual"
                   profileName: "Random-Boolean-Device"
                   autoEvents:
-                    - frequency: "10s"
+                    - interval: "10s"
                       onChange: false
                       sourceName: "Bool"
                   protocols:
@@ -2909,7 +2909,7 @@ paths:
                   adminState: "UNLOCKED"
                   autoEvents:
                     - sourceName: "Bool"
-                      frequency: "10s"
+                      interval: "10s"
                       onChange: false
         '400':
           description: "Request is in an invalid state"

@@ -30,6 +30,10 @@ func distribute(dic *di.Container, n models.Notification) errors.EdgeX {
 	}
 
 	for _, sub := range subs {
+		if sub.AdminState == models.Locked {
+			lc.Debugf("subscription %s is locked, skip the notification transmission", sub.Name)
+			continue
+		}
 		for _, address := range sub.Channels {
 			// Async transmit the notification to improve the performance
 			go transmit(dic, n, sub, address)
