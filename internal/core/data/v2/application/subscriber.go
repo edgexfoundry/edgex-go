@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -60,6 +62,11 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Errorf("fail to unmarshal event, %v", err)
 					break
 				}
+				err = validateEvent(msgEnvelope.ReceivedTopic, event.Event)
+				if err != nil {
+					lc.Error(err.Error())
+					break
+				}
 				err = AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
 				if err != nil {
 					lc.Errorf("fail to persist the event, %v", err)
@@ -84,4 +91,26 @@ func unmarshalPayload(envelope types.MessageEnvelope, target interface{}) error 
 		err = fmt.Errorf("unsupported content-type '%s' recieved", envelope.ContentType)
 	}
 	return err
+}
+
+func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
+	// Parse messageTopic by the pattern `edgex/events/<device-profile-name>/<device-name>/<source-name>`
+	fields := strings.Split(messageTopic, "/")
+	if len(fields) != 5 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid message topic %s", messageTopic), nil)
+	}
+	profileName := fields[2]
+	deviceName := fields[3]
+	sourceName := fields[4]
+	// Check whether the event fields match the message topic
+	if e.ProfileName != profileName {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches with the name %s received in topic", e.ProfileName, profileName), nil)
+	}
+	if e.DeviceName != deviceName {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches with the name %s received in topic", e.DeviceName, deviceName), nil)
+	}
+	if e.SourceName != sourceName {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's sourceName %s mismatches with the name %s received in topic", e.SourceName, sourceName), nil)
+	}
+	return nil
 }

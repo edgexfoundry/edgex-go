@@ -98,7 +98,7 @@ components:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: object
     Interval:
-      description: "Defines the frequency at which some action should occur."
+      description: "Defines the interval at which some action should occur."
       type: object
       properties:
         created:
@@ -107,8 +107,8 @@ components:
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
-        frequency:
-          description: Frequency indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
+        interval:
+          description: Interval indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
           type: string
         id:
           description: "Uniquely identifies the interval"
@@ -128,9 +128,9 @@ components:
           type: string
       required:
         - name
-        - frequency
+        - interval
     UpdateInterval:
-      description: "Defines the frequency at which some action should occur."
+      description: "Defines the interval at which some action should occur."
       type: object
       properties:
         id:
@@ -146,8 +146,8 @@ components:
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
-        frequency:
-          description: Frequency indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
+        interval:
+          description: Interval indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
           type: string
         runOnce:
           description: "Indicates that this interval runs one time - at the time indicated by the start"
