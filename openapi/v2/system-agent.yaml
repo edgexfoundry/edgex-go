@@ -428,8 +428,6 @@ paths:
                     Authentication:
                       AuthType: "X-Vault-Token"
                       AuthToken: ""
-                    AdditionalRetryAttempts: 10
-                    RetryWaitPeriod: "1s"
                     TokenFile: "/vault/config/assets/resp-init.json"
         '500':
           description: "Interval Server Error"

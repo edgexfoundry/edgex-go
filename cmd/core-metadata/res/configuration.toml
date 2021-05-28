@@ -57,14 +57,10 @@ Type = 'vault'
 Protocol = 'http'
 Host = 'localhost'
 Port = 8200
-Path = '/v1/secret/edgex/core-metadata/'
+Path = 'core-metadata/'
 TokenFile = '/tmp/edgex/secrets/core-metadata/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
-# Number of attempts to retry retrieving secrets before failing to start the service.
-AdditionalRetryAttempts = 10
-# Amount of time to wait before attempting another retry
-RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
 

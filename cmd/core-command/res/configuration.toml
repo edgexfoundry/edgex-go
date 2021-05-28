@@ -42,14 +42,10 @@ Protocol = 'http'
 Host = 'localhost'
 Port = 8200
 # Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
-Path = '/v1/secret/edgex/core-command/'
+Path = 'core-command/'
 TokenFile = '/tmp/edgex/secrets/core-command/secrets-token.json'
 RootCaCertPath = ''
 ServerName = ''
-# Number of attempts to retry retrieving secrets before failing to start the service.
-AdditionalRetryAttempts = 10
-# Amount of time to wait before attempting another retry
-RetryWaitPeriod = "1s"
   [SecretStore.Authentication]
   AuthType = 'X-Vault-Token'
 
