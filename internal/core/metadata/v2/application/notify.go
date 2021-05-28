@@ -34,12 +34,14 @@ func addDeviceCallback(ctx context.Context, dic *di.Container, device dtos.Devic
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, device.ServiceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", device.ServiceName, err)
+		return
 	}
 
 	request := requests.NewAddDeviceRequest(device)
 	response, err := deviceServiceCallbackClient.AddDeviceCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for adding device %s, err: %v", device.Name, err)
+		return
 	}
 	if response.StatusCode != http.StatusOK {
 		lc.Errorf("fail to invoke device service callback for adding device %s, err: %s", device.Name, response.Message)
@@ -52,6 +54,7 @@ func updateDeviceCallback(ctx context.Context, dic *di.Container, serviceName st
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, serviceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
+		return
 	}
 
 	request := requests.NewUpdateDeviceRequest(dtos.FromDeviceModelToUpdateDTO(device))
@@ -71,6 +74,7 @@ func deleteDeviceCallback(ctx context.Context, dic *di.Container, device models.
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, device.ServiceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", device.ServiceName, err)
+		return
 	}
 	response, err := deviceServiceCallbackClient.DeleteDeviceCallback(ctx, device.Name)
 	if err != nil {
@@ -88,25 +92,28 @@ func updateDeviceProfileCallback(ctx context.Context, dic *di.Container, deviceP
 	devices, err := DevicesByProfileName(0, -1, deviceProfile.Name, dic)
 	if err != nil {
 		lc.Errorf("fail to query associated devices by deviceProfile name %s, err: %v", deviceProfile.Name, err)
+		return
 	}
 	// Invoke callback for each device service
 	dsMap := make(map[string]bool)
 	for _, d := range devices {
 		if _, ok := dsMap[d.ServiceName]; ok {
-			return
+			// skip the invoked device service
+			continue
 		}
 		dsMap[d.ServiceName] = true
 
 		deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, d.ServiceName)
 		if err != nil {
 			lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", d.ServiceName, err)
+			continue
 		}
 
 		request := requests.NewDeviceProfileRequest(deviceProfile)
 		response, err := deviceServiceCallbackClient.UpdateDeviceProfileCallback(ctx, request)
 		if err != nil {
 			lc.Errorf("fail to invoke device service callback for updating device profile %s, err: %v", deviceProfile.Name, err)
-			return
+			continue
 		}
 		if response.StatusCode != http.StatusOK {
 			lc.Errorf("fail to invoke device service callback for updating device profile %s, err: %s", deviceProfile.Name, response.Message)
@@ -120,12 +127,14 @@ func addProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw dtos
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, pw.ServiceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
+		return
 	}
 
 	request := requests.NewAddProvisionWatcherRequest(pw)
 	response, err := deviceServiceCallbackClient.AddProvisionWatcherCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for adding  provision watcher %s, err: %v", pw.Name, err)
+		return
 	}
 	if response.StatusCode != http.StatusOK {
 		lc.Errorf("fail to invoke device service callback for adding  provision watcher %s, err: %s", pw.Name, response.Message)
@@ -138,6 +147,7 @@ func updateProvisionWatcherCallback(ctx context.Context, dic *di.Container, serv
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, serviceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
+		return
 	}
 
 	request := requests.NewUpdateProvisionWatcherRequest(dtos.FromProvisionWatcherModelToUpdateDTO(pw))
@@ -157,6 +167,7 @@ func deleteProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw m
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, pw.ServiceName)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
+		return
 	}
 	response, err := deviceServiceCallbackClient.DeleteProvisionWatcherCallback(ctx, pw.Name)
 	if err != nil {
@@ -174,12 +185,14 @@ func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds mode
 	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, ds.Name)
 	if err != nil {
 		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", ds.Name, err)
+		return
 	}
 
 	request := requests.NewUpdateDeviceServiceRequest(dtos.FromDeviceServiceModelToUpdateDTO(ds))
 	response, err := deviceServiceCallbackClient.UpdateDeviceServiceCallback(ctx, request)
 	if err != nil {
 		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %v", ds.Name, err)
+		return
 	}
 	if response.StatusCode != http.StatusOK {
 		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %s", ds.Name, response.Message)
