@@ -7,11 +7,13 @@ package direct
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-registry/v2/registry"
 	"github.com/edgexfoundry/go-mod-registry/v2/registry/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetHealth(t *testing.T) {
@@ -25,20 +27,25 @@ func TestGetHealth(t *testing.T) {
 		name            string
 		services        []string
 		rc              registry.Client
+		expectedErr     bool
 		expectedHealthy bool
 	}{
-		{"healthy", []string{"edgex-core-data", "edgex-core-metadata"}, rcMock, true},
-		{"unhealthy - RegisterClient not running", []string{"edgex-core-data", "edgex-core-metadata"}, nil, false},
-		{"unhealthy - service not running", []string{"edgex-core-command"}, rcMock, false},
+		{"valid - healthy", []string{"edgex-core-data", "edgex-core-metadata"}, rcMock, false, true},
+		{"valid - unhealthy, service not running", []string{"edgex-core-command"}, rcMock, false, false},
+		{"invalid - consul not running", []string{"edgex-core-data", "edgex-core-metadata"}, nil, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res := GetHealth(tt.services, tt.rc)
-			for _, v := range res {
-				if tt.expectedHealthy {
-					assert.Equal(t, v, healthy)
-				} else {
-					assert.NotEqual(t, v, healthy)
+			res, err := GetHealth(tt.services, tt.rc)
+			if tt.expectedErr {
+				require.Error(t, err)
+			} else {
+				for _, v := range res {
+					if tt.expectedHealthy {
+						assert.Equal(t, v.StatusCode, http.StatusOK)
+					} else {
+						assert.NotEqual(t, v.StatusCode, http.StatusOK)
+					}
 				}
 			}
 		})

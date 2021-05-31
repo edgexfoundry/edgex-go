@@ -10,12 +10,13 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/system"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
+
+	"github.com/edgexfoundry/edgex-go/internal/system"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 )
 
 // metrics contains references to dependencies required to handle the metrics via external executor use case.
@@ -35,11 +36,11 @@ func NewMetrics(executor interfaces.CommandExecutor, lc logger.LoggingClient, ex
 }
 
 // Get implements the Metrics interface to obtain metrics via executor for one or more services concurrently.
-func (m *metrics) Get(_ context.Context, services []string) (interface{}, errors.EdgeX) {
-	metrics := make(map[string]interface{})
-
+func (m *metrics) Get(_ context.Context, services []string) ([]interface{}, errors.EdgeX) {
+	var mu sync.Mutex
 	var wg sync.WaitGroup
-	var errCh = make(chan error, len(services))
+	var responses []interface{}
+
 	for _, service := range services {
 		wg.Add(1)
 		go func(serviceName string) {
@@ -47,23 +48,27 @@ func (m *metrics) Get(_ context.Context, services []string) (interface{}, errors
 
 			raw, err := m.executor(m.executorPath, serviceName, system.Metrics)
 			if err != nil {
-				errCh <- err
+				mu.Lock()
+				responses = append(responses, common.BaseWithMetricsResponse{
+					BaseResponse: common.NewBaseResponse("", err.Error(), http.StatusInternalServerError),
+					ServiceName:  serviceName,
+					Metrics:      nil,
+				})
+				mu.Unlock()
 				return
 			}
 
 			r := response.Process(raw, m.lc)
-			metrics[serviceName] = r
+			mu.Lock()
+			responses = append(responses, common.BaseWithMetricsResponse{
+				BaseResponse: common.NewBaseResponse("", "", http.StatusOK),
+				ServiceName:  serviceName,
+				Metrics:      r,
+			})
+			mu.Unlock()
 		}(service)
 	}
 
 	wg.Wait()
-	close(errCh)
-
-	err := <-errCh
-	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindUnknown, "", err)
-	}
-
-	res := common.NewMultiMetricsResponse("", "", http.StatusOK, metrics)
-	return res, nil
+	return responses, nil
 }

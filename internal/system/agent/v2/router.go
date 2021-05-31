@@ -10,8 +10,9 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/v2/controller/http"
@@ -30,7 +31,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	ac := smaController.NewAgentController(dic)
 	r.HandleFunc(v2.ApiHealthRoute, ac.GetHealth).Methods(http.MethodGet)
 	r.HandleFunc(v2.ApiMultiMetricsRoute, ac.GetMetrics).Methods(http.MethodGet)
-	r.HandleFunc(v2.ApiMultiConfigsRoute, ac.GetConfigs).Methods(http.MethodGet)
+	r.HandleFunc(v2.ApiMultiConfigRoute, ac.GetConfigs).Methods(http.MethodGet)
 	r.HandleFunc(v2.ApiOperationRoute, ac.PostOperations).Methods(http.MethodPost)
 
 	r.Use(correlation.ManageHeader)

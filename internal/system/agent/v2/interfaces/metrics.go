@@ -13,5 +13,5 @@ import (
 
 // Metrics defines a metrics gathering abstraction.
 type Metrics interface {
-	Get(ctx context.Context, services []string) (interface{}, errors.EdgeX)
+	Get(ctx context.Context, services []string) ([]interface{}, errors.EdgeX)
 }
