@@ -48,45 +48,61 @@ var notification = models.Notification{
 	Status:      models.New,
 }
 
-var testAddress1 = models.RESTAddress{
+var testRestAddress = models.RESTAddress{
 	BaseAddress: models.BaseAddress{Type: v2.REST, Host: testHost, Port: testPort},
 	HTTPMethod:  http.MethodGet,
 	Path:        "path1",
 }
-var testAddress2 = models.RESTAddress{
+var testRestAddress2 = models.RESTAddress{
 	BaseAddress: models.BaseAddress{Type: v2.REST, Host: testHost, Port: testPort},
 	HTTPMethod:  http.MethodGet,
 	Path:        "path2",
+}
+var testEmailAddress = models.EmailAddress{
+	BaseAddress: models.BaseAddress{Type: v2.EMAIL, Host: testHost, Port: testPort},
+	Recipients:  []string{"test@gamil.com"},
+}
+var testEmailAddress2 = models.EmailAddress{
+	BaseAddress: models.BaseAddress{Type: v2.EMAIL, Host: testHost, Port: testPort},
+	Recipients:  []string{"test2@gamil.com"},
 }
 
 func TestFirstSend(t *testing.T) {
 	dic := mockDic()
 	restSender := &senderMock.Sender{}
+	restSender.On("Send", notification, testRestAddress).Return("", nil)
+	restSender.On("Send", notification, testRestAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the request", nil))
+	emailSender := &senderMock.Sender{}
+	emailSender.On("Send", notification, testEmailAddress).Return("", nil)
+	emailSender.On("Send", notification, testEmailAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the email", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
+			return restSender
+		},
+		v2NotificationsContainer.EmailSenderName: func(get di.Get) interface{} {
+			return emailSender
+		},
+	})
 
 	tests := []struct {
 		name          string
 		address       models.Address
-		expectedError errors.EdgeX
+		expectedError bool
 	}{
-		{"sent successful", testAddress1, nil},
-		{"sent failed", testAddress2, errors.NewCommonEdgeX(errors.KindServerError, "fail to send the request", nil)},
+		{"sent rest address successful", testRestAddress, false},
+		{"sent email address successful", testEmailAddress, false},
+		{"sent rest failed", testRestAddress2, true},
+		{"sent email failed", testEmailAddress2, true},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			sub.Channels = []models.Address{testCase.address}
-			restSender.On("Send", notification, testCase.address).Return("", testCase.expectedError)
-			dic.Update(di.ServiceConstructorMap{
-				v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
-					return restSender
-				},
-			})
-
 			trans := models.NewTransmission(sub.Name, testCase.address, notification.Id)
 
 			trans = firstSend(dic, notification, trans)
 
 			assert.Equal(t, 1, len(trans.Records))
-			if testCase.expectedError != nil {
+			if testCase.expectedError {
 				assert.EqualValues(t, models.Failed, trans.Status)
 			} else {
 				assert.EqualValues(t, models.Sent, trans.Status)
@@ -105,31 +121,41 @@ func TestReSend(t *testing.T) {
 			return dbClientMock
 		},
 	})
+
 	restSender := &senderMock.Sender{}
+	restSender.On("Send", notification, testRestAddress).Return("", nil)
+	restSender.On("Send", notification, testRestAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the request", nil))
+	emailSender := &senderMock.Sender{}
+	emailSender.On("Send", notification, testEmailAddress).Return("", nil)
+	emailSender.On("Send", notification, testEmailAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the email", nil))
+	dic.Update(di.ServiceConstructorMap{
+		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
+			return restSender
+		},
+		v2NotificationsContainer.EmailSenderName: func(get di.Get) interface{} {
+			return emailSender
+		},
+	})
 
 	tests := []struct {
 		name          string
 		address       models.Address
-		expectedError errors.EdgeX
+		expectedError bool
 	}{
-		{"sent successful", testAddress1, nil},
-		{"sent failed", testAddress2, errors.NewCommonEdgeX(errors.KindServerError, "fail to send the request", nil)},
+		{"sent rest address successful", testRestAddress, false},
+		{"sent email address successful", testEmailAddress, false},
+		{"sent rest failed", testRestAddress2, true},
+		{"sent email failed", testEmailAddress2, true},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			sub.Channels = []models.Address{testCase.address}
-			restSender.On("Send", notification, testCase.address).Return("", testCase.expectedError)
-			dic.Update(di.ServiceConstructorMap{
-				v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
-					return restSender
-				},
-			})
 			trans := models.NewTransmission(sub.Name, testCase.address, notification.Id)
 
 			trans, err := reSend(dic, notification, sub, trans)
 			require.NoError(t, err)
 
-			if testCase.expectedError != nil {
+			if testCase.expectedError {
 				assert.EqualValues(t, models.Escalated, trans.Status)
 				assert.Equal(t, config.Writable.ResendLimit, trans.ResendCount)
 				assert.Equal(t, config.Writable.ResendLimit, len(trans.Records))

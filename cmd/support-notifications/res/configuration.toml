@@ -34,12 +34,18 @@ Type = 'consul'
 
 [Smtp]
   Host = 'smtp.gmail.com'
-  Username = 'username@mail.example.com'
-  Password = ''
+  Username = 'username@mail.example.com' # deprecated in V2
+  Password = '' # deprecated in V2
   Port = 587
   Sender = 'jdoe@gmail.com'
   EnableSelfSignedCert = false
   Subject = 'EdgeX Notification'
+  # SecretPath is used to specify the secret path to store the credential(username and password) for connecting the SMTP server
+  # User need to store the credential via the /secret API before sending the email notification
+  SecretPath = 'smtp'
+  # AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
+  AuthMode = 'usernamepassword'
+
 
 [SecretStore]
 Type = 'vault'
