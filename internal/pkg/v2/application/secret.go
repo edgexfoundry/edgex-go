@@ -16,7 +16,7 @@ import (
 
 // AddSecret adds EdgeX Service exclusive secret to the Secret Store
 func AddSecret(dic *di.Container, request common.SecretRequest) errors.EdgeX {
-	path, secret := prepareSecret(dic, request)
+	path, secret := prepareSecret(request)
 
 	secretProvider := container.SecretProviderFrom(dic.Get)
 	if secretProvider == nil {
@@ -24,28 +24,18 @@ func AddSecret(dic *di.Container, request common.SecretRequest) errors.EdgeX {
 	}
 
 	if err := secretProvider.StoreSecret(path, secret); err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, "adding secret failed", err)
+		return errors.NewCommonEdgeX(errors.Kind(err), "adding secret failed", err)
 	}
 	return nil
 }
 
-func prepareSecret(dic *di.Container, request common.SecretRequest) (string, map[string]string) {
-	secretStoreInfo := container.ConfigurationFrom(dic.Get).GetBootstrap().SecretStore
-
+func prepareSecret(request common.SecretRequest) (string, map[string]string) {
 	var secretsKV = make(map[string]string)
 	for _, secret := range request.SecretData {
 		secretsKV[secret.Key] = secret.Value
 	}
 
 	path := strings.TrimSpace(request.Path)
-
-	// add '/' in the full URL path if it's not already at the end of the base path or sub path
-	if !strings.HasSuffix(secretStoreInfo.Path, "/") && !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	} else if strings.HasSuffix(secretStoreInfo.Path, "/") && strings.HasPrefix(path, "/") {
-		// remove extra '/' in the full URL path because secret store's (Vault) APIs don't handle extra '/'.
-		path = path[1:]
-	}
 
 	return path, secretsKV
 }

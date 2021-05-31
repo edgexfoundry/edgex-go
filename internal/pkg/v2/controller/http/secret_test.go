@@ -42,8 +42,6 @@ func TestAddSecret(t *testing.T) {
 
 	NoPath := validRequest
 	NoPath.Path = ""
-	validPathWithSlash := validRequest
-	validPathWithSlash.Path = "/mqtt"
 	validNoRequestId := validRequest
 	validNoRequestId.RequestId = ""
 	badRequestId := validRequest
@@ -60,7 +58,7 @@ func TestAddSecret(t *testing.T) {
 	}
 
 	mockProvider := &mocks.SecretProvider{}
-	mockProvider.On("StoreSecret", "/mqtt", map[string]string{"password": "password", "username": "username"}).Return(nil)
+	mockProvider.On("StoreSecret", validRequest.Path, map[string]string{"password": "password", "username": "username"}).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.SecretProviderName: func(get di.Get) interface{} {
 			return mockProvider
@@ -73,9 +71,6 @@ func TestAddSecret(t *testing.T) {
 		ErrorExpected      bool
 		ExpectedStatusCode int
 	}{
-		{"Valid - sub-path no trailing slash, SecretsPath has trailing slash", validRequest, false, http.StatusCreated},
-		{"Valid - sub-path only with trailing slash", validPathWithSlash, false, http.StatusCreated},
-		{"Valid - both trailing slashes", validPathWithSlash, false, http.StatusCreated},
 		{"Valid - no requestId", validNoRequestId, false, http.StatusCreated},
 		{"Invalid - no path", NoPath, true, http.StatusBadRequest},
 		{"Invalid - bad requestId", badRequestId, true, http.StatusBadRequest},
