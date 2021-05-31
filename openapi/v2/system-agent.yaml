@@ -44,43 +44,44 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+    BaseWithServiceNameResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        servieName:
+          description: "A field indicates the original requested serviceName"
+          type: string
+    BaseWithMetricsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        servieName:
+          description: "A field indicates the original requested serviceName"
+          type: string
+        metrics:
+          description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
+          type: object
+    BaseWithConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        servieName:
+          description: "A field indicates the original requested serviceName"
+          type: string
+        config:
+          description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
+          type: object
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
-    HealthResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      description: "Response containing the health status for the targeted services."
-      properties:
-        health:
-          type: object
-          additionalProperties:
-            type: string
-          example:
-            core-data: healthy
-    MultiMetricsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      description: "Response containing the metrics information for the targeted services."
-      properties:
-        metrics:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/MetricsResponse'
-    MultiConfigsResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      type: object
-      description: "Response containing the configuration for the targeted service(s)."
-      properties:
-        metrics:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ConfigResponse'
     OperationRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -181,7 +182,7 @@ components:
         message: "Internal Server Error"
 
 paths:
-  /health/{services}:
+  /system/health/{services}:
     get:
       summary: "Obtain health information from the targeted service."
       parameters:
@@ -192,15 +193,19 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: "OK"
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithServiceNameResponse'
         '400':
           description: "Bad request"
           headers:
@@ -219,7 +224,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /metrics/{services}:
+  /system/metrics/{services}:
     get:
       summary: "Obtain metrics information from the targeted service(s)."
       parameters:
@@ -230,26 +235,21 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: "OK"
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiMetricsResponse'
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithMetricsResponse'
         '400':
           description: "Bad request"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "Not Found"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -266,7 +266,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /configs/{services}:
+  /system/config/{services}:
     get:
       summary: "Obtain configuration from the targeted service(s)."
       parameters:
@@ -277,26 +277,21 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: "OK"
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiConfigsResponse'
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithConfigResponse'
         '400':
           description: "Bad request"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: "Not Found"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -313,7 +308,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /operation:
+  /system/operation:
     post:
       summary: "Issue a start, stop or restart action to the targeted service."
       requestBody:
@@ -339,7 +334,7 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseResponse'
+                    - $ref: '#/components/schemas/BaseWithServiceNameResponse'
         '400':
           description: "Bad request"
           headers:
