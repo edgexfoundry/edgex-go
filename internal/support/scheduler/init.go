@@ -18,7 +18,6 @@ package scheduler
 import (
 	"context"
 	"sync"
-	"time"
 
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2"
@@ -52,9 +51,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
 
-	ticker := time.NewTicker(time.Duration(configuration.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(ticker, lc, configuration)
-
 	// V2 Scheduler
 	schedulerManager := scheduler.NewManager(lc, configuration)
 	dic.Update(di.ServiceConstructorMap{
@@ -82,7 +78,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		defer wg.Done()
 
 		<-ctx.Done()
-		StopTicker(ticker)
 		schedulerManager.StopTicker()
 	}()
 
