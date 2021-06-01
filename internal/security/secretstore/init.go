@@ -401,6 +401,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		os.Exit(1)
 	}
 
+	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redis5Pair, lc)
+
 	// Concat all cert path secretStore values together to check for empty values
 	certPathCheck := secretStoreConfig.CertPath +
 		secretStoreConfig.CertFilePath +
