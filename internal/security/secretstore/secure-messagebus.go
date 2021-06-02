@@ -17,16 +17,14 @@ package secretstore
 
 import (
 	"fmt"
-	"io/ioutil"
-	"strings"
+	"os"
+	"text/template"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
 
 const (
-	usernamePlaceholder  = "<USERNAME_PLACEHOLDER>"
-	passwordPlaceholder  = "<PASSWORD_PLACEHOLDER>"
 	kuiperConfigTemplate = `
 application_conf:
   port: 5571
@@ -35,8 +33,8 @@ application_conf:
   topic: application
 default:
   optional:
-    Username: ` + usernamePlaceholder + `
-    Password: ` + passwordPlaceholder + `
+    Username: {{.User}}
+    Password: {{.Password}}
   port: 6379
   protocol: redis
   server: edgex-redis
@@ -83,11 +81,21 @@ func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, red
 }
 
 func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath string, lc logger.LoggingClient) error {
-	kuiperEdgexConfig := kuiperConfigTemplate
-	kuiperEdgexConfig = strings.Replace(kuiperEdgexConfig, usernamePlaceholder, credentials.User, -1)
-	kuiperEdgexConfig = strings.Replace(kuiperEdgexConfig, passwordPlaceholder, credentials.Password, -1)
+	tmpl, err := template.New("kuiper").Parse(kuiperConfigTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse Kuiper Edgex config template: %w", err)
+	}
 
-	err := ioutil.WriteFile(configPath, []byte(kuiperEdgexConfig), 0644)
+	file, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open/create Kuiper Edgex config file %s: %w", configPath, err)
+	}
+
+	defer func() {
+		_ = file.Close()
+	}()
+
+	err = tmpl.Execute(file, credentials)
 	if err != nil {
 		return fmt.Errorf("failed to write Kuiper Edgex config file %s: %w", configPath, err)
 	}

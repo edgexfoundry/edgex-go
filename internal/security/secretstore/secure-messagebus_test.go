@@ -77,6 +77,9 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 			require.NoError(t, err)
 			assert.True(t, strings.Contains(string(contents), test.Expected.User))
 			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
+			err = os.Remove(secureMessageBus.KuiperConfigPath)
+			require.NoError(t, err)
+
 		})
 	}
 }
