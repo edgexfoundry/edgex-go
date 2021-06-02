@@ -197,7 +197,7 @@ components:
           description: "A timestamp indicating when the notification was last modified."
           type: integer
         sender:
-          description: "Identifies the sender of a notification, usually an email address."
+          description: "Identifies the sender of a notification, usually the name of sender."
           type: string
         severity:
           description: "Indicates the level of severity for the notification. Current accepted values include: MINOR, NORMAL, CRITICAL"

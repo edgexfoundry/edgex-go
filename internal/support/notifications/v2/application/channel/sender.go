@@ -7,6 +7,7 @@ package channel
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
+	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -53,11 +54,21 @@ func NewEmailSender(dic *di.Container) Sender {
 
 // Send sends the email to the specified address
 func (sender *EmailSender) Send(notification models.Notification, address models.Address) (res string, err errors.EdgeX) {
-	lc := container.LoggingClientFrom(sender.dic.Get)
+	smtpInfo := notificationContainer.ConfigurationFrom(sender.dic.Get).Smtp
 
 	emailAddress, ok := address.(models.EmailAddress)
 	if !ok {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to EmailAddress", nil)
 	}
-	return utils.SendEmailWithAddress(lc, notification.Content, notification.ContentType, emailAddress)
+
+	msg := buildSmtpMessage(notification.Sender, smtpInfo.Subject, emailAddress.Recipients, notification.ContentType, notification.Content)
+	auth, err := deduceAuth(sender.dic, smtpInfo)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+	err = sendEmail(smtpInfo, auth, emailAddress.Recipients, msg)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+	return "", nil
 }
