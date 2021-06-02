@@ -59,6 +59,17 @@ passthrough:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload
 
+plugs:
+  # This content interface provides a mechanism for the edgexfoundry
+  # snap to shared vault secret tokens in order for services in external
+  # edgex snap to access the secret-store. Note, in this case this snap
+  # defines a plug instead of slot to allow the consuming snap to create
+  # the service-specific directory under $SNAP_DATA/secrets.
+  edgex-secretstore-token:
+    interface: content
+    content: edgex-secretstore-token
+    target: $SNAP_DATA/secrets
+
 # kong runs things through luarocks and luarocks expects it's configuration to
 # be located here and we can't override this at runtime, so map what's in
 # $SNAP to the expected location
