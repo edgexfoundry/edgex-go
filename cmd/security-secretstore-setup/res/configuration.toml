@@ -84,5 +84,5 @@ ConfigJWTPath = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 ConfigJWTDuration = "1h"
 
 [SecureMessageBus]
-Type = "redis" # blank or none if MessageBus not secured, 'redis' if secured. 'mqtt' is TBD
+Type = "none" # blank or none if MessageBus not secured, 'redis' if secured. 'mqtt' is TBD
 KuiperConfigPath = "/tmp/kuiper/edgex.yaml"
