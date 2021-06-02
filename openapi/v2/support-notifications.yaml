@@ -481,6 +481,38 @@ components:
         version:
           description: "The latest version supported by the service."
           type: string
+    SecretRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      description: Defines the secret data to be stored
+      type: object
+      properties:
+        path:
+          description: Specifies the type or location of the secret to store
+          type: string
+        secretData:
+          description: A list of the key/value pairs of secret data to store
+          type: array
+          items:
+            $ref: '#/components/schemas/SecretDataKeyValue'
+      required:
+        - path
+        - secrets
+    SecretDataKeyValue:
+      description: Defines a key/value pair of secret data
+      type: object
+      properties:
+        key:
+          description: The key to identify the secret data
+          type: string
+          example: "appsecret"
+        value:
+          description: The value of the secret data
+          type: string
+          example: "appsecret-value"
+      required:
+        - key
+        - value
   parameters:
     offsetParam:
       in: query
@@ -2072,3 +2104,43 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  /secret:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+    post:
+      summary: Adds EdgeX Service exclusive secret to the Secret Store
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/SecretRequest'
+        required: true
+      responses:
+        '201':
+          description: "Created"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+        '400':
+          description: "Invalid request."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "An unexpected error happened on the server."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
