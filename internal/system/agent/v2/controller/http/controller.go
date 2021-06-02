@@ -39,14 +39,12 @@ func (c *AgentController) GetHealth(w http.ResponseWriter, r *http.Request) {
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 	ctx := r.Context()
 
-	queryString := r.URL.Query()[v2.Services]
-	if queryString == nil || (len(queryString) == 1 && queryString[0] == "") {
-		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse query", nil)
+	services, err := parseServicesFromQuery(r)
+	if err != nil {
 		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
 		return
 	}
 
-	services := strings.Split(queryString[0], v2.CommaSeparator)
 	res, err := direct.GetHealth(services, rc)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
@@ -60,14 +58,12 @@ func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 	ctx := r.Context()
 
-	queryString := r.URL.Query()[v2.Services]
-	if queryString == nil || (len(queryString) == 1 && queryString[0] == "") {
-		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse query", nil)
+	services, err := parseServicesFromQuery(r)
+	if err != nil {
 		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
 		return
 	}
 
-	services := strings.Split(queryString[0], v2.CommaSeparator)
 	metricsImpl := v2Container.V2MetricsFrom(c.dic.Get)
 	res, err := metricsImpl.Get(ctx, services)
 	if err != nil {
@@ -83,14 +79,12 @@ func (c *AgentController) GetConfigs(w http.ResponseWriter, r *http.Request) {
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 	ctx := r.Context()
 
-	queryString := r.URL.Query()[v2.Services]
-	if queryString == nil || (len(queryString) == 1 && queryString[0] == "") {
-		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse query", nil)
+	services, err := parseServicesFromQuery(r)
+	if err != nil {
 		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
 		return
 	}
 
-	services := strings.Split(queryString[0], v2.CommaSeparator)
 	res := config.GetConfigs(ctx, services, c.dic)
 	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
 	pkg.Encode(res, w, lc)
@@ -122,4 +116,15 @@ func (c *AgentController) PostOperations(w http.ResponseWriter, r *http.Request)
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(res, w, lc)
+}
+
+func parseServicesFromQuery(r *http.Request) ([]string, errors.EdgeX) {
+	queryString := r.URL.Query()[v2.Services]
+	if queryString == nil || (len(queryString) == 1 && queryString[0] == "") {
+		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse query", nil)
+		return nil, err
+	}
+
+	services := strings.Split(queryString[0], v2.CommaSeparator)
+	return services, nil
 }
