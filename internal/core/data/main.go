@@ -25,7 +25,6 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
 	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 
@@ -40,7 +39,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 	startupTimer := startup.NewStartUpTimer(clients.CoreDataServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
@@ -73,14 +72,12 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			database.NewDatabaseForCoreData(httpServer, configuration).BootstrapHandler,
 			v2Handlers.NewDatabase(httpServer, configuration, v2DataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			messaging.BootstrapHandler,
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).BootstrapHandler,
-			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		},
 	)
 }

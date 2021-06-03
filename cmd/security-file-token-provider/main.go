@@ -19,11 +19,9 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	fileprovider.Main(ctx, cancel, mux.NewRouter(), nil)
+	fileprovider.Main(ctx, cancel)
 }

@@ -19,20 +19,9 @@ import (
 
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/urlclient/local"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2"
-	errorContainer "github.com/edgexfoundry/edgex-go/internal/pkg/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/errorconcept"
-
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/coredata"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/notifications"
-
 	"github.com/gorilla/mux"
 )
 
@@ -50,33 +39,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
-
-	// TODO: there is an outstanding known issue (https://github.com/edgexfoundry/edgex-go/issues/2462)
-	// 		that could be seemingly be solved by moving from JIT initialization of these external clients to static
-	// 		init on startup, like registryClient and configuration are initialized.
-	// 		Doing so would cover over the symptoms of the bug, but the root problem of server processing taking longer
-	// 		than the configured client time out would still be present.
-	// 		Until that problem is addressed by larger architectural changes, if you are experiencing a bug similar to
-	//		https://github.com/edgexfoundry/edgex-go/issues/2421, the correct fix is to bump up the client timeout.
-	configuration := container.ConfigurationFrom(dic.Get)
-
-	// add dependencies to container
-	dic.Update(di.ServiceConstructorMap{
-		errorContainer.ErrorHandlerName: func(get di.Get) interface{} {
-			return errorconcept.NewErrorHandler(bootstrapContainer.LoggingClientFrom(get))
-		},
-		container.CoreDataValueDescriptorClientName: func(get di.Get) interface{} {
-			return coredata.NewValueDescriptorClient(
-				local.New(configuration.Clients[clients.CoreDataServiceKey].Url() + clients.ApiValueDescriptorRoute))
-		},
-		container.NotificationsClientName: func(get di.Get) interface{} {
-			return notifications.NewNotificationsClient(
-				local.New(configuration.Clients[clients.SupportNotificationsServiceKey].Url() + clients.ApiNotificationRoute))
-
-		},
-	})
 
 	return true
 }

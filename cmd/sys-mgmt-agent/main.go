@@ -23,5 +23,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	agent.Main(ctx, cancel, mux.NewRouter(), nil)
+	agent.Main(ctx, cancel, mux.NewRouter())
 }

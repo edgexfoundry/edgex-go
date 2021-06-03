@@ -24,5 +24,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	scheduler.Main(ctx, cancel, mux.NewRouter(), nil)
+	scheduler.Main(ctx, cancel, mux.NewRouter())
 }

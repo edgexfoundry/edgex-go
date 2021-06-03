@@ -23,11 +23,9 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	secretstore.Main(ctx, cancel, mux.NewRouter(), nil)
+	secretstore.Main(ctx, cancel)
 }

@@ -20,7 +20,7 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 # pull the 3rd party / vendor packages
 make prepare
 # build the microservice
-make cmd/core-data/core-data
+make core-data
 # get to the core data microservice executable
 cd cmd/core-data
 # run the microservice (may require other dependent services to run correctly)

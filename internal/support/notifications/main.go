@@ -27,7 +27,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers/database"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
@@ -45,7 +44,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, readyStream chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 	startupTimer := startup.NewStartUpTimer(clients.SupportNotificationsServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
@@ -79,11 +78,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router, re
 		true,
 		[]interfaces.BootstrapHandler{
 			v2Handlers.NewDatabase(httpServer, configuration, v2NotificationContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
-			database.NewDatabase(httpServer, configuration).BootstrapHandler,
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(clients.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
-			handlers.NewReady(httpServer, readyStream).BootstrapHandler,
 		})
 }

@@ -14,7 +14,6 @@
 package redis
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -40,23 +39,6 @@ type Client struct {
 type CoreDataClient struct {
 	*Client
 	logger logger.LoggingClient
-}
-
-func NewCoreDataClient(config db.Configuration, logger logger.LoggingClient) (*CoreDataClient, error) {
-	var err error
-	dc := &CoreDataClient{}
-	dc.Client, err = NewClient(config, logger)
-	if err != nil {
-		return nil, err
-	}
-	dc.logger = logger
-	// Background process for deleting device readings and events.
-	// This only needs to be running for core-data since this is the service responsible for handling the deletion
-	// of events
-	go dc.AsyncDeleteEvents()
-	go dc.AsyncDeleteReadings()
-
-	return dc, err
 }
 
 // Return a pointer to the Redis client
@@ -124,14 +106,4 @@ func (c *Client) CloseSession() {
 	_ = c.Pool.Close()
 	currClient = nil
 	once = sync.Once{}
-}
-
-// getConnection gets a connection from the pool
-func getConnection() (conn redis.Conn, err error) {
-	if currClient == nil {
-		return nil, errors.New("No current Redis client: create a new client before getting a connection from it")
-	}
-
-	conn = currClient.Pool.Get()
-	return conn, nil
 }
