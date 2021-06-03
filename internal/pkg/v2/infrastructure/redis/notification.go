@@ -160,7 +160,7 @@ func sendDeleteNotificationCmd(conn redis.Conn, storedKey string, n models.Notif
 	_ = conn.Send(ZREM, CreateKey(NotificationCollectionStatus, string(n.Status)), storedKey)
 }
 
-// deleteNotificationById deletes the notification by id
+// deleteNotificationById deletes the notification by id and all of its associated transmissions
 func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	notification, edgexErr := notificationById(conn, id)
 	if edgexErr != nil {
@@ -172,6 +172,18 @@ func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification deletion failed", err)
+	}
+
+	// Remove the associated transmissions
+	transStoreKeys, err := redis.Strings(conn.Do(ZRANGE, CreateKey(TransmissionCollectionNotificationId, notification.Id), 0, -1))
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "fail to retrieve transmission storeKeys", err)
+	}
+	for _, storeKey := range transStoreKeys {
+		err = deleteTransmissionById(conn, idFromStoredKey(storeKey))
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 	return nil
 }

@@ -123,7 +123,7 @@ func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di
 	return notifications, nil
 }
 
-// DeleteNotificationById deletes the notification by id
+// DeleteNotificationById deletes the notification by id and all of its associated transmissions
 func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
 	if id == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
