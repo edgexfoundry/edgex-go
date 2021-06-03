@@ -193,12 +193,12 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
 func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
-	return objectsByKeys(conn, "ZUNIONSTORE", offset, limit, redisKeys...)
+	return objectsByKeys(conn, ZUNIONSTORE, offset, limit, redisKeys...)
 }
 
 // intersectionObjectsByKeys returns the keys of the set resulting from the intersection of all the given sets.
 func intersectionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
-	return objectsByKeys(conn, "ZINTERSTORE", offset, limit, redisKeys...)
+	return objectsByKeys(conn, ZINTERSTORE, offset, limit, redisKeys...)
 }
 
 // objectsByKeys returns the keys of the set resulting from the all the given sets. The data set method could be ZINTERSTORE or ZUNIONSTORE
@@ -221,7 +221,7 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute %s command with args %v", setMethod, args), err)
 	}
-	storeKeys, err := redis.Values(conn.Do("ZREVRANGE", cacheSet, 0, -1))
+	storeKeys, err := redis.Values(conn.Do(ZREVRANGE, cacheSet, 0, -1))
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query storeKeys", err)
 	}
@@ -233,9 +233,15 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		storeKeys = storeKeys[offset : end+1]
 	}
-	objects, err := redis.ByteSlices(conn.Do("MGET", storeKeys...))
+	objects, err := redis.ByteSlices(conn.Do(MGET, storeKeys...))
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "query objects from database failed", err)
+	}
+
+	// clean up unused cache set
+	_, err = redis.Int(conn.Do(DEL, cacheSet))
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "cache set deletion failed", err)
 	}
 
 	return objects, nil

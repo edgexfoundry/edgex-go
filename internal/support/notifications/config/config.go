@@ -40,12 +40,17 @@ type WritableInfo struct {
 
 type SmtpInfo struct {
 	Host                 string
-	Username             string
-	Password             string
+	Username             string // deprecated in V2
+	Password             string // deprecated in V2
 	Port                 int
 	Sender               string
 	EnableSelfSignedCert bool
 	Subject              string
+	// SecretPath is used to specify the secret path to store the credential(username and password) for connecting the SMTP server
+	// User need to store the credential via the /secret API before sending the email notification
+	SecretPath string
+	// AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
+	AuthMode string
 }
 
 // The earlier releases do not have Username field and are using Sender field where Usename will

@@ -76,8 +76,13 @@ ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
   [Databases.scheduler]
   Service = "support-scheduler"
   Username = "support-scheduler"
+
 [KongAdmin]
 ConfigTemplatePath = "/res/kong-admin-config.template.yml"
 ConfigFilePath = "/tmp/kong/kong.yml"
 ConfigJWTPath = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 ConfigJWTDuration = "1h"
+
+[SecureMessageBus]
+Type = "none" # blank or none if MessageBus not secured, 'redis' if secured. 'mqtt' is TBD
+KuiperConfigPath = "/tmp/kuiper/edgex.yaml"
