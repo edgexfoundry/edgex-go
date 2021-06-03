@@ -114,6 +114,22 @@ func updateTransmission(conn redis.Conn, trans models.Transmission) errors.EdgeX
 	return nil
 }
 
+// deleteTransmissionById deletes the transmission by id
+func deleteTransmissionById(conn redis.Conn, id string) errors.EdgeX {
+	transmission, edgexErr := transmissionById(conn, id)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	storedKey := transmissionStoredKey(transmission.Id)
+	_ = conn.Send(MULTI)
+	sendDeleteTransmissionCmd(conn, storedKey, transmission)
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "transmission deletion failed", err)
+	}
+	return nil
+}
+
 // transmissionsByTimeRange query transmissions by time range, offset, and limit
 func transmissionsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, TransmissionCollectionCreated, startTime, endTime, offset, limit)

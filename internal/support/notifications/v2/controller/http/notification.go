@@ -202,6 +202,7 @@ func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter
 	pkg.Encode(response, w, lc)
 }
 
+// DeleteNotificationById deletes the notification by id and all of its associated transmissions
 func (nc *NotificationController) DeleteNotificationById(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(nc.dic.Get)
 	ctx := r.Context()
