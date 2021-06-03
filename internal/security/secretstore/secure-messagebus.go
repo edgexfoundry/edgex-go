@@ -100,7 +100,7 @@ func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath
 		return fmt.Errorf("failed to write Kuiper Edgex config file %s: %w", configPath, err)
 	}
 
-	lc.Info("Wrote kuiper config at %s with secure MessageBus credentials", configPath)
+	lc.Infof("Wrote Kuiper config at %s with secure MessageBus credentials", configPath)
 
 	return nil
 }
