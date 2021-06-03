@@ -54,7 +54,6 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)

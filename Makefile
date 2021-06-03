@@ -99,7 +99,6 @@ test:
 	GO111MODULE=on go vet ./...
 	gofmt -l .
 	[ "`gofmt -l .`" = "" ]
-	./bin/test-go-mod-tidy.sh
 	./bin/test-attribution-txt.sh
 
 run:

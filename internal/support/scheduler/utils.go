@@ -23,21 +23,6 @@ const (
 	frequencyPattern = `^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$`
 )
 
-// Convert millisecond string to Time
-func msToTime(ms string) (time.Time, error) {
-	msInt, err := strconv.ParseInt(ms, 10, 64)
-	if err != nil {
-		// todo: support-scheduler will be removed later issue_650a
-		t, err := time.Parse(TIMELAYOUT, ms)
-		if err == nil {
-			return t, nil
-		}
-		return time.Time{}, err
-	}
-
-	return time.Unix(0, msInt*int64(time.Millisecond)), nil
-}
-
 // Frequency indicates how often the specific resource needs to be polled.
 // It represents as a duration string. Will not do days you must compute to hours
 //

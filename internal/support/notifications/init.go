@@ -43,7 +43,6 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization for the notifications service.
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
 	restSender := channel.NewRESTSender(dic)

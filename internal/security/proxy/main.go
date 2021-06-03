@@ -30,11 +30,9 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
-
-	"github.com/gorilla/mux"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, _ *mux.Router, _ chan<- bool) {
+func Main(ctx context.Context, cancel context.CancelFunc) {
 	startupTimer := startup.NewStartUpTimer(clients.SecurityProxySetupServiceKey)
 
 	var initNeeded bool

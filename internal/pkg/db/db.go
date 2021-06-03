@@ -16,40 +16,6 @@ package db
 
 import (
 	"errors"
-	"time"
-)
-
-const (
-	// Databases
-
-	RedisDB = "redisdb"
-
-	// Data
-	EventsCollection          = "event"
-	ReadingsCollection        = "reading"
-	ValueDescriptorCollection = "valueDescriptor"
-
-	//Export
-	ExportCollection = "exportConfiguration"
-
-	//Logging
-	LogsCollection = "logEntry"
-
-	// Metadata
-	Device           = "device"
-	DeviceProfile    = "deviceProfile"
-	DeviceService    = "deviceService"
-	Addressable      = "addressable"
-	Command          = "command"
-	DeviceReport     = "deviceReport"
-	ProvisionWatcher = "provisionWatcher"
-	Interval         = "interval"
-	IntervalAction   = "intervalAction"
-
-	// Notification
-	Notification = "notification"
-	Subscription = "subscription"
-	Transmission = "transmission"
 )
 
 var (
@@ -71,8 +37,4 @@ type Configuration struct {
 	Username     string
 	Password     string
 	BatchSize    int
-}
-
-func MakeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
 }

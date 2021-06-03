@@ -30,5 +30,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	notifications.Main(ctx, cancel, mux.NewRouter(), nil)
+	notifications.Main(ctx, cancel, mux.NewRouter())
 }

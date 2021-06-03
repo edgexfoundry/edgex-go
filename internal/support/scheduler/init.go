@@ -17,11 +17,8 @@ package scheduler
 
 import (
 	"context"
-	"fmt"
 	"sync"
-	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/container"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application"
@@ -49,28 +46,10 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	loadRestRoutes(b.router, dic)
 	v2.LoadRestRoutes(b.router, dic)
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
-
-	// add dependencies to bootstrapContainer
-	scClient := NewSchedulerQueueClient(lc)
-	dic.Update(di.ServiceConstructorMap{
-		schedulerContainer.QueueName: func(get di.Get) interface{} {
-			return scClient
-		},
-	})
-
-	err := LoadScheduler(lc, container.DBClientFrom(dic.Get), scClient, configuration)
-	if err != nil {
-		lc.Error(fmt.Sprintf("Failed to load schedules and events %s", err.Error()))
-		return false
-	}
-
-	ticker := time.NewTicker(time.Duration(configuration.ScheduleIntervalTime) * time.Millisecond)
-	StartTicker(ticker, lc, configuration)
 
 	// V2 Scheduler
 	schedulerManager := scheduler.NewManager(lc, configuration)
@@ -80,7 +59,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 	})
 
-	err = application.LoadIntervalToSchedulerManager(dic)
+	err := application.LoadIntervalToSchedulerManager(dic)
 	if err != nil {
 		lc.Errorf("Failed to load interval to scheduler %v", err)
 		return false
@@ -99,7 +78,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		defer wg.Done()
 
 		<-ctx.Done()
-		StopTicker(ticker)
 		schedulerManager.StopTicker()
 	}()
 
