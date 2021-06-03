@@ -60,6 +60,8 @@ const (
 	secretBasePath       = "/v1/secret/edgex"
 )
 
+var errNotFound = errors.New("credential NOT found")
+
 type Bootstrap struct {
 	insecureSkipVerify bool
 	vaultInterval      int
