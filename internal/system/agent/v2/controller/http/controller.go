@@ -12,12 +12,10 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/requests"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/responses"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/v2/utils"
@@ -37,21 +35,34 @@ func NewAgentController(dic *di.Container) *AgentController {
 }
 
 func (c *AgentController) GetHealth(w http.ResponseWriter, r *http.Request) {
+	rc := bootstrapContainer.RegistryFrom(c.dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
+	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
+	services, err := parseServicesFromQuery(r)
+	if err != nil {
+		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
+		return
+	}
 
-	health := direct.GetHealth(services, bootstrapContainer.RegistryFrom(c.dic.Get))
-	res := responses.NewHealthResponse("", "", http.StatusOK, health)
+	res, err := direct.GetHealth(services, rc)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
 	pkg.Encode(res, w, lc)
 }
 
 func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
+
+	services, err := parseServicesFromQuery(r)
+	if err != nil {
+		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
+		return
+	}
 
 	metricsImpl := v2Container.V2MetricsFrom(c.dic.Get)
 	res, err := metricsImpl.Get(ctx, services)
@@ -60,7 +71,7 @@ func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
 	pkg.Encode(res, w, lc)
 }
 
@@ -68,17 +79,15 @@ func (c *AgentController) GetConfigs(w http.ResponseWriter, r *http.Request) {
 	lc := bootstrapContainer.LoggingClientFrom(c.dic.Get)
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	services := strings.Split(vars[v2.Services], v2.CommaSeparator)
-
-	configs, err := config.GetConfigs(ctx, services, c.dic)
+	services, err := parseServicesFromQuery(r)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		utils.WriteErrorResponse(w, r.Context(), lc, err, "")
 		return
 	}
 
-	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(configs, w, lc)
+	res := config.GetConfigs(ctx, services, c.dic)
+	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
+	pkg.Encode(res, w, lc)
 }
 
 func (c *AgentController) PostOperations(w http.ResponseWriter, r *http.Request) {
@@ -107,4 +116,15 @@ func (c *AgentController) PostOperations(w http.ResponseWriter, r *http.Request)
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.Encode(res, w, lc)
+}
+
+func parseServicesFromQuery(r *http.Request) ([]string, errors.EdgeX) {
+	queryString := r.URL.Query()[v2.Services]
+	if queryString == nil || (len(queryString) == 1 && queryString[0] == "") {
+		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to parse query", nil)
+		return nil, err
+	}
+
+	services := strings.Split(queryString[0], v2.CommaSeparator)
+	return services, nil
 }

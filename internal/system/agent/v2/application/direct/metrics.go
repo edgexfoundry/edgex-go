@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-registry/v2/registry"
@@ -36,53 +37,101 @@ func NewMetrics(lc logger.LoggingClient, rc registry.Client, config *config.Conf
 	}
 }
 
-func (m *metrics) Get(ctx context.Context, services []string) (res interface{}, err errors.EdgeX) {
-	metrics := make(map[string]interface{})
+func (m *metrics) Get(ctx context.Context, services []string) ([]interface{}, errors.EdgeX) {
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	var responses []interface{}
 
 	for _, service := range services {
-		var client interfaces.GeneralClient
-		if m.rc != nil {
-			ok, err := m.rc.IsServiceAvailable(service)
-			if err != nil {
-				errMsg := fmt.Sprintf("service %s not found in Registry", service)
-				return res, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, errMsg, err)
-			}
-			if !ok {
-				errMsg := fmt.Sprintf("service %s unavailable", service)
-				return res, errors.NewCommonEdgeX(errors.KindServiceUnavailable, errMsg, nil)
-			}
+		wg.Add(1)
+		go func(serviceName string) {
+			defer wg.Done()
 
-			m.lc.Debugf("Registry responded with %s serviceName available", service)
+			var client interfaces.GeneralClient
+			if m.rc != nil {
+				ok, err := m.rc.IsServiceAvailable(serviceName)
+				if err != nil {
+					mu.Lock()
+					responses = append(responses, common.BaseWithMetricsResponse{
+						BaseResponse: common.NewBaseResponse("", err.Error(), http.StatusNotFound),
+						ServiceName:  serviceName,
+						Metrics:      nil,
+					})
+					mu.Unlock()
+					return
+				}
+				if !ok {
+					errMsg := fmt.Sprintf("service %s unavailable", serviceName)
+					mu.Lock()
+					responses = append(responses, common.BaseWithMetricsResponse{
+						BaseResponse: common.NewBaseResponse("", errMsg, http.StatusServiceUnavailable),
+						ServiceName:  serviceName,
+						Metrics:      nil,
+					})
+					mu.Unlock()
+					return
+				}
 
-			// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint
-			e, err := m.rc.GetServiceEndpoint(service)
-			if err != nil {
-				return res, errors.NewCommonEdgeXWrapper(err)
-			}
+				m.lc.Debugf("Registry responded with %s service available", serviceName)
 
-			clientInfo := bootstrapConfig.ClientInfo{
-				Protocol: "http",
-				Host:     e.Host,
-				Port:     e.Port,
-			}
-			client = clients.NewGeneralClient(clientInfo.Url())
-		} else {
-			c, ok := m.config.Clients[service]
-			if ok {
-				client = clients.NewGeneralClient(c.Url())
+				// Since service is unknown to SMA, ask the Registry for a ServiceEndpoint
+				e, err := m.rc.GetServiceEndpoint(serviceName)
+				if err != nil {
+					mu.Lock()
+					responses = append(responses, common.BaseWithMetricsResponse{
+						BaseResponse: common.NewBaseResponse("", err.Error(), http.StatusInternalServerError),
+						ServiceName:  serviceName,
+						Metrics:      nil,
+					})
+					mu.Unlock()
+					return
+				}
+
+				clientInfo := bootstrapConfig.ClientInfo{
+					Protocol: "http",
+					Host:     e.Host,
+					Port:     e.Port,
+				}
+				client = clients.NewGeneralClient(clientInfo.Url())
 			} else {
-				errMsg := fmt.Sprintf("service %s not found in Configuration.Clients section", service)
-				return res, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, errMsg, err)
+				c, ok := m.config.Clients[serviceName]
+				if ok {
+					client = clients.NewGeneralClient(c.Url())
+				} else {
+					errMsg := fmt.Sprintf("service %s not found in Configuration.Clients section", serviceName)
+					mu.Lock()
+					responses = append(responses, common.BaseWithMetricsResponse{
+						BaseResponse: common.NewBaseResponse("", errMsg, http.StatusNotFound),
+						ServiceName:  serviceName,
+						Metrics:      nil,
+					})
+					mu.Unlock()
+					return
+				}
 			}
-		}
 
-		m, err := client.FetchMetrics(ctx)
-		if err != nil {
-			return res, errors.NewCommonEdgeXWrapper(err)
-		}
-		metrics[service] = m
+			m, err := client.FetchMetrics(ctx)
+			if err != nil {
+				mu.Lock()
+				responses = append(responses, common.BaseWithMetricsResponse{
+					BaseResponse: common.NewBaseResponse("", err.Error(), http.StatusInternalServerError),
+					ServiceName:  serviceName,
+					Metrics:      nil,
+				})
+				mu.Unlock()
+				return
+			}
+
+			mu.Lock()
+			responses = append(responses, common.BaseWithMetricsResponse{
+				BaseResponse: common.NewBaseResponse("", "", http.StatusOK),
+				ServiceName:  serviceName,
+				Metrics:      m,
+			})
+			mu.Unlock()
+		}(service)
 	}
 
-	res = common.NewMultiMetricsResponse("", "", http.StatusOK, metrics)
-	return res, nil
+	wg.Wait()
+	return responses, nil
 }

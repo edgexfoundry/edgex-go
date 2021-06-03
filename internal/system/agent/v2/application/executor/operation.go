@@ -35,9 +35,10 @@ func NewOperation(executor interfaces.CommandExecutor, executorPath string, lc l
 }
 
 // Do concurrently delegates a start/stop/restart operation request to the configuration-defined executor.
-func (o *operation) Do(_ context.Context, operations []requests.OperationRequest) ([]interface{}, errors.EdgeX) {
+func (o *operation) Do(_ context.Context, operations []requests.OperationRequest) ([]common.BaseWithServiceNameResponse, errors.EdgeX) {
+	var mu sync.Mutex
 	var wg sync.WaitGroup
-	var responses []interface{}
+	var responses []common.BaseWithServiceNameResponse
 
 	for _, operation := range operations {
 		wg.Add(1)
@@ -47,11 +48,21 @@ func (o *operation) Do(_ context.Context, operations []requests.OperationRequest
 			o.lc.Debugf("Executing '%s' action on %s", operation.Action, operation.ServiceName)
 			_, err := o.executor(o.executorPath, operation.ServiceName, operation.Action)
 			if err != nil {
-				responses = append(responses, common.NewBaseResponse(operation.RequestId, err.Error(), http.StatusInternalServerError))
+				mu.Lock()
+				responses = append(responses, common.BaseWithServiceNameResponse{
+					BaseResponse: common.NewBaseResponse(operation.RequestId, err.Error(), http.StatusInternalServerError),
+					ServiceName:  operation.ServiceName,
+				})
+				mu.Unlock()
 				return
 			}
 
-			responses = append(responses, common.NewBaseResponse(operation.RequestId, "", http.StatusOK))
+			mu.Lock()
+			responses = append(responses, common.BaseWithServiceNameResponse{
+				BaseResponse: common.NewBaseResponse(operation.RequestId, "", http.StatusOK),
+				ServiceName:  operation.ServiceName,
+			})
+			mu.Unlock()
 		}(operation)
 	}
 
