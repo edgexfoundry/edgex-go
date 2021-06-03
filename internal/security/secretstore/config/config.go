@@ -22,15 +22,21 @@ import (
 )
 
 type ConfigurationStruct struct {
-	LogLevel    string
-	SecretStore SecretStoreInfo
-	Databases   map[string]Database
-	KongAdmin   KongAdminInfo
+	LogLevel         string
+	SecretStore      SecretStoreInfo
+	Databases        map[string]Database
+	KongAdmin        KongAdminInfo
+	SecureMessageBus SecureMessageBusInfo
 }
 
 type Database struct {
 	Username string
 	Service  string
+}
+
+type SecureMessageBusInfo struct {
+	Type             string
+	KuiperConfigPath string
 }
 
 type SecretStoreInfo struct {
