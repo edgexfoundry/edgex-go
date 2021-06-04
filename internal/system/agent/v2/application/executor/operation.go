@@ -46,11 +46,11 @@ func (o *operation) Do(_ context.Context, operations []requests.OperationRequest
 			defer wg.Done()
 
 			o.lc.Debugf("Executing '%s' action on %s", operation.Action, operation.ServiceName)
-			_, err := o.executor(o.executorPath, operation.ServiceName, operation.Action)
+			res, err := o.executor(o.executorPath, operation.ServiceName, operation.Action)
 			if err != nil {
 				mu.Lock()
 				responses = append(responses, common.BaseWithServiceNameResponse{
-					BaseResponse: common.NewBaseResponse(operation.RequestId, err.Error(), http.StatusInternalServerError),
+					BaseResponse: common.NewBaseResponse(operation.RequestId, res, http.StatusInternalServerError),
 					ServiceName:  operation.ServiceName,
 				})
 				mu.Unlock()

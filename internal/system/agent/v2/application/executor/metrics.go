@@ -46,11 +46,11 @@ func (m *metrics) Get(_ context.Context, services []string) ([]interface{}, erro
 		go func(serviceName string) {
 			defer wg.Done()
 
-			raw, err := m.executor(m.executorPath, serviceName, system.Metrics)
+			res, err := m.executor(m.executorPath, serviceName, system.Metrics)
 			if err != nil {
 				mu.Lock()
 				responses = append(responses, common.BaseWithMetricsResponse{
-					BaseResponse: common.NewBaseResponse("", err.Error(), http.StatusInternalServerError),
+					BaseResponse: common.NewBaseResponse("", res, http.StatusInternalServerError),
 					ServiceName:  serviceName,
 					Metrics:      nil,
 				})
@@ -58,7 +58,7 @@ func (m *metrics) Get(_ context.Context, services []string) ([]interface{}, erro
 				return
 			}
 
-			r := response.Process(raw, m.lc)
+			r := response.Process(res, m.lc)
 			mu.Lock()
 			responses = append(responses, common.BaseWithMetricsResponse{
 				BaseResponse: common.NewBaseResponse("", "", http.StatusOK),

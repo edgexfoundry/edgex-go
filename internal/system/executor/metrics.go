@@ -15,13 +15,18 @@
 package executor
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const separator = ";"
+
+type metricsResult struct {
+	CpuUsedPercent float64         `json:"cpuUsedPercent"`
+	MemoryUsed     int64           `json:"memoryUsed"`
+	Raw            json.RawMessage `json:"raw"`
+}
 
 // metricsExecutorCommands returns the Docker command to be executed to gather metrics from the Docker CLI.
 func metricsExecutorCommands(serviceName string) []string {
@@ -81,11 +86,16 @@ func resultToFields(result string) (cpuUsedPercent float64, memoryUsed int64, ra
 }
 
 // gatherMetrics delegates metrics gathering to the executor and converts the result to a MetricsSuccessResult.
-func gatherMetrics(serviceName string, executor CommandExecutor) system.Result {
-	result, err := executor(metricsExecutorCommands(serviceName)...)
+func gatherMetrics(serviceName string, executor CommandExecutor) (res metricsResult, err error) {
+	output, err := executor(metricsExecutorCommands(serviceName)...)
 	if err != nil {
-		return system.Failure(serviceName, Metrics, executorType, err.Error())
+		return res, fmt.Errorf("%s: %s", err.Error(), output)
 	}
-	cpuUsedPercent, memoryUsed, raw := resultToFields(string(result))
-	return system.MetricsSuccess(serviceName, executorType, cpuUsedPercent, memoryUsed, raw)
+
+	cpuUsedPercent, memoryUsed, raw := resultToFields(string(output))
+	return metricsResult{
+		CpuUsedPercent: cpuUsedPercent,
+		MemoryUsed:     memoryUsed,
+		Raw:            raw,
+	}, nil
 }
