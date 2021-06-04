@@ -21,7 +21,6 @@ package secretstore
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -48,8 +47,6 @@ type Certs struct {
 	secretServiceBaseURL string
 	loggingClient        logger.LoggingClient
 }
-
-var errNotFound = errors.New("proxy cert pair not found in secret store")
 
 func NewCerts(
 	caller internal.HttpCaller,

@@ -86,7 +86,7 @@ func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath
 		return fmt.Errorf("failed to parse Kuiper Edgex config template: %w", err)
 	}
 
-	file, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open/create Kuiper Edgex config file %s: %w", configPath, err)
 	}
@@ -100,7 +100,7 @@ func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath
 		return fmt.Errorf("failed to write Kuiper Edgex config file %s: %w", configPath, err)
 	}
 
-	lc.Info("Wrote kuiper config at %s with secure MessageBus credentials", configPath)
+	lc.Infof("Wrote Kuiper config at %s with secure MessageBus credentials", configPath)
 
 	return nil
 }

@@ -57,7 +57,10 @@ const (
 	serviceListBegin     = "["
 	serviceListEnd       = "]"
 	serviceListSeparator = ";"
+	secretBasePath       = "/v1/secret/edgex"
 )
+
+var errNotFound = errors.New("credential NOT found")
 
 type Bootstrap struct {
 	insecureSkipVerify bool
@@ -360,14 +363,26 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
 
-	redis5Password, err := cred.GeneratePassword(ctx)
+	redis5Pair, err := getDBCredential("security-bootstrapper-redis", cred, "redisdb")
 	if err != nil {
-		lc.Error("failed to generate redis5 password")
-		os.Exit(1)
-	}
-	redis5Pair := UserPasswordPair{
-		User:     "redis5",
-		Password: redis5Password,
+		if err != errNotFound {
+			lc.Error("failed to determine if Redis credentials already exist or not: %w", err)
+			os.Exit(1)
+		}
+
+		lc.Info("Generating new password for Redis DB")
+		redis5Password, err := cred.GeneratePassword(ctx)
+		if err != nil {
+			lc.Error("failed to generate redis5 password")
+			os.Exit(1)
+		}
+
+		redis5Pair = UserPasswordPair{
+			User:     "redis5",
+			Password: redis5Password,
+		}
+	} else {
+		lc.Info("Redis DB credentials exist, skipping generating new password")
 	}
 
 	// Add any additional services that need the known DB secret
@@ -402,6 +417,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redis5Pair, lc)
+	if err != nil {
+		lc.Error("failed to configure for Secure Message Bus: %w", err)
+		os.Exit(1)
+	}
 
 	// Concat all cert path secretStore values together to check for empty values
 	certPathCheck := secretStoreConfig.CertPath +
@@ -573,7 +592,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 // variadic functions
 
 func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
-	path := fmt.Sprintf("/v1/secret/edgex/%s/%s", service, db)
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, service, db)
 	existing, err := cred.AlreadyInStore(path)
 	if err != nil {
 		return err
@@ -591,8 +610,19 @@ func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service
 	return err
 }
 
+func getDBCredential(db string, cred Cred, service string) (UserPasswordPair, error) {
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, db, service)
+
+	pair, err := cred.getUserPasswordPair(path)
+	if err != nil {
+		return UserPasswordPair{}, err
+	}
+
+	return *pair, err
+
+}
 func addDBCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
-	path := fmt.Sprintf("/v1/secret/edgex/%s/%s", db, service)
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, db, service)
 	existing, err := cred.AlreadyInStore(path)
 	if err != nil {
 		lc.Error(err.Error())
