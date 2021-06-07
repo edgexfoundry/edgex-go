@@ -47,7 +47,7 @@ const (
 	// AddProxyRoutesEnv is the environment variable name for adding the additional Kong routes for app services
 	AddProxyRoutesEnv = "ADD_PROXY_ROUTE"
 
-	edgeXCoreConsulServiceKey = "edgex-core-consul"
+	edgeXCoreConsulServiceKey = "core-consul"
 )
 
 type CertError struct {
