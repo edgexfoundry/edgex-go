@@ -10,37 +10,43 @@ There are 2 major components that are responsible for security features:
 |  [Security-secretstore-setup](cmd/security-secretstore-setup/README.md) | Security-secretstore-setup is responsible for initializing the secret store to hold various credentials for EdgeX.  |
 | [Security-proxy-setup](cmd/security-proxy-setup/README.md)  | Security-proxy-setup is responsible for initializating the EdgeX proxy environment, which includes setting up related permissions and authentication methods. The proxy will protect all the REST API resources.  |
 
-When starting a secure EdgeX deployment, the sequence is [see docker-compose-nexus-redis.yml for reference](https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml))
+When starting a secure EdgeX deployment, the sequence is defined by the
+[EdgeX secure bootstrapping Architecture Decision Record](https://docs.edgexfoundry.org/2.0/design/adr/security/0009-Secure-Bootstrapping/).  In general the sequence is:
 
-1. Start [Vault by HashiCorp](https://www.vaultproject.io/)
-1. Start the `edgex-secretstore-setup` container from the `docker-edgex-security-secretstore-setup-go` image to create the shared secrets needed by the microservices.
-1. Finally, the start the `edgex-proxy-setup` container from the `docker-edgex-security-proxy-setup-go` image once [Kong](https://konghq.com/) is up.
+1. Start a bootstrapping component that sequences the framework startup.
+1. Start the EdgeX secret store component.
+1. Start the `secretstore-setup` container to initialize the secret store and create shared secrets (such as database passwords) needed by the microservices.
+1. Start the other stateful components of EdgeX.
+1. Start the non-stateful EdgeX services.
+1. Start the `proxy-setup` container to configure the [Kong](https://konghq.com/) API gateway.
+
+The startup sequence is automatically coordinated to boot in the proper order to ensure correct functioning of EdgeX.
 
 ## Get Started
 
-To get started, fetch the latest [docker-compose-nexus-redis.yml](https://github.com/edgexfoundry/developer-scripts/blob/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml)) and start the EdgeX containers:
-
-```sh
-wget https://raw.githubusercontent.com/edgexfoundry/developer-scripts/master/releases/nightly-build/compose-files/docker-compose-nexus-redis.yml
-docker-compose up -d
-```
+This documentation assumes that EdgeX has been started from the
+`docker-compose` scripts in the
+[edgex-compose respository](https://github.com/edgexfoundry/edgex-compose).
 
 Once EdgeX is up and running, the following steps are required to access EdgeX resources:
 
 1. The user needs to create an access token and associate every REST request with the security token
-   while sending the request. Use _admin_ as group name, as it is the privileged group in the
-   default configuration of the proxy. Use anything for _user_ as the desired account name
-   (e.g., "mary", "iot_user", etc).
+   while sending the request.  Run the following command from the `edgex-compose` root folder:
 
-    ```sh
-    docker-compose -f docker-compose-nexus-redis.yml run --rm --entrypoint /edgex/security-proxy-setup edgex-proxy --init=false --useradd=IAmGroot --group=admin
+    ```console
+    $ make get-token
     ```
 
-    which will create an access token. One example of an access token is:
-    `eyJpc3MiOiI5M3V3cmZBc0xzS2Qwd1JnckVFdlRzQloxSmtYOTRRciIsImFjY291bnQiOiJhZG1pbmlzdHJhdG9yIn0`.  
+    The above command will create an access token. One example of an access token is:
+    `eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjMwODMwNzgsImlhdCI6MTYyMzA3OTQ3OCwiaXNzIjoiOGJlYjRiNzUtZDA0Mi00YmE0LWFlOTctOTFjMDcxYTJmZGM0IiwibmJmIjoxNjIzMDc5NDc4fQ.KqAgCg63zjtFSvMtChLoLyIrmh8xQdb0t4sroIbLhOtgBnacaTlOdoT33VQY0QGkCEFdE1VT8WjjwrbIwitpDQ`.  
     Yours will differ from this one.
 
-2. The exported external ports (such as 59880, 59881 etc.) will be inaccessible for security reasons.
+    Note that the `get-token` Makefile target by default generates a public/private keypair
+    in a temporary folder that is **deleted** after the token is created.
+    *For production usage, one would want to keep this keypair around
+    and use it to generate future access tokens.*
+
+2. Individual microservice ports (such as 59880, 59881 etc.) will be inaccessible for security reasons.
 Instead, all the REST requests need to go through the proxy, and the proxy will redirect the request to individual microservice on behalf of the user.
 
     E.g, if we need to send a request to the ping endpoint of coredata, without security this would look like:
@@ -52,18 +58,21 @@ Instead, all the REST requests need to go through the proxy, and the proxy will 
     With security services enabled, the request would look like this:
 
     ```sh
-    curl -k https://{kong-ip}:8443/coredata/api/v1/ping -H "Authorization: Bearer <access-token>"
+    token=(paste output of `make get-token` here)
+    curl -k https://{kong-ip}:8443/core-data/api/v2/ping -H "Authorization: Bearer $token"
     ```
 
    Note the request is made over https to the proxy-service's IP address on port 8443.  The access token is also
-   included in the Authorization header.
+   included in the `Authorization` header.
 
 ## Starting a Non-Docker Microservice With Security Enabled
 
-As an example, let's say you want to start core-metadata outside a container so you can debug it. You will need a non-expired token to authenticate and authorize the service and you will need to tell core-metadata about its environment. Be aware that
+As an example, let's say you want to start core-metadata outside a container so you can debug it. 
+All EdgeX microservices need a non-expired authentication token to the EdgeX secret store in order to run.
+Be aware that
 
-* Tokens expire after 60 minutes if not renewed. If you are starting/stopping a microservice and the service token has expired, stop and start security-secretstore-setup (aka vault-worker).
-* `/tmp/edgex/secrets/...` where the tokens live is only root readable. You can run the microservice as root or use the following to open up the tree. Note you will need to repeat the chmod each time you restart `security-secretstore-setup`
+* Tokens expire after 60 minutes if not renewed. If you are starting/stopping a microservice and the service token has expired, fully shut down and restart the environment (`make down` and `make run`) to get fresh tokens for all.
+* `/tmp/edgex/secrets/...` where the tokens live is only root readable. You can run the microservice as root or use the following to open up the tree. Note you will need to repeat the chmod each time you restart `secretstore-setup` service.
 
     ```sh
     pushd /tmp/edgex
@@ -78,13 +87,16 @@ Fortunately, between go-mod-boostrap and [microservice self seeding](https://git
 sudo bash
 
 cd cmd/core-metadata
-SecretStore_TokenFile=/tmp/edgex/secrets/edgex-core-metadata/secrets-token.json Logging_EnableRemote="false" ./core-metadata
+EDGEX_SECURITY_SECRET_STORE=true ./core-metadata
 ```
 
 | Environment Override  | Description  |
 |---|---|
-| SecretStore_TokenFile=/tmp/edgex/secrets/edgex-core-metadata/secrets-token.json | Authorization token |
-| Logging_EnableRemote="false" | There can only one (logger) |
+| EDGEX_SECURITY_SECRET_STORE=true | Enable security flag (optional, security enabled by default) |
+
+Security is enabled by default, but some developers run EdgeX =
+with `EDGEX_SECURITY_SECRET_STORE=false` set in their environments.
+The above command ensures that security is enabled for this particular run of the EdgeX microservice.
 
 The defaults are loaded from `res/configuration.toml` and then the environment variables override the defaults.
 
