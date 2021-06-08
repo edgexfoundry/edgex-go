@@ -476,13 +476,8 @@ parts:
     source: snap/local/build-helpers
     override-pull: |
       cd $SNAPCRAFT_PROJECT_DIR
-      if [ -f VERSION ]; then
-        PROJECT_VERSION=$(cat VERSION)
-      else
-        PROJECT_VERSION=local-dev
-      fi
-      GIT_REVISION=$(git rev-parse --short HEAD)
-      snapcraftctl set-version ${PROJECT_VERSION}
+      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      snapcraftctl set-version ${GIT_VERSION}
   static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
