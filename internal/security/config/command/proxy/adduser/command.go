@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -150,7 +150,7 @@ func (c *cmd) createConsumer() error {
 		return fmt.Errorf("Failed to send new consumer request %s: %w", c.username, err)
 	}
 	defer resp.Body.Close()
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (c *cmd) addUserToGroup() error {
 		return fmt.Errorf("Failed to submit request to associate consumer %s to group %s: %w", c.username, c.group, err)
 	}
 	defer resp.Body.Close()
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (c *cmd) addUserToGroup() error {
 // ExecuteAddJwt will add a user to the Kong gateway, assign the user to the
 // group specified, and then create a JWT entry for the user.
 func (c *cmd) ExecuteAddJwt() (int, error) {
-	publicKey, err := ioutil.ReadFile(c.publicKeyPath)
+	publicKey, err := os.ReadFile(c.publicKeyPath)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to read public key from file %s: %w", c.publicKeyPath, err)
 	}
@@ -258,7 +258,7 @@ func (c *cmd) ExecuteAddJwt() (int, error) {
 	}
 	defer resp.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, err
 	}
@@ -328,7 +328,7 @@ func (c *cmd) ExecuteAddOAuth2() (statusCode int, err error) {
 	}
 	defer resp.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, err
 	}

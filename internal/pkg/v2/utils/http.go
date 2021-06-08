@@ -9,7 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -165,7 +165,7 @@ func ParsePathParamToInt(r *http.Request, pathKey string) (int, errors.EdgeX) {
 // Parse the body of http request to a map[string]string.  EdgeX error will be returned if any parsing error occurs.
 func ParseBodyToMap(r *http.Request) (map[string]string, errors.EdgeX) {
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "failed to read request body", err)
 	}
