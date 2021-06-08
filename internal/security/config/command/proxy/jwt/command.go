@@ -9,7 +9,6 @@ package jwt
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -86,7 +85,7 @@ func (c *cmd) Execute() (int, error) {
 		claims.ExpiresAt = now + int64(duration.Seconds())
 	}
 
-	bytes, err := ioutil.ReadFile(c.privateKeyPath)
+	bytes, err := os.ReadFile(c.privateKeyPath)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Could read private key from file %s: %w", c.privateKeyPath, err)
 	}

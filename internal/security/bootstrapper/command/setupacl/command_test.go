@@ -18,7 +18,6 @@ package setupacl
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -153,7 +152,7 @@ func TestExecute(t *testing.T) {
 			if test.adminDir != "" {
 				err = helper.CreateDirectoryIfNotExists(test.adminDir)
 				require.NoError(t, err)
-				err = ioutil.WriteFile(conf.StageGate.Registry.ACL.SecretsAdminTokenPath,
+				err = os.WriteFile(conf.StageGate.Registry.ACL.SecretsAdminTokenPath,
 					[]byte(secretstoreTokenJsonStub), 0600)
 				require.NoError(t, err)
 			}
@@ -244,7 +243,7 @@ func TestMultipleExecuteCalls(t *testing.T) {
 			if test.adminDir != "" {
 				err = helper.CreateDirectoryIfNotExists(test.adminDir)
 				require.NoError(t, err)
-				err = ioutil.WriteFile(conf.StageGate.Registry.ACL.SecretsAdminTokenPath,
+				err = os.WriteFile(conf.StageGate.Registry.ACL.SecretsAdminTokenPath,
 					[]byte(secretstoreTokenJsonStub), 0600)
 				require.NoError(t, err)
 			}

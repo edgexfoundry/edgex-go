@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -88,7 +88,7 @@ func (s *Service) getServicePluginIDBy(serviceName, pluginName string) (string, 
 
 	defer func() { _ = resp.Body.Close() }()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body to get plugins: %w", err)
 	}
@@ -149,7 +149,7 @@ func (s *Service) deleteServicePlugin(serviceName, pluginID string) error {
 
 		return nil
 	default:
-		responseBody, err := ioutil.ReadAll(resp.Body)
+		responseBody, err := io.ReadAll(resp.Body)
 		var errMsg string
 		if err != nil {
 			errMsg = fmt.Sprintf("failed to read response body for delete service plugin: %v", err)
@@ -223,7 +223,7 @@ func (s *Service) createConsulTokenHeaderForServicePlugin(serviceName, pluginNam
 
 		return nil
 	default:
-		responseBody, err := ioutil.ReadAll(resp.Body)
+		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed to read response body for creating Consul token header: %w", err)
 		}

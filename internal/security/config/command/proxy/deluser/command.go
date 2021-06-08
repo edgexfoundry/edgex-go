@@ -9,7 +9,7 @@ package deluser
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -90,7 +90,7 @@ func (c *cmd) Execute() (int, error) {
 	case http.StatusNoContent:
 		c.loggingClient.Info(fmt.Sprintf("deleted consumer (user) '%s'", c.username))
 	default:
-		responseBody, _ := ioutil.ReadAll(resp.Body)
+		responseBody, _ := io.ReadAll(resp.Body)
 		c.loggingClient.Error(fmt.Sprintf("Error response: %s", responseBody))
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("Delete consumer request failed with code: %d", resp.StatusCode)
 	}

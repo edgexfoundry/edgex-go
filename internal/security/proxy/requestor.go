@@ -18,8 +18,8 @@ package proxy
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal"
@@ -39,7 +39,7 @@ func NewRequestor(
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	} else {
-		caCert, err := ioutil.ReadFile(caCertPath)
+		caCert, err := os.ReadFile(caCertPath)
 		if err != nil {
 			lc.Error("failed to load rootCA certificate.")
 			return nil
