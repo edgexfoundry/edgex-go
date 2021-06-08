@@ -65,7 +65,6 @@ func addIntervalRequestData() requests.AddIntervalRequest {
 			Start:    TestIntervalStart,
 			End:      TestIntervalEnd,
 			Interval: TestIntervalFrequency,
-			RunOnce:  TestIntervalRunOnce,
 		},
 	}
 
