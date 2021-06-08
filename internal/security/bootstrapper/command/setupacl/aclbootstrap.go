@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -59,7 +59,7 @@ func (c *cmd) generateBootStrapACLToken() (*BootStrapACLTokenInfo, error) {
 		_ = resp.Body.Close()
 	}()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read response body of bootstrap ACL: %w", err)
 	}

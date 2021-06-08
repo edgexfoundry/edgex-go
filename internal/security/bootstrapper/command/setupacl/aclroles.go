@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -129,7 +129,7 @@ func (c *cmd) createRole(secretStoreToken string, registryRole RegistryRole) err
 		c.loggingClient.Infof("successfully created a role [%s] for secretstore", registryRole.RoleName)
 		return nil
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			c.loggingClient.Errorf("cannot read resp.Body: %v", err)
 		}

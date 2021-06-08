@@ -8,7 +8,6 @@ package io
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
@@ -78,7 +77,7 @@ func (jsonEventReader) ReadAddEventRequest(bytes []byte) (dto.AddEventRequest, e
 
 func ReadDataInBytes(reader io.Reader) ([]byte, errors.EdgeX) {
 	// use LimitReader with defaultMaxEventSize to avoid unexpected memory exhaustion
-	bytes, err := ioutil.ReadAll(io.LimitReader(reader, defaultMaxEventSize))
+	bytes, err := io.ReadAll(io.LimitReader(reader, defaultMaxEventSize))
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", err)
 	}

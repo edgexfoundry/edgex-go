@@ -17,7 +17,6 @@ package proxy
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -79,7 +78,7 @@ func TestAddConsulHeaderTo(t *testing.T) {
 			// prepare test
 			if test.accessTokenFileCreate {
 				// use test name as the config name so that it is unique
-				err := ioutil.WriteFile(test.name, []byte(tokenData), 0600)
+				err := os.WriteFile(test.name, []byte(tokenData), 0600)
 				require.NoError(t, err)
 			}
 
