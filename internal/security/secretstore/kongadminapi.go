@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -116,7 +115,7 @@ func (k *KongAdminAPI) Setup() error {
 	defer k.clearSecrets()
 
 	// Read in the configuration template
-	configTemplateBytes, err := ioutil.ReadFile(k.paths.template)
+	configTemplateBytes, err := os.ReadFile(k.paths.template)
 	if err != nil {
 		return fmt.Errorf("%s Failed to read config template from file %s: %w", k.prefixes.errText, k.paths.template, err)
 	}
@@ -134,7 +133,7 @@ func (k *KongAdminAPI) Setup() error {
 		"<<INSERT-ADMIN-JWT-ISSUER-KEY>>", k.secrets.jwt.issuer, -1)
 
 	// Write the config file to the configured save path
-	err = ioutil.WriteFile(k.paths.config, []byte(configTemplateText), 0644)
+	err = os.WriteFile(k.paths.config, []byte(configTemplateText), 0644)
 	if err != nil {
 		return fmt.Errorf("%s Failed to write config template to file %s: %w", k.prefixes.errText, k.paths.config, err)
 	}
@@ -146,7 +145,7 @@ func (k *KongAdminAPI) Setup() error {
 	}
 
 	// Write JWT to secret file (used solely by "admin" group in Kong)
-	err = ioutil.WriteFile(k.paths.jwt, []byte(k.secrets.jwt.signed), 0400)
+	err = os.WriteFile(k.paths.jwt, []byte(k.secrets.jwt.signed), 0400)
 	if err != nil {
 		return fmt.Errorf("%s Failed to write JWT to file %s: %w", k.prefixes.errText, k.paths.jwt, err)
 	}

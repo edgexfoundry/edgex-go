@@ -22,9 +22,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 
@@ -148,13 +149,13 @@ func (cs *Certs) getCertPair() (*CertPair, error) {
 }
 
 func (cs *Certs) ReadFrom(certPath string, keyPath string) (*CertPair, error) {
-	certPEMBlock, err := ioutil.ReadFile(certPath)
+	certPEMBlock, err := os.ReadFile(certPath)
 	if err != nil {
 		return nil, err
 	}
 	cert := string(certPEMBlock)
 
-	keyPEMBlock, err := ioutil.ReadFile(keyPath)
+	keyPEMBlock, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
