@@ -72,7 +72,8 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 
 // IsComplete checks whether the Executor is complete
 func (executor *Executor) IsComplete() bool {
-	return executor.isComplete(time.Now())
+	expired := executor.NextTime.Unix() > executor.EndTime.Unix()
+	return expired
 }
 
 // UpdateNextTime increase the NextTime by frequency if the Executor not complete
@@ -80,9 +81,4 @@ func (executor *Executor) UpdateNextTime() {
 	if !executor.IsComplete() {
 		executor.NextTime = executor.NextTime.Add(executor.Frequency)
 	}
-}
-
-func (executor *Executor) isComplete(time time.Time) bool {
-	expired := executor.NextTime.Unix() > executor.EndTime.Unix()
-	return expired
 }
