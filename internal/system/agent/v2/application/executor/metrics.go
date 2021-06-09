@@ -14,7 +14,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2/dtos/common"
 
-	"github.com/edgexfoundry/edgex-go/internal/system"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/response"
 )
@@ -46,7 +45,7 @@ func (m *metrics) Get(_ context.Context, services []string) ([]interface{}, erro
 		go func(serviceName string) {
 			defer wg.Done()
 
-			res, err := m.executor(m.executorPath, serviceName, system.Metrics)
+			res, err := m.executor(m.executorPath, serviceName, "metrics")
 			if err != nil {
 				mu.Lock()
 				responses = append(responses, common.BaseWithMetricsResponse{
