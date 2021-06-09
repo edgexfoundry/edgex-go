@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -104,7 +104,7 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken string) (bool, error) {
 		_ = resp.Body.Close()
 	}()
 
-	checkAgentResp, err := ioutil.ReadAll(resp.Body)
+	checkAgentResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false, fmt.Errorf("Failed to read checkAgent response body: %w", err)
 	}
@@ -206,7 +206,7 @@ func (c *cmd) getEdgeXAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (strin
 		_ = resp.Body.Close()
 	}()
 
-	listTokensResp, err := ioutil.ReadAll(resp.Body)
+	listTokensResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("Failed to read getEdgeXAgentToken response body: %w", err)
 	}
@@ -274,7 +274,7 @@ func (c *cmd) readTokenIDBy(bootstrapACLToken BootStrapACLTokenInfo, accessorID 
 		_ = resp.Body.Close()
 	}()
 
-	readTokenResp, err := ioutil.ReadAll(resp.Body)
+	readTokenResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("Failed to read readTokenID response body: %w", err)
 	}
@@ -378,7 +378,7 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 		// no response body returned in this case
 		c.loggingClient.Infof("agent token is set with type [%s]", tokenType)
 	default:
-		setAgentTokenResp, err := ioutil.ReadAll(resp.Body)
+		setAgentTokenResp, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("Failed to read SetAgentToken response body with status code=%d: %w", resp.StatusCode, err)
 		}
@@ -424,7 +424,7 @@ func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegis
 		_ = resp.Body.Close()
 	}()
 
-	createTokenResp, err := ioutil.ReadAll(resp.Body)
+	createTokenResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("Failed to read create a new token response body: %w", err)
 	}

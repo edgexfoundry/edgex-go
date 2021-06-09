@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"gopkg.in/yaml.v2"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 
@@ -55,7 +54,7 @@ func (jsonDeviceProfileReader) ReadDeviceProfileYaml(r *http.Request) (dtos.Devi
 		return dtos.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", err)
 	}
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return dtos.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindServerError, "failed to read yaml file", err)
 	}

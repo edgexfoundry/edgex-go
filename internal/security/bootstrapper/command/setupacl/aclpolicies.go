@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -126,7 +126,7 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 		_ = resp.Body.Close()
 	}()
 
-	createPolicyResp, err := ioutil.ReadAll(resp.Body)
+	createPolicyResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read create a new policy response body: %w", err)
 	}
@@ -170,7 +170,7 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 		_ = resp.Body.Close()
 	}()
 
-	readPolicyResp, err := ioutil.ReadAll(resp.Body)
+	readPolicyResp, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read readPolicyByName response body: %w", err)
 	}

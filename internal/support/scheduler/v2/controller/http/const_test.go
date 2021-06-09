@@ -11,7 +11,6 @@ const (
 	TestIntervalStart     = "20190102T150405"
 	TestIntervalEnd       = "20190802T150405"
 	TestIntervalFrequency = "30ms"
-	TestIntervalRunOnce   = false
 
 	TestIntervalActionName = "TestIntervalAction"
 	TestHost               = "localhost"

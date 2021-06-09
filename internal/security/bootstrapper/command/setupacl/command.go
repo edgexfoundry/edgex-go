@@ -22,7 +22,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -511,7 +511,7 @@ func (c *cmd) getNonEmptyConsulLeader() error {
 		_ = resp.Body.Close()
 	}()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("Failed to read response body to get leader: %w", err)
 	}
@@ -626,7 +626,7 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, bootstrapACLToken s
 		c.loggingClient.Info("successfully configure Consul access for secretstore")
 		return nil
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			c.loggingClient.Errorf("cannot read resp.Body: %v", err)
 		}

@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -94,11 +94,11 @@ func (c *cmd) Execute() (statusCode int, err error) {
 }
 
 func (c *cmd) readCertKeyPairFromFiles() (*bootstrapConfig.CertKeyPair, error) {
-	certPem, err := ioutil.ReadFile(c.certificatePath)
+	certPem, err := os.ReadFile(c.certificatePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read TLS certificate from file %s: %w", c.certificatePath, err)
 	}
-	prvKey, err := ioutil.ReadFile(c.privateKeyPath)
+	prvKey, err := os.ReadFile(c.privateKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read private key from file %s: %w", c.privateKeyPath, err)
 	}
@@ -174,7 +174,7 @@ func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body to list Kong snis tls certs: %w", err)
 	}
@@ -262,7 +262,7 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 		return fmt.Errorf("failed to send request to post Kong tls cert: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %v", err)
 	}

@@ -116,7 +116,6 @@ func (m *manager) execute(
 	}
 
 	executor.UpdateNextTime()
-	executor.UpdateIterations()
 
 	if executor.IsComplete() {
 		m.lc.Debugf("completed interval %s", executor.Interval.Name)

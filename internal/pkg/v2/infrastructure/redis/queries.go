@@ -225,10 +225,12 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query storeKeys", err)
 	}
-	if len(storeKeys) == 0 {
+	count := len(storeKeys)
+	if count == 0 || count == offset {
 		return nil, nil
-	}
-	if end >= len(storeKeys) || end == -1 {
+	} else if count > 0 && offset > count { // return RangeNotSatisfiable error when offset is out of range
+		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", count), nil)
+	} else if end >= count || end == -1 {
 		storeKeys = storeKeys[offset:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
 		storeKeys = storeKeys[offset : end+1]

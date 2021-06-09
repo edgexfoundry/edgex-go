@@ -26,15 +26,13 @@ func TestInitialize(t *testing.T) {
 		startTime         string
 		endTime           string
 		interval          string
-		runOnce           bool
 		expectedErrorKind errors.ErrKind
 	}{
-		{"run once", "midnight", "20000101T000000", "", "24h", true, ""},
-		{"run with interval", "midnight", "20000101T000000", "22000101T000000", "24h", false, ""},
-		{"run without startTime ", "midnight", "", "22000101T000000", "24h", false, ""},
-		{"wrong startTime string format", "midnight", "20000101T", "", "24h", false, errors.KindContractInvalid},
-		{"wrong endTime string format", "midnight", "", "20000101T", "24h", false, errors.KindContractInvalid},
-		{"wrong frequency string format", "midnight", "", "", "24", false, errors.KindContractInvalid},
+		{"run with interval", "midnight", "20000101T000000", "22000101T000000", "24h", ""},
+		{"run without startTime ", "midnight", "", "22000101T000000", "24h", ""},
+		{"wrong startTime string format", "midnight", "20000101T", "", "24h", errors.KindContractInvalid},
+		{"wrong endTime string format", "midnight", "", "20000101T", "24h", errors.KindContractInvalid},
+		{"wrong frequency string format", "midnight", "", "", "24", errors.KindContractInvalid},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -42,7 +40,7 @@ func TestInitialize(t *testing.T) {
 			interval := models.Interval{
 				Name:  testCase.intervalName,
 				Start: testCase.startTime, End: testCase.endTime,
-				Interval: testCase.interval, RunOnce: testCase.runOnce,
+				Interval: testCase.interval,
 			}
 			executor := Executor{}
 
@@ -61,20 +59,9 @@ func TestInitialize(t *testing.T) {
 			if interval.End != "" {
 				assert.Equal(t, interval.End, executor.EndTime.Format("20060102T000000"))
 			}
-			if interval.RunOnce {
-				assert.LessOrEqual(t, executor.NextTime.Unix(), current.Unix())
-				assert.EqualValues(t, executor.MaxIterations, 1)
-				assert.EqualValues(t, executor.Frequency.Seconds(), 0)
-				if interval.Start == "" {
-					assert.Equal(t, executor.StartTime, executor.NextTime)
-					assert.LessOrEqual(t, executor.NextTime.Unix(), current.Unix())
-				}
-				assert.True(t, executor.IsComplete())
-			} else {
-				assert.GreaterOrEqual(t, executor.NextTime.Unix(), current.Unix())
-				assert.Greater(t, executor.Frequency.Seconds(), float64(0))
-				assert.False(t, executor.IsComplete())
-			}
+			assert.GreaterOrEqual(t, executor.NextTime.Unix(), current.Unix())
+			assert.Greater(t, executor.Frequency.Seconds(), float64(0))
+			assert.False(t, executor.IsComplete())
 		})
 	}
 }

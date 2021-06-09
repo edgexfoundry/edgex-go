@@ -5,7 +5,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0-dev.61
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.0.0-dev.8
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.96
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.0-dev.99
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.0-dev.15
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0-dev.7
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0-dev.23
@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/pelletier/go-toml v1.9.1
+	github.com/pelletier/go-toml v1.9.2
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	gopkg.in/eapache/queue.v1 v1.1.0

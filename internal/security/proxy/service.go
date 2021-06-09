@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -47,7 +47,7 @@ const (
 	// AddProxyRoutesEnv is the environment variable name for adding the additional Kong routes for app services
 	AddProxyRoutesEnv = "ADD_PROXY_ROUTE"
 
-	edgeXCoreConsulServiceKey = "edgex-core-consul"
+	edgeXCoreConsulServiceKey = "core-consul"
 )
 
 type CertError struct {
@@ -130,7 +130,7 @@ func (s *Service) ResetProxy() error {
 func (s *Service) Init() error {
 
 	// Read in JWT
-	jwtBytes, err := ioutil.ReadFile(s.configuration.KongAuth.JWTFile)
+	jwtBytes, err := os.ReadFile(s.configuration.KongAuth.JWTFile)
 	if err != nil {
 		return fmt.Errorf("failed to read config template: %w", err)
 	}
@@ -310,7 +310,7 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.loggingClient.Info("successfully added certificate to the reverse proxy")
 	default:
-		b, err := ioutil.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return &CertError{err.Error(), InternalError}
 		}
