@@ -16,10 +16,9 @@ package executor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const inspect = "inspect"
@@ -59,9 +58,9 @@ func messageMoreThanOneContainerFound(serviceName string) string {
 func isContainerRunning(service string, executor CommandExecutor) (bool, string) {
 	// check the status of the container using the json format - include all
 	// containers as the container we want to check may be Exited
-	stringOutput, err := executor(inspect, service)
+	output, err := executor(inspect, service)
 	if err != nil {
-		return false, err.Error()
+		return false, fmt.Sprintf("%s: %s", err.Error(), output)
 	}
 
 	var containerStatus []struct {
@@ -69,7 +68,7 @@ func isContainerRunning(service string, executor CommandExecutor) (bool, string)
 			Running bool
 		}
 	}
-	jsonOutput := json.NewDecoder(strings.NewReader(string(stringOutput)))
+	jsonOutput := json.NewDecoder(strings.NewReader(string(output)))
 	if err = jsonOutput.Decode(&containerStatus); err != nil {
 		return false, err.Error()
 	}
@@ -92,22 +91,22 @@ func executeACommand(
 	service string,
 	executor CommandExecutor,
 	operationPrefix string,
-	shouldBeRunning bool) system.Result {
+	shouldBeRunning bool) (string, error) {
 
 	if output, err := executor(operation, service); err != nil {
-		return system.Failure(service, operation, executorType, messageExecutorCommandFailed(operationPrefix, string(output), err.Error()))
+		return "", fmt.Errorf("%s: %s", err.Error(), output)
 	}
 
 	isRunning, errorMessage := isContainerRunning(service, executor)
 	switch {
 	case len(errorMessage) > 0:
-		return system.Failure(service, operation, executorType, messageExecutorInspectFailed(operationPrefix, errorMessage))
+		return "", errors.New(messageExecutorInspectFailed(operationPrefix, errorMessage))
 	case isRunning != shouldBeRunning:
 		if isRunning {
-			return system.Failure(service, operation, executorType, messageServiceIsRunningButShouldNotBe(operationPrefix))
+			return "", errors.New(messageServiceIsRunningButShouldNotBe(operationPrefix))
 		}
-		return system.Failure(service, operation, executorType, messageServiceIsNotRunningButShouldBe(operationPrefix))
+		return "", errors.New(messageServiceIsNotRunningButShouldBe(operationPrefix))
 	default:
-		return system.Success(service, operation, executorType)
+		return "", nil
 	}
 }

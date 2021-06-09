@@ -23,13 +23,19 @@ import (
 )
 
 func main() {
-	result, err := json.Marshal(executor.Execute(os.Args, func(arg ...string) ([]byte, error) {
-		return exec.Command("docker", arg...).CombinedOutput()
-	}))
-	switch {
-	case err != nil:
-		fmt.Printf("json.Marshal error: %s", err.Error())
-	default:
-		fmt.Print(string(result))
+	output, err := executor.Execute(os.Args, func(args ...string) ([]byte, error) {
+		return exec.Command("docker", args...).CombinedOutput()
+	})
+	if err != nil {
+		fmt.Print(err.Error())
+		os.Exit(1)
 	}
+
+	result, err := json.Marshal(output)
+	if err != nil {
+		fmt.Printf("json.Marshal error: %s", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Print(string(result))
 }

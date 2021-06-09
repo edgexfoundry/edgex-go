@@ -15,16 +15,15 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
-
-	"github.com/edgexfoundry/edgex-go/internal/system"
 )
 
 const (
 	Start   = "start"
 	Stop    = "stop"
 	Restart = "restart"
-	Metrics = system.Metrics
+	Metrics = "metrics"
 
 	executorType        = "docker"
 	failedStartPrefix   = "Error starting service"
@@ -48,7 +47,7 @@ func messageMissingArguments() string {
 }
 
 // Execute is called from main (which supplies an executor) to process a request.
-func Execute(args []string, executor CommandExecutor) (result system.Result) {
+func Execute(args []string, executor CommandExecutor) (res interface{}, err error) {
 	switch {
 	case len(args) > 2:
 		service := args[1]
@@ -56,18 +55,17 @@ func Execute(args []string, executor CommandExecutor) (result system.Result) {
 
 		switch operation {
 		case Start:
-			result = executeACommand(operation, service, executor, failedStartPrefix, true)
+			return executeACommand(operation, service, executor, failedStartPrefix, true)
 		case Restart:
-			result = executeACommand(operation, service, executor, failedRestartPrefix, true)
+			return executeACommand(operation, service, executor, failedRestartPrefix, true)
 		case Stop:
-			result = executeACommand(operation, service, executor, failedStopPrefix, false)
+			return executeACommand(operation, service, executor, failedStopPrefix, false)
 		case Metrics:
-			result = gatherMetrics(service, executor)
+			return gatherMetrics(service, executor)
 		default:
-			result = system.Failure(service, operation, executorType, messageExecutorOperationNotSupported())
+			return res, errors.New(messageExecutorOperationNotSupported())
 		}
 	default:
-		result = system.Failure("", "", executorType, messageMissingArguments())
+		return res, errors.New(messageMissingArguments())
 	}
-	return
 }
