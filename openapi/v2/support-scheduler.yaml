@@ -120,9 +120,6 @@ components:
         name:
           description: "Non-database identifier for an interval (*must be unique)"
           type: string
-        runOnce:
-          description: "Indicates that this interval runs one time - at the time indicated by the start"
-          type: boolean
         start:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
@@ -149,9 +146,6 @@ components:
         interval:
           description: Interval indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
           type: string
-        runOnce:
-          description: "Indicates that this interval runs one time - at the time indicated by the start"
-          type: boolean
       required:
         - id
         - name

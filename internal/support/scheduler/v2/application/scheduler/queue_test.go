@@ -48,7 +48,6 @@ func intervalData() models.Interval {
 		Start:    "",
 		End:      "",
 		Interval: "10s",
-		RunOnce:  false,
 	}
 }
 
