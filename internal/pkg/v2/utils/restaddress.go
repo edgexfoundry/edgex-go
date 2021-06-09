@@ -8,7 +8,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -95,7 +95,7 @@ func sendRequestAndGetResponse(client *http.Client, req *http.Request) (res stri
 	defer resp.Body.Close()
 	resp.Close = true
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindIOError, "fail to read the response body", err)
 	}

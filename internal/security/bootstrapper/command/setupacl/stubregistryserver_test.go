@@ -18,7 +18,7 @@ package setupacl
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -278,7 +278,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 			require.Equal(t, http.MethodPut, r.Method)
 			if registry.serverOptions.createNewPolicyOk {
 				w.WriteHeader(http.StatusOK)
-				reqBody, err := ioutil.ReadAll(r.Body)
+				reqBody, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
 				var policyMap map[string]interface{}
 				err = json.Unmarshal(reqBody, &policyMap)

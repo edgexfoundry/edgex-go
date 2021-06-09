@@ -16,7 +16,6 @@
 package helper
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -60,7 +59,7 @@ func CheckIfFileExists(fileName string) bool {
 
 func writeFile(aFileName string) error {
 	timestamp := []byte(strconv.FormatInt(time.Now().Unix(), 10))
-	return ioutil.WriteFile(aFileName, timestamp, 0400)
+	return os.WriteFile(aFileName, timestamp, 0400)
 }
 
 // GenerateRandomString will return a randomized string of characters at the

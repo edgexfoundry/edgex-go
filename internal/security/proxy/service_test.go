@@ -16,7 +16,7 @@
 package proxy
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -40,7 +40,7 @@ import (
 
 func TestPostCertExists(t *testing.T) {
 	fileName := "./testdata/configuration.toml"
-	contents, err := ioutil.ReadFile(fileName)
+	contents, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
 		return
@@ -88,7 +88,7 @@ func TestPostCertExists(t *testing.T) {
 
 func TestInit(t *testing.T) {
 	fileName := "./testdata/configuration.toml"
-	contents, err := ioutil.ReadFile(fileName)
+	contents, err := os.ReadFile(fileName)
 	if err != nil {
 		t.Errorf("could not load configuration file (%s): %s", fileName, err.Error())
 		return
@@ -114,7 +114,7 @@ func TestInit(t *testing.T) {
 			return
 		}
 
-		_, err := ioutil.ReadAll(r.Body)
+		_, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -279,7 +279,7 @@ func TestInitKongService(t *testing.T) {
 			return
 		}
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

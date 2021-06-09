@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -113,7 +113,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	// Get the response
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, err
 	}
