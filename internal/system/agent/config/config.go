@@ -27,12 +27,10 @@ type ConfigurationStruct struct {
 	ExecutorPath     string
 	MetricsMechanism string
 	Registry         bootstrapConfig.RegistryInfo
-	FormatSpecifier  string
 	SecretStore      bootstrapConfig.SecretStoreInfo
 }
 
 type WritableInfo struct {
-	ResendLimit     int
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
