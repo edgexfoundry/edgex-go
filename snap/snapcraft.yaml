@@ -59,6 +59,17 @@ passthrough:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload
 
+plugs:
+  # This content interface provides a mechanism for the edgexfoundry
+  # snap to shared vault secret tokens in order for services in external
+  # edgex snap to access the secret-store. Note, in this case this snap
+  # defines a plug instead of slot to allow the consuming snap to create
+  # the service-specific directory under $SNAP_DATA/secrets.
+  edgex-secretstore-token:
+    interface: content
+    content: edgex-secretstore-token
+    target: $SNAP_DATA/secrets
+
 # kong runs things through luarocks and luarocks expects it's configuration to
 # be located here and we can't override this at runtime, so map what's in
 # $SNAP to the expected location
@@ -327,7 +338,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
   device-virtual:
-    adapter: none
+    adapter: full
     after:
       - security-bootstrapper-redis
       # This generates the consul role for this service before the service starts
@@ -338,7 +349,8 @@ apps:
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
     daemon: simple
     environment:
-      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res
+      DEVICE_DEVICESDIR: $SNAP_DATA/config/device-virtual/res/devices
+      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res/profiles
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/device-virtual/secrets-token.json
     plugs: [network, network-bind]
   app-service-configurable:
@@ -464,13 +476,8 @@ parts:
     source: snap/local/build-helpers
     override-pull: |
       cd $SNAPCRAFT_PROJECT_DIR
-      if [ -f VERSION ]; then
-        PROJECT_VERSION=$(cat VERSION)
-      else
-        PROJECT_VERSION=local-dev
-      fi
-      GIT_REVISION=$(git rev-parse --short HEAD)
-      snapcraftctl set-version ${PROJECT_VERSION}
+      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      snapcraftctl set-version ${GIT_VERSION}
   static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
@@ -546,7 +553,7 @@ parts:
     # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
     build-snaps:
-      - go/1.15/stable
+      - go/1.16/stable
     prime: [-*]
 
   config-common:
@@ -554,60 +561,36 @@ parts:
     source: snap/local/runtime-helpers
 
   consul:
-    after: [go-build-helper]
-    plugin: make
-    source: https://github.com/hashicorp/consul.git
-    source-tag: v1.8.4
-    source-depth: 1
-    stage:
-      # duplicated file with the deps of vault, so just drop this one and use
-      # the file from the vault part instead
-      - -usr/share/doc/github.com/patrickmn/go-cache/LICENSE
-      - -usr/share/doc/github.com/miekg/dns/LICENSE
-      - -usr/share/doc/github.com/Azure/azure-sdk-for-go/LICENSE
-
-    override-build: |
-      # When the snap is built by Jenkins w/in a docker instance, the existence of
-      # the top level go.mod file causes the consul build to fail when using go 1.13.
-      # This workaround can probably be removed if/when consul is updated to a more
-      # recent version.
-      if [ -f /build/go.mod ]; then
-        mv /build/go.mod /build/go.mod.bk
-      fi
-
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/consul
-      export GO111MODULES=off
-      go get -u github.com/kardianos/govendor
-      govendor install
-      CONSUL_DEV=1 make
-
-      # install the consul binary
-      install -DT bin/consul "$SNAPCRAFT_PART_INSTALL/bin/consul"
-
-      # handle consul LICENSE
-      # TODO: do PATENT files need copying?
-      install -DT "$GOIMPORTPATH/LICENSE" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/consul/LICENSE"
-
-      # handle vendor LICENSE files
-      cd $GOIMPORTPATH/vendor
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # TODO: some LICENSE files fall under .gopath too
-      cd $GOPATH/src
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      if [ -f /build/go.mod.bk ]; then
-        mv /build/go.mod.bk /build/go.mod
-      fi
+    plugin: nil
     build-packages:
-      - make
-      - zip
+      - curl
+      - unzip
+    override-build: |
+      # use dpkg architecture to figure out our target arch
+      # note - we specifically don't use arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=consul_1.9.1_linux_amd64.zip
+          FILE_HASH=9ba45ec6eb3e762444f077ae06e407ca5161d46785d725d7b5ea0c4d5cd5a99b
+          ;;
+        arm64)
+          FILE_NAME=consul_1.9.1_linux_arm64.zip
+          FILE_HASH=80a05bf3a3d9c18f0ef952eff8e6e0de8f7205060916e351c4cd3f2418ed7900
+          ;;
+      esac
+      # download the archive, failing on ssl cert problems
+      curl -L https://releases.hashicorp.com/consul/1.9.1/$FILE_NAME -o $FILE_NAME
+      #
+      # Note the binary releases appear to just include the single consul binary,
+      # this means we might need to provide config files... ;(-
+      #
+      # or apt.releases.hashicorp.com/pool/amd64/main/consul_1.9.1_amd64.deb
+      # NOTE - there only seem to be amd64 debs, no arm64!!!
+      echo "$FILE_HASH $FILE_NAME" > sha256
+      sha256sum -c sha256 | grep OK
+      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+    organize:
+      consul: bin/consul
 
   redis:
     source: https://github.com/redis/redis.git
@@ -780,24 +763,32 @@ parts:
       fi
 
   # DEVICE SERVICES parts
+  #
+  # NOTE - it would be nice to also just use stage-snaps to include
+  # device-virtual, however we currently don't publish an independent
+  # snap of device-virtual. Maybe we should, as this would simplify
+  # this snap.
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-tag: v1.2.1
+    source-tag: master
     plugin: make
     after: [go-build-helper]
     override-build: |
-      # create VERSION file (supposed to be created by jenkins pipeline...)
-      echo "1.2.1" > ./VERSION
+      echo "2.0.0-dev" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
       install -DT "./cmd/res/configuration.toml" \
         "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/configuration.toml"
+      install -DT "./cmd/res/devices/devices.toml" \
+          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/devices/devices.toml"
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles
 
       for profileType in bool float int uint binary; do
-        install -T "./cmd/res/device.virtual.$profileType.yaml" \
-          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/device.virtual.$profileType.yaml"
+        install -T "./cmd/res/profiles/device.virtual.$profileType.yaml" \
+          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles/device.virtual.$profileType.yaml"
       done
 
       install -DT "./Attribution.txt" \
@@ -805,26 +796,17 @@ parts:
       install -DT "./LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
 
+  # TODO: vet all the correct files are available...
   app-service-config:
-    source: https://github.com/edgexfoundry/app-service-configurable.git
-    # TODO(Hanoi): update to source-tag for release
-    source-branch: master
-    plugin: make
-    build-packages: [gcc, git, libzmq3-dev, pkg-config]
-    stage-packages: [libzmq5]
-    after: [go-build-helper]
-    override-build: |
-      make build
-
-      # install the service binary, configuration, and license files
-      install -DT "./app-service-configurable" \
-         "$SNAPCRAFT_PART_INSTALL/bin/app-service-configurable"
-      install -DT "./res/rules-engine/configuration.toml" \
-         "$SNAPCRAFT_PART_INSTALL/config/app-service-configurable/res/rules-engine/configuration.toml"
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/app-service-configurable/LICENSE"
+    plugin: nil
+    stage-snaps:
+      - edgex-app-service-configurable/edge
+    stage:
+      - -res/functional-tests/configuration.toml
+      - -res/http-export/configuration.toml
+      - -res/mqtt-export/configuration.toml
+      - -res/push-to-core/configuration.toml
+      - -res/sample/configuration.toml
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
@@ -834,6 +816,7 @@ parts:
     override-build: |
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD
       export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
+      go mod tidy
       make build_with_edgex
       make real_pkg
       cd $SNAPCRAFT_PART_INSTALL
