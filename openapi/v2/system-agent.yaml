@@ -371,7 +371,6 @@ paths:
                 apiVersion: "v2"
                 config:
                   Writeable:
-                    ResendLimit: 2
                     LogLevel: "INFO"
                   Clients:
                     edge-core-command:
@@ -410,7 +409,6 @@ paths:
                     Host: "edgex-core-consul"
                     Port: 8500
                     Type: "consul"
-                  FormatSpecifier: "%(\\d+\\$)?([-#+ 0(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])"
                   SecretStore:
                     Type: "vault"
                     Host: "localhost"
