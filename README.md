@@ -147,7 +147,7 @@ make docker run_docker
 
 ## Community
 
-- Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/enQtNDgyODM5ODUyODY0LWVhY2VmOTcyOWY2NjZhOWJjOGI1YzQ2NzYzZmIxYzAzN2IzYzY0NTVmMWZhZjNkMjVmODNiZGZmYTkzZDE3MTA)
+- Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/zt-65tadqv4-DtLS6eiz_AC7_FeJSdSm8A)
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 ## License
