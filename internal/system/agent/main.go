@@ -30,13 +30,13 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
-	startupTimer := startup.NewStartUpTimer(clients.SystemManagementAgentServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SystemManagementAgentServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -61,7 +61,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		ctx,
 		cancel,
 		f,
-		clients.SystemManagementAgentServiceKey,
+		common.SystemManagementAgentServiceKey,
 		internal.ConfigStemCore,
 		configuration,
 		startupTimer,
@@ -70,6 +70,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(router).BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(clients.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewStartMessage(common.SystemManagementAgentServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

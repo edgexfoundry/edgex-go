@@ -1373,13 +1373,8 @@ paths:
                 apiVersion: "v2"
                 config:
                   Writeable:
-                    DeviceUpdateLastConnected: false
-                    MetaDataCheck: false
                     PersistData: true
-                    ServiceUpdateLastConnected: false
-                    ValidateCheck: false
                     LogLevel: "INFO"
-                    ChecksumAlgo: "xxHash"
                   MessageQueue:
                     Host: "*"
                     Port: 5563

@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 // RegistryTokenType is the type of registry tokens that will be created when the role is using to call token creds API
@@ -113,7 +113,7 @@ func (c *cmd) createRole(secretStoreToken string, registryRole RegistryRole) err
 	}
 
 	req.Header.Add("X-Vault-Token", secretStoreToken)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request for http URL: %w", err)

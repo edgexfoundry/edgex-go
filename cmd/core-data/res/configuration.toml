@@ -1,11 +1,6 @@
 [Writable]
-DeviceUpdateLastConnected = false
-MetaDataCheck = false
 PersistData = true
-ServiceUpdateLastConnected = false
-ValidateCheck = false
 LogLevel = 'INFO'
-ChecksumAlgo = 'xxHash'
    [Writable.InsecureSecrets]
       [Writable.InsecureSecrets.DB]
          path = "redisdb"

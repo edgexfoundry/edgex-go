@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 const (
@@ -116,7 +116,7 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, tokenID)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send create a new policy request for http URL: %w", err)
