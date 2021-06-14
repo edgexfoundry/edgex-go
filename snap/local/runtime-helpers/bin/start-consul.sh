@@ -30,7 +30,7 @@ EOF
 "$SNAP/bin/consul" agent \
     -data-dir="$SNAP_DATA/consul/data" \
     -config-dir="$SNAP_DATA/consul/config" \
-    -server -client=0.0.0.0 -bind=127.0.0.1 -bootstrap -ui &
+    -server -bind=127.0.0.1 -bootstrap -ui &
 
 # loop trying to connect to consul, as soon as we are successful exit
 # NOTE: ideally consul would be able to notify systemd directly, but currently 
