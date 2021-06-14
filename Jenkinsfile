@@ -14,12 +14,16 @@
 // limitations under the License.
 //
 
+@Library("edgex-global-pipelines@experimental") _
+
 edgeXBuildGoParallel(
     project: 'edgex-go',
     dockerFileGlobPath: 'cmd/**/Dockerfile',
-    testScript: 'make test',
-    buildScript: 'make build',
-    publishSwaggerDocs: true,
+    testScript: 'echo test && touch coverage.out',
+    buildScript: 'echo build',
+    buildImage: false,
+    arch: ['amd64'],
+    publishSwaggerDocs: false,
     swaggerApiFolders: ['openapi/v2'],
     buildSnap: true
 )
