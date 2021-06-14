@@ -11,7 +11,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -38,7 +38,7 @@ func TestDeviceResourceByProfileNameAndResourceName(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
 	dbClientMock.On("DeviceProfileByName", profileNotFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

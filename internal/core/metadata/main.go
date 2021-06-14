@@ -20,7 +20,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
-	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
@@ -69,7 +68,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			pkgHandlers.NewDatabase(httpServer, configuration, metadataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

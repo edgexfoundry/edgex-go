@@ -18,7 +18,7 @@ import (
 
 // AddSecret handles the request to the /secret endpoint. Is used to add EdgeX Service exclusive secret to the Secret Store
 // It returns a response as specified by the V2 API swagger in openapi/v2
-func (c *V2CommonController) AddSecret(writer http.ResponseWriter, request *http.Request) {
+func (c *CommonController) AddSecret(writer http.ResponseWriter, request *http.Request) {
 	defer func() {
 		_ = request.Body.Close()
 	}()

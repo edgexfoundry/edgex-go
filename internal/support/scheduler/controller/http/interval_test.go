@@ -13,12 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
-	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/infrastructure/interfaces/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -37,7 +36,7 @@ import (
 
 func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
-		schedulerContainer.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					LogLevel: "DEBUG",
@@ -47,7 +46,7 @@ func mockDic() *di.Container {
 				},
 			}
 		},
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()
 		},
 	})
@@ -112,10 +111,10 @@ func TestAddInterval(t *testing.T) {
 	dbClientMock.On("AddInterval", model).Return(model, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("interval name %s already exists", model.Name), nil))
 
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})
@@ -181,7 +180,7 @@ func TestIntervalByName(t *testing.T) {
 	dbClientMock.On("IntervalByName", interval.Name).Return(interval, nil)
 	dbClientMock.On("IntervalByName", notFoundName).Return(models.Interval{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "interval doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -240,7 +239,7 @@ func TestAllIntervals(t *testing.T) {
 	dbClientMock.On("AllIntervals", 0, 20).Return([]models.Interval{}, nil)
 	dbClientMock.On("AllIntervals", 0, 1).Return([]models.Interval{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -313,10 +312,10 @@ func TestDeleteIntervalByName(t *testing.T) {
 	dbClientMock.On("IntervalActionsByIntervalName", 0, 1, notFoundName).Return([]models.IntervalAction{}, nil)
 	schedulerManagerMock.On("DeleteIntervalByName", interval.Name).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})
@@ -416,10 +415,10 @@ func TestPatchInterval(t *testing.T) {
 	dbClientMock.On("IntervalByName", *invalidNotFoundName.Interval.Name).Return(model, notFoundNameError)
 
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})

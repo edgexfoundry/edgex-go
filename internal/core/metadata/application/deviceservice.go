@@ -9,10 +9,10 @@ import (
 	"context"
 	"fmt"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -23,8 +23,8 @@ import (
 // The AddDeviceService function accepts the new device service model from the controller function
 // and then invokes AddDeviceService function of infrastructure layer to add new device service
 func AddDeviceService(d models.DeviceService, ctx context.Context, dic *di.Container) (id string, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	correlationId := correlation.FromContext(ctx)
 	addedDeviceService, err := dbClient.AddDeviceService(d)
@@ -46,7 +46,7 @@ func DeviceServiceByName(name string, ctx context.Context, dic *di.Container) (d
 	if name == "" {
 		return deviceService, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	ds, err := dbClient.DeviceServiceByName(name)
 	if err != nil {
 		return deviceService, errors.NewCommonEdgeXWrapper(err)
@@ -57,8 +57,8 @@ func DeviceServiceByName(name string, ctx context.Context, dic *di.Container) (d
 
 // PatchDeviceService executes the PATCH operation with the device service DTO to replace the old data
 func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *di.Container) errors.EdgeX {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	var deviceService models.DeviceService
 	var edgeXerr errors.EdgeX
@@ -97,7 +97,7 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	// Check the associated Device and ProvisionWatcher existence
 	devices, err := dbClient.DevicesByServiceName(0, 1, name)
@@ -124,7 +124,7 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 
 // AllDeviceServices query the device services with labels, offset, and limit
 func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	services, err := dbClient.AllDeviceServices(offset, limit, labels)
 	if err != nil {
 		return deviceServices, errors.NewCommonEdgeXWrapper(err)

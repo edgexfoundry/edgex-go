@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/direct/config"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
-	v2Container "github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 )
 
 type AgentController struct {
@@ -64,7 +63,7 @@ func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metricsImpl := v2Container.V2MetricsFrom(c.dic.Get)
+	metricsImpl := container.V2MetricsFrom(c.dic.Get)
 	res, err := metricsImpl.Get(ctx, services)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")

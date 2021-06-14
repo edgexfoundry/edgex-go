@@ -10,10 +10,9 @@ import (
 	"fmt"
 	"strings"
 
-	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/bootstrap/container"
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -42,13 +41,13 @@ func ValidateEvent(e models.Event, profileName string, deviceName string, source
 // The AddEvent function accepts the new event model from the controller functions
 // and invokes addEvent function in the infrastructure layer
 func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
-	configuration := dataContainer.ConfigurationFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 	if !configuration.Writable.PersistData {
 		return nil
 	}
 
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// Add the event and readings to the database
 	if configuration.Writable.PersistData {
@@ -71,9 +70,9 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err error
 
 // PublishEvent publishes incoming AddEventRequest in the format of []byte through MessageClient
 func PublishEvent(data []byte, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
-	lc := container.LoggingClientFrom(dic.Get)
-	msgClient := dataContainer.MessagingClientFrom(dic.Get)
-	configuration := dataContainer.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	msgClient := container.MessagingClientFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
 	publishTopic := fmt.Sprintf("%s/%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName, sourceName)
@@ -99,7 +98,7 @@ func EventById(id string, dic *di.Container) (dtos.Event, errors.EdgeX) {
 		return dtos.Event{}, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
 	}
 
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	event, err := dbClient.EventById(id)
 	if err != nil {
@@ -123,7 +122,7 @@ func DeleteEventById(id string, dic *di.Container) errors.EdgeX {
 		}
 	}
 
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.DeleteEventById(id)
 	if err != nil {
@@ -135,7 +134,7 @@ func DeleteEventById(id string, dic *di.Container) errors.EdgeX {
 
 // EventTotalCount return the count of all of events currently stored in the database and error if any
 func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	count, err := dbClient.EventTotalCount()
 	if err != nil {
@@ -147,7 +146,7 @@ func EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 
 // EventCountByDeviceName return the count of all of events associated with given device and error if any
 func EventCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	count, err := dbClient.EventCountByDeviceName(deviceName)
 	if err != nil {
@@ -164,7 +163,7 @@ func DeleteEventsByDeviceName(deviceName string, dic *di.Container) errors.EdgeX
 	if len(strings.TrimSpace(deviceName)) <= 0 {
 		return errors.NewCommonEdgeX(errors.KindInvalidId, "blank device name is not allowed", nil)
 	}
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.DeleteEventsByDeviceName(deviceName)
 	if err != nil {
@@ -175,7 +174,7 @@ func DeleteEventsByDeviceName(deviceName string, dic *di.Container) errors.EdgeX
 
 // AllEvents query events by offset and limit
 func AllEvents(offset int, limit int, dic *di.Container) (events []dtos.Event, err errors.EdgeX) {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	eventModels, err := dbClient.AllEvents(offset, limit)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
@@ -192,7 +191,7 @@ func EventsByDeviceName(offset int, limit int, name string, dic *di.Container) (
 	if name == "" {
 		return events, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	eventModels, err := dbClient.EventsByDeviceName(offset, limit, name)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
@@ -206,7 +205,7 @@ func EventsByDeviceName(offset int, limit int, name string, dic *di.Container) (
 
 // EventsByTimeRange query events with offset, limit and time range
 func EventsByTimeRange(startTime int, endTime int, offset int, limit int, dic *di.Container) (events []dtos.Event, err errors.EdgeX) {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	eventModels, err := dbClient.EventsByTimeRange(startTime, endTime, offset, limit)
 	if err != nil {
 		return events, errors.NewCommonEdgeXWrapper(err)
@@ -222,7 +221,7 @@ func EventsByTimeRange(startTime int, endTime int, offset int, limit int, dic *d
 // and then invokes DeleteEventsByAge function in the infrastructure layer to remove
 // events that are older than age.  Age is supposed in milliseconds since created timestamp.
 func DeleteEventsByAge(age int64, dic *di.Container) errors.EdgeX {
-	dbClient := v2DataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.DeleteEventsByAge(age)
 	if err != nil {

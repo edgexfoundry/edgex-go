@@ -10,11 +10,10 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/bootstrap/container"
-	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -25,9 +24,9 @@ import (
 // The AddIntervalAction function accepts the new IntervalAction model from the controller function
 // and then invokes AddIntervalAction function of infrastructure layer to add new IntervalAction
 func AddIntervalAction(action models.IntervalAction, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// checks the interval existence by name
 	_, edgeXerr = dbClient.IntervalByName(action.IntervalName)
@@ -52,7 +51,7 @@ func AddIntervalAction(action models.IntervalAction, ctx context.Context, dic *d
 
 // AllIntervalActions query the intervalActions with offset and limit
 func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActionDTOs []dtos.IntervalAction, err errors.EdgeX) {
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	intervalActions, err := dbClient.AllIntervalActions(offset, limit)
 	if err != nil {
 		return intervalActionDTOs, errors.NewCommonEdgeXWrapper(err)
@@ -70,7 +69,7 @@ func IntervalActionByName(name string, ctx context.Context, dic *di.Container) (
 	if name == "" {
 		return dto, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	action, edgeXerr := dbClient.IntervalActionByName(name)
 	if edgeXerr != nil {
 		return dto, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -84,8 +83,8 @@ func DeleteIntervalActionByName(name string, ctx context.Context, dic *di.Contai
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 
 	err := dbClient.DeleteIntervalActionByName(name)
 	if err != nil {
@@ -100,9 +99,9 @@ func DeleteIntervalActionByName(name string, ctx context.Context, dic *di.Contai
 
 // PatchIntervalAction executes the PATCH operation with the DTO to replace the old data
 func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic *di.Container) errors.EdgeX {
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	var action models.IntervalAction
 	var edgeXerr errors.EdgeX
@@ -148,10 +147,10 @@ func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic
 
 // LoadIntervalActionToSchedulerManager loads intervalActions to SchedulerManager before running the interval job
 func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
-	dbClient := v2SchedulerContainer.DBClientFrom(dic.Get)
-	schedulerManager := v2SchedulerContainer.SchedulerManagerFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	// Load intervalActions from config to DB
-	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 	for i := range configuration.IntervalActions {
 		action := models.IntervalAction{
 			Name:         configuration.IntervalActions[i].Name,

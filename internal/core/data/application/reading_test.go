@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -22,7 +22,7 @@ func TestAllReadings(t *testing.T) {
 	dbClientMock.On("AllReadings", 0, 20).Return(readings, nil)
 	dbClientMock.On("AllReadings", 3, 10).Return([]models.Reading{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -65,7 +65,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 1, 2).Return([]models.Reading{readings[2], readings[1]}, nil)
 	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -110,7 +110,7 @@ func TestReadingsByResourceName(t *testing.T) {
 	dbClientMock.On("ReadingsByResourceName", 0, 20, testDeviceResourceName).Return(readings, nil)
 	dbClientMock.On("ReadingsByResourceName", len(readings)+1, 10, testDeviceResourceName).Return([]models.Reading{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -153,7 +153,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 	dbClientMock.On("ReadingsByDeviceName", 0, 20, testDeviceName).Return(readings, nil)
 	dbClientMock.On("ReadingsByDeviceName", 3, 10, testDeviceName).Return([]models.Reading{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -193,7 +193,7 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceName", testDeviceName).Return(expectedReadingCount, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

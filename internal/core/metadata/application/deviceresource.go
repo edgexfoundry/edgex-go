@@ -8,7 +8,7 @@ package application
 import (
 	"fmt"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -24,7 +24,7 @@ func DeviceResourceByProfileNameAndResourceName(profileName string, resourceName
 	if resourceName == "" {
 		return resource, errors.NewCommonEdgeX(errors.KindContractInvalid, "resource name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	profile, err := dbClient.DeviceProfileByName(profileName)
 	if err != nil {
 		return resource, errors.NewCommonEdgeXWrapper(err)

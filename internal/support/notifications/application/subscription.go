@@ -10,9 +10,9 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -24,8 +24,8 @@ import (
 // The AddSubscription function accepts the new Subscription model from the controller function
 // and then invokes AddSubscription function of infrastructure layer to add new Subscription
 func AddSubscription(d models.Subscription, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	addedSubscription, err := dbClient.AddSubscription(d)
 	if err != nil {
@@ -41,7 +41,7 @@ func AddSubscription(d models.Subscription, ctx context.Context, dic *di.Contain
 
 // AllSubscriptions queries subscriptions by offset and limit
 func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dtos.Subscription, err errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subs, err := dbClient.AllSubscriptions(offset, limit)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
@@ -58,7 +58,7 @@ func SubscriptionByName(name string, dic *di.Container) (subscription dtos.Subsc
 	if name == "" {
 		return subscription, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subscriptionModel, err := dbClient.SubscriptionByName(name)
 	if err != nil {
 		return subscription, errors.NewCommonEdgeXWrapper(err)
@@ -72,7 +72,7 @@ func SubscriptionsByCategory(offset, limit int, category string, dic *di.Contain
 	if category == "" {
 		return subscriptions, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subscriptionModels, err := dbClient.SubscriptionsByCategory(offset, limit, category)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
@@ -89,7 +89,7 @@ func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (s
 	if label == "" {
 		return subscriptions, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subscriptionModels, err := dbClient.SubscriptionsByLabel(offset, limit, label)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
@@ -106,7 +106,7 @@ func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Contain
 	if receiver == "" {
 		return subscriptions, errors.NewCommonEdgeX(errors.KindContractInvalid, "receiver is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subscriptionModels, err := dbClient.SubscriptionsByReceiver(offset, limit, receiver)
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)
@@ -123,7 +123,7 @@ func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Containe
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	err := dbClient.DeleteSubscriptionByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -133,8 +133,8 @@ func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Containe
 
 // PatchSubscription executes the PATCH operation with the subscription DTO to replace the old data
 func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di.Container) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	var subscription models.Subscription
 	var edgexErr errors.EdgeX

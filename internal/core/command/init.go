@@ -21,10 +21,10 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	V2Container "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	V2Clients "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
+	clients "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/gorilla/mux"
@@ -50,17 +50,17 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
-			return V2Clients.NewDeviceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceRoute)
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+			return clients.NewDeviceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceRoute)
 		},
-		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
-			return V2Clients.NewDeviceProfileClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceProfileRoute)
+		bootstrapContainer.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+			return clients.NewDeviceProfileClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceProfileRoute)
 		},
-		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceServiceClient
-			return V2Clients.NewDeviceServiceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceServiceRoute)
+		bootstrapContainer.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceServiceClient
+			return clients.NewDeviceServiceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceServiceRoute)
 		},
-		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
-			return V2Clients.NewDeviceServiceCommandClient()
+		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+			return clients.NewDeviceServiceCommandClient()
 		},
 	})
 	return true

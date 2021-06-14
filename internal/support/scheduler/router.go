@@ -18,9 +18,8 @@ import (
 )
 
 func LoadRestRoutes(r *mux.Router, dic *di.Container) {
-	// v2 API routes
 	// Common
-	cc := commonController.NewV2CommonController(dic)
+	cc := commonController.NewCommonController(dic)
 	r.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiVersionRoute, cc.Version).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiConfigRoute, cc.Config).Methods(http.MethodGet)

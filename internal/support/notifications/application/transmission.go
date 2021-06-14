@@ -6,7 +6,7 @@
 package application
 
 import (
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
@@ -24,7 +24,7 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 		return trans, errors.NewCommonEdgeX(errors.KindContractInvalid, "ID is not a valid UUID", err)
 	}
 
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	transModel, edgeXerr := dbClient.TransmissionById(id)
 	if edgeXerr != nil {
 		return trans, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -35,7 +35,7 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 
 // TransmissionsByTimeRange query transmissions with offset, limit and time range
 func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	models, err := dbClient.TransmissionsByTimeRange(start, end, offset, limit)
 	if err != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(err)
@@ -49,7 +49,7 @@ func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di
 
 // AllTransmissions queries transmissions by offset and limit
 func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	models, err := dbClient.AllTransmissions(offset, limit)
 	if err != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(err)
@@ -66,7 +66,7 @@ func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) 
 	if status == "" {
 		return transmissions, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	transModels, err := dbClient.TransmissionsByStatus(offset, limit, status)
 	if err != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(err)
@@ -77,7 +77,7 @@ func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) 
 // DeleteProcessedTransmissionsByAge invokes the infrastructure layer function to remove the processed transmissions that are older than age.
 // Age is supposed in milliseconds since created timestamp.
 func DeleteProcessedTransmissionsByAge(age int64, dic *di.Container) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.DeleteProcessedTransmissionsByAge(age)
 	if err != nil {
@@ -91,7 +91,7 @@ func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string,
 	if subscriptionName == "" {
 		return transmissions, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	transModels, err := dbClient.TransmissionsBySubscriptionName(offset, limit, subscriptionName)
 	if err != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(err)

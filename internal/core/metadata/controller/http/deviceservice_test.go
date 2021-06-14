@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -145,7 +145,7 @@ func TestAddDeviceService(t *testing.T) {
 
 			dic := mockDic()
 			dic.Update(di.ServiceConstructorMap{
-				v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+				container.DBClientInterfaceName: func(get di.Get) interface{} {
 					return testCase.dbClientMock
 				},
 			})
@@ -202,7 +202,7 @@ func TestDeviceServiceByName(t *testing.T) {
 	dbClientMock.On("DeviceServiceByName", deviceService.Name).Return(deviceService, nil)
 	dbClientMock.On("DeviceServiceByName", notFoundName).Return(models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -309,7 +309,7 @@ func TestPatchDeviceService(t *testing.T) {
 	dbClientMock.On("DeviceServiceByName", *invalidNotFoundName.Service.Name).Return(dsModels, notFoundNameError)
 
 	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -402,7 +402,7 @@ func TestAllDeviceServices(t *testing.T) {
 	dbClientMock.On("AllDeviceServices", 1, 2, []string(nil)).Return([]models.DeviceService{deviceServices[1], deviceServices[2]}, nil)
 	dbClientMock.On("AllDeviceServices", 4, 1, testDeviceServiceLabels).Return([]models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -482,7 +482,7 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 	dbClientMock.On("DevicesByServiceName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2MetadataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

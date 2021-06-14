@@ -9,9 +9,9 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -23,8 +23,8 @@ import (
 // The AddNotification function accepts the new Notification model from the controller function
 // and then invokes AddNotification function of infrastructure layer to add new Notification
 func AddNotification(n models.Notification, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	addedNotification, edgeXerr := dbClient.AddNotification(n)
 	if edgeXerr != nil {
@@ -45,7 +45,7 @@ func NotificationsByCategory(offset, limit int, category string, dic *di.Contain
 	if category == "" {
 		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByCategory(offset, limit, category)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
@@ -62,7 +62,7 @@ func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (n
 	if label == "" {
 		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByLabel(offset, limit, label)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
@@ -83,7 +83,7 @@ func NotificationById(id string, dic *di.Container) (notification dtos.Notificat
 		return notification, errors.NewCommonEdgeX(errors.KindContractInvalid, "ID is not a valid UUID", err)
 	}
 
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	notificationModel, edgeXerr := dbClient.NotificationById(id)
 	if edgeXerr != nil {
 		return notification, errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -97,7 +97,7 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 	if status == "" {
 		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByStatus(offset, limit, status)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
@@ -111,7 +111,7 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 
 // NotificationsByTimeRange query notifications with offset, limit and time range
 func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByTimeRange(start, end, offset, limit)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
@@ -128,7 +128,7 @@ func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
 	if id == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	err := dbClient.DeleteNotificationById(id)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -141,7 +141,7 @@ func NotificationsBySubscriptionName(offset, limit int, subscriptionName string,
 	if subscriptionName == "" {
 		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
 	}
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	subscription, err := dbClient.SubscriptionByName(subscriptionName)
 	if err != nil {
 		return notifications, errors.NewCommonEdgeXWrapper(err)
@@ -160,7 +160,7 @@ func NotificationsBySubscriptionName(offset, limit int, subscriptionName string,
 // CleanupNotificationsByAge invokes the infrastructure layer function to remove notifications that are older than age. And the corresponding transmissions will also be deleted
 // Age is supposed in milliseconds since modified timestamp.
 func CleanupNotificationsByAge(age int64, dic *di.Container) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.CleanupNotificationsByAge(age)
 	if err != nil {
@@ -172,7 +172,7 @@ func CleanupNotificationsByAge(age int64, dic *di.Container) errors.EdgeX {
 // DeleteProcessedNotificationsByAge invokes the infrastructure layer function to remove processed notifications that are older than age. And the corresponding transmissions will also be deleted
 // Age is supposed in milliseconds since modified timestamp.
 func DeleteProcessedNotificationsByAge(age int64, dic *di.Container) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	err := dbClient.DeleteProcessedNotificationsByAge(age)
 	if err != nil {

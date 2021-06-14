@@ -10,12 +10,11 @@ import (
 	"net/http"
 	"testing"
 
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
-	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -45,7 +44,7 @@ var (
 
 func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
-		notificationContainer.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					LogLevel:       "DEBUG",
@@ -57,7 +56,7 @@ func mockDic() *di.Container {
 				},
 			}
 		},
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()
 		},
 	})
@@ -103,7 +102,7 @@ func TestPatchSubscription(t *testing.T) {
 	emptyCategoriesAndLabels.Labels = []string{}
 
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

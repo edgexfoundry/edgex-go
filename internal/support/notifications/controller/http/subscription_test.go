@@ -13,12 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
-	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
@@ -54,7 +53,7 @@ var (
 
 func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
-		notificationContainer.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					LogLevel: "DEBUG",
@@ -64,7 +63,7 @@ func mockDic() *di.Container {
 				},
 			}
 		},
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()
 		},
 	})
@@ -145,7 +144,7 @@ func TestAddSubscription(t *testing.T) {
 	invalidResendInterval.Subscription.ResendInterval = "10"
 
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -217,7 +216,7 @@ func TestAllSubscriptions(t *testing.T) {
 	dbClientMock.On("AllSubscriptions", 1, 2).Return([]models.Subscription{subscriptions[1], subscriptions[2]}, nil)
 	dbClientMock.On("AllSubscriptions", 4, 1).Return([]models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -287,7 +286,7 @@ func TestSubscriptionByName(t *testing.T) {
 	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
 	dbClientMock.On("SubscriptionByName", notFoundName).Return(models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -347,7 +346,7 @@ func TestSubscriptionsByCategory(t *testing.T) {
 	dbClientMock.On("SubscriptionsByCategory", 0, 20, testCategory).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByCategory", 0, 1, testCategory).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -415,7 +414,7 @@ func TestSubscriptionsByLabel(t *testing.T) {
 	dbClientMock.On("SubscriptionsByLabel", 0, 20, testLabel).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByLabel", 0, 1, testLabel).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -483,7 +482,7 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 	dbClientMock.On("SubscriptionsByReceiver", 0, 20, testReceiver).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByReceiver", 0, 1, testReceiver).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -556,7 +555,7 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 	dbClientMock.On("SubscriptionByName", notFoundName).Return(subscription, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -658,7 +657,7 @@ func TestPatchSubscription(t *testing.T) {
 	dbClientMock.On("SubscriptionByName", *invalidNotFoundName.Subscription.Name).Return(subscriptionModel, notFoundNameError)
 
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

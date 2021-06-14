@@ -10,11 +10,11 @@ import (
 	"time"
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
-	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -23,7 +23,7 @@ import (
 
 // firstSend sends the notification and return the transmission
 func firstSend(dic *di.Container, n models.Notification, trans models.Transmission) models.Transmission {
-	lc := container.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	record := sendNotificationViaChannel(dic, n, trans.Channel)
 	trans.Records = append(trans.Records, record)
@@ -34,9 +34,9 @@ func firstSend(dic *di.Container, n models.Notification, trans models.Transmissi
 
 // reSend sends the Critical notification and return the transmission
 func reSend(dic *di.Container, n models.Notification, sub models.Subscription, trans models.Transmission) (models.Transmission, errors.EdgeX) {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
-	config := notificationContainer.ConfigurationFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 
 	resendLimit, resendInterval, err := resendLimitAndInterval(config, sub)
 	if err != nil {
@@ -96,8 +96,8 @@ func resendLimitAndInterval(config *config.ConfigurationStruct, sub models.Subsc
 
 // escalatedSend handle the escalated notification for the ESCALATION subscription
 func escalatedSend(dic *di.Container, n models.Notification, trans models.Transmission) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	sub, err := dbClient.SubscriptionByName(models.EscalationSubscriptionName)
 	if err != nil {
@@ -127,18 +127,18 @@ func escalatedNotification(n models.Notification, trans models.Transmission) mod
 }
 
 // sendNotificationViaChannel sends notification via address and return the transmission record. The record status should be SENT or FAILED.
-func sendNotificationViaChannel(dic *di.Container, n models.Notification, channel models.Address) (transRecord models.TransmissionRecord) {
+func sendNotificationViaChannel(dic *di.Container, n models.Notification, address models.Address) (transRecord models.TransmissionRecord) {
 	var err errors.EdgeX
 	transRecord.Status = models.Sent
-	switch channel.GetBaseAddress().Type {
+	switch address.GetBaseAddress().Type {
 	case common.REST:
-		restSender := v2NotificationsContainer.RESTSenderFrom(dic.Get)
-		transRecord.Response, err = restSender.Send(n, channel)
+		restSender := channel.RESTSenderFrom(dic.Get)
+		transRecord.Response, err = restSender.Send(n, address)
 	case common.EMAIL:
-		emailSender := v2NotificationsContainer.EmailSenderFrom(dic.Get)
-		transRecord.Response, err = emailSender.Send(n, channel)
+		emailSender := channel.EmailSenderFrom(dic.Get)
+		transRecord.Response, err = emailSender.Send(n, address)
 	default:
-		transRecord.Response = fmt.Sprintf("unsupported address type: %s", channel.GetBaseAddress().Type)
+		transRecord.Response = fmt.Sprintf("unsupported address type: %s", address.GetBaseAddress().Type)
 		return transRecord
 	}
 

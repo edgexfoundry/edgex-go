@@ -12,7 +12,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -50,7 +50,7 @@ func TestTransmissionById(t *testing.T) {
 	dbClientMock.On("TransmissionById", trans.Id).Return(trans, nil)
 	dbClientMock.On("TransmissionById", notFoundId).Return(models.Transmission{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "transmission doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -109,7 +109,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("TransmissionsByTimeRange", 0, 100, 0, 10).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -183,7 +183,7 @@ func TestAllTransmissions(t *testing.T) {
 	dbClientMock.On("AllTransmissions", 1, 2).Return([]models.Transmission{transmissions[1], transmissions[2]}, nil)
 	dbClientMock.On("AllTransmissions", 4, 1).Return([]models.Transmission{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -250,7 +250,7 @@ func TestTransmissionsByStatus(t *testing.T) {
 	dbClientMock.On("TransmissionsByStatus", 0, 20, testStatus).Return([]models.Transmission{}, nil)
 	dbClientMock.On("TransmissionsByStatus", 0, 1, testStatus).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -317,7 +317,7 @@ func TestDeleteTransmissionsByAge(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteProcessedTransmissionsByAge", int64(0)).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -374,7 +374,7 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 	dbClientMock.On("TransmissionsBySubscriptionName", 0, 20, testName).Return([]models.Transmission{}, nil)
 	dbClientMock.On("TransmissionsBySubscriptionName", 0, 1, testName).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

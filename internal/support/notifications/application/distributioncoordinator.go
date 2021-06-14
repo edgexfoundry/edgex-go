@@ -6,18 +6,18 @@
 package application
 
 import (
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 // distribute distributes notification to associate subscriptions
 func distribute(dic *di.Container, n models.Notification) errors.EdgeX {
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	var categories []string
 	if n.Category != "" {
@@ -51,8 +51,8 @@ func distribute(dic *di.Container, n models.Notification) errors.EdgeX {
 
 // transmit transmits the notification with specified subscription and address
 func transmit(dic *di.Container, n models.Notification, sub models.Subscription, address models.Address) (models.Transmission, errors.EdgeX) {
-	lc := container.LoggingClientFrom(dic.Get)
-	dbClient := v2NotificationsContainer.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	trans := models.NewTransmission(sub.Name, address, n.Id)
 	trans = firstSend(dic, n, trans)

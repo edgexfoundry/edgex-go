@@ -27,7 +27,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/direct"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
-	v2Container "github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -60,7 +59,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
-		v2Container.V2MetricsInterfaceName: func(get di.Get) interface{} {
+		container.V2MetricsInterfaceName: func(get di.Get) interface{} {
 			lc := bootstrapContainer.LoggingClientFrom(get)
 			switch configuration.MetricsMechanism {
 			case application.DirectMechanism:

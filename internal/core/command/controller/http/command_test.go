@@ -18,7 +18,7 @@ import (
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	V2Container "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
@@ -85,10 +85,10 @@ func buildDeviceCoreCommands(t *testing.T, device dtos.Device, deviceProfile dto
 		Return(responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile), nil)
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} {
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} {
 			return dcMock
 		},
-		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} {
+		bootstrapContainer.MetadataDeviceProfileClientName: func(get di.Get) interface{} {
 			return dpcMock
 		},
 	})
@@ -187,10 +187,10 @@ func TestAllCommands(t *testing.T) {
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
 			return dcMock
 		},
-		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+		bootstrapContainer.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
 			return dpcMock
 		},
 	})
@@ -268,10 +268,10 @@ func TestCommandsByDeviceName(t *testing.T) {
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
 			return dcMock
 		},
-		V2Container.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+		bootstrapContainer.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
 			return dpcMock
 		},
 	})
@@ -344,13 +344,13 @@ func TestIssueGetCommand(t *testing.T) {
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
 			return dcMock
 		},
-		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+		bootstrapContainer.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
 			return dscMock
 		},
-		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
 			return dsccMock
 		},
 	})
@@ -432,13 +432,13 @@ func TestIssueSetCommand(t *testing.T) {
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		V2Container.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
+		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
 			return dcMock
 		},
-		V2Container.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
+		bootstrapContainer.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
 			return dscMock
 		},
-		V2Container.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
 			return dsccMock
 		},
 	})

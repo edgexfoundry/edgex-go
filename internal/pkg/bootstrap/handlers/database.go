@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
+	bootstrapInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/redis"
-	v2Interface "github.com/edgexfoundry/edgex-go/internal/pkg/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/interfaces"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/secret"
@@ -33,12 +33,12 @@ type httpServer interface {
 // Database contains references to dependencies required by the database bootstrap implementation.
 type Database struct {
 	httpServer            httpServer
-	database              interfaces.Database
+	database              bootstrapInterfaces.Database
 	dBClientInterfaceName string
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database interfaces.Database, dBClientInterfaceName string) Database {
+func NewDatabase(httpServer httpServer, database bootstrapInterfaces.Database, dBClientInterfaceName string) Database {
 	return Database{
 		httpServer:            httpServer,
 		database:              database,
@@ -49,7 +49,7 @@ func NewDatabase(httpServer httpServer, database interfaces.Database, dBClientIn
 // Return the dbClient interface
 func (d Database) newDBClient(
 	lc logger.LoggingClient,
-	credentials bootstrapConfig.Credentials) (v2Interface.DBClient, error) {
+	credentials bootstrapConfig.Credentials) (interfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()[common.Primary]
 	switch databaseInfo.Type {
 	case "redisdb":
@@ -95,7 +95,7 @@ func (d Database) BootstrapHandler(
 	}
 
 	// initialize database.
-	var dbClient v2Interface.DBClient
+	var dbClient interfaces.DBClient
 
 	for startupTimer.HasNotElapsed() {
 		var err error

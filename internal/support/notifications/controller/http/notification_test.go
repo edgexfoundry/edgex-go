@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -84,7 +84,7 @@ func TestAddNotification(t *testing.T) {
 	invalidStatus.Notification.Status = "foo"
 
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -157,7 +157,7 @@ func TestNotificationById(t *testing.T) {
 	dbClientMock.On("NotificationById", notification.Id).Return(notification, nil)
 	dbClientMock.On("NotificationById", notFoundId).Return(models.Notification{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "notification doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -218,7 +218,7 @@ func TestNotificationsByCategory(t *testing.T) {
 	dbClientMock.On("NotificationsByCategory", 0, 20, testCategory).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByCategory", 0, 1, testCategory).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -286,7 +286,7 @@ func TestNotificationsByLabel(t *testing.T) {
 	dbClientMock.On("NotificationsByLabel", 0, 20, testLabel).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByLabel", 0, 1, testLabel).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -354,7 +354,7 @@ func TestNotificationsByStatus(t *testing.T) {
 	dbClientMock.On("NotificationsByStatus", 0, 20, testStatus).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByStatus", 0, 1, testStatus).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -420,7 +420,7 @@ func TestNotificationsByTimeRange(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("NotificationsByTimeRange", 0, 100, 0, 10).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -494,7 +494,7 @@ func TestDeleteNotificationById(t *testing.T) {
 	dbClientMock.On("DeleteNotificationById", notification.Id).Return(nil)
 	dbClientMock.On("DeleteNotificationById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -551,7 +551,7 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 20, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 1, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -618,7 +618,7 @@ func TestCleanupNotificationByAge(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("CleanupNotificationsByAge", int64(0)).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -673,7 +673,7 @@ func TestCleanupNotification(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("CleanupNotificationsByAge", int64(0)).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -725,7 +725,7 @@ func TestDeleteNotificationByAge(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteProcessedNotificationsByAge", int64(0)).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

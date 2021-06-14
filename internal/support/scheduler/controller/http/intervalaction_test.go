@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/scheduler/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -79,10 +79,10 @@ func TestAddIntervalAction(t *testing.T) {
 	dbClientMock.On("AddIntervalAction", model).Return(model, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("intervalAction name %s already exists", model.Name), nil))
 
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})
@@ -141,7 +141,7 @@ func TestAllIntervalActions(t *testing.T) {
 	dbClientMock.On("AllIntervalActions", 0, 20).Return([]models.IntervalAction{}, nil)
 	dbClientMock.On("AllIntervalActions", 0, 1).Return([]models.IntervalAction{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -210,7 +210,7 @@ func TestIntervalActionByName(t *testing.T) {
 	dbClientMock.On("IntervalActionByName", action.Name).Return(action, nil)
 	dbClientMock.On("IntervalActionByName", notFoundName).Return(models.IntervalAction{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "intervalAction doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -275,10 +275,10 @@ func TestDeleteIntervalActionByName(t *testing.T) {
 	schedulerManagerMock.On("DeleteIntervalActionByName", action.Name).Return(nil)
 	dbClientMock.On("DeleteIntervalActionByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "intervalAction doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})
@@ -385,10 +385,10 @@ func TestPatchIntervalAction(t *testing.T) {
 	invalidIntervalNotFound.Action.IntervalName = &intervalNotFoundName
 
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManagerMock
 		},
 	})

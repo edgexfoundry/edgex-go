@@ -13,9 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/bootstrap/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -99,14 +98,14 @@ func TestAddEvent(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		dataContainer.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				Writable: config.WritableInfo{
 					PersistData: false,
 				},
 			}
 		},
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -280,7 +279,7 @@ func TestEventById(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -343,7 +342,7 @@ func TestDeleteEventById(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -394,7 +393,7 @@ func TestEventTotalCount(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -425,7 +424,7 @@ func TestEventCountByDeviceName(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -456,7 +455,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -488,7 +487,7 @@ func TestAllEvents(t *testing.T) {
 	dbClientMock.On("AllEvents", 1, 1).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("AllEvents", 4, 1).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -566,7 +565,7 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	dbClientMock.On("EventsByDeviceName", 1, 1, testDeviceA).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("EventsByDeviceName", 4, 1, testDeviceB).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -630,7 +629,7 @@ func TestAllEventsByTimeRange(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventsByTimeRange", 0, 100, 0, 10).Return([]models.Event{}, nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -699,7 +698,7 @@ func TestDeleteEventsByAge(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteEventsByAge", int64(0)).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2DataContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})

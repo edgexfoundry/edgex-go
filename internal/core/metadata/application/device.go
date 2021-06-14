@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -26,8 +26,8 @@ import (
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device
 func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	exists, edgeXerr := dbClient.DeviceServiceNameExists(d.ServiceName)
 	if edgeXerr != nil {
@@ -61,7 +61,7 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	device, err := dbClient.DeviceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -79,7 +79,7 @@ func DevicesByServiceName(offset int, limit int, name string, ctx context.Contex
 	if name == "" {
 		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	deviceModels, err := dbClient.DevicesByServiceName(offset, limit, name)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)
@@ -96,7 +96,7 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 	if name == "" {
 		return exists, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	exists, err = dbClient.DeviceNameExists(name)
 	if err != nil {
 		return exists, errors.NewCommonEdgeXWrapper(err)
@@ -106,8 +106,8 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 
 // PatchDevice executes the PATCH operation with the device DTO to replace the old data
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	if dto.ServiceName != nil {
 		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
@@ -186,7 +186,7 @@ func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device mo
 
 // AllDevices query the devices with offset, limit, and labels
 func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.AllDevices(offset, limit, labels)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)
@@ -203,7 +203,7 @@ func DeviceByName(name string, dic *di.Container) (device dtos.Device, err error
 	if name == "" {
 		return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	d, err := dbClient.DeviceByName(name)
 	if err != nil {
 		return device, errors.NewCommonEdgeXWrapper(err)
@@ -217,7 +217,7 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	if profileName == "" {
 		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "profileName is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	deviceModels, err := dbClient.DevicesByProfileName(offset, limit, profileName)
 	if err != nil {
 		return devices, errors.NewCommonEdgeXWrapper(err)

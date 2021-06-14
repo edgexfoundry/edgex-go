@@ -29,7 +29,7 @@ import (
 func TestAddSecret(t *testing.T) {
 	dic := mockDic()
 
-	target := NewV2CommonController(dic)
+	target := NewCommonController(dic)
 	assert.NotNil(t, target)
 
 	validRequest := commonDTO.NewSecretRequest(

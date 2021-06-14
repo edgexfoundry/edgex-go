@@ -9,8 +9,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	senderMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel/mocks"
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
@@ -75,10 +76,10 @@ func TestFirstSend(t *testing.T) {
 	emailSender.On("Send", notification, testEmailAddress).Return("", nil)
 	emailSender.On("Send", notification, testEmailAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the email", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
+		channel.RESTSenderName: func(get di.Get) interface{} {
 			return restSender
 		},
-		v2NotificationsContainer.EmailSenderName: func(get di.Get) interface{} {
+		channel.EmailSenderName: func(get di.Get) interface{} {
 			return emailSender
 		},
 	})
@@ -116,7 +117,7 @@ func TestReSend(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateTransmission", mock.Anything).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.DBClientInterfaceName: func(get di.Get) interface{} {
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
 		},
 	})
@@ -128,10 +129,10 @@ func TestReSend(t *testing.T) {
 	emailSender.On("Send", notification, testEmailAddress).Return("", nil)
 	emailSender.On("Send", notification, testEmailAddress2).Return("", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the email", nil))
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
+		channel.RESTSenderName: func(get di.Get) interface{} {
 			return restSender
 		},
-		v2NotificationsContainer.EmailSenderName: func(get di.Get) interface{} {
+		channel.EmailSenderName: func(get di.Get) interface{} {
 			return emailSender
 		},
 	})

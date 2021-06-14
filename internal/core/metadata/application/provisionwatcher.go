@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -25,8 +25,8 @@ import (
 // AddProvisionWatcher function accepts the new provision watcher model from the controller function
 // and then invokes AddProvisionWatcher function of infrastructure layer to add new device service
 func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *di.Container) (id string, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
 	addProvisionWatcher, err := dbClient.AddProvisionWatcher(pw)
@@ -48,7 +48,7 @@ func ProvisionWatcherByName(name string, dic *di.Container) (provisionWatcher dt
 		return provisionWatcher, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	pw, err := dbClient.ProvisionWatcherByName(name)
 	if err != nil {
 		return provisionWatcher, errors.NewCommonEdgeXWrapper(err)
@@ -64,7 +64,7 @@ func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.
 		return provisionWatchers, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.ProvisionWatchersByServiceName(offset, limit, name)
 	if err != nil {
 		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
@@ -84,7 +84,7 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 		return provisionWatchers, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.ProvisionWatchersByProfileName(offset, limit, name)
 	if err != nil {
 		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
@@ -100,7 +100,7 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 
 // AllProvisionWatchers query the provision watchers with offset, limit and labels
 func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.AllProvisionWatchers(offset, limit, labels)
 	if err != nil {
 		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
@@ -119,7 +119,7 @@ func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Cont
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	pw, err := dbClient.ProvisionWatcherByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -134,8 +134,8 @@ func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Cont
 
 // PatchProvisionWatcher executes the PATCH operation with the provisionWatcher DTO to replace the old data
 func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher, dic *di.Container) errors.EdgeX {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	if dto.ServiceName != nil {
 		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)

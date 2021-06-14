@@ -12,7 +12,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	v2HttpClient "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
+	clients "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
@@ -25,7 +25,7 @@ func newDeviceServiceCallbackClient(ctx context.Context, dic *di.Container, devi
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
-	return v2HttpClient.NewDeviceServiceCallbackClient(ds.BaseAddress), nil
+	return clients.NewDeviceServiceCallbackClient(ds.BaseAddress), nil
 }
 
 // addDeviceCallback invoke device service's callback function for adding new device

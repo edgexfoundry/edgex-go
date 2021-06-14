@@ -9,10 +9,10 @@ import (
 	"context"
 	"fmt"
 
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -22,8 +22,8 @@ import (
 // The AddDeviceProfile function accepts the new device profile model from the controller functions
 // and invokes addDeviceProfile function in the infrastructure layer
 func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (id string, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	correlationId := correlation.FromContext(ctx)
 	addedDeviceProfile, err := dbClient.AddDeviceProfile(d)
@@ -43,8 +43,8 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 // The UpdateDeviceProfile function accepts the device profile model from the controller functions
 // and invokes updateDeviceProfile function in the infrastructure layer
 func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
-	lc := container.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	err = dbClient.UpdateDeviceProfile(d)
 	if err != nil {
@@ -64,7 +64,7 @@ func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (d
 	if name == "" {
 		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(name)
 	if err != nil {
 		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
@@ -78,7 +78,7 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 
 	// Check the associated Device and ProvisionWatcher existence
 	devices, err := dbClient.DevicesByProfileName(0, 1, name)
@@ -105,7 +105,7 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 
 // AllDeviceProfiles query the device profiles with offset, and limit
 func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, err errors.EdgeX) {
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
@@ -122,7 +122,7 @@ func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Containe
 	if model == "" {
 		return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "model is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.DeviceProfilesByModel(offset, limit, model)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
@@ -139,7 +139,7 @@ func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, di
 	if manufacturer == "" {
 		return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "manufacturer is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.DeviceProfilesByManufacturer(offset, limit, manufacturer)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
@@ -159,7 +159,7 @@ func DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer st
 	if model == "" {
 		return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "model is empty", nil)
 	}
-	dbClient := v2MetadataContainer.DBClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model)
 	if err != nil {
 		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
