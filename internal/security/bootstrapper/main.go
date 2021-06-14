@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	bootstrapper "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command"
@@ -43,7 +43,7 @@ const (
 // Main function is the wrapper for the security bootstrapper main
 func Main(ctx context.Context, cancel context.CancelFunc) {
 	// service key for this bootstrapper service
-	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapperKey)
+	startupTimer := startup.NewStartUpTimer(common.SecurityBootstrapperKey)
 
 	// Common Command-line flags have been moved to command.CommonFlags, but this service doesn't use all
 	// the common flags so we are using our own implementation of the CommonFlags interface
@@ -81,7 +81,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		ctx,
 		cancel,
 		f,
-		clients.SecurityBootstrapperKey,
+		common.SecurityBootstrapperKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,

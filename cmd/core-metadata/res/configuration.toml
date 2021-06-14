@@ -1,6 +1,5 @@
 [Writable]
 LogLevel = 'INFO'
-EnableValueDescriptorManagement = false
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"

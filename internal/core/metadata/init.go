@@ -19,7 +19,6 @@ import (
 
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/v2"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/gorilla/mux"
@@ -39,7 +38,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	v2.LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic)
 
 	return true
 }

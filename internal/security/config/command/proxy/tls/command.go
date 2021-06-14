@@ -18,14 +18,14 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
+	proxyCommon "github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 const (
@@ -254,7 +254,7 @@ func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) e
 		return fmt.Errorf("failed to prepare request to post Kong tls cert: %w", err)
 	}
 
-	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	req.Header.Add(common.ContentType, proxyCommon.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.adminApiJwt)
 
 	resp, err := c.client.Do(req)

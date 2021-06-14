@@ -32,8 +32,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 )
@@ -294,7 +294,7 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	}
 	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	if err != nil {
 		s.loggingClient.Error("failed to create upload cert request -- %s", err.Error())
 		return &CertError{err.Error(), InternalError}
@@ -341,7 +341,7 @@ func (s *Service) initKongService(service *models.KongService) error {
 		return fmt.Errorf("failed to construct http POST form request: %s %s", service.Name, err.Error())
 	}
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
-	req.Header.Add(clients.ContentType, URLEncodedForm)
+	req.Header.Add(common.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -380,7 +380,7 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 		return err
 	}
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -425,7 +425,7 @@ func (s *Service) initJWTAuth() error {
 		s.loggingClient.Error(e)
 		return err
 	}
-	req.Header.Add(clients.ContentType, URLEncodedForm)
+	req.Header.Add(common.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -471,7 +471,7 @@ func (s *Service) initOAuth2(ttl int) error {
 		s.loggingClient.Error(e)
 		return err
 	}
-	req.Header.Add(clients.ContentType, URLEncodedForm)
+	req.Header.Add(common.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {

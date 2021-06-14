@@ -22,9 +22,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	v2MetadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/v2/bootstrap/container"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -32,12 +31,12 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
-	startupTimer := startup.NewStartUpTimer(clients.CoreMetaDataServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.CoreMetaDataServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -62,17 +61,17 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		ctx,
 		cancel,
 		f,
-		clients.CoreMetaDataServiceKey,
+		common.CoreMetaDataServiceKey,
 		internal.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			v2Handlers.NewDatabase(httpServer, configuration, v2MetadataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(clients.CoreMetaDataServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewStartMessage(common.CoreMetaDataServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,7 +32,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 )
 
@@ -208,7 +208,7 @@ func (s *Service) createConsulTokenHeaderForServicePlugin(serviceName, pluginNam
 	}
 
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
-	req.Header.Add(clients.ContentType, URLEncodedForm)
+	req.Header.Add(common.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {

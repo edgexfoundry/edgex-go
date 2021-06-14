@@ -44,8 +44,8 @@ import (
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 const (
@@ -610,7 +610,7 @@ func (c *cmd) configureConsulAccess(secretStoreToken string, bootstrapACLToken s
 	}
 
 	req.Header.Add("X-Vault-Token", secretStoreToken)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to send request for http URL: %w", err)

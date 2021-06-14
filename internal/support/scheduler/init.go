@@ -19,11 +19,9 @@ import (
 	"context"
 	"sync"
 
-	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/application/scheduler"
-	v2SchedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/v2/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application/scheduler"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -46,15 +44,15 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the scheduler service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	v2.LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic)
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	configuration := schedulerContainer.ConfigurationFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
 
 	// V2 Scheduler
 	schedulerManager := scheduler.NewManager(lc, configuration)
 	dic.Update(di.ServiceConstructorMap{
-		v2SchedulerContainer.SchedulerManagerName: func(get di.Get) interface{} {
+		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManager
 		},
 	})
