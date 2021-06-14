@@ -22,11 +22,10 @@ import (
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
-	v2DataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/v2/bootstrap/container"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -34,13 +33,13 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
-	startupTimer := startup.NewStartUpTimer(clients.CoreDataServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.CoreDataServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -54,7 +53,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
-		dataContainer.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) interface{} {
 			return configuration
 		},
 	})
@@ -65,19 +64,19 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		ctx,
 		cancel,
 		f,
-		clients.CoreDataServiceKey,
+		common.CoreDataServiceKey,
 		internal.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			v2Handlers.NewDatabase(httpServer, configuration, v2DataContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			messaging.BootstrapHandler,
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(clients.CoreDataServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewStartMessage(common.CoreDataServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)
 }

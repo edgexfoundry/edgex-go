@@ -27,11 +27,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
-	v2Handlers "github.com/edgexfoundry/edgex-go/internal/pkg/v2/bootstrap/handlers"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
-	v2NotificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -39,13 +38,13 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
-	startupTimer := startup.NewStartUpTimer(clients.SupportNotificationsServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SupportNotificationsServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -70,17 +69,17 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		ctx,
 		cancel,
 		f,
-		clients.SupportNotificationsServiceKey,
+		common.SupportNotificationsServiceKey,
 		internal.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			v2Handlers.NewDatabase(httpServer, configuration, v2NotificationContainer.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			NewBootstrap(router).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(clients.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewStartMessage(common.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
 		})
 }

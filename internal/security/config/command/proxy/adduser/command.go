@@ -18,13 +18,13 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
+	proxyCommon "github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 const (
@@ -143,7 +143,7 @@ func (c *cmd) createConsumer() error {
 	if err != nil {
 		return fmt.Errorf("Failed to prepare new consumer request %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	req.Header.Add(common.ContentType, proxyCommon.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -184,7 +184,7 @@ func (c *cmd) addUserToGroup() error {
 	if err != nil {
 		return fmt.Errorf("Failed to build request to associate consumer %s to group %s: %w", c.username, c.group, err)
 	}
-	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	req.Header.Add(common.ContentType, proxyCommon.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -250,7 +250,7 @@ func (c *cmd) ExecuteAddJwt() (int, error) {
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to prepare request to associate JWT to user %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	req.Header.Add(common.ContentType, proxyCommon.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -320,7 +320,7 @@ func (c *cmd) ExecuteAddOAuth2() (statusCode int, err error) {
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to prepare request to create oauth application %s: %w", c.username, err)
 	}
-	req.Header.Add(clients.ContentType, common.UrlEncodedForm)
+	req.Header.Add(common.ContentType, proxyCommon.UrlEncodedForm)
 	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+c.jwt)
 	resp, err := c.client.Do(req)
 	if err != nil {

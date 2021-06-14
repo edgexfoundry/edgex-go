@@ -29,11 +29,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
-	startupTimer := startup.NewStartUpTimer(clients.SecurityProxySetupServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SecurityProxySetupServiceKey)
 
 	var initNeeded bool
 	var insecureSkipVerify bool
@@ -66,7 +66,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		ctx,
 		cancel,
 		f,
-		clients.SecurityProxySetupServiceKey,
+		common.SecurityProxySetupServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,

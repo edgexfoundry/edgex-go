@@ -23,12 +23,10 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/application"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/direct"
+	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/direct"
-	"github.com/edgexfoundry/edgex-go/internal/system/agent/v2/application/executor"
-	v2Container "github.com/edgexfoundry/edgex-go/internal/system/agent/v2/container"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -45,7 +43,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  It implements agent-specific initialization.
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	v2.LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
 
@@ -61,7 +59,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	// add dependencies to container
 	dic.Update(di.ServiceConstructorMap{
-		v2Container.V2MetricsInterfaceName: func(get di.Get) interface{} {
+		container.V2MetricsInterfaceName: func(get di.Get) interface{} {
 			lc := bootstrapContainer.LoggingClientFrom(get)
 			switch configuration.MetricsMechanism {
 			case application.DirectMechanism:

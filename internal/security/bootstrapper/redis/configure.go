@@ -31,14 +31,14 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 // Configure is the main entry point for configuring the database redis before startup
 func Configure(ctx context.Context,
 	cancel context.CancelFunc,
 	flags flags.Common) {
-	startupTimer := startup.NewStartUpTimer(clients.SecurityBootstrapperRedisKey)
+	startupTimer := startup.NewStartUpTimer(common.SecurityBootstrapperRedisKey)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -56,7 +56,7 @@ func Configure(ctx context.Context,
 		ctx,
 		cancel,
 		flags,
-		clients.SecurityBootstrapperRedisKey,
+		common.SecurityBootstrapperRedisKey,
 		internal.ConfigStemCore,
 		configuration,
 		nil,

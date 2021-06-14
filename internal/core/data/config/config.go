@@ -29,14 +29,9 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	DeviceUpdateLastConnected  bool
-	MetaDataCheck              bool
-	PersistData                bool
-	ServiceUpdateLastConnected bool
-	ValidateCheck              bool
-	LogLevel                   string
-	ChecksumAlgo               string
-	InsecureSecrets            bootstrapConfig.InsecureSecrets
+	PersistData     bool
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

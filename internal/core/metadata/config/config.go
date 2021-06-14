@@ -30,9 +30,8 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	LogLevel                        string
-	EnableValueDescriptorManagement bool
-	InsecureSecrets                 bootstrapConfig.InsecureSecrets
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 // Notification Info provides properties related to the assembly of notification content

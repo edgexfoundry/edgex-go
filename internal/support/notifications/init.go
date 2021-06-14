@@ -20,12 +20,11 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/v2"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/application/channel"
-	v2NotificationsContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/v2/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
 	"github.com/gorilla/mux"
 )
 
@@ -43,15 +42,15 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization for the notifications service.
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	v2.LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic)
 
 	restSender := channel.NewRESTSender(dic)
 	emailSender := channel.NewEmailSender(dic)
 	dic.Update(di.ServiceConstructorMap{
-		v2NotificationsContainer.RESTSenderName: func(get di.Get) interface{} {
+		channel.RESTSenderName: func(get di.Get) interface{} {
 			return restSender
 		},
-		v2NotificationsContainer.EmailSenderName: func(get di.Get) interface{} {
+		channel.EmailSenderName: func(get di.Get) interface{} {
 			return emailSender
 		},
 	})

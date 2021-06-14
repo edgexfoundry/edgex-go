@@ -34,11 +34,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
-	startupTimer := startup.NewStartUpTimer(clients.SecuritySecretStoreSetupServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SecuritySecretStoreSetupServiceKey)
 
 	var insecureSkipVerify bool
 	var vaultInterval int
@@ -70,7 +70,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		ctx,
 		cancel,
 		f,
-		clients.SecuritySecretStoreSetupServiceKey,
+		common.SecuritySecretStoreSetupServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,

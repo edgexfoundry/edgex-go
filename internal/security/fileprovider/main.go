@@ -29,11 +29,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
-	startupTimer := startup.NewStartUpTimer(clients.SecurityFileTokenProviderServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SecurityFileTokenProviderServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -59,7 +59,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		ctx,
 		cancel,
 		f,
-		clients.SecurityFileTokenProviderServiceKey,
+		common.SecurityFileTokenProviderServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,

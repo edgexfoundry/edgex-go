@@ -27,7 +27,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 // AgentTokenType is the type of token to be set on the Consul agent
@@ -363,7 +363,7 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLToken.SecretID)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to send SetAgentToken request for http URL: %w", err)
@@ -414,7 +414,7 @@ func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegis
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLTokenID)
-	req.Header.Add(clients.ContentType, clients.ContentTypeJSON)
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("Failed to send create a new token request for http URL: %w", err)

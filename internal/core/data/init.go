@@ -19,9 +19,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/v2"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/v2/application"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -44,7 +43,7 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
-	v2.LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)

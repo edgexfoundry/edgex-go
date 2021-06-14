@@ -33,7 +33,7 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/v2"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
 const (
@@ -68,7 +68,7 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 
 	for startupTimer.HasNotElapsed() {
 		// retrieve database credentials from secretstore
-		secrets, err := secretProvider.GetSecret(config.Databases[v2.Primary].Type)
+		secrets, err := secretProvider.GetSecret(config.Databases[common.Primary].Type)
 		if err == nil {
 			credentials.Username = secrets[secret.UsernameKey]
 			credentials.Password = secrets[secret.PasswordKey]
