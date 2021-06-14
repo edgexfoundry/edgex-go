@@ -471,12 +471,18 @@ apps:
 parts:
   version:
     plugin: nil
+    # we need to include git, in case we are building the minimal-snap-build
+    build-packages:
+      - git
     # as with static-packages part, the source dir is unrelated to this part and is used
     # since it changes rarely and therefore will not trigger a new pull
     source: snap/local/build-helpers
     override-pull: |
       cd $SNAPCRAFT_PROJECT_DIR
       GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      if [ -z "$GIT_VERSION" ]; then
+        GIT_VERSION="0.0.0"
+      fi
       snapcraftctl set-version ${GIT_VERSION}
   static-packages:
     plugin: nil
