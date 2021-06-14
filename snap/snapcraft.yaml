@@ -685,12 +685,12 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=kong_2.3.3_amd64.deb
-          FILE_HASH=c30cdf5ffac9c0921699c1b3ee549daa032dc8bbbb348a4d1d5aebf5c8c2faa7
+          FILE_NAME=kong_2.4.1_amd64.deb
+          FILE_HASH=3ce4c5db28378bccd2b9d11cfcfe6e7abf56ef50fd5cc1bc99cdf115e6af4cc1
           ;;
         arm64)
-          FILE_NAME=kong_2.3.3_arm64.deb
-          FILE_HASH=54066ca600dd9873b812ca7e1b98012c23b808c8773a61006d021b3deebbb335
+          FILE_NAME=kong_2.4.1_arm64.deb
+          FILE_HASH=41040e60966e05ab704201bec40a1bf22ef4e6a4abedde164018d6c623794018
           ;;
       esac
       # download the archive, failing on ssl cert problems
