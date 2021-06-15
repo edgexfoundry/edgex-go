@@ -16,6 +16,8 @@ package executor
 
 import "os/exec"
 
+const edgexPrefix = "edgex-"
+
 // CommandExecutor provides the common callout to the configuration-defined executor.
 func CommandExecutor(executorPath, serviceName, operation string) (string, error) {
 	bytes, err := exec.Command(executorPath, serviceName, operation).CombinedOutput()
