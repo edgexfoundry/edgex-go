@@ -174,6 +174,8 @@ apps:
     after: [vault]
     command: >-
       bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
@@ -205,6 +207,8 @@ apps:
       - security-consul-bootstrapper
       - kong-daemon
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    command-chain:
+      - bin/service-config-overrides.sh
     environment:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
@@ -222,7 +226,7 @@ apps:
     adapter: none
     after:
       - security-secretstore-setup
-    command: bin/security-bootstrapper -confdir $SNAP_DATA/config/security-bootstrapper/res-bootstrap-redis configureRedis
+    command: bin/setup-redis-acl.sh
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
       SECRETSTORE_SERVERNAME: localhost
@@ -254,6 +258,7 @@ apps:
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
     daemon: simple
@@ -272,6 +277,7 @@ apps:
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
     daemon: simple
@@ -287,6 +293,7 @@ apps:
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
     daemon: simple
@@ -302,9 +309,12 @@ apps:
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
@@ -317,9 +327,12 @@ apps:
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   sys-mgmt-agent:
@@ -332,10 +345,13 @@ apps:
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
   device-virtual:
     adapter: full
@@ -347,7 +363,11 @@ apps:
       - core-data
       - core-metadata
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       DEVICE_DEVICESDIR: $SNAP_DATA/config/device-virtual/res/devices
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res/profiles
@@ -362,7 +382,11 @@ apps:
       bin/app-service-configurable -cp -r -s
       -confdir $SNAP_DATA/config/app-service-configurable/res
       -profile rules-engine
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       BINDING_PUBLISHTOPIC: events
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/app-rules-engine/secrets-token.json
@@ -378,6 +402,8 @@ apps:
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
+    # double-check with bnevis that this is OK, as there is an individual config.toml
+    # file for the secrets-config command
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
     command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
     plugs: [home, removable-media, network]
@@ -560,6 +586,16 @@ parts:
     plugin: dump
     source: snap/local/runtime-helpers
 
+  hooks:
+    source: snap/local/hooks
+    plugin: make
+    after: [go-build-helper]
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC
+      make build
+      install -DT ./cmd/configure/configure "$SNAPCRAFT_PART_INSTALL/snap/hooks/configure"
+      install -DT ./cmd/install/install "$SNAPCRAFT_PART_INSTALL/snap/hooks/install"
+
   consul:
     plugin: nil
     build-packages:
@@ -605,6 +641,13 @@ parts:
     after: [go-build-helper]
     override-build: |
       cd $SNAPCRAFT_PART_SRC
+
+      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      if [ -z "$GIT_VERSION" ]; then
+        GIT_VERSION="0.0.0"
+      fi
+
+      echo $GIT_VERSION > ./VERSION
 
       make build
 
@@ -786,7 +829,7 @@ parts:
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/devices/devices.toml"
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles
-
+      
       for profileType in bool float int uint binary; do
         install -T "./cmd/res/profiles/device.virtual.$profileType.yaml" \
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles/device.virtual.$profileType.yaml"
@@ -816,7 +859,6 @@ parts:
     plugin: make
     after: [go-build-helper]
     override-build: |
-      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
 
       cd $SNAPCRAFT_PART_SRC
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD
