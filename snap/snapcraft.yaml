@@ -576,16 +576,16 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=consul_1.9.1_linux_amd64.zip
-          FILE_HASH=9ba45ec6eb3e762444f077ae06e407ca5161d46785d725d7b5ea0c4d5cd5a99b
+          FILE_NAME=consul_1.9.5_linux_amd64.zip
+          FILE_HASH=76e46d6711c92ffe573710345dc8c996605822eb6dbb371f895f011cda260035
           ;;
         arm64)
-          FILE_NAME=consul_1.9.1_linux_arm64.zip
-          FILE_HASH=80a05bf3a3d9c18f0ef952eff8e6e0de8f7205060916e351c4cd3f2418ed7900
+          FILE_NAME=consul_1.9.5_linux_arm64.zip
+          FILE_HASH=951fdad76ad641029f8644d9d1f061fbfab99d58ab6aa9e4569b1e073765cd41
           ;;
       esac
       # download the archive, failing on ssl cert problems
-      curl -L https://releases.hashicorp.com/consul/1.9.1/$FILE_NAME -o $FILE_NAME
+      curl -L https://releases.hashicorp.com/consul/1.9.5/$FILE_NAME -o $FILE_NAME
       #
       # Note the binary releases appear to just include the single consul binary,
       # this means we might need to provide config files... ;(-
@@ -600,7 +600,7 @@ parts:
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "6.0.9"
+    source-tag: "6.2.4"
     source-depth: 1
     plugin: make
     make-install-var: PREFIX
@@ -685,12 +685,12 @@ parts:
       # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=kong_2.3.3_amd64.deb
-          FILE_HASH=c30cdf5ffac9c0921699c1b3ee549daa032dc8bbbb348a4d1d5aebf5c8c2faa7
+          FILE_NAME=kong_2.4.1_amd64.deb
+          FILE_HASH=3ce4c5db28378bccd2b9d11cfcfe6e7abf56ef50fd5cc1bc99cdf115e6af4cc1
           ;;
         arm64)
-          FILE_NAME=kong_2.3.3_arm64.deb
-          FILE_HASH=54066ca600dd9873b812ca7e1b98012c23b808c8773a61006d021b3deebbb335
+          FILE_NAME=kong_2.4.1_arm64.deb
+          FILE_HASH=41040e60966e05ab704201bec40a1bf22ef4e6a4abedde164018d6c623794018
           ;;
       esac
       # download the archive, failing on ssl cert problems
@@ -727,7 +727,7 @@ parts:
     after: [go-build-helper]
     plugin: make
     source: https://github.com/hashicorp/vault.git
-    source-tag: v1.5.4
+    source-tag: v1.7.2
     source-depth: 1
     override-build: |
       . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
