@@ -67,9 +67,10 @@ func NewCommand(
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
 	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
-	flagSet.StringVar(&cmd.tokenType, "token-type", "", "Type of token to create: jwt or oauth2")
+	//flagSet.StringVar(&cmd.tokenType, "token-type", "", "Type of token to create: jwt or oauth2")  	// #3564: Deprecate for Ireland; might bring back in Jakarta
+	flagSet.StringVar(&cmd.tokenType, "token-type", "jwt", "Type of token to create: jwt")
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to add")
-	flagSet.StringVar(&cmd.group, "group", "gateway", "Group to which the user belongs, defaults to 'gateway'")
+	flagSet.StringVar(&cmd.group, "group", "gateway-group", "Group to which the user belongs, defaults to 'gateway-group'")
 
 	flagSet.StringVar(&cmd.algorithm, "algorithm", "", "Algorithm used for signing the JWT, RS256 or ES256")
 	flagSet.StringVar(&cmd.publicKeyPath, "public_key", "", "Public key (in PEM format) used to validate the JWT.")
@@ -87,8 +88,12 @@ func NewCommand(
 	if cmd.tokenType == "" {
 		return nil, fmt.Errorf("%s proxy adduser: argument --token-type is required", os.Args[0])
 	}
-	if cmd.tokenType != interfaces.JwtTokenType && cmd.tokenType != interfaces.OAuth2TokenType {
-		return nil, fmt.Errorf("%s proxy adduser: argument --token-type must be either 'jwt' or 'oauth2'", os.Args[0])
+	// #3564: Deprecate for Ireland; commenting in case user community needs back in Jakarta stabilization release
+	//if cmd.tokenType != interfaces.JwtTokenType && cmd.tokenType != interfaces.OAuth2TokenType {
+	//	return nil, fmt.Errorf("%s proxy adduser: argument --token-type must be either 'jwt' or 'oauth2'", os.Args[0])
+	//}
+	if cmd.tokenType != interfaces.JwtTokenType {
+		return nil, fmt.Errorf("%s proxy adduser: argument --token-type must be 'jwt'", os.Args[0])
 	}
 	if cmd.username == "" {
 		return nil, fmt.Errorf("%s proxy adduser: argument --user is required", os.Args[0])
@@ -118,8 +123,9 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	switch c.tokenType {
 	case interfaces.JwtTokenType:
 		statusCode, err = c.ExecuteAddJwt()
-	case interfaces.OAuth2TokenType:
-		statusCode, err = c.ExecuteAddOAuth2()
+	// #3564: Deprecate for Ireland; commenting in case user community needs back in Jakarta stabilization release
+	//case interfaces.OAuth2TokenType:
+	//	statusCode, err = c.ExecuteAddOAuth2()
 	default:
 		statusCode = interfaces.StatusCodeExitWithError
 		err = fmt.Errorf("unsupported token type %s", c.tokenType)
