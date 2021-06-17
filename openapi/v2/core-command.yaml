@@ -63,6 +63,32 @@ components:
           type: string
         valueType:
           type: string
+          enum:
+            - Bool
+            - String
+            - Uint8
+            - Uint16
+            - Uint32
+            - Uint64
+            - Int8
+            - Int16
+            - Int32
+            - Int64
+            - Float32
+            - Float64
+            - Binary
+            - BoolArray
+            - StringArray
+            - Uint8Array
+            - Uint16Array
+            - Uint32Array
+            - Uint64Array
+            - Int8Array
+            - Int16Array
+            - Int32Array
+            - Int64Array
+            - Float32Array
+            - Float64Array
     CoreCommand:
       type: object
       properties:
@@ -139,6 +165,32 @@ components:
         valueType:
           description: "Indicates the datatype of the value property"
           type: string
+          enum:
+            - Bool
+            - String
+            - Uint8
+            - Uint16
+            - Uint32
+            - Uint64
+            - Int8
+            - Int16
+            - Int32
+            - Int64
+            - Float32
+            - Float64
+            - Binary
+            - BoolArray
+            - StringArray
+            - Uint8Array
+            - Uint16Array
+            - Uint32Array
+            - Uint64Array
+            - Int8Array
+            - Int16Array
+            - Int32Array
+            - Int64Array
+            - Float32Array
+            - Float64Array
       required:
         - apiVersion
         - deviceName

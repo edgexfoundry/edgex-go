@@ -126,10 +126,17 @@ components:
           type: string
         adminState:
           type: string
-          description: Admin state (locked/unlocked)
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
         operatingState:
           type: string
-          description: Operating state (UP/DOWN)
+          description: Operating state
+          enum:
+            - UP
+            - DOWN
+            - UNKNOWN
         lastConnected:
           type: integer
           description: Time (milliseconds) that the device last provided any feedback or responded to any request
@@ -173,10 +180,17 @@ components:
           type: string
         adminState:
           type: string
-          description: Admin state (locked/unlocked)
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
         operatingState:
           type: string
-          description: Operating state (UP/DOWN)
+          description: Operating state
+          enum:
+            - UP
+            - DOWN
+            - UNKNOWN
         labels:
           type: array
           description: Other labels applied to the device to help with searching
@@ -449,7 +463,11 @@ components:
           description: time in milliseconds that the device service last reported data to the core microservice
         operatingState:
           type: string
-          description: operational state - either UP or DOWN
+          description: operational state
+          enum:
+            - UP
+            - DOWN
+            - UNKNOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -461,6 +479,9 @@ components:
         adminState:
           type: string
           description: Device Service Admin State
+          enum:
+            - LOCKED
+            - UNLOCKED
       required:
         - name
         - operatingState
@@ -478,9 +499,16 @@ components:
         adminState:
           type: string
           description: Device Service Admin State
+          enum:
+            - LOCKED
+            - UNLOCKED
         operatingState:
           type: string
-          description: operational state - either UP or DOWN
+          description: operational state
+          enum:
+            - UP
+            - DOWN
+            - UNKNOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -577,7 +605,10 @@ components:
           description: Name of the device service that new devices will be associated to
         adminState:
           type: string
-          description: Admin state - either locked or unlocked
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
         autoEvents:
           type: array
           description: Autoevents that allow device service to automatically start generating data from new devices
@@ -662,7 +693,10 @@ components:
           description: Name of the device service that new devices will be associated to
         adminState:
           type: string
-          description: Admin state - either locked or unlocked
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
         autoEvents:
           type: array
           description:  Autoevents that allow device service to automatically start generating data from new devices
@@ -752,6 +786,10 @@ components:
         readWrite:
           type: string
           description: "Read/Write Permissions set for this DeviceCommand. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
+          enum:
+            - R
+            - W
+            - RW
         resourceOperations:
           type: array
           items:
@@ -766,10 +804,40 @@ components:
       properties:
         valueType:
           type: string
-          description: "ValueDescriptor Type of property after transformations. Optional: uint8, uint16, uint32, uint64, int8, int16, int32, int64, float32, float64, bool, string, binary, uint8array, uint16array, uint32array, uint64array, int8array, int16array, int32array, int64array, float32array, float64array, boolarray."
+          description: "Indicates the datatype of the value property"
+          enum:
+            - Bool
+            - String
+            - Uint8
+            - Uint16
+            - Uint32
+            - Uint64
+            - Int8
+            - Int16
+            - Int32
+            - Int64
+            - Float32
+            - Float64
+            - Binary
+            - BoolArray
+            - StringArray
+            - Uint8Array
+            - Uint16Array
+            - Uint32Array
+            - Uint64Array
+            - Int8Array
+            - Int16Array
+            - Int32Array
+            - Int64Array
+            - Float32Array
+            - Float64Array
         readWrite:
           type: string
           description: "Read/Write Permissions set for this ResourceProperties. The value can be R, W, or RW. R enables GET command, and W enables SET command in the Core Command Service."
+          enum:
+            - R
+            - W
+            - RW
         units:
           type: string
           description: A string which describes the measurement units associated with a property value  Examples include "deg/s", "degreesFarenheit", "G", or "% Relative Humidity"
