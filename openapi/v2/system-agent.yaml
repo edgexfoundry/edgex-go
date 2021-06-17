@@ -53,6 +53,7 @@ components:
         servieName:
           description: "A field indicates the original requested serviceName"
           type: string
+          example: "core-data"
     BaseWithMetricsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -62,6 +63,7 @@ components:
         servieName:
           description: "A field indicates the original requested serviceName"
           type: string
+          example: "core-data"
         metrics:
           description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
           type: object
@@ -74,6 +76,7 @@ components:
         servieName:
           description: "A field indicates the original requested serviceName"
           type: string
+          example: "core-data"
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
@@ -204,7 +207,6 @@ paths:
                 type: array
                 items:
                   anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithServiceNameResponse'
         '400':
           description: "Bad request"
@@ -246,7 +248,6 @@ paths:
                 type: array
                 items:
                   anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithMetricsResponse'
         '400':
           description: "Bad request"
@@ -288,7 +289,6 @@ paths:
                 type: array
                 items:
                   anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithConfigResponse'
         '400':
           description: "Bad request"
@@ -333,7 +333,6 @@ paths:
                 type: array
                 items:
                   anyOf:
-                    - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithServiceNameResponse'
         '400':
           description: "Bad request"

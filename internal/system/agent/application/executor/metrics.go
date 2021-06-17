@@ -45,7 +45,7 @@ func (m *metrics) Get(_ context.Context, services []string) ([]interface{}, erro
 		go func(serviceName string) {
 			defer wg.Done()
 
-			res, err := m.executor(m.executorPath, serviceName, "metrics")
+			res, err := m.executor(m.executorPath, edgexPrefix+serviceName, "metrics")
 			if err != nil {
 				mu.Lock()
 				responses = append(responses, common.BaseWithMetricsResponse{
