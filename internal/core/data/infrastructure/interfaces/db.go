@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2021 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -29,4 +29,5 @@ type DBClient interface {
 	ReadingsByResourceName(offset int, limit int, resourceName string) ([]model.Reading, errors.EdgeX)
 	ReadingsByDeviceName(offset int, limit int, name string) ([]model.Reading, errors.EdgeX)
 	ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
+	ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int) ([]model.Reading, errors.EdgeX)
 }

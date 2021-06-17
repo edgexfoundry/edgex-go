@@ -574,6 +574,19 @@ func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.Edg
 	return count, nil
 }
 
+// ReadingsByResourceNameAndTimeRange query readings by resourceName and specified time range. Readings are sorted in descending order of origin time.
+func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, err = readingsByResourceNameAndTimeRange(conn, resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by resourceName %s and time range %v ~ %v, offset %d, and limit %d", resourceName, start, end, offset, limit), err)
+	}
+	return readings, nil
+}
+
 // AddProvisionWatcher adds a new provision watcher
 func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX) {
 	conn := c.Pool.Get()
