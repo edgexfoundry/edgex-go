@@ -80,6 +80,9 @@ components:
         type:
           description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL."
           type: string
+          enum:
+            - REST
+            - EMAIL
         host:
           description: "The host targeted by the action. Only required when type is REST."
           type: string
@@ -202,9 +205,17 @@ components:
         severity:
           description: "Indicates the level of severity for the notification. Current accepted values include: MINOR, NORMAL, CRITICAL"
           type: string
+          enum:
+            - MINOR
+            - NORMAL
+            - CRITICAL
         status:
           description: "A status indicating the current processing status of the notification. Accepted values are: NEW, PROCESSED, ESCALATED"
           type: string
+          enum:
+            - NEW
+            - PROCESSED
+            - ESCALATED
       required:
         - content
         - sender
@@ -286,8 +297,11 @@ components:
           description: "The interval in ISO 8691 format of resending the notification."
           type: string
         adminState:
-          description: Admin state (locked/unlocked)
+          description: Admin state
           type: string
+          enum:
+            - LOCKED
+            - UNLOCKED
     CreateSubscription:
       description: "Create address information for a party interested in receiving notifications."
       type: object
@@ -325,8 +339,11 @@ components:
           description: "The interval in ISO 8691 format of resending the notification."
           type: string
         adminState:
-          description: Admin state (locked/unlocked)
+          description: Admin state
           type: string
+          enum:
+            - LOCKED
+            - UNLOCKED
       required:
         - name
         - channels
@@ -424,6 +441,12 @@ components:
         status:
           description: "Indicates the most recent success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, RESENDING, ESCALATED"
           type: string
+          enum:
+            - ACKNOWLEDGED
+            - FAILED
+            - SENT
+            - ESCALATED
+            - RESENDING
       required:
         - channel
         - notification
@@ -436,6 +459,11 @@ components:
         status:
           description: "Indicates the success/failure of a given transmission attempt. Accepted values are: ACKNOWLEDGED, FAILED, SENT, ESCALATED"
           type: string
+          enum:
+            - ACKNOWLEDGED
+            - FAILED
+            - SENT
+            - ESCALATED
         response:
           description: "Records any response received when attempting the transmission. An HTTP error or SMTP failure will be logged here."
           type: string

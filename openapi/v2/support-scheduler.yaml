@@ -173,10 +173,23 @@ components:
           oneOf:
             - $ref: '#/components/schemas/RESTAddress'
             - $ref: '#/components/schemas/MQTTAddress'
+        content:
+          description: "The actual content to be sent as the body"
+          type: string
+        contentType:
+          description: "Indicates which request contentType should be used (i.e. text/html, application/json), the default is application/json"
+          type: string
+        adminState:
+          type: string
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
       required:
         - name
         - intervalName
         - address
+        - adminState
     UpdateIntervalAction:
       description: "Defines the action to be taken at a specified interval."
       type: object
@@ -195,6 +208,18 @@ components:
           oneOf:
             - $ref: '#/components/schemas/RESTAddress'
             - $ref: '#/components/schemas/MQTTAddress'
+        content:
+          description: "The actual content to be sent as the body"
+          type: string
+        contentType:
+          description: "Indicates which request contentType should be used (i.e. text/html, application/json), the default is application/json"
+          type: string
+        adminState:
+          type: string
+          description: Admin state
+          enum:
+            - LOCKED
+            - UNLOCKED
       required:
         - id
         - name
@@ -365,17 +390,16 @@ components:
       type: object
       properties:
         type:
-          description: "Indicates which protocol should be used (REST/MQTT)."
+          description: "Indicates which protocol should be used."
           type: string
+          enum:
+            - REST
         host:
           description: "The host targeted by the action."
           type: string
         port:
           description: "The port to address on the targeted host."
           type: integer
-        contentType:
-          description: "Indicates which request contentType should be used (i.e. text/html, application/json), the default is application/json"
-          type: string
       required:
         - type
         - host
