@@ -96,12 +96,17 @@ func unmarshalPayload(envelope types.MessageEnvelope, target interface{}) error 
 func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
 	// Parse messageTopic by the pattern `edgex/events/<device-profile-name>/<device-name>/<source-name>`
 	fields := strings.Split(messageTopic, "/")
-	if len(fields) != 5 {
+
+	// assumes a non-empty base topic with /profileName/deviceName/sourceName appended by publisher
+	if len(fields) < 4 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid message topic %s", messageTopic), nil)
 	}
-	profileName := fields[2]
-	deviceName := fields[3]
-	sourceName := fields[4]
+
+	len := len(fields)
+	profileName := fields[len-3]
+	deviceName := fields[len-2]
+	sourceName := fields[len-1]
+
 	// Check whether the event fields match the message topic
 	if e.ProfileName != profileName {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches with the name %s received in topic", e.ProfileName, profileName), nil)
