@@ -137,7 +137,7 @@ The defaults are loaded from `res/configuration.toml` and then the environment v
 
 ## Community
 
-* Chat: [https://edgexfoundry.slack.com](https://join.slack.com/t/edgexfoundry/shared_invite/enQtNDgyODM5ODUyODY0LWVhY2VmOTcyOWY2NjZhOWJjOGI1YzQ2NzYzZmIxYzAzN2IzYzY0NTVmMWZhZjNkMjVmODNiZGZmYTkzZDE3MTA)
+* Chat: <https://slack.edgexfoundry.org/>
 * Mailing lists: [https://lists.edgexfoundry.org/mailman/listinfo](https://lists.edgexfoundry.org/mailman/listinfo)
 
 ## License
