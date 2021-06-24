@@ -41,6 +41,7 @@ var testDeviceProfileLabels = []string{"MODBUS", "TEMP"}
 var testAttributes = map[string]interface{}{
 	"TestAttribute": "TestAttributeValue",
 }
+var testMappings = map[string]string{"0": "off", "1": "on"}
 
 func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 	var testDeviceResources = []dtos.DeviceResource{{
@@ -58,6 +59,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		ReadWrite: common.ReadWrite_RW,
 		ResourceOperations: []dtos.ResourceOperation{{
 			DeviceResource: TestDeviceResourceName,
+			Mappings:       testMappings,
 		}},
 	}}
 
