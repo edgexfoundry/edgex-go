@@ -448,22 +448,16 @@ apps:
     plugs: [home, removable-media, network]
   kuiper:
     adapter: full
-    command: bin/kuiper-server
+    command: bin/kuiperd
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
-      # KUIPER_DEBUG: "true"
-      KUIPER_CONSOLE_LOG: "true"
-      KUIPER_REST_PORT: 48075
-      EDGEX_SERVER: localhost
-      EDGEX_SERVICE_SERVER: http://localhost:59880
-      EDGEX_TOPIC: events
-      EDGEX_PROTOCOL: tcp
-      EDGEX_PORT: 5566
     plugs: [network, network-bind]
   kuiper-cli:
     adapter: full
-    command: bin/kuiper-cli
+    command: bin/kuiper
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
     plugs: [home, network, network-bind]
@@ -777,6 +771,7 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
+    # TODO: ideally this should be changed to v2.0.0
     source-tag: master
     plugin: make
     after: [go-build-helper]
@@ -805,6 +800,7 @@ parts:
   # TODO: vet all the correct files are available...
   app-service-config:
     plugin: nil
+    # TODO: get rid of edge channel!!!
     stage-snaps:
       - edgex-app-service-configurable/edge
     stage:
@@ -816,25 +812,44 @@ parts:
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
-    source-tag: 0.4.1
+    source-tag: 1.2.1
     plugin: make
     after: [go-build-helper]
     override-build: |
+      export PATH="$SNAPCRAFT_STAGE/go1.15/bin:$GOPATH/bin:$PATH"
+
+      cd $SNAPCRAFT_PART_SRC
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD
       export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
-      go mod tidy
       make build_with_edgex
       make real_pkg
       cd $SNAPCRAFT_PART_INSTALL
+      # TODO: SIMPLIFY THIS!!!
       tar -xvf kuiper*.tar.gz --strip-components=1
       rm *.zip *.gz
 
+      # configure logging & restrict to localhost
+      sed -i -e 's@consoleLog\: false@consoleLog\: true@' \
+        -e 's@fileLog\: true@fileLog\: false@' \
+        -e 's@ip\: 0.0.0.0@ip\: localhost@' \
+        -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
+        $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
+
+      # update the edgex source's port to 5566 to match
+      # app-service-configurable's message bus publish port
+      sed -i -e 's@port\: 5563@port\: 5566@' \
+        $SNAPCRAFT_PART_INSTALL/etc/sources/edgex.yaml
+
+      # update the edgex sink's port to 5567 so that it
+      # doesn't collide with the default port used by
+      # app-service-configurable
+      sed -i -e 's@"default": 5563@"default": 5567@' \
+        $SNAPCRAFT_PART_INSTALL/etc/sinks/edgex.json
+
       install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
-    organize:
-      bin/cli: bin/kuiper-cli
-      bin/server: bin/kuiper-server
     stage:
       - -etc/mqtt_source.yaml
+      - -etc/services/
     stage-packages:
       - libzmq5
