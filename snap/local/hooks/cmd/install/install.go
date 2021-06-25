@@ -29,7 +29,6 @@ import (
 
 var cli *hooks.CtlCli = hooks.NewSnapCtl()
 
-const proxyRouteCfg = "env.security-proxy.add-proxy-route"
 const secretStoreAddTokensCfg = "env.security-secret-store.add-secretstore-tokens"
 const secretStoreAddKnownSecretsCfg = "env.security-secret-store.add-known-secrets"
 const consulAddRegistryACLRolesCfg = "env.security-bootstrapper.add-registry-acl-roles"
@@ -270,13 +269,6 @@ func installProxy() error {
 	var err error
 
 	if err = os.MkdirAll(hooks.SnapCommon+"/logs", 0755); err != nil {
-		return err
-	}
-
-	// the configuration is not available in the install hook, so we can only set it here
-	// to the default value (consul).
-	proxyRoute := "consul.http://localhost:8500"
-	if err = cli.SetConfig(proxyRouteCfg, proxyRoute); err != nil {
 		return err
 	}
 
