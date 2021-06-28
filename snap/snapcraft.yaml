@@ -815,11 +815,11 @@ parts:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
     # TODO: ideally this should be changed to v2.0.0
-    source-tag: master
+    source-tag: v2.0.0
     plugin: make
     after: [go-build-helper]
     override-build: |
-      echo "2.0.0-dev" > ./VERSION
+      echo "2.0.0" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
