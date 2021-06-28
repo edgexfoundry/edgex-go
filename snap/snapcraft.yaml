@@ -843,9 +843,8 @@ parts:
   # TODO: vet all the correct files are available...
   app-service-config:
     plugin: nil
-    # TODO: get rid of edge channel!!!
     stage-snaps:
-      - edgex-app-service-configurable/edge
+      - edgex-app-service-configurable/2.0/stable
     stage:
       - -res/functional-tests/configuration.toml
       - -res/http-export/configuration.toml
