@@ -5,6 +5,7 @@ if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
     mkdir -p "$SNAP_DATA/kuiper/data"
     mkdir -p "$SNAP_DATA/kuiper/etc/functions"
     mkdir -p "$SNAP_DATA/kuiper/etc/multilingual"
+    mkdir -p "$SNAP_DATA/kuiper/etc/services"
     mkdir -p "$SNAP_DATA/kuiper/etc/sinks"
     mkdir -p "$SNAP_DATA/kuiper/etc/sources"
     mkdir -p "$SNAP_DATA/kuiper/plugins/functions"
@@ -22,6 +23,8 @@ if [ ! -f "$SNAP_DATA/kuiper/data" ]; then
     cp "$SNAP/etc/mqtt_source.json" "$SNAP_DATA/kuiper/etc"
 
     cp "$SNAP/etc/functions/"*.json "$SNAP_DATA/kuiper/etc/functions"
+
+    cp "$SNAP/etc/services/"*.proto "$SNAP_DATA/kuiper/etc/services"
 
     for sink in file edgex influx log nop; do
         cp "$SNAP/etc/sinks/$sink.json" "$SNAP_DATA/kuiper/etc/sinks"
