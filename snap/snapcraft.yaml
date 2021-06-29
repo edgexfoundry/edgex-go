@@ -58,6 +58,12 @@ passthrough:
       command-chain:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload
+    prepare-plug-edgex-secretstore-token:
+      command-chain:
+       - snap/command-chain/snapcraft-runner
+    connect-plug-edgex-secretstore-token:
+      command-chain:
+       - snap/command-chain/snapcraft-runner
 
 plugs:
   # This content interface provides a mechanism for the edgexfoundry
@@ -174,6 +180,8 @@ apps:
     after: [vault]
     command: >-
       bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
@@ -205,6 +213,8 @@ apps:
       - security-consul-bootstrapper
       - kong-daemon
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    command-chain:
+      - bin/service-config-overrides.sh
     environment:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
@@ -222,7 +232,7 @@ apps:
     adapter: none
     after:
       - security-secretstore-setup
-    command: bin/security-bootstrapper -confdir $SNAP_DATA/config/security-bootstrapper/res-bootstrap-redis configureRedis
+    command: bin/setup-redis-acl.sh
     environment:
       # TODO: determine the correct cmd-line args & env var overrides...
       SECRETSTORE_SERVERNAME: localhost
@@ -254,6 +264,7 @@ apps:
     command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
     daemon: simple
@@ -272,6 +283,7 @@ apps:
     command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
     daemon: simple
@@ -287,6 +299,7 @@ apps:
     command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
     daemon: simple
@@ -302,9 +315,12 @@ apps:
     command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
@@ -317,9 +333,12 @@ apps:
     command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   sys-mgmt-agent:
@@ -332,10 +351,13 @@ apps:
     command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
+      - bin/service-config-overrides.sh
     environment:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
+    passthrough:
+      install-mode: disable    
     plugs: [network, network-bind]
   device-virtual:
     adapter: full
@@ -347,7 +369,11 @@ apps:
       - core-data
       - core-metadata
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       DEVICE_DEVICESDIR: $SNAP_DATA/config/device-virtual/res/devices
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res/profiles
@@ -362,7 +388,11 @@ apps:
       bin/app-service-configurable -cp -r -s
       -confdir $SNAP_DATA/config/app-service-configurable/res
       -profile rules-engine
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       BINDING_PUBLISHTOPIC: events
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/app-rules-engine/secrets-token.json
@@ -378,6 +408,8 @@ apps:
     plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
+    # double-check with bnevis that this is OK, as there is an individual config.toml
+    # file for the secrets-config command
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
     command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
     plugs: [home, removable-media, network]
@@ -448,22 +480,16 @@ apps:
     plugs: [home, removable-media, network]
   kuiper:
     adapter: full
-    command: bin/kuiper-server
+    command: bin/kuiperd
     daemon: simple
+    passthrough:
+      install-mode: disable    
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
-      # KUIPER_DEBUG: "true"
-      KUIPER_CONSOLE_LOG: "true"
-      KUIPER_REST_PORT: 48075
-      EDGEX_SERVER: localhost
-      EDGEX_SERVICE_SERVER: http://localhost:59880
-      EDGEX_TOPIC: events
-      EDGEX_PROTOCOL: tcp
-      EDGEX_PORT: 5566
     plugs: [network, network-bind]
   kuiper-cli:
     adapter: full
-    command: bin/kuiper-cli
+    command: bin/kuiper
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
     plugs: [home, network, network-bind]
@@ -566,6 +592,16 @@ parts:
     plugin: dump
     source: snap/local/runtime-helpers
 
+  hooks:
+    source: snap/local/hooks
+    plugin: make
+    after: [go-build-helper]
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC
+      make build
+      install -DT ./cmd/configure/configure "$SNAPCRAFT_PART_INSTALL/snap/hooks/configure"
+      install -DT ./cmd/install/install "$SNAPCRAFT_PART_INSTALL/snap/hooks/install"
+
   consul:
     plugin: nil
     build-packages:
@@ -611,6 +647,13 @@ parts:
     after: [go-build-helper]
     override-build: |
       cd $SNAPCRAFT_PART_SRC
+
+      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      if [ -z "$GIT_VERSION" ]; then
+        GIT_VERSION="0.0.0"
+      fi
+
+      echo $GIT_VERSION > ./VERSION
 
       make build
 
@@ -777,11 +820,12 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    source-tag: master
+    # TODO: ideally this should be changed to v2.0.0
+    source-tag: v2.0.0
     plugin: make
     after: [go-build-helper]
     override-build: |
-      echo "2.0.0-dev" > ./VERSION
+      echo "2.0.0" > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
@@ -791,7 +835,7 @@ parts:
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/devices/devices.toml"
 
       mkdir -p $SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles
-
+      
       for profileType in bool float int uint binary; do
         install -T "./cmd/res/profiles/device.virtual.$profileType.yaml" \
           "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles/device.virtual.$profileType.yaml"
@@ -806,7 +850,7 @@ parts:
   app-service-config:
     plugin: nil
     stage-snaps:
-      - edgex-app-service-configurable/edge
+      - edgex-app-service-configurable/2.0/stable
     stage:
       - -res/functional-tests/configuration.toml
       - -res/http-export/configuration.toml
@@ -816,25 +860,43 @@ parts:
 
   kuiper:
     source: https://github.com/emqx/kuiper.git
-    source-tag: 0.4.1
+    source-tag: 1.2.1
     plugin: make
     after: [go-build-helper]
     override-build: |
+
+      cd $SNAPCRAFT_PART_SRC
       export BUILD_PATH=$SNAPCRAFT_PART_BUILD
       export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
-      go mod tidy
       make build_with_edgex
       make real_pkg
       cd $SNAPCRAFT_PART_INSTALL
+      # TODO: SIMPLIFY THIS!!!
       tar -xvf kuiper*.tar.gz --strip-components=1
       rm *.zip *.gz
 
+      # configure logging & restrict to localhost
+      sed -i -e 's@consoleLog\: false@consoleLog\: true@' \
+        -e 's@fileLog\: true@fileLog\: false@' \
+        -e 's@ip\: 0.0.0.0@ip\: localhost@' \
+        -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
+        $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
+
+      # update the edgex source's port to 5566 to match
+      # app-service-configurable's message bus publish port
+      sed -i -e 's@port\: 5563@port\: 5566@' \
+        $SNAPCRAFT_PART_INSTALL/etc/sources/edgex.yaml
+
+      # update the edgex sink's port to 5567 so that it
+      # doesn't collide with the default port used by
+      # app-service-configurable
+      sed -i -e 's@"default": 5563@"default": 5567@' \
+        $SNAPCRAFT_PART_INSTALL/etc/sinks/edgex.json
+
       install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
-    organize:
-      bin/cli: bin/kuiper-cli
-      bin/server: bin/kuiper-server
     stage:
       - -etc/mqtt_source.yaml
+      - -etc/services/
     stage-packages:
       - libzmq5
