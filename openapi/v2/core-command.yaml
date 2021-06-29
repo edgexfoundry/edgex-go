@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Command API
   description: This is the definition of the API for the Core Command service in the EdgeX Foundry IOT microservice platform. Core Command is responsible for storing command definitions and also for executing those commands as reads and writes against target devices.
-  version: 2.x
+  version: 2.0
   
 servers:
   - url: http://localhost:59882/api/v2
