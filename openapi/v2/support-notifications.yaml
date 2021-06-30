@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Notifications API
   description: This is the definition of the API for the Support Notifications service in the EdgeX Foundry IOT microservice platform. Support Notifications provides functionality for sending notifications via email/REST from the EdgeX Foundry platform.
-  version: 2.0
+  version: 2.0.0
 
 servers:
   - url: http://localhost:59860/api/v2
