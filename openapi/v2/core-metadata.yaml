@@ -1208,8 +1208,8 @@ components:
                 - "397"
                 - "398"
                 - "399"
-            profile: "device-simple"
-            service: "device-simple"
+            profileName: "device-simple"
+            serviceName: "device-simple"
             adminState: "UNLOCKED"
     GetAllDevicesResponse:
       value:
@@ -1337,8 +1337,8 @@ components:
                 - "397"
                 - "398"
                 - "399"
-            profile: "device-virtual"
-            service: "device-virtual"
+            profileName: "device-virtual"
+            serviceName: "device-virtual"
             adminState: "UNLOCKED"
             autoEvents:
               - sourceName: "Bool"
@@ -1358,8 +1358,8 @@ components:
                 - "497"
                 - "498"
                 - "499"
-            profile: "device-simple"
-            service: "device-simple"
+            profileName: "device-simple"
+            serviceName: "device-simple"
             adminState: "UNLOCKED"
 paths:
   /device:
@@ -2843,8 +2843,8 @@ paths:
                 provisionwatcher:
                   - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                     name: "virtual-identifier"
-                    profile: "device-virtual"
-                    service: "device-virtual"
+                    profileName: "device-virtual"
+                    serviceName: "device-virtual"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -2904,7 +2904,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiProvisionWatchersResponse'
-              example:
+              examples:
                 GetAllProvisionWatchersResponse:
                   $ref: '#/components/examples/GetAllProvisionWatchersResponse'
         '400':
@@ -2972,8 +2972,8 @@ paths:
                       - "397"
                       - "398"
                       - "399"
-                  profile: "device-virtual"
-                  service: "device-virtual"
+                  profileName: "device-virtual"
+                  serviceName: "device-virtual"
                   adminState: "UNLOCKED"
                   autoEvents:
                     - sourceName: "Bool"
