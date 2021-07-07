@@ -17,7 +17,7 @@ components:
       type: object
       properties:
         notification:
-          $ref: '#/components/schemas/Notification'
+          $ref: '#/components/schemas/CreateNotification'
       required:
         - notification
     AddSubscriptionRequest:
@@ -73,8 +73,8 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
-    Address:
-      description: "The address shows the information indicating how to contact a specific endpoint."
+    RESTAddress:
+      description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
       type: object
       properties:
         type:
@@ -83,44 +83,43 @@ components:
           enum:
             - REST
             - EMAIL
+          example: "REST"
         host:
-          description: "The host targeted by the action. Only required when type is REST."
+          description: "The host targeted by the action."
           type: string
         port:
-          description: "The port to address on the targeted host. Only required when type is REST."
+          description: "The port to address on the targeted host."
           type: integer
+        path:
+          description: "The HTTP path at the targeted host for fulfillment of the notification."
+          type: string
+        httpMethod:
+          description: "Indicates which Http verb should be used for the REST endpoint."
+          type: string
       required:
         - type
-    RESTAddress:
-      description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
-      allOf:
-        - $ref: '#/components/schemas/Address'
-        - type: object
-          properties:
-            path:
-              description: "The HTTP path at the targeted host for fulfillment of the notification."
-              type: string
-            requestBody:
-              description: "The HTTP request body required by the notification."
-              type: string
-            httpMethod:
-              description: "Indicates which Http verb should be used for the REST endpoint."
-              type: string
-          required:
-            - httpMethod
+        - host
+        - port
+        - httpMethod
     EmailAddress:
       description: "The EmailAddress identifies an array of email addresses to which notifications are delivered."
-      allOf:
-        - $ref: '#/components/schemas/Address'
-        - type: object
-          properties:
-            recipients:
-              description: "Recipients who are interested in receiving notifications."
-              type: array
-              items:
-                type: string
-          required:
-            - recipients
+      type: object
+      properties:
+        type:
+          description: "Indicates the type of transport to be used in delivering the notification. May be one of the following values: REST, EMAIL."
+          type: string
+          enum:
+            - REST
+            - EMAIL
+          example: "EMAIL"
+        recipients:
+          description: "Recipients (emails) who are interested in receiving notifications."
+          type: array
+          items:
+            type: string
+      required:
+        - type
+        - recipients
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -175,6 +174,7 @@ components:
       properties:
         category:
           description: "Categorizes the notification."
+          type: string
         content:
           description: "The actual content to be sent as the body of the notification."
           type: string
@@ -199,6 +199,44 @@ components:
         modified:
           description: "A timestamp indicating when the notification was last modified."
           type: integer
+        sender:
+          description: "Identifies the sender of a notification, usually the name of sender."
+          type: string
+        severity:
+          description: "Indicates the level of severity for the notification. Current accepted values include: MINOR, NORMAL, CRITICAL"
+          type: string
+          enum:
+            - MINOR
+            - NORMAL
+            - CRITICAL
+        status:
+          description: "A status indicating the current processing status of the notification. Accepted values are: NEW, PROCESSED, ESCALATED"
+          type: string
+          enum:
+            - NEW
+            - PROCESSED
+            - ESCALATED
+    CreateNotification:
+      description: "Defines the content included in a notification"
+      type: object
+      properties:
+        category:
+          description: "Categorizes the notification."
+          type: string
+        content:
+          description: "The actual content to be sent as the body of the notification."
+          type: string
+        contentType:
+          description: "Indicates the MIME type/Content-type of the notification's content."
+          type: string
+        description:
+          description: "An optional description of the notification's intent."
+          type: string
+        labels:
+          description: "Arbitrary labels that can be applied to notifications for further categorization or identification."
+          type: array
+          items:
+            type: string
         sender:
           description: "Identifies the sender of a notification, usually the name of sender."
           type: string
@@ -425,8 +463,10 @@ components:
           description: "Uniquely identifies the transmission"
           type: string
           format: uuid
-        notification:
-          $ref: '#/components/schemas/Notification'
+        notificationId:
+          description: "The id of the notification to be sent"
+          type: string
+          format: uuid
         subscriptionName:
           description: "The name of the subscription interested in the notification."
           type: string
@@ -447,11 +487,6 @@ components:
             - SENT
             - ESCALATED
             - RESENDING
-      required:
-        - channel
-        - notification
-        - subscriptionName
-        - status
     TransmissionRecord:
       description: "Records the result of an individual attempt to transmit a notification."
       type: object
@@ -580,6 +615,10 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+    202Example:
+      value:
+        apiVersion: "v2"
+        statusCode: 202
     400Example:
       value:
         apiVersion: "v2"
@@ -622,17 +661,6 @@ components:
             resendLimit: 0
             resendInterval: 1h
             adminState: UNLOCKED
-    AddSubscriptionsExample:
-      value:
-        - apiVersion: "v2"
-          statusCode: 201
-          id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
-        - apiVersion: "v2"
-          statusCode: 409
-          message: "Duplicated"
-        - apiVersion: "v2"
-          statusCode: 500
-          message: "Internal Server Error"
     UpdateSubscriptionsExample:
       value:
         - apiVersion: "v2"
@@ -640,15 +668,6 @@ components:
         - apiVersion: "v2"
           statusCode: 404
           message: "Not Found"
-        - apiVersion: "v2"
-          statusCode: 500
-          message: "Internal Server Error"
-    AddNotificationsExample:
-      value:
-        - apiVersion: "v2"
-          statusCode: 201
-          id: "e77c6ca4-46e9-4b11-b0e9-4bbfe5e8420e"
-          message: ""
         - apiVersion: "v2"
           statusCode: 500
           message: "Internal Server Error"
@@ -702,6 +721,103 @@ components:
               modified: 1616660213552
               resendInterval: 1h
               adminState: UNLOCKED
+    NotificationRequestExample:
+      value:
+        - apiVersion: "v2"
+          notification:
+            category: "daily-notify"
+            contentType: "string"
+            description: "device notice"
+            labels:
+              - daily
+            sender: "core-metadata"
+            severity: "CRITICAL"
+            status: "NEW"
+    NotificationResponseExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        notification:
+          id: e6e8a2f4-eb14-4649-9e2b-175247911369
+          category: "daily-notify"
+          contentType: "string"
+          description: "device notice"
+          labels:
+            - daily
+          sender: "core-metadata"
+          severity: "CRITICAL"
+          status: "PROCESSED"
+          created: 1616659630356
+          modified: 1616660213552
+    MultiNotificationResponseExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        notifications:
+          - id: e6e8a2f4-eb14-4649-9e2b-175247911369
+            category: "daily-notify"
+            contentType: "string"
+            description: "device notice"
+            labels:
+              - daily
+            sender: "core-metadata"
+            severity: "CRITICAL"
+            status: "PROCESSED"
+            created: 1616659630356
+            modified: 1616660213552
+    TransmissionResponseExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        transmission:
+          id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          notificationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          subscriptionName: "subscriptionA"
+          channel:
+            - type: "REST"
+              host: "localhost"
+              port: 59860
+              httpMethod: "POST"
+          records:
+            - status: "SENT"
+              response: "POST request for /"
+              sent: 1616659630356
+          status: "SENT"
+          created: 1616659630356
+    MultiTransmissionResponseExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        transmissions:
+          - id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            notificationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            subscriptionName: "subscriptionA"
+            channel:
+              - type: "REST"
+                host: "localhost"
+                port: 59860
+                httpMethod: "POST"
+            records:
+              - status: "SENT"
+                response: "POST request for /"
+                sent: 1616659630356
+            status: "SENT"
+            created: 1616659630356
+    MultiPOSTStatusExample:
+      value:
+        - apiVersion: "v2"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 201
+          id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
+          message: ""
+        - apiVersion: "v2"
+          requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
+          statusCode: 409
+          message: "Duplicated"
+        - apiVersion: "v2"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error"
 paths:
   /cleanup:
     parameters:
@@ -709,11 +825,18 @@ paths:
     delete:
       summary: "Deletes all notifications and the corresponding transmissions."
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Request has been accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                202Example:
+                  $ref: '#/components/examples/202Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -738,11 +861,30 @@ paths:
     delete:
       summary: "Deletes notifications which have age and is less than the specified one, where the age of Notification is calculated by subtracting its last modification timestamp from the current timestamp. Note that the corresponding transmissions will also be deleted."
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Request has been accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                202Example:
+                  $ref: '#/components/examples/202Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                202Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -768,6 +910,9 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/AddNotificationRequest'
+            examples:
+              NotificationRequestExample:
+                $ref: '#/components/examples/NotificationRequestExample'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -783,8 +928,8 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
               examples:
-                AddNotificationsExample:
-                  $ref: '#/components/examples/AddNotificationsExample'
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -838,6 +983,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -886,11 +1034,18 @@ paths:
     delete:
       summary: "Deletes the processed notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding transmissions will also be deleted.  Please notice that this API is only for processed notifications (status = PROCESSED). If the deletion purpose includes each kind of notifications, please refer to /cleanup API."
       responses:
-        '200':
-          description: "Delete successful"
+        '202':
+          description: "Request has been accepted"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                202Example:
+                  $ref: '#/components/examples/202Example'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -903,18 +1058,6 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                404Example:
-                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -950,6 +1093,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1009,6 +1155,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1067,8 +1216,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotificationResponse'
               examples:
-                200Example:
-                  $ref: '#/components/examples/200Example'
+                NotificationResponseExample:
+                  $ref: '#/components/examples/NotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1113,6 +1262,13 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1172,6 +1328,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1231,6 +1390,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1243,6 +1405,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1286,8 +1460,8 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
               examples:
-                AddSubscriptionsExample:
-                  $ref: '#/components/examples/AddSubscriptionsExample'
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1664,6 +1838,13 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1673,6 +1854,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1706,6 +1890,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                TransmissionResponseExample:
+                  $ref: '#/components/examples/TransmissionResponseExample'
         '404':
           description: "The requested resource does not exist"
           headers:
@@ -1742,11 +1929,18 @@ paths:
     delete:
       summary: "Deletes the processed transmissions if the current timestamp minus their created timestamp is less than the age parameter."
       responses:
-        '200':
+        '202':
           description: "Delete successful"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                202Example:
+                  $ref: '#/components/examples/202Example'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1759,15 +1953,6 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
-        '404':
-          description: "The requested resource does not exist"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1796,7 +1981,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiTransmissionsResponse'
+                $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                MultiTransmissionResponseExample:
+                  $ref: '#/components/examples/MultiTransmissionResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1855,7 +2043,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiTransmissionsResponse'
+                $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                MultiTransmissionResponseExample:
+                  $ref: '#/components/examples/MultiTransmissionResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1920,7 +2111,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiTransmissionsResponse'
+                $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                MultiTransmissionResponseExample:
+                  $ref: '#/components/examples/MultiTransmissionResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1979,7 +2173,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MultiTransmissionsResponse'
+                $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                MultiTransmissionResponseExample:
+                  $ref: '#/components/examples/MultiTransmissionResponseExample' 
         '400':
           description: "Request is in an invalid state"
           headers:
