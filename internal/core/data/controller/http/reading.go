@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2021 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package http
 
 import (
@@ -159,4 +164,30 @@ func (rc *ReadingController) ReadingCountByDeviceName(w http.ResponseWriter, r *
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc) // encode and send out the response
+}
+
+// ReadingsByResourceNameAndTimeRange returns readings by resource name and specified time range. Readings are sorted in descending order of origin time.
+func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(rc.dic.Get)
+	ctx := r.Context()
+	config := dataContainer.ConfigurationFrom(rc.dic.Get)
+
+	vars := mux.Vars(r)
+	resourceName := vars[common.ResourceName]
+
+	// parse time range (start, end), offset, and limit from incoming request
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	readings, err := application.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit, rc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, readings)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
 }

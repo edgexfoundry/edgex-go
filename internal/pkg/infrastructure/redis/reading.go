@@ -214,6 +214,14 @@ func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int
 	return convertObjectsToReadings(objects)
 }
 
+func readingsByResourceNameAndTimeRange(conn redis.Conn, resourceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), startTime, endTime, offset, limit)
+	if edgeXerr != nil {
+		return readings, edgeXerr
+	}
+	return convertObjectsToReadings(objects)
+}
+
 func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	readings = make([]models.Reading, len(objects))
 	var alias struct {

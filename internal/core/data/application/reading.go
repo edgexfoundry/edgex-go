@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2021 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package application
 
 import (
@@ -40,11 +45,7 @@ func ReadingsByResourceName(offset int, limit int, resourceName string, dic *di.
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
-	readings = make([]dtos.BaseReading, len(readingModels))
-	for i, r := range readingModels {
-		readings[i] = dtos.FromReadingModelToDTO(r)
-	}
-	return readings, nil
+	return convertReadingModelsToDTOs(readingModels)
 }
 
 // ReadingsByDeviceName query readings with offset, limit, and device name
@@ -90,4 +91,17 @@ func ReadingCountByDeviceName(deviceName string, dic *di.Container) (uint32, err
 	}
 
 	return count, nil
+}
+
+// ReadingsByResourceNameAndTimeRange returns readings by resource name and specified time range. Readings are sorted in descending order of origin time.
+func ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+	if resourceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "resourceName is empty", nil)
+	}
+	dbClient := container.DBClientFrom(dic.Get)
+	readingModels, err := dbClient.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+	return convertReadingModelsToDTOs(readingModels)
 }
