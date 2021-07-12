@@ -493,6 +493,25 @@ components:
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
+    ReadingsByResourceNameAndTimeRangeExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        readings:
+          - deviceName: "device-001"
+            resourceName: "resource-001"
+            profileName: "profile-001"
+            id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
+            origin: 1602168089665565300
+            valueType: "Float32"
+            value: "39.5"
+          - deviceName: "device-001"
+            resourceName: "resource-001"
+            profileName: "profile-001"
+            id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
+            origin: 1602168089665565300
+            valueType: "Float32"
+            value: "38.6"
     CountExample:
       value:
         apiVersion: "v2"
@@ -1342,6 +1361,84 @@ paths:
               examples:
                 MultiReadingsExample:
                   $ref: '#/components/examples/AllReadingsExample'
+        '400':
+          description: "\"{start}\" and \"{end}\" are unix time, and \"{end}\" should be greater than \"{start}\""
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /reading/resourceName/{resourceName}/start/{start}/end/{end}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The device resource name of readings"
+      - name: start
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the start of a date/time range"
+      - name: end
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Return a paginated range of readings by resourceName and specified time range."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/ReadingsByResourceNameAndTimeRangeExample'
         '400':
           description: "\"{start}\" and \"{end}\" are unix time, and \"{end}\" should be greater than \"{start}\""
           headers:

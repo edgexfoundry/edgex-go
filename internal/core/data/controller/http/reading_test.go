@@ -348,3 +348,72 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 	assert.Equal(t, expectedReadingCount, actualResponse.Count, "Reading count in the response body is not expected")
 }
+
+func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByResourceNameAndTimeRange", TestDeviceResourceName, 0, 100, 0, 10).Return([]models.Reading{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	rc := NewReadingController(dic)
+	assert.NotNil(t, rc)
+
+	tests := []struct {
+		name               string
+		resourceName       string
+		start              string
+		end                string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid ", TestDeviceResourceName, "0", "100", "0", "10", false, http.StatusOK},
+		{"Invalid - empty resourceName", "", "0", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid start format", TestDeviceResourceName, "aaa", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid end format", TestDeviceResourceName, "0", "bbb", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - empty start", TestDeviceResourceName, "", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - empty end", TestDeviceResourceName, "0", "", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - end before start", TestDeviceResourceName, "10", "0", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid offset format", TestDeviceResourceName, "0", "100", "aaa", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid limit format", TestDeviceResourceName, "0", "100", "0", "aaa", true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameAndTimeRangeRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(common.Offset, testCase.offset)
+			query.Add(common.Limit, testCase.limit)
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{common.ResourceName: testCase.resourceName, common.Start: testCase.start, common.End: testCase.end})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(rc.ReadingsByResourceNameAndTimeRange)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiReadingsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
