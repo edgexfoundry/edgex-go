@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Data API
   description: This is the definition of the API for the Core Data service in the EdgeX Foundry IOT microservice platform. Core Data is responsible for storing event and reading data ingested from edge devices in the environment.
-  version: 2.0.0
+  version: 2.0.1
   
 servers:
   - url: http://localhost:59880/api/v2
@@ -1329,6 +1329,78 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  /reading/device/name/{deviceName}/resourceName/{resourceName}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: deviceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The device name name of readings"
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The device resource name of readings.
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Returns a paginated range of readings by deviceName and resourceName"
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/AllReadingsExample'
+        '400':
+          description: "Request is in an invalid state."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /reading/start/{start}/end/{end}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1441,6 +1513,90 @@ paths:
                   $ref: '#/components/examples/ReadingsByResourceNameAndTimeRangeExample'
         '400':
           description: "\"{start}\" and \"{end}\" are unix time, and \"{end}\" should be greater than \"{start}\""
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /reading/device/name/{deviceName}/resourceName/{resourceName}/start/{start}/end/{end}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: deviceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The device name name of readings"
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The device resource name of readings"
+      - name: start
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the start of a date/time range"
+      - name: end
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Return a paginated range of readings by deviceName, resourceName and specified time range."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/ReadingsByResourceNameAndTimeRangeExample'
+        '400':
+          description: "Request is in an invalid state."
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
