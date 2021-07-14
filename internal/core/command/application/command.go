@@ -26,7 +26,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
 	}
 	multiDevicesResponse, err := dc.AllDevices(context.Background(), nil, offset, limit)
 	if err != nil {
@@ -36,7 +36,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 	// retrieve device profile information through Metadata DeviceProfileClient
 	dpc := bootstrapContainer.MetadataDeviceProfileClientFrom(dic.Get)
 	if dpc == nil {
-		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceProfileClient returned", nil)
+		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceProfileClient returned", nil)
 	}
 
 	// Prepare the url for command
@@ -71,7 +71,7 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
 	}
 	deviceResponse, err := dc.DeviceByName(context.Background(), name)
 	if err != nil {
@@ -81,7 +81,7 @@ func CommandsByDeviceName(name string, dic *di.Container) (deviceCoreCommand dto
 	// retrieve device profile information through Metadata DeviceProfileClient
 	dpc := bootstrapContainer.MetadataDeviceProfileClientFrom(dic.Get)
 	if dpc == nil {
-		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceProfileClient returned", nil)
+		return deviceCoreCommand, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceProfileClient returned", nil)
 	}
 	deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), deviceResponse.Device.ProfileName)
 	if err != nil {
@@ -196,7 +196,7 @@ func IssueGetCommandByName(deviceName string, commandName string, queryParams st
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
 	}
 	deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
 	if err != nil {
@@ -206,7 +206,7 @@ func IssueGetCommandByName(deviceName string, commandName string, queryParams st
 	// retrieve device service information through Metadata DeviceClient
 	dsc := bootstrapContainer.MetadataDeviceServiceClientFrom(dic.Get)
 	if dsc == nil {
-		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceServiceClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceServiceClient returned", nil)
 	}
 	deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
 	if err != nil {
@@ -216,7 +216,7 @@ func IssueGetCommandByName(deviceName string, commandName string, queryParams st
 	// Issue command by passing the base address of device service into DeviceServiceCommandClient
 	dscc := bootstrapContainer.DeviceServiceCommandClientFrom(dic.Get)
 	if dscc == nil {
-		return res, errors.NewCommonEdgeX(errors.KindClientError, "nil DeviceServiceCommandClient returned", nil)
+		return res, errors.NewCommonEdgeX(errors.KindServerError, "nil DeviceServiceCommandClient returned", nil)
 	}
 	res, err = dscc.GetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams)
 	if err != nil {
@@ -240,7 +240,7 @@ func IssueSetCommandByName(deviceName string, commandName string, queryParams st
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return response, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceClient returned", nil)
+		return response, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
 	}
 	deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
 	if err != nil {
@@ -250,7 +250,7 @@ func IssueSetCommandByName(deviceName string, commandName string, queryParams st
 	// retrieve device service information through Metadata DeviceClient
 	dsc := bootstrapContainer.MetadataDeviceServiceClientFrom(dic.Get)
 	if dsc == nil {
-		return response, errors.NewCommonEdgeX(errors.KindClientError, "nil MetadataDeviceServiceClient returned", nil)
+		return response, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceServiceClient returned", nil)
 	}
 	deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
 	if err != nil {
@@ -260,7 +260,7 @@ func IssueSetCommandByName(deviceName string, commandName string, queryParams st
 	// Issue command by passing the base address of device service into DeviceServiceCommandClient
 	dscc := bootstrapContainer.DeviceServiceCommandClientFrom(dic.Get)
 	if dscc == nil {
-		return response, errors.NewCommonEdgeX(errors.KindClientError, "nil DeviceServiceCommandClient returned", nil)
+		return response, errors.NewCommonEdgeX(errors.KindServerError, "nil DeviceServiceCommandClient returned", nil)
 	}
 	return dscc.SetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams, settings)
 }
