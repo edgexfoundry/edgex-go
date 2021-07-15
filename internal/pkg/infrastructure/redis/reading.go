@@ -9,20 +9,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
+	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
 )
 
 const (
-	ReadingsCollection             = "cd|rd"
-	ReadingsCollectionOrigin       = ReadingsCollection + DBKeySeparator + common.Origin
-	ReadingsCollectionDeviceName   = ReadingsCollection + DBKeySeparator + common.Device + DBKeySeparator + common.Name
-	ReadingsCollectionResourceName = ReadingsCollection + DBKeySeparator + common.ResourceName
+	ReadingsCollection                       = "cd|rd"
+	ReadingsCollectionOrigin                 = ReadingsCollection + DBKeySeparator + common.Origin
+	ReadingsCollectionDeviceName             = ReadingsCollection + DBKeySeparator + common.DeviceName
+	ReadingsCollectionResourceName           = ReadingsCollection + DBKeySeparator + common.ResourceName
+	ReadingsCollectionDeviceNameResourceName = ReadingsCollection + DBKeySeparator + common.DeviceName + DBKeySeparator + common.ResourceName
 )
 
 var emptyBinaryValue = make([]byte, 0)
@@ -125,6 +127,7 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 	_ = conn.Send(ZADD, ReadingsCollectionOrigin, baseReading.Origin, storedKey)
 	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionDeviceName, baseReading.DeviceName), baseReading.Origin, storedKey)
 	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionResourceName, baseReading.ResourceName), baseReading.Origin, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ReadingsCollectionDeviceNameResourceName, baseReading.DeviceName, baseReading.ResourceName), baseReading.Origin, storedKey)
 
 	return reading, nil
 }
@@ -144,6 +147,7 @@ func deleteReadingById(conn redis.Conn, id string) (edgeXerr errors.EdgeX) {
 	_ = conn.Send(ZREM, ReadingsCollectionOrigin, storedKey)
 	_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceName, r.DeviceName), storedKey)
 	_ = conn.Send(ZREM, CreateKey(ReadingsCollectionResourceName, r.ResourceName), storedKey)
+	_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceNameResourceName, r.DeviceName, r.ResourceName), storedKey)
 	_, err := conn.Do(EXEC)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("reading[id:%s] delete failed", id), err)
@@ -200,6 +204,24 @@ func readingsByDeviceName(conn redis.Conn, offset int, limit int, name string) (
 	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionDeviceName, name), offset, limit)
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToReadings(objects)
+}
+
+func readingsByDeviceNameAndResourceName(conn redis.Conn, deviceName string, resourceName string, offset int, limit int) (readings []models.Reading, err errors.EdgeX) {
+	objects, err := getObjectsByRevRange(conn, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName), offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertObjectsToReadings(objects)
+}
+
+func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName string, resourceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, err errors.EdgeX) {
+	objects, err := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName), startTime, endTime, offset, limit)
+	if err != nil {
+		return readings, err
 	}
 
 	return convertObjectsToReadings(objects)

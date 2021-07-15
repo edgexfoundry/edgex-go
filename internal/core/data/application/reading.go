@@ -6,11 +6,13 @@
 package application
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 )
 
 // ReadingTotalCount return the count of all of readings currently stored in the database and error if any
@@ -103,5 +105,41 @@ func ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int,
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
+	return convertReadingModelsToDTOs(readingModels)
+}
+
+// ReadingsByDeviceNameAndResourceName query readings with offset, limit, device name and its associated resource name
+func ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+	if deviceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
+	}
+	if resourceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "resource name is empty", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return convertReadingModelsToDTOs(readingModels)
+}
+
+// ReadingsByDeviceNameAndResourceNameAndTimeRange query readings with offset, limit, device name, its associated resource name and specified time range
+func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start, end, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+	if deviceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
+	}
+	if resourceName == "" {
+		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "resource name is empty", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
 	return convertReadingModelsToDTOs(readingModels)
 }
