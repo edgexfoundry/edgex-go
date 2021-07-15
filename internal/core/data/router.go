@@ -10,8 +10,9 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	dataController "github.com/edgexfoundry/edgex-go/internal/core/data/controller/http"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/controller/http"
@@ -48,6 +49,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(common.ApiReadingByResourceNameRoute, rc.ReadingsByResourceName).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiReadingCountByDeviceNameRoute, rc.ReadingCountByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiReadingByResourceNameAndTimeRangeRoute, rc.ReadingsByResourceNameAndTimeRange).Methods(http.MethodGet)
+	r.HandleFunc(common.ApiReadingByDeviceNameAndResourceNameRoute, rc.ReadingsByDeviceNameAndResourceName).Methods(http.MethodGet)
+	r.HandleFunc(common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeRoute, rc.ReadingsByDeviceNameAndResourceNameAndTimeRange).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))

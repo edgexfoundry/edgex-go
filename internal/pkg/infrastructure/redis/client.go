@@ -587,6 +587,32 @@ func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start i
 	return readings, nil
 }
 
+func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, err = readingsByDeviceNameAndResourceName(conn, deviceName, resourceName, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by deviceName %s and resourceName %s", deviceName, resourceName), err)
+	}
+
+	return readings, nil
+}
+
+func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, err = readingsByDeviceNameAndResourceNameAndTimeRange(conn, deviceName, resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by deviceName %s, resourceName %s and time range %v ~ %v", deviceName, resourceName, start, end), err)
+	}
+
+	return readings, nil
+}
+
 // AddProvisionWatcher adds a new provision watcher
 func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX) {
 	conn := c.Pool.Get()

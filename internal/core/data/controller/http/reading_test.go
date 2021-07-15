@@ -6,17 +6,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestReadingTotalCount(t *testing.T) {
@@ -394,6 +395,149 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 			// Act
 			recorder := httptest.NewRecorder()
 			handler := http.HandlerFunc(rc.ReadingsByResourceNameAndTimeRange)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiReadingsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName, 0, 20).Return([]models.Reading{}, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName, 0, 1).Return([]models.Reading{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewReadingController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		resourceName       string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"valid - get readings without offset, and limit", TestDeviceName, TestDeviceResourceName, "", "", false, http.StatusOK},
+		{"valid - get readings with offset, and limit", TestDeviceName, TestDeviceResourceName, "0", "1", false, http.StatusOK},
+		{"invalid - empty deviceName", "", TestDeviceResourceName, "0", "1", true, http.StatusBadRequest},
+		{"invalid - empty resourceName", TestDeviceName, "", "0", "1", true, http.StatusBadRequest},
+		{"invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "aaa", "1", true, http.StatusBadRequest},
+		{"invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "1", "aaa", true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameRoute, http.NoBody)
+			require.NoError(t, err)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(common.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(common.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.ResourceName: testCase.resourceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.ReadingsByDeviceNameAndResourceName)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiReadingsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}
+
+func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
+	dic := mocks.NewMockDIC()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, 0, 100, 0, 10).Return([]models.Reading{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	rc := NewReadingController(dic)
+	assert.NotNil(t, rc)
+
+	tests := []struct {
+		name               string
+		deviceName         string
+		resourceName       string
+		start              string
+		end                string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", false, http.StatusOK},
+		{"Invalid - empty deviceName", "", TestDeviceResourceName, "0", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - empty resourceName", TestDeviceName, "", "0", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid start format", TestDeviceName, TestDeviceResourceName, "aaa", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid end format", TestDeviceName, TestDeviceResourceName, "0", "bbb", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - empty start", TestDeviceName, TestDeviceResourceName, "", "100", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - empty end", TestDeviceName, TestDeviceResourceName, "0", "", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - end before start", TestDeviceName, TestDeviceResourceName, "10", "0", "0", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "0", "100", "aaa", "10", true, http.StatusBadRequest},
+		{"Invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "aaa", true, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeRoute, http.NoBody)
+			require.NoError(t, err)
+			query := req.URL.Query()
+			query.Add(common.Offset, testCase.offset)
+			query.Add(common.Limit, testCase.limit)
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.ResourceName: testCase.resourceName, common.Start: testCase.start, common.End: testCase.end})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(rc.ReadingsByDeviceNameAndResourceNameAndTimeRange)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert
