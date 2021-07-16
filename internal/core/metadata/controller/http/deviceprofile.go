@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
 	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/io"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -23,20 +23,25 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 
 	"github.com/gorilla/mux"
 )
 
+const yamlFileName = "file"
+
 type DeviceProfileController struct {
-	reader io.DeviceProfileReader
-	dic    *di.Container
+	jsonDtoReader io.DtoReader
+	yamlDtoReader io.DtoReader
+	dic           *di.Container
 }
 
 // NewDeviceProfileController creates and initializes an DeviceProfileController
 func NewDeviceProfileController(dic *di.Container) *DeviceProfileController {
 	return &DeviceProfileController{
-		reader: io.NewDeviceProfileRequestReader(),
-		dic:    dic,
+		jsonDtoReader: io.NewJsonDtoReader(),
+		yamlDtoReader: io.NewYamlDtoReader(),
+		dic:           dic,
 	}
 }
 
@@ -50,18 +55,18 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceProfileDTOs, err := dc.reader.ReadDeviceProfileRequest(r.Body)
+	var reqDTOs []requestDTO.DeviceProfileRequest
+	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(addDeviceProfileDTOs)
+	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, d := range deviceProfiles {
 		var addDeviceProfileResponse interface{}
-		// get the requestID from AddDeviceProfileDTO
-		reqId := addDeviceProfileDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddDeviceProfile(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -94,17 +99,18 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateDeviceProfileReq, err := dc.reader.ReadDeviceProfileRequest(r.Body)
+	var reqDTOs []requestDTO.DeviceProfileRequest
+	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(updateDeviceProfileReq)
+	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(reqDTOs)
 
 	var responses []interface{}
 	for i, d := range deviceProfiles {
 		var response interface{}
-		reqId := updateDeviceProfileReq[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		err := application.UpdateDeviceProfile(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -134,7 +140,17 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 
-	deviceProfileDTO, err := dc.reader.ReadDeviceProfileYaml(r)
+	file, _, fileErr := r.FormFile(yamlFileName)
+	if fileErr == http.ErrMissingFile {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
+		return
+	} else if fileErr != nil {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
+		return
+	}
+
+	var deviceProfileDTO dtos.DeviceProfile
+	err := dc.yamlDtoReader.Read(file, &deviceProfileDTO)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -161,7 +177,17 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 
-	deviceProfileDTO, err := dc.reader.ReadDeviceProfileYaml(r)
+	file, _, fileErr := r.FormFile(yamlFileName)
+	if fileErr == http.ErrMissingFile {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
+		return
+	} else if fileErr != nil {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
+		return
+	}
+
+	var deviceProfileDTO dtos.DeviceProfile
+	err := dc.yamlDtoReader.Read(file, &deviceProfileDTO)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application"
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/io"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -30,14 +30,14 @@ import (
 )
 
 type NotificationController struct {
-	reader io.NotificationReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewNotificationController creates and initializes an NotificationController
 func NewNotificationController(dic *di.Container) *NotificationController {
 	return &NotificationController{
-		reader: io.NewNotificationRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -52,17 +52,18 @@ func (nc *NotificationController) AddNotification(w http.ResponseWriter, r *http
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addNotificationDTOs, err := nc.reader.ReadAddNotificationRequest(r.Body)
+	var reqDTOs []requestDTO.AddNotificationRequest
+	err := nc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications := requestDTO.AddNotificationReqToNotificationModels(addNotificationDTOs)
+	notifications := requestDTO.AddNotificationReqToNotificationModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, n := range notifications {
 		var response interface{}
-		reqId := addNotificationDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddNotification(n, ctx, nc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
