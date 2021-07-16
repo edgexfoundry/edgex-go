@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
@@ -22,8 +21,7 @@ import (
 )
 
 type DeviceResourceController struct {
-	reader io.DeviceProfileReader
-	dic    *di.Container
+	dic *di.Container
 }
 
 // NewDeviceResourceController creates and initializes an DeviceResourceController

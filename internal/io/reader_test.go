@@ -1,12 +1,14 @@
 package io
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	dto "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+
 	"github.com/fxamacker/cbor/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,25 +27,25 @@ func buildTestAddEvent() dto.AddEventRequest {
 	return dto.NewAddEventRequest(testEvent)
 }
 
-func TestNewEventRequestReader(t *testing.T) {
+func TestNewReader(t *testing.T) {
 	tests := []struct {
 		name         string
 		contentType  string
 		expectedType interface{}
 	}{
-		{"Get Json Reader", common.ContentTypeJSON, jsonEventReader{}},
-		{"Get Cbor Reader", common.ContentTypeCBOR, cborEventReader{}},
-		{"Get Json Reader when content-type is unknown", "Unknown-Type", jsonEventReader{}},
+		{"Get Json Reader", common.ContentTypeJSON, jsonDtoReader{}},
+		{"Get Cbor Reader", common.ContentTypeCBOR, cborDtoReader{}},
+		{"Get Json Reader when content-type is unknown", "Unknown-Type", jsonDtoReader{}},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reader := NewEventRequestReader(testCase.contentType)
+			reader := NewDtoReader(testCase.contentType)
 			assert.IsType(t, testCase.expectedType, reader, "unexpected reader type")
 		})
 	}
 }
 
-func TestJsonSerialization(t *testing.T) {
+func TestJsonReader_Read(t *testing.T) {
 	var testAddEvent = buildTestAddEvent()
 	tests := []struct {
 		name          string
@@ -55,10 +57,12 @@ func TestJsonSerialization(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			jsonReader := NewEventRequestReader(common.ContentTypeJSON)
+			var dto dto.AddEventRequest
+			reader := NewDtoReader(common.ContentTypeJSON)
 			byteArray, err := json.Marshal(testCase.targetDTO)
 			require.NoError(t, err, "error occurs during json marshalling")
-			_, err = jsonReader.ReadAddEventRequest(byteArray)
+
+			err = reader.Read(bytes.NewReader(byteArray), &dto)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {
@@ -68,7 +72,7 @@ func TestJsonSerialization(t *testing.T) {
 	}
 }
 
-func TestCborSerialization(t *testing.T) {
+func TestCborReader_Read(t *testing.T) {
 	var testAddEvent = buildTestAddEvent()
 	tests := []struct {
 		name          string
@@ -80,10 +84,12 @@ func TestCborSerialization(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			cborReader := NewEventRequestReader(common.ContentTypeCBOR)
+			var dto dto.AddEventRequest
+			reader := NewDtoReader(common.ContentTypeCBOR)
 			byteArray, err := cbor.Marshal(testCase.targetDTO)
 			require.NoError(t, err, "error occurs during cbor marshalling")
-			_, err = cborReader.ReadAddEventRequest(byteArray)
+
+			err = reader.Read(bytes.NewReader(byteArray), &dto)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {
