@@ -104,12 +104,6 @@ test: hadolint
 	[ "`gofmt -l .`" = "" ]
 	./bin/test-attribution-txt.sh
 
-run:
-	cd bin && ./edgex-launch.sh
-
-run_docker:
-	bin/edgex-docker-launch.sh $(EDGEX_DB)
-
 docker: $(DOCKERS)
 
 docker_core_metadata:
