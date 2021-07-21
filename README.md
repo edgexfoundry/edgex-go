@@ -110,22 +110,15 @@ cd $GOPATH/src/github.com/edgexfoundry/edgex-go
 make build
 ```
 
-To start EdgeX
+#### Deploy EdgeX
 
-```sh
-make run
-```
+Recommended deployment of EdgeX services is either Docker or Snap. See [Getting Started with Docker](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedUsers/) or [Getting Started with Snap](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedSnapUsers/) for more details. 
 
-or
+#### Hybrid for debug/testing
 
-```sh
-cd bin
-./edge-launch.sh
-```
+If you need to run and/or debug one of the services locally, simply stop the docker container running that service and run the service locally from command-line or from your debugger. All executables are located in the `cmd/<service-name>` folders. See [Working in a Hybrid Environment](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedHybrid/) for more details.
 
-**Note** You must have a database (Redis) running before the services will operate
-correctly. If you don't want to install a database locally, you can host one via Docker. You may
-also need to change the `configuration.toml` files for one or more of the services.
+> *Note that this works best when running the service in non-secure mode. i.e. with environment variable `EDGEX_SECURITY_SECRET_STORE=false`*
 
 ### Build your own Docker Containers
 
@@ -135,17 +128,25 @@ In addition to running the services directly, Docker and Docker Compose can be u
 
 See [the install instructions](https://docs.docker.com/install/) to learn how to obtain and install Docker.
 
-#### Installation and Execution
+#### Build
 
 Follow the "Installation and Execution" steps above for obtaining and building the code, then
 
 ```sh
-make docker run_docker
+make docker 
 ```
 
-**Note** The default behavior is to use Redis for the database.
+#### Run 
 
-## Community
+The **Compose Builder** tool has the `dev` option to generate and run EdgeX compose files using locally built images for above. See [Compose Builder README](https://github.com/edgexfoundry/edgex-compose/tree/main/compose-builder#readme) for more details.
+
+```bash
+make run no-secty dev
+```
+
+> *Note that this run all the edgex-go services using the locally built images.*
+
+#### Community
 
 - Chat: <https://slack.edgexfoundry.org/>
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
