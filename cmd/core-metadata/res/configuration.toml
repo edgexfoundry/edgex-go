@@ -45,8 +45,7 @@ Type = 'consul'
 
 [Notifications]
 PostDeviceChanges = true
-Slug = 'device-change-'
-Content = 'Device update: '
+Content = 'Device notice: '
 Sender = 'core-metadata'
 Description = 'Metadata device notice'
 Label = 'metadata'
