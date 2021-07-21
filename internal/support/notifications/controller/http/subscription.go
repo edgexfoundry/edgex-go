@@ -9,12 +9,12 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application"
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
-	"github.com/edgexfoundry/edgex-go/internal/support/notifications/io"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -28,14 +28,14 @@ import (
 )
 
 type SubscriptionController struct {
-	reader io.SubscriptionReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewSubscriptionController creates and initializes an SubscriptionController
 func NewSubscriptionController(dic *di.Container) *SubscriptionController {
 	return &SubscriptionController{
-		reader: io.NewSubscriptionRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -50,17 +50,18 @@ func (sc *SubscriptionController) AddSubscription(w http.ResponseWriter, r *http
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addSubscriptionDTOs, err := sc.reader.ReadAddSubscriptionRequest(r.Body)
+	var reqDTOs []requestDTO.AddSubscriptionRequest
+	err := sc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	subscriptions := requestDTO.AddSubscriptionReqToSubscriptionModels(addSubscriptionDTOs)
+	subscriptions := requestDTO.AddSubscriptionReqToSubscriptionModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, s := range subscriptions {
 		var response interface{}
-		reqId := addSubscriptionDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddSubscription(s, ctx, sc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -221,14 +222,15 @@ func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateSubscriptionDTOs, err := sc.reader.ReadUpdateSubscriptionRequest(r.Body)
+	var reqDTOs []requestDTO.UpdateSubscriptionRequest
+	err := sc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
 	var updateResponses []interface{}
-	for _, dto := range updateSubscriptionDTOs {
+	for _, dto := range reqDTOs {
 		var response interface{}
 		reqId := dto.RequestId
 		err := application.PatchSubscription(ctx, dto.Subscription, sc.dic)
