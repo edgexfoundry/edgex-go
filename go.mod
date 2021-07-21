@@ -4,7 +4,7 @@ require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.0
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.1-dev.2
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.1-dev.7
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.1
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.0
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.0
@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/pelletier/go-toml v1.9.3
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v2 v2.4.0
 )
