@@ -24,6 +24,12 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
+const (
+	deviceCreateAction = "Device creation"
+	deviceUpdateAction = "Device update"
+	deviceRemoveAction = "Device removal"
+)
+
 func newDeviceServiceCallbackClient(ctx context.Context, dic *di.Container, deviceServiceName string) (interfaces.DeviceServiceCallbackClient, errors.EdgeX) {
 	ds, err := DeviceServiceByName(deviceServiceName, ctx, dic)
 	if err != nil {
@@ -51,7 +57,7 @@ func addDeviceCallback(ctx context.Context, dic *di.Container, device dtos.Devic
 		lc.Errorf("fail to invoke device service callback for adding device %s, err: %s", device.Name, response.Message)
 	}
 
-	sendNotification(ctx, dic, device.Name, http.MethodPost)
+	go sendNotification(ctx, dic, device.Name, deviceCreateAction)
 }
 
 // updateDeviceCallback invoke device service's callback function for updating device
@@ -73,7 +79,7 @@ func updateDeviceCallback(ctx context.Context, dic *di.Container, serviceName st
 		lc.Errorf("fail to invoke device service callback for updating device %s, err: %s", device.Name, response.Message)
 	}
 
-	sendNotification(ctx, dic, device.Name, http.MethodPatch)
+	go sendNotification(ctx, dic, device.Name, deviceUpdateAction)
 }
 
 // deleteDeviceCallback invoke device service's callback function for deleting device
@@ -93,7 +99,7 @@ func deleteDeviceCallback(ctx context.Context, dic *di.Container, device models.
 		lc.Errorf("fail to invoke device service callback for deleting device %s, err: %s", device.Name, response.Message)
 	}
 
-	sendNotification(ctx, dic, device.Name, http.MethodDelete)
+	go sendNotification(ctx, dic, device.Name, deviceRemoveAction)
 }
 
 // updateDeviceProfileCallback invoke device service's callback function for updating device profile
@@ -209,8 +215,8 @@ func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds mode
 	}
 }
 
-// sendNotification sends a notification after adding or updating the device entity
-func sendNotification(ctx context.Context, dic *di.Container, deviceName string, httpMethod string) {
+// sendNotification sends a notification after adding or updating the metadata
+func sendNotification(ctx context.Context, dic *di.Container, name string, action string) {
 	config := metadataContainer.ConfigurationFrom(dic.Get)
 	if !config.Notifications.PostDeviceChanges {
 		return
@@ -219,7 +225,7 @@ func sendNotification(ctx context.Context, dic *di.Container, deviceName string,
 	client := clients.NewNotificationClient(config.Clients[common.SupportNotificationsServiceKey].Url())
 
 	dto := dtos.Notification{
-		Content:     fmt.Sprintf("%s %s %s", config.Notifications.Content, deviceName, httpMethod),
+		Content:     fmt.Sprintf("%s %s %s", config.Notifications.Content, name, action),
 		ContentType: common.ContentTypeText,
 		Description: config.Notifications.Description,
 		Labels:      []string{config.Notifications.Label},
@@ -230,10 +236,10 @@ func sendNotification(ctx context.Context, dic *di.Container, deviceName string,
 	req := requests.NewAddNotificationRequest(dto)
 	res, err := client.SendNotification(ctx, []requests.AddNotificationRequest{req})
 	if err != nil {
-		lc.Errorf("fail to send the notification for %s, err: %v", deviceName, err)
+		lc.Errorf("fail to send the notification for %s, err: %v", name, err)
 		return
 	}
-	if res[0].StatusCode > http.StatusMultiStatus {
-		lc.Errorf("fail to send the notification for %s, err: %v", deviceName, res[0].Message)
+	if len(res) > 0 && res[0].StatusCode > http.StatusMultiStatus {
+		lc.Errorf("fail to send the notification for %s, err: %v", name, res[0].Message)
 	}
 }

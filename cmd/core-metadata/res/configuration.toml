@@ -45,9 +45,9 @@ Type = 'consul'
 
 [Notifications]
 PostDeviceChanges = true
-Content = 'Device notice: '
+Content = 'Meatadata notice: '
 Sender = 'core-metadata'
-Description = 'Metadata device notice'
+Description = 'Metadata change notice'
 Label = 'metadata'
 
 [SecretStore]
