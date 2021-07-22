@@ -6,8 +6,9 @@
 package io
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"io"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 )
 
 // To avoid large data causing unexpected memory exhaustion when decoding CBOR payload, defaultMaxEventSize was introduced as

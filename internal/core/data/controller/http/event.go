@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
@@ -25,6 +26,7 @@ import (
 
 type EventController struct {
 	readers map[string]io.DtoReader
+	mux     sync.RWMutex
 	dic     *di.Container
 }
 
@@ -37,6 +39,8 @@ func NewEventController(dic *di.Container) *EventController {
 }
 
 func (ec *EventController) getReader(r *http.Request) io.DtoReader {
+	ec.mux.RLock()
+	defer ec.mux.RUnlock()
 	contentType := strings.ToLower(r.Header.Get(common.ContentType))
 	if reader, ok := ec.readers[contentType]; ok {
 		return reader
