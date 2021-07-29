@@ -172,7 +172,11 @@ components:
         address:
           oneOf:
             - $ref: '#/components/schemas/RESTAddress'
-            - $ref: '#/components/schemas/MQTTAddress'
+          example:
+            type: "REST"
+            host: "192.168.0.102"
+            port: 8080
+            httpMethod: "GET"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -207,7 +211,11 @@ components:
         address:
           oneOf:
             - $ref: '#/components/schemas/RESTAddress'
-            - $ref: '#/components/schemas/MQTTAddress'
+          example:
+            type: "REST"
+            host: "192.168.0.102"
+            port: 8080
+            httpMethod: "GET"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -413,44 +421,11 @@ components:
             path:
               description: "The HTTP path at the targeted host for fulfillment of the action."
               type: string
-            requestBody:
-              description: "The HTTP request body required by the action."
-              type: string
             httpMethod:
               description: "Indicates which Http verb should be used for the REST endpoint."
               type: string
           required:
             - httpMethod
-    MQTTAddress:
-      description: "The MQTT address shows the information indicating how to contact a specific endpoint by MQTT protocol."
-      allOf:
-        - $ref: '#/components/schemas/Address'
-        - type: object
-          properties:
-            publisher:
-              description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
-              type: string
-            topic:
-              description: "The topic to publish to."
-              type: string
-            qos:
-              description: "Determines the quality of service level used to guarantee message delivery."
-              type: integer
-            keepAlive:
-              description: "Maximum time in seconds to allow the connection to the MQTT broker to remain idle."
-              type: integer
-            retained:
-              description: "Determines whether or not the MQTT broker retains the message last published."
-              type: boolean
-            autoReconnect:
-              description: "Reconnect to the broker when the connection failure."
-              type: boolean
-            connectTimeout:
-              description: "The time interval in seconds to allow a connect to complete.."
-              type: integer
-          required:
-            - publisher
-            - topic
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
