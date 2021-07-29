@@ -39,13 +39,17 @@ func NewEventController(dic *di.Container) *EventController {
 }
 
 func (ec *EventController) getReader(r *http.Request) io.DtoReader {
-	ec.mux.RLock()
-	defer ec.mux.RUnlock()
 	contentType := strings.ToLower(r.Header.Get(common.ContentType))
-	if reader, ok := ec.readers[contentType]; ok {
+	ec.mux.RLock()
+	reader, ok := ec.readers[contentType]
+	ec.mux.RUnlock()
+	if ok {
 		return reader
 	}
-	reader := io.NewDtoReader(contentType)
+
+	ec.mux.Lock()
+	defer ec.mux.Unlock()
+	reader = io.NewDtoReader(contentType)
 	ec.readers[contentType] = reader
 	return reader
 }
