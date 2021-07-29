@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
 	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/io"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -27,14 +27,14 @@ import (
 )
 
 type DeviceServiceController struct {
-	reader io.DeviceServiceReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewDeviceServiceController creates and initializes an DeviceServiceController
 func NewDeviceServiceController(dic *di.Container) *DeviceServiceController {
 	return &DeviceServiceController{
-		reader: io.NewDeviceServiceRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -49,20 +49,19 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceServiceDTOs, err := dc.reader.ReadAddDeviceServiceRequest(r.Body)
+	var reqDTOs []requestDTO.AddDeviceServiceRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceServices := requestDTO.AddDeviceServiceReqToDeviceServiceModels(addDeviceServiceDTOs)
+	deviceServices := requestDTO.AddDeviceServiceReqToDeviceServiceModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, d := range deviceServices {
-		newId, err := application.AddDeviceService(d, ctx, dc.dic)
 		var addDeviceServiceResponse interface{}
-		// get the requestID from addDeviceServiceDTOs
-		reqId := addDeviceServiceDTOs[i].RequestId
-
+		reqId := reqDTOs[i].RequestId
+		newId, err := application.AddDeviceService(d, ctx, dc.dic)
 		if err == nil {
 			addDeviceServiceResponse = commonDTO.NewBaseWithIdResponse(
 				reqId,
@@ -114,14 +113,15 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateDeviceServiceDTOs, err := dc.reader.ReadUpdateDeviceServiceRequest(r.Body)
+	var reqDTOs []requestDTO.UpdateDeviceServiceRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
 	var updateResponses []interface{}
-	for _, dto := range updateDeviceServiceDTOs {
+	for _, dto := range reqDTOs {
 		var response interface{}
 		reqId := dto.RequestId
 		err := application.PatchDeviceService(dto.Service, ctx, dc.dic)

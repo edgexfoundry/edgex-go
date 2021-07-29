@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
 	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/io"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -25,14 +25,14 @@ import (
 )
 
 type ProvisionWatcherController struct {
-	reader io.ProvisionWatcherReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewProvisionWatcherController creates and initializes an ProvisionWatcherController
 func NewProvisionWatcherController(dic *di.Container) *ProvisionWatcherController {
 	return &ProvisionWatcherController{
-		reader: io.NewProvisionWatcherRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -47,20 +47,19 @@ func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addProvisionWatcherDTOs, err := pwc.reader.ReadAddProvisionWatcherRequest(r.Body)
+	var reqDTOs []requestDTO.AddProvisionWatcherRequest
+	err := pwc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	provisionWatchers := requestDTO.AddProvisionWatcherReqToProvisionWatcherModels(addProvisionWatcherDTOs)
+	provisionWatchers := requestDTO.AddProvisionWatcherReqToProvisionWatcherModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, pw := range provisionWatchers {
-		newId, err := application.AddProvisionWatcher(pw, ctx, pwc.dic)
 		var addProvisionWatcherResponse interface{}
-		// get the requestID from addProvisionWatcherDTOs
-		reqId := addProvisionWatcherDTOs[i].RequestId
-
+		reqId := reqDTOs[i].RequestId
+		newId, err := application.AddProvisionWatcher(pw, ctx, pwc.dic)
 		if err == nil {
 			addProvisionWatcherResponse = commonDTO.NewBaseWithIdResponse(
 				reqId,
@@ -202,15 +201,15 @@ func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWrit
 
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
-
-	updateProvisionWatcherDTOs, err := pwc.reader.ReadUpdateProvisionWatcherRequest(r.Body)
+	var reqDTOs []requestDTO.UpdateProvisionWatcherRequest
+	err := pwc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
 	var updateResponses []interface{}
-	for _, dto := range updateProvisionWatcherDTOs {
+	for _, dto := range reqDTOs {
 		var response interface{}
 		reqId := dto.RequestId
 		err := application.PatchProvisionWatcher(ctx, dto.ProvisionWatcher, pwc.dic)

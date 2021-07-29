@@ -11,7 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
 	metadataContainer "github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/io"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 
@@ -27,14 +28,14 @@ import (
 )
 
 type DeviceController struct {
-	reader io.DeviceReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewDeviceController creates and initializes an DeviceController
 func NewDeviceController(dic *di.Container) *DeviceController {
 	return &DeviceController{
-		reader: io.NewDeviceRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -49,17 +50,18 @@ func (dc *DeviceController) AddDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addDeviceDTOs, err := dc.reader.ReadAddDeviceRequest(r.Body)
+	var reqDTOs []requests.AddDeviceRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	devices := requestDTO.AddDeviceReqToDeviceModels(addDeviceDTOs)
+	devices := requestDTO.AddDeviceReqToDeviceModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, d := range devices {
 		var response interface{}
-		reqId := addDeviceDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddDevice(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -164,14 +166,15 @@ func (dc *DeviceController) PatchDevice(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	updateDeviceDTOs, err := dc.reader.ReadUpdateDeviceRequest(r.Body)
+	var reqDTOs []requests.UpdateDeviceRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
 	var updateResponses []interface{}
-	for _, dto := range updateDeviceDTOs {
+	for _, dto := range reqDTOs {
 		var response interface{}
 		reqId := dto.RequestId
 		err := application.PatchDevice(dto.Device, ctx, dc.dic)
