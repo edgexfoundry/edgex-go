@@ -1,14 +1,16 @@
 package http
 
 import (
+	"bytes"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/io"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -23,24 +25,31 @@ import (
 )
 
 type EventController struct {
-	readers map[string]io.EventReader
+	readers map[string]io.DtoReader
+	mux     sync.RWMutex
 	dic     *di.Container
 }
 
 // NewEventController creates and initializes an EventController
 func NewEventController(dic *di.Container) *EventController {
 	return &EventController{
-		readers: make(map[string]io.EventReader),
+		readers: make(map[string]io.DtoReader),
 		dic:     dic,
 	}
 }
 
-func (ec *EventController) getReader(r *http.Request) io.EventReader {
+func (ec *EventController) getReader(r *http.Request) io.DtoReader {
 	contentType := strings.ToLower(r.Header.Get(common.ContentType))
-	if reader, ok := ec.readers[contentType]; ok {
+	ec.mux.RLock()
+	reader, ok := ec.readers[contentType]
+	ec.mux.RUnlock()
+	if ok {
 		return reader
 	}
-	reader := io.NewEventRequestReader(contentType)
+
+	ec.mux.Lock()
+	defer ec.mux.Unlock()
+	reader = io.NewDtoReader(contentType)
 	ec.readers[contentType] = reader
 	return reader
 }
@@ -63,14 +72,14 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 
 	var addEventReqDTO requestDTO.AddEventRequest
 
-	bytes, err := io.ReadDataInBytes(r.Body)
+	dataBytes, err := io.ReadAddEventRequestInBytes(r.Body)
 	if err == nil {
 		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
 		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
-		go application.PublishEvent(bytes, profileName, deviceName, sourceName, ctx, ec.dic)
+		go application.PublishEvent(dataBytes, profileName, deviceName, sourceName, ctx, ec.dic)
 		// unmarshal bytes to AddEventRequest
 		reader := ec.getReader(r)
-		addEventReqDTO, err = reader.ReadAddEventRequest(bytes)
+		err = reader.Read(bytes.NewReader(dataBytes), &addEventReqDTO)
 	}
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")

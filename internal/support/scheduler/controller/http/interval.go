@@ -9,12 +9,12 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/io"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -27,14 +27,14 @@ import (
 )
 
 type IntervalController struct {
-	reader io.IntervalReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewIntervalController creates and initializes an IntervalController
 func NewIntervalController(dic *di.Container) *IntervalController {
 	return &IntervalController{
-		reader: io.NewIntervalRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -49,17 +49,18 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	addIntervalDTOs, err := dc.reader.ReadAddIntervalRequest(r.Body)
+	var reqDTOs []requestDTO.AddIntervalRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	Intervals := requestDTO.AddIntervalReqToIntervalModels(addIntervalDTOs)
+	Intervals := requestDTO.AddIntervalReqToIntervalModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, d := range Intervals {
 		var response interface{}
-		reqId := addIntervalDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddInterval(d, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -145,7 +146,8 @@ func (dc *IntervalController) PatchInterval(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	reqDTOs, err := dc.reader.ReadUpdateIntervalRequest(r.Body)
+	var reqDTOs []requestDTO.UpdateIntervalRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

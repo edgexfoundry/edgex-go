@@ -9,12 +9,12 @@ import (
 	"math"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/io"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -27,14 +27,14 @@ import (
 )
 
 type IntervalActionController struct {
-	reader io.IntervalActionReader
+	reader io.DtoReader
 	dic    *di.Container
 }
 
 // NewIntervalActionController creates and initializes an IntervalActionController
 func NewIntervalActionController(dic *di.Container) *IntervalActionController {
 	return &IntervalActionController{
-		reader: io.NewIntervalActionRequestReader(),
+		reader: io.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -49,17 +49,18 @@ func (ic *IntervalActionController) AddIntervalAction(w http.ResponseWriter, r *
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	actionDTOs, err := ic.reader.ReadAddIntervalActionRequest(r.Body)
+	var reqDTOs []requestDTO.AddIntervalActionRequest
+	err := ic.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	actions := requestDTO.AddIntervalActionReqToIntervalActionModels(actionDTOs)
+	actions := requestDTO.AddIntervalActionReqToIntervalActionModels(reqDTOs)
 
 	var addResponses []interface{}
 	for i, action := range actions {
 		var response interface{}
-		reqId := actionDTOs[i].RequestId
+		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddIntervalAction(action, ctx, ic.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -145,7 +146,8 @@ func (ic *IntervalActionController) PatchIntervalAction(w http.ResponseWriter, r
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	reqDTOs, err := ic.reader.ReadUpdateIntervalActionRequest(r.Body)
+	var reqDTOs []requestDTO.UpdateIntervalActionRequest
+	err := ic.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
