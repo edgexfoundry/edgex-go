@@ -76,6 +76,12 @@ type IntervalActionInfo struct {
 	Path string
 	// Associated Schedule for the Event
 	Interval string
+	// Content is the actual content to be sent as the body of the notification
+	Content string
+	// ContentType indicates the MIME type/Content-type of the notification's content.
+	ContentType string
+	// Administrative state (LOCKED/UNLOCKED)
+	AdminState string
 }
 
 // URI constructs a URI from the protocol, host and port and returns that as a string.
