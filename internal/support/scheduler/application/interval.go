@@ -14,6 +14,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -154,12 +155,17 @@ func LoadIntervalToSchedulerManager(dic *di.Container) errors.EdgeX {
 	// Load intervals from config to DB
 	configuration := container.ConfigurationFrom(dic.Get)
 	for i := range configuration.Intervals {
-		interval := models.Interval{
+		dto := dtos.Interval{
 			Name:     configuration.Intervals[i].Name,
 			Start:    configuration.Intervals[i].Start,
 			End:      configuration.Intervals[i].End,
 			Interval: configuration.Intervals[i].Interval,
 		}
+		validateErr := common.Validate(dto)
+		if validateErr != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("validate pre-defined Interval %s from configuration failed", dto.Name), validateErr)
+		}
+		interval := dtos.ToIntervalModel(dto)
 		_, err := dbClient.IntervalByName(interval.Name)
 		if errors.Kind(err) == errors.KindEntityDoesNotExist {
 			_, err = dbClient.AddInterval(interval)

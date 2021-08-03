@@ -152,20 +152,32 @@ func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 	// Load intervalActions from config to DB
 	configuration := container.ConfigurationFrom(dic.Get)
 	for i := range configuration.IntervalActions {
-		action := models.IntervalAction{
+		dto := dtos.IntervalAction{
 			Name:         configuration.IntervalActions[i].Name,
 			IntervalName: configuration.IntervalActions[i].Interval,
-			Address: models.RESTAddress{
-				BaseAddress: models.BaseAddress{
-					Type: common.REST,
-					Host: configuration.IntervalActions[i].Host,
-					Port: configuration.IntervalActions[i].Port,
+			Address: dtos.Address{
+				Type: common.REST,
+				Host: configuration.IntervalActions[i].Host,
+				Port: configuration.IntervalActions[i].Port,
+				RESTAddress: dtos.RESTAddress{
+					Path:       configuration.IntervalActions[i].Path,
+					HTTPMethod: configuration.IntervalActions[i].Method,
 				},
-				Path:       configuration.IntervalActions[i].Path,
-				HTTPMethod: configuration.IntervalActions[i].Method,
 			},
+			Content:     configuration.IntervalActions[i].Content,
+			ContentType: configuration.IntervalActions[i].ContentType,
+			AdminState:  configuration.IntervalActions[i].AdminState,
 		}
-		_, err := dbClient.IntervalActionByName(action.Name)
+		validateErr := common.Validate(dto)
+		if validateErr != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("validate pre-defined IntervalAction %s from configuration failed", dto.Name), validateErr)
+		}
+		_, err := dbClient.IntervalByName(dto.IntervalName)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+		action := dtos.ToIntervalActionModel(dto)
+		_, err = dbClient.IntervalActionByName(action.Name)
 		if errors.Kind(err) == errors.KindEntityDoesNotExist {
 			_, err = dbClient.AddIntervalAction(action)
 			if err != nil {
