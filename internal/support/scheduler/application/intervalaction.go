@@ -170,7 +170,7 @@ func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 		}
 		validateErr := common.Validate(dto)
 		if validateErr != nil {
-			return errors.NewCommonEdgeXWrapper(validateErr)
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("validate pre-defined IntervalAction %s from configuration failed", dto.Name), validateErr)
 		}
 		_, err := dbClient.IntervalByName(dto.IntervalName)
 		if err != nil {

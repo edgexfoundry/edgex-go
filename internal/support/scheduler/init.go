@@ -59,13 +59,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	err := application.LoadIntervalToSchedulerManager(dic)
 	if err != nil {
-		lc.Errorf("Failed to load interval to scheduler %v", err)
+		lc.Errorf("Failed to load interval to scheduler, %v", err)
 		return false
 	}
 
 	err = application.LoadIntervalActionToSchedulerManager(dic)
 	if err != nil {
-		lc.Errorf("Failed to load interval to scheduler %v", err)
+		lc.Errorf("Failed to load intervalAction to scheduler, %v", err)
 		return false
 	}
 
