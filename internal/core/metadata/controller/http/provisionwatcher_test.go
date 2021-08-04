@@ -637,6 +637,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.ProvisionWatcher.Id = &emptyString
+	emptyId.ProvisionWatcher.Name = nil
 	emptyName := testReq
 	emptyName.ProvisionWatcher.Id = nil
 	emptyName.ProvisionWatcher.Name = &emptyString

@@ -405,7 +405,7 @@ func TestPatchIntervalAction(t *testing.T) {
 		{"Valid - no id", []requests.UpdateIntervalActionRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
 		{"Valid - no name", []requests.UpdateIntervalActionRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
 		{"Invalid - invalid id", []requests.UpdateIntervalActionRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateIntervalActionRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateIntervalActionRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
 		{"Invalid - empty name", []requests.UpdateIntervalActionRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - no id and name", []requests.UpdateIntervalActionRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateIntervalActionRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},

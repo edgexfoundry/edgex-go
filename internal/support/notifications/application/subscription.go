@@ -139,6 +139,9 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 	var subscription models.Subscription
 	var edgexErr errors.EdgeX
 	if dto.Id != nil {
+		if *dto.Id == "" {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+		}
 		subscription, edgexErr = dbClient.SubscriptionById(*dto.Id)
 		if edgexErr != nil {
 			return errors.NewCommonEdgeXWrapper(edgexErr)

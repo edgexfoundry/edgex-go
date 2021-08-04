@@ -326,7 +326,7 @@ func TestPatchDeviceService(t *testing.T) {
 		{"Valid - no id", []requests.UpdateDeviceServiceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
 		{"Valid - no name", []requests.UpdateDeviceServiceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
 		{"Invalid - invalid id", []requests.UpdateDeviceServiceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateDeviceServiceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateDeviceServiceRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
 		{"Invalid - empty name", []requests.UpdateDeviceServiceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - no id and name", []requests.UpdateDeviceServiceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateDeviceServiceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},

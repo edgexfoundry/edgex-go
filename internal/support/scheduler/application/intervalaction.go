@@ -106,6 +106,9 @@ func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic
 	var action models.IntervalAction
 	var edgeXerr errors.EdgeX
 	if dto.Id != nil {
+		if *dto.Id == "" {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
+		}
 		action, edgeXerr = dbClient.IntervalActionById(*dto.Id)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
