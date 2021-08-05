@@ -634,6 +634,7 @@ func TestPatchSubscription(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Subscription.Id = &emptyString
+	emptyId.Subscription.Name = nil
 	emptyName := testReq
 	emptyName.Subscription.Id = nil
 	emptyName.Subscription.Name = &emptyString
@@ -674,7 +675,7 @@ func TestPatchSubscription(t *testing.T) {
 		{"Valid - no id", []requests.UpdateSubscriptionRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
 		{"Valid - no name", []requests.UpdateSubscriptionRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
 		{"Invalid - invalid id", []requests.UpdateSubscriptionRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateSubscriptionRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateSubscriptionRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - empty name", []requests.UpdateSubscriptionRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateSubscriptionRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found name", []requests.UpdateSubscriptionRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},

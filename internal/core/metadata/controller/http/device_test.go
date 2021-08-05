@@ -453,6 +453,7 @@ func TestPatchDevice(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Device.Id = &emptyString
+	emptyId.Device.Name = nil
 	emptyName := testReq
 	emptyName.Device.Id = nil
 	emptyName.Device.Name = &emptyString
@@ -502,7 +503,7 @@ func TestPatchDevice(t *testing.T) {
 		{"Valid - no id", []requests.UpdateDeviceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
 		{"Valid - no name", []requests.UpdateDeviceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
 		{"Invalid - invalid id", []requests.UpdateDeviceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - empty name", []requests.UpdateDeviceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},

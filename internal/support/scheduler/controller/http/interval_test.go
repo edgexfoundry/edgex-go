@@ -392,6 +392,7 @@ func TestPatchInterval(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Interval.Id = &emptyString
+	emptyId.Interval.Name = nil
 	emptyName := testReq
 	emptyName.Interval.Id = nil
 	emptyName.Interval.Name = &emptyString
@@ -435,7 +436,7 @@ func TestPatchInterval(t *testing.T) {
 		{"Valid - no id", []requests.UpdateIntervalRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
 		{"Valid - no name", []requests.UpdateIntervalRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
 		{"Invalid - invalid id", []requests.UpdateIntervalRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateIntervalRequest{emptyId}, http.StatusMultiStatus, http.StatusBadRequest},
+		{"Invalid - empty id", []requests.UpdateIntervalRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - empty name", []requests.UpdateIntervalRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - no id and name", []requests.UpdateIntervalRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found id", []requests.UpdateIntervalRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
