@@ -356,6 +356,7 @@ func TestPatchIntervalAction(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Action.Id = &emptyString
+	emptyId.Action.Name = nil
 	emptyName := testReq
 	emptyName.Action.Id = nil
 	emptyName.Action.Name = &emptyString

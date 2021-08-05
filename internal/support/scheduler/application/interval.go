@@ -11,6 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/infrastructure/interfaces"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -105,21 +106,9 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	var interval models.Interval
-	var edgeXerr errors.EdgeX
-	if dto.Id != nil {
-		interval, edgeXerr = dbClient.IntervalById(*dto.Id)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-	} else {
-		interval, edgeXerr = dbClient.IntervalByName(*dto.Name)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-	}
-	if dto.Name != nil && *dto.Name != interval.Name {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("interval name '%s' not match the exsting '%s' ", *dto.Name, interval.Name), nil)
+	interval, err := intervalByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, interval.Name)
@@ -132,13 +121,13 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 
 	requests.ReplaceIntervalModelFieldsWithDTO(&interval, dto)
 
-	edgeXerr = dbClient.UpdateInterval(interval)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	err = dbClient.UpdateInterval(interval)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
-	edgeXerr = schedulerManager.UpdateInterval(interval)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	err = schedulerManager.UpdateInterval(interval)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	lc.Debugf(
@@ -146,6 +135,25 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 		correlation.FromContext(ctx),
 	)
 	return nil
+}
+
+func intervalByDTO(dbClient interfaces.DBClient, dto dtos.UpdateInterval) (interval models.Interval, err errors.EdgeX) {
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
+		interval, err = dbClient.IntervalById(*dto.Id)
+		if err != nil {
+			return interval, errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		interval, err = dbClient.IntervalByName(*dto.Name)
+		if err != nil {
+			return interval, errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	if dto.Name != nil && *dto.Name != interval.Name {
+		return interval, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("interval name '%s' not match the exsting '%s' ", *dto.Name, interval.Name), nil)
+	}
+	return interval, nil
 }
 
 // LoadIntervalToSchedulerManager loads intervals to SchedulerManager before running the interval job
