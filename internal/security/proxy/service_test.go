@@ -536,60 +536,6 @@ func TestGetSvcIDs(t *testing.T) {
 	}
 }
 
-func TestInitJWTAuth(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		if !strings.Contains(r.URL.EscapedPath(), PluginsPath) {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer ts.Close()
-
-	host, port, err := parseHostAndPort(ts, t)
-	if err != nil {
-		t.Error(err.Error())
-		return
-	}
-
-	cfgOK := config.ConfigurationStruct{}
-	cfgOK.KongURL = config.KongUrlInfo{
-		Server:          host,
-		ApplicationPort: port,
-	}
-
-	cfgWrongPort := cfgOK
-	cfgWrongPort.KongURL.ApplicationPort = 123
-
-	tests := []struct {
-		name        string
-		config      config.ConfigurationStruct
-		expectError bool
-	}{
-		{"jwtOK", cfgOK, false},
-		{"InvalidPort", cfgWrongPort, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			svc := NewService(&http.Client{}, logger.MockLogger{}, &tt.config)
-			err := svc.initJWTAuth()
-			if err != nil && !tt.expectError {
-				t.Error(err)
-			}
-
-			if err == nil && tt.expectError {
-				t.Error("error was expected, none occurred")
-			}
-		})
-	}
-}
-
 func parseHostAndPort(server *httptest.Server, t *testing.T) (host string, port int, err error) {
 	parsed, err := url.Parse(server.URL)
 	if err != nil {

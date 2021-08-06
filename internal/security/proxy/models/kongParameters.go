@@ -43,15 +43,6 @@ type KongRoute struct {
 	Name  string   `json:"name,omitempty"`
 }
 
-type KongOAuth2Plugin struct {
-	Name                    string `url:"name"`
-	Scope                   string `url:"config.scopes"`
-	MandatoryScope          string `url:"config.mandatory_scope"`
-	EnableClientCredentials string `url:"config.enable_client_credentials"`
-	EnableGlobalCredentials string `url:"config.global_credentials"`
-	TokenTTL                int    `url:"config.refresh_token_ttl"`
-}
-
 type KongACLPlugin struct {
 	Name      string `url:"name"`
 	WhiteList string `url:"config.whitelist"`

@@ -171,8 +171,7 @@ func (s *Service) Init() error {
 			Name:  strings.ToLower(route.Name),
 		}
 
-		err = s.initKongRoutes(routeParams, strings.ToLower(route.Name))
-		if err != nil {
+		if err := s.initKongRoutes(routeParams, strings.ToLower(route.Name)); err != nil {
 			return err
 		}
 
@@ -182,6 +181,24 @@ func (s *Service) Init() error {
 				return err
 			}
 		}
+
+		var formVals url.Values
+
+		switch s.configuration.KongAuth.Name {
+		case "jwt":
+			formVals = url.Values{
+				"name": {"jwt"},
+			}
+		default:
+			return fmt.Errorf("unsupported authetication method: %s", s.configuration.KongAuth.Name)
+		}
+
+		s.loggingClient.Info(fmt.Sprintf("selected auth method %s", s.configuration.KongAuth.Name))
+
+		if err := s.initRouteAuthentication(strings.ToLower(route.Name), formVals.Encode()); err != nil {
+			return err
+		}
+
 	}
 
 	s.loggingClient.Info("finishing initialization for reverse proxy")
@@ -456,34 +473,23 @@ func (s *Service) initCORSRoutes(corsConfig *config.CORSConfigurationInfo, name 
 	return nil
 }
 
-func (s *Service) initAuthMethod(name string, ttl int) error {
-	s.loggingClient.Info(fmt.Sprintf("selected authetication method as %s.", name))
-	switch name {
-	case "jwt":
-		return s.initJWTAuth()
-	case "oauth2":
-		return s.initOAuth2(ttl)
-	default:
-		return fmt.Errorf("unsupported authetication method: %s", name)
-	}
-}
+func (s *Service) initRouteAuthentication(routeName string, formVals string) error {
 
-func (s *Service) initJWTAuth() error {
-	formVals := url.Values{
-		"name": {"jwt"},
-	}
-	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), RoutesPath, routeName, PluginsPath}
+
+	// Create routes associated to a specific service
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals))
 	if err != nil {
-		e := fmt.Sprintf("failed to create jwt auth request -- %s", err.Error())
+		e := fmt.Sprintf("failed to form route authentication request for %s with error %s", routeName, err.Error())
 		s.loggingClient.Error(e)
 		return err
 	}
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
 	req.Header.Add(common.ContentType, URLEncodedForm)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		e := fmt.Sprintf("failed to set up jwt authentication -- %s", err.Error())
+		e := fmt.Sprintf("failed to request route authentication for %s with error %s", routeName, err.Error())
 		s.loggingClient.Error(e)
 		return err
 	}
@@ -491,55 +497,10 @@ func (s *Service) initJWTAuth() error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		s.loggingClient.Info("successful to set up jwt authentication")
+		s.loggingClient.Info(fmt.Sprintf("successful to set up route authentication for `%s`", routeName))
 	default:
-		e := fmt.Sprintf("failed to set up jwt authentication with errorcode %d", resp.StatusCode)
-		s.loggingClient.Error(e)
-		return errors.New(e)
-	}
-	return nil
-}
-
-func (s *Service) initOAuth2(ttl int) error {
-	oauth2Params := &models.KongOAuth2Plugin{
-		Name:                    "oauth2",
-		Scope:                   OAuth2Scopes,
-		MandatoryScope:          "true",
-		EnableClientCredentials: "true",
-		EnableGlobalCredentials: "true",
-		TokenTTL:                ttl,
-	}
-	//Again, the type above is largely useless but the struct tags indicate the field names below so I left it.
-	formVals := url.Values{
-		"name":                             {oauth2Params.Name},
-		"config.scopes":                    {oauth2Params.Scope},
-		"config.mandatory_scope":           {oauth2Params.MandatoryScope},
-		"config.enable_client_credentials": {oauth2Params.EnableClientCredentials},
-		"config.global_credentials":        {oauth2Params.EnableGlobalCredentials},
-		"config.refresh_token_ttl":         {strconv.Itoa(oauth2Params.TokenTTL)},
-	}
-	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), PluginsPath}
-	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
-	if err != nil {
-		e := fmt.Sprintf("failed to create oauth2 request -- %s", err.Error())
-		s.loggingClient.Error(e)
-		return err
-	}
-	req.Header.Add(common.ContentType, URLEncodedForm)
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		e := fmt.Sprintf("failed to set up oauth2 authentication -- %s", err.Error())
-		s.loggingClient.Error(e)
-		return err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		s.loggingClient.Info("successful to set up oauth2 authentication")
-	default:
-		e := fmt.Sprintf("failed to set up oauth2 authentication with errorcode %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		e := fmt.Sprintf("failed to set up route authentication for %s with error %s, %s", routeName, resp.Status, string(body))
 		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
