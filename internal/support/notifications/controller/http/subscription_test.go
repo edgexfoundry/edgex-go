@@ -634,6 +634,7 @@ func TestPatchSubscription(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Subscription.Id = &emptyString
+	emptyId.Subscription.Name = nil
 	emptyName := testReq
 	emptyName.Subscription.Id = nil
 	emptyName.Subscription.Name = &emptyString

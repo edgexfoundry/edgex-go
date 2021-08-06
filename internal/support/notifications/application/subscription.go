@@ -11,6 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -136,21 +137,9 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	var subscription models.Subscription
-	var edgexErr errors.EdgeX
-	if dto.Id != nil {
-		subscription, edgexErr = dbClient.SubscriptionById(*dto.Id)
-		if edgexErr != nil {
-			return errors.NewCommonEdgeXWrapper(edgexErr)
-		}
-	} else {
-		subscription, edgexErr = dbClient.SubscriptionByName(*dto.Name)
-		if edgexErr != nil {
-			return errors.NewCommonEdgeXWrapper(edgexErr)
-		}
-	}
-	if dto.Name != nil && *dto.Name != subscription.Name {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("subscription name '%s' not match the existing '%s' ", *dto.Name, subscription.Name), nil)
+	subscription, err := subscriptionByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	requests.ReplaceSubscriptionModelFieldsWithDTO(&subscription, dto)
@@ -159,11 +148,30 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription categories and labels can not be both empty", nil)
 	}
 
-	edgexErr = dbClient.UpdateSubscription(subscription)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
+	err = dbClient.UpdateSubscription(subscription)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	lc.Debugf("Subscription patched on DB successfully. Correlation-ID: %s ", correlation.FromContext(ctx))
 	return nil
+}
+
+func subscriptionByDTO(dbClient interfaces.DBClient, dto dtos.UpdateSubscription) (subscription models.Subscription, err errors.EdgeX) {
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
+		subscription, err = dbClient.SubscriptionById(*dto.Id)
+		if err != nil {
+			return subscription, errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		subscription, err = dbClient.SubscriptionByName(*dto.Name)
+		if err != nil {
+			return subscription, errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	if dto.Name != nil && *dto.Name != subscription.Name {
+		return subscription, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("subscription name '%s' not match the existing '%s' ", *dto.Name, subscription.Name), nil)
+	}
+	return subscription, nil
 }
