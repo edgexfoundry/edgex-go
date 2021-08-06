@@ -28,6 +28,16 @@ import (
 func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int) {
 	w.Header().Set(common.CorrelationHeader, correlation.FromContext(ctx))
 	w.Header().Set(common.ContentType, common.ContentTypeJSON)
+	// when the requst destination server is shut down or unreachable
+	// the the statusCode in the response header  would be  zero .
+	// http.ResponseWriter.WriteHeader will check statusCode,if less than 100 or bigger than 900 ,
+	// when this check not pass would raise a panic, response to the caller can not be completed
+ 	defer func() {
+		err:=recover()
+		if(err!=nil){
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}()
 	w.WriteHeader(statusCode)
 }
 
