@@ -8,6 +8,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
 	"github.com/google/uuid"
 )
 
@@ -41,5 +42,11 @@ func LoggingMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler 
 				next.ServeHTTP(w, r)
 			}
 		})
+	}
+}
+
+func ManageTimeout(timeout time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.TimeoutHandler(next, timeout, "HTTP request timeout")
 	}
 }

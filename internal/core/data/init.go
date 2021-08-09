@@ -18,9 +18,11 @@ package data
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -47,6 +49,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
+
+	timeout, err := time.ParseDuration(configuration.Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("unable to parse RequestTimeout value of %s to a duration: %w", configuration.Service.RequestTimeout, err)
+		return false
+	}
+	b.router.Use(correlation.ManageTimeout(timeout))
 
 	if configuration.MessageQueue.SubscribeEnabled {
 		err := application.SubscribeEvents(ctx, dic)
