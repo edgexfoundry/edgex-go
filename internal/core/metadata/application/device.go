@@ -19,8 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-
-	"github.com/google/uuid"
 )
 
 // The AddDevice function accepts the new device model from the controller function
@@ -157,22 +155,13 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 }
 
 func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device models.Device, edgeXerr errors.EdgeX) {
-	if dto.Id != nil {
-		if *dto.Id == "" {
-			return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-		}
-		_, err := uuid.Parse(*dto.Id)
-		if err != nil {
-			return device, errors.NewCommonEdgeX(errors.KindInvalidId, "fail to parse id as an UUID", err)
-		}
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
 		device, edgeXerr = dbClient.DeviceById(*dto.Id)
 		if edgeXerr != nil {
 			return device, errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
 	} else {
-		if *dto.Name == "" {
-			return device, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
-		}
 		device, edgeXerr = dbClient.DeviceByName(*dto.Name)
 		if edgeXerr != nil {
 			return device, errors.NewCommonEdgeXWrapper(edgeXerr)

@@ -637,6 +637,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.ProvisionWatcher.Id = &emptyString
+	emptyId.ProvisionWatcher.Name = nil
 	emptyName := testReq
 	emptyName.ProvisionWatcher.Id = nil
 	emptyName.ProvisionWatcher.Name = &emptyString
@@ -653,9 +654,9 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	dbClientMock.On("ProvisionWatcherById", *invalidNotFoundId.ProvisionWatcher.Id).Return(pwModels, notFoundIdError)
 
 	invalidNotFoundName := testReq
-	invalidNotFoundName.ProvisionWatcher.Name = nil
 	notFoundName := "notFoundName"
 	invalidNotFoundName.ProvisionWatcher.Name = &notFoundName
+	invalidNotFoundName.ProvisionWatcher.Id = nil
 	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
 	dbClientMock.On("ProvisionWatcherByName", *invalidNotFoundName.ProvisionWatcher.Name).Return(pwModels, notFoundNameError)
 

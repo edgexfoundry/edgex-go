@@ -19,7 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/google/uuid"
 )
 
 // AddProvisionWatcher function accepts the new provision watcher model from the controller function
@@ -182,23 +181,14 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 }
 
 func provisionWatcherByDTO(dbClient interfaces.DBClient, dto dtos.UpdateProvisionWatcher) (pw models.ProvisionWatcher, edgexErr errors.EdgeX) {
-	if dto.Name != nil {
-		if *dto.Name == "" {
-			return pw, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
-		}
-		pw, edgexErr = dbClient.ProvisionWatcherByName(*dto.Name)
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
+		pw, edgexErr = dbClient.ProvisionWatcherById(*dto.Id)
 		if edgexErr != nil {
 			return pw, errors.NewCommonEdgeXWrapper(edgexErr)
 		}
 	} else {
-		if *dto.Id == "" {
-			return pw, errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
-		}
-		_, err := uuid.Parse(*dto.Id)
-		if err != nil {
-			return pw, errors.NewCommonEdgeX(errors.KindInvalidId, "failed to parse id as an UUID", err)
-		}
-		pw, edgexErr = dbClient.ProvisionWatcherById(*dto.Id)
+		pw, edgexErr = dbClient.ProvisionWatcherByName(*dto.Name)
 		if edgexErr != nil {
 			return pw, errors.NewCommonEdgeXWrapper(edgexErr)
 		}
