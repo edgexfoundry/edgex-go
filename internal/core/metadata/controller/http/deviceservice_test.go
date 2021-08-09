@@ -286,6 +286,7 @@ func TestPatchDeviceService(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Service.Id = &emptyString
+	emptyId.Service.Name = nil
 	emptyName := testReq
 	emptyName.Service.Id = nil
 	emptyName.Service.Name = &emptyString

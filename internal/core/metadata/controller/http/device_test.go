@@ -453,6 +453,7 @@ func TestPatchDevice(t *testing.T) {
 	emptyString := ""
 	emptyId := testReq
 	emptyId.Device.Id = &emptyString
+	emptyId.Device.Name = nil
 	emptyName := testReq
 	emptyName.Device.Id = nil
 	emptyName.Device.Name = &emptyString

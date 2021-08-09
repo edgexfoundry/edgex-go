@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -60,28 +61,16 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	var deviceService models.DeviceService
-	var edgeXerr errors.EdgeX
-	if dto.Id != nil {
-		deviceService, edgeXerr = dbClient.DeviceServiceById(*dto.Id)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-	} else {
-		deviceService, edgeXerr = dbClient.DeviceServiceByName(*dto.Name)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
-		}
-	}
-	if dto.Name != nil && *dto.Name != deviceService.Name {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service name '%s' not match the exsting '%s' ", *dto.Name, deviceService.Name), nil)
+	deviceService, err := deviceServiceByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	requests.ReplaceDeviceServiceModelFieldsWithDTO(&deviceService, dto)
 
-	edgeXerr = dbClient.UpdateDeviceService(deviceService)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	err = dbClient.UpdateDeviceService(deviceService)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	lc.Debugf(
@@ -90,6 +79,25 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 	)
 	go updateDeviceServiceCallback(ctx, dic, deviceService)
 	return nil
+}
+
+func deviceServiceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDeviceService) (deviceService models.DeviceService, err errors.EdgeX) {
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
+		deviceService, err = dbClient.DeviceServiceById(*dto.Id)
+		if err != nil {
+			return deviceService, errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		deviceService, err = dbClient.DeviceServiceByName(*dto.Name)
+		if err != nil {
+			return deviceService, errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	if dto.Name != nil && *dto.Name != deviceService.Name {
+		return deviceService, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service name '%s' not match the exsting '%s' ", *dto.Name, deviceService.Name), nil)
+	}
+	return deviceService, nil
 }
 
 // DeleteDeviceServiceByName delete the device service by name
