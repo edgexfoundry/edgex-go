@@ -316,11 +316,9 @@ paths:
         content:
           application/json:
             schema:
-              anyOf:
-                - $ref: '#/components/schemas/OperationRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/OperationRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/OperationRequest'
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
