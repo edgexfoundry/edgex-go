@@ -1925,9 +1925,10 @@ paths:
             schema:
               type: object
               properties:
-                filename:
+                file:
                   type: string
                   format: binary
+                  description: 'The Device Profile YAML file binary'
       responses:
         '201':
           description: "OK"
@@ -1989,9 +1990,10 @@ paths:
             schema:
               type: object
               properties:
-                filename:
+                file:
                   type: string
                   format: binary
+                  description: 'The Device Profile YAML file binary'
       responses:
         '200':
           description: "OK"
