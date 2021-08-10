@@ -6,7 +6,13 @@
 package common
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+
+	"github.com/gorilla/mux"
 )
 
 func MakeTimestamp() int64 {
@@ -46,4 +52,13 @@ func ConvertStringsToInterfaces(stringArray []string) []interface{} {
 		result[i] = s
 	}
 	return result
+}
+
+func LoadRequestTimeoutHandler(r *mux.Router, timeout string) errors.EdgeX {
+	td, err := time.ParseDuration(timeout)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("unable to parse RequestTimeout value of %s to a duration", timeout), err)
+	}
+	r.Use(correlation.ManageTimeout(td))
+	return nil
 }

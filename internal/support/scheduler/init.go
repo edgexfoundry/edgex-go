@@ -19,6 +19,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/application/scheduler"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
@@ -49,6 +50,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
+	err := common.LoadRequestTimeoutHandler(b.router, configuration.Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("Fail to load the request timout handler, %v", err)
+		return false
+	}
+
 	// V2 Scheduler
 	schedulerManager := scheduler.NewManager(lc, configuration)
 	dic.Update(di.ServiceConstructorMap{
@@ -57,7 +64,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 	})
 
-	err := application.LoadIntervalToSchedulerManager(dic)
+	err = application.LoadIntervalToSchedulerManager(dic)
 	if err != nil {
 		lc.Errorf("Failed to load interval to scheduler, %v", err)
 		return false

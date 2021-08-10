@@ -16,11 +16,14 @@ package metadata
 
 import (
 	"context"
-
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
 	"github.com/gorilla/mux"
 )
 
@@ -39,6 +42,15 @@ func NewBootstrap(router *mux.Router) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the metadata service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic)
+
+	configuration := container.ConfigurationFrom(dic.Get)
+	lc := container.LoggingClientFrom(dic.Get)
+
+	err := common.LoadRequestTimeoutHandler(b.router, configuration.GetBootstrap().Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("Fail to load the request timout handler, %v", err)
+		return false
+	}
 
 	return true
 }

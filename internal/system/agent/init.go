@@ -21,12 +21,14 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/gorilla/mux"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/direct"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/application/executor"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
+
+	"github.com/gorilla/mux"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -46,6 +48,13 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	LoadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	err := common.LoadRequestTimeoutHandler(b.router, configuration.Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("Fail to load the request timout handler, %v", err)
+		return false
+	}
 
 	// validate metrics implementation
 	switch configuration.MetricsMechanism {

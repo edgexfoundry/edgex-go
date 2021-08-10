@@ -21,6 +21,8 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
+
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -47,6 +49,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	LoadRestRoutes(b.router, dic)
 
 	configuration := container.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	err := pkgCommon.LoadRequestTimeoutHandler(b.router, configuration.Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("Fail to load the request timout handler, %v", err)
+		return false
+	}
 
 	// initialize clients required by the service
 	dic.Update(di.ServiceConstructorMap{
