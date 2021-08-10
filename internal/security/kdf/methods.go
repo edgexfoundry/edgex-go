@@ -28,7 +28,7 @@ import (
 // in the event that the KDF inputKeyMaterial is less than random.
 const (
 	saltFile   string = "kdf-salt.dat"
-	saltLength        = 32
+	saltLength int    = 32
 )
 
 var (
