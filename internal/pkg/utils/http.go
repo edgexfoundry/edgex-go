@@ -32,13 +32,12 @@ func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int)
 	// the the statusCode in the response header  would be  zero .
 	// http.ResponseWriter.WriteHeader will check statusCode,if less than 100 or bigger than 900,
 	// when this check not pass would raise a panic, response to the caller can not be completed
-	defer func() {
-		err := recover()
-		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-		}
-	}()
-	w.WriteHeader(statusCode)
+	// to avoid panic see http.checkWriteHeaderCode
+	if statusCode < 100 || statusCode > 900 {
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(statusCode)
+	}
 }
 
 // WriteErrorResponse writes Http header, encode error response with JSON format and writes to the HTTP response.
