@@ -1,4 +1,4 @@
-LogLevel = 'DEBUG'
+LogLevel = "DEBUG"
 
 [SecretStore]
 Type = "vault"

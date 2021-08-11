@@ -13,30 +13,30 @@
 #
 #################################################################################
 
-LogLevel = 'INFO'
+LogLevel = "INFO"
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'          ## Override in environment variables, if necessary
+Type = "vault"
+Protocol = "http"
+Host = "localhost"          ## Override in environment variables, if necessary
 Port = 8200
-Path = 'security-bootstrapper-redis/'
-TokenFile = '/tmp/edgex/secrets/security-bootstrapper-redis/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "security-bootstrapper-redis/"
+TokenFile = "/tmp/edgex/secrets/security-bootstrapper-redis/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = ''           ## Unused
-  Password = ''       ## Will be set from value in Vault
-  Username = ''       ## Will be set from value in Vault
+  Host = "localhost"
+  Name = ""           ## Unused
+  Password = ""       ## Will be set from value in Vault
+  Username = ""       ## Will be set from value in Vault
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [DatabaseConfig]
-  Path = '/path/to/redis/conf/dir'
-  Name = 'redis.conf'
+  Path = "/path/to/redis/conf/dir"
+  Name = "redis.conf"

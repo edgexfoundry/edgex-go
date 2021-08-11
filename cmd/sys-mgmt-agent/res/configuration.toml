@@ -5,64 +5,64 @@
 # In the first release of the SMA, the manifest will be static.
 # In the future, the manifest may be more dynamic or even provided by some 3rd party orchestrator.
 
-ExecutorPath = '../sys-mgmt-executor/sys-mgmt-executor'
+ExecutorPath = "../sys-mgmt-executor/sys-mgmt-executor"
 
 # The MetricsMechanism setting can be one of the following options:
-# MetricsMechanism = 'executor'
-MetricsMechanism = 'direct-service'
+# MetricsMechanism = "executor"
+MetricsMechanism = "direct-service"
 
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 58890
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the System Management Agent Service'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the System Management Agent Service"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '20s'
+RequestTimeout = "20s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Clients]
   [Clients.support-notifications]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59860
 
   [Clients.core-command]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59882
 
   [Clients.core-metadata]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59881
 
   [Clients.core-data]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59880
 
   [Clients.support-scheduler]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59861
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
-Path = 'sys-mgmt-agent/'
-TokenFile = '/tmp/edgex/secrets/sys-mgmt-agent/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "sys-mgmt-agent/"
+TokenFile = "/tmp/edgex/secrets/sys-mgmt-agent/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"

@@ -1,7 +1,7 @@
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
 ResendLimit = 2
-ResendInterval = '5s'
+ResendInterval = "5s"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"
@@ -15,50 +15,50 @@ ResendInterval = '5s'
       password = ""
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 59860
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the Support Notifications Microservice'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the Support Notifications Microservice"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '5s'
+RequestTimeout = "5s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'notifications'
+  Host = "localhost"
+  Name = "notifications"
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [Smtp]
-  Host = 'smtp.gmail.com'
+  Host = "smtp.gmail.com"
   Port = 587
-  Sender = 'jdoe@gmail.com'
+  Sender = "jdoe@gmail.com"
   EnableSelfSignedCert = false
-  Subject = 'EdgeX Notification'
+  Subject = "EdgeX Notification"
   # SecretPath is used to specify the secret path to store the credential(username and password) for connecting the SMTP server
   # User need to store the credential via the /secret API before sending the email notification
-  SecretPath = 'smtp'
-  # AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
-  AuthMode = 'usernamepassword'
+  SecretPath = "smtp"
+  # AuthMode is the SMTP authentication mechanism. Currently, "usernamepassword" is the only AuthMode supported by this service, and the secret keys are "username" and "password".
+  AuthMode = "usernamepassword"
 
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
-Path = 'support-notifications/'
-TokenFile = '/tmp/edgex/secrets/support-notifications/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "support-notifications/"
+TokenFile = "/tmp/edgex/secrets/support-notifications/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
 

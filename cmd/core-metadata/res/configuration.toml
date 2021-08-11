@@ -1,5 +1,5 @@
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"
@@ -8,57 +8,57 @@ LogLevel = 'INFO'
       password = ""
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 59881
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the EdgeX Core Metadata Microservice'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the EdgeX Core Metadata Microservice"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '5s'
+RequestTimeout = "5s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Clients]
   [Clients.support-notifications]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59860
 
   [Clients.core-data]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59880
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'metadata'
-  Password = 'password'
-  Username = 'meta'
+  Host = "localhost"
+  Name = "metadata"
+  Password = "password"
+  Username = "meta"
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [Notifications]
 PostDeviceChanges = true
-Content = 'Meatadata notice: '
-Sender = 'core-metadata'
-Description = 'Metadata change notice'
-Label = 'metadata'
+Content = "Meatadata notice: "
+Sender = "core-metadata"
+Description = "Metadata change notice"
+Label = "metadata"
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
-Path = 'core-metadata/'
-TokenFile = '/tmp/edgex/secrets/core-metadata/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "core-metadata/"
+TokenFile = "/tmp/edgex/secrets/core-metadata/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
 
