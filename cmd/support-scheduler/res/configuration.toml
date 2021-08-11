@@ -1,7 +1,7 @@
 ScheduleIntervalTime = 500
 
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
     [Writable.InsecureSecrets]
         [Writable.InsecureSecrets.DB]
         path = "redisdb"
@@ -10,55 +10,55 @@ LogLevel = 'INFO'
             password = ""
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 59861
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the Support Scheduler Microservice'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the Support Scheduler Microservice"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '5s'
+RequestTimeout = "5s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'scheduler'
+  Host = "localhost"
+  Name = "scheduler"
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [Intervals]
     [Intervals.Midnight]
-    Name = 'midnight'
-    Start = '20180101T000000'
-    Interval = '24h'
+    Name = "midnight"
+    Start = "20180101T000000"
+    Interval = "24h"
 
 [IntervalActions]
     [IntervalActions.ScrubAged]
-    Name = 'scrub-aged-events'
-    Host = 'localhost'
+    Name = "scrub-aged-events"
+    Host = "localhost"
     Port = 59880
-    Protocol = 'http'
-    Method = 'DELETE'
-    Target = 'core-data'
-    Path = '/api/v2/event/age/604800000000000' # Remove events older than 7 days
-    Interval = 'midnight'
-    AdminState = 'UNLOCKED'
+    Protocol = "http"
+    Method = "DELETE"
+    Target = "core-data"
+    Path = "/api/v2/event/age/604800000000000" # Remove events older than 7 days
+    Interval = "midnight"
+    AdminState = "UNLOCKED"
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
-Path = 'support-scheduler/'
-TokenFile = '/tmp/edgex/secrets/support-scheduler/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "support-scheduler/"
+TokenFile = "/tmp/edgex/secrets/support-scheduler/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
 

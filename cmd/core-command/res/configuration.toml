@@ -1,5 +1,5 @@
 [Writable]
-LogLevel = 'INFO'
+LogLevel = "INFO"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"
@@ -8,44 +8,44 @@ LogLevel = 'INFO'
       password = ""
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 59882
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the Core Command Microservice'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the Core Command Microservice"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '45s'
+RequestTimeout = "45s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Clients]
   [Clients.core-metadata]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59881
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'metadata'
+  Host = "localhost"
+  Name = "metadata"
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
 # Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
-Path = 'core-command/'
-TokenFile = '/tmp/edgex/secrets/core-command/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "core-command/"
+TokenFile = "/tmp/edgex/secrets/core-command/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
 

@@ -16,7 +16,7 @@
 
 # This is a TOML config file for EdgeX security-secretstore-setup service.
 
-LogLevel = 'DEBUG'
+LogLevel = "DEBUG"
 
 [SecretStore]
 Type = "vault"
@@ -84,5 +84,5 @@ ConfigJWTPath = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 ConfigJWTDuration = "1h"
 
 [SecureMessageBus]
-Type = "none" # blank or none if MessageBus not secured, 'redis' if secured. 'mqtt' is TBD
+Type = "none" # blank or none if MessageBus not secured, "redis" if secured. "mqtt" is TBD
 KuiperConfigPath = "/tmp/kuiper/edgex.yaml"

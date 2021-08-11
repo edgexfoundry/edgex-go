@@ -1,6 +1,6 @@
 [Writable]
 PersistData = true
-LogLevel = 'INFO'
+LogLevel = "INFO"
    [Writable.InsecureSecrets]
       [Writable.InsecureSecrets.DB]
          path = "redisdb"
@@ -9,42 +9,42 @@ LogLevel = 'INFO'
             password = ""
 
 [Service]
-HealthCheckInterval = '10s'
-Host = 'localhost'
+HealthCheckInterval = "10s"
+Host = "localhost"
 Port = 59880
-ServerBindAddr = '' # Leave blank so default to Host value unless different value is needed.
-StartupMsg = 'This is the Core Data Microservice'
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the Core Data Microservice"
 MaxResultCount = 50000
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = '5s'
+RequestTimeout = "5s"
 
 [Registry]
-Host = 'localhost'
+Host = "localhost"
 Port = 8500
-Type = 'consul'
+Type = "consul"
 
 [Clients]
   [Clients.core-metadata]
-  Protocol = 'http'
-  Host = 'localhost'
+  Protocol = "http"
+  Host = "localhost"
   Port = 59881
 
 [Databases]
   [Databases.Primary]
-  Host = 'localhost'
-  Name = 'coredata'
+  Host = "localhost"
+  Name = "coredata"
   Port = 6379
   Timeout = 5000
-  Type = 'redisdb'
+  Type = "redisdb"
 
 [MessageQueue]
-Protocol = 'redis'
-Host = 'localhost'
+Protocol = "redis"
+Host = "localhost"
 Port = 6379
-Type = 'redis'
-AuthMode = 'usernamepassword'  # required for redis messagebus (secure or insecure).
-SecretName = 'redisdb'
-PublishTopicPrefix = 'edgex/events/core' # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
+Type = "redis"
+AuthMode = "usernamepassword"  # required for redis messagebus (secure or insecure).
+SecretName = "redisdb"
+PublishTopicPrefix = "edgex/events/core" # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
 SubscribeEnabled = true
 SubscribeTopic = "edgex/events/device/#"  # required for subscribing to Events from MessageBus
   [MessageQueue.Optional]
@@ -61,13 +61,13 @@ SubscribeTopic = "edgex/events/device/#"  # required for subscribing to Events f
   SkipCertVerify = "false"
 
 [SecretStore]
-Type = 'vault'
-Protocol = 'http'
-Host = 'localhost'
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
 Port = 8200
-Path = 'core-data/'
-TokenFile = '/tmp/edgex/secrets/core-data/secrets-token.json'
-RootCaCertPath = ''
-ServerName = ''
+Path = "core-data/"
+TokenFile = "/tmp/edgex/secrets/core-data/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
   [SecretStore.Authentication]
-  AuthType = 'X-Vault-Token'
+  AuthType = "X-Vault-Token"
