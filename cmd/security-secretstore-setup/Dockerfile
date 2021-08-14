@@ -37,7 +37,7 @@ RUN make cmd/security-file-token-provider/security-file-token-provider \
 
 FROM alpine:3.12
 
-RUN apk add --update --no-cache ca-certificates dumb-init curl su-exec
+RUN apk add --update --no-cache ca-certificates dumb-init su-exec
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
