@@ -1227,7 +1227,7 @@ components:
             operatingState: "UP"
             lastConnected: 0
             lastReported: 0
-            lables:
+            labels:
               - device-virtual-example
             location: ""
             serviceName: "device-virtual"
@@ -1237,9 +1237,9 @@ components:
                 onChange: false
                 sourceName: "Bool"
             protocols:
-              - other:
-                  Address: "device-virtual-bool-01"
-                  Port: "300"
+              other:
+                Address: "device-virtual-bool-01"
+                Port: "300"
           - id: "03bd5ce0-b967-4165-a335-775fea604142"
             name: "Random-UnsignedInteger-Device"
             description: "Example of Device Virtual"
@@ -1249,7 +1249,7 @@ components:
             operatingState: "UP"
             lastConnected: 0
             lastReported: 0
-            lables:
+            labels:
               - device-virtual-example
             location: ""
             serviceName: "device-virtual"
@@ -1262,9 +1262,9 @@ components:
                 onChange: false
                 sourceName: "Uint16"
             protocols:
-              - other:
-                  Address: "device-virtual-uint-01"
-                  Port: "300"
+              other:
+                Address: "device-virtual-uint-01"
+                Port: "300"
     GetAllDeviceProfilesResponse:
       value:
         apiVersion: "v2"
@@ -1614,7 +1614,7 @@ paths:
                   operatingState: "UP"
                   lastConnected: 0
                   lastReported: 0
-                  lables:
+                  labels:
                     - device-virtual-example
                   location: ""
                   serviceName: "device-virtual"
@@ -1624,9 +1624,9 @@ paths:
                       onChange: false
                       sourceName: "Bool"
                   protocols:
-                    - other:
-                        Address: "device-virtual-bool-01"
-                        Port: "300"
+                    other:
+                      Address: "device-virtual-bool-01"
+                      Port: "300"
         '400':
           description: "Request is in an invalid state"
           headers:
