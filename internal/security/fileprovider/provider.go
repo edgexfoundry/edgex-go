@@ -109,7 +109,7 @@ func (p *fileTokenProvider) Run() error {
 			for pathKey, policy := range defaultPolicyPaths {
 				servicePolicy["path"].(map[string]interface{})[pathKey] = policy
 			}
-			createTokenParameters = makeDefaultTokenParameters(serviceName)
+			createTokenParameters = makeDefaultTokenParameters(serviceName, p.tokenConfig.DefaultTokenTTL, p.tokenConfig.DefaultTokenTTL)
 		}
 
 		if serviceConfig.CustomPolicy != nil {

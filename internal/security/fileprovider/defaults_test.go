@@ -47,7 +47,7 @@ func TestDefaultTokenPolicy(t *testing.T) {
 
 func TestDefaultTokenParameters(t *testing.T) {
 	// Act
-	parameters := makeDefaultTokenParameters("service-name")
+	parameters := makeDefaultTokenParameters("service-name", "1h", "1h")
 
 	// Assert
 	bytes, err := json.Marshal(parameters)

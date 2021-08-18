@@ -442,7 +442,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	}
 	expectedService1Policy, err := json.Marshal(&policy)
 	require.NoError(t, err)
-	expectedService1Parameters := makeDefaultTokenParameters(serviceName)
+	expectedService1Parameters := makeDefaultTokenParameters(serviceName, "1h", "1h")
 	expectedService1Parameters["meta"] = makeMetaServiceName(serviceName)["meta"]
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, string(expectedService1Policy)).
@@ -466,7 +466,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 		expectedServicePolicy, err := json.Marshal(&policy)
 		require.NoError(t, err)
 
-		expectedServiceParameters := makeDefaultTokenParameters(service)
+		expectedServiceParameters := makeDefaultTokenParameters(service, "1h", "1h")
 
 		expectedServiceParameters["meta"] = makeMetaServiceName(service)["meta"]
 
@@ -482,6 +482,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 		ConfigFile:          configFile,
 		OutputDir:           outputDir,
 		OutputFilename:      outputFilename,
+		DefaultTokenTTL:     "1h",
 	})
 
 	// Act
