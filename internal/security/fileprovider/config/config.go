@@ -36,6 +36,8 @@ type TokenFileProviderInfo struct {
 	OutputDir string
 	// File name for token file (default: secrets-token.json)
 	OutputFilename string
+	// Default duration of issued tokens
+	DefaultTokenTTL string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct
