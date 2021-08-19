@@ -37,7 +37,7 @@ default:
     Password: {{.Password}}
   port: 6379
   protocol: redis
-  server: edgex-redis
+  server: localhost
   serviceServer: http://localhost:48080
   topic: rules-events
   type: redis
@@ -46,7 +46,7 @@ mqtt_conf:
     ClientId: client1
   port: 1883
   protocol: tcp
-  server: 127.0.0.1
+  server: localhost
   topic: events
   type: mqtt
 `
