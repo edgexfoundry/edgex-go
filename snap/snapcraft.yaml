@@ -204,6 +204,10 @@ apps:
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
       KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
 
+      # enable secure message bus setup for kuiper
+      SECUREMESSAGEBUS_TYPE: "redis"
+      SECUREMESSAGEBUS_KUIPERCONFIGPATH: "$SNAP_DATA/kuiper/etc/sources/edgex.yaml"
+
     start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
