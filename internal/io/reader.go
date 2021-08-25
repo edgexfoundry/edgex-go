@@ -15,7 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 
 	"github.com/fxamacker/cbor/v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type DtoReader interface {
