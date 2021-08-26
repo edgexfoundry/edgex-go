@@ -35,12 +35,15 @@ const consulAddRegistryACLRolesCfg = "env.security-bootstrapper.add-registry-acl
 
 // device-rest and device-virtual are both on the /cmd/security-file-token-provider/res/token-config.json file,
 // so they should not need to be set here as well
-const secretStoreTokens = "app-rules-engine,app-http-export,app-mqtt-export,device-camera,device-mqtt,device-modbus,device-coap,device-snmp"
+const secretStoreTokens = "app-functional-tests,app-rules-engine,app-http-export,app-mqtt-export,application-service" +
+	"device-camera,device-mqtt,device-modbus,device-coap,device-snmp"
 
 const secretStoreKnownSecrets = "" +
+	"redisdb[app-functional-tests]," +
 	"redisdb[app-rules-engine]," +
 	"redisdb[app-http-export]," +
 	"redisdb[app-mqtt-export]," +
+	"redisdb[application-service]," +
 	"redisdb[device-rest]," +
 	"redisdb[device-virtual]," +
 	"redisdb[device-camera]," +
