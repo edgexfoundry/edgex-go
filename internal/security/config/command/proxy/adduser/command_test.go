@@ -66,7 +66,7 @@ func TestAddUserJWT(t *testing.T) {
 	publicKey := "testdata/rsa.pub"
 
 	// Create a mock server for handling the command requests
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check to make sure the JWT authorization header exists
 		assert.NotNil(t, r.Header.Values(internal.AuthHeaderTitle))
@@ -103,7 +103,7 @@ func TestAddUserJWT(t *testing.T) {
 	require.NoError(t, err)
 
 	config.KongURL.Server = tsURL.Hostname()
-	config.KongURL.ApplicationPort, _ = strconv.Atoi(tsURL.Port())
+	config.KongURL.ApplicationPortSSL, _ = strconv.Atoi(tsURL.Port())
 
 	// Setup command "addUser w/JWT"
 	command, err := NewCommand(lc, config, []string{

@@ -159,7 +159,7 @@ func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
 	}
 
 	// list snis certificates association to see if any already exists
-	certKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "snis"}, "/")
+	certKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "snis"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("list snis tls certificates on the endpoint of %s", certKongURL))
 
 	req, err := http.NewRequest(http.MethodGet, certKongURL, http.NoBody)
@@ -209,7 +209,7 @@ func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
 func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 
 	// Delete the Kong TLS certificate
-	delCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+	delCertKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(),
 		"certificates", certId}, "/")
 	c.loggingClient.Info(fmt.Sprintf("deleting tls certificate on the endpoint of %s", delCertKongURL))
 
@@ -238,7 +238,7 @@ func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 }
 
 func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) error {
-	postCertKongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(),
+	postCertKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(),
 		"certificates"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("posting tls certificate on the endpoint of %s", postCertKongURL))
 
