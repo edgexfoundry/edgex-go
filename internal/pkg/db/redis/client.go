@@ -38,7 +38,6 @@ type Client struct {
 
 type CoreDataClient struct {
 	*Client
-	logger logger.LoggingClient
 }
 
 // Return a pointer to the Redis client
