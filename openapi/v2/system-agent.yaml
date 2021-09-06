@@ -185,12 +185,12 @@ components:
         message: "Internal Server Error"
 
 paths:
-  /system/health/{services}:
+  /system/health:
     get:
       summary: "Obtain health information from the targeted service."
       parameters:
         - name: services
-          in: path
+          in: query
           description: "A comma-separated list of EdgeX service names to query for health."
           required: true
           schema:
@@ -226,12 +226,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /system/metrics/{services}:
+  /system/metrics:
     get:
       summary: "Obtain metrics information from the targeted service(s)."
       parameters:
         - name: services
-          in: path
+          in: query
           description: "A comma-separated list of EdgeX service names to query for metrics."
           required: true
           schema:
@@ -267,12 +267,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /system/config/{services}:
+  /system/config:
     get:
       summary: "Obtain configuration from the targeted service(s)."
       parameters:
         - name: services
-          in: path
+          in: query
           description: "A comma-separated list of EdgeX service names to query for metrics."
           required: true
           schema:
