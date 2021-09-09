@@ -106,7 +106,7 @@ func TestTLSAddNewCertificate(t *testing.T) {
 			require.NoError(t, err)
 
 			config.KongURL.Server = tsURL.Hostname()
-			config.KongURL.ApplicationPort, _ = strconv.Atoi(tsURL.Port())
+			config.KongURL.ApplicationPortSSL, _ = strconv.Atoi(tsURL.Port())
 
 			args := []string{
 				"--incert", "testdata/testCert.pem",
@@ -160,7 +160,7 @@ func TestGetServerNameIndicators(t *testing.T) {
 func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk bool, postCertOk bool,
 	t *testing.T) *httptest.Server {
 	builtinSnis := []string{"localhost", "kong"}
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		urlPath := r.URL.EscapedPath()
 		switch r.Method {
 		case http.MethodGet:

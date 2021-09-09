@@ -70,7 +70,7 @@ func (c *cmd) Execute() (int, error) {
 	// Delete Kong consumer
 	// https://docs.konghq.com/2.1.x/admin-api/#delete-consumer
 
-	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers", c.username}, "/")
+	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username}, "/")
 	c.loggingClient.Info(fmt.Sprintf("deleting consumer (user) on the endpoint of %s", kongURL))
 
 	// Setup request

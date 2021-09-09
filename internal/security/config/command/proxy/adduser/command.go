@@ -141,7 +141,7 @@ func (c *cmd) createConsumer() error {
 	form := url.Values{
 		"username": []string{c.username},
 	}
-	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers"}, "/")
+	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("creating consumer (user) on the endpoint of %s", kongURL))
 
 	formVal := form.Encode()
@@ -182,7 +182,7 @@ func (c *cmd) addUserToGroup() error {
 	form := url.Values{
 		"group": []string{c.group},
 	}
-	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers", c.username, "acls"}, "/")
+	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "acls"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("Associating consumer to acl using endpoint %s", kongURL))
 
 	formVal := form.Encode()
@@ -248,7 +248,7 @@ func (c *cmd) ExecuteAddJwt() (int, error) {
 		form.Set("key", c.jwtID)
 	}
 
-	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers", c.username, "jwt"}, "/")
+	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "jwt"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("associating JWT on the endpoint of %s", kongURL))
 
 	formVal := form.Encode()
@@ -318,7 +318,7 @@ func (c *cmd) ExecuteAddOAuth2() (statusCode int, err error) {
 		form.Set("client_secret", c.clientSecret)
 	}
 
-	kongURL := strings.Join([]string{c.configuration.KongURL.GetProxyBaseURL(), "consumers", c.username, "oauth2"}, "/")
+	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "oauth2"}, "/")
 	c.loggingClient.Info(fmt.Sprintf("creating oauth application at %s", kongURL))
 
 	formVal := form.Encode()

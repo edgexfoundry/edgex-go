@@ -48,7 +48,7 @@ func delUserWithArgs(t *testing.T, args []string) {
 	lc := logger.MockLogger{}
 	config := &config.ConfigurationStruct{}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.EscapedPath() {
 		case "/admin/consumers/someuser":
 			require.Equal(t, "DELETE", r.Method)
@@ -63,7 +63,7 @@ func delUserWithArgs(t *testing.T, args []string) {
 	require.NoError(t, err)
 
 	config.KongURL.Server = tsURL.Hostname()
-	config.KongURL.ApplicationPort, _ = strconv.Atoi(tsURL.Port())
+	config.KongURL.ApplicationPortSSL, _ = strconv.Atoi(tsURL.Port())
 
 	// Act
 	command, err := NewCommand(lc, config, args)
