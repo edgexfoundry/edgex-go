@@ -140,6 +140,7 @@ apps:
       KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
       KONG_ADMIN_LISTEN: "localhost:8001, localhost:8444 ssl"
       KONG_STATUS_LISTEN: "localhost:8100"
+      KONG_SSL_CIPHER_SUITE: "modern"
       # The DNS order was modified because of an issue with a Windows based host DNS issue.
       # Keeping the default order would cause the first API request to Kong's admin API much longer time to connect for
       # taking something minimum of 20 seconds to complete, and then others would complete as expected.
