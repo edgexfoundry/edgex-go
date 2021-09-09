@@ -461,13 +461,6 @@ components:
         lastReported:
           type: integer
           description: time in milliseconds that the device service last reported data to the core microservice
-        operatingState:
-          type: string
-          description: operational state
-          enum:
-            - UP
-            - DOWN
-            - UNKNOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -484,7 +477,6 @@ components:
             - UNLOCKED
       required:
         - name
-        - operatingState
         - adminState
         - baseAddress
     CreateDeviceService:
@@ -502,13 +494,6 @@ components:
           enum:
             - LOCKED
             - UNLOCKED
-        operatingState:
-          type: string
-          description: operational state
-          enum:
-            - UP
-            - DOWN
-            - UNKNOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -519,7 +504,6 @@ components:
           description: BaseAddress is a fully qualified URI, e.g. <protocol>:\\<hostname>:<port>/<optional path>
       required:
         - name
-        - operatingState
         - adminState
         - baseAddress
     UpdateDeviceService:
@@ -533,9 +517,6 @@ components:
         name:
           type: string
           description: Description of the device service
-        operatingState:
-          type: string
-          description: operational state - either UP or DOWN
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -1161,7 +1142,6 @@ components:
             name: home thermostat device service
             description: manage homethermostats
             adminState: UNLOCKED
-            operatingState: UP
             labels:
               - hvac
               - thermostat
@@ -2525,7 +2505,6 @@ paths:
                 - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "home thermostat device service"
                   description: "Home automation system"
-                  operatingState: "UP"
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
@@ -2533,7 +2512,6 @@ paths:
                 service:
                 - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "Google Home device service"
-                  operatingState: "UP"
                   adminState: "UNLOCKED"
                   baseAddress: "http://home-device-service:49980"
       responses:
@@ -2609,10 +2587,9 @@ paths:
                     lastConnected: 0
                     lastReported: 0
                     adminState: "UNLOCKED"
-                    operatingState: "UP"
                     labels:
                       - virtual
-                    baseAddress: "http://edgex-device-virtual:49990"
+                    baseAddress: "http://edgex-device-virtual:59990"
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -2672,10 +2649,9 @@ paths:
                   lastConnected: 0
                   lastReported: 0
                   adminState: "UNLOCKED"
-                  operatingState: "UP"
                   labels:
                     - virtual
-                  baseAddress: "http://edgex-device-virtual:49990"
+                  baseAddress: "http://edgex-device-virtual:59990"
         '400':
           description: "Request is in an invalid state"
           headers:
