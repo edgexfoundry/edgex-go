@@ -438,7 +438,7 @@ Example: `snap set edgexfoundry env.device-virtual.service.port=7777`
 | --------------------- | ----------- |
 | add-secretstore-tokens | The add-secretstore-tokens setting is a csv list of service keys to be added to the list of Vault tokens that security-file-token-provider (launched by security-secretstore-setup) creates. It is set to a default list of additional services by the snap, so be sure to examine the default setting before providing a custom list of services. NOTE - this setting is not a configuration override, it's a top-level environment variable used by the security-secretstore-setup. |
 | add-known-secrets | The add-known-secrets setting is a csv list of secret paths and associated services. It's used to provision the specified secret for the given service in Vault. It is set to a default list of additional services by the snap, so be sure to examine the default setting before providing a custom list of services. NOTE - this setting is not a configuration override, it's a top-level environment variable used by the security-secretstore-setup.|
-
+| default-token-ttl | The default-token-ttl setting is a Go Duration string, a sequence of decimal numbers, each with optional fraction and a unit suffix (e.g. "ns", "us" (or "µs"), "ms", "s", "m", "h"). It's used to set the TTL of vault tokens generated for EdgeX services during bootstrap. This setting can be used to increase (or decrease) the default TTL (one hour). If the TTL of a token expires before a service is started, the service will not be able to access the Secret Store.|
 
 ### Security bootstrapper settings (prefix: env.security-bootstrapper.)
 
