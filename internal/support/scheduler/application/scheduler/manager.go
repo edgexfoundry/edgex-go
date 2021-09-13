@@ -123,8 +123,6 @@ func (m *manager) execute(
 		m.lc.Debugf("requeue interval %s", executor.Interval.Name)
 		m.executorQueue.Add(executor)
 	}
-
-	return
 }
 
 func (m *manager) executeAction(action models.IntervalAction) errors.EdgeX {

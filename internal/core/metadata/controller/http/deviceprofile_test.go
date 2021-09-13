@@ -115,7 +115,7 @@ func createDeviceProfileRequestWithFile(fileContents []byte) (*http.Request, err
 	boundary := writer.Boundary()
 
 	err = writer.Close()
-	if err != err {
+	if err != nil {
 		return nil, err
 	}
 

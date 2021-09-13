@@ -52,6 +52,6 @@ func TestCreatesFile(t *testing.T) {
 	defer cancel()
 
 	file, err := os.Open(testfile)
-	defer file.Close()
 	assert.NoError(t, err) // fails if file wasn't created
+	defer file.Close()
 }
