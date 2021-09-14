@@ -58,10 +58,13 @@ services:
 # (placeholder)
 # -----------------------------------------------------------------------------
 routes:
-- paths:
-  - /admin
-  name: admin-route
+- name: admin-route
   service: admin-service
+  paths:
+  - /admin
+  plugins:
+  - name: jwt
+    enabled: true
 
 # -----------------------------------------------------------------------------
 # Activate JWT and ACL Plugins
@@ -69,13 +72,6 @@ routes:
 # (placeholder)
 # -----------------------------------------------------------------------------
 plugins:
-- enabled: true
-  name: jwt
-- enabled: true
-  name: acl
-  config:
-    allow:
-    - gateway-group
 - enabled: true
   name: acl
   route: admin-route
