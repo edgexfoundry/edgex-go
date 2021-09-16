@@ -38,14 +38,6 @@ Resource = "coredata"
 OutputPath = "accessToken.json"
 JWTFile = "/tmp/edgex/secrets/security-proxy-setup/kong-admin-jwt"
 
-[CORSConfiguration]
-EnableCORS = false
-CORSAllowCredentials = false
-CORSAllowedOrigins = "https://localhost"
-CORSAllowedMethods = "GET, POST, PUT, DELETE"
-CORSAllowedHeaders = "Content-Type"
-CORSPreflightMaxAge = 3600
-
 [SecretStore]
 Type = "vault"
 Protocol = "http"
