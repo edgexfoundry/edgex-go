@@ -27,15 +27,14 @@ import (
 )
 
 type ConfigurationStruct struct {
-	LogLevel          string
-	RequestTimeout    int
-	SNIS              []string
-	AccessTokenFile   string
-	KongURL           KongUrlInfo
-	KongAuth          KongAuthInfo
-	CORSConfiguration CORSConfigurationInfo
-	SecretStore       bootstrapConfig.SecretStoreInfo
-	Routes            map[string]models.KongService
+	LogLevel        string
+	RequestTimeout  int
+	SNIS            []string
+	AccessTokenFile string
+	KongURL         KongUrlInfo
+	KongAuth        KongAuthInfo
+	SecretStore     bootstrapConfig.SecretStoreInfo
+	Routes          map[string]models.KongService
 }
 
 type KongUrlInfo struct {
@@ -45,15 +44,6 @@ type KongUrlInfo struct {
 	ApplicationPort    int
 	ApplicationPortSSL int
 	StatusPort         int
-}
-
-type CORSConfigurationInfo struct {
-	EnableCORS           bool
-	CORSAllowCredentials bool
-	CORSAllowedOrigins   string
-	CORSAllowedMethods   string
-	CORSAllowedHeaders   string
-	CORSPreflightMaxAge  int
 }
 
 func (k KongUrlInfo) GetProxyBaseURL() string {
