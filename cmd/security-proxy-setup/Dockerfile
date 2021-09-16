@@ -16,7 +16,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.16-alpine3.12
+ARG BUILDER_BASE=golang:1.16-alpine3.14
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -34,7 +34,7 @@ COPY . .
 RUN go mod tidy
 RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
 
-FROM alpine:3.12
+FROM alpine:3.14
 
 RUN apk add --update --no-cache curl
 
