@@ -28,14 +28,6 @@ Type = "consul"
   Host = "localhost"
   Port = 59881
 
-[Databases]
-  [Databases.Primary]
-  Host = "localhost"
-  Name = "metadata"
-  Port = 6379
-  Timeout = 5000
-  Type = "redisdb"
-
 [SecretStore]
 Type = "vault"
 Protocol = "http"
