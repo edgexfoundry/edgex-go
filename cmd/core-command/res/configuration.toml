@@ -13,7 +13,7 @@ Host = "localhost"
 Port = 59882
 ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
 StartupMsg = "This is the Core Command Microservice"
-MaxResultCount = 50000
+MaxResultCount = 1024
 MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
 RequestTimeout = "45s"
 
