@@ -55,10 +55,6 @@ on the snap, including how to install it, please refer to [EdgeX snap](https://g
 - The current targeted version of the Go language runtime for release artifacts is v1.16.x
 - The minimum supported version of the Go language runtime is v1.16.x
 
-##### pkg-config
-
-`go get github.com/rjeczalik/pkgconfig/cmd/pkg-config`
-
 ##### ZeroMQ
 
 Several EdgeX Foundry services depend on ZeroMQ for communications by default.
@@ -72,22 +68,6 @@ brew install zeromq
 ```
 
 For directions installing ZeroMQ on Windows, please see [the Windows documentation.](ZMQWindows.md)
-
-##### pkg-config
-
-The necessary file will need to be added to the `PKG_CONFIG_PATH` environment variable.
-
-On Linux, add this line to your local profile:
-
-```sh
-export PKG_CONFIG_PATH=/usr/local/Cellar/zeromq/4.2.5/lib/pkgconfig/
-```
-
-For macOS, install the package with brew:
-
-```sh
-brew install pkg-config
-```
 
 #### Installation and Execution
 
