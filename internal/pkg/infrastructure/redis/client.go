@@ -7,20 +7,15 @@ package redis
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 
 	"github.com/google/uuid"
 )
-
-var currClient *Client // a singleton so Readings can be de-referenced
-var once sync.Once
 
 type Client struct {
 	*redisClient.Client
@@ -37,14 +32,6 @@ func NewClient(config db.Configuration, logger logger.LoggingClient) (*Client, e
 	}
 
 	return dc, nil
-}
-
-// CloseSession closes the connections to Redis
-func (c *Client) CloseSession() {
-	c.Pool.Close()
-
-	currClient = nil
-	once = sync.Once{}
 }
 
 // AddEvent adds a new event
