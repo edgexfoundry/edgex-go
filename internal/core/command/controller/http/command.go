@@ -111,12 +111,13 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-
-	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	// If dsReturnEvent is no, there will be no content returned in the http response
 	if response != nil {
+		utils.WriteHttpHeader(w, ctx, response.StatusCode)
 		pkg.Encode(response, w, lc)
+	} else {
+		// If dsReturnEvent is no, there will be no content returned in the http response
+		utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	}
 }
 
