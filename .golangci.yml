@@ -5,5 +5,4 @@ linters:
     - gosimple
     - ineffassign
     - staticcheck
-    - unused
     - varcheck

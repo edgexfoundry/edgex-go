@@ -32,7 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var expectedCorrelationId = uuid.New().String()
 var expectedEventId = uuid.New().String()
 
 var testReading = dtos.BaseReading{
