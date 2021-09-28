@@ -3,7 +3,6 @@ linters:
     - deadcode
     - errcheck
     - gosimple
-    - ineffassign
     - staticcheck
     - unused
     - varcheck
