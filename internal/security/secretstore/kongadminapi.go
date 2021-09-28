@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 // KongAdminAPI is the main struct used to generate the configuration file
@@ -157,7 +157,7 @@ func (k *KongAdminAPI) Setup() error {
 func (k *KongAdminAPI) createJWT(privateKey string, issuer string) (signedToken string, err error) {
 
 	// Setup JWT generation variables
-	now := time.Now().Unix()
+	now := time.Now()
 	duration, err := time.ParseDuration(k.jwtDuration)
 	if err != nil {
 		return "", fmt.Errorf("%s Could not parse JWT duration: %w", k.prefixes.errText, err)
@@ -173,11 +173,11 @@ func (k *KongAdminAPI) createJWT(privateKey string, issuer string) (signedToken 
 	}
 
 	// Create JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, &jwt.StandardClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, &jwt.RegisteredClaims{
 		Issuer:    issuer,
-		IssuedAt:  now,
-		NotBefore: now,
-		ExpiresAt: now + int64(duration.Seconds()),
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
 	})
 
 	// Save JWT to string return
