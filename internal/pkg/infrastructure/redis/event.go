@@ -223,19 +223,11 @@ func getEventReadingIdsByKeyScoreRange(conn redis.Conn, key string, min string, 
 	if err != nil {
 		return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve event ids by key %s failed", key), err)
 	}
-	events, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(eventIds))
-	if edgeXerr != nil {
-		return nil, nil, edgeXerr
-	}
-	e := models.Event{}
-	for _, event := range events {
-		err = json.Unmarshal(event, &e)
+	for _, storeKey := range eventIds {
+		eId := idFromStoredKey(storeKey)
+		rIds, err := redis.Strings(conn.Do(ZRANGE, CreateKey(EventsCollectionReadings, eId), 0, -1))
 		if err != nil {
-			return nil, nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to marshal event", err)
-		}
-		rIds, err := redis.Strings(conn.Do(ZRANGE, CreateKey(EventsCollectionReadings, e.Id), 0, -1))
-		if err != nil {
-			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of event %s failed", e.Id), err)
+			return nil, nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("retrieve all reading Ids of event %s failed", eId), err)
 		}
 		readingIds = append(readingIds, rIds...)
 	}
