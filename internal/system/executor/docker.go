@@ -25,7 +25,6 @@ const (
 	Restart = "restart"
 	Metrics = "metrics"
 
-	executorType        = "docker"
 	failedStartPrefix   = "Error starting service"
 	failedRestartPrefix = "Error restarting service"
 	failedStopPrefix    = "Error stopping service"
