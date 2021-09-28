@@ -2,4 +2,3 @@ linters:
   disable:
     - errcheck
     - staticcheck
-    - varcheck
