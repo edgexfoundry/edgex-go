@@ -42,13 +42,15 @@ func TestCreatesFile(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	err := os.RemoveAll(testfile)
-	defer os.RemoveAll(testfile) // cleanup
+	assert.NoError(t, err)
+	defer func() { _ = os.RemoveAll(testfile) }() // cleanup
 
 	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
-	p.SetConfiguration(configuration)
+	err = p.SetConfiguration(configuration)
 	assert.NoError(t, err)
 
-	p.Launch()
+	err = p.Launch()
+	assert.NoError(t, err)
 	defer cancel()
 
 	file, err := os.Open(testfile)
