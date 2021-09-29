@@ -461,6 +461,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 	ec := NewEventController(dic)
 
 	req, err := http.NewRequest(http.MethodDelete, common.ApiEventByDeviceNameRoute, http.NoBody)
+	assert.NoError(t, err)
 	req = mux.SetURLVars(req, map[string]string{common.Name: deviceName})
 	require.NoError(t, err)
 
@@ -470,6 +471,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 	var actualResponse commonDTO.BaseResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+	assert.NoError(t, err)
 
 	assert.Equal(t, common.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
 	assert.Equal(t, http.StatusAccepted, recorder.Result().StatusCode, "HTTP status code not as expected")

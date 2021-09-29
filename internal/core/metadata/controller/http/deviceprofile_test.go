@@ -9,12 +9,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -532,6 +533,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 			handler.ServeHTTP(recorder, req)
 			var res commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			assert.NoError(t, err)
 
 			// Assert
 			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
@@ -693,6 +695,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 			handler.ServeHTTP(recorder, req)
 			var res commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			assert.NoError(t, err)
 
 			// Assert
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
