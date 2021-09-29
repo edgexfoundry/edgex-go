@@ -177,16 +177,6 @@ func (c *cmd) GetCommandName() string {
 	return CommandName
 }
 
-func (c *cmd) getRegistryBaseURL() (string, error) {
-	baseURL := fmt.Sprintf("%s://%s:%d", c.configuration.StageGate.Registry.ACL.Protocol,
-		c.configuration.StageGate.Registry.Host, c.configuration.StageGate.Registry.Port)
-	_, err := url.Parse(baseURL)
-	if err != nil {
-		return "", err
-	}
-	return baseURL, nil
-}
-
 // reSetup calls when anything is running 2nd time or later, in order to re-set up the registry ACL
 func (c *cmd) reSetup() error {
 	// although we may have done setup ACL successfully already previous times,

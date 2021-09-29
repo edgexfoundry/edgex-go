@@ -3,5 +3,4 @@ linters:
     - errcheck
     - gosimple
     - staticcheck
-    - unused
     - varcheck
