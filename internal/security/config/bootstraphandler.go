@@ -51,7 +51,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	commandName := flagSet.Arg(0)
 	if flag.NArg() > 0 {
-		subcommandArgs = append(flag.Args()[1:])
+		subcommandArgs = flag.Args()[1:]
 	}
 
 	switch commandName {

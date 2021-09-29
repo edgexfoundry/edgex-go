@@ -80,6 +80,7 @@ func TestPostCertExists(t *testing.T) {
 	e := service.postCert(mockCertPair)
 	if e == nil {
 		t.Errorf("failed on testing existing certificate on proxy - failed to catch bad request")
+		return
 	}
 	if e.reason != CertExisting {
 		t.Errorf("failed on testing existing certificate on proxy - failed to catch message of existing cert")
