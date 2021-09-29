@@ -1,6 +1,5 @@
 linters:
   disable:
-    - deadcode
     - errcheck
     - gosimple
     - ineffassign
