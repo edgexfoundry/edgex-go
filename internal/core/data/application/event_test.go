@@ -31,7 +31,6 @@ const (
 	testProfileName        = "TestProfile"
 	testSourceName         = "testSourceName"
 	testUUIDString         = "ca93c8fa-9919-4ec5-85d3-f81b2b6a7bc1"
-	testCreatedTime        = 1600666214495
 	testOriginTime         = 1600666185705354000
 	nonexistentEventID     = "8ad33474-fbc5-11ea-adc1-0242ac120002"
 	testEventCount         = uint32(7778)

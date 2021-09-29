@@ -172,6 +172,9 @@ func (cs *Certs) ReadFrom(certPath string, keyPath string) (*CertPair, error) {
 func (cs *Certs) UploadToStore(cp *CertPair) error {
 	cs.loggingClient.Info("trying to upload the proxy cert pair into secret store")
 	jsonBytes, err := json.Marshal(cp)
+	if err != nil {
+		return err
+	}
 	body := bytes.NewBuffer(jsonBytes)
 
 	certUrl, err := cs.certPathUrl()

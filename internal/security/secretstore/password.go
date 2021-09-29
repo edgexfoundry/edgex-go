@@ -182,6 +182,9 @@ func (cr *Cred) GeneratePassword(ctx context.Context) (string, error) {
 func (cr *Cred) UploadToStore(pair *UserPasswordPair, path string) error {
 	cr.loggingClient.Debug("trying to upload the credential pair into secret store")
 	jsonBytes, err := json.Marshal(pair)
+	if err != nil {
+		return err
+	}
 	body := bytes.NewBuffer(jsonBytes)
 
 	credURL, err := cr.credPathURL(path)
