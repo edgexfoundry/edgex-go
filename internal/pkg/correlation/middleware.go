@@ -18,12 +18,12 @@ func ManageHeader(next http.Handler) http.Handler {
 			correlationID = uuid.New().String()
 		}
 		// lint:ignore SA1029 legacy
-		// nolint:staticcheck // SA1004 legacy
+		// nolint:staticcheck // See golangci-lint #741
 		ctx := context.WithValue(r.Context(), common.CorrelationHeader, correlationID)
 
 		contentType := r.Header.Get(common.ContentType)
 		// lint:ignore SA1029 legacy
-		// nolint:staticcheck // SA1004 legacy
+		// nolint:staticcheck // See golangci-lint #741
 		ctx = context.WithValue(ctx, common.ContentType, contentType)
 
 		r = r.WithContext(ctx)
