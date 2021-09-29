@@ -16,7 +16,6 @@ package executor
 
 import (
 	"errors"
-	"fmt"
 )
 
 const (
@@ -42,7 +41,7 @@ func messageExecutorOperationNotSupported() string {
 
 // messageMissingArguments returns a text error message and exists to support unit testing.
 func messageMissingArguments() string {
-	return fmt.Sprintf("missing <service> and <operation> command line arguments")
+	return "missing <service> and <operation> command line arguments"
 }
 
 // Execute is called from main (which supplies an executor) to process a request.

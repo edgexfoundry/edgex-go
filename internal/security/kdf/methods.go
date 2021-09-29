@@ -14,7 +14,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"hash"
-	"io"
 	"os"
 	"path"
 
@@ -100,9 +99,9 @@ func (kdf *kdfObject) initializeSalt() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		saltFileObj, ok := saltFileWriter.(io.WriteCloser) // Cast the interface we need
+		saltFileObj := saltFileWriter
 		// use explicit close() for writing
-		if !ok {
+		if saltFileObj == nil {
 			_ = saltFileWriter.Close()
 			return nil, errors.New("saltFileWriter does not implement required read/write methods")
 		}

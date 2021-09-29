@@ -252,7 +252,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 		})
 	}
 }
@@ -415,7 +415,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
-				assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 			} else {
 				var res []commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -428,7 +428,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
 				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
-				assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 			}
 		})
 	}
@@ -539,7 +539,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "HTTP status code not as expected")
-			assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 		})
 	}
 }
@@ -701,7 +701,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "HTTP status code not as expected")
-			assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 		})
 	}
 }

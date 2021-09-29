@@ -79,13 +79,11 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				select {
-				case <-ctx.Done():
-					if msgClient != nil {
-						_ = msgClient.Disconnect()
-					}
-					lc.Infof("Disconnected from MessageBus")
+				<-ctx.Done()
+				if msgClient != nil {
+					_ = msgClient.Disconnect()
 				}
+				lc.Infof("Disconnected from MessageBus")
 			}()
 
 			dic.Update(di.ServiceConstructorMap{

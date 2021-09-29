@@ -334,8 +334,9 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 		why := string(b)
 		message := fmt.Sprintf("failed to add certificate with errorcode %d, error %s", resp.StatusCode, why)
 		s.loggingClient.Error(message)
-		if (resp.StatusCode == http.StatusBadRequest) && (strings.Index(why, "existing certificate") != -1) {
-			message = fmt.Sprintf("certificate already exists on reverse proxy")
+
+		if (resp.StatusCode == http.StatusBadRequest) && strings.Contains(why, "existing certificate") {
+			message = "certificate already exists on reverse proxy"
 		}
 		return &CertError{message, CertExisting}
 	}

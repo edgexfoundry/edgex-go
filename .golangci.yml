@@ -1,6 +1,5 @@
 linters:
   disable:
     - errcheck
-    - gosimple
     - staticcheck
     - varcheck
