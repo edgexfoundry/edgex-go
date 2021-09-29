@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"io"
 	"os"
 	"testing"
 	"time"
@@ -216,10 +215,6 @@ func TestShortWrite(t *testing.T) {
 //
 // Mock opening and reading of the seed file
 //
-
-func mockFileOpener(name string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
-	return &mockSeedFile{}, nil
-}
 
 type mockSeedFile struct {
 	mock.Mock
