@@ -57,7 +57,7 @@ func buildSmtpMessage(sender string, subject string, toAddresses []string, conte
 		buf.WriteString(line[idx:] + smtpNewline)
 	}
 
-	return []byte(buf.String())
+	return buf.Bytes()
 }
 
 func deduceAuth(dic *di.Container, s config.SmtpInfo) (mail.Auth, errors.EdgeX) {

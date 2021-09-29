@@ -109,7 +109,7 @@ func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, off
 // getObjectsByLabelsAndSomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
 // command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
 func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string, labels []string, offset int, limit int) ([][]byte, errors.EdgeX) {
-	if labels == nil || len(labels) == 0 { //if no labels specified, simply return getObjectsBySomeRange
+	if len(labels) == 0 { //if no labels specified, simply return getObjectsBySomeRange
 		return getObjectsBySomeRange(conn, command, key, offset, limit)
 	}
 

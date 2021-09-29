@@ -126,7 +126,7 @@ func (d Database) BootstrapHandler(
 		<-ctx.Done()
 		for {
 			// wait for httpServer to stop running (e.g. handling requests) before closing the database connection.
-			if d.httpServer.IsRunning() == false {
+			if !d.httpServer.IsRunning() {
 				dbClient.CloseSession()
 				break
 			}

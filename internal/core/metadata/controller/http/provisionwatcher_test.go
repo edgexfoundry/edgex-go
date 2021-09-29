@@ -183,7 +183,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 
 			// Assert
 			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.NotEmpty(t, string(recorder.Body.Bytes()), "Message is empty")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 		})
 	}
 }

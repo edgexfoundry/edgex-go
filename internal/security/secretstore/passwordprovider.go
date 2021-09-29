@@ -81,7 +81,7 @@ func (p *PasswordProvider) Generate(ctx context.Context) (string, error) {
 
 	p.loggingClient.Info("password provider exited successfully")
 
-	pw := string(outputBuffer.Bytes())
+	pw := outputBuffer.String()
 	pw = strings.TrimSuffix(pw, "\n")
 	return pw, nil
 }
