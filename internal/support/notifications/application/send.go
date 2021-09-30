@@ -112,7 +112,7 @@ func escalatedSend(dic *di.Container, n models.Notification, trans models.Transm
 	}
 
 	for _, address := range sub.Channels {
-		go transmit(dic, escalated, sub, address)
+		go transmit(dic, escalated, sub, address) // nolint:errcheck
 	}
 	return nil
 }

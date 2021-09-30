@@ -23,7 +23,7 @@ const (
 
 func buildTestAddEvent() dto.AddEventRequest {
 	testEvent := dtos.NewEvent(TestDeviceProfileName, TestDeviceName, TestDeviceResourceName)
-	testEvent.AddSimpleReading(TestDeviceResourceName, common.ValueTypeUint8, TestReadingValue)
+	_ = testEvent.AddSimpleReading(TestDeviceResourceName, common.ValueTypeUint8, TestReadingValue)
 	return dto.NewAddEventRequest(testEvent)
 }
 

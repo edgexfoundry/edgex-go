@@ -155,7 +155,7 @@ func buildDeviceServiceResponse() responseDTO.DeviceServiceResponse {
 
 func buildEvent() dtos.Event {
 	event := dtos.NewEvent(testProfileName, testDeviceName, testSourceName)
-	event.AddSimpleReading(testResourceName, common.ValueTypeUint16, uint16(45))
+	_ = event.AddSimpleReading(testResourceName, common.ValueTypeUint16, uint16(45))
 	id, _ := uuid.NewUUID()
 	event.Id = id.String()
 	event.Readings[0].Id = id.String()
