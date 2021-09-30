@@ -36,7 +36,10 @@ func NewRequestor(
 	var tr *http.Transport
 	if skipVerify {
 		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{
+				MinVersion:         tls.VersionTLS12,
+				InsecureSkipVerify: true, // nolint:gosec
+			},
 		}
 	} else {
 		caCert, err := os.ReadFile(caCertPath)

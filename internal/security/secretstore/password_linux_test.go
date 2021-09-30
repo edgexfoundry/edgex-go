@@ -20,7 +20,7 @@ import (
 )
 
 func TestGenerateWithAPG(t *testing.T) {
-	rootToken := "s.Ga5jyNq6kNfRMVQk2LY1j9iu"
+	rootToken := "s.Ga5jyNq6kNfRMVQk2LY1j9iu" // nolint:gosec
 	mockLogger := logger.MockLogger{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

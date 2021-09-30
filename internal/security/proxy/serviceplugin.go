@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"io"
 	"net/http"
 	"net/url"
@@ -28,6 +27,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
@@ -37,7 +38,7 @@ import (
 
 const (
 	requestTransformerPlugin = "request-transformer"
-	consulTokenHeader        = "X-Consul-Token"
+	consulTokenHeader        = "X-Consul-Token" // nolint:gosec
 )
 
 // addConsulHeader is to enable request transformer plugin on a service

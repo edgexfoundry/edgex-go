@@ -62,15 +62,15 @@ func writeFile(aFileName string) error {
 	return os.WriteFile(aFileName, timestamp, 0400)
 }
 
-// GenerateRandomString will return a randomized string of characters at the
+// GeneratePseudoRandomString will return a randomized string of characters at the
 // length specified via input variable `n`
-func GenerateRandomString(n int) string {
+func GeneratePseudoRandomString(n int) string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	if n > 0 {
 		s := make([]rune, n)
 		for i := range s {
-			s[i] = letters[rand.Intn(len(letters))]
+			s[i] = letters[rand.Intn(len(letters))] // nolint:gosec
 		}
 		return string(s)
 	}

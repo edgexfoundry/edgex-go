@@ -32,11 +32,12 @@ const (
 	// and the the length of the name is upto 512 characters
 	ServiceNameValidationRegx = `^[\w. \~\^\-\|\<\>\{\}]{1,512}$`
 
-	VaultToken             = "X-Vault-Token"
+	VaultToken             = "X-Vault-Token" // nolint:gosec
 	TokenCreatorPolicyName = "privileged-token-creator"
 
 	// This is an admin token policy that allow for creation of
 	// per-service tokens and policies
+	// nolint:gosec
 	TokenCreatorPolicy = `
 path "auth/token/create" {
   capabilities = ["create", "update", "sudo"]

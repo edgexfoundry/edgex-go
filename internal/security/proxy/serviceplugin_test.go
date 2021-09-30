@@ -42,6 +42,7 @@ func TestAddConsulHeaderTo(t *testing.T) {
 		Name: testServiceName,
 	}
 	// setup access token file
+	// nolint:gosec
 	tokenData := `{
 		"SecretID":"test-access-token",
 		"Policies": [

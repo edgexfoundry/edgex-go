@@ -17,7 +17,7 @@ package share
 
 const (
 	// ConsulTokenHeader is the HTTP header for Consul token access
-	ConsulTokenHeader = "X-Consul-Token"
+	ConsulTokenHeader = "X-Consul-Token" // nolint:gosec
 	// EmptyToken represents an empty token
 	EmptyToken = ""
 )

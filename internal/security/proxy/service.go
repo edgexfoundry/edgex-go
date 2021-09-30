@@ -148,7 +148,8 @@ func (s *Service) Init() error {
 
 	for serviceKey, route := range mergedRoutes {
 
-		err := s.initKongService(&route)
+		var routeCopy = route // gosec -- memory aliasing in for loop
+		err := s.initKongService(&routeCopy)
 		if err != nil {
 			return err
 		}
@@ -158,7 +159,7 @@ func (s *Service) Init() error {
 		// see details on https://docs.konghq.com/hub/kong-inc/request-transformer/#enabling-the-plugin-on-a-service
 		if serviceKey == edgeXCoreConsulServiceKey {
 			s.loggingClient.Infof("try to enable service plugin for %s", edgeXCoreConsulServiceKey)
-			if err := s.addConsulTokenHeaderTo(&route); err != nil {
+			if err := s.addConsulTokenHeaderTo(&routeCopy); err != nil {
 				s.loggingClient.Errorf("failed to enable service plugin for %s: %v", edgeXCoreConsulServiceKey, err)
 				return err
 			}
