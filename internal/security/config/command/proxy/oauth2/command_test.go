@@ -71,7 +71,7 @@ func TestOauth2Generate(t *testing.T) {
 		jsonResponse := map[string]interface{}{
 			"access_token": "sometoken",
 		}
-		json.NewEncoder(w).Encode(jsonResponse)
+		_ = json.NewEncoder(w).Encode(jsonResponse)
 	}))
 	defer ts.Close()
 	tsURL, err := url.Parse(ts.URL)

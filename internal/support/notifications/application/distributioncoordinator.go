@@ -36,7 +36,7 @@ func distribute(dic *di.Container, n models.Notification) errors.EdgeX {
 		}
 		for _, address := range sub.Channels {
 			// Async transmit the notification to improve the performance
-			go transmit(dic, n, sub, address)
+			go transmit(dic, n, sub, address) // nolint:errcheck
 		}
 	}
 

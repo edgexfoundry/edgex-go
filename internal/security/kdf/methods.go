@@ -55,7 +55,9 @@ func (kdf *kdfObject) DeriveKey(inputKeyingMaterial []byte, keyLen uint, info st
 	infoBytes := []byte(info)
 	kdfReader := hkdf.New(kdf.hashConstructor, inputKeyingMaterial, salt, infoBytes)
 	key := make([]byte, keyLen)
-	kdfReader.Read(key)
+	if _, err := kdfReader.Read(key); err != nil {
+		return nil, err
+	}
 	return key, nil
 }
 
