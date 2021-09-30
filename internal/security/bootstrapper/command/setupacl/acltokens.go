@@ -49,11 +49,11 @@ const (
 
 	// consul API related:
 	consulCheckAgentAPI    = "/v1/agent/self"
-	consulSetAgentTokenAPI = "/v1/agent/token/%s"
-	consulListTokensAPI    = "/v1/acl/tokens"
-	consulCreateTokenAPI   = "/v1/acl/token"
+	consulSetAgentTokenAPI = "/v1/agent/token/%s" // nolint:gosec
+	consulListTokensAPI    = "/v1/acl/tokens"     // nolint:gosec
+	consulCreateTokenAPI   = "/v1/acl/token"      // nolint:gosec
 	// RUD: Read Update Delete
-	consulTokenRUDAPI = "/v1/acl/token/%s"
+	consulTokenRUDAPI = "/v1/acl/token/%s" //nolint:gosec
 )
 
 // CreateRegistryToken is the structure to create a new registry token

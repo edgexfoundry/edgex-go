@@ -178,7 +178,7 @@ func TestExecute(t *testing.T) {
 			}()
 
 			// literally make random delay between 0 to 3 seconds before running the tcp server
-			time.Sleep(time.Duration(rand.Intn(3)) * time.Second)
+			time.Sleep(time.Duration(rand.Intn(3)) * time.Second) // nolint:gosec
 
 			tcpSrvErr := make(chan error, 1)
 			go func() {

@@ -22,7 +22,7 @@ const (
 	CertificatesPath = "certificates"
 	PluginsPath      = "plugins"
 	EdgeXKong        = "edgex-kong"
-	VaultToken       = "X-Vault-Token"
+	VaultToken       = "X-Vault-Token" // nolint:gosec
 	OAuth2GrantType  = "client_credentials"
 	OAuth2Scopes     = "all"
 	URLEncodedForm   = "application/x-www-form-urlencoded"

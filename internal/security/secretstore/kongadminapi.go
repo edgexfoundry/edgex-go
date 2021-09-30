@@ -122,7 +122,7 @@ func (k *KongAdminAPI) Setup() error {
 
 	// Set random string for JWT issuer payload value - the default issuer value assigned
 	// by Kong is 32 bytes in length - simply mirroring that for consistency
-	k.secrets.jwt.issuer = helper.GenerateRandomString(32)
+	k.secrets.jwt.issuer = helper.GeneratePseudoRandomString(32)
 
 	// Insert public key
 	configTemplateText := strings.Replace(string(configTemplateBytes),
@@ -133,7 +133,8 @@ func (k *KongAdminAPI) Setup() error {
 		"<<INSERT-ADMIN-JWT-ISSUER-KEY>>", k.secrets.jwt.issuer, -1)
 
 	// Write the config file to the configured save path
-	err = os.WriteFile(k.paths.config, []byte(configTemplateText), 0644)
+	// note: config file contains no confidential data -- 0644 since it is owned by root
+	err = os.WriteFile(k.paths.config, []byte(configTemplateText), 0644) // nolint:gosec
 	if err != nil {
 		return fmt.Errorf("%s Failed to write config template to file %s: %w", k.prefixes.errText, k.paths.config, err)
 	}

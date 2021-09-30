@@ -57,7 +57,7 @@ const (
 	serviceListBegin     = "["
 	serviceListEnd       = "]"
 	serviceListSeparator = ";"
-	secretBasePath       = "/v1/secret/edgex"
+	secretBasePath       = "/v1/secret/edgex" // nolint:gosec
 )
 
 var errNotFound = errors.New("credential NOT found")

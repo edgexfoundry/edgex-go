@@ -111,7 +111,7 @@ func sendEmail(s config.SmtpInfo, auth mail.Auth, to []string, msg []byte) error
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	if ok, _ := c.Extension("STARTTLS"); ok {
-		config := &tls.Config{ServerName: serverName}
+		config := &tls.Config{MinVersion: tls.VersionTLS12, ServerName: serverName}
 		config.InsecureSkipVerify = s.EnableSelfSignedCert
 		if err = c.StartTLS(config); err != nil {
 			return errors.NewCommonEdgeXWrapper(err)

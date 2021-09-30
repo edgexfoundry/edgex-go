@@ -17,6 +17,7 @@ package setupacl
 
 // this is just the stub for test data related
 const (
+	// nolint:gosec
 	secretstoreTokenJsonStub = `
 	{
 		"auth": {

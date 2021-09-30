@@ -298,7 +298,7 @@ func TestGetUniqueRoleNames(t *testing.T) {
 	testConfigOneRole["testRole1"] = config.ACLRoleInfo{Description: "role1"}
 
 	// random number of roles between 2 and 4
-	numOfConfigRoles := rand.Intn(1)*3 + 2
+	numOfConfigRoles := rand.Intn(1)*3 + 2 // nolint:gosec
 	testConfigMultipleRoles := make(map[string]config.ACLRoleInfo)
 	for i := 0; i < numOfConfigRoles; i++ {
 		roleName := "testRole" + strconv.Itoa(i+1)
