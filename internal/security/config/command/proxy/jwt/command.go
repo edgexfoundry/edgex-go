@@ -18,7 +18,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 const (
@@ -71,18 +71,18 @@ func NewCommand(
 }
 
 func (c *cmd) Execute() (int, error) {
-	now := time.Now().Unix()
-	claims := &jwt.StandardClaims{
+	now := time.Now()
+	claims := &jwt.RegisteredClaims{
 		Issuer:    c.jwtID,
-		IssuedAt:  now,
-		NotBefore: now,
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
 	}
 	if len(c.expiration) > 0 {
 		duration, err := time.ParseDuration(c.expiration)
 		if err != nil {
 			return interfaces.StatusCodeExitWithError, fmt.Errorf("Could not parse JWT duration: %w", err)
 		}
-		claims.ExpiresAt = now + int64(duration.Seconds())
+		claims.ExpiresAt = jwt.NewNumericDate(now.Add(duration))
 	}
 
 	bytes, err := os.ReadFile(c.privateKeyPath)
