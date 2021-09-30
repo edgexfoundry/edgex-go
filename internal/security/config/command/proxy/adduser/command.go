@@ -168,7 +168,7 @@ func (c *cmd) createConsumer() error {
 	case http.StatusConflict:
 		c.loggingClient.Info(fmt.Sprintf("consumer '%s' already created", c.username))
 	default:
-		c.loggingClient.Error(fmt.Sprintf("%s", responseBody))
+		c.loggingClient.Error(string(responseBody))
 		return fmt.Errorf("Create consumer request failed with code: %d", resp.StatusCode)
 	}
 
@@ -209,7 +209,7 @@ func (c *cmd) addUserToGroup() error {
 	case http.StatusConflict:
 		c.loggingClient.Info(fmt.Sprintf("consumer %s already associated to group %s", c.username, c.group))
 	default:
-		c.loggingClient.Error(fmt.Sprintf("%s", responseBody))
+		c.loggingClient.Error(string(responseBody))
 		return fmt.Errorf("failed to associate consumer to group with status: %d", resp.StatusCode)
 	}
 

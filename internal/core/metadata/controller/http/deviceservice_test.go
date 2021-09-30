@@ -184,6 +184,7 @@ func TestAddDeviceService(t *testing.T) {
 			} else {
 				var res commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				assert.NoError(t, err)
 				assert.Equal(t, testCase.expectedHttpStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedHttpStatusCode, res.StatusCode, "BaseResponse status code not as expected")
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")

@@ -14,7 +14,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"hash"
-	"io"
 	"os"
 	"path"
 
@@ -56,7 +55,9 @@ func (kdf *kdfObject) DeriveKey(inputKeyingMaterial []byte, keyLen uint, info st
 	infoBytes := []byte(info)
 	kdfReader := hkdf.New(kdf.hashConstructor, inputKeyingMaterial, salt, infoBytes)
 	key := make([]byte, keyLen)
-	kdfReader.Read(key)
+	if _, err := kdfReader.Read(key); err != nil {
+		return nil, err
+	}
 	return key, nil
 }
 
@@ -100,9 +101,9 @@ func (kdf *kdfObject) initializeSalt() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		saltFileObj, ok := saltFileWriter.(io.WriteCloser) // Cast the interface we need
+		saltFileObj := saltFileWriter
 		// use explicit close() for writing
-		if !ok {
+		if saltFileObj == nil {
 			_ = saltFileWriter.Close()
 			return nil, errors.New("saltFileWriter does not implement required read/write methods")
 		}

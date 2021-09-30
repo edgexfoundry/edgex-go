@@ -23,11 +23,6 @@ import (
 
 const inspect = "inspect"
 
-// messageExecutorCommandFailed returns a text error message and exists to support unit testing.
-func messageExecutorCommandFailed(operationPrefix string, result string, errorMessage string) string {
-	return fmt.Sprintf("%s: %s (%s)", operationPrefix, errorMessage, strings.Replace(result, "\n", " ", -1))
-}
-
 // messageExecutorInspectFailed returns a text error message and exists to support unit testing.
 func messageExecutorInspectFailed(operationPrefix string, errorMessage string) string {
 	return fmt.Sprintf("%s: %s", operationPrefix, errorMessage)

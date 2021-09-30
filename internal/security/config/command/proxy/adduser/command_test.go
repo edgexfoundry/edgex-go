@@ -91,7 +91,8 @@ func TestAddUserJWT(t *testing.T) {
 			jsonResponse := map[string]interface{}{
 				"key": "bad060a9-0e2b-47ba-98d5-9d622e2322b5",
 			}
-			json.NewEncoder(w).Encode(jsonResponse)
+			err := json.NewEncoder(w).Encode(jsonResponse)
+			require.NoError(t, err)
 
 		// Testing --> fail if we don't recognize the URL in the request
 		default:

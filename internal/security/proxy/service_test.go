@@ -60,7 +60,7 @@ func TestPostCertExists(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`"edgex-kong already associated with existing certificate"`))
+		_, _ = w.Write([]byte(`"edgex-kong already associated with existing certificate"`))
 	}))
 	defer ts.Close()
 
@@ -80,6 +80,7 @@ func TestPostCertExists(t *testing.T) {
 	e := service.postCert(mockCertPair)
 	if e == nil {
 		t.Errorf("failed on testing existing certificate on proxy - failed to catch bad request")
+		return
 	}
 	if e.reason != CertExisting {
 		t.Errorf("failed on testing existing certificate on proxy - failed to catch message of existing cert")
@@ -419,7 +420,7 @@ func TestResetProxy(t *testing.T) {
 
 		if r.Method == http.MethodGet {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
+			_, _ = w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
 		} else if r.Method != http.MethodDelete {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -475,7 +476,7 @@ func TestGetSvcIDs(t *testing.T) {
 
 		if r.URL.EscapedPath() == "/admin/badjson" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"this is" invalid JSON]`))
+			_, _ = w.Write([]byte(`{"this is" invalid JSON]`))
 			return
 		}
 
@@ -484,7 +485,7 @@ func TestGetSvcIDs(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
+		_, _ = w.Write([]byte(`{"data": [ {"id": "test-id-1"}, {"id": "test-id-2"}]}`))
 	}))
 	defer ts.Close()
 

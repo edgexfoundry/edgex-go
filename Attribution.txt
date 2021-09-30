@@ -193,3 +193,6 @@ https://github.com/golang/text/blob/master/LICENSE
 
 github.com/gorilla/websocket (BSD-2) https://github.com/gorilla/websocket
 https://github.com/gorilla/websocket/blob/master/LICENSE
+
+github.com/golang-jwt/jwt/v4 (MIT) github.com/golang-jwt/jwt
+https://github.com/golang-jwt/jwt/blob/main/LICENSE

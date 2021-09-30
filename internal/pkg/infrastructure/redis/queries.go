@@ -70,7 +70,7 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, offset i
 	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 		end = limit
 	}
-	count, err := redis.Int(conn.Do(ZCOUNT, key, InfiniteMin, InfiniteMax))
+	count, _ := redis.Int(conn.Do(ZCOUNT, key, InfiniteMin, InfiniteMax))
 	if count == 0 { // return nil slice when there is no records in the DB
 		return nil, nil
 	} else if count > 0 && start > count { // return RangeNotSatisfiable error when start is out of range
@@ -91,7 +91,7 @@ func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, off
 	if limit == 0 {
 		return
 	}
-	count, err := redis.Int(conn.Do(ZCOUNT, key, start, end))
+	count, _ := redis.Int(conn.Do(ZCOUNT, key, start, end))
 	if count == 0 { // return nil slice when there is no records satisfied with the score range in the DB
 		return nil, nil
 	} else if count > 0 && offset >= count { // return RangeNotSatisfiable error when offset is out of range
@@ -109,7 +109,7 @@ func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, off
 // getObjectsByLabelsAndSomeRange retrieves the entries for keys enumerated in a sorted set using the specified Redis range
 // command (i.e. RANGE, REVRANGE). The entries are retrieved in the order specified by the supplied Redis command.
 func getObjectsByLabelsAndSomeRange(conn redis.Conn, command string, key string, labels []string, offset int, limit int) ([][]byte, errors.EdgeX) {
-	if labels == nil || len(labels) == 0 { //if no labels specified, simply return getObjectsBySomeRange
+	if len(labels) == 0 { //if no labels specified, simply return getObjectsBySomeRange
 		return getObjectsBySomeRange(conn, command, key, offset, limit)
 	}
 

@@ -23,11 +23,10 @@ import (
 )
 
 const (
-	serviceName                   = "serviceName"
-	executableName                = "executableName"
-	errorMessage                  = "errorMessage"
-	metricsSuccessRawResult       = "metricsSuccessRawResult"
-	jsonDecodeFailureErrorMessage = "EOF"
+	serviceName             = "serviceName"
+	executableName          = "executableName"
+	errorMessage            = "errorMessage"
+	metricsSuccessRawResult = "metricsSuccessRawResult"
 )
 
 type executorStubCall struct {

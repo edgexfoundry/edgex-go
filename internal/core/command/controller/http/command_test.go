@@ -45,8 +45,6 @@ const (
 	testSourceName        = "testSourceName"
 	testDeviceServiceName = "testDeviceService"
 	testCommandName       = "testCommand"
-	testPathPrefix        = common.ApiDeviceRoute + "/" + common.Name + "/" + testDeviceName + "/" + common.Command + "/"
-	testUrl               = "http://localhost:59882"
 	testBaseAddress       = "http://localhost:49990"
 	testQueryStrings      = "a=1&b=2&ds-pushevent=no"
 )
@@ -157,7 +155,7 @@ func buildDeviceServiceResponse() responseDTO.DeviceServiceResponse {
 
 func buildEvent() dtos.Event {
 	event := dtos.NewEvent(testProfileName, testDeviceName, testSourceName)
-	event.AddSimpleReading(testResourceName, common.ValueTypeUint16, uint16(45))
+	_ = event.AddSimpleReading(testResourceName, common.ValueTypeUint16, uint16(45))
 	id, _ := uuid.NewUUID()
 	event.Id = id.String()
 	event.Readings[0].Id = id.String()
