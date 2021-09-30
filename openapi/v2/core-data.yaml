@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Data API
   description: This is the definition of the API for the Core Data service in the EdgeX Foundry IOT microservice platform. Core Data is responsible for storing event and reading data ingested from edge devices in the environment.
-  version: 2.0.1
+  version: 2.1.0
   
 servers:
   - url: http://localhost:59880/api/v2
@@ -175,8 +175,16 @@ components:
           type: object
           example: {
             "Gateway-id": "HoustonStore-000123",
-            "Latitude": "29.630771",
-            "Longitude": "-95.377603",
+            "latitude": {
+              "degrees": 25.0,
+              "minute": 1.0,
+              "second": 26.6268000000062
+            },
+            "longitude": {
+              "degree": 121.0,
+              "minute": 31.0,
+              "second": 19.600799999980154
+            }
           }
       required:
         - id
@@ -379,8 +387,14 @@ components:
           origin: 1602168089665565300
           tags:
             Gateway: "HoustonStore-000123"
-            Latitude: "29.630771"
-            Longitude: "-95.377603"
+            Latitude:
+              degrees: 25.0
+              minute: 1.0
+              second: 26.6268000000062
+            Longitude:
+              degree: 121.0
+              minute: 31.0
+              second: 19.600799999980154
           readings:
             - deviceName: "device-001"
               resourceName: "resource-001"
@@ -411,8 +425,14 @@ components:
             origin: 1602168089665565300
             tags:
               Gateway: "HoustonStore-000123"
-              Latitude: "29.630771"
-              Longitude: "-95.377603"
+              Latitude:
+                degrees: 25.0
+                minute: 1.0
+                second: 26.6268000000062
+              Longitude:
+                degree: 121.0
+                minute: 31.0
+                second: 19.600799999980154
             readings:
               - deviceName: "device-001"
                 resourceName: "resource-001"
@@ -558,8 +578,14 @@ paths:
                 origin: 1602168089665565300
                 tags:
                   Gateway: "HoustonStore-000123"
-                  Latitude: "29.630771"
-                  Longitude: "-95.377603"
+                  Latitude:
+                    degrees: 25.0
+                    minute: 1.0
+                    second: 26.6268000000062
+                  Longitude:
+                    degree: 121.0
+                    minute: 31.0
+                    second: 19.600799999980154
                 readings:
                   - deviceName: device-002
                     resourceName: resource-002
