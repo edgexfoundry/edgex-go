@@ -113,6 +113,13 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 		}
 		m, err = json.Marshal(newReading)
 		reading = newReading
+	case models.ObjectReading:
+		baseReading = &newReading.BaseReading
+		if err = checkReadingValue(baseReading); err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
+		m, err = json.Marshal(newReading)
+		reading = newReading
 	default:
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unsupported reading type", nil)
 	}
@@ -261,6 +268,13 @@ func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edge
 				return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "binary reading format parsing failed from the database", err)
 			}
 			readings[i] = binaryReading
+		} else if alias.ValueType == common.ValueTypeObject {
+			var objectReading models.ObjectReading
+			err = json.Unmarshal(in, &objectReading)
+			if err != nil {
+				return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "object reading format parsing failed from the database", err)
+			}
+			readings[i] = objectReading
 		} else {
 			var simpleReading models.SimpleReading
 			err = json.Unmarshal(in, &simpleReading)
