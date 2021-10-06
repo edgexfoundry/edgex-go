@@ -6,7 +6,6 @@ glide.lock
 docker/docker-compose.yml
 .project
 .vscode/
-go.sum
 coverage.out
 debug
 *.dll
@@ -41,6 +40,5 @@ parts/*
 prime/*
 stage/*
 snap/.snapcraft/*
-go.sum
 squashfs-root/
 

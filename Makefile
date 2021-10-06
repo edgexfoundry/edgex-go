@@ -49,7 +49,7 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 ARCH=$(shell uname -m)
 
-build: tidy $(MICROSERVICES)
+build: $(MICROSERVICES)
 
 tidy:
 	go mod tidy
@@ -107,8 +107,8 @@ lint:
 
 test: unittest hadolint lint
 	GO111MODULE=on go vet ./...
-	gofmt -l .
-	[ "`gofmt -l .`" = "" ]
+	gofmt -l $$(find . -type f -name '*.go'| grep -v "/vendor/")
+	[ "`gofmt -l $$(find . -type f -name '*.go'| grep -v "/vendor/")`" = "" ]
 	./bin/test-attribution-txt.sh
 
 docker: $(DOCKERS)
@@ -202,3 +202,6 @@ docker_security_bootstrapper:
 		-t edgexfoundry/security-bootstrapper:$(GIT_SHA) \
 		-t edgexfoundry/security-bootstrapper:$(DOCKER_TAG) \
 		.
+
+vendor:
+	$(GO) mod vendor
