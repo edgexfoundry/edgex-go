@@ -182,6 +182,15 @@ func objectIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	return exists, nil
 }
 
+func getMemberCountByScoreRange(conn redis.Conn, key string, start int, end int) (uint32, errors.EdgeX) {
+	count, err := redis.Int(conn.Do(ZCOUNT, key, start, end))
+	if err != nil {
+		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to get member count from %s between score range %v to %v", key, start, end), err)
+	}
+
+	return uint32(count), nil
+}
+
 func getMemberNumber(conn redis.Conn, command string, key string) (uint32, errors.EdgeX) {
 	count, err := redis.Int(conn.Do(command, key))
 	if err != nil {

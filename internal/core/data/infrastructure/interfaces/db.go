@@ -18,6 +18,7 @@ type DBClient interface {
 	DeleteEventById(id string) errors.EdgeX
 	EventTotalCount() (uint32, errors.EdgeX)
 	EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
+	EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
 	AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX)
 	EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX)
 	DeleteEventsByDeviceName(deviceName string) errors.EdgeX

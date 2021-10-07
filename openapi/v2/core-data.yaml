@@ -119,6 +119,15 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
+    BaseWithTotalCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        totalCount:
+          description: "The total count of all multi instances."
+          type: integer
     BinaryReading:
       description: "An event reading for a binary data type"
       allOf:
@@ -262,7 +271,7 @@ components:
               type: number
     MultiEventsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning Events to the caller."
       type: object
       properties:
@@ -429,6 +438,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        "totalCount": 3
         events: 
           - apiVersion: "v2"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
@@ -606,7 +616,7 @@ paths:
                 apiVersion: v2
                 deviceName: device-002
                 profileName: profile-002
-                sourceName: resource-002,
+                sourceName: resource-002
                 id: d5471d59-2810-419a-8744-18eb8fa03465
                 origin: 1602168089665565300
                 tags:

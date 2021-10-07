@@ -284,12 +284,25 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 	return count, nil
 }
 
-// EventCountByDevice returns the count of Event associated a specific Device from the database
+// EventCountByDeviceName returns the count of Event associated a specific Device from the database
 func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
 	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(EventsCollectionDeviceName, deviceName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// EventCountByTimeRange returns the count of Event by time range
+func (c *Client) EventCountByTimeRange(startTime int, endTime int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, EventsCollectionOrigin, startTime, endTime)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}

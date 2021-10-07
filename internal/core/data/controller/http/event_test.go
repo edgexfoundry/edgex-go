@@ -480,10 +480,12 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 func TestAllEvents(t *testing.T) {
 	events := []models.Event{persistedEvent, persistedEvent, persistedEvent}
+	totalCount := uint32(len(events))
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
 
+	dbClientMock.On("EventTotalCount").Return(totalCount, nil)
 	dbClientMock.On("AllEvents", 0, 20).Return(events, nil)
 	dbClientMock.On("AllEvents", 1, 1).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("AllEvents", 4, 1).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -501,11 +503,12 @@ func TestAllEvents(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get events without offset and limit", "", "", false, 3, http.StatusOK},
-		{"Valid - get events with offset and limit", "1", "1", false, 1, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", true, 0, http.StatusNotFound},
+		{"Valid - get events without offset and limit", "", "", false, 3, totalCount, http.StatusOK},
+		{"Valid - get events with offset and limit", "1", "1", false, 1, totalCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", true, 0, 0, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -542,6 +545,7 @@ func TestAllEvents(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Events), "Event count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -559,10 +563,15 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	event3WithDeviceB.DeviceName = testDeviceB
 
 	events := []models.Event{event1WithDeviceA, event2WithDeviceA, event3WithDeviceB}
+	totalCountDeviceA := uint32(2)
+	totalCountDeviceB := uint32(1)
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCountByDeviceName", testDeviceA).Return(totalCountDeviceA, nil)
+	dbClientMock.On("EventCountByDeviceName", testDeviceB).Return(totalCountDeviceB, nil)
 	dbClientMock.On("EventsByDeviceName", 0, 5, testDeviceA).Return([]models.Event{events[0], events[1]}, nil)
+	dbClientMock.On("EventsByDeviceName", 0, 5, testDeviceB).Return([]models.Event{events[2]}, nil)
 	dbClientMock.On("EventsByDeviceName", 1, 1, testDeviceA).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("EventsByDeviceName", 4, 1, testDeviceB).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
@@ -580,12 +589,14 @@ func TestAllEventsByDeviceName(t *testing.T) {
 		deviceName         string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get events with deviceName", "0", "5", testDeviceA, false, 2, http.StatusOK},
-		{"Valid - get events with offset and no labels", "1", "1", testDeviceA, false, 1, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", testDeviceB, true, 0, http.StatusNotFound},
-		{"Invalid - get events without deviceName", "0", "10", "", true, 0, http.StatusBadRequest},
+		{"Valid - get events with deviceName - deviceA", "0", "5", testDeviceA, false, 2, totalCountDeviceA, http.StatusOK},
+		{"Valid - get events with deviceName - deviceB", "0", "5", testDeviceB, false, 1, totalCountDeviceB, http.StatusOK},
+		{"Valid - get events with offset and no labels", "1", "1", testDeviceA, false, 1, totalCountDeviceA, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", testDeviceB, true, 0, 0, http.StatusNotFound},
+		{"Invalid - get events without deviceName", "0", "10", "", true, 0, 0, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -619,6 +630,7 @@ func TestAllEventsByDeviceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Events), "Device count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -626,8 +638,10 @@ func TestAllEventsByDeviceName(t *testing.T) {
 }
 
 func TestAllEventsByTimeRange(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCountByTimeRange", 0, 100).Return(totalCount, nil)
 	dbClientMock.On("EventsByTimeRange", 0, 100, 0, 10).Return([]models.Event{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -645,16 +659,17 @@ func TestAllEventsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, http.StatusOK},
-		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty start", "", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty end", "0", "", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - end before start", "10", "0", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, http.StatusBadRequest},
+		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, totalCount, http.StatusOK},
+		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - empty start", "", "100", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - empty end", "0", "", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - end before start", "10", "0", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -688,6 +703,7 @@ func TestAllEventsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Events), "Device count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
