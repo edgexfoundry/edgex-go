@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Data API
   description: This is the definition of the API for the Core Data service in the EdgeX Foundry IOT microservice platform. Core Data is responsible for storing event and reading data ingested from edge devices in the environment.
-  version: 2.1.0
+  version: 2.2.0
   
 servers:
   - url: http://localhost:59880/api/v2
@@ -69,6 +69,7 @@ components:
             - Int64Array
             - Float32Array
             - Float64Array
+            - Object
       required:
         - deviceName
         - resourceName
@@ -134,6 +135,18 @@ components:
           required:
             - binaryValue
             - mediaType
+    ObjectReading:
+      description: "An event reading for a object data type"
+      allOf:
+        - $ref: '#/components/schemas/ObjectReading'
+        - type: object
+          properties:
+            objectValue:
+              description: "If the value type of the reading is Object, it will be found in this property as a object value"
+              type: string
+              format: byte
+          required:
+            - objectValue
     CountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -465,6 +478,16 @@ components:
                 valueType: "Binary"
                 binaryValue: [12,34]
                 mediaType: "image"
+              - deviceName: "device-002"
+                resourceName: "resource-003"
+                profileName: "profile-002"
+                id: "71c601d9-cb56-453a-8c75-54461e444715"
+                origin: 1602168089665565300
+                valueType: "Object"
+                objectValue:
+                  Attr1: "yyz"
+                  Attr2: -45
+                  Attr3: [ 255, 1, 0 ]
           - apiVersion: "v2"
             deviceName: "device-002"
             profileName: "profile-002"
@@ -513,6 +536,16 @@ components:
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
+          - deviceName: "device-002"
+            resourceName: "resource-003"
+            profileName: "profile-002"
+            id: "71c601d9-cb56-453a-8c75-54461e444715"
+            origin: 1602168089665565300
+            valueType: "Object"
+            objectValue:
+              Attr1: "yyz"
+              Attr2: -45
+              Attr3: [255, 1, 0]
     ReadingsByResourceNameAndTimeRangeExample:
       value:
         apiVersion: "v2"

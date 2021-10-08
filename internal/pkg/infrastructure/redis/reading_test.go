@@ -51,18 +51,38 @@ func binaryReadingData() models.BinaryReading {
 	}
 }
 
+func objectReadingData() models.ObjectReading {
+	return models.ObjectReading{
+		BaseReading: models.BaseReading{
+			Id:           exampleUUID,
+			Origin:       1616728256236000001,
+			DeviceName:   testDeviceName,
+			ProfileName:  testProfileName,
+			ResourceName: testResourceName,
+			ValueType:    common.ValueTypeObject,
+		},
+		ObjectValue: map[string]interface{}{
+			"f1": "ABC",
+			"f2": float64(123),
+		},
+	}
+}
+
 func TestConvertObjectsToReadings(t *testing.T) {
 	simpleReading := simpleReadingData()
 	binaryReading := binaryReadingData()
+	objectReading := objectReadingData()
 
 	simpleReadingBytes, err := json.Marshal(simpleReading)
 	require.NoError(t, err)
 	binaryReadingBytes, err := json.Marshal(binaryReading)
 	require.NoError(t, err)
+	objectReadingBytes, err := json.Marshal(objectReading)
+	require.NoError(t, err)
 
-	readingsData := [][]byte{simpleReadingBytes, binaryReadingBytes}
+	readingsData := [][]byte{simpleReadingBytes, binaryReadingBytes, objectReadingBytes}
 	expectedReadings := []models.Reading{
-		simpleReading, binaryReading,
+		simpleReading, binaryReading, objectReading,
 	}
 
 	events, err := convertObjectsToReadings(readingsData)
