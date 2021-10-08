@@ -25,13 +25,9 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 
 RUN apk add --update --no-cache make git
 
-COPY go.mod .
-
-RUN go mod download
-
 COPY . .
+RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
-RUN go mod tidy
 RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
 
 FROM alpine:3.14

@@ -16,13 +16,8 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 
 RUN apk add --update --no-cache make bash git
 
-COPY go.mod .
-
-RUN go mod download
-
 COPY . .
-
-RUN go mod tidy
+RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 # Build the SMA executable.
 RUN make cmd/sys-mgmt-agent/sys-mgmt-agent

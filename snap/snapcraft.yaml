@@ -660,6 +660,8 @@ parts:
 
       echo $GIT_VERSION > ./VERSION
 
+      [ ! -d "vendor" ] && go mod download all || echo "skipping..."
+
       make build
 
       # copy service binaries, configuration, and license files into the snap install
