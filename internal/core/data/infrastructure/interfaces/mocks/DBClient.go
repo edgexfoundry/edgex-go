@@ -306,6 +306,121 @@ func (_m *DBClient) ReadingCountByDeviceName(deviceName string) (uint32, errors.
 	return r0, r1
 }
 
+// ReadingCountByDeviceNameAndResourceName provides a mock function with given fields: deviceName, resourceName
+func (_m *DBClient) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX) {
+	ret := _m.Called(deviceName, resourceName)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string, string) uint32); ok {
+		r0 = rf(deviceName, resourceName)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string, string) errors.EdgeX); ok {
+		r1 = rf(deviceName, resourceName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ReadingCountByDeviceNameAndResourceNameAndTimeRange provides a mock function with given fields: deviceName, resourceName, start, end
+func (_m *DBClient) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int) (uint32, errors.EdgeX) {
+	ret := _m.Called(deviceName, resourceName, start, end)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string, string, int, int) uint32); ok {
+		r0 = rf(deviceName, resourceName, start, end)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string, string, int, int) errors.EdgeX); ok {
+		r1 = rf(deviceName, resourceName, start, end)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ReadingCountByResourceName provides a mock function with given fields: resourceName
+func (_m *DBClient) ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX) {
+	ret := _m.Called(resourceName)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string) uint32); ok {
+		r0 = rf(resourceName)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(resourceName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ReadingCountByResourceNameAndTimeRange provides a mock function with given fields: resourceName, start, end
+func (_m *DBClient) ReadingCountByResourceNameAndTimeRange(resourceName string, start int, end int) (uint32, errors.EdgeX) {
+	ret := _m.Called(resourceName, start, end)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string, int, int) uint32); ok {
+		r0 = rf(resourceName, start, end)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string, int, int) errors.EdgeX); ok {
+		r1 = rf(resourceName, start, end)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// ReadingCountByTimeRange provides a mock function with given fields: start, end
+func (_m *DBClient) ReadingCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+	ret := _m.Called(start, end)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(int, int) uint32); ok {
+		r0 = rf(start, end)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int) errors.EdgeX); ok {
+		r1 = rf(start, end)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // ReadingTotalCount provides a mock function with given fields:
 func (_m *DBClient) ReadingTotalCount() (uint32, errors.EdgeX) {
 	ret := _m.Called()

@@ -51,8 +51,10 @@ func TestReadingTotalCount(t *testing.T) {
 }
 
 func TestAllReadings(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingTotalCount").Return(totalCount, nil)
 	dbClientMock.On("AllReadings", 0, 20).Return([]models.Reading{}, nil)
 	dbClientMock.On("AllReadings", 0, 1).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -68,12 +70,13 @@ func TestAllReadings(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get readings without offset, and limit", "", "", false, http.StatusOK},
-		{"Valid - get readings with offset, and limit", "0", "1", false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", true, http.StatusBadRequest},
+		{"Valid - get readings without offset, and limit", "", "", false, totalCount, http.StatusOK},
+		{"Valid - get readings with offset, and limit", "0", "1", false, totalCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -110,14 +113,17 @@ func TestAllReadings(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
 }
 
 func TestReadingsByTimeRange(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByTimeRange", 0, 100).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByTimeRange", 0, 100, 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -135,16 +141,17 @@ func TestReadingsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, http.StatusOK},
-		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty start", "", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty end", "0", "", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - end before start", "10", "0", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, http.StatusBadRequest},
+		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, totalCount, http.StatusOK},
+		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - empty start", "", "100", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - empty end", "0", "", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - end before start", "10", "0", "0", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -179,14 +186,17 @@ func TestReadingsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Readings), "Device count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
 }
 
 func TestReadingsByResourceName(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByResourceName", TestDeviceResourceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByResourceName", 0, 20, TestDeviceResourceName).Return([]models.Reading{}, nil)
 	dbClientMock.On("ReadingsByResourceName", 0, 1, TestDeviceResourceName).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -203,12 +213,13 @@ func TestReadingsByResourceName(t *testing.T) {
 		limit              string
 		resourceName       string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get readings without offset, and limit", "", "", TestDeviceResourceName, false, http.StatusOK},
-		{"Valid - get readings with offset, and limit", "0", "1", TestDeviceResourceName, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", TestDeviceResourceName, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", TestDeviceResourceName, true, http.StatusBadRequest},
+		{"Valid - get readings without offset, and limit", "", "", TestDeviceResourceName, false, totalCount, http.StatusOK},
+		{"Valid - get readings with offset, and limit", "0", "1", TestDeviceResourceName, false, totalCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", TestDeviceResourceName, true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", TestDeviceResourceName, true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -246,14 +257,17 @@ func TestReadingsByResourceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
 }
 
 func TestReadingsByDeviceName(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByDeviceName", TestDeviceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceName", 0, 20, TestDeviceName).Return([]models.Reading{}, nil)
 	dbClientMock.On("ReadingsByDeviceName", 0, 1, TestDeviceName).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -270,12 +284,13 @@ func TestReadingsByDeviceName(t *testing.T) {
 		limit              string
 		deviceName         string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get readings without offset, and limit", "", "", TestDeviceName, false, http.StatusOK},
-		{"Valid - get readings with offset, and limit", "0", "1", TestDeviceName, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", TestDeviceName, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", TestDeviceName, true, http.StatusBadRequest},
+		{"Valid - get readings without offset, and limit", "", "", TestDeviceName, false, totalCount, http.StatusOK},
+		{"Valid - get readings with offset, and limit", "0", "1", TestDeviceName, false, totalCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", TestDeviceName, true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", TestDeviceName, true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -313,6 +328,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
@@ -351,8 +367,10 @@ func TestReadingCountByDeviceName(t *testing.T) {
 }
 
 func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByResourceNameAndTimeRange", TestDeviceResourceName, 0, 100).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByResourceNameAndTimeRange", TestDeviceResourceName, 0, 100, 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -370,17 +388,18 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid ", TestDeviceResourceName, "0", "100", "0", "10", false, http.StatusOK},
-		{"Invalid - empty resourceName", "", "0", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid start format", TestDeviceResourceName, "aaa", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid end format", TestDeviceResourceName, "0", "bbb", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - empty start", TestDeviceResourceName, "", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - empty end", TestDeviceResourceName, "0", "", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - end before start", TestDeviceResourceName, "10", "0", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid offset format", TestDeviceResourceName, "0", "100", "aaa", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", TestDeviceResourceName, "0", "100", "0", "aaa", true, http.StatusBadRequest},
+		{"Valid ", TestDeviceResourceName, "0", "100", "0", "10", false, totalCount, http.StatusOK},
+		{"Invalid - empty resourceName", "", "0", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid start format", TestDeviceResourceName, "aaa", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", TestDeviceResourceName, "0", "bbb", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - empty start", TestDeviceResourceName, "", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - empty end", TestDeviceResourceName, "0", "", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - end before start", TestDeviceResourceName, "10", "0", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", TestDeviceResourceName, "0", "100", "aaa", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", TestDeviceResourceName, "0", "100", "0", "aaa", true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -414,14 +433,17 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
 }
 
 func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName, 0, 20).Return([]models.Reading{}, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName, 0, 1).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -439,14 +461,15 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"valid - get readings without offset, and limit", TestDeviceName, TestDeviceResourceName, "", "", false, http.StatusOK},
-		{"valid - get readings with offset, and limit", TestDeviceName, TestDeviceResourceName, "0", "1", false, http.StatusOK},
-		{"invalid - empty deviceName", "", TestDeviceResourceName, "0", "1", true, http.StatusBadRequest},
-		{"invalid - empty resourceName", TestDeviceName, "", "0", "1", true, http.StatusBadRequest},
-		{"invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "aaa", "1", true, http.StatusBadRequest},
-		{"invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "1", "aaa", true, http.StatusBadRequest},
+		{"valid - get readings without offset, and limit", TestDeviceName, TestDeviceResourceName, "", "", false, totalCount, http.StatusOK},
+		{"valid - get readings with offset, and limit", TestDeviceName, TestDeviceResourceName, "0", "1", false, totalCount, http.StatusOK},
+		{"invalid - empty deviceName", "", TestDeviceResourceName, "0", "1", true, totalCount, http.StatusBadRequest},
+		{"invalid - empty resourceName", TestDeviceName, "", "0", "1", true, totalCount, http.StatusBadRequest},
+		{"invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "aaa", "1", true, totalCount, http.StatusBadRequest},
+		{"invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "1", "aaa", true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -485,14 +508,17 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}
 }
 
 func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
+	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingCountByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, 0, 100).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, 0, 100, 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -511,18 +537,19 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", false, http.StatusOK},
-		{"Invalid - empty deviceName", "", TestDeviceResourceName, "0", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - empty resourceName", TestDeviceName, "", "0", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid start format", TestDeviceName, TestDeviceResourceName, "aaa", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid end format", TestDeviceName, TestDeviceResourceName, "0", "bbb", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - empty start", TestDeviceName, TestDeviceResourceName, "", "100", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - empty end", TestDeviceName, TestDeviceResourceName, "0", "", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - end before start", TestDeviceName, TestDeviceResourceName, "10", "0", "0", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "0", "100", "aaa", "10", true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "aaa", true, http.StatusBadRequest},
+		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", false, totalCount, http.StatusOK},
+		{"Invalid - empty deviceName", "", TestDeviceResourceName, "0", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - empty resourceName", TestDeviceName, "", "0", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid start format", TestDeviceName, TestDeviceResourceName, "aaa", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", TestDeviceName, TestDeviceResourceName, "0", "bbb", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - empty start", TestDeviceName, TestDeviceResourceName, "", "100", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - empty end", TestDeviceName, TestDeviceResourceName, "0", "", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - end before start", TestDeviceName, TestDeviceResourceName, "10", "0", "0", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", TestDeviceName, TestDeviceResourceName, "0", "100", "aaa", "10", true, totalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "aaa", true, totalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -557,6 +584,7 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 			}
 		})
 	}

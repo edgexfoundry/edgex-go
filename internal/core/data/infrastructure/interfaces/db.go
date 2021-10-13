@@ -32,5 +32,10 @@ type DBClient interface {
 	ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, offset int, limit int) ([]model.Reading, errors.EdgeX)
 	ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int, offset int, limit int) ([]model.Reading, errors.EdgeX)
 	ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
+	ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX)
+	ReadingCountByResourceNameAndTimeRange(resourceName string, start int, end int) (uint32, errors.EdgeX)
+	ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX)
+	ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int) (uint32, errors.EdgeX)
+	ReadingCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
 	ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int) ([]model.Reading, errors.EdgeX)
 }

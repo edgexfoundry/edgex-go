@@ -574,6 +574,71 @@ func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.Edg
 	return count, nil
 }
 
+// ReadingCountByResourceName returns the count of Readings associated a specific Resource from the database
+func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(ReadingsCollectionResourceName, resourceName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// ReadingCountByResourceNameAndTimeRange returns the count of Readings associated a specific Resource from the database within specified time range
+func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, startTime int, endTime int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), startTime, endTime)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// ReadingCountByDeviceNameAndResourceName returns the count of Readings associated with specified Resource and Device from the database
+func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// ReadingCountByDeviceNameAndResourceNameAndTimeRange returns the count of Readings associated with specified Resource and Device from the database within specified time range
+func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName), start, end)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// ReadingCountByTimeRange returns the count of Readings from the database within specified time range
+func (c *Client) ReadingCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, ReadingsCollectionOrigin, start, end)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
 // ReadingsByResourceNameAndTimeRange query readings by resourceName and specified time range. Readings are sorted in descending order of origin time.
 func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
 	conn := c.Pool.Get()

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Data API
   description: This is the definition of the API for the Core Data service in the EdgeX Foundry IOT microservice platform. Core Data is responsible for storing event and reading data ingested from edge devices in the environment.
-  version: 2.2.0
+  version: 2.1.0
   
 servers:
   - url: http://localhost:59880/api/v2
@@ -281,7 +281,7 @@ components:
             $ref: '#/components/schemas/Event'
     MultiReadingsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning Readings to the caller."
       type: object
       properties:
@@ -438,7 +438,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
-        "totalCount": 3
+        totalCount: 3
         events: 
           - apiVersion: "v2"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
@@ -516,6 +516,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 5
         readings:
           - deviceName: "device-001"
             resourceName: "resource-001"
@@ -560,6 +561,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 6
         readings:
           - deviceName: "device-001"
             resourceName: "resource-001"
