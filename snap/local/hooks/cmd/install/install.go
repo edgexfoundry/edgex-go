@@ -35,22 +35,33 @@ const consulAddRegistryACLRolesCfg = "env.security-bootstrapper.add-registry-acl
 
 // device-rest and device-virtual are both on the /cmd/security-file-token-provider/res/token-config.json file,
 // so they should not need to be set here as well
-const secretStoreTokens = "app-functional-tests,app-rules-engine,app-http-export,app-mqtt-export,application-service" +
-	"device-camera,device-mqtt,device-modbus,device-coap,device-snmp"
+var secretStoreTokens = []string{
+	"app-functional-tests",
+	"app-rules-engine",
+	"app-http-export",
+	"app-mqtt-export",
+	"application-service",
+	"device-camera",
+	"device-mqtt",
+	"device-modbus",
+	"device-coap",
+	"device-snmp",
+}
 
-const secretStoreKnownSecrets = "" +
-	"redisdb[app-functional-tests]," +
-	"redisdb[app-rules-engine]," +
-	"redisdb[app-http-export]," +
-	"redisdb[app-mqtt-export]," +
-	"redisdb[application-service]," +
-	"redisdb[device-rest]," +
-	"redisdb[device-virtual]," +
-	"redisdb[device-camera]," +
-	"redisdb[device-mqtt]," +
-	"redisdb[device-modbus]," +
-	"redisdb[device-coap]," +
-	"redisdb[device-snmp]"
+var secretStoreKnownSecrets = []string{
+	"redisdb[app-functional-tests]",
+	"redisdb[app-rules-engine]",
+	"redisdb[app-http-export]",
+	"redisdb[app-mqtt-export]",
+	"redisdb[application-service]",
+	"redisdb[device-rest]",
+	"redisdb[device-virtual]",
+	"redisdb[device-camera]",
+	"redisdb[device-mqtt]",
+	"redisdb[device-modbus]",
+	"redisdb[device-coap]",
+	"redisdb[device-snmp]",
+}
 
 var services = []string{
 	"security-bootstrapper",
@@ -181,11 +192,11 @@ func installSecretStore() error {
 	//	ADD_REGISTRY_ACL_ROLES
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = cli.SetConfig(secretStoreAddTokensCfg, secretStoreTokens); err != nil {
+	if err = cli.SetConfig(secretStoreAddTokensCfg, strings.Join(secretStoreTokens, ",")); err != nil {
 		return err
 	}
 
-	if err = cli.SetConfig(secretStoreAddKnownSecretsCfg, secretStoreKnownSecrets); err != nil {
+	if err = cli.SetConfig(secretStoreAddKnownSecretsCfg, strings.Join(secretStoreKnownSecrets, ",")); err != nil {
 		return err
 	}
 
@@ -231,7 +242,7 @@ func installConsul() error {
 	// using the same list of services as used in ADD_KNOWN_SECRETS
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = cli.SetConfig(consulAddRegistryACLRolesCfg, secretStoreTokens); err != nil {
+	if err = cli.SetConfig(consulAddRegistryACLRolesCfg, strings.Join(secretStoreTokens, ",")); err != nil {
 		return err
 	}
 
