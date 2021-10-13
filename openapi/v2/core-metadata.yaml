@@ -1104,17 +1104,17 @@ components:
               - hvac
               - thermostat
             location: "{lat:45.45,long:47.80}"
-            serviceName: Google Home device service
-            profileName: Google Home profile
+            serviceName: device-modbus
+            profileName: Google-Home-profile
             autoEvents:
               - interval: 300ms
                 onChange: true
                 sourceName: CurrentHumidity
             protocols:
               modbus-tcp:
-                host: localhost
-                port: '1234'
-                unitID: '1'
+                Address: "localhost"
+                Port: "502"
+                UnitID: "1"
             notify: false
     UpdateDeviceRequest:
       value:
@@ -1157,7 +1157,6 @@ components:
             labels:
               - "modbus"
             description: "Example of Simple Device Profile"
-
             deviceResources:
               - name: "SwitchButton"
                 description: "Switch On/Off."
