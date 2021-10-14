@@ -73,20 +73,24 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 }
 
 // DevicesByServiceName query devices with offset, limit and name
-func DevicesByServiceName(offset int, limit int, name string, ctx context.Context, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+func DevicesByServiceName(offset int, limit int, name string, ctx context.Context, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
 	if name == "" {
-		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		return devices, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	deviceModels, err := dbClient.DevicesByServiceName(offset, limit, name)
+	if err == nil {
+		totalCount, err = dbClient.DeviceCountByServiceName(name)
+	}
 	if err != nil {
-		return devices, errors.NewCommonEdgeXWrapper(err)
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		devices = make([]dtos.Device, len(deviceModels))
+		for i, d := range deviceModels {
+			devices[i] = dtos.FromDeviceModelToDTO(d)
+		}
+		return devices, totalCount, nil
 	}
-	devices = make([]dtos.Device, len(deviceModels))
-	for i, d := range deviceModels {
-		devices[i] = dtos.FromDeviceModelToDTO(d)
-	}
-	return devices, nil
 }
 
 // DeviceNameExists checks the device existence by name
@@ -174,17 +178,21 @@ func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device mo
 }
 
 // AllDevices query the devices with offset, limit, and labels
-func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, err := dbClient.AllDevices(offset, limit, labels)
+	deviceModels, err := dbClient.AllDevices(offset, limit, labels)
+	if err == nil {
+		totalCount, err = dbClient.DeviceTotalCount()
+	}
 	if err != nil {
-		return devices, errors.NewCommonEdgeXWrapper(err)
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		devices = make([]dtos.Device, len(deviceModels))
+		for i, d := range deviceModels {
+			devices[i] = dtos.FromDeviceModelToDTO(d)
+		}
+		return devices, totalCount, nil
 	}
-	devices = make([]dtos.Device, len(dps))
-	for i, dp := range dps {
-		devices[i] = dtos.FromDeviceModelToDTO(dp)
-	}
-	return devices, nil
 }
 
 // DeviceByName query the device by name
@@ -202,18 +210,22 @@ func DeviceByName(name string, dic *di.Container) (device dtos.Device, err error
 }
 
 // DevicesByProfileName query the devices with offset, limit, and profile name
-func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Container) (devices []dtos.Device, err errors.EdgeX) {
+func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
 	if profileName == "" {
-		return devices, errors.NewCommonEdgeX(errors.KindContractInvalid, "profileName is empty", nil)
+		return devices, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "profileName is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	deviceModels, err := dbClient.DevicesByProfileName(offset, limit, profileName)
+	if err == nil {
+		totalCount, err = dbClient.DeviceCountByProfileName(profileName)
+	}
 	if err != nil {
-		return devices, errors.NewCommonEdgeXWrapper(err)
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		devices = make([]dtos.Device, len(deviceModels))
+		for i, d := range deviceModels {
+			devices[i] = dtos.FromDeviceModelToDTO(d)
+		}
+		return devices, totalCount, nil
 	}
-	devices = make([]dtos.Device, len(deviceModels))
-	for i, d := range deviceModels {
-		devices[i] = dtos.FromDeviceModelToDTO(d)
-	}
-	return devices, nil
 }

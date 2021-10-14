@@ -264,7 +264,7 @@ func deviceProfilesByManufacturer(conn redis.Conn, offset int, limit int, manufa
 }
 
 // deviceProfilesByManufacturerAndModel query device profiles by offset, limit, manufacturer and model
-func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int, manufacturer string, model string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
+func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int, manufacturer string, model string) (deviceProfiles []models.DeviceProfile, totalCount uint32, edgeXerr errors.EdgeX) {
 	if limit == 0 {
 		return
 	}
@@ -277,20 +277,21 @@ func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int
 	// query ids by manufacturer
 	idsWithManufacturer, err := redis.Strings(conn.Do(ZREVRANGE, CreateKey(DeviceProfileCollectionManufacturer, manufacturer), 0, -1))
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by manufacturer %s from database failed", manufacturer), err)
+		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by manufacturer %s from database failed", manufacturer), err)
 	}
 	idsSlice[0] = idsWithManufacturer
 	// query ids by model
 	idsWithModel, err := redis.Strings(conn.Do(ZREVRANGE, CreateKey(DeviceProfileCollectionModel, model), 0, -1))
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by model %s from database failed", manufacturer), err)
+		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by model %s from database failed", manufacturer), err)
 	}
 	idsSlice[1] = idsWithModel
 
 	//find common Ids among two-dimension Ids slice
 	commonIds := pkgCommon.FindCommonStrings(idsSlice...)
+	totalCount = uint32(len(commonIds))
 	if offset > len(commonIds) {
-		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
+		return nil, totalCount, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
 	}
 	if end >= len(commonIds) || end == -1 {
 		commonIds = commonIds[offset:]
@@ -300,7 +301,7 @@ func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int
 
 	objects, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(commonIds))
 	if edgeXerr != nil {
-		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
 	deviceProfiles = make([]models.DeviceProfile, len(objects))
@@ -308,9 +309,9 @@ func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int
 		dp := models.DeviceProfile{}
 		err := json.Unmarshal(in, &dp)
 		if err != nil {
-			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
+			return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
 		}
 		deviceProfiles[i] = dp
 	}
-	return deviceProfiles, nil
+	return deviceProfiles, totalCount, nil
 }

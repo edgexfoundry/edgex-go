@@ -58,59 +58,65 @@ func ProvisionWatcherByName(name string, dic *di.Container) (provisionWatcher dt
 }
 
 // ProvisionWatchersByServiceName query provision watchers with offset, limit and service name
-func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, err errors.EdgeX) {
+func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
 	if name == "" {
-		return provisionWatchers, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		return provisionWatchers, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.ProvisionWatchersByServiceName(offset, limit, name)
+	if err == nil {
+		totalCount, err = dbClient.ProvisionWatcherCountByServiceName(name)
+	}
 	if err != nil {
-		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+		for i, pw := range pwModels {
+			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+		}
+		return provisionWatchers, totalCount, nil
 	}
-
-	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-	for i, pw := range pwModels {
-		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-	}
-
-	return
 }
 
 // ProvisionWatchersByProfileName query provision watchers with offset, limit and profile name
-func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, err errors.EdgeX) {
+func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
 	if name == "" {
-		return provisionWatchers, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
+		return provisionWatchers, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.ProvisionWatchersByProfileName(offset, limit, name)
+	if err == nil {
+		totalCount, err = dbClient.ProvisionWatcherCountByProfileName(name)
+	}
 	if err != nil {
-		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+		for i, pw := range pwModels {
+			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+		}
+		return provisionWatchers, totalCount, nil
 	}
-
-	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-	for i, pw := range pwModels {
-		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-	}
-
-	return
 }
 
 // AllProvisionWatchers query the provision watchers with offset, limit and labels
-func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, err errors.EdgeX) {
+func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.AllProvisionWatchers(offset, limit, labels)
+	if err == nil {
+		totalCount, err = dbClient.ProvisionWatcherTotalCount()
+	}
 	if err != nil {
-		return provisionWatchers, errors.NewCommonEdgeXWrapper(err)
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+		for i, pw := range pwModels {
+			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+		}
+		return provisionWatchers, totalCount, nil
 	}
-
-	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-	for i, pw := range pwModels {
-		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-	}
-
-	return
 }
 
 // DeleteProvisionWatcherByName deletes the provision watcher by name

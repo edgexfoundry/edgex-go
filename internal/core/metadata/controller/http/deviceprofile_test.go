@@ -367,6 +367,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", deviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DeviceCountByProfileName", deviceProfileModel.Name).Return(uint32(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -657,6 +658,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
+	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(uint32(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, validDeviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -839,9 +841,11 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 func TestAllDeviceProfiles(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfileTotalCount").Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
 	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
@@ -861,12 +865,13 @@ func TestAllDeviceProfiles(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get device profiles without labels", "0", "10", "", false, 3, http.StatusOK},
-		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, http.StatusOK},
-		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, http.StatusNotFound},
+		{"Valid - get device profiles without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -902,6 +907,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -911,9 +917,11 @@ func TestAllDeviceProfiles(t *testing.T) {
 func TestDeviceProfilesByModel(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfileCountByModel", TestModel).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByModel", 0, 10, TestModel).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByModel", 1, 2, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
 	dbClientMock.On("DeviceProfilesByModel", 4, 1, TestModel).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -932,12 +940,13 @@ func TestDeviceProfilesByModel(t *testing.T) {
 		model              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get device profiles by model", "0", "10", TestModel, false, 3, http.StatusOK},
-		{"Valid - get device profiles by model with offset and limit", "1", "2", TestModel, false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestModel, true, 0, http.StatusNotFound},
-		{"Invalid - model is empty", "0", "10", "", true, 0, http.StatusBadRequest},
+		{"Valid - get device profiles by model", "0", "10", TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profiles by model with offset and limit", "1", "2", TestModel, false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", TestModel, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - model is empty", "0", "10", "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -971,6 +980,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -980,9 +990,11 @@ func TestDeviceProfilesByModel(t *testing.T) {
 func TestDeviceProfilesByManufacturer(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfileCountByManufacturer", TestManufacturer).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 0, 10, TestManufacturer).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 1, 2, TestManufacturer).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 4, 1, TestManufacturer).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -1001,12 +1013,13 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 		manufacturer       string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get device profiles by manufacturer", "0", "10", TestManufacturer, false, 3, http.StatusOK},
-		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestManufacturer, true, 0, http.StatusNotFound},
-		{"Invalid - manufacturer is empty", "0", "10", "", true, 0, http.StatusBadRequest},
+		{"Valid - get device profiles by manufacturer", "0", "10", TestManufacturer, false, 3, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", TestManufacturer, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - manufacturer is empty", "0", "10", "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1040,6 +1053,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -1049,12 +1063,13 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, nil)
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, expectedTotalProfileCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1071,13 +1086,14 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 		model              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get device profiles by manufacturer and model", "0", "10", TestManufacturer, TestModel, false, 3, http.StatusOK},
-		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, TestModel, false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestManufacturer, TestModel, true, 0, http.StatusNotFound},
-		{"Invalid - manufacturer is empty", "0", "10", "", TestModel, true, 0, http.StatusBadRequest},
-		{"Invalid - model is empty", "0", "10", TestManufacturer, "", true, 0, http.StatusBadRequest},
+		{"Valid - get device profiles by manufacturer and model", "0", "10", TestManufacturer, TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, TestModel, false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", TestManufacturer, TestModel, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - manufacturer is empty", "0", "10", "", TestModel, true, 0, expectedTotalProfileCount, http.StatusBadRequest},
+		{"Invalid - model is empty", "0", "10", TestManufacturer, "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1111,6 +1127,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

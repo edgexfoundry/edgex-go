@@ -131,16 +131,19 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 }
 
 // AllDeviceServices query the device services with labels, offset, and limit
-func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, err errors.EdgeX) {
+func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	services, err := dbClient.AllDeviceServices(offset, limit, labels)
+	if err == nil {
+		totalCount, err = dbClient.DeviceServiceTotalCount()
+	}
 	if err != nil {
-		return deviceServices, errors.NewCommonEdgeXWrapper(err)
+		return deviceServices, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		deviceServices = make([]dtos.DeviceService, len(services))
+		for i, s := range services {
+			deviceServices[i] = dtos.FromDeviceServiceModelToDTO(s)
+		}
+		return deviceServices, totalCount, nil
 	}
-	deviceServices = make([]dtos.DeviceService, len(services))
-	for i, ds := range services {
-		dsDTO := dtos.FromDeviceServiceModelToDTO(ds)
-		deviceServices[i] = dsDTO
-	}
-	return deviceServices, nil
 }

@@ -117,13 +117,13 @@ func (dc *DeviceController) DevicesByServiceName(w http.ResponseWriter, r *http.
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	devices, err := application.DevicesByServiceName(offset, limit, name, ctx, dc.dic)
+	devices, totalCount, err := application.DevicesByServiceName(offset, limit, name, ctx, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
+	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -209,13 +209,13 @@ func (dc *DeviceController) AllDevices(w http.ResponseWriter, r *http.Request) {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	devices, err := application.AllDevices(offset, limit, labels, dc.dic)
+	devices, totalCount, err := application.AllDevices(offset, limit, labels, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
+	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -253,13 +253,13 @@ func (dc *DeviceController) DevicesByProfileName(w http.ResponseWriter, r *http.
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	devices, err := application.DevicesByProfileName(offset, limit, name, dc.dic)
+	devices, totalCount, err := application.DevicesByProfileName(offset, limit, name, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, devices)
+	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
