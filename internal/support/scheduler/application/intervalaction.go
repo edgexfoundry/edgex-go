@@ -51,18 +51,22 @@ func AddIntervalAction(action models.IntervalAction, ctx context.Context, dic *d
 }
 
 // AllIntervalActions query the intervalActions with offset and limit
-func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActionDTOs []dtos.IntervalAction, err errors.EdgeX) {
+func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActionDTOs []dtos.IntervalAction, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	intervalActions, err := dbClient.AllIntervalActions(offset, limit)
+	if err == nil {
+		totalCount, err = dbClient.IntervalActionTotalCount()
+	}
 	if err != nil {
-		return intervalActionDTOs, errors.NewCommonEdgeXWrapper(err)
+		return intervalActionDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		intervalActionDTOs = make([]dtos.IntervalAction, len(intervalActions))
+		for i, action := range intervalActions {
+			dto := dtos.FromIntervalActionModelToDTO(action)
+			intervalActionDTOs[i] = dto
+		}
+		return intervalActionDTOs, totalCount, nil
 	}
-	intervalActionDTOs = make([]dtos.IntervalAction, len(intervalActions))
-	for i, action := range intervalActions {
-		dto := dtos.FromIntervalActionModelToDTO(action)
-		intervalActionDTOs[i] = dto
-	}
-	return intervalActionDTOs, nil
 }
 
 // IntervalActionByName query the intervalAction by name
@@ -197,7 +201,7 @@ func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 	}
 
 	// Load intervalActions from DB to scheduler
-	actions, err := AllIntervalActions(0, -1, dic)
+	actions, _, err := AllIntervalActions(0, -1, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

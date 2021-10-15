@@ -976,6 +976,32 @@ func (c *Client) DeleteIntervalByName(name string) errors.EdgeX {
 	return nil
 }
 
+// IntervalTotalCount returns the total count of Interval from the database
+func (c *Client) IntervalTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, IntervalCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// IntervalActionTotalCount returns the total count of IntervalAction from the database
+func (c *Client) IntervalActionTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, IntervalActionCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
 // AddIntervalAction adds a new intervalAction
 func (c *Client) AddIntervalAction(action model.IntervalAction) (model.IntervalAction, errors.EdgeX) {
 	conn := c.Pool.Get()

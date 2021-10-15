@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Scheduler API
   description: This is the definition of the API for the Support Scheduler service in the EdgeX Foundry IOT microservice platform. Support Scheduler provides functionality for scheduling different actions in the EdgeX Foundry platform.
-  version: 2.0.0
+  version: 2.1.0
   
 servers:
   - url: http://localhost:59861/api/v2
@@ -81,6 +81,15 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+    BaseWithTotalCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        totalCount:
+          description: "The total count of all multi instances."
+          type: integer
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -107,9 +116,11 @@ components:
         end:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
+          example: "20221016T200000"
         interval:
           description: Interval indicates how often the specific resource needs to be polled. It represents as a duration string. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
           type: string
+          example: "100m"
         id:
           description: "Uniquely identifies the interval"
           type: string
@@ -120,9 +131,11 @@ components:
         name:
           description: "Non-database identifier for an interval (*must be unique)"
           type: string
+          example: "test interval"
         start:
           description: "Start time in ISO 8601 format YYYYMMDD'T'HHmmss 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = \"yyyymmdd'T'HHmmss\")"
           type: string
+          example: "20211016T200000"
       required:
         - name
         - interval
@@ -240,7 +253,7 @@ components:
           $ref: '#/components/schemas/IntervalAction'
     MultiIntervalActionsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         actions:
@@ -256,7 +269,7 @@ components:
           $ref: '#/components/schemas/Interval'
     MultiIntervalsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         intervals:
@@ -482,6 +495,54 @@ components:
         apiVersion: "v2"
         statusCode: 500
         message: "Internal Server Error"
+    MultiIntervalsExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        totalCount: 3
+        intervals:
+          - created: 1634279367311
+            modified: 1634279367311
+            id: "debade10-7838-44bd-9c09-1283813db6c8"
+            name: "interval_4"
+            start: "20211015T200000"
+            end: "20211016T200000"
+            interval: "100m"
+          - created: 1634279236873
+            modified: 1634279236873
+            id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            name: "interval_1"
+            start: "20211015T200000"
+            end: "20211016T200000"
+            interval: "100m"
+    MultiIntervalActionsExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        totalCount: 3
+        actions:
+          - created: 1634279367311
+            modified: 1634279367311
+            id: "debade10-7838-44bd-9c09-1283813db6c8"
+            name: "action_2"
+            intervalName: "interval_1"
+            address:
+              type: "REST"
+              host: "192.168.0.102"
+              port: 8080
+              httpMethod: "GET"
+            adminState: "UNLOCKED"
+          - created: 1634280525302
+            modified: 1634280525302
+            id: "7b9c6908-0929-498d-9f81-c25abdedd93f"
+            name: "action_1"
+            intervalName: "interval_1"
+            address:
+              type: "REST"
+              host: "192.168.0.102"
+              port: 8080
+              httpMethod: "GET"
+            adminState: "UNLOCKED"
 paths:
   /interval:
     parameters:
@@ -598,9 +659,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/IntervalResponse'
+                $ref: '#/components/schemas/MultiIntervalsResponse'
+              examples:
+                MultiIntervalsExample:
+                  $ref: '#/components/examples/MultiIntervalsExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -792,9 +854,10 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/IntervalActionResponse'
+                $ref: '#/components/schemas/MultiIntervalActionsResponse'
+              examples:
+                MultiIntervalActionsExample:
+                  $ref: '#/components/examples/MultiIntervalActionsExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
