@@ -68,13 +68,13 @@ func (tc *TransmissionController) TransmissionsByTimeRange(w http.ResponseWriter
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	transmissions, err := application.TransmissionsByTimeRange(start, end, offset, limit, tc.dic)
+	transmissions, totalCount, err := application.TransmissionsByTimeRange(start, end, offset, limit, tc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -90,13 +90,13 @@ func (tc *TransmissionController) AllTransmissions(w http.ResponseWriter, r *htt
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	transmissions, err := application.AllTransmissions(offset, limit, tc.dic)
+	transmissions, totalCount, err := application.AllTransmissions(offset, limit, tc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -116,13 +116,13 @@ func (tc *TransmissionController) TransmissionsByStatus(w http.ResponseWriter, r
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	transmissions, err := application.TransmissionsByStatus(offset, limit, status, tc.dic)
+	transmissions, totalCount, err := application.TransmissionsByStatus(offset, limit, status, tc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -166,13 +166,13 @@ func (tc *TransmissionController) TransmissionsBySubscriptionName(w http.Respons
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	transmissions, err := application.TransmissionsBySubscriptionName(offset, limit, subscriptionName, tc.dic)
+	transmissions, totalCount, err := application.TransmissionsBySubscriptionName(offset, limit, subscriptionName, tc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, transmissions)
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

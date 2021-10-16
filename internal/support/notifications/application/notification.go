@@ -41,37 +41,45 @@ func AddNotification(n models.Notification, ctx context.Context, dic *di.Contain
 }
 
 // NotificationsByCategory queries notifications with offset, limit, and category
-func NotificationsByCategory(offset, limit int, category string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+func NotificationsByCategory(offset, limit int, category string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	if category == "" {
-		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
+		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByCategory(offset, limit, category)
+	if err == nil {
+		totalCount, err = dbClient.NotificationCountByCategory(category)
+	}
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		notifications = make([]dtos.Notification, len(notificationModels))
+		for i, n := range notificationModels {
+			notifications[i] = dtos.FromNotificationModelToDTO(n)
+		}
+		return notifications, totalCount, nil
 	}
-	notifications = make([]dtos.Notification, len(notificationModels))
-	for i, n := range notificationModels {
-		notifications[i] = dtos.FromNotificationModelToDTO(n)
-	}
-	return notifications, nil
 }
 
 // NotificationsByLabel queries notifications with offset, limit, and label
-func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	if label == "" {
-		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
+		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByLabel(offset, limit, label)
+	if err == nil {
+		totalCount, err = dbClient.NotificationCountByLabel(label)
+	}
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		notifications = make([]dtos.Notification, len(notificationModels))
+		for i, n := range notificationModels {
+			notifications[i] = dtos.FromNotificationModelToDTO(n)
+		}
+		return notifications, totalCount, nil
 	}
-	notifications = make([]dtos.Notification, len(notificationModels))
-	for i, n := range notificationModels {
-		notifications[i] = dtos.FromNotificationModelToDTO(n)
-	}
-	return notifications, nil
 }
 
 // NotificationById queries notification by ID
@@ -93,34 +101,42 @@ func NotificationById(id string, dic *di.Container) (notification dtos.Notificat
 }
 
 // NotificationsByStatus queries notifications with offset, limit, and status
-func NotificationsByStatus(offset, limit int, status string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+func NotificationsByStatus(offset, limit int, status string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	if status == "" {
-		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
+		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByStatus(offset, limit, status)
+	if err == nil {
+		totalCount, err = dbClient.NotificationCountByStatus(status)
+	}
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		notifications = make([]dtos.Notification, len(notificationModels))
+		for i, n := range notificationModels {
+			notifications[i] = dtos.FromNotificationModelToDTO(n)
+		}
+		return notifications, totalCount, nil
 	}
-	notifications = make([]dtos.Notification, len(notificationModels))
-	for i, n := range notificationModels {
-		notifications[i] = dtos.FromNotificationModelToDTO(n)
-	}
-	return notifications, nil
 }
 
 // NotificationsByTimeRange query notifications with offset, limit and time range
-func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByTimeRange(start, end, offset, limit)
+	if err == nil {
+		totalCount, err = dbClient.NotificationCountByTimeRange(start, end)
+	}
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		notifications = make([]dtos.Notification, len(notificationModels))
+		for i, n := range notificationModels {
+			notifications[i] = dtos.FromNotificationModelToDTO(n)
+		}
+		return notifications, totalCount, nil
 	}
-	notifications = make([]dtos.Notification, len(notificationModels))
-	for i, e := range notificationModels {
-		notifications[i] = dtos.FromNotificationModelToDTO(e)
-	}
-	return notifications, nil
 }
 
 // DeleteNotificationById deletes the notification by id and all of its associated transmissions
@@ -137,24 +153,28 @@ func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
 }
 
 // NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
-func NotificationsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (notifications []dtos.Notification, err errors.EdgeX) {
+func NotificationsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	if subscriptionName == "" {
-		return notifications, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
+		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	subscription, err := dbClient.SubscriptionByName(subscriptionName)
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 	notificationModels, err := dbClient.NotificationsByCategoriesAndLabels(offset, limit, subscription.Categories, subscription.Labels)
+	if err == nil {
+		totalCount, err = dbClient.NotificationCountByCategoriesAndLabels(subscription.Categories, subscription.Labels)
+	}
 	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		notifications = make([]dtos.Notification, len(notificationModels))
+		for i, n := range notificationModels {
+			notifications[i] = dtos.FromNotificationModelToDTO(n)
+		}
+		return notifications, totalCount, nil
 	}
-	notifications = make([]dtos.Notification, len(notificationModels))
-	for i, n := range notificationModels {
-		notifications[i] = dtos.FromNotificationModelToDTO(n)
-	}
-	return notifications, nil
 }
 
 // CleanupNotificationsByAge invokes the infrastructure layer function to remove notifications that are older than age. And the corresponding transmissions will also be deleted

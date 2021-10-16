@@ -213,8 +213,10 @@ func TestNotificationById(t *testing.T) {
 
 func TestNotificationsByCategory(t *testing.T) {
 	testCategory := "category"
+	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationCountByCategory", testCategory).Return(expectedNotificationCount, nil)
 	dbClientMock.On("NotificationsByCategory", 0, 20, testCategory).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByCategory", 0, 1, testCategory).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -231,12 +233,13 @@ func TestNotificationsByCategory(t *testing.T) {
 		limit              string
 		category           string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get notifications without offset, and limit", "", "", testCategory, false, http.StatusOK},
-		{"Valid - get notifications with offset, and limit", "0", "1", testCategory, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testCategory, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testCategory, true, http.StatusBadRequest},
+		{"Valid - get notifications without offset, and limit", "", "", testCategory, false, expectedNotificationCount, http.StatusOK},
+		{"Valid - get notifications with offset, and limit", "0", "1", testCategory, false, expectedNotificationCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testCategory, true, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testCategory, true, expectedNotificationCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -273,6 +276,7 @@ func TestNotificationsByCategory(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -281,8 +285,10 @@ func TestNotificationsByCategory(t *testing.T) {
 
 func TestNotificationsByLabel(t *testing.T) {
 	testLabel := "label"
+	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationCountByLabel", testLabel).Return(expectedNotificationCount, nil)
 	dbClientMock.On("NotificationsByLabel", 0, 20, testLabel).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByLabel", 0, 1, testLabel).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -299,12 +305,13 @@ func TestNotificationsByLabel(t *testing.T) {
 		limit              string
 		label              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get notifications without offset, and limit", "", "", testLabel, false, http.StatusOK},
-		{"Valid - get notifications with offset, and limit", "0", "1", testLabel, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testLabel, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testLabel, true, http.StatusBadRequest},
+		{"Valid - get notifications without offset, and limit", "", "", testLabel, false, expectedNotificationCount, http.StatusOK},
+		{"Valid - get notifications with offset, and limit", "0", "1", testLabel, false, expectedNotificationCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testLabel, true, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testLabel, true, expectedNotificationCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -341,6 +348,7 @@ func TestNotificationsByLabel(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -349,8 +357,10 @@ func TestNotificationsByLabel(t *testing.T) {
 
 func TestNotificationsByStatus(t *testing.T) {
 	testStatus := models.New
+	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationCountByStatus", testStatus).Return(expectedNotificationCount, nil)
 	dbClientMock.On("NotificationsByStatus", 0, 20, testStatus).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByStatus", 0, 1, testStatus).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -367,12 +377,13 @@ func TestNotificationsByStatus(t *testing.T) {
 		limit              string
 		status             string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get notifications without offset, and limit", "", "", testStatus, false, http.StatusOK},
-		{"Valid - get notifications with offset, and limit", "0", "1", testStatus, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testStatus, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testStatus, true, http.StatusBadRequest},
+		{"Valid - get notifications without offset, and limit", "", "", testStatus, false, expectedNotificationCount, http.StatusOK},
+		{"Valid - get notifications with offset, and limit", "0", "1", testStatus, false, expectedNotificationCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testStatus, true, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testStatus, true, expectedNotificationCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -409,6 +420,7 @@ func TestNotificationsByStatus(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -416,8 +428,10 @@ func TestNotificationsByStatus(t *testing.T) {
 }
 
 func TestNotificationsByTimeRange(t *testing.T) {
+	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationCountByTimeRange", 0, 100).Return(expectedNotificationCount, nil)
 	dbClientMock.On("NotificationsByTimeRange", 0, 100, 0, 10).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -435,16 +449,17 @@ func TestNotificationsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, http.StatusOK},
-		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty start", "", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty end", "0", "", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - end before start", "10", "0", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, http.StatusBadRequest},
+		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, expectedNotificationCount, http.StatusOK},
+		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - empty start", "", "100", "0", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - empty end", "0", "", "0", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - end before start", "10", "0", "0", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, expectedNotificationCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -478,6 +493,7 @@ func TestNotificationsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Notifications), "Device count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -545,9 +561,11 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 		Categories: testSubscriptionCategories,
 		Labels:     testSubscriptionLabels,
 	}
+	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
+	dbClientMock.On("NotificationCountByCategoriesAndLabels", subscription.Categories, subscription.Labels).Return(expectedNotificationCount, nil)
 	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 20, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
 	dbClientMock.On("NotificationsByCategoriesAndLabels", 0, 1, subscription.Categories, subscription.Labels).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -564,13 +582,14 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 		limit              string
 		subscriptionName   string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get notifications without offset, and limit", "", "", subscription.Name, false, http.StatusOK},
-		{"Valid - get notifications with offset, and limit", "0", "1", subscription.Name, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", subscription.Name, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", subscription.Name, true, http.StatusBadRequest},
-		{"Invalid - empty subscriptionName", "1", "0", "", true, http.StatusBadRequest},
+		{"Valid - get notifications without offset, and limit", "", "", subscription.Name, false, expectedNotificationCount, http.StatusOK},
+		{"Valid - get notifications with offset, and limit", "0", "1", subscription.Name, false, expectedNotificationCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", subscription.Name, true, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", subscription.Name, true, expectedNotificationCount, http.StatusBadRequest},
+		{"Invalid - empty subscriptionName", "1", "0", "", true, expectedNotificationCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

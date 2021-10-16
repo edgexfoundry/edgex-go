@@ -88,13 +88,13 @@ func (sc *SubscriptionController) AllSubscriptions(w http.ResponseWriter, r *htt
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	subscriptions, err := application.AllSubscriptions(offset, limit, sc.dic)
+	subscriptions, totalCount, err := application.AllSubscriptions(offset, limit, sc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, subscriptions)
+	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -132,13 +132,13 @@ func (sc *SubscriptionController) SubscriptionsByCategory(w http.ResponseWriter,
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	subscriptions, err := application.SubscriptionsByCategory(offset, limit, category, sc.dic)
+	subscriptions, totalCount, err := application.SubscriptionsByCategory(offset, limit, category, sc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, subscriptions)
+	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -157,13 +157,13 @@ func (sc *SubscriptionController) SubscriptionsByLabel(w http.ResponseWriter, r 
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	subscriptions, err := application.SubscriptionsByLabel(offset, limit, label, sc.dic)
+	subscriptions, totalCount, err := application.SubscriptionsByLabel(offset, limit, label, sc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, subscriptions)
+	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -182,13 +182,13 @@ func (sc *SubscriptionController) SubscriptionsByReceiver(w http.ResponseWriter,
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	subscriptions, err := application.SubscriptionsByReceiver(offset, limit, receiver, sc.dic)
+	subscriptions, totalCount, err := application.SubscriptionsByReceiver(offset, limit, receiver, sc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, subscriptions)
+	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

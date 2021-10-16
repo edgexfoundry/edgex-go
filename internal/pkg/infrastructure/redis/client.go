@@ -1295,6 +1295,174 @@ func (c *Client) NotificationsByCategoriesAndLabels(offset int, limit int, categ
 	return notifications, nil
 }
 
+// NotificationCountByCategory returns the count of Notification associated with specified category from the database
+func (c *Client) NotificationCountByCategory(category string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionCategory, category))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// NotificationCountByLabel returns the count of Notification associated with specified label from the database
+func (c *Client) NotificationCountByLabel(label string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionLabel, label))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// NotificationCountByStatus returns the count of Notification associated with specified status from the database
+func (c *Client) NotificationCountByStatus(status string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionStatus, status))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// NotificationCountByTimeRange returns the count of Notification from the database within specified time range
+func (c *Client) NotificationCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, NotificationCollectionCreated, start, end)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// NotificationCountByCategoriesAndLabels returns the count of Notification associated with specified categories and labels from the database
+func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr := notificationsByCategoriesAndLabels(conn, 0, -1, categories, labels)
+	if edgeXerr != nil {
+		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by categories %v and labels %v", categories, labels), edgeXerr)
+	}
+	return uint32(len(notifications)), nil
+}
+
+// SubscriptionTotalCount returns the total count of Subscription from the database
+func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, SubscriptionCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// SubscriptionCountByCategory returns the count of Subscription associated with specified category from the database
+func (c *Client) SubscriptionCountByCategory(category string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(SubscriptionCollectionCategory, category))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// SubscriptionCountByLabel returns the count of Subscription associated with specified label from the database
+func (c *Client) SubscriptionCountByLabel(label string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(SubscriptionCollectionLabel, label))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// SubscriptionCountByReceiver returns the count of Subscription associated with specified receiver from the database
+func (c *Client) SubscriptionCountByReceiver(receiver string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(SubscriptionCollectionReceiver, receiver))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// TransmissionTotalCount returns the total count of Transmission from the database
+func (c *Client) TransmissionTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, TransmissionCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// TransmissionCountBySubscriptionName returns the count of Transmission associated with specified subscription name from the database
+func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(TransmissionCollectionSubscriptionName, subscriptionName))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// TransmissionCountByStatus returns the count of Transmission associated with specified status name from the database
+func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(TransmissionCollectionStatus, status))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// TransmissionCountByTimeRange returns the count of Transmission from the database within specified time range
+func (c *Client) TransmissionCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, TransmissionCollectionCreated, start, end)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
 // DeleteNotificationById deletes a notification by id
 func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
 	conn := c.Pool.Get()
