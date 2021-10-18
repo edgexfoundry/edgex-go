@@ -196,3 +196,9 @@ https://github.com/gorilla/websocket/blob/master/LICENSE
 
 github.com/golang-jwt/jwt/v4 (MIT) github.com/golang-jwt/jwt
 https://github.com/golang-jwt/jwt/blob/main/LICENSE
+
+hashicorp/errwrap (Mozilla Public License 2.0) https://github.com/hashicorp/errwrap
+https://github.com/hashicorp/errwrap/blob/master/LICENSE
+
+hashicorp/go-multierror (Mozilla Public License 2.0) https://github.com/hashicorp/go-multierror
+https://github.com/hashicorp/go-multierror/blob/master/LICENSE

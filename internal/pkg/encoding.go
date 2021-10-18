@@ -22,7 +22,7 @@ import (
 )
 
 func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
-	w.Header().Add(common.ContentType, common.ContentTypeJSON)
+	w.Header().Set(common.ContentType, common.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)
 	err := enc.Encode(i)
