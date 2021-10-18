@@ -110,3 +110,20 @@ func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string,
 	}
 	return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 }
+
+// TransmissionsByNotificationId queries transmissions with offset, limit, and notification id
+func TransmissionsByNotificationId(offset, limit int, notificationId string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+	if notificationId == "" {
+		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "notification id is empty", nil)
+	}
+	dbClient := container.DBClientFrom(dic.Get)
+	transModels, err := dbClient.TransmissionsByNotificationId(offset, limit, notificationId)
+	if err == nil {
+		totalCount, err = dbClient.TransmissionCountByNotificationId(notificationId)
+	}
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
+	} else {
+		return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
+	}
+}

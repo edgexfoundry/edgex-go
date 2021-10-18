@@ -743,6 +743,29 @@ func (_m *DBClient) TransmissionById(id string) (models.Transmission, errors.Edg
 	return r0, r1
 }
 
+// TransmissionCountByNotificationId provides a mock function with given fields: id
+func (_m *DBClient) TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX) {
+	ret := _m.Called(id)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func(string) uint32); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
+		r1 = rf(id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // TransmissionCountByStatus provides a mock function with given fields: status
 func (_m *DBClient) TransmissionCountByStatus(status string) (uint32, errors.EdgeX) {
 	ret := _m.Called(status)
@@ -826,6 +849,31 @@ func (_m *DBClient) TransmissionTotalCount() (uint32, errors.EdgeX) {
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
 		r1 = rf()
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// TransmissionsByNotificationId provides a mock function with given fields: offset, limit, id
+func (_m *DBClient) TransmissionsByNotificationId(offset int, limit int, id string) ([]models.Transmission, errors.EdgeX) {
+	ret := _m.Called(offset, limit, id)
+
+	var r0 []models.Transmission
+	if rf, ok := ret.Get(0).(func(int, int, string) []models.Transmission); ok {
+		r0 = rf(offset, limit, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Transmission)
+		}
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func(int, int, string) errors.EdgeX); ok {
+		r1 = rf(offset, limit, id)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

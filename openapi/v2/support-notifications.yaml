@@ -2226,6 +2226,68 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  /transmission/notification/id/{id}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The notification id associated with transmissions you wish to load."
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Allows retrieval of the transmissions associated with the specified notification id. Ordered by create timestamp descending."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransmissionResponse'
+              examples:
+                MultiTransmissionResponseExample:
+                  $ref: '#/components/examples/MultiTransmissionResponseExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /config:
     get:
       summary: "Returns the current configuration of the service."
