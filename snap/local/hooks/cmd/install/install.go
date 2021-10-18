@@ -40,12 +40,18 @@ var secretStoreTokens = []string{
 	"app-rules-engine",
 	"app-http-export",
 	"app-mqtt-export",
+	"app-rfid-llrp-inventory",
 	"application-service",
 	"device-camera",
 	"device-mqtt",
 	"device-modbus",
 	"device-coap",
 	"device-snmp",
+	"device-gpio",
+	"device-bacnet",
+	"device-grove",
+	"device-uart",
+	"device-rfid-llrp",
 }
 
 var secretStoreKnownSecrets = []string{
@@ -53,6 +59,7 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[app-rules-engine]",
 	"redisdb[app-http-export]",
 	"redisdb[app-mqtt-export]",
+	"redisdb[app-rfid-llrp-inventory]",
 	"redisdb[application-service]",
 	"redisdb[device-rest]",
 	"redisdb[device-virtual]",
@@ -61,6 +68,11 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[device-modbus]",
 	"redisdb[device-coap]",
 	"redisdb[device-snmp]",
+	"redisdb[device-gpio]",
+	"redisdb[device-bacnet]",
+	"redisdb[device-grove]",
+	"redisdb[device-uart]",
+	"redisdb[device-rfid-llrp]",
 }
 
 var services = []string{
