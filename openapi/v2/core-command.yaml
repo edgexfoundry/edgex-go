@@ -98,6 +98,7 @@ components:
             - Int64Array
             - Float32Array
             - Float64Array
+            - Object
     CoreCommand:
       type: object
       properties:
@@ -144,7 +145,12 @@ components:
         type: string
       title: Setting
       type: object
-      example: { "AHU-TargetTemperature": "28.5", "AHU-TargetBand": "4.0" }
+      example:
+        AHU-TargetTemperature: "28.5"
+        AHU-TargetBand: "4.0"
+        AHU-TargetHumidity:
+          Accuracy: "0.2-0.3% RH"
+          Value: 59
     BaseReading:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
@@ -200,6 +206,7 @@ components:
             - Int64Array
             - Float32Array
             - Float64Array
+            - Object
       required:
         - apiVersion
         - deviceName
