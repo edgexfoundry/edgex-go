@@ -59,14 +59,13 @@ func AllIntervalActions(offset int, limit int, dic *di.Container) (intervalActio
 	}
 	if err != nil {
 		return intervalActionDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		intervalActionDTOs = make([]dtos.IntervalAction, len(intervalActions))
-		for i, action := range intervalActions {
-			dto := dtos.FromIntervalActionModelToDTO(action)
-			intervalActionDTOs[i] = dto
-		}
-		return intervalActionDTOs, totalCount, nil
 	}
+	intervalActionDTOs = make([]dtos.IntervalAction, len(intervalActions))
+	for i, action := range intervalActions {
+		dto := dtos.FromIntervalActionModelToDTO(action)
+		intervalActionDTOs[i] = dto
+	}
+	return intervalActionDTOs, totalCount, nil
 }
 
 // IntervalActionByName query the intervalAction by name

@@ -67,14 +67,13 @@ func AllIntervals(offset int, limit int, dic *di.Container) (intervalDTOs []dtos
 	}
 	if err != nil {
 		return intervalDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		intervalDTOs = make([]dtos.Interval, len(intervals))
-		for i, interval := range intervals {
-			dto := dtos.FromIntervalModelToDTO(interval)
-			intervalDTOs[i] = dto
-		}
-		return intervalDTOs, totalCount, nil
 	}
+	intervalDTOs = make([]dtos.Interval, len(intervals))
+	for i, interval := range intervals {
+		dto := dtos.FromIntervalModelToDTO(interval)
+		intervalDTOs[i] = dto
+	}
+	return intervalDTOs, totalCount, nil
 }
 
 // DeleteIntervalByName delete the interval by name

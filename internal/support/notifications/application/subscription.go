@@ -49,13 +49,12 @@ func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dto
 	}
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		subscriptions = make([]dtos.Subscription, len(subs))
-		for i, sub := range subs {
-			subscriptions[i] = dtos.FromSubscriptionModelToDTO(sub)
-		}
-		return subscriptions, totalCount, nil
 	}
+	subscriptions = make([]dtos.Subscription, len(subs))
+	for i, sub := range subs {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(sub)
+	}
+	return subscriptions, totalCount, nil
 }
 
 // SubscriptionByName queries subscription by name
@@ -84,13 +83,12 @@ func SubscriptionsByCategory(offset, limit int, category string, dic *di.Contain
 	}
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		subscriptions = make([]dtos.Subscription, len(subscriptionModels))
-		for i, s := range subscriptionModels {
-			subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
-		}
-		return subscriptions, totalCount, nil
 	}
+	subscriptions = make([]dtos.Subscription, len(subscriptionModels))
+	for i, s := range subscriptionModels {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
+	}
+	return subscriptions, totalCount, nil
 }
 
 // SubscriptionsByLabel queries subscriptions with offset, limit, and label
@@ -105,13 +103,12 @@ func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (s
 	}
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		subscriptions = make([]dtos.Subscription, len(subscriptionModels))
-		for i, s := range subscriptionModels {
-			subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
-		}
-		return subscriptions, totalCount, nil
 	}
+	subscriptions = make([]dtos.Subscription, len(subscriptionModels))
+	for i, s := range subscriptionModels {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
+	}
+	return subscriptions, totalCount, nil
 }
 
 // SubscriptionsByReceiver queries subscriptions with offset, limit, and receiver
@@ -126,13 +123,12 @@ func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Contain
 	}
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		subscriptions = make([]dtos.Subscription, len(subscriptionModels))
-		for i, s := range subscriptionModels {
-			subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
-		}
-		return subscriptions, totalCount, nil
 	}
+	subscriptions = make([]dtos.Subscription, len(subscriptionModels))
+	for i, s := range subscriptionModels {
+		subscriptions[i] = dtos.FromSubscriptionModelToDTO(s)
+	}
+	return subscriptions, totalCount, nil
 }
 
 // DeleteSubscriptionByName deletes the subscription by name

@@ -139,11 +139,10 @@ func AllDeviceServices(offset int, limit int, labels []string, ctx context.Conte
 	}
 	if err != nil {
 		return deviceServices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		deviceServices = make([]dtos.DeviceService, len(services))
-		for i, s := range services {
-			deviceServices[i] = dtos.FromDeviceServiceModelToDTO(s)
-		}
-		return deviceServices, totalCount, nil
 	}
+	deviceServices = make([]dtos.DeviceService, len(services))
+	for i, s := range services {
+		deviceServices[i] = dtos.FromDeviceServiceModelToDTO(s)
+	}
+	return deviceServices, totalCount, nil
 }

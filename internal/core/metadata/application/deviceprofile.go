@@ -112,13 +112,12 @@ func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container
 	}
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		deviceProfiles = make([]dtos.DeviceProfile, len(dps))
-		for i, dp := range dps {
-			deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
-		}
-		return deviceProfiles, totalCount, nil
 	}
+	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
+	for i, dp := range dps {
+		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+	}
+	return deviceProfiles, totalCount, nil
 }
 
 // DeviceProfilesByModel query the device profiles with offset, limit and model
@@ -133,13 +132,12 @@ func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Containe
 	}
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		deviceProfiles = make([]dtos.DeviceProfile, len(dps))
-		for i, dp := range dps {
-			deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
-		}
-		return deviceProfiles, totalCount, nil
 	}
+	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
+	for i, dp := range dps {
+		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+	}
+	return deviceProfiles, totalCount, nil
 }
 
 // DeviceProfilesByManufacturer query the device profiles with offset, limit and manufacturer
@@ -154,13 +152,12 @@ func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, di
 	}
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		deviceProfiles = make([]dtos.DeviceProfile, len(dps))
-		for i, dp := range dps {
-			deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
-		}
-		return deviceProfiles, totalCount, nil
 	}
+	deviceProfiles = make([]dtos.DeviceProfile, len(dps))
+	for i, dp := range dps {
+		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
+	}
+	return deviceProfiles, totalCount, nil
 }
 
 // DeviceProfilesByManufacturerAndModel query the device profiles with offset, limit, manufacturer and model

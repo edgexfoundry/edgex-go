@@ -84,13 +84,12 @@ func DevicesByServiceName(offset int, limit int, name string, ctx context.Contex
 	}
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		devices = make([]dtos.Device, len(deviceModels))
-		for i, d := range deviceModels {
-			devices[i] = dtos.FromDeviceModelToDTO(d)
-		}
-		return devices, totalCount, nil
 	}
+	devices = make([]dtos.Device, len(deviceModels))
+	for i, d := range deviceModels {
+		devices[i] = dtos.FromDeviceModelToDTO(d)
+	}
+	return devices, totalCount, nil
 }
 
 // DeviceNameExists checks the device existence by name
@@ -186,13 +185,12 @@ func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devi
 	}
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		devices = make([]dtos.Device, len(deviceModels))
-		for i, d := range deviceModels {
-			devices[i] = dtos.FromDeviceModelToDTO(d)
-		}
-		return devices, totalCount, nil
 	}
+	devices = make([]dtos.Device, len(deviceModels))
+	for i, d := range deviceModels {
+		devices[i] = dtos.FromDeviceModelToDTO(d)
+	}
+	return devices, totalCount, nil
 }
 
 // DeviceByName query the device by name
@@ -221,11 +219,10 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	}
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		devices = make([]dtos.Device, len(deviceModels))
-		for i, d := range deviceModels {
-			devices[i] = dtos.FromDeviceModelToDTO(d)
-		}
-		return devices, totalCount, nil
 	}
+	devices = make([]dtos.Device, len(deviceModels))
+	for i, d := range deviceModels {
+		devices[i] = dtos.FromDeviceModelToDTO(d)
+	}
+	return devices, totalCount, nil
 }

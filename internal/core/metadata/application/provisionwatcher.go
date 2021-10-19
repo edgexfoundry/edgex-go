@@ -70,13 +70,12 @@ func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.
 	}
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-		for i, pw := range pwModels {
-			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-		}
-		return provisionWatchers, totalCount, nil
 	}
+	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+	for i, pw := range pwModels {
+		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+	}
+	return provisionWatchers, totalCount, nil
 }
 
 // ProvisionWatchersByProfileName query provision watchers with offset, limit and profile name
@@ -92,13 +91,12 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 	}
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-		for i, pw := range pwModels {
-			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-		}
-		return provisionWatchers, totalCount, nil
 	}
+	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+	for i, pw := range pwModels {
+		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+	}
+	return provisionWatchers, totalCount, nil
 }
 
 // AllProvisionWatchers query the provision watchers with offset, limit and labels
@@ -110,13 +108,12 @@ func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Contai
 	}
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
-		for i, pw := range pwModels {
-			provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
-		}
-		return provisionWatchers, totalCount, nil
 	}
+	provisionWatchers = make([]dtos.ProvisionWatcher, len(pwModels))
+	for i, pw := range pwModels {
+		provisionWatchers[i] = dtos.FromProvisionWatcherModelToDTO(pw)
+	}
+	return provisionWatchers, totalCount, nil
 }
 
 // DeleteProvisionWatcherByName deletes the provision watcher by name

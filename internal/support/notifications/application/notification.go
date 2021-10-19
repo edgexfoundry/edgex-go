@@ -52,13 +52,12 @@ func NotificationsByCategory(offset, limit int, category string, dic *di.Contain
 	}
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		notifications = make([]dtos.Notification, len(notificationModels))
-		for i, n := range notificationModels {
-			notifications[i] = dtos.FromNotificationModelToDTO(n)
-		}
-		return notifications, totalCount, nil
 	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, totalCount, nil
 }
 
 // NotificationsByLabel queries notifications with offset, limit, and label
@@ -73,13 +72,12 @@ func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (n
 	}
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		notifications = make([]dtos.Notification, len(notificationModels))
-		for i, n := range notificationModels {
-			notifications[i] = dtos.FromNotificationModelToDTO(n)
-		}
-		return notifications, totalCount, nil
 	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, totalCount, nil
 }
 
 // NotificationById queries notification by ID
@@ -112,13 +110,12 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 	}
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		notifications = make([]dtos.Notification, len(notificationModels))
-		for i, n := range notificationModels {
-			notifications[i] = dtos.FromNotificationModelToDTO(n)
-		}
-		return notifications, totalCount, nil
 	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, totalCount, nil
 }
 
 // NotificationsByTimeRange query notifications with offset, limit and time range
@@ -130,13 +127,12 @@ func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di
 	}
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		notifications = make([]dtos.Notification, len(notificationModels))
-		for i, n := range notificationModels {
-			notifications[i] = dtos.FromNotificationModelToDTO(n)
-		}
-		return notifications, totalCount, nil
 	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, totalCount, nil
 }
 
 // DeleteNotificationById deletes the notification by id and all of its associated transmissions
@@ -168,13 +164,12 @@ func NotificationsBySubscriptionName(offset, limit int, subscriptionName string,
 	}
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		notifications = make([]dtos.Notification, len(notificationModels))
-		for i, n := range notificationModels {
-			notifications[i] = dtos.FromNotificationModelToDTO(n)
-		}
-		return notifications, totalCount, nil
 	}
+	notifications = make([]dtos.Notification, len(notificationModels))
+	for i, n := range notificationModels {
+		notifications[i] = dtos.FromNotificationModelToDTO(n)
+	}
+	return notifications, totalCount, nil
 }
 
 // CleanupNotificationsByAge invokes the infrastructure layer function to remove notifications that are older than age. And the corresponding transmissions will also be deleted

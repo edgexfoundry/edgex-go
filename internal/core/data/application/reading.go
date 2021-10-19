@@ -40,9 +40,8 @@ func AllReadings(offset int, limit int, dic *di.Container) (readings []dtos.Base
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 // ReadingsByResourceName query readings with offset, limit, and resource name
@@ -61,9 +60,8 @@ func ReadingsByResourceName(offset int, limit int, resourceName string, dic *di.
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 // ReadingsByDeviceName query readings with offset, limit, and device name
@@ -82,9 +80,8 @@ func ReadingsByDeviceName(offset int, limit int, name string, dic *di.Container)
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 // ReadingsByTimeRange query readings with offset, limit and time range

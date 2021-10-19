@@ -42,13 +42,12 @@ func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di
 	}
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		transmissions = make([]dtos.Transmission, len(models))
-		for i, trans := range models {
-			transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
-		}
-		return transmissions, totalCount, nil
 	}
+	transmissions = make([]dtos.Transmission, len(models))
+	for i, trans := range models {
+		transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
+	}
+	return transmissions, totalCount, nil
 }
 
 // AllTransmissions queries transmissions by offset and limit
@@ -60,13 +59,12 @@ func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dto
 	}
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		transmissions = make([]dtos.Transmission, len(models))
-		for i, trans := range models {
-			transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
-		}
-		return transmissions, totalCount, nil
 	}
+	transmissions = make([]dtos.Transmission, len(models))
+	for i, trans := range models {
+		transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
+	}
+	return transmissions, totalCount, nil
 }
 
 // TransmissionsByStatus queries transmissions with offset, limit, and status
@@ -81,9 +79,8 @@ func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) 
 	}
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 	}
+	return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 }
 
 // DeleteProcessedTransmissionsByAge invokes the infrastructure layer function to remove the processed transmissions that are older than age.
@@ -110,7 +107,6 @@ func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string,
 	}
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 	}
+	return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 }
