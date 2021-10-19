@@ -234,6 +234,20 @@ func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName
 	return convertObjectsToReadings(objects)
 }
 
+func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceName string, resourceNames []string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, totalCount uint32, err errors.EdgeX) {
+	var redisKeys []string
+	for _, resourceName := range resourceNames {
+		redisKeys = append(redisKeys, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName))
+	}
+
+	objects, totalCount, err := unionObjectsByKeysAndScoreRange(conn, startTime, endTime, offset, limit, redisKeys...)
+	if err != nil {
+		return readings, totalCount, err
+	}
+	readings, err = convertObjectsToReadings(objects)
+	return readings, totalCount, err
+}
+
 // readingsByTimeRange query readings by time range, offset, and limit
 func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionOrigin, startTime, endTime, offset, limit)
@@ -245,6 +259,14 @@ func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int
 
 func readingsByResourceNameAndTimeRange(conn redis.Conn, resourceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), startTime, endTime, offset, limit)
+	if edgeXerr != nil {
+		return readings, edgeXerr
+	}
+	return convertObjectsToReadings(objects)
+}
+
+func readingsByDeviceNameAndTimeRange(conn redis.Conn, deviceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+	objects, edgeXerr := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionDeviceName, deviceName), startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr
 	}
