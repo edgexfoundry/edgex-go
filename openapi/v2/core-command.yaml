@@ -526,6 +526,13 @@ paths:
         description: "A name uniquely identifying a command."
     get:
       summary: "Issue the specified read command referenced by the command name to the device/sensor that is also referenced by name."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingRequest'
+        required: false
+        description: The user can put additional parameters in the request body because the parameters might be a more complex data structure for the specific device like the Onvif camera. Then the device service can retrieve the parameters from the request if needed.
       parameters:
         - $ref: '#/components/parameters/correlatedRequestHeader'
         - in: path

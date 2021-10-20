@@ -184,7 +184,7 @@ func buildCoreCommands(deviceName string, serviceUrl string, profile dtos.Device
 
 // IssueGetCommandByName issues the specified get(read) command referenced by the command name to the device/sensor, also
 // referenced by name.
-func IssueGetCommandByName(deviceName string, commandName string, queryParams string, dic *di.Container) (res *responses.EventResponse, err errors.EdgeX) {
+func IssueGetCommandByName(deviceName string, commandName string, queryParams string, parameters map[string]interface{}, dic *di.Container) (res *responses.EventResponse, err errors.EdgeX) {
 	if deviceName == "" {
 		return res, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name cannot be empty", nil)
 	}
@@ -218,7 +218,7 @@ func IssueGetCommandByName(deviceName string, commandName string, queryParams st
 	if dscc == nil {
 		return res, errors.NewCommonEdgeX(errors.KindServerError, "nil DeviceServiceCommandClient returned", nil)
 	}
-	res, err = dscc.GetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams)
+	res, err = dscc.GetCommandWithObject(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams, parameters)
 	if err != nil {
 		return res, errors.NewCommonEdgeXWrapper(err)
 	}

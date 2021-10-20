@@ -179,6 +179,10 @@ func ParseBodyToMap(r *http.Request) (map[string]interface{}, errors.EdgeX) {
 	}
 
 	var result map[string]interface{}
+	// The request body is optional for Get command
+	if r.Method == http.MethodGet && len(body) == 0 {
+		return result, nil
+	}
 	if err = json.Unmarshal(body, &result); err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "failed to parse request body", err)
 	}

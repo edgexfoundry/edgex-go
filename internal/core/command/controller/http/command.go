@@ -105,8 +105,14 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
+	// Request body
+	parameters, err := utils.ParseBodyToMap(r)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
 
-	response, err := application.IssueGetCommandByName(deviceName, commandName, queryParams, cc.dic)
+	response, err := application.IssueGetCommandByName(deviceName, commandName, queryParams, parameters, cc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

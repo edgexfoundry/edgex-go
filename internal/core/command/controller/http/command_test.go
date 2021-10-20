@@ -330,6 +330,16 @@ func TestCommandsByDeviceName(t *testing.T) {
 
 func TestIssueGetCommand(t *testing.T) {
 	var nonExistName = "nonExist"
+	var emptyParameters map[string]interface{}
+	parameters := map[string]interface{}{
+		"foo": 0.123,
+		"meta": map[string]interface{}{
+			"key": "foo",
+			"val": 0.123,
+		},
+	}
+	parametersJsonData, err := json.Marshal(parameters)
+	require.NoError(t, err)
 
 	expectedEventResponse := buildEventResponse()
 	expectedDeviceResponse := buildDeviceResponse()
@@ -343,9 +353,10 @@ func TestIssueGetCommand(t *testing.T) {
 	dscMock.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(expectedDeviceServiceResponse, nil)
 
 	dsccMock := &mocks.DeviceServiceCommandClient{}
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings).Return(&expectedEventResponse, nil)
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "").Return(&expectedEventResponse, nil)
-	dsccMock.On("GetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings).Return(&responseDTO.EventResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to query device service by name", nil))
+	dsccMock.On("GetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, emptyParameters).Return(&expectedEventResponse, nil)
+	dsccMock.On("GetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, "", parameters).Return(&expectedEventResponse, nil)
+	dsccMock.On("GetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, "", emptyParameters).Return(&expectedEventResponse, nil)
+	dsccMock.On("GetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings, emptyParameters).Return(&responseDTO.EventResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to query device service by name", nil))
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{
@@ -367,21 +378,23 @@ func TestIssueGetCommand(t *testing.T) {
 		deviceName         string
 		commandName        string
 		queryStrings       string
+		parameters         []byte
 		errorExpected      bool
 		expectedStatusCode int
 	}{
-		{"Valid - execute read command with valid deviceName, commandName, and query strings", testDeviceName, testCommandName, testQueryStrings, false, http.StatusOK},
-		{"Valid - empty query strings", testDeviceName, testCommandName, "", false, http.StatusOK},
-		{"Invalid - execute read command with invalid deviceName", nonExistName, testCommandName, testQueryStrings, true, http.StatusNotFound},
-		{"Invalid - execute read command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, true, http.StatusBadRequest},
-		{"Invalid - empty device name", "", nonExistName, testQueryStrings, true, http.StatusBadRequest},
-		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, true, http.StatusBadRequest},
-		{"Invalid - invalid ds-pushevent paramter", testDeviceName, "", "ds-pushevent=123", true, http.StatusBadRequest},
-		{"Invalid - invalid ds-returnevent paramter", testDeviceName, "", "ds-returnevent=123", true, http.StatusBadRequest},
+		{"Valid - execute read command with valid deviceName, commandName, and query strings", testDeviceName, testCommandName, testQueryStrings, []byte{}, false, http.StatusOK},
+		{"Valid - empty query strings", testDeviceName, testCommandName, "", []byte{}, false, http.StatusOK},
+		{"Valid - execute read command with request payload", testDeviceName, testCommandName, "", parametersJsonData, false, http.StatusOK},
+		{"Invalid - execute read command with invalid deviceName", nonExistName, testCommandName, testQueryStrings, []byte{}, true, http.StatusNotFound},
+		{"Invalid - execute read command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, []byte{}, true, http.StatusBadRequest},
+		{"Invalid - empty device name", "", nonExistName, testQueryStrings, []byte{}, true, http.StatusBadRequest},
+		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, []byte{}, true, http.StatusBadRequest},
+		{"Invalid - invalid ds-pushevent paramter", testDeviceName, "", "ds-pushevent=123", []byte{}, true, http.StatusBadRequest},
+		{"Invalid - invalid ds-returnevent paramter", testDeviceName, "", "ds-returnevent=123", []byte{}, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceNameCommandNameRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceNameCommandNameRoute, bytes.NewBuffer(testCase.parameters))
 			req.URL.RawQuery = testCase.queryStrings
 			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.Command: testCase.commandName})
 			require.NoError(t, err)
