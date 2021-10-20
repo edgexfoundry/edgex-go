@@ -136,8 +136,10 @@ func TestAddIntervalAction(t *testing.T) {
 }
 
 func TestAllIntervalActions(t *testing.T) {
+	expectedTotalIntervalActionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("IntervalActionTotalCount").Return(expectedTotalIntervalActionCount, nil)
 	dbClientMock.On("AllIntervalActions", 0, 20).Return([]models.IntervalAction{}, nil)
 	dbClientMock.On("AllIntervalActions", 0, 1).Return([]models.IntervalAction{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -153,12 +155,13 @@ func TestAllIntervalActions(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get intervalActions without offset and limit", "", "", false, http.StatusOK},
-		{"Valid - get intervalActions with offset and limit", "0", "1", false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", true, http.StatusBadRequest},
+		{"Valid - get intervalActions without offset and limit", "", "", false, expectedTotalIntervalActionCount, http.StatusOK},
+		{"Valid - get intervalActions with offset and limit", "0", "1", false, expectedTotalIntervalActionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", true, expectedTotalIntervalActionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", true, expectedTotalIntervalActionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -194,6 +197,7 @@ func TestAllIntervalActions(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

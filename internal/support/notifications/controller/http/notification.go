@@ -119,13 +119,13 @@ func (nc *NotificationController) NotificationsByCategory(w http.ResponseWriter,
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications, err := application.NotificationsByCategory(offset, limit, category, nc.dic)
+	notifications, totalCount, err := application.NotificationsByCategory(offset, limit, category, nc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -144,13 +144,13 @@ func (nc *NotificationController) NotificationsByLabel(w http.ResponseWriter, r 
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications, err := application.NotificationsByLabel(offset, limit, label, nc.dic)
+	notifications, totalCount, err := application.NotificationsByLabel(offset, limit, label, nc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -169,13 +169,13 @@ func (nc *NotificationController) NotificationsByStatus(w http.ResponseWriter, r
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications, err := application.NotificationsByStatus(offset, limit, status, nc.dic)
+	notifications, totalCount, err := application.NotificationsByStatus(offset, limit, status, nc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -191,13 +191,13 @@ func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications, err := application.NotificationsByTimeRange(start, end, offset, limit, nc.dic)
+	notifications, totalCount, err := application.NotificationsByTimeRange(start, end, offset, limit, nc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -237,13 +237,13 @@ func (nc *NotificationController) NotificationsBySubscriptionName(w http.Respons
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	notifications, err := application.NotificationsBySubscriptionName(offset, limit, subscriptionName, nc.dic)
+	notifications, totalCount, err := application.NotificationsBySubscriptionName(offset, limit, subscriptionName, nc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, notifications)
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

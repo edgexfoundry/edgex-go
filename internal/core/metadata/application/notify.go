@@ -105,7 +105,7 @@ func deleteDeviceCallback(ctx context.Context, dic *di.Container, device models.
 // updateDeviceProfileCallback invoke device service's callback function for updating device profile
 func updateDeviceProfileCallback(ctx context.Context, dic *di.Container, deviceProfile dtos.DeviceProfile) {
 	lc := container.LoggingClientFrom(dic.Get)
-	devices, err := DevicesByProfileName(0, -1, deviceProfile.Name, dic)
+	devices, _, err := DevicesByProfileName(0, -1, deviceProfile.Name, dic)
 	if err != nil {
 		lc.Errorf("fail to query associated devices by deviceProfile name %s, err: %v", deviceProfile.Name, err)
 		return

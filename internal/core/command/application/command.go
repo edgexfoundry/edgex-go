@@ -22,21 +22,21 @@ import (
 )
 
 // AllCommands query commands by offset, and limit
-func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands []dtos.DeviceCoreCommand, err errors.EdgeX) {
+func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands []dtos.DeviceCoreCommand, totalCount uint32, err errors.EdgeX) {
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.MetadataDeviceClientFrom(dic.Get)
 	if dc == nil {
-		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
+		return deviceCoreCommands, totalCount, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceClient returned", nil)
 	}
 	multiDevicesResponse, err := dc.AllDevices(context.Background(), nil, offset, limit)
 	if err != nil {
-		return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
+		return deviceCoreCommands, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// retrieve device profile information through Metadata DeviceProfileClient
 	dpc := bootstrapContainer.MetadataDeviceProfileClientFrom(dic.Get)
 	if dpc == nil {
-		return deviceCoreCommands, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceProfileClient returned", nil)
+		return deviceCoreCommands, totalCount, errors.NewCommonEdgeX(errors.KindServerError, "nil MetadataDeviceProfileClient returned", nil)
 	}
 
 	// Prepare the url for command
@@ -47,11 +47,11 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 	for i, device := range multiDevicesResponse.Devices {
 		deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), device.ProfileName)
 		if err != nil {
-			return deviceCoreCommands, errors.NewCommonEdgeXWrapper(err)
+			return deviceCoreCommands, totalCount, errors.NewCommonEdgeXWrapper(err)
 		}
 		commands, err := buildCoreCommands(device.Name, serviceUrl, deviceProfileResponse.Profile)
 		if err != nil {
-			return nil, errors.NewCommonEdgeXWrapper(err)
+			return nil, totalCount, errors.NewCommonEdgeXWrapper(err)
 		}
 		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
@@ -59,7 +59,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 			CoreCommands: commands,
 		}
 	}
-	return deviceCoreCommands, nil
+	return deviceCoreCommands, multiDevicesResponse.TotalCount, nil
 }
 
 // CommandsByDeviceName query coreCommands with device name

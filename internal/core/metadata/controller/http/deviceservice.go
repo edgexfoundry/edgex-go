@@ -175,13 +175,13 @@ func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *h
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceServices, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
+	deviceServices, totalCount, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, deviceServices)
+	response := responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, totalCount, deviceServices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
 	pkg.Encode(response, w, lc)

@@ -113,7 +113,8 @@ func buildMultiDevicesResponse() responseDTO.MultiDevicesResponse {
 		{Name: testDeviceName + "2", ProfileName: testProfileName, ServiceName: testDeviceServiceName},
 	}
 	return responseDTO.MultiDevicesResponse{
-		Devices: devices,
+		BaseWithTotalCountResponse: commonDTO.NewBaseWithTotalCountResponse("", "", http.StatusOK, uint32(2)),
+		Devices:                    devices,
 	}
 }
 
@@ -201,13 +202,14 @@ func TestAllCommands(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get commands without offset and limit", "", "", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), http.StatusOK},
-		{"Valid - get commands with offset and limit", "0", "2", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), http.StatusOK},
-		{"Invalid - bounds out of range", "3", "10", true, 0, http.StatusRequestedRangeNotSatisfiable},
-		{"Invalid - invalid offset format", "aaa", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "0", "aaa", true, 0, http.StatusBadRequest},
+		{"Valid - get commands without offset and limit", "", "", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), expectedMultiDevicesResponse.TotalCount, http.StatusOK},
+		{"Valid - get commands with offset and limit", "0", "2", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), expectedMultiDevicesResponse.TotalCount, http.StatusOK},
+		{"Invalid - bounds out of range", "3", "10", true, 0, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Invalid - invalid offset format", "aaa", "10", true, 0, 0, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "aaa", true, 0, 0, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -244,6 +246,7 @@ func TestAllCommands(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.DeviceCoreCommands), "Device count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

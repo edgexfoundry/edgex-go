@@ -197,13 +197,12 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, err := application.AllEvents(offset, limit, ec.dic)
+	events, totalCount, err := application.AllEvents(offset, limit, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-
-	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -222,13 +221,13 @@ func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Req
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, err := application.EventsByDeviceName(offset, limit, name, ec.dic)
+	events, totalCount, err := application.EventsByDeviceName(offset, limit, name, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -265,13 +264,13 @@ func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Requ
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, err := application.EventsByTimeRange(start, end, offset, limit, ec.dic)
+	events, totalCount, err := application.EventsByTimeRange(start, end, offset, limit, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, events)
+	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

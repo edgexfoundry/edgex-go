@@ -106,13 +106,13 @@ func (dc *IntervalController) AllIntervals(w http.ResponseWriter, r *http.Reques
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	intervals, err := application.AllIntervals(offset, limit, dc.dic)
+	intervals, totalCount, err := application.AllIntervals(offset, limit, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, intervals)
+	response := responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, totalCount, intervals)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

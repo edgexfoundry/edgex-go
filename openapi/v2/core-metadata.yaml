@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Metadata API
   description: "This is the definition of the API for the Core Metadata service in the EdgeX Foundry IOT microservice platform. Core Metadata is responsible for all information related to provisioned devices and their associated services."
-  version: 2.0.0
+  version: 2.1.0
 servers:
   - url: 'http://localhost:59881/api/v2'
     description: URL for local development and testing
@@ -106,6 +106,15 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
+    BaseWithTotalCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        totalCount:
+          description: "The total count of all multi instances."
+          type: integer
     Device:
       type: object
       properties:
@@ -384,7 +393,7 @@ components:
           $ref: '#/components/schemas/DeviceProfile'
     MultiDeviceProfilesResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         profiles:
@@ -429,7 +438,7 @@ components:
           $ref: '#/components/schemas/Device'
     MultiDevicesResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         devices:
@@ -537,7 +546,7 @@ components:
           $ref: '#/components/schemas/DeviceService'
     MultiDeviceServicesResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         services:
@@ -692,7 +701,7 @@ components:
           $ref: '#/components/schemas/ProvisionWatcher'
     MultiProvisionWatchersResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
         provisionwatchers:
@@ -1195,7 +1204,7 @@ components:
         apiVersion: "v2"
         requestId: "479439fa-0148-11eb-adc1-0242ac120002"
         statusCode: 200
-        message: ""
+        totalCount: 3
         devices:
           - id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
             name: "Random-Boolean-Device"
@@ -1249,7 +1258,7 @@ components:
         apiVersion: "v2"
         requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
         statusCode: 200
-        message: ""
+        totalCount: 3
         profiles:
         - id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
           name: "Device-Virtual-Profile"
@@ -1300,7 +1309,7 @@ components:
         apiVersion: "v2"
         requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
         statusCode: 200
-        message: ""
+        totalCount: 3
         provisionwatchers:
           - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
             name: "virtual-watcher"
@@ -2576,7 +2585,7 @@ paths:
                 apiVersion: "v2"
                 requestId: "4c7c47a7-10e0-4489-99c5-f639b7d7eb5c"
                 statusCode: 200
-                message: ""
+                totalCount: 3
                 services:
                   - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                     name: "device-virtual"

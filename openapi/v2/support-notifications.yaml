@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Notifications API
   description: This is the definition of the API for the Support Notifications service in the EdgeX Foundry IOT microservice platform. Support Notifications provides functionality for sending notifications via email/REST from the EdgeX Foundry platform.
-  version: 2.0.0
+  version: 2.1.0
 
 servers:
   - url: http://localhost:59860/api/v2
@@ -73,6 +73,15 @@ components:
           description: "The unique identifier for the instance."
           type: string
           format: uuid
+    BaseWithTotalCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        totalCount:
+          description: "The total count of all multi instances."
+          type: integer
     RESTAddress:
       description: "The REST address shows the information indicating how to contact a specific endpoint by HTTP protocol."
       type: object
@@ -268,7 +277,7 @@ components:
           $ref: '#/components/schemas/Notification'
     MultiNotificationsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning Notifications to the caller."
       type: object
       properties:
@@ -440,7 +449,7 @@ components:
           $ref: '#/components/schemas/Subscription'
     MultiSubscriptionsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning Subscriptions to the caller."
       type: object
       properties:
@@ -515,7 +524,7 @@ components:
           $ref: '#/components/schemas/Transmission'
     MultiTransmissionsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning Transmissions to the caller."
       type: object
       properties:
@@ -700,6 +709,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 3
         subscriptions:
             - id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
               name: subscriptionB
@@ -726,6 +736,7 @@ components:
         - apiVersion: "v2"
           notification:
             category: "daily-notify"
+            content: "content"
             contentType: "string"
             description: "device notice"
             labels:
@@ -753,6 +764,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 3
         notifications:
           - id: e6e8a2f4-eb14-4649-9e2b-175247911369
             category: "daily-notify"
@@ -788,6 +800,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 3
         transmissions:
           - id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
             notificationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6

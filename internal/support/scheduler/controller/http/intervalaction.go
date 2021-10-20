@@ -87,13 +87,13 @@ func (ic *IntervalActionController) AllIntervalActions(w http.ResponseWriter, r 
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	intervalActions, err := application.AllIntervalActions(offset, limit, ic.dic)
+	intervalActions, totalCount, err := application.AllIntervalActions(offset, limit, ic.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiIntervalActionsResponse("", "", http.StatusOK, intervalActions)
+	response := responseDTO.NewMultiIntervalActionsResponse("", "", http.StatusOK, totalCount, intervalActions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

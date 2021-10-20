@@ -325,9 +325,11 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	pw3WithServiceB.ServiceName = testServiceB
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithServiceA, pw2WithServiceA, pw3WithServiceB}
+	expectedTotalCountServiceA := uint32(2)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("ProvisionWatcherCountByServiceName", testServiceA).Return(expectedTotalCountServiceA, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 5, testServiceA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 1, 1, testServiceA).Return([]models.ProvisionWatcher{provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 4, 1, testServiceB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -346,12 +348,13 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 		serviceName        string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get provision watchers with serviceName", "0", "5", testServiceA, false, 2, http.StatusOK},
-		{"Valid - get provision watchers with offset and limit", "1", "1", testServiceA, false, 1, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", testServiceB, true, 0, http.StatusNotFound},
-		{"Invalid - get provision watchers without serviceName", "0", "10", "", true, 0, http.StatusBadRequest},
+		{"Valid - get provision watchers with serviceName", "0", "5", testServiceA, false, 2, expectedTotalCountServiceA, http.StatusOK},
+		{"Valid - get provision watchers with offset and limit", "1", "1", testServiceA, false, 1, expectedTotalCountServiceA, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", testServiceB, true, 0, expectedTotalCountServiceA, http.StatusNotFound},
+		{"Invalid - get provision watchers without serviceName", "0", "10", "", true, 0, expectedTotalCountServiceA, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -385,6 +388,7 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.ProvisionWatchers), "ProvisionWatcher count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -403,9 +407,12 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 	pw3WithProfileB.ProfileName = testProfileB
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithProfileA, pw2WithProfileA, pw3WithProfileB}
+	expectedTotalPWCountProfileA := uint32(2)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("ProvisionWatcherCountByProfileName", testProfileA).Return(expectedTotalPWCountProfileA, nil)
+	dbClientMock.On("ProvisionWatchersByProfileName", 0, 5, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 5, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 1, 1, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 4, 1, testProfileB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -424,12 +431,13 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 		profileName        string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get provision watchers with profileName", "0", "5", testProfileA, false, 2, http.StatusOK},
-		{"Valid - get provision watchers with offset and limit", "1", "1", testProfileA, false, 1, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", testProfileB, true, 0, http.StatusNotFound},
-		{"Invalid - get provision watchers without profileName", "0", "10", "", true, 0, http.StatusBadRequest},
+		{"Valid - get provision watchers with profileName", "0", "5", testProfileA, false, 2, expectedTotalPWCountProfileA, http.StatusOK},
+		{"Valid - get provision watchers with offset and limit", "1", "1", testProfileA, false, 1, expectedTotalPWCountProfileA, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", testProfileB, true, 0, expectedTotalPWCountProfileA, http.StatusNotFound},
+		{"Invalid - get provision watchers without profileName", "0", "10", "", true, 0, expectedTotalPWCountProfileA, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -463,6 +471,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.ProvisionWatchers), "ProvisionWatcher count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -472,9 +481,11 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 	provisionWatcher := dtos.ToProvisionWatcherModel(buildTestAddProvisionWatcherRequest().ProvisionWatcher)
 	provisionWatchers := []models.ProvisionWatcher{provisionWatcher, provisionWatcher, provisionWatcher}
+	expectedTotalPWCount := uint32(len(provisionWatchers))
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("ProvisionWatcherTotalCount").Return(expectedTotalPWCount, nil)
 	dbClientMock.On("AllProvisionWatchers", 0, 10, []string(nil)).Return(provisionWatchers, nil)
 	dbClientMock.On("AllProvisionWatchers", 0, 5, testProvisionWatcherLabels).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("AllProvisionWatchers", 1, 2, []string(nil)).Return([]models.ProvisionWatcher{provisionWatchers[1], provisionWatchers[2]}, nil)
@@ -494,12 +505,13 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get provision watchers without labels", "0", "10", "", false, 3, http.StatusOK},
-		{"Valid - get provision watchers with labels", "0", "5", strings.Join(testProvisionWatcherLabels, ","), false, 2, http.StatusOK},
-		{"Valid - get provision watchers with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testProvisionWatcherLabels, ","), true, 0, http.StatusNotFound},
+		{"Valid - get provision watchers without labels", "0", "10", "", false, 3, expectedTotalPWCount, http.StatusOK},
+		{"Valid - get provision watchers with labels", "0", "5", strings.Join(testProvisionWatcherLabels, ","), false, 2, expectedTotalPWCount, http.StatusOK},
+		{"Valid - get provision watchers with offset and no labels", "1", "2", "", false, 2, expectedTotalPWCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testProvisionWatcherLabels, ","), true, 0, expectedTotalPWCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -535,6 +547,7 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.ProvisionWatchers), "ProvisionWatcher count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

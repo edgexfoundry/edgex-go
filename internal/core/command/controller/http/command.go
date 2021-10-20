@@ -45,13 +45,13 @@ func (cc *CommandController) AllCommands(w http.ResponseWriter, r *http.Request)
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	commands, err := application.AllCommands(offset, limit, cc.dic)
+	commands, totalCount, err := application.AllCommands(offset, limit, cc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceCoreCommandsResponse("", "", http.StatusOK, commands)
+	response := responseDTO.NewMultiDeviceCoreCommandsResponse("", "", http.StatusOK, totalCount, commands)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
 	pkg.Encode(response, w, lc)

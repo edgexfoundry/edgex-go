@@ -234,8 +234,10 @@ func TestIntervalByName(t *testing.T) {
 }
 
 func TestAllIntervals(t *testing.T) {
+	expectedTotalIntervalCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("IntervalTotalCount").Return(expectedTotalIntervalCount, nil)
 	dbClientMock.On("AllIntervals", 0, 20).Return([]models.Interval{}, nil)
 	dbClientMock.On("AllIntervals", 0, 1).Return([]models.Interval{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -251,12 +253,13 @@ func TestAllIntervals(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get intervals without offset and limit", "", "", false, http.StatusOK},
-		{"Valid - get intervals with offset and limit", "0", "1", false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", true, http.StatusBadRequest},
+		{"Valid - get intervals without offset and limit", "", "", false, expectedTotalIntervalCount, http.StatusOK},
+		{"Valid - get intervals with offset and limit", "0", "1", false, expectedTotalIntervalCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", true, expectedTotalIntervalCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", true, expectedTotalIntervalCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -292,6 +295,7 @@ func TestAllIntervals(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

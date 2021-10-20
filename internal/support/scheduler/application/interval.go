@@ -59,18 +59,21 @@ func IntervalByName(name string, ctx context.Context, dic *di.Container) (dto dt
 }
 
 // AllIntervals query the intervals with offset and limit
-func AllIntervals(offset int, limit int, dic *di.Container) (intervalDTOs []dtos.Interval, err errors.EdgeX) {
+func AllIntervals(offset int, limit int, dic *di.Container) (intervalDTOs []dtos.Interval, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	intervals, err := dbClient.AllIntervals(offset, limit)
+	if err == nil {
+		totalCount, err = dbClient.IntervalTotalCount()
+	}
 	if err != nil {
-		return intervalDTOs, errors.NewCommonEdgeXWrapper(err)
+		return intervalDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 	intervalDTOs = make([]dtos.Interval, len(intervals))
 	for i, interval := range intervals {
 		dto := dtos.FromIntervalModelToDTO(interval)
 		intervalDTOs[i] = dto
 	}
-	return intervalDTOs, nil
+	return intervalDTOs, totalCount, nil
 }
 
 // DeleteIntervalByName delete the interval by name
@@ -186,7 +189,7 @@ func LoadIntervalToSchedulerManager(dic *di.Container) errors.EdgeX {
 	}
 
 	// Load intervals from DB to scheduler
-	intervals, err := AllIntervals(0, -1, dic)
+	intervals, _, err := AllIntervals(0, -1, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

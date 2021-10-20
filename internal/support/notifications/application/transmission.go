@@ -34,44 +34,53 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 }
 
 // TransmissionsByTimeRange query transmissions with offset, limit and time range
-func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	models, err := dbClient.TransmissionsByTimeRange(start, end, offset, limit)
+	if err == nil {
+		totalCount, err = dbClient.TransmissionCountByTimeRange(start, end)
+	}
 	if err != nil {
-		return transmissions, errors.NewCommonEdgeXWrapper(err)
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 	transmissions = make([]dtos.Transmission, len(models))
 	for i, trans := range models {
 		transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
 	}
-	return transmissions, nil
+	return transmissions, totalCount, nil
 }
 
 // AllTransmissions queries transmissions by offset and limit
-func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	models, err := dbClient.AllTransmissions(offset, limit)
+	if err == nil {
+		totalCount, err = dbClient.TransmissionTotalCount()
+	}
 	if err != nil {
-		return transmissions, errors.NewCommonEdgeXWrapper(err)
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 	transmissions = make([]dtos.Transmission, len(models))
 	for i, trans := range models {
 		transmissions[i] = dtos.FromTransmissionModelToDTO(trans)
 	}
-	return transmissions, nil
+	return transmissions, totalCount, nil
 }
 
 // TransmissionsByStatus queries transmissions with offset, limit, and status
-func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	if status == "" {
-		return transmissions, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
+		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	transModels, err := dbClient.TransmissionsByStatus(offset, limit, status)
-	if err != nil {
-		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	if err == nil {
+		totalCount, err = dbClient.TransmissionCountByStatus(status)
 	}
-	return dtos.FromTransmissionModelsToDTOs(transModels), nil
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 }
 
 // DeleteProcessedTransmissionsByAge invokes the infrastructure layer function to remove the processed transmissions that are older than age.
@@ -87,14 +96,17 @@ func DeleteProcessedTransmissionsByAge(age int64, dic *di.Container) errors.Edge
 }
 
 // TransmissionsBySubscriptionName queries transmissions with offset, limit, and subscription name
-func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (transmissions []dtos.Transmission, err errors.EdgeX) {
+func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	if subscriptionName == "" {
-		return transmissions, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
+		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	transModels, err := dbClient.TransmissionsBySubscriptionName(offset, limit, subscriptionName)
-	if err != nil {
-		return transmissions, errors.NewCommonEdgeXWrapper(err)
+	if err == nil {
+		totalCount, err = dbClient.TransmissionCountBySubscriptionName(subscriptionName)
 	}
-	return dtos.FromTransmissionModelsToDTOs(transModels), nil
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	return dtos.FromTransmissionModelsToDTOs(transModels), totalCount, nil
 }

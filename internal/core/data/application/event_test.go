@@ -399,7 +399,9 @@ func TestEventsByTimeRange(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("EventCountByTimeRange", int(event1.Origin), int(event5.Origin)).Return(uint32(5), nil)
 	dbClientMock.On("EventsByTimeRange", int(event1.Origin), int(event5.Origin), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
+	dbClientMock.On("EventCountByTimeRange", int(event2.Origin), int(event4.Origin)).Return(uint32(3), nil)
 	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
 	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 1, 2).Return([]models.Event{event3, event2}, nil)
 	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
@@ -418,16 +420,17 @@ func TestEventsByTimeRange(t *testing.T) {
 		errorExpected      bool
 		ExpectedErrKind    errors.ErrKind
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - all events", int(event1.Origin), int(event5.Origin), 0, 10, false, "", 5, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest", int(event2.Origin), int(event4.Origin), 0, 10, false, "", 3, http.StatusOK},
-		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Origin), int(event4.Origin), 1, 2, false, "", 2, http.StatusOK},
-		{"Invalid - bounds out of range", int(event2.Origin), int(event4.Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - all events", int(event1.Origin), int(event5.Origin), 0, 10, false, "", 5, uint32(5), http.StatusOK},
+		{"Valid - events trimmed by latest and oldest", int(event2.Origin), int(event4.Origin), 0, 10, false, "", 3, uint32(3), http.StatusOK},
+		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Origin), int(event4.Origin), 1, 2, false, "", 2, uint32(3), http.StatusOK},
+		{"Invalid - bounds out of range", int(event2.Origin), int(event4.Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			events, err := EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
+			events, totalCount, err := EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
 			if testCase.errorExpected {
 				require.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -435,7 +438,8 @@ func TestEventsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, err.Code(), "Status code not as expected")
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, testCase.expectedCount, len(events), "Event total count is not expected")
+				assert.Equal(t, testCase.expectedCount, len(events), "Event count is not expected")
+				assert.Equal(t, testCase.expectedTotalCount, totalCount, "Total count is not expected")
 			}
 		})
 	}

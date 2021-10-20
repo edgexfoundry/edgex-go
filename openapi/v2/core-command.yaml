@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Command API
   description: This is the definition of the API for the Core Command service in the EdgeX Foundry IOT microservice platform. Core Command is responsible for storing command definitions and also for executing those commands as reads and writes against target devices.
-  version: 2.0.0
+  version: 2.1.0
   
 servers:
   - url: http://localhost:59882/api/v2
@@ -44,6 +44,15 @@ components:
         message:
           description: "A field that can contain a free-form message, such as an error message."
           type: string
+    BaseWithTotalCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      description: "Defines basic properties which all use-case specific response DTO instances should support"
+      type: object
+      properties:
+        totalCount:
+          description: "The total count of all multi instances."
+          type: integer
     DeviceCoreCommand:
       type: object
       properties:
@@ -116,7 +125,7 @@ components:
           $ref: '#/components/schemas/DeviceCoreCommand'
     MultiDeviceCoreCommandsResponse:
       allOf:
-        - $ref: '#/components/schemas/BaseResponse'
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       description: "A response type for returning multiple DeviceCoreCommand to the caller."
       type: object
       properties:
@@ -464,6 +473,7 @@ components:
       value:
         apiVersion: "v2"
         statusCode: 200
+        totalCount: 3
         deviceCoreCommands:
           - deviceName: "testDevice1"
             profileName: "testProfile"

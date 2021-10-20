@@ -208,9 +208,11 @@ func TestAddSubscription(t *testing.T) {
 func TestAllSubscriptions(t *testing.T) {
 	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
 	subscriptions := []models.Subscription{subscription, subscription, subscription}
+	expectedSubscriptionCount := uint32(len(subscriptions))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionTotalCount").Return(expectedSubscriptionCount, nil)
 	dbClientMock.On("AllSubscriptions", 0, 20).Return(subscriptions, nil)
 	dbClientMock.On("AllSubscriptions", 1, 2).Return([]models.Subscription{subscriptions[1], subscriptions[2]}, nil)
 	dbClientMock.On("AllSubscriptions", 4, 1).Return([]models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -228,11 +230,12 @@ func TestAllSubscriptions(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get subscriptions without offset and limit", "", "", false, 3, http.StatusOK},
-		{"Valid - get subscriptions with offset and limit", "1", "2", false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", true, 0, http.StatusNotFound},
+		{"Valid - get subscriptions without offset and limit", "", "", false, 3, expectedSubscriptionCount, http.StatusOK},
+		{"Valid - get subscriptions with offset and limit", "1", "2", false, 2, expectedSubscriptionCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", true, 0, expectedSubscriptionCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -269,6 +272,7 @@ func TestAllSubscriptions(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Subscriptions), "Subscription count is not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Subscription total count is not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -340,8 +344,10 @@ func TestSubscriptionByName(t *testing.T) {
 
 func TestSubscriptionsByCategory(t *testing.T) {
 	testCategory := "category"
+	expectedSubscriptionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionCountByCategory", testCategory).Return(expectedSubscriptionCount, nil)
 	dbClientMock.On("SubscriptionsByCategory", 0, 20, testCategory).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByCategory", 0, 1, testCategory).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -358,12 +364,13 @@ func TestSubscriptionsByCategory(t *testing.T) {
 		limit              string
 		category           string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get subscriptions without offset, and limit", "", "", testCategory, false, http.StatusOK},
-		{"Valid - get subscriptions with offset, and limit", "0", "1", testCategory, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testCategory, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testCategory, true, http.StatusBadRequest},
+		{"Valid - get subscriptions without offset, and limit", "", "", testCategory, false, expectedSubscriptionCount, http.StatusOK},
+		{"Valid - get subscriptions with offset, and limit", "0", "1", testCategory, false, expectedSubscriptionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testCategory, true, expectedSubscriptionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testCategory, true, expectedSubscriptionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -400,6 +407,7 @@ func TestSubscriptionsByCategory(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Subscription total count is not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -408,8 +416,10 @@ func TestSubscriptionsByCategory(t *testing.T) {
 
 func TestSubscriptionsByLabel(t *testing.T) {
 	testLabel := "label"
+	expectedSubscriptionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionCountByLabel", testLabel).Return(expectedSubscriptionCount, nil)
 	dbClientMock.On("SubscriptionsByLabel", 0, 20, testLabel).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByLabel", 0, 1, testLabel).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -426,12 +436,13 @@ func TestSubscriptionsByLabel(t *testing.T) {
 		limit              string
 		label              string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get subscriptions without offset, and limit", "", "", testLabel, false, http.StatusOK},
-		{"Valid - get subscriptions with offset, and limit", "0", "1", testLabel, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testLabel, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testLabel, true, http.StatusBadRequest},
+		{"Valid - get subscriptions without offset, and limit", "", "", testLabel, false, expectedSubscriptionCount, http.StatusOK},
+		{"Valid - get subscriptions with offset, and limit", "0", "1", testLabel, false, expectedSubscriptionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testLabel, true, expectedSubscriptionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testLabel, true, expectedSubscriptionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -468,6 +479,7 @@ func TestSubscriptionsByLabel(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Subscription total count is not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -476,8 +488,10 @@ func TestSubscriptionsByLabel(t *testing.T) {
 
 func TestSubscriptionsByReceiver(t *testing.T) {
 	testReceiver := "receiver"
+	expectedSubscriptionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("SubscriptionCountByReceiver", testReceiver).Return(expectedSubscriptionCount, nil)
 	dbClientMock.On("SubscriptionsByReceiver", 0, 20, testReceiver).Return([]models.Subscription{}, nil)
 	dbClientMock.On("SubscriptionsByReceiver", 0, 1, testReceiver).Return([]models.Subscription{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -494,12 +508,13 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 		limit              string
 		receiver           string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get subscriptions without offset, and limit", "", "", testReceiver, false, http.StatusOK},
-		{"Valid - get subscriptions with offset, and limit", "0", "1", testReceiver, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testReceiver, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testReceiver, true, http.StatusBadRequest},
+		{"Valid - get subscriptions without offset, and limit", "", "", testReceiver, false, expectedSubscriptionCount, http.StatusOK},
+		{"Valid - get subscriptions with offset, and limit", "0", "1", testReceiver, false, expectedSubscriptionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testReceiver, true, expectedSubscriptionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testReceiver, true, expectedSubscriptionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -536,6 +551,7 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Subscription total count is not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

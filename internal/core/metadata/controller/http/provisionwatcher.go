@@ -115,13 +115,13 @@ func (pwc *ProvisionWatcherController) ProvisionWatchersByServiceName(w http.Res
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	provisionWatchers, err := application.ProvisionWatchersByServiceName(offset, limit, name, pwc.dic)
+	provisionWatchers, totalCount, err := application.ProvisionWatchersByServiceName(offset, limit, name, pwc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -140,13 +140,13 @@ func (pwc *ProvisionWatcherController) ProvisionWatchersByProfileName(w http.Res
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	provisionWatchers, err := application.ProvisionWatchersByProfileName(offset, limit, name, pwc.dic)
+	provisionWatchers, totalCount, err := application.ProvisionWatchersByProfileName(offset, limit, name, pwc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -162,13 +162,13 @@ func (pwc *ProvisionWatcherController) AllProvisionWatchers(w http.ResponseWrite
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	provisionWatchers, err := application.AllProvisionWatchers(offset, limit, labels, pwc.dic)
+	provisionWatchers, totalCount, err := application.AllProvisionWatchers(offset, limit, labels, pwc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, provisionWatchers)
+	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

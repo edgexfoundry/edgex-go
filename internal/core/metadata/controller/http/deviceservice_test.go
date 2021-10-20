@@ -396,9 +396,11 @@ func TestAllDeviceServices(t *testing.T) {
 			Name: "ds3",
 		},
 	}
+	expectedTotalDeviceServiceCount := uint32(len(deviceServices))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceServiceTotalCount").Return(expectedTotalDeviceServiceCount, nil)
 	dbClientMock.On("AllDeviceServices", 0, 10, []string(nil)).Return(deviceServices, nil)
 	dbClientMock.On("AllDeviceServices", 0, 5, testDeviceServiceLabels).Return([]models.DeviceService{deviceServices[0], deviceServices[1]}, nil)
 	dbClientMock.On("AllDeviceServices", 1, 2, []string(nil)).Return([]models.DeviceService{deviceServices[1], deviceServices[2]}, nil)
@@ -418,12 +420,13 @@ func TestAllDeviceServices(t *testing.T) {
 		labels             string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get device services without labels", "0", "10", "", false, 3, http.StatusOK},
-		{"Valid - get device services with labels", "0", "5", strings.Join(testDeviceServiceLabels, ","), false, 2, http.StatusOK},
-		{"Valid - get device services with offset and no labels", "1", "2", "", false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceServiceLabels, ","), true, 0, http.StatusNotFound},
+		{"Valid - get device services without labels", "0", "10", "", false, 3, expectedTotalDeviceServiceCount, http.StatusOK},
+		{"Valid - get device services with labels", "0", "5", strings.Join(testDeviceServiceLabels, ","), false, 2, expectedTotalDeviceServiceCount, http.StatusOK},
+		{"Valid - get device services with offset and no labels", "1", "2", "", false, 2, expectedTotalDeviceServiceCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceServiceLabels, ","), true, 0, expectedTotalDeviceServiceCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -459,6 +462,7 @@ func TestAllDeviceServices(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Services), "Service count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})

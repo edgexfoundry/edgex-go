@@ -254,13 +254,13 @@ func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *h
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
+	deviceProfiles, totalCount, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -279,13 +279,13 @@ func (dc *DeviceProfileController) DeviceProfilesByModel(w http.ResponseWriter, 
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles, err := application.DeviceProfilesByModel(offset, limit, model, dc.dic)
+	deviceProfiles, totalCount, err := application.DeviceProfilesByModel(offset, limit, model, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -304,13 +304,13 @@ func (dc *DeviceProfileController) DeviceProfilesByManufacturer(w http.ResponseW
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles, err := application.DeviceProfilesByManufacturer(offset, limit, manufacturer, dc.dic)
+	deviceProfiles, totalCount, err := application.DeviceProfilesByManufacturer(offset, limit, manufacturer, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
@@ -330,13 +330,13 @@ func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(w http.R
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	deviceProfiles, err := application.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model, dc.dic)
+	deviceProfiles, totalCount, err := application.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
 
-	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, deviceProfiles)
+	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }

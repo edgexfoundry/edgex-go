@@ -105,8 +105,10 @@ func TestTransmissionById(t *testing.T) {
 }
 
 func TestTransmissionsByTimeRange(t *testing.T) {
+	expectedTransmissionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("TransmissionCountByTimeRange", 0, 100).Return(expectedTransmissionCount, nil)
 	dbClientMock.On("TransmissionsByTimeRange", 0, 100, 0, 10).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -124,16 +126,17 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, http.StatusOK},
-		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty start", "", "100", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - empty end", "0", "", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - end before start", "10", "0", "0", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, http.StatusBadRequest},
+		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, expectedTransmissionCount, http.StatusOK},
+		{"Invalid - invalid start format", "aaa", "100", "0", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid end format", "0", "bbb", "0", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - empty start", "", "100", "0", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - empty end", "0", "", "0", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - end before start", "10", "0", "0", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid offset format", "0", "100", "aaa", "10", true, 0, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "0", "100", "0", "aaa", true, 0, expectedTransmissionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -167,6 +170,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Transmissions), "Transmission count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -176,9 +180,11 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 func TestAllTransmissions(t *testing.T) {
 	trans := transmissionData()
 	transmissions := []models.Transmission{trans, trans, trans}
+	expectedTransmissionCount := uint32(len(transmissions))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("TransmissionTotalCount").Return(expectedTransmissionCount, nil)
 	dbClientMock.On("AllTransmissions", 0, 20).Return(transmissions, nil)
 	dbClientMock.On("AllTransmissions", 1, 2).Return([]models.Transmission{transmissions[1], transmissions[2]}, nil)
 	dbClientMock.On("AllTransmissions", 4, 1).Return([]models.Transmission{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
@@ -196,11 +202,12 @@ func TestAllTransmissions(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get transmissions without offset and limit", "", "", false, 3, http.StatusOK},
-		{"Valid - get transmissions with offset and limit", "1", "2", false, 2, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", true, 0, http.StatusNotFound},
+		{"Valid - get transmissions without offset and limit", "", "", false, 3, expectedTransmissionCount, http.StatusOK},
+		{"Valid - get transmissions with offset and limit", "1", "2", false, 2, expectedTransmissionCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", true, 0, expectedTransmissionCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -237,6 +244,7 @@ func TestAllTransmissions(t *testing.T) {
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
 				assert.Equal(t, testCase.expectedCount, len(res.Transmissions), "Transmission count is not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -245,8 +253,10 @@ func TestAllTransmissions(t *testing.T) {
 
 func TestTransmissionsByStatus(t *testing.T) {
 	testStatus := models.New
+	expectedTransmissionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("TransmissionCountByStatus", testStatus).Return(expectedTransmissionCount, nil)
 	dbClientMock.On("TransmissionsByStatus", 0, 20, testStatus).Return([]models.Transmission{}, nil)
 	dbClientMock.On("TransmissionsByStatus", 0, 1, testStatus).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -263,13 +273,14 @@ func TestTransmissionsByStatus(t *testing.T) {
 		limit              string
 		status             string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get transmissions without offset, and limit", "", "", testStatus, false, http.StatusOK},
-		{"Valid - get transmissions with offset, and limit", "0", "1", testStatus, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testStatus, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testStatus, true, http.StatusBadRequest},
-		{"Invalid - status is empty", "0", "1", "", true, http.StatusBadRequest},
+		{"Valid - get transmissions without offset, and limit", "", "", testStatus, false, expectedTransmissionCount, http.StatusOK},
+		{"Valid - get transmissions with offset, and limit", "0", "1", testStatus, false, expectedTransmissionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testStatus, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testStatus, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - status is empty", "0", "1", "", true, expectedTransmissionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -306,6 +317,7 @@ func TestTransmissionsByStatus(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
@@ -369,8 +381,10 @@ func TestDeleteTransmissionsByAge(t *testing.T) {
 
 func TestTransmissionsBySubscriptionName(t *testing.T) {
 	testName := "testName"
+	expectedTransmissionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("TransmissionCountBySubscriptionName", testName).Return(expectedTransmissionCount, nil)
 	dbClientMock.On("TransmissionsBySubscriptionName", 0, 20, testName).Return([]models.Transmission{}, nil)
 	dbClientMock.On("TransmissionsBySubscriptionName", 0, 1, testName).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -387,13 +401,14 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 		limit              string
 		subscriptionName   string
 		errorExpected      bool
+		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get transmissions without offset, and limit", "", "", testName, false, http.StatusOK},
-		{"Valid - get transmissions with offset, and limit", "0", "1", testName, false, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", testName, true, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", testName, true, http.StatusBadRequest},
-		{"Invalid - subscription name is empty", "0", "1", "", true, http.StatusBadRequest},
+		{"Valid - get transmissions without offset, and limit", "", "", testName, false, expectedTransmissionCount, http.StatusOK},
+		{"Valid - get transmissions with offset, and limit", "0", "1", testName, false, expectedTransmissionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testName, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testName, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - subscription name is empty", "0", "1", "", true, expectedTransmissionCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -430,6 +445,7 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
 				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
 				assert.Empty(t, res.Message, "Message should be empty when it is successful")
 			}
 		})
