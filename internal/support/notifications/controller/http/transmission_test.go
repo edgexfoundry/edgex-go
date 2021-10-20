@@ -451,3 +451,76 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 		})
 	}
 }
+
+func TestTransmissionsByNotificationId(t *testing.T) {
+	testId := "id"
+	expectedTransmissionCount := uint32(0)
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("TransmissionCountByNotificationId", testId).Return(expectedTransmissionCount, nil)
+	dbClientMock.On("TransmissionsByNotificationId", 0, 20, testId).Return([]models.Transmission{}, nil)
+	dbClientMock.On("TransmissionsByNotificationId", 0, 1, testId).Return([]models.Transmission{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewTransmissionController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		notificationId     string
+		errorExpected      bool
+		expectedTotalCount uint32
+		expectedStatusCode int
+	}{
+		{"Valid - get transmissions without offset, and limit", "", "", testId, false, expectedTransmissionCount, http.StatusOK},
+		{"Valid - get transmissions with offset, and limit", "0", "1", testId, false, expectedTransmissionCount, http.StatusOK},
+		{"Invalid - invalid offset format", "aaa", "1", testId, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "1", "aaa", testId, true, expectedTransmissionCount, http.StatusBadRequest},
+		{"Invalid - notification id is empty", "0", "1", "", true, expectedTransmissionCount, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByNotificationIdRoute, http.NoBody)
+			query := req.URL.Query()
+			if testCase.offset != "" {
+				query.Add(common.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(common.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
+			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.notificationId})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.TransmissionsByNotificationId)
+			handler.ServeHTTP(recorder, req)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiTransmissionsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Response total count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}

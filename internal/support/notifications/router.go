@@ -59,6 +59,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(common.ApiTransmissionByStatusRoute, trans.TransmissionsByStatus).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiTransmissionByAgeRoute, trans.DeleteProcessedTransmissionsByAge).Methods(http.MethodDelete)
 	r.HandleFunc(common.ApiTransmissionBySubscriptionNameRoute, trans.TransmissionsBySubscriptionName).Methods(http.MethodGet)
+	r.HandleFunc(common.ApiTransmissionByNotificationIdRoute, trans.TransmissionsByNotificationId).Methods(http.MethodGet)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))

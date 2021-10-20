@@ -176,3 +176,30 @@ func (tc *TransmissionController) TransmissionsBySubscriptionName(w http.Respons
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.Encode(response, w, lc)
 }
+
+// TransmissionsByNotificationId queries transmission by Notification ID
+func (tc *TransmissionController) TransmissionsByNotificationId(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(tc.dic.Get)
+	ctx := r.Context()
+	config := notificationContainer.ConfigurationFrom(tc.dic.Get)
+
+	// URL parameters
+	vars := mux.Vars(r)
+	notificationId := vars[common.Id]
+
+	// parse URL query string for offset, limit
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+	transmissions, totalCount, err := application.TransmissionsByNotificationId(offset, limit, notificationId, tc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
+}

@@ -1566,3 +1566,29 @@ func (c *Client) TransmissionsBySubscriptionName(offset int, limit int, subscrip
 	}
 	return transmissions, nil
 }
+
+// TransmissionsByNotificationId queries transmissions by offset, limit and notification id
+func (c *Client) TransmissionsByNotificationId(offset int, limit int, id string) (transmissions []model.Transmission, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	transmissions, err = transmissionsByNotificationId(conn, offset, limit, id)
+	if err != nil {
+		return transmissions, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query transmissions by offset %d, limit %d and notification id %s", offset, limit, id), err)
+	}
+	return transmissions, nil
+}
+
+// TransmissionCountByNotificationId returns the count of Transmission associated with specified notification id from the database
+func (c *Client) TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(TransmissionCollectionNotificationId, id))
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}

@@ -57,4 +57,6 @@ type DBClient interface {
 	TransmissionCountBySubscriptionName(subscriptionName string) (uint32, errors.EdgeX)
 	TransmissionCountByStatus(status string) (uint32, errors.EdgeX)
 	TransmissionCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
+	TransmissionsByNotificationId(offset, limit int, id string) ([]models.Transmission, errors.EdgeX)
+	TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX)
 }
