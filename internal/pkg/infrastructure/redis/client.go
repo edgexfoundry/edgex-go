@@ -678,6 +678,44 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 	return readings, nil
 }
 
+func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end, offset, limit int) (readings []model.Reading, totalCount uint32, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, totalCount, err = readingsByDeviceNameAndResourceNamesAndTimeRange(conn, deviceName, resourceNames, start, end, offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by deviceName %s, resourceNames %v and time range %v ~ %v", deviceName, resourceNames, start, end), err)
+	}
+
+	return readings, totalCount, nil
+}
+
+func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, err = readingsByDeviceNameAndTimeRange(conn, deviceName, start, end, offset, limit)
+	if err != nil {
+		return readings, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by deviceName %s, and time range %v ~ %v", deviceName, start, end), err)
+	}
+
+	return readings, nil
+}
+
+func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int, end int) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberCountByScoreRange(conn, CreateKey(ReadingsCollectionDeviceName, deviceName), start, end)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
 // AddProvisionWatcher adds a new provision watcher
 func (c *Client) AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX) {
 	conn := c.Pool.Get()

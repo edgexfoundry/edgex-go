@@ -1706,6 +1706,94 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  /reading/device/name/{deviceName}/start/{start}/end/{end}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: deviceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The device name name of readings"
+      - name: start
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the start of a date/time range"
+      - name: end
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+    get:
+      summary: "Return a paginated range of readings by deviceName and specified time range while also allowing multiple resource names specified in the request body as query criteria.  If resource names or request body is empty, return all the readings that meet deviceName and specified time range."
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEventRequest'
+            example:
+              resourceNames:
+                - resource-001
+                - resource-002
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiReadingsResponse'
+              examples:
+                MultiReadingsExample:
+                  $ref: '#/components/examples/ReadingsByResourceNameAndTimeRangeExample'
+        '400':
+          description: "Request is in an invalid state."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /config:
     get:
       summary: "Returns the current configuration of the service."
