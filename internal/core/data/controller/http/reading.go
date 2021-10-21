@@ -6,31 +6,34 @@
 package http
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
+	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/io"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/gorilla/mux"
 )
 
 type ReadingController struct {
-	dic *di.Container
+	reader io.DtoReader
+	dic    *di.Container
 }
 
 // NewReadingController creates and initializes a ReadingController
 func NewReadingController(dic *di.Container) *ReadingController {
 	return &ReadingController{
-		dic: dic,
+		reader: io.NewJsonDtoReader(),
+		dic:    dic,
 	}
 }
 
@@ -237,6 +240,57 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(w h
 	}
 
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit, rc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.Encode(response, w, lc)
+}
+
+func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(rc.dic.Get)
+	ctx := r.Context()
+	config := dataContainer.ConfigurationFrom(rc.dic.Get)
+
+	vars := mux.Vars(r)
+	deviceName := vars[common.Name]
+
+	// parse time range (start, end), offset, and limit from incoming request
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	var queryPayload map[string]interface{}
+	if r.Body != http.NoBody { //only parse request body when there are contents provided
+		err = rc.reader.Read(r.Body, &queryPayload)
+		if err != nil {
+			utils.WriteErrorResponse(w, ctx, lc, err, "")
+			return
+		}
+	}
+
+	var resourceNames []string
+	if val, ok := queryPayload[common.ResourceNames]; ok { //look for
+		switch t := val.(type) {
+		case []interface{}:
+			for _, v := range t {
+				if strVal, ok := v.(string); ok {
+					resourceNames = append(resourceNames, strVal)
+				}
+			}
+		default:
+			err = errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("query criteria [%v] not in expected format", common.ResourceNames), nil)
+			utils.WriteErrorResponse(w, ctx, lc, err, "")
+			return
+		}
+	}
+
+	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit, rc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

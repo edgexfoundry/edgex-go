@@ -97,9 +97,8 @@ func ReadingsByTimeRange(start int, end int, offset int, limit int, dic *di.Cont
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 func convertReadingModelsToDTOs(readingModels []models.Reading) (readings []dtos.BaseReading, err errors.EdgeX) {
@@ -140,9 +139,8 @@ func ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int,
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 // ReadingsByDeviceNameAndResourceName query readings with offset, limit, device name and its associated resource name
@@ -165,9 +163,8 @@ func ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string,
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
 }
 
 // ReadingsByDeviceNameAndResourceNameAndTimeRange query readings with offset, limit, device name, its associated resource name and specified time range
@@ -190,7 +187,32 @@ func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resource
 
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	} else {
-		return readings, totalCount, nil
 	}
+	return readings, totalCount, nil
+}
+
+// ReadingsByDeviceNameAndResourceNamesAndTimeRange query readings with offset, limit, device name, its associated resource name and specified time range
+func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
+	if deviceName == "" {
+		return readings, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	var readingModels []models.Reading
+	if len(resourceNames) > 0 {
+		readingModels, totalCount, err = dbClient.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit)
+	} else {
+		readingModels, err = dbClient.ReadingsByDeviceNameAndTimeRange(deviceName, start, end, offset, limit)
+		if err == nil {
+			totalCount, err = dbClient.ReadingCountByDeviceNameAndTimeRange(deviceName, start, end)
+		}
+	}
+
+	if err == nil {
+		readings, err = convertReadingModelsToDTOs(readingModels)
+	}
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	return readings, totalCount, nil
 }
