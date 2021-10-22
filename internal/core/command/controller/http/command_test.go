@@ -67,10 +67,14 @@ func NewMockDIC() *di.Container {
 	})
 }
 
-func buildTestSettings() map[string]string {
-	var settings = make(map[string]string)
+func buildTestSettings() map[string]interface{} {
+	var settings = make(map[string]interface{})
 	settings["AHU-TargetTemperature"] = "28.5"
 	settings["AHU-TargetBand"] = "4.0"
+	settings["AHU-TargetHumidity"] = map[string]interface{}{
+		"Accuracy": "0.2-0.3% RH",
+		"Value":    float64(59),
+	}
 	return settings
 }
 
@@ -426,10 +430,10 @@ func TestIssueSetCommand(t *testing.T) {
 	testSettings := buildTestSettings()
 	testSettingsJsonStr, _ := json.Marshal(testSettings)
 	dsccMock := &mocks.DeviceServiceCommandClient{}
-	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, testSettings).Return(expectedBaseResponse, nil)
-	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, "", testSettings).Return(expectedBaseResponse, nil)
-	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, "").Return(commonDTO.BaseResponse{}, errors.NewCommonEdgeX(errors.KindServerError, "no request body provided for PUT command", nil))
-	dsccMock.On("SetCommand", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings, testSettings).Return(commonDTO.BaseResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "no corresponding PUT command", nil))
+	dsccMock.On("SetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, testSettings).Return(expectedBaseResponse, nil)
+	dsccMock.On("SetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, "", testSettings).Return(expectedBaseResponse, nil)
+	dsccMock.On("SetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, testCommandName, testQueryStrings, "").Return(commonDTO.BaseResponse{}, errors.NewCommonEdgeX(errors.KindServerError, "no request body provided for PUT command", nil))
+	dsccMock.On("SetCommandWithObject", context.Background(), testBaseAddress, testDeviceName, nonExistName, testQueryStrings, testSettings).Return(commonDTO.BaseResponse{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "no corresponding PUT command", nil))
 
 	dic := NewMockDIC()
 	dic.Update(di.ServiceConstructorMap{

@@ -228,7 +228,7 @@ func IssueGetCommandByName(deviceName string, commandName string, queryParams st
 
 // IssueSetCommandByName issues the specified set(write) command referenced by the command name to the device/sensor, also
 // referenced by name.
-func IssueSetCommandByName(deviceName string, commandName string, queryParams string, settings map[string]string, dic *di.Container) (response commonDTO.BaseResponse, err errors.EdgeX) {
+func IssueSetCommandByName(deviceName string, commandName string, queryParams string, settings map[string]interface{}, dic *di.Container) (response commonDTO.BaseResponse, err errors.EdgeX) {
 	if deviceName == "" {
 		return response, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name cannot be empty", nil)
 	}
@@ -262,5 +262,5 @@ func IssueSetCommandByName(deviceName string, commandName string, queryParams st
 	if dscc == nil {
 		return response, errors.NewCommonEdgeX(errors.KindServerError, "nil DeviceServiceCommandClient returned", nil)
 	}
-	return dscc.SetCommand(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams, settings)
+	return dscc.SetCommandWithObject(context.Background(), deviceServiceResponse.Service.BaseAddress, deviceName, commandName, queryParams, settings)
 }
