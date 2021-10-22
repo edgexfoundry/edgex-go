@@ -889,6 +889,11 @@ parts:
         -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
         $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
 
+      # configure kuiper's REST service port to 59720 
+      # so that kuiper REST API can be used by edgex
+      sed -i -e 's@restPort\: 9081@restPort\: 59720@' \
+        $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
+
       # update the edgex source's port to 5566 to match
       # app-service-configurable's message bus publish port
       sed -i -e 's@port\: 5563@port\: 5566@' \
