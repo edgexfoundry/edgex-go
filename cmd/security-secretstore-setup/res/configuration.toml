@@ -86,3 +86,4 @@ ConfigJWTDuration = "1h"
 [SecureMessageBus]
 Type = "none" # blank or none if MessageBus not secured, "redis" if secured. "mqtt" is TBD
 KuiperConfigPath = "/tmp/kuiper/edgex.yaml"
+KuiperConnectionsPath = "/tmp/kuiper-connections/connection.yaml"

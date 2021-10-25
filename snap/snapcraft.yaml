@@ -208,6 +208,7 @@ apps:
       # enable secure message bus setup for kuiper
       SECUREMESSAGEBUS_TYPE: "redis"
       SECUREMESSAGEBUS_KUIPERCONFIGPATH: "$SNAP_DATA/kuiper/etc/sources/edgex.yaml"
+      SECUREMESSAGEBUS_KUIPERCONNECTIONSPATH: "$SNAP_DATA/kuiper/etc/connections/connection.yaml"
 
     start-timeout: 15m
     plugs: [network]
