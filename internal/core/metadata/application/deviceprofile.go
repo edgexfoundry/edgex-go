@@ -108,7 +108,7 @@ func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container
 	dbClient := container.DBClientFrom(dic.Get)
 	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
 	if err == nil {
-		totalCount, err = dbClient.DeviceProfileTotalCount()
+		totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
 	}
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)

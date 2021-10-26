@@ -23,7 +23,7 @@ type DBClient interface {
 	DeviceProfilesByModel(offset int, limit int, model string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, uint32, errors.EdgeX)
-	DeviceProfileTotalCount() (uint32, errors.EdgeX)
+	DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX)
 	DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX)
 	DeviceProfileCountByModel(model string) (uint32, errors.EdgeX)
 
@@ -35,7 +35,7 @@ type DBClient interface {
 	DeviceServiceNameExists(name string) (bool, errors.EdgeX)
 	AllDeviceServices(offset int, limit int, labels []string) ([]model.DeviceService, errors.EdgeX)
 	UpdateDeviceService(ds model.DeviceService) errors.EdgeX
-	DeviceServiceTotalCount() (uint32, errors.EdgeX)
+	DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX)
 
 	AddDevice(d model.Device) (model.Device, errors.EdgeX)
 	DeleteDeviceById(id string) errors.EdgeX
@@ -48,7 +48,7 @@ type DBClient interface {
 	AllDevices(offset int, limit int, labels []string) ([]model.Device, errors.EdgeX)
 	DevicesByProfileName(offset int, limit int, profileName string) ([]model.Device, errors.EdgeX)
 	UpdateDevice(d model.Device) errors.EdgeX
-	DeviceTotalCount() (uint32, errors.EdgeX)
+	DeviceCountByLabels(labels []string) (uint32, errors.EdgeX)
 	DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX)
 	DeviceCountByServiceName(serviceName string) (uint32, errors.EdgeX)
 
@@ -60,7 +60,7 @@ type DBClient interface {
 	AllProvisionWatchers(offset int, limit int, labels []string) ([]model.ProvisionWatcher, errors.EdgeX)
 	DeleteProvisionWatcherByName(name string) errors.EdgeX
 	UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX
-	ProvisionWatcherTotalCount() (uint32, errors.EdgeX)
+	ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX)
 	ProvisionWatcherCountByServiceName(name string) (uint32, errors.EdgeX)
 	ProvisionWatcherCountByProfileName(name string) (uint32, errors.EdgeX)
 }

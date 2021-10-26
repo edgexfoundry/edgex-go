@@ -60,6 +60,7 @@ func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 		_ = conn.Send(ZREM, ReadingsCollectionOrigin, storedKey)
 		_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceName, r.DeviceName), storedKey)
 		_ = conn.Send(ZREM, CreateKey(ReadingsCollectionResourceName, r.ResourceName), storedKey)
+		_ = conn.Send(ZREM, CreateKey(ReadingsCollectionDeviceNameResourceName, r.DeviceName, r.ResourceName), storedKey)
 		queriesInQueue++
 
 		if queriesInQueue >= c.BatchSize {

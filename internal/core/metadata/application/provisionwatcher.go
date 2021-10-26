@@ -104,7 +104,7 @@ func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Contai
 	dbClient := container.DBClientFrom(dic.Get)
 	pwModels, err := dbClient.AllProvisionWatchers(offset, limit, labels)
 	if err == nil {
-		totalCount, err = dbClient.ProvisionWatcherTotalCount()
+		totalCount, err = dbClient.ProvisionWatcherCountByLabels(labels)
 	}
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)

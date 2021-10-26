@@ -883,10 +883,12 @@ parts:
       rm *.zip *.gz
 
       # configure logging & restrict to localhost
+      # configure REST API service port to 59720
       sed -i -e 's@consoleLog\: false@consoleLog\: true@' \
         -e 's@fileLog\: true@fileLog\: false@' \
         -e 's@ip\: 0.0.0.0@ip\: localhost@' \
         -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
+        -e 's@restPort\: 9081@restPort\: 59720@' \
         $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
 
       # update the edgex source's port to 5566 to match
