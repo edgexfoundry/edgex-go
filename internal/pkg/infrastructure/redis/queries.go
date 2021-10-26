@@ -191,6 +191,25 @@ func getMemberCountByScoreRange(conn redis.Conn, key string, start int, end int)
 	return uint32(count), nil
 }
 
+// getMemberCountByLabels return the record count of key with labels specified.
+func getMemberCountByLabels(conn redis.Conn, command string, key string, labels []string) (uint32, errors.EdgeX) {
+	if len(labels) == 0 { //if no labels specified, simply return the count of record for the key
+		return getMemberNumber(conn, ZCARD, key)
+	}
+
+	idsSlice := make([][]string, len(labels))
+	for i, label := range labels { //iterate each labels to retrieve Ids associated with labels
+		idsWithLabel, err := redis.Strings(conn.Do(command, CreateKey(key, common.Label, label), 0, -1))
+		if err != nil {
+			return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by label %s from database failed", label), err)
+		}
+		idsSlice[i] = idsWithLabel
+	}
+	//find common Ids among two-dimension Ids slice associated with labels
+	commonIds := pkgCommon.FindCommonStrings(idsSlice...)
+	return uint32(len(commonIds)), nil
+}
+
 func getMemberNumber(conn redis.Conn, command string, key string) (uint32, errors.EdgeX) {
 	count, err := redis.Int(conn.Do(command, key))
 	if err != nil {

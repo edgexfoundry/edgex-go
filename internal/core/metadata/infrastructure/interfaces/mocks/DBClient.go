@@ -370,6 +370,29 @@ func (_m *DBClient) DeviceByName(name string) (models.Device, errors.EdgeX) {
 	return r0, r1
 }
 
+// DeviceCountByLabels provides a mock function with given fields: labels
+func (_m *DBClient) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+	ret := _m.Called(labels)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func([]string) uint32); ok {
+		r0 = rf(labels)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func([]string) errors.EdgeX); ok {
+		r1 = rf(labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceCountByProfileName provides a mock function with given fields: profileName
 func (_m *DBClient) DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX) {
 	ret := _m.Called(profileName)
@@ -485,6 +508,29 @@ func (_m *DBClient) DeviceProfileByName(name string) (models.DeviceProfile, erro
 	return r0, r1
 }
 
+// DeviceProfileCountByLabels provides a mock function with given fields: labels
+func (_m *DBClient) DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX) {
+	ret := _m.Called(labels)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func([]string) uint32); ok {
+		r0 = rf(labels)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func([]string) errors.EdgeX); ok {
+		r1 = rf(labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceProfileCountByManufacturer provides a mock function with given fields: manufacturer
 func (_m *DBClient) DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX) {
 	ret := _m.Called(manufacturer)
@@ -545,29 +591,6 @@ func (_m *DBClient) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
 		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// DeviceProfileTotalCount provides a mock function with given fields:
-func (_m *DBClient) DeviceProfileTotalCount() (uint32, errors.EdgeX) {
-	ret := _m.Called()
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func() uint32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
-		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -705,6 +728,29 @@ func (_m *DBClient) DeviceServiceByName(name string) (models.DeviceService, erro
 	return r0, r1
 }
 
+// DeviceServiceCountByLabels provides a mock function with given fields: labels
+func (_m *DBClient) DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+	ret := _m.Called(labels)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func([]string) uint32); ok {
+		r0 = rf(labels)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func([]string) errors.EdgeX); ok {
+		r1 = rf(labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // DeviceServiceNameExists provides a mock function with given fields: name
 func (_m *DBClient) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -719,52 +765,6 @@ func (_m *DBClient) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
 		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// DeviceServiceTotalCount provides a mock function with given fields:
-func (_m *DBClient) DeviceServiceTotalCount() (uint32, errors.EdgeX) {
-	ret := _m.Called()
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func() uint32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
-		r1 = rf()
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// DeviceTotalCount provides a mock function with given fields:
-func (_m *DBClient) DeviceTotalCount() (uint32, errors.EdgeX) {
-	ret := _m.Called()
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func() uint32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
-		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -870,6 +870,29 @@ func (_m *DBClient) ProvisionWatcherByName(name string) (models.ProvisionWatcher
 	return r0, r1
 }
 
+// ProvisionWatcherCountByLabels provides a mock function with given fields: labels
+func (_m *DBClient) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX) {
+	ret := _m.Called(labels)
+
+	var r0 uint32
+	if rf, ok := ret.Get(0).(func([]string) uint32); ok {
+		r0 = rf(labels)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(1).(func([]string) errors.EdgeX); ok {
+		r1 = rf(labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // ProvisionWatcherCountByProfileName provides a mock function with given fields: name
 func (_m *DBClient) ProvisionWatcherCountByProfileName(name string) (uint32, errors.EdgeX) {
 	ret := _m.Called(name)
@@ -907,29 +930,6 @@ func (_m *DBClient) ProvisionWatcherCountByServiceName(name string) (uint32, err
 	var r1 errors.EdgeX
 	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
 		r1 = rf(name)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// ProvisionWatcherTotalCount provides a mock function with given fields:
-func (_m *DBClient) ProvisionWatcherTotalCount() (uint32, errors.EdgeX) {
-	ret := _m.Called()
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func() uint32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
-		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

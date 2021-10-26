@@ -181,7 +181,7 @@ func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devi
 	dbClient := container.DBClientFrom(dic.Get)
 	deviceModels, err := dbClient.AllDevices(offset, limit, labels)
 	if err == nil {
-		totalCount, err = dbClient.DeviceTotalCount()
+		totalCount, err = dbClient.DeviceCountByLabels(labels)
 	}
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
