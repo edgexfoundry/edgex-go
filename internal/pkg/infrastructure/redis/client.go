@@ -816,12 +816,12 @@ func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX 
 	return updateProvisionWatcher(conn, pw)
 }
 
-// DeviceProfileTotalCount returns the total count of Device Profiles stored in the database
-func (c *Client) DeviceProfileTotalCount() (uint32, errors.EdgeX) {
+// DeviceProfileCountByLabels returns the total count of Device Profiles with labels specified.  If no label is specified, the total count of all device profiles will be returned.
+func (c *Client) DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, DeviceProfileCollection)
+	count, edgeXerr := getMemberCountByLabels(conn, ZREVRANGE, DeviceProfileCollection, labels)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -855,12 +855,12 @@ func (c *Client) DeviceProfileCountByModel(model string) (uint32, errors.EdgeX) 
 	return count, nil
 }
 
-// DeviceServiceTotalCount returns the total count of Device Services stored in the database
-func (c *Client) DeviceServiceTotalCount() (uint32, errors.EdgeX) {
+// DeviceServiceCountByLabels returns the total count of Device Services with labels specified.  If no label is specified, the total count of all device services will be returned.
+func (c *Client) DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, DeviceServiceCollection)
+	count, edgeXerr := getMemberCountByLabels(conn, ZREVRANGE, DeviceServiceCollection, labels)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -868,12 +868,12 @@ func (c *Client) DeviceServiceTotalCount() (uint32, errors.EdgeX) {
 	return count, nil
 }
 
-// DeviceTotalCount returns the total count of Devices stored in the database
-func (c *Client) DeviceTotalCount() (uint32, errors.EdgeX) {
+// DeviceCountByLabels returns the total count of Devices with labels specified.  If no label is specified, the total count of all devices will be returned.
+func (c *Client) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, DeviceCollection)
+	count, edgeXerr := getMemberCountByLabels(conn, ZREVRANGE, DeviceCollection, labels)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
@@ -907,12 +907,12 @@ func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.Ed
 	return count, nil
 }
 
-// ProvisionWatcherTotalCount returns the total count of Provision Watcher stored in the database
-func (c *Client) ProvisionWatcherTotalCount() (uint32, errors.EdgeX) {
+// ProvisionWatcherCountByLabels returns the total count of Provision Watchers with labels specified.  If no label is specified, the total count of all provision watchers will be returned.
+func (c *Client) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, ProvisionWatcherCollection)
+	count, edgeXerr := getMemberCountByLabels(conn, ZREVRANGE, ProvisionWatcherCollection, labels)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}

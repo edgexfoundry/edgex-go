@@ -845,7 +845,8 @@ func TestAllDeviceProfiles(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeviceProfileTotalCount").Return(expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfileCountByLabels", []string(nil)).Return(expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfileCountByLabels", testDeviceProfileLabels).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
 	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
