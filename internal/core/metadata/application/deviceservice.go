@@ -135,7 +135,7 @@ func AllDeviceServices(offset int, limit int, labels []string, ctx context.Conte
 	dbClient := container.DBClientFrom(dic.Get)
 	services, err := dbClient.AllDeviceServices(offset, limit, labels)
 	if err == nil {
-		totalCount, err = dbClient.DeviceServiceTotalCount()
+		totalCount, err = dbClient.DeviceServiceCountByLabels(labels)
 	}
 	if err != nil {
 		return deviceServices, totalCount, errors.NewCommonEdgeXWrapper(err)

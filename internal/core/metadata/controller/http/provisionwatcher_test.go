@@ -485,7 +485,8 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
-	dbClientMock.On("ProvisionWatcherTotalCount").Return(expectedTotalPWCount, nil)
+	dbClientMock.On("ProvisionWatcherCountByLabels", []string(nil)).Return(expectedTotalPWCount, nil)
+	dbClientMock.On("ProvisionWatcherCountByLabels", testProvisionWatcherLabels).Return(expectedTotalPWCount, nil)
 	dbClientMock.On("AllProvisionWatchers", 0, 10, []string(nil)).Return(provisionWatchers, nil)
 	dbClientMock.On("AllProvisionWatchers", 0, 5, testProvisionWatcherLabels).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("AllProvisionWatchers", 1, 2, []string(nil)).Return([]models.ProvisionWatcher{provisionWatchers[1], provisionWatchers[2]}, nil)
