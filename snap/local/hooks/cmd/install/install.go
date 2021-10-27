@@ -239,6 +239,12 @@ func installSecretStore() error {
 		return err
 	}
 
+	// Create the kuiper connections directory for security-secretstore-setup's secure message bug credentials.
+	// This will no longer be required for eKuiper 1.4.0
+	if err = os.MkdirAll(hooks.SnapData+"/kuiper/etc/connections", 0755); err != nil {
+		return err
+	}
+
 	if err = os.Chmod(destPath, 0644); err != nil {
 		return err
 	}
