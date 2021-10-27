@@ -6,7 +6,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.0.1-dev.25
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.0.1
 	github.com/edgexfoundry/go-mod-registry/v2 v2.0.1-dev.8
-	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.7
+	github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.8
 	github.com/fxamacker/cbor/v2 v2.3.0
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/gomodule/redigo v2.0.0+incompatible
