@@ -20,12 +20,13 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 )
 
 const (
-	kuiperConfigTemplate = `
+	eKuiperEdgeXSourceTemplate = `
 application_conf:
   port: 5571
   protocol: tcp
@@ -50,6 +51,18 @@ mqtt_conf:
   topic: events
   type: mqtt
 `
+
+	eKuiperConnectionsTemplate = `
+edgex:
+  redisMsgBus: #connection key
+    protocol: redis
+    server: localhost
+    port: 6379
+    type: redis
+    optional:
+      Username: {{.User}}
+      Password: {{.Password}}
+`
 	// Can't use constants from go-mod-messaging since that will create ZMQ dependency, which we do not want!
 	redisSecureMessageBusType = "redis"
 	mqttSecureMessageBusType  = "mqtt"
@@ -59,36 +72,43 @@ mqtt_conf:
 
 func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, redis5Pair UserPasswordPair, lc logger.LoggingClient) error {
 	switch secureMessageBus.Type {
-	// Currently only support Secure MessageBus when using the Redis implementation
+	// Currently, only support Secure MessageBus when using the Redis implementation.
 	case redisSecureMessageBusType:
-		err := configureKuiperForSecureMessageBus(redis5Pair, secureMessageBus.KuiperConfigPath, lc)
+		// eKuiper now has two configuration files (EdgeX Sources and Connections)
+
+		err := configureKuiperForSecureMessageBus(redis5Pair, "EdgeX Source", eKuiperEdgeXSourceTemplate, secureMessageBus.KuiperConfigPath, lc)
+		if err != nil {
+			return err
+		}
+
+		err = configureKuiperForSecureMessageBus(redis5Pair, "Connections", eKuiperConnectionsTemplate, secureMessageBus.KuiperConnectionsPath, lc)
 		if err != nil {
 			return err
 		}
 
 	// TODO: Add support for secure MQTT MessageBus
 	case mqttSecureMessageBusType:
-		return fmt.Errorf("Secure MQTT MessageBus not yet supported")
+		return fmt.Errorf("secure MQTT MessageBus not yet supported")
 
 	case noneSecureMessageBusType, blankSecureMessageBusType:
 		return nil
 
 	default:
-		return fmt.Errorf("Invalid Secure MessageBus Type of '%s'", secureMessageBus.Type)
+		return fmt.Errorf("invalid Secure MessageBus Type of '%s'", secureMessageBus.Type)
 	}
 
 	return nil
 }
 
-func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath string, lc logger.LoggingClient) error {
-	tmpl, err := template.New("kuiper").Parse(kuiperConfigTemplate)
+func configureKuiperForSecureMessageBus(credentials UserPasswordPair, fileType string, fileTemplate string, path string, lc logger.LoggingClient) error {
+	tmpl, err := template.New("eKuiper").Parse(fileTemplate)
 	if err != nil {
-		return fmt.Errorf("failed to parse Kuiper Edgex config template: %w", err)
+		return fmt.Errorf("failed to parse eKuiper %s template: %w", fileType, err)
 	}
 
-	file, err := os.OpenFile(configPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open/create Kuiper Edgex config file %s: %w", configPath, err)
+		return fmt.Errorf("failed to open/create eKuiper %s file %s: %w", fileType, path, err)
 	}
 
 	defer func() {
@@ -97,10 +117,10 @@ func configureKuiperForSecureMessageBus(credentials UserPasswordPair, configPath
 
 	err = tmpl.Execute(file, credentials)
 	if err != nil {
-		return fmt.Errorf("failed to write Kuiper Edgex config file %s: %w", configPath, err)
+		return fmt.Errorf("failed to write eKuiper  %s file %s: %w", fileType, path, err)
 	}
 
-	lc.Infof("Wrote Kuiper config at %s with secure MessageBus credentials", configPath)
+	lc.Infof("Wrote eKuiper %s at %s with Secure MessageBus credentials", fileType, path)
 
 	return nil
 }

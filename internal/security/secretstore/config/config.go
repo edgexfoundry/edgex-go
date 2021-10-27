@@ -35,8 +35,9 @@ type Database struct {
 }
 
 type SecureMessageBusInfo struct {
-	Type             string
-	KuiperConfigPath string
+	Type                  string
+	KuiperConfigPath      string
+	KuiperConnectionsPath string
 }
 
 type SecretStoreInfo struct {
