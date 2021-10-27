@@ -39,17 +39,19 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 	}
 
 	tests := []struct {
-		Name        string
-		Type        string
-		Credentials UserPasswordPair
-		Expected    *UserPasswordPair
-		ExpectError bool
+		Name                 string
+		Type                 string
+		ConnectionFileExists bool
+		Credentials          UserPasswordPair
+		Expected             *UserPasswordPair
+		ExpectError          bool
 	}{
-		{"valid redis", redisSecureMessageBusType, validExpected, &validExpected, false},
-		{"valid blank", blankSecureMessageBusType, validExpected, nil, false},
-		{"valid none", noneSecureMessageBusType, validExpected, nil, false},
-		{"invalid type", "bogus", validExpected, nil, true},
-		{"invalid mqtt", mqttSecureMessageBusType, validExpected, nil, true},
+		{"valid redis - both files", redisSecureMessageBusType, true, validExpected, &validExpected, false},
+		{"valid redis - no connection file", redisSecureMessageBusType, false, validExpected, &validExpected, false},
+		{"valid blank", blankSecureMessageBusType, false, validExpected, nil, false},
+		{"valid none", noneSecureMessageBusType, false, validExpected, nil, false},
+		{"invalid type", "bogus", false, validExpected, nil, true},
+		{"invalid mqtt", mqttSecureMessageBusType, false, validExpected, nil, true},
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
@@ -60,6 +62,16 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 				_ = os.Remove(secureMessageBus.KuiperConfigPath)
 				_ = os.Remove(secureMessageBus.KuiperConnectionsPath)
 			}()
+
+			if test.Expected != nil {
+				_, err := os.Create(secureMessageBus.KuiperConfigPath)
+				require.NoError(t, err)
+
+				if test.ConnectionFileExists {
+					_, err := os.Create(secureMessageBus.KuiperConnectionsPath)
+					require.NoError(t, err)
+				}
+			}
 
 			secureMessageBus.Type = test.Type
 			err := ConfigureSecureMessageBus(secureMessageBus, test.Credentials, logger.NewMockClient())
@@ -88,11 +100,17 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 			assert.True(t, strings.Contains(string(contents), test.Expected.User))
 			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
 
-			// Connections file should have been written
-			contents, err = os.ReadFile(secureMessageBus.KuiperConnectionsPath)
-			require.NoError(t, err)
-			assert.True(t, strings.Contains(string(contents), test.Expected.User))
-			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
+			if test.ConnectionFileExists {
+				// Connections file should have been written
+				contents, err = os.ReadFile(secureMessageBus.KuiperConnectionsPath)
+				require.NoError(t, err)
+				assert.True(t, strings.Contains(string(contents), test.Expected.User))
+				assert.True(t, strings.Contains(string(contents), test.Expected.Password))
+			} else {
+				// Connections file should not have been written
+				_, err = os.Stat(secureMessageBus.KuiperConnectionsPath)
+				require.True(t, os.IsNotExist(err))
+			}
 		})
 	}
 }
