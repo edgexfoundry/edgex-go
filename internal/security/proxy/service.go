@@ -176,6 +176,13 @@ func (s *Service) Init() error {
 			return err
 		}
 
+		if s.configuration.CORSConfiguration.EnableCORS {
+			err = s.initCORSRoutes(&s.configuration.CORSConfiguration, strings.ToLower(route.Name))
+			if err != nil {
+				return err
+			}
+		}
+
 		var formVals url.Values
 
 		switch s.configuration.KongAuth.Name {
@@ -413,6 +420,56 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 		s.loggingClient.Info(fmt.Sprintf("successful to set up route for `%s` at `%v`", name, r.Paths))
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
+		s.loggingClient.Error(e)
+		return errors.New(e)
+	}
+	return nil
+}
+
+func (s *Service) initCORSRoutes(corsConfig *bootstrapConfig.CORSConfigurationInfo, name string) error {
+	formVals := url.Values{
+		"name":               {"cors"},
+		"config.origins":     {corsConfig.CORSAllowedOrigin},
+		"config.credentials": {strconv.FormatBool(corsConfig.CORSAllowCredentials)},
+		"config.max_age":     {strconv.Itoa(corsConfig.CORSMaxAge)},
+	}
+
+	// Break out CORSAllowedMethods and CORSAllowedHeaders
+	for _, method := range strings.Split(corsConfig.CORSAllowedMethods, ",") {
+		formVals.Add("config.methods", strings.TrimSpace(method))
+	}
+	for _, header := range strings.Split(corsConfig.CORSAllowedHeaders, ",") {
+		formVals.Add("config.headers", strings.TrimSpace(header))
+	}
+	for _, header := range strings.Split(corsConfig.CORSExposeHeaders, ",") {
+		formVals.Add("config.exposed_headers", strings.TrimSpace(header))
+	}
+
+	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), RoutesPath, name, "plugins"}
+
+	// Create routes associated to a specific service
+	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(formVals.Encode()))
+	if err != nil {
+		e := fmt.Sprintf("failed to set up routes for %s with error %s", name, err.Error())
+		s.loggingClient.Error(e)
+		return err
+	}
+	req.Header.Add(internal.AuthHeaderTitle, internal.BearerLabel+s.bearerToken)
+	req.Header.Add(common.ContentType, URLEncodedForm)
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		e := fmt.Sprintf("failed to set up CORS for %s with error %s", name, err.Error())
+		s.loggingClient.Error(e)
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusConflict:
+		s.loggingClient.Info(fmt.Sprintf("successful to set up CORS at `%s`", name))
+	default:
+		e := fmt.Sprintf("failed to set up CORS for %s with error %s", name, resp.Status)
 		s.loggingClient.Error(e)
 		return errors.New(e)
 	}
