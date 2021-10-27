@@ -20,15 +20,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 )
 
 func TestConfigureSecureMessageBus(t *testing.T) {
 	secureMessageBus := config.SecureMessageBusInfo{
-		KuiperConfigPath: "./testdata/edgex.yaml",
+		KuiperConfigPath:      "./testdata/edgex.yaml",
+		KuiperConnectionsPath: "./testdata/connection.yaml",
 	}
 
 	validExpected := UserPasswordPair{
@@ -52,8 +54,11 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			_ = os.Remove(secureMessageBus.KuiperConfigPath)
+			_ = os.Remove(secureMessageBus.KuiperConnectionsPath)
+
 			defer func() {
 				_ = os.Remove(secureMessageBus.KuiperConfigPath)
+				_ = os.Remove(secureMessageBus.KuiperConnectionsPath)
 			}()
 
 			secureMessageBus.Type = test.Type
@@ -66,20 +71,28 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 			require.NoError(t, err)
 
 			if test.Expected == nil {
-				// Config file should not have been written
+				// Source Config file should not have been written
 				_, err = os.Stat(secureMessageBus.KuiperConfigPath)
 				require.True(t, os.IsNotExist(err))
+
+				// Connections file should not have been written
+				_, err = os.Stat(secureMessageBus.KuiperConnectionsPath)
+				require.True(t, os.IsNotExist(err))
+
 				return
 			}
 
-			// Config file should have been written
+			// Source Config file should have been written
 			contents, err := os.ReadFile(secureMessageBus.KuiperConfigPath)
 			require.NoError(t, err)
 			assert.True(t, strings.Contains(string(contents), test.Expected.User))
 			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
-			err = os.Remove(secureMessageBus.KuiperConfigPath)
-			require.NoError(t, err)
 
+			// Connections file should have been written
+			contents, err = os.ReadFile(secureMessageBus.KuiperConnectionsPath)
+			require.NoError(t, err)
+			assert.True(t, strings.Contains(string(contents), test.Expected.User))
+			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
 		})
 	}
 }
