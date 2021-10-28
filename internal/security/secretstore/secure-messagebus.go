@@ -16,6 +16,7 @@
 package secretstore
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/template"
@@ -101,6 +102,14 @@ func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, red
 }
 
 func configureKuiperForSecureMessageBus(credentials UserPasswordPair, fileType string, fileTemplate string, path string, lc logger.LoggingClient) error {
+	// This capability depends on the eKuiper file existing, which depends on the version of eKuiper installed.
+	// If the file doesn't exist, then the eKuiper version installed doesn't use it, so skip the injection.
+	_, err := os.Stat(path)
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		lc.Infof("eKuiper file %s doesn't exist, skipping Secure MessageBus credentials injection", path)
+		return nil
+	}
+
 	tmpl, err := template.New("eKuiper").Parse(fileTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to parse eKuiper %s template: %w", fileType, err)
