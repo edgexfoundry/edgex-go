@@ -62,8 +62,9 @@ github.com/edgexfoundry/go-mod-messaging/v2 v2.0.1 h1:8nT3CiPLIft5RmR+vbmXBW9Kbz
 github.com/edgexfoundry/go-mod-messaging/v2 v2.0.1/go.mod h1:bLKWB9yeOHLZoQtHLZlGwz8MjsMJIvHDFce7CcUb4fE=
 github.com/edgexfoundry/go-mod-registry/v2 v2.0.1-dev.8 h1:ZFQXFpqUdtjLrflqxk7VhOzhP6WLD97ArTAJyoLgpAM=
 github.com/edgexfoundry/go-mod-registry/v2 v2.0.1-dev.8/go.mod h1:+MNlQm8Ks9ZmxqrMK4O3KdBA6E7nRK9M+qBtv/1lPcA=
-github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.7 h1:KBmLI8XkAX6mdJIEdlmuD7JiTd+KAnFNwxy8kQ8g+KQ=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.7/go.mod h1:SbTMX0C+uGK7XCQYuD4oHmGSK5cYV/0mZLpLBu9HAmM=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.8 h1:qJGhgfziNypMjLDW1Oy7CFRxnNfIFCkl6ht6G8KC3xQ=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.0.1-dev.8/go.mod h1:SbTMX0C+uGK7XCQYuD4oHmGSK5cYV/0mZLpLBu9HAmM=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
