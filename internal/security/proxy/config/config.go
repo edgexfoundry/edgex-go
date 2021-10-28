@@ -27,14 +27,15 @@ import (
 )
 
 type ConfigurationStruct struct {
-	LogLevel        string
-	RequestTimeout  int
-	SNIS            []string
-	AccessTokenFile string
-	KongURL         KongUrlInfo
-	KongAuth        KongAuthInfo
-	SecretStore     bootstrapConfig.SecretStoreInfo
-	Routes          map[string]models.KongService
+	LogLevel          string
+	RequestTimeout    int
+	SNIS              []string
+	AccessTokenFile   string
+	KongURL           KongUrlInfo
+	KongAuth          KongAuthInfo
+	CORSConfiguration bootstrapConfig.CORSConfigurationInfo
+	SecretStore       bootstrapConfig.SecretStoreInfo
+	Routes            map[string]models.KongService
 }
 
 type KongUrlInfo struct {
