@@ -67,6 +67,8 @@ Path = "support-notifications/"
 TokenFile = "/tmp/edgex/secrets/support-notifications/secrets-token.json"
 RootCaCertPath = ""
 ServerName = ""
+SecretsFile = ""
+DisableScrubSecretsFile = false
   [SecretStore.Authentication]
   AuthType = "X-Vault-Token"
 
