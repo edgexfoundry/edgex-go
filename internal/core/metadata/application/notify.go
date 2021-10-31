@@ -236,7 +236,7 @@ func sendNotification(ctx context.Context, dic *di.Container, name string, actio
 	req := requests.NewAddNotificationRequest(dto)
 	res, err := client.SendNotification(ctx, []requests.AddNotificationRequest{req})
 	if err != nil {
-		lc.Errorf("fail to send the notification for %s, err: %v", name, err)
+		lc.Warnf("fail to send the notification for %s, err: %v", name, err)
 		return
 	}
 	if len(res) > 0 && res[0].StatusCode > http.StatusMultiStatus {
