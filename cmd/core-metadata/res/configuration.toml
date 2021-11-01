@@ -52,7 +52,7 @@ Type = "consul"
   Type = "redisdb"
 
 [Notifications]
-PostDeviceChanges = true
+PostDeviceChanges = false
 Content = "Meatadata notice: "
 Sender = "core-metadata"
 Description = "Metadata change notice"
