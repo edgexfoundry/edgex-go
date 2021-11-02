@@ -91,6 +91,28 @@ var services = []string{
 	"app-service-configurable",
 }
 
+// FIXME: if possible, re-factor to use snapctl to query the list of snap
+// services, so that this slice can be generated at runtime.
+var enabledServices = []string{
+	// base services
+	"consul",
+	"redis",
+	// core services
+	"core-data",
+	"core-metadata",
+	"core-command",
+	// NOTE - the actual snap "service" names for the
+	// security services don't match one to one with
+	// the service key names for historical reasons...
+	"security-secretstore-setup",
+	"security-proxy-setup",
+	"security-bootstrapper-redis",
+	"security-consul-bootstrapper",
+	"kong-daemon",
+	"postgres",
+	"vault",
+}
+
 // installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
 func installConfFiles() error {
 	var err error
@@ -269,6 +291,9 @@ func installConsul() error {
 	return nil
 }
 
+// TODO: this function actually causes postgres to start in order
+// to setup the security for postgres, thus we may need to move
+// the install/setup logic for the proxy to the configure hook.
 func setupPostgres() error {
 
 	setupScriptPath, err := exec.LookPath("install-setup-postgres.sh")
@@ -386,6 +411,51 @@ func main() {
 
 	if err = installRedis(); err != nil {
 		hooks.Error(fmt.Sprintf("edgexfoundry:install %v", err))
+		os.Exit(1)
+	}
+
+	// Stop and disable all *enabled* services as they will be
+	// re-enabled in the configure hook if the config option
+	// 'install=true'.
+	for _, s := range enabledServices {
+		if err = cli.Stop(s, true); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:install can't disable: %s; %v", s, err))
+			os.Exit(1)
+		}
+
+		hooks.Info(fmt.Sprintf("edgexfoundry:install disabling service: %s", s))
+
+		// NOTE - snap service names don't match service keys
+		switch s {
+
+		case "security-proxy-setup":
+			s = "security-proxy"
+		case "security-secretstore-setup":
+			s = "security-secret-store"
+
+		// these will be started in the install hook if "security-secret-store=install"
+		// as such, we don't set config service keys for any of them
+		case "security-consul-bootstrapper", "security-bootstrapper-redis", "vault":
+			continue
+
+		// these will be started in the install hook if "security-proxy=install"
+		// as such, we don't set config service keys for any of them
+		case "kong-daemon", "postgres":
+			continue
+		}
+
+		// Use "install" instead of "on"; this allows the configure hook to unset
+		// all of the service options set to "install", and leave configuration
+		// that actually happened as a result of provided config (e.g. from the
+		// gadget) alone
+		if err = cli.SetConfig(s, "install"); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:install setting service: %s to 'on'; %v", s, err))
+			os.Exit(1)
+		}
+	}
+
+	if err = cli.SetConfig("install", "true"); err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install=true'; %v", err))
 		os.Exit(1)
 	}
 }
