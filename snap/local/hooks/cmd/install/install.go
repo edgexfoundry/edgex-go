@@ -388,23 +388,4 @@ func main() {
 		hooks.Error(fmt.Sprintf("edgexfoundry:install %v", err))
 		os.Exit(1)
 	}
-
-	// just like the configure hook, this code needs to iterate over every service
-	// and setup .env files for each if required...
-	for _, v := range hooks.Services {
-		serviceCfg := hooks.EnvConfig + "." + v
-		envJSON, err := cli.Config(serviceCfg)
-		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:install failed to read service %s configuration - %v", v, err))
-			os.Exit(1)
-		}
-
-		if envJSON != "" {
-			hooks.Debug(fmt.Sprintf("edgexfoundry:install: service envJSON: %s", envJSON))
-			if err := hooks.HandleEdgeXConfig(v, envJSON, nil); err != nil {
-				hooks.Error(fmt.Sprintf("edgexfoundry:install failed to process service %s configuration - %v", v, err))
-				os.Exit(1)
-			}
-		}
-	}
 }
