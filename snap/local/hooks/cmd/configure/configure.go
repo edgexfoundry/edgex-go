@@ -28,17 +28,34 @@ import (
 var cli *hooks.CtlCli = hooks.NewSnapCtl()
 
 const ( // iota is reset to 0
-	devVirtService = iota
-	kuiperService
+	kuiperService = iota
 	secProxyService
 	secStoreService
 	otherService
 )
 
 const (
-	ON  = "on"
-	OFF = "off"
+	INSTALL = "install"
+	ON      = "on"
+	OFF     = "off"
+	UNSET   = ""
 )
+
+func getDefaultServices() []string {
+	return []string{"consul", "redis", "core-data",
+		"core-metadata", "core-command",
+		"security-secretstore-setup", "security-proxy-setup",
+		"security-bootstrapper-redis", "security-consul-bootstrapper",
+		"kong-daemon", "postgres", "vault"}
+}
+
+func getKuiperServices() []string {
+	return []string{hooks.ServiceAppCfg, hooks.ServiceKuiper}
+}
+
+func getProxyServices() []string {
+	return []string{"postgres", "kong-daemon", "security-proxy-setup"}
+}
 
 // handleSingleService starts or stops a service based on
 // the given state (ON|OFF). It also ensures that the top
@@ -62,8 +79,6 @@ func handleSingleService(name, state string) error {
 		if err := cli.SetConfig(name, ON); err != nil {
 			return err
 		}
-	case "":
-		hooks.Debug("edgexfoundry:configure: state: ''")
 	default:
 		return fmt.Errorf("edgexfoundry:configure: invalid state %s for service: %s", state, name)
 	}
@@ -71,10 +86,17 @@ func handleSingleService(name, state string) error {
 	return nil
 }
 
+func handleServices(serviceList []string, state string) error {
+	for _, s := range serviceList {
+		if err := handleSingleService(s, state); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func serviceType(name string) int {
 	switch name {
-	case hooks.ServiceDevVirt:
-		return devVirtService
 	case hooks.ServiceKuiper:
 		return kuiperService
 	case hooks.ServiceProxy:
@@ -86,22 +108,32 @@ func serviceType(name string) int {
 	}
 }
 
+func buildStartCmd(startServices []string, newServices []string) []string {
+	for _, s := range newServices {
+		s = hooks.SnapName + "." + s
+		startServices = append(startServices, s)
+	}
+	return startServices
+}
+
 // handleAllServices iterates through all of the services in the
 // edgexfoundry snap and:
 //
-// - queries the config option associated with the service state (on|off)
+// - queries the config option associated with the service state (on|off|install|'')
 // - queries the environment configuration for the service (env.<service-name>)
 //   - if env configuration for the service exists, use it to write a
 //     service-specific .env file to the service config dir in $SNAP_DATA
-// - start/stop any tightly couple services (e.g. if the secret-store
-//   is disabled, the proxy also has to come down) if required
-// - start/stop the service itself if required
+//   - start/stop any tightly coupled services (e.g. if the secret-store
+//     is disabled, the proxy also has to come down) if required
+//   - start/stop the service itself if required
 //
 // NOTE - at this time, this function does *not* restart a service based
 // on env configuration changes. If changes are made after a service has
 // been started, the service must be restarted manually.
 //
 func handleAllServices() error {
+	var serviceList []string
+	secretStoreActive := true
 
 	// grab and log the current service configuration
 	for _, s := range hooks.Services {
@@ -112,12 +144,13 @@ func handleAllServices() error {
 			return err
 		}
 
-		hooks.Debug(fmt.Sprintf("edgexfoundry:configure: service: %s status: %s", s, status))
+		hooks.Info(fmt.Sprintf("edgexfoundry:configure: service: %s status: %s", s, status))
 
 		serviceCfg := hooks.EnvConfig + "." + s
 		envJSON, err = cli.Config(serviceCfg)
 		if err != nil {
-			return fmt.Errorf("edgexfoundry:configure failed to read service %s configuration - %v", s, err)
+			err = fmt.Errorf("edgexfoundry:configure failed to read service %s configuration - %v", s, err)
+			return err
 		}
 
 		if envJSON != "" {
@@ -127,105 +160,119 @@ func handleAllServices() error {
 			}
 		}
 
+		// SecBootstrapper is a valid service for configuration
+		// purposes, however it isn't individually controlable
+		// using on|off, so once configuration has been handled
+		// skip to the next service.
+		if s == hooks.ServiceSecBootstrapper {
+			continue
+		}
+
 		sType := serviceType(s)
 
 		switch sType {
-		case devVirtService:
-			hooks.Debug("edgexfoundry:configure: device-virtual")
-			// device-virtual is built with device-sdk-go which waits
-			// for core-data and core-metadata to come online, so if we are
-			// enabling a device service, we should also enable those services
-			if status == ON {
-				if err = handleSingleService("core-data", ON); err != nil {
-					return err
-				}
-				if err = handleSingleService("core-metadata", ON); err != nil {
-					return err
-				}
-			}
-
-			// handle the service too
-			if err = handleSingleService(s, status); err != nil {
-				return nil
-			}
 		case kuiperService:
 			hooks.Debug("edgexfoundry:configure: kuiper")
 
-			// if we are turning kuiper on, make sure
-			// app-service-configurable is on too
-			if err = handleSingleService("app-service-configurable", status); err != nil {
-				return err
+			switch status {
+			case ON:
+				fallthrough
+			case OFF:
+				serviceList = getKuiperServices()
+			case UNSET:
+				// this is the default status of all services if no
+				// configuration has been specified; no-op
+				continue
+			default:
+				return fmt.Errorf("edgexfoundry:configure: invalid value for kuiper: %s", status)
 			}
-			if err = handleSingleService("kuiper", status); err != nil {
-				return err
-			}
+
 		case secProxyService:
-			hooks.Debug("edgexfoundry:configure: proxy")
-			// FIXME - this logic always overrwrites the existing value. This
-			// should be fixed.
+			hooks.Info("edgexfoundry:configure: proxy")
 
-			// the security-proxy consists of the following base services
-			// - kong
-			// - postgres (because kong requires it)
-			if err = handleSingleService("postgres", status); err != nil {
-				return err
-			}
-			if err = handleSingleService("kong-daemon", status); err != nil {
-				return err
-			}
-			if err = handleSingleService("security-proxy-setup", status); err != nil {
-				return err
-			}
-
-			// additionally, the security-proxy needs to use the following
-			// services:
-			// - vault (because security-proxy-setup will access/store secrets in vault)
-			// - security-secretstore-setup
-			// so if we are turning the security-api-gateway on, then turn
-			// those services on too
-			if status == ON {
-				if err = handleSingleService("vault", ON); err != nil {
+			switch status {
+			case ON:
+				// NOTE: the original bash based implementation would
+				// additionally handle the secret-store dependency.
+				// Due to the added complexity, this initial implementation
+				// does not automatically handle enabling the secret-store
+				// if/when the proxy is dynamically enabled.
+				if !secretStoreActive {
+					err = fmt.Errorf("edgexfoundry:configure security-proxy=on not allowed;" +
+						"secret-store=off")
 					return err
 				}
-				if err = handleSingleService("security-secretstore-setup", ON); err != nil {
-					return err
-				}
+
+				fallthrough
+			case OFF:
+				serviceList = getProxyServices()
+			case UNSET:
+				// this is the default status of all services if no
+				// configuration has been specified; no-op
+				continue
+			default:
+				return fmt.Errorf("edgexfoundry:configure: invalid value for security-proxy: %s", status)
 			}
+
 		case secStoreService:
-			hooks.Debug("edgexfoundry:configure: secretstore")
-			// the security-api-gateway consists of the following services:
-			// - vault
-			// - security-secretstore-setup
-			// and since the security-api-gateway needs to be able to use
-			// security-secret-store, we also need to turn off those services
-			// if this one is disabled
-			if status == OFF {
-				if err = handleSingleService("postgres", OFF); err != nil {
-					return err
-				}
-				if err = handleSingleService("kong-daemon", OFF); err != nil {
-					return err
-				}
-				if err = handleSingleService("security-proxy-setup", OFF); err != nil {
-					return err
-				}
+			hooks.Info("edgexfoundry:configure: secretstore")
 
+			switch status {
+			case ON:
+				serviceList = []string{"vault", "security-secretstore-setup",
+					"security-consul-bootstrapper", "security-bootstrapper-redis"}
+				hooks.Info(fmt.Sprintf("edgexfoundry:configure serviceList: %v", serviceList))
+			case OFF:
+				secretStoreActive = false
+
+				serviceList = []string{"postgres", "kong-daemon", "security-proxy-setup",
+					"vault", "security-secretstore-setup", "security-consul-bootstrapper",
+					"security-bootstrapper-redis"}
+
+				// TODO: the original Hanoi implementation did NOT handle restarting the
+				// rest of the framework, nor does this implementation.
+				//
+				// If/when we can properly disable secret-store usage *after* install, we
+				// need to handle the following:
+				//
+				// - stop all services that use the secret store
+				// - stop consul & redis
+				// - clear redis password (rm $SNAP_DATA/conf/redis.conf)
+				//   touch same file
+				// - rm the consul ACL conf file (and maybe other consul files)
+				// - start all the services just disabled
+			case UNSET:
+				// this is the default status of all services if no
+				// configuration has been specified; no-op
+				continue
+			default:
+				return fmt.Errorf("edgexfoundry:configure: invalid value for security-secret-store: %s", status)
 			}
-			if err = handleSingleService("vault", status); err != nil {
-				return err
-			}
-			if err = handleSingleService("security-secretstore-setup", status); err != nil {
-				return err
-			}
+
 		default:
-			hooks.Debug("edgexfoundry:configure: other service")
-			// default case for all other services just enable/disable the service using
-			// snapd/systemd
-			// if the service is meant to be off, then disable it
-			if err = handleSingleService(s, status); err != nil {
-				return nil
+			hooks.Info("edgexfoundry:configure: other service")
+			// default case for all other services
+
+			switch status {
+			case ON:
+				fallthrough
+			case OFF:
+				serviceList = append(serviceList, s)
+			case UNSET:
+				// this is the default status of all services if no
+				// configuration has been specified; no-op
+				continue
+			default:
+				return fmt.Errorf("edgexfoundry:configure: invalid value for %s: %s", s, status)
 			}
 		}
+
+		hooks.Info(fmt.Sprintf("edgexfoundry:configure calling handleServices: %v", serviceList))
+		if err = handleServices(serviceList, status); err != nil {
+			return err
+		}
+		// clear serviceList
+		serviceList = nil
 	}
 
 	return nil
@@ -234,6 +281,7 @@ func handleAllServices() error {
 func main() {
 	var debug = false
 	var err error
+	var startServices []string
 
 	status, err := cli.Config("debug")
 	if err != nil {
@@ -250,8 +298,44 @@ func main() {
 
 	}
 
-	if err = handleAllServices(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure: error handling services: %v", err))
+	install, err := cli.Config("install")
+	if err != nil {
+		fmt.Println(fmt.Sprintf("edgexfoundry:configure: reading 'install': %v", err))
 		os.Exit(1)
+	}
+
+	if install == "true" {
+		hooks.Info(fmt.Sprintf("edgexfoundry:configure install=true; starting disabled services"))
+
+		for _, s := range getDefaultServices() {
+			status, err := cli.Config(s)
+			if err != nil {
+				fmt.Println(fmt.Sprintf("edgexfoundry:configure: reading %s status; %v", s, err))
+				os.Exit(1)
+			}
+
+			if status != OFF {
+				startServices = append(startServices, s)
+			}
+
+			// TODO: add code to handle optional services set to ON
+		}
+
+		if err = cli.StartMultiple(true, startServices...); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:configure failure starting/enabling services: %v", err))
+			os.Exit(1)
+		}
+
+		// TODO: use unset configuration
+		if err = cli.SetConfig("install", "false"); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install=false'; %v", err))
+			os.Exit(1)
+		}
+	} else {
+		// handle runtime configuration
+		if err = handleAllServices(); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:configure: error handling services: %v", err))
+			os.Exit(1)
+		}
 	}
 }

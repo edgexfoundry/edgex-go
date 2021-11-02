@@ -75,20 +75,25 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[device-rfid-llrp]",
 }
 
-var services = []string{
-	"security-bootstrapper",
-	"security-bootstrap-redis",
-	"security-file-token-provider",
-	"security-proxy-setup",
-	"security-secretstore-setup",
-	"core-command",
-	"core-data",
-	"core-metadata",
-	"support-notifications",
-	"support-scheduler",
-	"sys-mgmt-agent",
-	"device-virtual",
-	"app-service-configurable",
+// services w/configuration that needs to be copied
+// to $SNAP_DATA
+func getServicesWithConfig() []string {
+	return []string{"security-bootstrapper", "security-bootstrap-redis",
+		"security-file-token-provider",	"security-proxy-setup",
+		"security-secretstore-setup", "core-command", "core-data",
+		"core-metadata", "support-notifications", "support-scheduler",
+		"sys-mgmt-agent", "device-virtual", "app-service-configurable"}
+}
+
+// TODO: re-factor to get this list from snapd using snapctl
+func getAllServices() []string {
+	return []string{"consul", "redis", "postgres",
+		"kong-daemon", "vault", "security-secretstore-setup",
+		"security-proxy-setup",	"security-bootstrapper-redis",
+		"security-consul-bootstrapper",	"core-command",
+		"core-data", "core-metadata", "support-notifications",
+		"support-scheduler", "sys-mgmt-agent", "device-virtual",
+		"kuiper", "app-service-configurable"}
 }
 
 // installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
@@ -97,7 +102,7 @@ func installConfFiles() error {
 
 	// TODO: should we continue to do this, since config overrides are
 	// the preferred way to make configuration changes now?
-	for _, v := range services {
+	for _, v := range getServicesWithConfig() {
 		destDir := hooks.SnapDataConf + "/"
 		srcDir := hooks.SnapConf + "/"
 
@@ -269,6 +274,9 @@ func installConsul() error {
 	return nil
 }
 
+// TODO: this function actually causes postgres to start in order
+// to setup the security for postgres, thus we may need to move
+// the install/setup logic for the proxy to the configure hook.
 func setupPostgres() error {
 
 	setupScriptPath, err := exec.LookPath("install-setup-postgres.sh")
@@ -386,6 +394,22 @@ func main() {
 
 	if err = installRedis(); err != nil {
 		hooks.Error(fmt.Sprintf("edgexfoundry:install %v", err))
+		os.Exit(1)
+	}
+
+	// Stop and disable all *enabled* services as they will be
+	// re-enabled in the configure hook if the config option
+	// 'install=true'.
+	for _, s := range getAllServices() {
+		hooks.Info(fmt.Sprintf("edgexfoundry:install disabling service: %s", s))
+		if err = cli.Stop(s, true); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:install can't disable: %s; %v", s, err))
+			os.Exit(1)
+		}
+	}
+
+	if err = cli.SetConfig("install", "true"); err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install=true'; %v", err))
 		os.Exit(1)
 	}
 }
