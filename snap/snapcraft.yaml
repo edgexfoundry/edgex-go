@@ -93,6 +93,8 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: forking
     plugs: [network, network-bind]
   redis:
