@@ -15,16 +15,21 @@ cat > "$SNAP_DATA/consul/config/consul_default.json" <<EOF
 }
 EOF
 
-echo "$(date) deploying additional ACL configuration for Consul"
-cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
+acls=${EDGEX_SECURITY_SECRET_STORE:-true}
+logger "start-consul.sh: acls=$acls"
+
+if [ "$acls" == "true" ]; then
+    echo "$(date) deploying additional ACL configuration for Consul"
+    cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
 {
-    "acl": {
+      "acl": {
       "enabled": true,
       "default_policy": "deny",
       "enable_token_persistence": true
     }
 }
 EOF
+fi
 
 # start consul in the background
 "$SNAP/bin/consul" agent \
