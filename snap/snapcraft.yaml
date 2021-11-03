@@ -370,6 +370,7 @@ apps:
       - core-metadata
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
     command-chain:
+      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     daemon: simple
     environment:
@@ -387,6 +388,7 @@ apps:
       -confdir $SNAP_DATA/config/app-service-configurable/res
       -profile rules-engine
     command-chain:
+      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     daemon: simple
     environment:
