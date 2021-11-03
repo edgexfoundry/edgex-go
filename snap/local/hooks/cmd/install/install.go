@@ -20,8 +20,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
@@ -330,11 +332,22 @@ func installProxy() error {
 	return nil
 }
 
+// This function creates the redis config dir under $SNAP_DATA,
+// and creates an empty redis.conf file. This allows the command
+// line for the service to always specify the config file, and
+// allows for redis when the config option security-secret-store
+// is "on" or "off".
 func installRedis() error {
-	if err := os.MkdirAll(hooks.SnapData+"/redis", 0755); err != nil {
-		return err
+	fileName := filepath.Join(hooks.SnapData,"/redis/conf/redis.conf")
+	if _, err := os.Stat(filepath.Join(hooks.SnapData,"redis")); err != nil {
+		// dir doesn't exist
+		if err := os.MkdirAll(filepath.Dir(fileName),0755); err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(fileName, nil, 0644); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
