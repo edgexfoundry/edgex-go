@@ -100,6 +100,8 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", pwModel).Return(pwModel, nil)
 	dbClientMock.On("DeviceServiceByName", pwModel.ServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceServiceNameExists", pwModel.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", pwModel.ProfileName).Return(true, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -150,9 +152,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 
 func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T) {
 	dic := mockDic()
-
-	controller := NewProvisionWatcherController(dic)
-	assert.NotNil(t, controller)
+	dbClientMock := &mocks.DBClient{}
 
 	provisionWatcher := buildTestAddProvisionWatcherRequest()
 	badRequestId := provisionWatcher
@@ -160,12 +160,34 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 	noName := provisionWatcher
 	noName.ProvisionWatcher.Name = ""
 
+	notFountServiceName := "notFoundService"
+	notFoundService := provisionWatcher
+	notFoundService.ProvisionWatcher.ServiceName = notFountServiceName
+	dbClientMock.On("DeviceServiceNameExists", notFoundService.ProvisionWatcher.ServiceName).Return(false, nil)
+	notFountProfileName := "notFoundProfile"
+	notFoundProfile := provisionWatcher
+	notFoundProfile.ProvisionWatcher.ProfileName = notFountProfileName
+	dbClientMock.On("DeviceServiceNameExists", notFoundProfile.ProvisionWatcher.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", notFoundProfile.ProvisionWatcher.ProfileName).Return(false, nil)
+
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewProvisionWatcherController(dic)
+	assert.NotNil(t, controller)
+
 	tests := []struct {
-		name    string
-		Request []requests.AddProvisionWatcherRequest
+		name                 string
+		Request              []requests.AddProvisionWatcherRequest
+		expectedStatusCode   int
+		expectedResponseCode int
 	}{
-		{"Invalid - Bad requestId", []requests.AddProvisionWatcherRequest{badRequestId}},
-		{"Invalid - Bad name", []requests.AddProvisionWatcherRequest{noName}},
+		{"Invalid - Bad requestId", []requests.AddProvisionWatcherRequest{badRequestId}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - Bad name", []requests.AddProvisionWatcherRequest{noName}, http.StatusBadRequest, http.StatusBadRequest},
+		{"Invalid - not found service", []requests.AddProvisionWatcherRequest{notFoundService}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - not found profile", []requests.AddProvisionWatcherRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -182,8 +204,18 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 			handler.ServeHTTP(recorder, req)
 
 			// Assert
-			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
-			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			} else {
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			}
 		})
 	}
 }
@@ -204,6 +236,8 @@ func TestProvisionWatcherController_AddProvisionWatcher_Duplicated(t *testing.T)
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", duplicateNameModel).Return(duplicateNameModel, duplicateNameDBError)
 	dbClientMock.On("AddProvisionWatcher", duplicateIdModel).Return(duplicateIdModel, duplicateIdDBError)
+	dbClientMock.On("DeviceServiceNameExists", duplicateIdRequest.ProvisionWatcher.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceProfileNameExists", duplicateIdRequest.ProvisionWatcher.ProfileName).Return(true, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
