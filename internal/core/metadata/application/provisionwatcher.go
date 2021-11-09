@@ -28,6 +28,19 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
+	exists, err := dbClient.DeviceServiceNameExists(pw.ServiceName)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	} else if !exists {
+		return "", errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.ServiceName), nil)
+	}
+	exists, err = dbClient.DeviceProfileNameExists(pw.ProfileName)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	} else if !exists {
+		return "", errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.ProfileName), nil)
+	}
+
 	addProvisionWatcher, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
