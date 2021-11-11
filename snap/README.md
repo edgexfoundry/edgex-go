@@ -248,7 +248,7 @@ sudo snap set edgexfoundry env.security-proxy.user=user01,USER_ID,ES256
 sudo snap set edgexfoundry env.security-proxy.public-key="$(cat public.pem)"
 ```
 
-Alternatively, you can create the user using the secrets-config command. You need to provide the following:
+To create multiple users, use the secrets-config command. You need to provide the following:
 
 - The username
 - The public key
@@ -263,7 +263,7 @@ JWT_FILE=/var/snap/edgexfoundry/current/secrets/security-proxy-setup/kong-admin-
 JWT=`sudo cat ${JWT_FILE}`
 
 # use secrets-config to add user
-$ edgexfoundry.secrets-config proxy adduser --token-type jwt --user user01 --algorithm ES256 --public_key public.pem --id USER_ID --jwt ${JWT}
+edgexfoundry.secrets-config proxy adduser --token-type jwt --user user01 --algorithm ES256 --public_key public.pem --id USER_ID --jwt ${JWT}
 ```
 
 3. Finally, you need to generate a token using the user ID which you specified:
