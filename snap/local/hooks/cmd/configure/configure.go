@@ -20,7 +20,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
 )
@@ -44,8 +47,47 @@ func getKuiperServices() []string {
 	return []string{hooks.ServiceAppCfg, hooks.ServiceKuiper}
 }
 
+// getProxyServices returns the list of services which implement
+// the API Gateway. Note this list *excludes* Consul and the
+// Secret Store services.
 func getProxyServices() []string {
 	return []string{"postgres", "kong-daemon", "security-proxy-setup"}
+}
+
+// getSecretStoreServices returns the list of services which implement
+// the Secret Store and related dependencies (i.e. the services that
+// secure redis and consul which are tightly bound to the secret store
+// being enabled).
+func getSecretStoreServices() []string {
+	return []string{"security-secretstore-setup", "vault",
+		"security-consul-bootstrapper", "security-bootstrapper-redis"}
+}
+
+// getAllServices returns the entire list of snap services.
+func getAllServices() []string {
+	return []string{"consul", "redis", "core-data", "core-metadata",
+	"core-command",	"security-secretstore-setup", "security-proxy-setup",
+	"security-bootstrapper-redis", "security-consul-bootstrapper",
+	"kong-daemon", "postgres", "vault"}
+}
+
+func getEdgeXServices() []string {
+	return []string{"core-data", "core-metadata", "core-command",
+			"device-virtual", "support-notifications",
+			"support-scheduler", "sys-mgmt-agent"}
+}
+
+// getRequiredServices returns the minimum list of required
+// snap services for a working EdgeX instance.
+func getRequiredServices() []string {
+	return []string{"consul", "redis", "core-metadata"}
+}
+
+// getOptionalServices returns the minimum list of optional
+// EdgeX services.
+func getOptionalServices() []string {
+	return []string{"core-command", "core-data", "support-notifications",
+			"support-scheduler","sys-mgmt-agent"}
 }
 
 // handleSingleService starts or stops a service based on
@@ -112,6 +154,127 @@ func buildStartCmd(startServices []string, newServices []string) []string {
 		startServices = append(startServices, s)
 	}
 	return startServices
+}
+
+// This function creates the redis config dir under $SNAP_DATA,
+// and creates an empty redis.conf file. This allows the command
+// line for the service to always specify the config file, and
+// allows for redis when the config option security-secret-store
+// is "on" or "off".
+func clearRedisConf() error {
+	path := filepath.Join(hooks.SnapData,"/redis/conf/redis.conf")
+	if err := ioutil.WriteFile(path, nil, 0644); err != nil {
+		return err
+	}
+	return nil
+}
+
+func consulAclFileExists() bool {
+	path := filepath.Join(hooks.SnapData,"/consul/config/consul_acl.json")
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// This function deletes the Consul ACL configuration file. This
+// allows Consul to operate in insecure mode.
+func rmConsulAclFile() error {
+	path := filepath.Join(hooks.SnapData,"/consul/config/consul_acl.json")
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+	return nil
+}
+
+func disableSecretStoreAndRestart() error {
+	hooks.Info(fmt.Sprintf("edgexfoundry:configure: disabling secret store"))
+
+	// if consul_acls.json doesn't exist, then secret-store has already been
+	// disabled, so just return
+	if !consulAclFileExists() {
+		hooks.Info(fmt.Sprintf("edgexfoundry:configure: secret store is already disabled"))
+		return nil
+	}
+
+	// stop & disable proxy services
+	for _, s := range getProxyServices() {
+		if err := handleSingleService(s, OFF, false); err != nil {
+			return err
+		}
+	}
+
+	// stop & disable secret store services
+	for _, s := range getSecretStoreServices() {
+		if err := handleSingleService(s, OFF, false); err != nil {
+			return err
+		}
+	}
+
+	// stop EdgeX services
+	// TODO: can't use handleServices because that would result in the
+	// snap config option for each service to be needlessly set to "off"
+	// then back to "on"; re-factor handleServices/handleSingleService
+	for _, s := range getEdgeXServices() {
+		if err := cli.Stop(s, false); err != nil {
+			return err
+		}
+	}
+
+	// stop redis
+	if err := cli.Stop("redis", false); err != nil {
+		return err
+	}
+
+	// stop consul
+	if err := cli.Stop("consul", false); err != nil {
+		return err
+	}
+
+	// - clear redis password
+	if err := clearRedisConf(); err != nil {
+		return err
+	}
+
+	// - clear consul ACLs
+	if err := rmConsulAclFile(); err != nil {
+		return err
+	}
+
+	// - start required services
+	for _, s := range getRequiredServices() {
+		if err := cli.Start(s, false); err != nil {
+			return err
+		}
+	}
+
+	// Now check config status of the optional EdgeX
+	// services and restart where necessary
+	for _, s := range getEdgeXServices() {
+		status, err := cli.Config(s)
+		if err != nil {
+			return err
+		}
+
+		// walk thru remaining edgex services
+		// if status is ON, start
+		// if status isn't set, if the service is
+		// part of the enabledServices (i.e. services
+		// always started), then also start it
+		switch status {
+			case "":
+				// TODO: switch to check enabledServices list
+				// when code is re-factored to remove the
+				// status="install" logic
+				if !strings.HasPrefix(s, "core-") {
+					break
+				}
+				fallthrough
+			case ON:
+				if err := cli.Start(s, false); err != nil {
+					return err
+				}
+		}
+	}
+	return nil
 }
 
 // handleAllServices iterates through all of the services in the
@@ -250,14 +413,18 @@ func handleAllServices(install bool) (error, []string) {
 				}
 				fallthrough
 			case ON:
-				serviceList = []string{"vault", "security-secretstore-setup",
-					"security-consul-bootstrapper", "security-bootstrapper-redis"}
-				hooks.Info(fmt.Sprintf("edgexfoundry:configure serviceList: %v", serviceList))
+				serviceList = getSecretStoreServices()
+
 				if install {
 					startServices = append(startServices, serviceList...)
 					hooks.Info(fmt.Sprintf("edgexfoundry:configure startServices: %v", startServices))
 					continue
 				}
+
+				// Don't allow secret-store to be toggled back on for now...
+				err = fmt.Errorf("edgexfoundry:configure security-secret-store=on not allowed")
+				return err, nil
+
 			case OFF:
 				secretStoreActive = false
 
@@ -265,22 +432,9 @@ func handleAllServices(install bool) (error, []string) {
 					continue
 				}
 
-				serviceList = []string{"postgres", "kong-daemon", "security-proxy-setup",
-					"vault", "security-secretstore-setup", "security-consul-bootstrapper",
-					"security-bootstrapper-redis"}
-
-				// TODO: the original Hanoi implementation did NOT handle restarting the
-				// rest of the framework, nor does this implementation.
-				//
-				// If/when we can properly disable secret-store usage *after* install, we
-				// need to handle the following:
-				//
-				// - stop all services that use the secret store
-				// - stop consul & redis
-				// - clear redis password (rm $SNAP_DATA/conf/redis.conf)
-				//   touch same file
-				// - rm the consul ACL conf file (and maybe other consul files)
-				// - start all the services just disabled
+				if err = disableSecretStoreAndRestart(); err != nil {
+					return err, nil
+				}
 			default:
 				// Note - this is the default status of all services if no
 				// configuration has been specified; no-op
@@ -293,7 +447,6 @@ func handleAllServices(install bool) (error, []string) {
 
 			switch status {
 			case INSTALL:
-				// FIXME: make this cli.UnsetConfig
 				if err := cli.UnsetConfig(s); err != nil {
 					return err, nil
 				}
