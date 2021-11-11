@@ -81,7 +81,7 @@ var secretStoreKnownSecrets = []string{
 // to $SNAP_DATA
 func getServicesWithConfig() []string {
 	return []string{"security-bootstrapper", "security-bootstrap-redis",
-		"security-file-token-provider",	"security-proxy-setup",
+		"security-file-token-provider", "security-proxy-setup",
 		"security-secretstore-setup", "core-command", "core-data",
 		"core-metadata", "support-notifications", "support-scheduler",
 		"sys-mgmt-agent", "device-virtual", "app-service-configurable"}
@@ -91,8 +91,8 @@ func getServicesWithConfig() []string {
 func getAllServices() []string {
 	return []string{"consul", "redis", "postgres",
 		"kong-daemon", "vault", "security-secretstore-setup",
-		"security-proxy-setup",	"security-bootstrapper-redis",
-		"security-consul-bootstrapper",	"core-command",
+		"security-proxy-setup", "security-bootstrapper-redis",
+		"security-consul-bootstrapper", "core-command",
 		"core-data", "core-metadata", "support-notifications",
 		"support-scheduler", "sys-mgmt-agent", "device-virtual",
 		"kuiper", "app-service-configurable"}
@@ -338,10 +338,10 @@ func installProxy() error {
 // allows for redis when the config option security-secret-store
 // is "on" or "off".
 func installRedis() error {
-	fileName := filepath.Join(hooks.SnapData,"/redis/conf/redis.conf")
-	if _, err := os.Stat(filepath.Join(hooks.SnapData,"redis")); err != nil {
+	fileName := filepath.Join(hooks.SnapData, "/redis/conf/redis.conf")
+	if _, err := os.Stat(filepath.Join(hooks.SnapData, "redis")); err != nil {
 		// dir doesn't exist
-		if err := os.MkdirAll(filepath.Dir(fileName),0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
 			return err
 		}
 		if err := ioutil.WriteFile(fileName, nil, 0644); err != nil {
@@ -412,7 +412,7 @@ func main() {
 
 	// Stop and disable all *enabled* services as they will be
 	// re-enabled in the configure hook if the config option
-	// 'install=true'.
+	// 'install-mode=defer-startup'.
 	for _, s := range getAllServices() {
 		hooks.Info(fmt.Sprintf("edgexfoundry:install disabling service: %s", s))
 		if err = cli.Stop(s, true); err != nil {
@@ -421,8 +421,8 @@ func main() {
 		}
 	}
 
-	if err = cli.SetConfig("install", "true"); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install=true'; %v", err))
+	if err = cli.SetConfig("install-mode", "defer-startup"); err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install-mode'; %v", err))
 		os.Exit(1)
 	}
 }
