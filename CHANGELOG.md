@@ -3,6 +3,74 @@
 ## EdgeX Foundry Services
 [Github repository](https://github.com/edgexfoundry/edgex-go)
 
+## [v2.1.0] Jakarta - 2021-11-17 (Compatible with the 2.0.0 release)
+
+## Change Logs for EdgeX Dependencies
+
+- [go-mod-bootstrap](https://github.com/edgexfoundry/go-mod-bootstrap/blob/main/CHANGELOG.md)
+- [go-mod-core-contracts](https://github.com/edgexfoundry/go-mod-core-contracts/blob/main/CHANGELOG.md)
+- [go-mod-messaging](https://github.com/edgexfoundry/go-mod-messaging/blob/main/CHANGELOG.md)
+- [go-mod-registry](https://github.com/edgexfoundry/go-mod-registry/blob/main/CHANGELOG.md) 
+- [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
+- [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
+
+### Features ✨
+- **data:** Implement V2 API to query readings by name and time range ([#3577](https://github.com/edgexfoundry/edgex-go/issues/3577)) ([#8a6c1010](https://github.com/edgexfoundry/edgex-go/commits/8a6c1010))
+- **metadata:** Send notification after updating device entity ([#3623](https://github.com/edgexfoundry/edgex-go/issues/3623)) ([#166d7917](https://github.com/edgexfoundry/edgex-go/commits/166d7917))
+- **security:** Add injection of Secure MessageBus creds for eKuiper connections ([#3778](https://github.com/edgexfoundry/edgex-go/issues/3778)) ([#fb769a00](https://github.com/edgexfoundry/edgex-go/commits/fb769a00))
+- **security:** Add Secret File config setting ([#3788](https://github.com/edgexfoundry/edgex-go/issues/3788)) ([#adab5248](https://github.com/edgexfoundry/edgex-go/commits/adab5248))
+- **scheduler:** Validate Interval and IntervalAction before loading from config ([#3646](https://github.com/edgexfoundry/edgex-go/issues/3646)) ([#c934d262](https://github.com/edgexfoundry/edgex-go/commits/c934d262))
+- **all:** Enable CORS headers for all services ([#3758](https://github.com/edgexfoundry/edgex-go/issues/3758)) ([#4fce4fd2](https://github.com/edgexfoundry/edgex-go/commits/4fce4fd2))
+- **all:** Update multi instance response to have totalCount field ([#ea5a8f40](https://github.com/edgexfoundry/edgex-go/commits/ea5a8f40))
+- **command:** Support object value type in Set Command ([#eaa9784a](https://github.com/edgexfoundry/edgex-go/commits/eaa9784a))
+- **command:** Update Command V2 API to include totalCount field for MultiDeviceCoreCommandsResponse ([#4ad05991](https://github.com/edgexfoundry/edgex-go/commits/4ad05991))
+- **data:** new API to search Readings by multiple resource names ([#3766](https://github.com/edgexfoundry/edgex-go/issues/3766)) ([#e2d5d6cc](https://github.com/edgexfoundry/edgex-go/commits/e2d5d6cc))
+- **data:** Enhance the performance of events deletion ([#3722](https://github.com/edgexfoundry/edgex-go/issues/3722)) ([#2de07aa5](https://github.com/edgexfoundry/edgex-go/commits/2de07aa5))
+- **data:** Support Object value type in Reading ([#94769bcc](https://github.com/edgexfoundry/edgex-go/commits/94769bcc))
+- **data:** refactor application-layer multi-events func to reduce code duplication ([#753b88f4](https://github.com/edgexfoundry/edgex-go/commits/753b88f4))
+- **data:** Update MultiReadingsResponse to have totalCount field ([#07c09b9a](https://github.com/edgexfoundry/edgex-go/commits/07c09b9a))
+- **data:** Update MultiEventsResponse to have totalCount field ([#d627eae0](https://github.com/edgexfoundry/edgex-go/commits/d627eae0))
+- **data:** implement new GET Readings API ([#1ef40f49](https://github.com/edgexfoundry/edgex-go/commits/1ef40f49))
+- **metadata:** Update Metadata V2 API to include totalCount field for multi-instance response ([#377c2adc](https://github.com/edgexfoundry/edgex-go/commits/377c2adc))
+- **notifications:** Update Notififcation V2 API to include totalCount field ([#b1707c08](https://github.com/edgexfoundry/edgex-go/commits/b1707c08))
+- **notifications:** add new API to Get Transmissions by Notification id ([#3759](https://github.com/edgexfoundry/edgex-go/issues/3759)) ([#4de7b29e](https://github.com/edgexfoundry/edgex-go/commits/4de7b29e))
+- **scheduler:** Update Scheduler V2 API to include totalCount field ([#2b972191](https://github.com/edgexfoundry/edgex-go/commits/2b972191))
+- **security:** Enable modern cipher suite / TLSv1.3 only ([#3704](https://github.com/edgexfoundry/edgex-go/issues/3704)) ([#7380b5be](https://github.com/edgexfoundry/edgex-go/commits/7380b5be))
+- **security:** Add configuration for CodeQL static analysis ([#3681](https://github.com/edgexfoundry/edgex-go/issues/3681)) ([#4ef23a9e](https://github.com/edgexfoundry/edgex-go/commits/4ef23a9e))
+- **security:** Make Vault token TTL configurable ([#3675](https://github.com/edgexfoundry/edgex-go/issues/3675)) ([#19484f48](https://github.com/edgexfoundry/edgex-go/commits/19484f48))
+- **security:** Give user instructions on how to install linter ([#3713](https://github.com/edgexfoundry/edgex-go/issues/3713)) ([#4342e0f0](https://github.com/edgexfoundry/edgex-go/commits/4342e0f0))
+- **snap:** add vault ttl config support ([#ef3901f9](https://github.com/edgexfoundry/edgex-go/commits/ef3901f9))
+- **snap:** add additional devices to secret store lists in install hook ([#8ad81a0f](https://github.com/edgexfoundry/edgex-go/commits/8ad81a0f))
+
+### Performance Improvements ⚡
+- Change MaxResultCount setting to 1024 ([#8524b20a](https://github.com/edgexfoundry/edgex-go/commits/8524b20a))
+
+### Bug Fixes 🐛
+- **command:** Fix core-command crashes error ([#86f6abfe](https://github.com/edgexfoundry/edgex-go/commits/86f6abfe))
+- **meta:** Remove operating state from device service ([#dc27294b](https://github.com/edgexfoundry/edgex-go/commits/dc27294b))
+- **all:** http response cannot be completed ([#3662](https://github.com/edgexfoundry/edgex-go/issues/3662)) ([#0ba6ba5b](https://github.com/edgexfoundry/edgex-go/commits/0ba6ba5b))
+- **command:** Using the Device Service response code for Get Command ([#9f422825](https://github.com/edgexfoundry/edgex-go/commits/9f422825))
+- **command:** clean out database section from core command ([#0fae9ab3](https://github.com/edgexfoundry/edgex-go/commits/0fae9ab3))
+- **data:** add codes to remove db index of reading:deviceName:resourceName when deleting readings ([#173b0957](https://github.com/edgexfoundry/edgex-go/commits/173b0957))
+- **meta:** Disable device notification by default ([#3789](https://github.com/edgexfoundry/edgex-go/issues/3789)) ([#c5f5ac19](https://github.com/edgexfoundry/edgex-go/commits/c5f5ac19))
+- **meta:** device yaml marshal to Json  error ([#3683](https://github.com/edgexfoundry/edgex-go/issues/3683)) ([#e89d87e1](https://github.com/edgexfoundry/edgex-go/commits/e89d87e1))
+- **metadata:** add labels as part of query criteria when finding ([#3781](https://github.com/edgexfoundry/edgex-go/issues/3781)) ([#11dac8c4](https://github.com/edgexfoundry/edgex-go/commits/11dac8c4))
+- **security:** Move JWT auth method to individual routes ([#3657](https://github.com/edgexfoundry/edgex-go/issues/3657)) ([#d2a5f5fe](https://github.com/edgexfoundry/edgex-go/commits/d2a5f5fe))
+- **security:** Replace abandoned JWT package ([#3729](https://github.com/edgexfoundry/edgex-go/issues/3729)) ([#32c3a59f](https://github.com/edgexfoundry/edgex-go/commits/32c3a59f))
+- **security:** use localhost for kuiper config ([#8fa67b54](https://github.com/edgexfoundry/edgex-go/commits/8fa67b54))
+- **security:** secrets-config user connect using TLS ([#3698](https://github.com/edgexfoundry/edgex-go/issues/3698)) ([#258ae4e0](https://github.com/edgexfoundry/edgex-go/commits/258ae4e0))
+- **security:** remove unused curl executable from secretstore-setup Dockerfile - curl command executable is not used, so it is removed from the Docker file of service secretstore-setup ([#49239b82](https://github.com/edgexfoundry/edgex-go/commits/49239b82))
+- **security:** Mismatched types int and int32 ([#3655](https://github.com/edgexfoundry/edgex-go/issues/3655)) ([#dbae55fc](https://github.com/edgexfoundry/edgex-go/commits/dbae55fc))
+- **snap:** fix app-rules-engine ([#651aaa83](https://github.com/edgexfoundry/edgex-go/commits/651aaa83))
+- **snap:** configure kuiper's REST service port ([#3770](https://github.com/edgexfoundry/edgex-go/issues/3770)) ([#a2b69b26](https://github.com/edgexfoundry/edgex-go/commits/a2b69b26))
+- **snap:** add kuiper message-bus config ([#602d7f53](https://github.com/edgexfoundry/edgex-go/commits/602d7f53))
+
+### Code Refactoring ♻
+- **all:** Clean up TOML quotes ([#3666](https://github.com/edgexfoundry/edgex-go/issues/3666)) ([#729eb473](https://github.com/edgexfoundry/edgex-go/commits/729eb473))
+- **all:** Refactor io.Reader for reusing ([#3627](https://github.com/edgexfoundry/edgex-go/issues/3627)) ([#7434bcad](https://github.com/edgexfoundry/edgex-go/commits/7434bcad))
+- **all:** Remove unused Redis client variables ([#905a639d](https://github.com/edgexfoundry/edgex-go/commits/905a639d))
+- **snap:** convert store lists into slice in install hook ([#e09eec38](https://github.com/edgexfoundry/edgex-go/commits/e09eec38))
+
 ## [v2.0.0] Ireland - 2021-06-30  (Not Compatible with 1.x releases)
 
 ## General
@@ -17,12 +85,12 @@
 
 ## Change Logs for EdgeX Dependencies
 
-- [go-mod-bootstrap](https://github.com/edgexfoundry/go-mod-bootstrap/blob/master/CHANGELOG.md)
-- [go-mod-core-contracts](https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/CHANGELOG.md)
-- [go-mod-messaging](https://github.com/edgexfoundry/go-mod-messaging/blob/master/CHANGELOG.md)
-- [go-mod-registry](https://github.com/edgexfoundry/go-mod-registry/blob/master/CHANGELOG.md) 
-- [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/master/CHANGELOG.md)
-- [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration) (indirect dependency)
+- [go-mod-bootstrap](https://github.com/edgexfoundry/go-mod-bootstrap/blob/v2.0.0/CHANGELOG.md)
+- [go-mod-core-contracts](https://github.com/edgexfoundry/go-mod-core-contracts/blob/v2.0.0/CHANGELOG.md)
+- [go-mod-messaging](https://github.com/edgexfoundry/go-mod-messaging/blob/v2.0.0/CHANGELOG.md)
+- [go-mod-registry](https://github.com/edgexfoundry/go-mod-registry/blob/v2.0.0/CHANGELOG.md) 
+- [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/v2.0.0/CHANGELOG.md)
+- [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/v2.0.0/CHANGELOG.md) (indirect dependency)
 
 ### Features ✨
 - **v2:** Remove --useradd and --userdel support from proxy-setup ([#2924](https://github.com/edgexfoundry/edgex-go/issues/2924)) ([#60451040](https://github.com/edgexfoundry/edgex-go/commits/60451040))
