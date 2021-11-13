@@ -774,50 +774,37 @@ parts:
        - -usr/share/man/*
 
   # SECURITY SERVICES PARTS
-  vault:
-    after: [go-build-helper]
-    plugin: make
-    source: https://github.com/hashicorp/vault.git
-    source-tag: v1.7.2
-    source-depth: 1
+  vault:    
+    plugin: nil
+    build-packages:
+      - curl
+      - unzip
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/vault
-      export GO111MODULES=off
-      make bootstrap
-      make dev
+      VERSION=1.8.5
 
-      # install the vault binary
-      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
+      # use dpkg architecture to figure out the target arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=vault_${VERSION}_linux_amd64.zip
+          FILE_HASH=97d7ac9145ffdf256ab91045a4857a640ecaa7c56bbd66b61fb70990620f3d33
+          ;;
+        arm64)
+          FILE_NAME=vault_${VERSION}_linux_arm64.zip
+          FILE_HASH=a1a57c51505cce0857c32a159ed193dd330e43bee1f3340d2143993c64cf0645
+          ;;
+      esac
 
-      # handle vault LICENSE
-      # TODO: do PATENT files need copying?
-      install -DT "$GOIMPORTPATH/LICENSE" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
-
-      # handle vendor LICENSE files
-      cd $GOIMPORTPATH/vendor
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # TODO: some LICENSE files fall under .gopath too
-      cd $GOPATH/src
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # delete duplicated license files between vault + consul
-      # as snapcraft will fail we attempt to install duplicated files into the snap
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
-
-      if [ -f /build/go.mod.bk ]; then
-        mv /build/go.mod.bk /build/go.mod
-      fi
+      # download the archive and verify the checksum
+      # NOTE: the archive only includes the binary distribution, 
+      # with no config or license files
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
+      echo "$FILE_HASH $FILE_NAME" > sha256
+      sha256sum -c sha256 | grep OK
+      
+      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+    organize:
+      vault: bin/vault
 
   # DEVICE SERVICES parts
   #
