@@ -642,9 +642,11 @@ parts:
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "6.2.4"
-    source-depth: 1
+    source-tag: "6.2.6"
+    source-depth: 0
     plugin: make
+    # NOTE: make-install-var is deprecated
+    # See https://snapcraft.io/docs/make-plugin
     make-install-var: PREFIX
 
   edgex-go:
