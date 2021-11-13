@@ -614,28 +614,28 @@ parts:
       - curl
       - unzip
     override-build: |
+      VERSION=1.10.4
+
       # use dpkg architecture to figure out our target arch
-      # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=consul_1.9.5_linux_amd64.zip
-          FILE_HASH=76e46d6711c92ffe573710345dc8c996605822eb6dbb371f895f011cda260035
+          FILE_NAME=consul_${VERSION}_linux_amd64.zip
+          FILE_HASH=2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d
           ;;
         arm64)
-          FILE_NAME=consul_1.9.5_linux_arm64.zip
-          FILE_HASH=951fdad76ad641029f8644d9d1f061fbfab99d58ab6aa9e4569b1e073765cd41
+          FILE_NAME=consul_${VERSION}_linux_arm64.zip
+          FILE_HASH=d4be8f68f0275701bcde71d130a997f5a32b47f91d5fb8a7eae7db666325a33b
           ;;
       esac
-      # download the archive, failing on ssl cert problems
-      curl -L https://releases.hashicorp.com/consul/1.9.5/$FILE_NAME -o $FILE_NAME
-      #
-      # Note the binary releases appear to just include the single consul binary,
-      # this means we might need to provide config files... ;(-
-      #
-      # or apt.releases.hashicorp.com/pool/amd64/main/consul_1.9.1_amd64.deb
-      # NOTE - there only seem to be amd64 debs, no arm64!!!
+
+      # download the archive and verify the checksum
+      # NOTE: the archive only includes the binary distribution, 
+      # with no config or license files
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
+      
       unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       consul: bin/consul
