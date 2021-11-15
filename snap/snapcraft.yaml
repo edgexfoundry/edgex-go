@@ -734,23 +734,27 @@ parts:
       - perl
       - zlib1g-dev
     override-build: |
+      VERSION=2.6.0
+
       # use dpkg architecture to figure out our target arch
-      # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=kong_2.4.1_amd64.deb
-          FILE_HASH=3ce4c5db28378bccd2b9d11cfcfe6e7abf56ef50fd5cc1bc99cdf115e6af4cc1
+          FILE_NAME=kong_${VERSION}_amd64.deb
+          FILE_HASH=80913c3c41249a77f7ca1c358d06ae3716a43c79f980f3dd77cd445ac3a62e25
           ;;
         arm64)
-          FILE_NAME=kong_2.4.1_arm64.deb
-          FILE_HASH=41040e60966e05ab704201bec40a1bf22ef4e6a4abedde164018d6c623794018
+          FILE_NAME=kong_${VERSION}_arm64.deb
+          FILE_HASH=6f7c5b9592ce858db890d4e5451a66935bf68b7c44a9ffee4b8f627280a9016c
           ;;
       esac
-      # download the archive, failing on ssl cert problems
-      curl -L https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME -o $FILE_NAME
+
+      # download the archive and verify the checksum
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
-      dpkg -x $FILE_NAME $SNAPCRAFT_PART_INSTALL
+      
+      dpkg --extract $FILE_NAME $SNAPCRAFT_PART_INSTALL
 
       # make kong world readable & executable to make snapcraft happy
       chmod 755 $SNAPCRAFT_PART_INSTALL/usr/local/bin/kong
