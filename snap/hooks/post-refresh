@@ -1,0 +1,14 @@
+#!/bin/bash -e
+#
+# Force remove kong-admin-jwt due to the fact that it's
+# written by security-secretstore-setup (2.0.0-*) with
+# read-only perm for the owner.
+#
+# See: https://github.com/edgexfoundry/edgex-go/issues/3818
+#
+# This is hook is called in the context of the new snap
+# revision, and prior to services being started.
+if [ -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt" ]; then
+    logger "edgexfoundry:post-refresh removing stale kong-admin-jwt"
+    rm -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt"
+fi
