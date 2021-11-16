@@ -614,37 +614,39 @@ parts:
       - curl
       - unzip
     override-build: |
+      VERSION=1.10.4
+
       # use dpkg architecture to figure out our target arch
-      # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=consul_1.9.5_linux_amd64.zip
-          FILE_HASH=76e46d6711c92ffe573710345dc8c996605822eb6dbb371f895f011cda260035
+          FILE_NAME=consul_${VERSION}_linux_amd64.zip
+          FILE_HASH=2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d
           ;;
         arm64)
-          FILE_NAME=consul_1.9.5_linux_arm64.zip
-          FILE_HASH=951fdad76ad641029f8644d9d1f061fbfab99d58ab6aa9e4569b1e073765cd41
+          FILE_NAME=consul_${VERSION}_linux_arm64.zip
+          FILE_HASH=d4be8f68f0275701bcde71d130a997f5a32b47f91d5fb8a7eae7db666325a33b
           ;;
       esac
-      # download the archive, failing on ssl cert problems
-      curl -L https://releases.hashicorp.com/consul/1.9.5/$FILE_NAME -o $FILE_NAME
-      #
-      # Note the binary releases appear to just include the single consul binary,
-      # this means we might need to provide config files... ;(-
-      #
-      # or apt.releases.hashicorp.com/pool/amd64/main/consul_1.9.1_amd64.deb
-      # NOTE - there only seem to be amd64 debs, no arm64!!!
+
+      # download the archive and verify the checksum
+      # NOTE: the archive only includes the binary distribution, 
+      # with no config or license files
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
+      
       unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       consul: bin/consul
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "6.2.4"
-    source-depth: 1
+    source-tag: "6.2.6"
+    source-depth: 0
     plugin: make
+    # NOTE: make-install-var is deprecated
+    # See https://snapcraft.io/docs/make-plugin
     make-install-var: PREFIX
 
   edgex-go:
@@ -732,23 +734,27 @@ parts:
       - perl
       - zlib1g-dev
     override-build: |
+      VERSION=2.6.0
+
       # use dpkg architecture to figure out our target arch
-      # note - we specifically don't use arch
       case "$(dpkg --print-architecture)" in
         amd64)
-          FILE_NAME=kong_2.4.1_amd64.deb
-          FILE_HASH=3ce4c5db28378bccd2b9d11cfcfe6e7abf56ef50fd5cc1bc99cdf115e6af4cc1
+          FILE_NAME=kong_${VERSION}_amd64.deb
+          FILE_HASH=80913c3c41249a77f7ca1c358d06ae3716a43c79f980f3dd77cd445ac3a62e25
           ;;
         arm64)
-          FILE_NAME=kong_2.4.1_arm64.deb
-          FILE_HASH=41040e60966e05ab704201bec40a1bf22ef4e6a4abedde164018d6c623794018
+          FILE_NAME=kong_${VERSION}_arm64.deb
+          FILE_HASH=6f7c5b9592ce858db890d4e5451a66935bf68b7c44a9ffee4b8f627280a9016c
           ;;
       esac
-      # download the archive, failing on ssl cert problems
-      curl -L https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME -o $FILE_NAME
+
+      # download the archive and verify the checksum
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
-      dpkg -x $FILE_NAME $SNAPCRAFT_PART_INSTALL
+      
+      dpkg --extract $FILE_NAME $SNAPCRAFT_PART_INSTALL
 
       # make kong world readable & executable to make snapcraft happy
       chmod 755 $SNAPCRAFT_PART_INSTALL/usr/local/bin/kong
@@ -774,50 +780,37 @@ parts:
        - -usr/share/man/*
 
   # SECURITY SERVICES PARTS
-  vault:
-    after: [go-build-helper]
-    plugin: make
-    source: https://github.com/hashicorp/vault.git
-    source-tag: v1.7.2
-    source-depth: 1
+  vault:    
+    plugin: nil
+    build-packages:
+      - curl
+      - unzip
     override-build: |
-      . $SNAPCRAFT_STAGE/bin/go-build-helper.sh
-      gopartbootstrap github.com/hashicorp/vault
-      export GO111MODULES=off
-      make bootstrap
-      make dev
+      VERSION=1.8.5
 
-      # install the vault binary
-      install -DT bin/vault "$SNAPCRAFT_PART_INSTALL/bin/vault"
+      # use dpkg architecture to figure out the target arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=vault_${VERSION}_linux_amd64.zip
+          FILE_HASH=97d7ac9145ffdf256ab91045a4857a640ecaa7c56bbd66b61fb70990620f3d33
+          ;;
+        arm64)
+          FILE_NAME=vault_${VERSION}_linux_arm64.zip
+          FILE_HASH=a1a57c51505cce0857c32a159ed193dd330e43bee1f3340d2143993c64cf0645
+          ;;
+      esac
 
-      # handle vault LICENSE
-      # TODO: do PATENT files need copying?
-      install -DT "$GOIMPORTPATH/LICENSE" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/hashicorp/vault/LICENSE"
-
-      # handle vendor LICENSE files
-      cd $GOIMPORTPATH/vendor
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # TODO: some LICENSE files fall under .gopath too
-      cd $GOPATH/src
-      for i in `find . -type f -name "LICENSE"`; do
-        install -DT "$i" \
-                 "$SNAPCRAFT_PART_INSTALL/usr/share/doc/$i"; done
-
-      # delete duplicated license files between vault + consul
-      # as snapcraft will fail we attempt to install duplicated files into the snap
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/cloud.google.com/go/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/golang/protobuf/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/sean-/seed/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/golang.org/x/oauth2/LICENSE
-      rm -rf $SNAPCRAFT_PART_INSTALL/usr/share/doc/google.golang.org/grpc/LICENSE
-
-      if [ -f /build/go.mod.bk ]; then
-        mv /build/go.mod.bk /build/go.mod
-      fi
+      # download the archive and verify the checksum
+      # NOTE: the archive only includes the binary distribution, 
+      # with no config or license files
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
+      echo "$FILE_HASH $FILE_NAME" > sha256
+      sha256sum -c sha256 | grep OK
+      
+      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+    organize:
+      vault: bin/vault
 
   # DEVICE SERVICES parts
   #
@@ -867,8 +860,9 @@ parts:
       - -res/sample/configuration.toml
 
   kuiper:
-    source: https://github.com/emqx/kuiper.git
-    source-tag: 1.3.0
+    source: https://github.com/lf-edge/ekuiper.git
+    source-tag: 1.3.1
+    source-depth: 0
     plugin: make
     after: [go-build-helper]
     override-build: |
