@@ -12,15 +12,14 @@ They can be launched easily with **docker-compose**.
 The simplest way to get started is to fetch the latest docker-compose.yml and start the EdgeX containers:
 
 ```sh
-release="pre-release" # or "hanoi" for latest
-wget -O docker-compose.yml \
-https://raw.githubusercontent.com/edgexfoundry/edgex-compose/master/releases/${release}/docker-compose-${release}.yml
+release="main" # or "jakarta" for latest
+wget https://raw.githubusercontent.com/edgexfoundry/edgex-compose/${release}/docker-compose.yml
 docker-compose up -d
 ```
 
 You can check the status of your running EdgeX services by going to http://localhost:8500/
 
-Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/1.3/walk-through/Ch-Walkthrough/) to learn how the different services work together to connect IoT devices to cloud services.
+Now that you have EdgeX up and running, you can follow our [API Walkthrough](https://docs.edgexfoundry.org/2.1/walk-through/Ch-Walkthrough/) to learn how the different services work together to connect IoT devices to cloud services.
 
 ## Running EdgeX with security components
 
@@ -44,7 +43,7 @@ Sample steps to create an access token and use the token to access EdgeX resourc
 ### Snap Package
 
 EdgeX Foundry is also available as a snap package, for more details
-on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/master/snap/README.md)
+on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/main/snap/README.md)
 
 ### Native binaries
 
@@ -141,4 +140,4 @@ Please refer to the EdgeX Foundry [versioning policy](https://wiki.edgexfoundry.
 
 ## Long Term Support
 
-Please refer to the EdgeX Foundry [LTS policy](https://wiki.edgexfoundry.org/display/FA/Long+Term+Support) for information on support of EdgeX releases. The EdgeX community does not offer support on any non-LTS release outside of the latest release.
+Please refer to the EdgeX Foundry [LTS policy](https://wiki.edgexfoundry.org/pages/viewpage.action?pageId=69173332) for information on support of EdgeX releases. The EdgeX community does not offer support on any non-LTS release outside of the latest release.
