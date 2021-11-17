@@ -205,6 +205,9 @@ Thus the following command will disable both:
 $ sudo snap set edgexfoundry security-secret-store=off
 ```
 
+*NOTE* - disabling security after the snap is installed is a convenience for developers. The snap will not allow the Secret Store to be
+re-enabled. The only way to re-enable the Secret Store is to re-install the snap.
+
 #### API Gateway
 Kong is used for access control to the EdgeX services from external systems and is referred to as the API Gateway. 
 

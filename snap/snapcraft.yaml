@@ -93,6 +93,8 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
+    command-chain:
+      - bin/security-secret-store-env-var.sh
     daemon: forking
     plugs: [network, network-bind]
   redis:
@@ -325,8 +327,6 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
-    passthrough:
-      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
@@ -343,8 +343,6 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
-    passthrough:
-      install-mode: disable    
     plugs: [network, network-bind]
     stop-timeout: 10s
   sys-mgmt-agent:
@@ -362,8 +360,6 @@ apps:
       EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
-    passthrough:
-      install-mode: disable    
     plugs: [network, network-bind]
   device-virtual:
     adapter: full
@@ -376,10 +372,9 @@ apps:
       - core-metadata
     command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
     command-chain:
+      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     daemon: simple
-    passthrough:
-      install-mode: disable    
     environment:
       DEVICE_DEVICESDIR: $SNAP_DATA/config/device-virtual/res/devices
       DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res/profiles
@@ -395,10 +390,9 @@ apps:
       -confdir $SNAP_DATA/config/app-service-configurable/res
       -profile rules-engine
     command-chain:
+      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     daemon: simple
-    passthrough:
-      install-mode: disable    
     environment:
       BINDING_PUBLISHTOPIC: events
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/app-rules-engine/secrets-token.json
@@ -488,8 +482,6 @@ apps:
     adapter: full
     command: bin/kuiperd
     daemon: simple
-    passthrough:
-      install-mode: disable    
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
     plugs: [network, network-bind]
