@@ -1,0 +1,187 @@
+# bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
+## explicit
+bitbucket.org/bertimus9/systemstat
+# github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
+github.com/armon/go-metrics
+# github.com/cenkalti/backoff v2.2.1+incompatible
+github.com/cenkalti/backoff
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/eclipse/paho.mqtt.golang v1.3.5
+github.com/eclipse/paho.mqtt.golang
+github.com/eclipse/paho.mqtt.golang/packets
+# github.com/edgexfoundry/go-mod-bootstrap/v2 v2.1.0
+## explicit
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/config
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/environment
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/handlers
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces/mocks
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/registration
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/secret
+github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup
+github.com/edgexfoundry/go-mod-bootstrap/v2/config
+github.com/edgexfoundry/go-mod-bootstrap/v2/di
+# github.com/edgexfoundry/go-mod-configuration/v2 v2.1.0
+github.com/edgexfoundry/go-mod-configuration/v2/configuration
+github.com/edgexfoundry/go-mod-configuration/v2/internal/pkg/consul
+github.com/edgexfoundry/go-mod-configuration/v2/pkg/types
+# github.com/edgexfoundry/go-mod-core-contracts/v2 v2.1.0
+## explicit
+github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http
+github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http/utils
+github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces
+github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks
+github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger
+github.com/edgexfoundry/go-mod-core-contracts/v2/common
+github.com/edgexfoundry/go-mod-core-contracts/v2/dtos
+github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common
+github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests
+github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses
+github.com/edgexfoundry/go-mod-core-contracts/v2/errors
+github.com/edgexfoundry/go-mod-core-contracts/v2/models
+# github.com/edgexfoundry/go-mod-messaging/v2 v2.1.0
+## explicit
+github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg
+github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg/mqtt
+github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg/redis
+github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg/zeromq
+github.com/edgexfoundry/go-mod-messaging/v2/messaging
+github.com/edgexfoundry/go-mod-messaging/v2/pkg/types
+# github.com/edgexfoundry/go-mod-registry/v2 v2.1.0
+## explicit
+github.com/edgexfoundry/go-mod-registry/v2/internal/pkg/consul
+github.com/edgexfoundry/go-mod-registry/v2/pkg/types
+github.com/edgexfoundry/go-mod-registry/v2/registry
+github.com/edgexfoundry/go-mod-registry/v2/registry/mocks
+# github.com/edgexfoundry/go-mod-secrets/v2 v2.1.0
+## explicit
+github.com/edgexfoundry/go-mod-secrets/v2/internal/pkg/vault
+github.com/edgexfoundry/go-mod-secrets/v2/pkg
+github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader
+github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader/mocks
+github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer
+github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks
+github.com/edgexfoundry/go-mod-secrets/v2/pkg/types
+github.com/edgexfoundry/go-mod-secrets/v2/secrets
+github.com/edgexfoundry/go-mod-secrets/v2/secrets/mocks
+# github.com/fatih/color v1.9.0
+github.com/fatih/color
+# github.com/fxamacker/cbor/v2 v2.3.0
+## explicit
+github.com/fxamacker/cbor/v2
+# github.com/go-kit/kit v0.11.0
+github.com/go-kit/kit/log
+# github.com/go-logfmt/logfmt v0.5.0
+github.com/go-logfmt/logfmt
+# github.com/go-playground/locales v0.14.0
+github.com/go-playground/locales
+github.com/go-playground/locales/currency
+# github.com/go-playground/universal-translator v0.18.0
+github.com/go-playground/universal-translator
+# github.com/go-playground/validator/v10 v10.9.0
+github.com/go-playground/validator/v10
+# github.com/go-redis/redis/v7 v7.3.0
+github.com/go-redis/redis/v7
+github.com/go-redis/redis/v7/internal
+github.com/go-redis/redis/v7/internal/consistenthash
+github.com/go-redis/redis/v7/internal/hashtag
+github.com/go-redis/redis/v7/internal/pool
+github.com/go-redis/redis/v7/internal/proto
+github.com/go-redis/redis/v7/internal/util
+# github.com/golang-jwt/jwt/v4 v4.1.0
+## explicit
+github.com/golang-jwt/jwt/v4
+# github.com/gomodule/redigo v2.0.0+incompatible
+## explicit
+github.com/gomodule/redigo/internal
+github.com/gomodule/redigo/redis
+# github.com/google/uuid v1.3.0
+## explicit
+github.com/google/uuid
+# github.com/gorilla/mux v1.8.0
+## explicit
+github.com/gorilla/mux
+# github.com/gorilla/websocket v1.4.2
+github.com/gorilla/websocket
+# github.com/hashicorp/consul/api v1.9.1
+github.com/hashicorp/consul/api
+# github.com/hashicorp/errwrap v1.0.0
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-cleanhttp v0.5.1
+github.com/hashicorp/go-cleanhttp
+# github.com/hashicorp/go-hclog v0.12.0
+github.com/hashicorp/go-hclog
+# github.com/hashicorp/go-immutable-radix v1.0.0
+github.com/hashicorp/go-immutable-radix
+# github.com/hashicorp/go-multierror v1.1.0
+github.com/hashicorp/go-multierror
+# github.com/hashicorp/go-rootcerts v1.0.2
+github.com/hashicorp/go-rootcerts
+# github.com/hashicorp/golang-lru v0.5.0
+github.com/hashicorp/golang-lru/simplelru
+# github.com/hashicorp/serf v0.9.5
+github.com/hashicorp/serf/coordinate
+# github.com/leodido/go-urn v1.2.1
+github.com/leodido/go-urn
+# github.com/lib/pq v1.10.3
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
+# github.com/mattn/go-colorable v0.1.6
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.12
+github.com/mattn/go-isatty
+# github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54
+github.com/mitchellh/consulstructure
+# github.com/mitchellh/copystructure v1.0.0
+github.com/mitchellh/copystructure
+# github.com/mitchellh/go-homedir v1.1.0
+github.com/mitchellh/go-homedir
+# github.com/mitchellh/mapstructure v1.1.2
+github.com/mitchellh/mapstructure
+# github.com/mitchellh/reflectwalk v1.0.0
+github.com/mitchellh/reflectwalk
+# github.com/pebbe/zmq4 v1.2.7
+github.com/pebbe/zmq4
+# github.com/pelletier/go-toml v1.9.4
+## explicit
+github.com/pelletier/go-toml
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/objx v0.1.1
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/mock
+github.com/stretchr/testify/require
+# github.com/x448/float16 v0.8.4
+github.com/x448/float16
+# golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+## explicit
+golang.org/x/crypto/hkdf
+golang.org/x/crypto/sha3
+# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+golang.org/x/net/internal/socks
+golang.org/x/net/proxy
+# golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069
+golang.org/x/sys/cpu
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
+# golang.org/x/text v0.3.6
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
+# gopkg.in/eapache/queue.v1 v1.1.0
+## explicit
+gopkg.in/eapache/queue.v1
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
+gopkg.in/yaml.v3
