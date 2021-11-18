@@ -86,7 +86,7 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(responses, w, lc)
+	pkg.EncodeAndWriteResponse(responses, w, lc)
 }
 
 func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +165,8 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 
 	response := commonDTO.NewBaseWithIdResponse("", "", http.StatusCreated, newId)
 	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
-	// Encode and send the resp body as JSON format
-	pkg.Encode(response, w, lc)
+	// EncodeAndWriteResponse and send the resp body as JSON format
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
@@ -202,7 +202,7 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r *http.Request) {
@@ -221,7 +221,7 @@ func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r 
 
 	response := responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc) // encode and send out the response
+	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
 func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +240,7 @@ func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWrit
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *http.Request) {
@@ -262,7 +262,7 @@ func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *h
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) DeviceProfilesByModel(w http.ResponseWriter, r *http.Request) {
@@ -287,7 +287,7 @@ func (dc *DeviceProfileController) DeviceProfilesByModel(w http.ResponseWriter, 
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) DeviceProfilesByManufacturer(w http.ResponseWriter, r *http.Request) {
@@ -312,7 +312,7 @@ func (dc *DeviceProfileController) DeviceProfilesByManufacturer(w http.ResponseW
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(w http.ResponseWriter, r *http.Request) {
@@ -338,5 +338,5 @@ func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(w http.R
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

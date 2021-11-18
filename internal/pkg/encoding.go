@@ -21,7 +21,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 )
 
-func Encode(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
+func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
 	w.Header().Set(common.ContentType, common.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)

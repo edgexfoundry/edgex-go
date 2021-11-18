@@ -74,7 +74,7 @@ func (sc *SubscriptionController) AddSubscription(w http.ResponseWriter, r *http
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (sc *SubscriptionController) AllSubscriptions(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (sc *SubscriptionController) AllSubscriptions(w http.ResponseWriter, r *htt
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) SubscriptionByName(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func (sc *SubscriptionController) SubscriptionByName(w http.ResponseWriter, r *h
 
 	response := responseDTO.NewSubscriptionResponse("", "", http.StatusOK, subscription)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) SubscriptionsByCategory(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +140,7 @@ func (sc *SubscriptionController) SubscriptionsByCategory(w http.ResponseWriter,
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) SubscriptionsByLabel(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +165,7 @@ func (sc *SubscriptionController) SubscriptionsByLabel(w http.ResponseWriter, r 
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) SubscriptionsByReceiver(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +190,7 @@ func (sc *SubscriptionController) SubscriptionsByReceiver(w http.ResponseWriter,
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) DeleteSubscriptionByName(w http.ResponseWriter, r *http.Request) {
@@ -209,7 +209,7 @@ func (sc *SubscriptionController) DeleteSubscriptionByName(w http.ResponseWriter
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *http.Request) {
@@ -245,5 +245,5 @@ func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(updateResponses, w, lc)
+	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }

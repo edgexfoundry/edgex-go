@@ -81,7 +81,7 @@ func (dc *DeviceController) AddDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +100,7 @@ func (dc *DeviceController) DeleteDeviceByName(w http.ResponseWriter, r *http.Re
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceController) DevicesByServiceName(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +125,7 @@ func (dc *DeviceController) DevicesByServiceName(w http.ResponseWriter, r *http.
 
 	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceController) DeviceNameExists(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +153,7 @@ func (dc *DeviceController) DeviceNameExists(w http.ResponseWriter, r *http.Requ
 		statusCode = http.StatusNotFound
 	}
 	utils.WriteHttpHeader(w, ctx, statusCode)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceController) PatchDevice(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +195,7 @@ func (dc *DeviceController) PatchDevice(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(updateResponses, w, lc)
+	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }
 
 func (dc *DeviceController) AllDevices(w http.ResponseWriter, r *http.Request) {
@@ -217,7 +217,7 @@ func (dc *DeviceController) AllDevices(w http.ResponseWriter, r *http.Request) {
 
 	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceController) DeviceByName(w http.ResponseWriter, r *http.Request) {
@@ -236,7 +236,7 @@ func (dc *DeviceController) DeviceByName(w http.ResponseWriter, r *http.Request)
 
 	response := responseDTO.NewDeviceResponse("", "", http.StatusOK, device)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceController) DevicesByProfileName(w http.ResponseWriter, r *http.Request) {
@@ -261,5 +261,5 @@ func (dc *DeviceController) DevicesByProfileName(w http.ResponseWriter, r *http.
 
 	response := responseDTO.NewMultiDevicesResponse("", "", http.StatusOK, totalCount, devices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
