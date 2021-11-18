@@ -146,7 +146,7 @@ func (k *KongAdminAPI) Setup() error {
 	}
 
 	// Write JWT to secret file (used solely by "admin" group in Kong)
-	err = os.WriteFile(k.paths.jwt, []byte(k.secrets.jwt.signed), 0400)
+	err = os.WriteFile(k.paths.jwt, []byte(k.secrets.jwt.signed), 0600)
 	if err != nil {
 		return fmt.Errorf("%s Failed to write JWT to file %s: %w", k.prefixes.errText, k.paths.jwt, err)
 	}

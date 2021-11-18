@@ -20,8 +20,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
@@ -75,20 +77,25 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[device-rfid-llrp]",
 }
 
-var services = []string{
-	"security-bootstrapper",
-	"security-bootstrap-redis",
-	"security-file-token-provider",
-	"security-proxy-setup",
-	"security-secretstore-setup",
-	"core-command",
-	"core-data",
-	"core-metadata",
-	"support-notifications",
-	"support-scheduler",
-	"sys-mgmt-agent",
-	"device-virtual",
-	"app-service-configurable",
+// services w/configuration that needs to be copied
+// to $SNAP_DATA
+func getServicesWithConfig() []string {
+	return []string{"security-bootstrapper", "security-bootstrap-redis",
+		"security-file-token-provider", "security-proxy-setup",
+		"security-secretstore-setup", "core-command", "core-data",
+		"core-metadata", "support-notifications", "support-scheduler",
+		"sys-mgmt-agent", "device-virtual", "app-service-configurable"}
+}
+
+// TODO: re-factor to get this list from snapd using snapctl
+func getAllServices() []string {
+	return []string{"consul", "redis", "postgres",
+		"kong-daemon", "vault", "security-secretstore-setup",
+		"security-proxy-setup", "security-bootstrapper-redis",
+		"security-consul-bootstrapper", "core-command",
+		"core-data", "core-metadata", "support-notifications",
+		"support-scheduler", "sys-mgmt-agent", "device-virtual",
+		"kuiper", "app-service-configurable"}
 }
 
 // installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
@@ -97,7 +104,7 @@ func installConfFiles() error {
 
 	// TODO: should we continue to do this, since config overrides are
 	// the preferred way to make configuration changes now?
-	for _, v := range services {
+	for _, v := range getServicesWithConfig() {
 		destDir := hooks.SnapDataConf + "/"
 		srcDir := hooks.SnapConf + "/"
 
@@ -269,6 +276,9 @@ func installConsul() error {
 	return nil
 }
 
+// TODO: this function actually causes postgres to start in order
+// to setup the security for postgres, thus we may need to move
+// the install/setup logic for the proxy to the configure hook.
 func setupPostgres() error {
 
 	setupScriptPath, err := exec.LookPath("install-setup-postgres.sh")
@@ -322,11 +332,22 @@ func installProxy() error {
 	return nil
 }
 
+// This function creates the redis config dir under $SNAP_DATA,
+// and creates an empty redis.conf file. This allows the command
+// line for the service to always specify the config file, and
+// allows for redis when the config option security-secret-store
+// is "on" or "off".
 func installRedis() error {
-	if err := os.MkdirAll(hooks.SnapData+"/redis", 0755); err != nil {
-		return err
+	fileName := filepath.Join(hooks.SnapData, "/redis/conf/redis.conf")
+	if _, err := os.Stat(filepath.Join(hooks.SnapData, "redis")); err != nil {
+		// dir doesn't exist
+		if err := os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(fileName, nil, 0644); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
 
@@ -389,22 +410,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// just like the configure hook, this code needs to iterate over every service
-	// and setup .env files for each if required...
-	for _, v := range hooks.Services {
-		serviceCfg := hooks.EnvConfig + "." + v
-		envJSON, err := cli.Config(serviceCfg)
-		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:install failed to read service %s configuration - %v", v, err))
+	// Stop and disable all *enabled* services as they will be
+	// re-enabled in the configure hook if the config option
+	// 'install-mode=defer-startup'.
+	for _, s := range getAllServices() {
+		hooks.Info(fmt.Sprintf("edgexfoundry:install disabling service: %s", s))
+		if err = cli.Stop(s, true); err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:install can't disable: %s; %v", s, err))
 			os.Exit(1)
 		}
+	}
 
-		if envJSON != "" {
-			hooks.Debug(fmt.Sprintf("edgexfoundry:install: service envJSON: %s", envJSON))
-			if err := hooks.HandleEdgeXConfig(v, envJSON, nil); err != nil {
-				hooks.Error(fmt.Sprintf("edgexfoundry:install failed to process service %s configuration - %v", v, err))
-				os.Exit(1)
-			}
-		}
+	if err = cli.SetConfig("install-mode", "defer-startup"); err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install-mode'; %v", err))
+		os.Exit(1)
 	}
 }

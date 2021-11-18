@@ -29,6 +29,13 @@ func TestKongAdminAPI_Setup(t *testing.T) {
 	err := k.Setup()
 	assert.NoError(t, err)
 
+	// check file permission of jwt
+	info, err := os.Stat(k.paths.jwt)
+	assert.NoError(t, err)
+
+	fileMode := info.Mode().String()
+	assert.Equal(t, "-rw-------", fileMode, "The jwt should be read+write for owner")
+
 	// Clean up files created
 	os.Remove(k.paths.config)
 	os.Remove(k.paths.jwt)
