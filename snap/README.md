@@ -447,7 +447,7 @@ Example: `snap set edgexfoundry env.device-virtual.service.port=7777`
 
 | API Gateway setting | Description                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| add-proxy-route     | Defines a configuration TOML file containing a comma-separated list of paired additional service names and URLs to create proxy Kong routes. See [documentation](https://docs.edgexfoundry.org/2.1/security/Ch-APIGateway/#configuration-of-adding-microservices-routes-for-api-gateway) NOTE - this setting is not a configuration override, which means it can not be configured through `snap set`. it's a top-level environment variable used by the security-proxy-setup. |
+| add-proxy-route     | The add-proxy-route setting is a comma-separated list of paired additional service names and URLs to be added to the API Gateway (aka Kong). See [documentation](https://docs.edgexfoundry.org/2.1/security/Ch-APIGateway/#configuration-of-adding-microservices-routes-for-api-gateway) NOTE - this setting is not a configuration override, it's a top-level environment variable used by the security-proxy-setup. |
 
 ### Secret Store settings (prefix: `env.security-secret-store.`)
 
@@ -461,7 +461,7 @@ Example: `snap set edgexfoundry env.device-virtual.service.port=7777`
 
 | setting                | Description                                                  |
 | ---------------------- | ------------------------------------------------------------ |
-| add-registry-acl-roles | Defines a comma-separated list of service keys used to create ACL roles in Vault to allow secure Consul access for the services, also contains registry role names to be added. |
+| add-registry-acl-roles | A comma separated list of registry role names to be added. |
 
 
 ### Support Notifications settings (prefix: `env.support-notifications.`)
