@@ -53,7 +53,7 @@ func (tc *TransmissionController) TransmissionById(w http.ResponseWriter, r *htt
 
 	response := responseDTO.NewTransmissionResponse("", "", http.StatusOK, trans)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // TransmissionsByTimeRange allows querying of transmissions by their creation timestamp within a given time range, sorted in descending order. Results are paginated.
@@ -76,7 +76,7 @@ func (tc *TransmissionController) TransmissionsByTimeRange(w http.ResponseWriter
 
 	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (tc *TransmissionController) AllTransmissions(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +98,7 @@ func (tc *TransmissionController) AllTransmissions(w http.ResponseWriter, r *htt
 
 	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // TransmissionsByStatus allows retrieval of the transmissions associated with the specified status. Ordered by create timestamp descending.
@@ -124,7 +124,7 @@ func (tc *TransmissionController) TransmissionsByStatus(w http.ResponseWriter, r
 
 	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // DeleteProcessedTransmissionsByAge deletes the processed transmissions if the current timestamp minus their created timestamp is less than the age parameter.
@@ -148,7 +148,7 @@ func (nc *TransmissionController) DeleteProcessedTransmissionsByAge(w http.Respo
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // TransmissionsBySubscriptionName allows retrieval of the transmissions associated with the specified subscription name. Ordered by create timestamp descending.
@@ -174,7 +174,7 @@ func (tc *TransmissionController) TransmissionsBySubscriptionName(w http.Respons
 
 	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // TransmissionsByNotificationId queries transmission by Notification ID
@@ -201,5 +201,5 @@ func (tc *TransmissionController) TransmissionsByNotificationId(w http.ResponseW
 
 	response := responseDTO.NewMultiTransmissionsResponse("", "", http.StatusOK, totalCount, transmissions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

@@ -49,7 +49,7 @@ func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.Lo
 	lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 	errResponses := commonDTO.NewBaseResponse(requestId, err.Message(), err.Code())
 	WriteHttpHeader(w, ctx, err.Code())
-	pkg.Encode(errResponses, w, lc)
+	pkg.EncodeAndWriteResponse(errResponses, w, lc)
 }
 
 // ParseGetAllObjectsRequestQueryString parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid.

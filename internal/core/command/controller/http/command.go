@@ -10,15 +10,16 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/command/application"
-	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/application"
+	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -54,7 +55,7 @@ func (cc *CommandController) AllCommands(w http.ResponseWriter, r *http.Request)
 	response := responseDTO.NewMultiDeviceCoreCommandsResponse("", "", http.StatusOK, totalCount, commands)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +75,7 @@ func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http
 	response := responseDTO.NewDeviceCoreCommandResponse("", "", http.StatusOK, deviceCoreCommand)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func validateGetCommandParameters(r *http.Request) (err errors.EdgeX) {
@@ -114,7 +115,7 @@ func (cc *CommandController) IssueGetCommandByName(w http.ResponseWriter, r *htt
 	// encode and send out the response
 	if response != nil {
 		utils.WriteHttpHeader(w, ctx, response.StatusCode)
-		pkg.Encode(response, w, lc)
+		pkg.EncodeAndWriteResponse(response, w, lc)
 	} else {
 		// If dsReturnEvent is no, there will be no content returned in the http response
 		utils.WriteHttpHeader(w, ctx, http.StatusOK)
@@ -147,5 +148,5 @@ func (cc *CommandController) IssueSetCommandByName(w http.ResponseWriter, r *htt
 
 	utils.WriteHttpHeader(w, ctx, response.StatusCode)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

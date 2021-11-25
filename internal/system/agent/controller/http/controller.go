@@ -50,7 +50,7 @@ func (c *AgentController) GetHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
-	pkg.Encode(res, w, lc)
+	pkg.EncodeAndWriteResponse(res, w, lc)
 }
 
 func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +71,7 @@ func (c *AgentController) GetMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
-	pkg.Encode(res, w, lc)
+	pkg.EncodeAndWriteResponse(res, w, lc)
 }
 
 func (c *AgentController) GetConfigs(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func (c *AgentController) GetConfigs(w http.ResponseWriter, r *http.Request) {
 
 	res := config.GetConfigs(ctx, services, c.dic)
 	utils.WriteHttpHeader(w, r.Context(), http.StatusMultiStatus)
-	pkg.Encode(res, w, lc)
+	pkg.EncodeAndWriteResponse(res, w, lc)
 }
 
 func (c *AgentController) PostOperations(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func (c *AgentController) PostOperations(w http.ResponseWriter, r *http.Request)
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(res, w, lc)
+	pkg.EncodeAndWriteResponse(res, w, lc)
 }
 
 func parseServicesFromQuery(r *http.Request) ([]string, errors.EdgeX) {

@@ -80,8 +80,8 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	// Encode and send the resp body as JSON format
-	pkg.Encode(addResponses, w, lc)
+	// EncodeAndWriteResponse and send the resp body as JSON format
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (dc *DeviceServiceController) DeviceServiceByName(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +100,7 @@ func (dc *DeviceServiceController) DeviceServiceByName(w http.ResponseWriter, r 
 
 	response := responseDTO.NewDeviceServiceResponse("", "", http.StatusOK, deviceService)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +142,7 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(updateResponses, w, lc)
+	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }
 
 func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +161,7 @@ func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWrit
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *http.Request) {
@@ -184,5 +184,5 @@ func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *h
 	response := responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, totalCount, deviceServices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
