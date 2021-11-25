@@ -83,7 +83,7 @@ func (nc *NotificationController) AddNotification(w http.ResponseWriter, r *http
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (nc *NotificationController) NotificationById(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +102,7 @@ func (nc *NotificationController) NotificationById(w http.ResponseWriter, r *htt
 
 	response := responseDTO.NewNotificationResponse("", "", http.StatusOK, notification)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (nc *NotificationController) NotificationsByCategory(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func (nc *NotificationController) NotificationsByCategory(w http.ResponseWriter,
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (nc *NotificationController) NotificationsByLabel(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (nc *NotificationController) NotificationsByLabel(w http.ResponseWriter, r 
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (nc *NotificationController) NotificationsByStatus(w http.ResponseWriter, r *http.Request) {
@@ -177,7 +177,7 @@ func (nc *NotificationController) NotificationsByStatus(w http.ResponseWriter, r
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter, r *http.Request) {
@@ -199,7 +199,7 @@ func (nc *NotificationController) NotificationsByTimeRange(w http.ResponseWriter
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // DeleteNotificationById deletes the notification by id and all of its associated transmissions
@@ -219,7 +219,7 @@ func (nc *NotificationController) DeleteNotificationById(w http.ResponseWriter, 
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
@@ -245,7 +245,7 @@ func (nc *NotificationController) NotificationsBySubscriptionName(w http.Respons
 
 	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // CleanupNotificationsByAge deletes notifications which have age and is less than the specified one, where the age of Notification is calculated by subtracting its last modification timestamp from the current timestamp. Note that the corresponding transmissions will also be deleted.
@@ -269,7 +269,7 @@ func (nc *NotificationController) CleanupNotificationsByAge(w http.ResponseWrite
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // CleanupNotifications deletes all notifications and the corresponding transmissions.
@@ -287,7 +287,7 @@ func (nc *NotificationController) CleanupNotifications(w http.ResponseWriter, r 
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 // DeleteProcessedNotificationsByAge deletes the processed notifications if the current timestamp minus their last modification timestamp is less than the age parameter, and the corresponding transmissions will also be deleted.
@@ -312,5 +312,5 @@ func (nc *NotificationController) DeleteProcessedNotificationsByAge(w http.Respo
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

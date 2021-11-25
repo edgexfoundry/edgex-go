@@ -49,5 +49,5 @@ func (dc *DeviceResourceController) DeviceResourceByProfileNameAndResourceName(w
 
 	response := responseDTO.NewDeviceResourceResponse("", "", http.StatusOK, resource)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

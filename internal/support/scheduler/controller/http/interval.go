@@ -73,7 +73,7 @@ func (dc *IntervalController) AddInterval(w http.ResponseWriter, r *http.Request
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(addResponses, w, lc)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
 func (dc *IntervalController) IntervalByName(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +92,7 @@ func (dc *IntervalController) IntervalByName(w http.ResponseWriter, r *http.Requ
 
 	response := responseDTO.NewIntervalResponse("", "", http.StatusOK, interval)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *IntervalController) AllIntervals(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +114,7 @@ func (dc *IntervalController) AllIntervals(w http.ResponseWriter, r *http.Reques
 
 	response := responseDTO.NewMultiIntervalsResponse("", "", http.StatusOK, totalCount, intervals)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *IntervalController) DeleteIntervalByName(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func (dc *IntervalController) DeleteIntervalByName(w http.ResponseWriter, r *htt
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (dc *IntervalController) PatchInterval(w http.ResponseWriter, r *http.Request) {
@@ -169,5 +169,5 @@ func (dc *IntervalController) PatchInterval(w http.ResponseWriter, r *http.Reque
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.Encode(responses, w, lc)
+	pkg.EncodeAndWriteResponse(responses, w, lc)
 }
