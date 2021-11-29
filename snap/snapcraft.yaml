@@ -813,12 +813,22 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    # TODO: ideally this should be changed to v2.0.0
-    source-tag: v2.0.0
+    source-branch: v2.1.0
     plugin: make
     after: [go-build-helper]
     override-build: |
-      echo "2.0.0" > ./VERSION
+
+      if git describe ; then
+          # get the short tag without commit count and hash when there are untagged commits
+          # gets tags across all branches, not just the current branch
+          # drop the v prefix
+          TAG=$(git describe --tags --abbrev=0)
+          VERSION=$(echo $TAG | sed 's/v//')
+      else
+          VERSION="0.0.0"
+      fi
+
+      echo $VERSION > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
