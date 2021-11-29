@@ -190,6 +190,7 @@ components:
             host: "192.168.0.102"
             port: 8080
             httpMethod: "GET"
+            path: "/api/v2/ping"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -229,6 +230,7 @@ components:
             host: "192.168.0.102"
             port: 8080
             httpMethod: "GET"
+            path: "/api/v2/ping"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -531,6 +533,7 @@ components:
               host: "192.168.0.102"
               port: 8080
               httpMethod: "GET"
+              path: "/api/v2/ping"
             adminState: "UNLOCKED"
           - created: 1634280525302
             modified: 1634280525302
@@ -542,6 +545,7 @@ components:
               host: "192.168.0.102"
               port: 8080
               httpMethod: "GET"
+              path: "/api/v2/test"
             adminState: "UNLOCKED"
 paths:
   /interval:
