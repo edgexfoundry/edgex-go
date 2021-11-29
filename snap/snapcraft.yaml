@@ -853,14 +853,17 @@ parts:
   app-service-config:
     plugin: nil
     stage-snaps:
-      - edgex-app-service-configurable/2.0/stable
+      - edgex-app-service-configurable/2.1/stable
     stage:
+      - -res/external-mqtt-trigger/configuration.toml
       - -res/functional-tests/configuration.toml
       - -res/http-export/configuration.toml
       - -res/mqtt-export/configuration.toml
       - -res/push-to-core/configuration.toml
       - -res/sample/configuration.toml
 
+      - -usr/*
+      
   kuiper:
     source: https://github.com/lf-edge/ekuiper.git
     source-tag: 1.3.1
