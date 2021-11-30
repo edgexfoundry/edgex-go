@@ -58,9 +58,6 @@ passthrough:
       command-chain:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload
-    prepare-plug-edgex-secretstore-token:
-      command-chain:
-       - snap/command-chain/snapcraft-runner
     connect-plug-edgex-secretstore-token:
       command-chain:
        - snap/command-chain/snapcraft-runner
