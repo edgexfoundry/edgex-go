@@ -8,15 +8,16 @@
 # respective hook script.
 
 # The caller is either post-stop-command from snapcraft.yaml (default)
-# or the connect-plug-edgex-secretstore-token hook
+# or the connect-plug-edgex-secretstore-token hook.
+# It is only for logging purposes
 caller=${1:-"post-stop-command"}
-
 logger "edgex-secretstore:post-setup: started by $caller"
 
 # create the directory which consumers bind-mount into
 mkdir -p $SNAP_DATA/mount/secrets
 
-# each directory corresponds to one service
+# Each directory corresponds to an external device/app service that is connected
+# to the edgex-secretstore-token plug
 for fpath in $SNAP_DATA/mount/secrets/*; do
     # verify that this is a directory
     [ -d "$fpath" ] || continue
