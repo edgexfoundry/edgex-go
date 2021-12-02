@@ -99,7 +99,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	response := commonDTO.NewBaseWithIdResponse(addEventReqDTO.RequestId, "", http.StatusCreated, event.Id)
 	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	response := responseDTO.NewEventResponse("", "", http.StatusOK, e)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) DeleteEventById(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +145,7 @@ func (ec *EventController) DeleteEventById(w http.ResponseWriter, r *http.Reques
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +162,7 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc) // encode and send out the response
+	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
 func (ec *EventController) EventCountByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +183,7 @@ func (ec *EventController) EventCountByDeviceName(w http.ResponseWriter, r *http
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc) // encode and send out the response
+	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
 func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +204,7 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 	}
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -229,7 +229,7 @@ func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Req
 
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -250,7 +250,7 @@ func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *ht
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +272,7 @@ func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Requ
 
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (ec *EventController) DeleteEventsByAge(w http.ResponseWriter, r *http.Request) {
@@ -297,5 +297,5 @@ func (ec *EventController) DeleteEventsByAge(w http.ResponseWriter, r *http.Requ
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

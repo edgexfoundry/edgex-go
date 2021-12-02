@@ -1104,7 +1104,7 @@ components:
       value:
         - apiVersion: v2
           device:
-            name: AWS IOT Button1
+            name: AWS-IOT-Button1
             description: Home automation system
             adminState: UNLOCKED
             operatingState: UP
@@ -1129,26 +1129,28 @@ components:
       value:
         - apiVersion: v2
           device:
-            - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
-              name: "AWS IOT Button1"
-              operatingState: "DOWN"
-              labels:
-                - "home"
-              autoEvents:
-                - interval: "100ms"
-                  onChange: true
-                  sourceName: "CurrentHumidity"
-            - id: "771de9f4-b5a3-4eba-b5e7-ec6e14fa3de7"
-              name: "AWS IOT Button2"
-              description: "Home automation system"
-              adminState: "LOCKED"
-              operatingState: "UP"
+            id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
+            name: "AWS-IOT-Button1"
+            operatingState: "DOWN"
+            labels:
+              - "home"
+            autoEvents:
+              - interval: "100ms"
+                onChange: true
+                sourceName: "CurrentHumidity"
+        - apiVersion: v2
+          device:
+            id: "771de9f4-b5a3-4eba-b5e7-ec6e14fa3de7"
+            name: "AWS-IOT-Button2"
+            description: "Home automation system"
+            adminState: "LOCKED"
+            operatingState: "UP"
     AddDeviceServiceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
           apiVersion: v2
           service:
-            name: home thermostat device service
+            name: home-thermostat-device-service
             description: manage homethermostats
             adminState: UNLOCKED
             labels:
@@ -2510,16 +2512,16 @@ paths:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
                 apiVersion: v2
                 service:
-                - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
-                  name: "home thermostat device service"
+                  id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
+                  name: "home-thermostat-device-service"
                   description: "Home automation system"
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
                 apiVersion: v2
                 service:
-                - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
-                  name: "Google Home device service"
+                  id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
+                  name: "Google-Home-device-service"
                   adminState: "UNLOCKED"
                   baseAddress: "http://home-device-service:49980"
       responses:
@@ -2816,21 +2818,21 @@ paths:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
                 apiVersion: v2
                 provisionwatcher:
-                  - id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
-                    name: "simple-identifier"
-                    identifiers:
-                      "address": "localhost"
-                      "port": "3[0-9]{2}"
-                    adminState: "UNLOCKED"
-                    labels:
-                      - "simple"
+                  id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
+                  name: "simple-identifier"
+                  identifiers:
+                    "address": "localhost"
+                    "port": "3[0-9]{2}"
+                  adminState: "UNLOCKED"
+                  labels:
+                    - "simple"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
                 apiVersion: v2
                 provisionwatcher:
-                  - id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
-                    name: "virtual-identifier"
-                    profileName: "device-virtual"
-                    serviceName: "device-virtual"
+                  id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
+                  name: "virtual-identifier"
+                  profileName: "device-virtual"
+                  serviceName: "device-virtual"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."

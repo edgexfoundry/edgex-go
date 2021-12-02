@@ -52,7 +52,7 @@ func (rc *ReadingController) ReadingTotalCount(w http.ResponseWriter, r *http.Re
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc) // encode and send out the countResponse
+	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the countResponse
 }
 
 func (rc *ReadingController) AllReadings(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,7 @@ func (rc *ReadingController) AllReadings(w http.ResponseWriter, r *http.Request)
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByTimeRange(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +96,7 @@ func (rc *ReadingController) ReadingsByTimeRange(w http.ResponseWriter, r *http.
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByResourceName(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func (rc *ReadingController) ReadingsByResourceName(w http.ResponseWriter, r *ht
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +146,7 @@ func (rc *ReadingController) ReadingsByDeviceName(w http.ResponseWriter, r *http
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingCountByDeviceName(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +168,7 @@ func (rc *ReadingController) ReadingCountByDeviceName(w http.ResponseWriter, r *
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc) // encode and send out the response
+	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
 // ReadingsByResourceNameAndTimeRange returns readings by resource name and specified time range. Readings are sorted in descending order of origin time.
@@ -194,7 +194,7 @@ func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(w http.ResponseW
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +220,7 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(w http.Response
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(w http.ResponseWriter, r *http.Request) {
@@ -247,7 +247,7 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(w h
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(w http.ResponseWriter, r *http.Request) {
@@ -298,5 +298,5 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(w 
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.Encode(response, w, lc)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }
