@@ -458,6 +458,11 @@ components:
         apiVersion: "v2"
         statusCode: 500
         message: "Internal Server Error"
+    503Example:
+      value:
+        apiVersion: "v2"
+        statusCode: 503
+        message: "HTTP request timeout"
     DeviceCoreCommandExample:
       value:
         apiVersion: "v2"
@@ -608,6 +613,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: "Service Unavailable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                503Example:
+                  $ref: '#/components/examples/503Example'
     put:
       summary: "Issue the specified write command referenced by the command name to the device/sensor that is also referenced by name."
       requestBody:
@@ -662,6 +679,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: "Service Unavailable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                503Example:
+                  $ref: '#/components/examples/503Example'
   /device/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
