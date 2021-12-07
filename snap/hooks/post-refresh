@@ -12,3 +12,6 @@ if [ -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt" ]; then
     logger "edgexfoundry:post-refresh removing stale kong-admin-jwt"
     rm -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt"
 fi
+
+# set up the new locations for postgres config files
+$SNAP/bin/install-setup-postgres.sh

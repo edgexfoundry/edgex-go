@@ -1,73 +1,114 @@
 #!/bin/sh
 
+# this script is called from the install hook to set up postgres
+# and also from the post-refresh hook. It handles these three scenerios:
+# - new install: create config file and database
+# - refresh from 2.0/stable or older - a snap using postgres 10
+# - refresh from a 2.1/stable or newer snap using postgres 12
+
+# in postgres 12 we are using these directories
+SNAP_DATA_CONFIG_POSTGRES_DIR="$SNAP_DATA/config/postgres"
+SNAP_DATA_CONFIG_POSTGRES_CONFIGFILE="$SNAP_DATA_CONFIG_POSTGRES_DIR/postgresql.conf"
+SNAP_DATA_POSTGRES_DIR="$SNAP_DATA/postgresql"
+SNAP_DATA_POSTGRES_DB_DIR="$SNAP_DATA_POSTGRES_DIR/data"
+
+# postgres 10 directories
+SNAP_DATA_OLD_POSTGRES_DIR="$SNAP_DATA/postgresql/10"
+SNAP_DATA_OLD_POSTGRES_DB_DIR="$SNAP_DATA_OLD_POSTGRES_DIR/main"
+SNAP_DATA_OLD_POSTGRES__CONFIGFILE="$SNAP_DATA/etc/postgresql/10/main/postgresql.conf"
+
 # setup postgres db config file with env vars replaced
-if [ ! -f "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf" ]; then
-    mkdir -p "$SNAP_DATA/etc/postgresql/10/main"
-    cp "$SNAP/etc/postgresql/10/main/postgresql.conf" "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf"
-    # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
+if [ -f "$SNAP_DATA_CONFIG_POSTGRES_CONFIGFILE" ]; then
+  logger "edgexfoundry:install-setup-postgres.sh: refresh - using existing configuration file"
+elif [ -f "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf" ]; then
+  logger "edgexfoundry:install-setup-postgres.sh: refresh - migrating existing Postgres 10 configuration file"
+  mkdir -p $SNAP_DATA_CONFIG_POSTGRES_DIR
+  mv $SNAP_DATA_OLD_POSTGRES__CONFIGFILE $SNAP_DATA_CONFIG_POSTGRES_DIR/
+else
+   logger "edgexfoundry:install-setup-postgres.sh: setting up new configuration file"
+   mkdir -p $SNAP_DATA_CONFIG_POSTGRES_DIR
+   cp "$SNAP/config/postgres/postgresql.conf" "$SNAP_DATA_CONFIG_POSTGRES_CONFIGFILE"
+   ls -al "$SNAP_DATA_CONFIG_POSTGRES_DIR"
+       # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
     sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
         -e "s@\$SNAP_DATA@$SNAP_DATA_CURRENT@g" \
         -e "s@\$SNAP@$SNAP_CURRENT@g" \
-        "$SNAP_DATA/etc/postgresql/10/main/postgresql.conf"
+        "$SNAP_DATA_CONFIG_POSTGRES_CONFIGFILE"
 fi
 
-# ensure the postgres data directory exists and is owned by snap_daemon
-mkdir -p "$SNAP_DATA/postgresql"
-chown -R snap_daemon:snap_daemon "$SNAP_DATA/postgresql"
+if [ -d "$SNAP_DATA_POSTGRES_DB_DIR" ]; then
+  logger "edgexfoundry:install-setup-postgres.sh: refresh - using existing data directory"
+else
+  # set up the postgres data directory - generate a new one if we are upgrading from postgres 10
 
-# setup the postgres data directory
-"$SNAP/bin/drop-snap-daemon.sh" "$SNAP/usr/lib/postgresql/10/bin/initdb" -D "$SNAP_DATA/postgresql/10/main"
+  if [ -d "$SNAP_DATA_OLD_POSTGRES_DB_DIR" ]; then
+    logger "edgexfoundry:install-setup-postgres.sh: refresh - removing existing Postgres 10 data directory"
+    rm -rf $SNAP_DATA_OLD_POSTGRES_DIR
+  fi
 
-# ensure the sockets dir exists and is properly owned
-mkdir -p "$SNAP_COMMON/sockets"
-chown -R snap_daemon:snap_daemon "$SNAP_COMMON/sockets"
+  logger "edgexfoundry:install-setup-postgres.sh: creating data directory and setting up Kong user"
+  # ensure the postgres data directory exists and is owned by snap_daemon
+  mkdir -p "$SNAP_DATA_POSTGRES_DB_DIR"
+  chown -R snap_daemon:snap_daemon "$SNAP_DATA_POSTGRES_DIR"
+  chown -R snap_daemon:snap_daemon "$SNAP_DATA_POSTGRES_DB_DIR"
+  
 
-# start postgres up and wait a bit for it so we can create the database and user
-# for kong
-snapctl start "$SNAP_NAME.postgres"
+  # setup the postgres data directory
+  logger "edgexfoundry:install-setup-postgres.sh: setup the postgres data directory"
+  "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/usr/lib/postgresql/12/bin/initdb" -D "$SNAP_DATA_POSTGRES_DB_DIR"
 
-# add a kong user and database in postgres - note we have to run these through
-# the perl5lib-launch scripts to setup env vars properly and we need to loop
-# trying to do this because we have to wait for postgres to start up
-iter_num=0
-MAX_POSTGRES_INIT_ITERATIONS=10
-until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
-    sleep 1
-    iter_num=$(( iter_num + 1 ))
-    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
-        logger "edgexfoundry:install: failed to create kong db in postgres after $iter_num iterations"
-        exit 1
-    fi
-done
 
-# generate a random password using the automatic password generator (apg)
-# debian package sourced from the Ubuntu 18.04 archive as a snap stage-package.
-#
-# -M ncl -- says the generator should use lowercase, uppercase, and numeric symbols
-# -n 1   -- generate a single password
-# -x 24  -- maximum password len
-# -m 16  -- minimum password len
-PGPASSWD=$("$SNAP/usr/lib/apg/apg" -a 0 -M ncl -n 1 -x 24 -m 16)
-mkdir -p "$SNAP_DATA/config/postgres/"
-echo "$PGPASSWD" > "$SNAP_DATA/config/postgres/kongpw"
+  # ensure the sockets dir exists and is properly owned
+  mkdir -p "$SNAP_COMMON/sockets"
+  chown -R snap_daemon:snap_daemon "$SNAP_COMMON/sockets"
 
-# createuser doesn't support specification of a password, so use psql instead.
-# Also as psql will use the database 'snap_daemon' by default, specify 'kong'
-# via environment variable.
-export PGDATABASE="kong"
-iter_num=0
-until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
-    "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
-    sleep 1
-    iter_num=$(( iter_num + 1 ))
-    if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
-        logger "edgexfoundry:install: failed to create kong user in postgres after $iter_num iterations"
-        exit 1
-    fi
-done
+  # start postgres up and wait a bit for it so we can create the database and user
+  # for kong
+  snapctl start "$SNAP_NAME.postgres"
 
-# stop postgres again in case the security services should be turned off
-snapctl stop "$SNAP_NAME.postgres"
+  # add a kong user and database in postgres - note we have to run these through
+  # the perl5lib-launch scripts to setup env vars properly and we need to loop
+  # trying to do this because we have to wait for postgres to start up
+  iter_num=0
+  MAX_POSTGRES_INIT_ITERATIONS=10
+  until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/createdb" kong; do
+      sleep 1
+      iter_num=$(( iter_num + 1 ))
+      if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+          logger "edgexfoundry:install-setup-postgres.sh: failed to create kong db in postgres after $iter_num iterations"
+          exit 1
+      fi
+  done
 
-# modify postgres authentication config to use 'md5' (password)
-"$SNAP/bin/drop-snap-daemon.sh" sed -i -e "s@trust@md5@g" "$SNAP_DATA/postgresql/10/main/pg_hba.conf"
+  # generate a random password using the automatic password generator (apg)
+  # debian package sourced from the Ubuntu 18.04 archive as a snap stage-package.
+  #
+  # -M ncl -- says the generator should use lowercase, uppercase, and numeric symbols
+  # -n 1   -- generate a single password
+  # -x 24  -- maximum password len
+  # -m 16  -- minimum password len
+  PGPASSWD=$("$SNAP/usr/lib/apg/apg" -a 0 -M ncl -n 1 -x 24 -m 16)
+  echo "$PGPASSWD" > "$SNAP_DATA_CONFIG_POSTGRES_DIR/kongpw"
+
+  # createuser doesn't support specification of a password, so use psql instead.
+  # Also as psql will use the database 'snap_daemon' by default, specify 'kong'
+  # via environment variable.
+  export PGDATABASE="kong"
+  iter_num=0
+  until "$SNAP/bin/drop-snap-daemon.sh" "$SNAP/bin/perl5lib-launch.sh" "$SNAP/usr/bin/psql" \
+      "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
+      sleep 1
+      iter_num=$(( iter_num + 1 ))
+      if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+          logger "edgexfoundry:install-setup-postgres.sh: failed to create kong user in postgres after $iter_num iterations"
+          exit 1
+      fi
+  done
+
+  # stop postgres again in case the security services should be turned off
+  snapctl stop "$SNAP_NAME.postgres"
+
+  # modify postgres authentication config to use 'md5' (password)
+  "$SNAP/bin/drop-snap-daemon.sh" sed -i -e "s@trust@md5@g" "$SNAP_DATA_POSTGRES_DB_DIR/pg_hba.conf"
+
+fi
