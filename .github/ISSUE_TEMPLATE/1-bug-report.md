@@ -10,12 +10,16 @@ Hello there! 😄
 To expedite issue processing please search open and closed issues before submitting a new one.
 Existing issues often contain information about workarounds, resolution, or progress updates.
 
+Please do not remove sections of this template when submitting your issue.  If the section is not relevant to your issue, leave the section but enter "n/a" for not applicable.
+
+Note some sections are marked "REQUIRED" and must be provided.  Never mark required sections "n/a".
+
 🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅🔅-->
 
 
 # 🐞 Bug Report
 
-### Affected Services
+### Affected Services [**REQUIRED**]
 <!-- Can you pin-point one or more EdgeX services (Data, Metadata, Command, etc...) as the source of the bug? -->
 <!-- ✍️edit: --> The issue is located in: 
 
@@ -26,7 +30,7 @@ Existing issues often contain information about workarounds, resolution, or prog
 <!-- ✍️--> Yes, the previous version in which this bug was not present was: ....
 
 
-### Description and Minimal Reproduction
+### Description and Minimal Reproduction [**REQUIRED**]
 
 
 ## 🔥 Exception or Error
@@ -40,7 +44,7 @@ Existing issues often contain information about workarounds, resolution, or prog
 ## 🌍  Your Environment
 **Deployment Environment:**
 
-**EdgeX Version:**
+**EdgeX Version [**REQUIRED**]:**
 
 
 **Anything else relevant?**
