@@ -16,6 +16,7 @@ import (
 	commandController "github.com/edgexfoundry/edgex-go/internal/core/command/controller/http"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/controller/http"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func LoadRestRoutes(r *mux.Router, dic *di.Container) {
@@ -25,6 +26,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(common.ApiVersionRoute, cc.Version).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiConfigRoute, cc.Config).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiMetricsRoute, cc.Metrics).Methods(http.MethodGet)
+	r.Handle("/api/v2/pmetrics", promhttp.Handler())
 
 	// Command
 	cmd := commandController.NewCommandController(dic)
@@ -32,6 +34,10 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container) {
 	r.HandleFunc(common.ApiDeviceByNameRoute, cmd.CommandsByDeviceName).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceNameCommandNameRoute, cmd.IssueGetCommandByName).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceNameCommandNameRoute, cmd.IssueSetCommandByName).Methods(http.MethodPut)
+
+	//prometheus metrics
+	middleware := NewPrometheusMiddleware(Opts{})
+	r.Use(middleware.PrometheusHandlerMetrics)
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
