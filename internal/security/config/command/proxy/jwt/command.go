@@ -87,7 +87,7 @@ func (c *cmd) Execute() (int, error) {
 
 	bytes, err := os.ReadFile(c.privateKeyPath)
 	if err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("Could read private key from file %s: %w", c.privateKeyPath, err)
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("Could not read private key from file %s: %w", c.privateKeyPath, err)
 	}
 
 	var signingMethod jwt.SigningMethod
