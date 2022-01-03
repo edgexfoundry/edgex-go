@@ -53,7 +53,7 @@ Type = "consul"
 
 [Notifications]
 PostDeviceChanges = false
-Content = "Meatadata notice: "
+Content = "Metadata notice: "
 Sender = "core-metadata"
 Description = "Metadata change notice"
 Label = "metadata"
