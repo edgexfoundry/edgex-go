@@ -320,6 +320,11 @@ func handleAllServices(deferStartup bool) error {
 
 		hooks.Debug(fmt.Sprintf("edgexfoundry:configure: service: %s status: %s", s, status))
 
+		if deferStartup && s == "security-proxy" {
+			hooks.Info("edgexfoundry:configure: defer-startup mode. Skip security-proxy config handling to after the startup")
+			continue
+		}
+
 		serviceCfg := hooks.EnvConfig + "." + s
 		envJSON, err = cli.Config(serviceCfg)
 		if err != nil {

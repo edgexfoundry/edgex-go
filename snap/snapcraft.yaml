@@ -221,6 +221,7 @@ apps:
     command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     command-chain:
       - bin/service-config-overrides.sh
+    post-stop-command: bin/security-proxy-post-setup.sh
     environment:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
