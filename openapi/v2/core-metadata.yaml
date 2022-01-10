@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Metadata API
   description: "This is the definition of the API for the Core Metadata service in the EdgeX Foundry IOT microservice platform. Core Metadata is responsible for all information related to provisioned devices and their associated services."
-  version: 2.1.0
+  version: 2.2.0
 servers:
   - url: 'http://localhost:59881/api/v2'
     description: URL for local development and testing
