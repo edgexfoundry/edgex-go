@@ -4,7 +4,7 @@ require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.1.0
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.1.0
-	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.3
+	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.4
 	github.com/edgexfoundry/go-mod-registry/v2 v2.1.0
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.1.0
 	github.com/fxamacker/cbor/v2 v2.4.0
