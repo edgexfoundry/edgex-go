@@ -71,6 +71,17 @@ passthrough:
       command-chain:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload 
+    pre-refresh:
+      environment:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+        PGHOST: $SNAP_COMMON/sockets
+        SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
+      command-chain:
+        - snap/command-chain/snapcraft-runner
+        - bin/snapcraft-preload 
+      plugs: [network]
+    
  
 
 plugs:
@@ -118,10 +129,10 @@ apps:
     plugs: [network, network-bind]
   postgres:
     adapter: full
-    command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/data -c $CONFIG_ARG
+    command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/12/main -c $CONFIG_ARG
     daemon: simple
     environment:
-      CONFIG_ARG: config_file=$SNAP_DATA/config/postgres/postgresql.conf
+      CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/12/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
       - bin/drop-snap-daemon.sh
@@ -193,7 +204,7 @@ apps:
       bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/service-config-overrides.sh
-    post-stop-command: bin/security-secretstore-post-setup.sh
+    post-stop-command:  bin/security-secretstore-post-setup.sh
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
@@ -569,6 +580,36 @@ parts:
       cmake -DCMAKE_INSTALL_PREFIX=$SNAPCRAFT_PART_INSTALL/ .
       make install
  
+  deck:
+    plugin: nil
+    build-packages:
+      - curl
+      - unzip
+    override-build: |
+      VERSION=1.8.2
+
+      # use dpkg architecture to figure out our target arch
+      case "$(dpkg --print-architecture)" in
+        amd64)
+          FILE_NAME=deck_${VERSION}_linux_amd64.tar.gz
+          # FILE_HASH=2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d
+          ;;
+        arm64)
+          FILE_NAME=deck_${VERSION}_linux_arm64.tar.gz
+          # FILE_HASH=d4be8f68f0275701bcde71d130a997f5a32b47f91d5fb8a7eae7db666325a33b
+          ;;
+      esac
+      # download the archive and verify the checksum
+      # NOTE: the archive only includes the binary distribution,
+      # with no config or license files
+      curl --silent --show-error --location --output $FILE_NAME \
+        https://github.com/kong/deck/releases/download/v${VERSION}/$FILE_NAME
+      #      echo "$FILE_HASH $FILE_NAME" > sha256
+      #      sha256sum -c sha256 | grep OK
+      tar -xf $FILE_NAME -C $SNAPCRAFT_PART_INSTALL
+    organize:
+      deck: bin/deck
+ 
   postgres:
     plugin: nil
     source: snap/local/build-helpers
@@ -587,7 +628,7 @@ parts:
     stage-packages:
       # note: version of postgres in core20 that this resolves to is version 12
       # See also https://ubuntu.com/security/notices/USN-5145-1
-      - postgresql
+      - postgresql-12
       - postgresql-contrib
       - postgresql-client-12
       - perl

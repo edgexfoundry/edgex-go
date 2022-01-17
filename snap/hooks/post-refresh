@@ -13,5 +13,6 @@ if [ -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt" ]; then
     rm -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt"
 fi
 
-# set up the new locations for postgres config files
-$SNAP/bin/install-setup-postgres.sh
+# set up postgres, if we are upgrading it
+. $SNAP/bin/kong-postgres-setup.sh
+kong_post_refresh
