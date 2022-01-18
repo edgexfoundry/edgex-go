@@ -2,14 +2,12 @@
 
 # This script is called as a post-stop-command when
 # security-proxy-setup oneshot service stops.
-#
-# Several config options depend on resources that only exist after proxy is 
-# setup. This scripts re-runs the configure hook after the deferred startup 
-# of security-proxy-setup to apply such configurations.
 
-logger "edgex-secretstore-proxy:post-setup: calling configure hook"
+logger "edgexfoundry:security-proxy-post-setup"
 
 # add bin directory to have e.g. secret-config in PATH
 export PATH="$SNAP/bin:$PATH"
 
-$SNAP/snap/hooks/configure
+# Several config options depend on resources that only exist after proxy 
+# setup. This re-applies the config options logic after deferred startup:
+$SNAP/snap/hooks/configure options --service=security-proxy
