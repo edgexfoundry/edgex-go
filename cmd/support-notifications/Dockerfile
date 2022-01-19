@@ -15,7 +15,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.16-alpine3.14
+ARG BUILDER_BASE=golang:1.17-alpine3.15
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -27,9 +27,10 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 
 RUN apk add --update --no-cache make bash git ca-certificates
 
-COPY . .
+COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
+COPY . .
 RUN make cmd/support-notifications/support-notifications
 
 FROM alpine:3.14

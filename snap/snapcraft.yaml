@@ -581,7 +581,7 @@ parts:
     # see comment for static-packages part about specifying a source part here
     source: snap/local/build-helpers
     build-snaps:
-      - go/1.16/stable
+      - go/1.17/stable
     prime: [-*]
 
   config-common:
