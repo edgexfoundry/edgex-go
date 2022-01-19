@@ -1,5 +1,4 @@
 #!/bin/bash -e
 
 # set up postgres, if we are upgrading it
-. $SNAP/bin/kong-postgres-setup.sh
-kong_post_refresh
+$SNAP/bin/kong-postgres-setup.sh "post-refresh"
