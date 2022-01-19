@@ -24,15 +24,27 @@ POSTGRES_12_DB_DIR="$SNAP_DATA/postgresql/12/main"
 POSTGRES_10_DIR="$SNAP_DATA/postgresql/10"
 POSTGRES_10_DB_DIR="$SNAP_DATA/postgresql/10/main"
 
+
 snap_daemon_run_command() {
-    "$SNAP/usr/bin/setpriv" --clear-groups --reuid snap_daemon --regid snap_daemon -- "$@"
+    "$SNAP/bin/snapcraft-preload" "$SNAP/snap/command-chain/snapcraft-runner" "$SNAP/usr/bin/setpriv" --clear-groups --reuid snap_daemon --regid snap_daemon -- "$@"
 }
 
 postgres_run_command() { 
-   snap_daemon_run_command "$SNAP/bin/perl5lib-launch.sh" "$@"  
-
+    snap_daemon_run_command "$SNAP/bin/perl5lib-launch.sh" "$@"  
 }
 
+postgres_set_env() {
+    export LC_ALL="C.UTF-8"
+    export LANG="C.UTF-8"
+    export PGHOST="$SNAP_COMMON/sockets"
+    export SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM="1"
+    
+    # set up SNAPCRAFT_PRELOAD and LD_PRELOAD
+    #"$SNAP/bin/snapcraft-preload" logger "edgexfoundry:postgres: environment set up (1)"
+
+    # set up PATH and LD_LIBRARY_PATH
+    #"$SNAP/snap/command-chain/snapcraft-runner" logger "edgexfoundry:postgres: environment set up (2)"
+}
 
 
 postgres_create_password_file() {
@@ -145,16 +157,23 @@ postgres_remove_old_postgres() {
 # called from the security-proxy-post-setup script.
 # kong needs to be running for this to succeed, so we can't run this in the 
 # post-refresh hook
-kong_restore_backup() {
+postgres_restore_backup() {
     if [ -f "$SNAP_COMMON/refresh/kong.sql" ]; then
       logger "edgexfoundry:postgres: refresh - loading saved kong data"
       postgres_run_command "$SNAP/usr/bin/psql" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
     fi
 }
 
+
+# This function is called either:
+# a) from install hook (via the install-setup-postgres.sh script), to set up a new PG 12 instance
+# b) from the post-refresh hook, to refresh the PG instance from an older PG version
 postgres_install() {
-     logger "edgexfoundry:postgres: postgres_install"
- 
+
+    logger "edgexfoundry:postgres: postgres_install"
+  
+    postgres_set_env
+
     # Note: It's fine to replace the current postgres installation.
     # Postgresql is only used for kong and if we're doing a snap refresh, then
     # we will backup and restore the Kong configuration. 
@@ -182,7 +201,7 @@ postgres_install() {
     postgres_create_kong_db
 
     # Load the SQL file with the kong backup from the older postgres server
-    kong_restore_backup
+    postgres_restore_backup
 
 
     # stop postgres again in case the security services should be turned off
@@ -197,6 +216,7 @@ postgres_install() {
 # called from the pre-refresh hook. Used to backup the Kong configuration
 kong_pre_refresh() {
     logger "edgexfoundry:postgres: postgres_pre_refresh"
+    postgres_set_env
     postgres_read_current_password_file
     postgres_run_command "$SNAP/usr/bin/pg_dump" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
 }
@@ -205,7 +225,22 @@ kong_pre_refresh() {
 # if needed and restore the kong configuration
 kong_post_refresh() {
     logger "edgexfoundry:postgres: postgres_post_refresh"
-    if [ -d $CONFIG_POSTGRES_10_CONFIGFILE_DIR ]; then
+    
+    #
+    # Force remove kong-admin-jwt due to the fact that it's
+    # written by security-secretstore-setup (2.0.0-*) with
+    # read-only perm for the owner.
+    #
+    # See: https://github.com/edgexfoundry/edgex-go/issues/3818
+    #
+    # This is hook is called in the context of the new snap
+    # revision, and prior to services being started.
+    if [ -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt" ]; then
+        logger "edgexfoundry:post-refresh removing stale kong-admin-jwt"
+        rm -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt"
+    fi
+
+    if [ -d $CONFIG_POSTGRES_10_CONFIGFILE_DIR ]; then 
       postgres_install
     else
      logger "edgexfoundry:postgres: post-refresh - nothing to refresh"
