@@ -51,8 +51,8 @@ on the snap, including how to install it, please refer to [EdgeX snap](https://g
 
 ##### Go
 
-- The current targeted version of the Go language runtime for release artifacts is v1.16.x
-- The minimum supported version of the Go language runtime is v1.16.x
+- The current targeted version of the Go language runtime for release artifacts is v1.17.x
+- The minimum supported version of the Go language runtime is v1.17.x
 
 ##### ZeroMQ
 

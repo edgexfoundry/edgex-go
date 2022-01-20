@@ -17,7 +17,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for Golang Core Data micro service
-ARG BUILDER_BASE=golang:1.16-alpine3.14
+ARG BUILDER_BASE=golang:1.17-alpine3.15
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -29,9 +29,10 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 
 RUN apk add --update --no-cache zeromq-dev libsodium-dev pkgconfig build-base git
 
-COPY . .
+COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
+COPY . .
 RUN make cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace

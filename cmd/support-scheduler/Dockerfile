@@ -16,7 +16,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.16-alpine3.14
+ARG BUILDER_BASE=golang:1.17-alpine3.15
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -28,13 +28,10 @@ RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/reposi
 
 RUN apk add --update --no-cache make git
 
-COPY go.mod .
-
-RUN go mod download
+COPY go.mod vendor* ./
+RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-
-RUN go mod tidy
 RUN make cmd/support-scheduler/support-scheduler
 
 FROM alpine:3.14
