@@ -147,6 +147,8 @@ postgres_restore_backup() {
     if [ -f "$SNAP_COMMON/refresh/kong.sql" ]; then
       logger "edgex-kong-postgres-setup: restoring kong database from $SNAP_COMMON/refresh/kong.sql"
       postgres_run_command "$SNAP/usr/bin/psql" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
+    else
+        logger "edgex-kong-postgres-setup: No backup found at $SNAP_COMMON/refresh/kong.sql"
     fi
 }
 
@@ -225,7 +227,7 @@ kong_post_refresh() {
      logger "edgex-kong-postgres-setup: post-refresh - nothing to refresh"
     fi
 
-    rm -f $SNAP_COMMON/refresh/kong.sql
+    snap_daemon_run_command rm -f $SNAP_COMMON/refresh/kong.sql
 }
 
 
