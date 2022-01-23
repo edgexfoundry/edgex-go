@@ -6,39 +6,68 @@
 # - refresh from 2.0/stable or older - a snap using postgres 10
 # - refresh from a 2.1/stable or newer snap using postgres 12
 
+
+
 # postgres configuration
-CONFIG_POSTGRES_PASSWORD_DIR="$SNAP_DATA/config/postgres"
-CONFIG_POSTGRES_PASSWORD_FILE="$SNAP_DATA/config/postgres/kongpw"
+CONFIG_KONG_PASSWORD_DIR="$SNAP_DATA/config/postgres"
+CONFIG_KONG_PASSWORD_FILE="$SNAP_DATA/config/postgres/kongpw"
 
-CONFIG_POSTGRES_12_CONFIGFILE_DIR="$SNAP_DATA/etc/postgresql/12/main"
-CONFIG_POSTGRES_10_CONFIGFILE_DIR="$SNAP_DATA/etc/postgresql/10/main"
-CONFIG_POSTGRES_CONFIGFILENAME="postgresql.conf"
-# postgres directory
-POSTGRES_DIR="$SNAP_DATA/postgresql"
+ETC_POSTGRES_10_CONFIGFILE_DIR="$SNAP_DATA/etc/postgresql/10/main"
 
-# postgres 12 directories
-POSTGRES_12_DIR="$SNAP_DATA/postgresql/12"
-POSTGRES_12_DB_DIR="$SNAP_DATA/postgresql/12/main"
+POSTGRES_CONFIGFILENAME="postgresql.conf"
 
-# postgres 10 directories
-POSTGRES_10_DIR="$SNAP_DATA/postgresql/10"
-POSTGRES_10_DB_DIR="$SNAP_DATA/postgresql/10/main"
+POSTGRES_12_DB_DIR="$SNAP_DATA/postgresql/12/main" 
 
-snap_daemon_run_command() {
+# if we use the postgres binaries in /bin, then --devmode install fails.
+PSQL_BIN_PATH="$SNAP/usr/lib/postgresql/12/bin/"
+
+snap_setup_environment() {
+    logger "edgex-kong-postgres-setup: setting up environment" 
     export LC_ALL="C.UTF-8"
     export LANG="C.UTF-8"
     export PGHOST="$SNAP_COMMON/sockets"
     export SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM="1"
     
     # "$SNAP/bin/snapcraft-preload" sets up SNAPCRAFT_PRELOAD and LD_PRELOAD
+    # export SNAPCRAFT_PRELOAD=$SNAP
+    # export LD_PRELOAD="$SNAP/lib/libsnapcraft-preload.so"
+    . "$SNAP/bin/snapcraft-preload"
+    
     #"$SNAP/snap/command-chain/snapcraft-runner" sets up PATH and LD_LIBRARY_PATH
-    "$SNAP/bin/snapcraft-preload" "$SNAP/snap/command-chain/snapcraft-runner" "$SNAP/usr/bin/setpriv" --clear-groups --reuid snap_daemon --regid snap_daemon -- "$@"
+    # export PATH=...
+    # export LD_LIBRARY_PATH=...
+    . "$SNAP/snap/command-chain/snapcraft-runner"
+
+    # setup perl5
+    # figure out the snap architecture lib name
+    case $SNAP_ARCH in
+        amd64)
+            ARCH_LIB_NAME="x86_64-linux-gnu"
+            ;;
+        arm64)
+            ARCH_LIB_NAME="aarch64-linux-gnu"
+            ;;
+        *)
+            # unsupported or unknown architecture
+            exit 1
+            ;;
+    esac
+
+    export ARCH_LIB_NAME
+
+    # get the perl version
+    PERL_VERSION=$(perl -version | grep -Po '\(v\K([^\)]*)')
+
+    # perl lib paths are needed for some rocks that kong loads through luarocks dependencies
+    PERL5LIB="$PERL5LIB:$SNAP/usr/lib/$ARCH_LIB_NAME/perl/$PERL_VERSION"
+    PERL5LIB="$PERL5LIB:$SNAP/usr/share/perl/$PERL_VERSION"
+    PERL5LIB="$PERL5LIB:$SNAP/usr/share/perl5"
+    export PERL5LIB
 }
 
-postgres_run_command() { 
-    snap_daemon_run_command "$SNAP/bin/perl5lib-launch.sh" "$@"  
+snap_daemon_run_command() {
+     "$SNAP/usr/bin/setpriv" --clear-groups --reuid snap_daemon --regid snap_daemon -- "$@"
 }
-
 
 
 postgres_create_password_file() {
@@ -52,16 +81,18 @@ postgres_create_password_file() {
     # -x 24  -- maximum password len
     # -m 16  -- minimum password len
     PGPASSWD=$("$SNAP/usr/lib/apg/apg" -a 0 -M ncl -n 1 -x 24 -m 16)
-    echo "$PGPASSWD" > "$CONFIG_POSTGRES_PASSWORD_FILE"
+    echo "$PGPASSWD" > "$CONFIG_KONG_PASSWORD_FILE"
 
 }
-
-postgres_read_current_password_file() {
-    export PGPASSWORD=`cat $CONFIG_POSTGRES_PASSWORD_FILE`
-}
-
 
  
+
+
+ postgres_init_postgres_database() {
+    logger "edgex-kong-postgres-setup: initializing database (initdb -D $POSTGRES_12_DB_DIR)" 
+    snap_daemon_run_command "$PSQL_BIN_PATH/initdb" -D "$POSTGRES_12_DB_DIR"
+}
+
 
 postgres_create_kong_db() {
 
@@ -72,7 +103,7 @@ postgres_create_kong_db() {
     iter_num=0
     MAX_POSTGRES_INIT_ITERATIONS=10
 
-    until postgres_run_command "$SNAP/usr/bin/createdb" "kong"; do
+    until snap_daemon_run_command "$PSQL_BIN_PATH/createdb" "kong"; do
         sleep 1  
         iter_num=$(( iter_num + 1 ))
         if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
@@ -86,17 +117,25 @@ postgres_create_kong_db() {
     # Also as psql will use the database 'snap_daemon' by default, specify 'kong'
     # via environment variable.
     export PGDATABASE="kong"
-    postgres_run_command "$SNAP/usr/bin/psql" "-c CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"
+    
+   until snap_daemon_run_command "$PSQL_BIN_PATH/psql" -c "CREATE ROLE kong WITH NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN PASSWORD '$PGPASSWD'"; do
+        sleep 1  
+        iter_num=$(( iter_num + 1 ))
+        if [ $iter_num -gt $MAX_POSTGRES_INIT_ITERATIONS ]; then
+            logger "edgex-kong-postgres-setup: failed to create konh role  after $iter_num iterations"
+            exit 1
+        fi
+    done
 
 }
 
-postgres_create_directories() {
+postgres_setup_directories() {
 
     logger "edgex-kong-postgres-setup: creating postgres directories" 
 
     # ensure the postgres data directory exists and is owned by snap_daemon
-    mkdir -p "$POSTGRES_DIR"
-    chown -R snap_daemon:snap_daemon "$POSTGRES_DIR"
+    mkdir -p "$POSTGRES_12_DB_DIR"
+    chown -R snap_daemon:snap_daemon "$SNAP_DATA/postgresql" 
     
     # ensure the sockets dir exists and is owned by snap_daemon
     mkdir -p "$SNAP_COMMON/sockets"
@@ -107,38 +146,31 @@ postgres_create_directories() {
     chown -R snap_daemon:snap_daemon "$SNAP_COMMON/refresh"
 
     # create the config directory used for the kong password
-    mkdir -p $CONFIG_POSTGRES_PASSWORD_DIR 
+    mkdir -p $CONFIG_KONG_PASSWORD_DIR 
 
-    # create directory for configuration
-    mkdir -p $CONFIG_POSTGRES_12_CONFIGFILE_DIR
-
+    # remove pg 10 directories
+    rm -rf "$SNAP_DATA/etc/postgresql"
+    
+    # remove database directory
+    rm -rf "$SNAP_DATA/postgresql/10/main"
 }
 
-postgres_init_postgres_database() {
-    logger "edgex-kong-postgres-setup: initializing database (initdb -D $POSTGRES_12_DB_DIR)" 
-    snap_daemon_run_command "$SNAP/usr/lib/postgresql/12/bin/initdb" -D "$POSTGRES_12_DB_DIR"
-}
 
 
 postgres_create_configuration_file() {
 
-    logger "edgex-kong-postgres-setup: creating configuration file $CONFIG_POSTGRES_12_CONFIGFILE_DIR/$CONFIG_POSTGRES_CONFIGFILENAME"
+    logger "edgex-kong-postgres-setup: creating configuration file $POSTGRES_12_DB_DIR/$POSTGRES_CONFIGFILENAME"
     
-    cp "$SNAP/config/postgres/$CONFIG_POSTGRES_CONFIGFILENAME" "$CONFIG_POSTGRES_12_CONFIGFILE_DIR/"
+   snap_daemon_run_command cp "$SNAP/config/postgres/$POSTGRES_CONFIGFILENAME" "$POSTGRES_12_DB_DIR/"
 
     # do replacement of the $SNAP, $SNAP_DATA, $SNAP_COMMON environment variables in the config files
-    sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
+     snap_daemon_run_command sed -i -e "s@\$SNAP_COMMON@$SNAP_COMMON@g" \
         -e "s@\$SNAP_DATA@$CURRENT@g" \
         -e "s@\$SNAP@$SNAP_CURRENT@g" \
-        "$CONFIG_POSTGRES_12_CONFIGFILE_DIR/$CONFIG_POSTGRES_CONFIGFILENAME" 
+        "$POSTGRES_12_DB_DIR/$POSTGRES_CONFIGFILENAME" 
     
 }
-
-postgres_remove_old_postgres() {
-    logger "edgex-kong-postgres-setup: removing postgres 10"
-    rm -rf "$CONFIG_POSTGRES_10_CONFIGFILE_DIR"
-    snap_daemon_run_command rm -rf "$POSTGRES_10_DIR"
-}
+ 
 
 # called from the security-proxy-post-setup script.
 # kong needs to be running for this to succeed, so we can't run this in the 
@@ -146,7 +178,7 @@ postgres_remove_old_postgres() {
 postgres_restore_backup() {
     if [ -f "$SNAP_COMMON/refresh/kong.sql" ]; then
       logger "edgex-kong-postgres-setup: restoring kong database from $SNAP_COMMON/refresh/kong.sql"
-      postgres_run_command "$SNAP/usr/bin/psql" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
+      snap_daemon_run_command "$PSQL_BIN_PATH/psql" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
     else
         logger "edgex-kong-postgres-setup: No backup found at $SNAP_COMMON/refresh/kong.sql"
     fi
@@ -164,21 +196,16 @@ postgres_install() {
     # Postgresql is only used for kong and if we're doing a snap refresh, then
     # we will backup and restore the Kong configuration. 
 
-    # If there is an old Postgres v10.x installation, then just remove it
-    if [ -d $CONFIG_POSTGRES_10_CONFIGFILE_DIR ]; then
-        postgres_remove_old_postgres
-    fi
-    
     # create the required directories 
-    postgres_create_directories
-
-    # and the config file
-    postgres_create_configuration_file
+    postgres_setup_directories
 
     postgres_create_password_file
     
     # set up the new postgres v12 database
     postgres_init_postgres_database
+
+    # and the config file
+    postgres_create_configuration_file
 
     # start postgres up and wait a bit for it so we can create the database and user for kong
     logger "edgex-kong-postgres-setup: install - starting postgres"
@@ -201,8 +228,11 @@ postgres_install() {
 # called from the pre-refresh hook. Used to backup the Kong configuration
 kong_pre_refresh() {
     logger "edgex-kong-postgres-setup: pre_refresh dumping kong database to $SNAP_COMMON/refresh/kong.sql"
-    postgres_read_current_password_file
-    postgres_run_command "$SNAP/usr/bin/pg_dump" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
+    
+    # use the kong role password
+    export PGPASSWORD=`cat $CONFIG_KONG_PASSWORD_FILE`
+
+    snap_daemon_run_command "$SNAP/usr/bin/pg_dump" "-Ukong" "-f$SNAP_COMMON/refresh/kong.sql" "kong"
 }
 
 # The post-refresh hook is called in the context of the new snap
@@ -221,18 +251,21 @@ kong_post_refresh() {
         rm -f "$SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt"
     fi
 
-    if [ -d $CONFIG_POSTGRES_10_CONFIGFILE_DIR ]; then 
+    if [ -d $ETC_POSTGRES_10_CONFIGFILE_DIR ]; then 
       postgres_install
     else
      logger "edgex-kong-postgres-setup: post-refresh - nothing to refresh"
     fi
 
+    # remove the SQL file
     snap_daemon_run_command rm -f $SNAP_COMMON/refresh/kong.sql
 }
 
 
 method=${1:-"post-stop-command"}
 logger "edgex-kong-postgres-setup: calling $method"
+
+snap_setup_environment
 
 case $method in 
 

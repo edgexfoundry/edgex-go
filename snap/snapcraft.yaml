@@ -107,7 +107,7 @@ apps:
     command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/12/main -c $CONFIG_ARG
     daemon: simple
     environment:
-      CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/12/main/postgresql.conf
+      CONFIG_ARG: config_file=$SNAP_DATA/postgresql/12/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
       - bin/drop-snap-daemon.sh
@@ -572,9 +572,8 @@ parts:
         $SNAPCRAFT_PART_INSTALL/usr/share/perl5/PgCommon.pm
     stage-packages:
       # note: version of postgres in core20 that this resolves to is version 12
-      # See also https://ubuntu.com/security/notices/USN-5145-1
+      # See also https://ubuntu.com/security/notices/USN-5145-1   - postgresql-contrib
       - postgresql-12
-      - postgresql-contrib
       - postgresql-client-12
       - perl
     prime:
