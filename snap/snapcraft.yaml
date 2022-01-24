@@ -888,16 +888,6 @@ parts:
         -e 's@restPort\: 9081@restPort\: 59720@' \
         $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
 
-      # override the default settings to specify the stream 
-      # to reuse the connection to EdgeX message bus
-      # update the edgex source's port to 5566 to match
-      # app-service-configurable's message bus publish port
-      sed -i -e '/type\: redis/a  \  connectionSelector: edgex.redisMsgBus' \
-        -e '/type\: redis/a  \  topic: rules-events' \
-        -e '/type\: redis/a  \  messageType: event' \
-        -e 's@port\: 5563@port\: 5566@' \
-        $SNAPCRAFT_PART_INSTALL/etc/sources/edgex.yaml
-
       install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
     stage:
