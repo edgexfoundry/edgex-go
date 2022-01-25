@@ -638,8 +638,6 @@ parts:
     source-tag: "6.2.6"
     source-depth: 1
     plugin: make
-    # NOTE: make-install-var is deprecated
-    # See https://snapcraft.io/docs/make-plugin
     make-parameters:
     - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
 

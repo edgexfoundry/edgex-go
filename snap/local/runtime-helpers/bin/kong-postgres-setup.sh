@@ -3,8 +3,8 @@
 # this script is called from the install hook to set up postgres
 # and also from the post-refresh hook. It handles these three scenerios:
 # - new install: create config file and database
-# - refresh from 2.0/stable or older - a snap using postgres 10
-# - refresh from a 2.1/stable or newer snap using postgres 12
+# - refresh from a snap using postgres 10
+# - refresh from a newer snap using postgres 12
 
 
 
