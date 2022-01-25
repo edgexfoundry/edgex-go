@@ -875,7 +875,7 @@ parts:
       make build_with_edgex
       make real_pkg
       cd $SNAPCRAFT_PART_INSTALL
-      # TODO: SIMPLIFY THIS!!!
+   
       tar -xvf kuiper*.tar.gz --strip-components=1
       rm *.gz
 
