@@ -31,19 +31,21 @@ import (
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
 type Bootstrap struct {
-	router *mux.Router
+	router      *mux.Router
+	serviceName string
 }
 
 // NewBootstrap is a factory method that returns an initialized Bootstrap receiver struct.
-func NewBootstrap(router *mux.Router) *Bootstrap {
+func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 	return &Bootstrap{
-		router: router,
+		router:      router,
+		serviceName: serviceName,
 	}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
-	LoadRestRoutes(b.router, dic)
+	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)

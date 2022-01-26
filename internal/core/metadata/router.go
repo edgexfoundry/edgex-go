@@ -18,9 +18,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 )
 
-func LoadRestRoutes(r *mux.Router, dic *di.Container) {
+func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	// Common
-	cc := commonController.NewCommonController(dic)
+	cc := commonController.NewCommonController(dic, serviceName)
 	r.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiVersionRoute, cc.Version).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiConfigRoute, cc.Config).Methods(http.MethodGet)
