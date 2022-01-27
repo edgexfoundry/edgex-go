@@ -235,6 +235,9 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
@@ -244,6 +247,9 @@ components:
       properties:
         apiVersion:
           description: "A version number shows the API version in DTOs."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
         metrics:
           type: object
@@ -299,6 +305,9 @@ components:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
     ReadingResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -327,6 +336,9 @@ components:
           type: string
         version:
           description: "The latest version supported by the service."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
   parameters:
     offsetParam:

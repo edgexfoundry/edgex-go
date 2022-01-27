@@ -103,6 +103,9 @@ components:
           description: "A version number shows the API version in DTOs."
           type: string
           example: v2
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: object
@@ -285,6 +288,9 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
         metrics:
           type: object
           properties:
@@ -319,6 +325,9 @@ components:
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
     RequestEnvelope:
       description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
@@ -451,6 +460,9 @@ components:
           example: v2
         version:
           description: "The latest version supported by the service."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
   parameters:
     offsetParam:
