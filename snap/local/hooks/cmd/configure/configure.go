@@ -28,8 +28,6 @@ import (
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
 )
 
-var cli *hooks.CtlCli = hooks.NewSnapCtl()
-
 const ( // iota is reset to 0
 	kuiperService = iota
 	secProxyService
@@ -310,7 +308,6 @@ func handleAllServices(deferStartup bool) error {
 
 	// grab and log the current service configuration
 	for _, s := range hooks.Services {
-		var envJSON string
 		var serviceList []string
 
 		status, err := cli.Config(s)
@@ -320,18 +317,9 @@ func handleAllServices(deferStartup bool) error {
 
 		hooks.Debug(fmt.Sprintf("edgexfoundry:configure: service: %s status: %s", s, status))
 
-		serviceCfg := hooks.EnvConfig + "." + s
-		envJSON, err = cli.Config(serviceCfg)
+		err = applyConfigOptions(s)
 		if err != nil {
-			err = fmt.Errorf("edgexfoundry:configure failed to read service %s configuration - %v", s, err)
-			return err
-		}
-
-		if envJSON != "" {
-			hooks.Debug(fmt.Sprintf("edgexfoundry:configure: service: %s envJSON: %s", s, envJSON))
-			if err := hooks.HandleEdgeXConfig(s, envJSON, nil); err != nil {
-				return err
-			}
+			return fmt.Errorf("failed to apply config options for %s: %v", s, err)
 		}
 
 		// if deferStartup is set, don't start/stop services
@@ -527,7 +515,7 @@ func checkSecurityConfig(services []string) ([]string, error) {
 	return services, nil
 }
 
-func main() {
+func configure() {
 	var debug = false
 	var err error
 	var startServices []string
@@ -544,8 +532,8 @@ func main() {
 	if err = hooks.Init(debug, "edgexfoundry"); err != nil {
 		fmt.Println(fmt.Sprintf("edgexfoundry:configure: initialization failure: %v", err))
 		os.Exit(1)
-
 	}
+	hooks.Info("edgexfoundry:configure: started")
 
 	val, err := cli.Config("install-mode")
 	if err != nil {
@@ -601,6 +589,7 @@ func main() {
 			os.Exit(1)
 		}
 
+		// NOTE - the services will be started after the configure hook finishes
 		if err = cli.StartMultiple(true, startServices...); err != nil {
 			hooks.Error(fmt.Sprintf("edgexfoundry:configure failure starting/enabling services: %v", err))
 			os.Exit(1)
