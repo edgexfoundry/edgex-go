@@ -7,6 +7,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,7 +30,7 @@ import (
 func TestAddSecret(t *testing.T) {
 	dic := mockDic()
 
-	target := NewCommonController(dic)
+	target := NewCommonController(dic, uuid.NewString())
 	assert.NotNil(t, target)
 
 	validRequest := commonDTO.NewSecretRequest(

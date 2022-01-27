@@ -109,6 +109,9 @@ components:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -120,6 +123,9 @@ components:
         version:
           description: "The latest version supported by the service."
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
     ConfigResponse:
       description: "Provides a response containing the configuration for the targeted service."
       type: object
@@ -130,12 +136,18 @@ components:
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
     MetricsResponse:
       description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
       type: object
       properties:
         apiVersion:
           description: "A version number shows the API version in DTOs."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
         metrics:
           type: object

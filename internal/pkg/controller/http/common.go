@@ -23,34 +23,36 @@ import (
 
 // CommonController controller for V2 REST APIs
 type CommonController struct {
-	dic *di.Container
+	dic         *di.Container
+	serviceName string
 }
 
 // NewCommonController creates and initializes an CommonController
-func NewCommonController(dic *di.Container) *CommonController {
+func NewCommonController(dic *di.Container, serviceName string) *CommonController {
 	return &CommonController{
-		dic: dic,
+		dic:         dic,
+		serviceName: serviceName,
 	}
 }
 
 // Ping handles the request to /ping endpoint. Is used to test if the service is working
 // It returns a response as specified by the V2 API swagger in openapi/v2
 func (c *CommonController) Ping(writer http.ResponseWriter, request *http.Request) {
-	response := commonDTO.NewPingResponse()
+	response := commonDTO.NewPingResponse(c.serviceName)
 	c.sendResponse(writer, request, common.ApiPingRoute, response, http.StatusOK)
 }
 
 // Version handles the request to /version endpoint. Is used to request the service's versions
 // It returns a response as specified by the V2 API swagger in openapi/v2
 func (c *CommonController) Version(writer http.ResponseWriter, request *http.Request) {
-	response := commonDTO.NewVersionResponse(edgex.Version)
+	response := commonDTO.NewVersionResponse(edgex.Version, c.serviceName)
 	c.sendResponse(writer, request, common.ApiVersionRoute, response, http.StatusOK)
 }
 
 // Config handles the request to /config endpoint. Is used to request the service's configuration
 // It returns a response as specified by the V2 API swagger in openapi/v2
 func (c *CommonController) Config(writer http.ResponseWriter, request *http.Request) {
-	response := commonDTO.NewConfigResponse(container.ConfigurationFrom(c.dic.Get))
+	response := commonDTO.NewConfigResponse(container.ConfigurationFrom(c.dic.Get), c.serviceName)
 	c.sendResponse(writer, request, common.ApiVersionRoute, response, http.StatusOK)
 }
 
@@ -68,7 +70,7 @@ func (c *CommonController) Metrics(writer http.ResponseWriter, request *http.Req
 		CpuBusyAvg:     uint8(telem.CpuBusyAvg),
 	}
 
-	response := commonDTO.NewMetricsResponse(metrics)
+	response := commonDTO.NewMetricsResponse(metrics, c.serviceName)
 	c.sendResponse(writer, request, common.ApiMetricsRoute, response, http.StatusOK)
 }
 

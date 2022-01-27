@@ -299,6 +299,9 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
@@ -308,6 +311,9 @@ components:
       properties:
         apiVersion:
           description: "A version number shows the API version in DTOs."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
         metrics:
           type: object
@@ -343,6 +349,9 @@ components:
           type: string
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
+        serviceName:
+          description: "Outputs the name of the service the response is from"
+          type: string
     RequestEnvelope:
       description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
       type: object
@@ -407,6 +416,9 @@ components:
           example: v2
         version:
           description: "The latest version supported by the service."
+          type: string
+        serviceName:
+          description: "Outputs the name of the service the response is from"
           type: string
   parameters:
     offsetParam:
