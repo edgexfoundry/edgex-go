@@ -179,7 +179,7 @@ apps:
       bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/service-config-overrides.sh
-    post-stop-command:  bin/security-secretstore-post-setup.sh
+    post-stop-command: bin/security-secretstore-post-setup.sh
     daemon: oneshot
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
