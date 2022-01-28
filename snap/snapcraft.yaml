@@ -1,5 +1,5 @@
 name: edgexfoundry
-base: core18
+base: core20
 type: app
 adopt-info: version
 summary: Open-source framework for IoT edge computing
@@ -16,8 +16,8 @@ icon: snap/local/assets/edgex-snap-icon.png
 # Different epochs prevent refreshes between major versions of EdgeX due
 # to continued configuration changes.
 #
-# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3, hanoi: 4, ireland: 5
-epoch: 5
+# delhi: 0, edinburgh: 1, fuji: 2, geneva: 3, hanoi: 4, ireland/jakarta: 5, kamakura:6 
+epoch: 6
 
 architectures:
   - build-on: arm64
@@ -53,14 +53,11 @@ passthrough:
       environment:
         LC_ALL: C.UTF-8
         LANG: C.UTF-8
-        PGHOST: $SNAP_COMMON/sockets
         SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
       command-chain:
         - snap/command-chain/snapcraft-runner
         - bin/snapcraft-preload
-    connect-plug-edgex-secretstore-token:
-      command-chain:
-       - snap/command-chain/snapcraft-runner
+      plugs: [network]
 
 plugs:
   # This content interface provides a mechanism for the edgexfoundry
@@ -107,10 +104,10 @@ apps:
     plugs: [network, network-bind]
   postgres:
     adapter: full
-    command: usr/lib/postgresql/10/bin/postgres -D $SNAP_DATA/postgresql/10/main -c $CONFIG_ARG
+    command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/12/main -c $CONFIG_ARG
     daemon: simple
     environment:
-      CONFIG_ARG: config_file=$SNAP_DATA/etc/postgresql/10/main/postgresql.conf
+      CONFIG_ARG: config_file=$SNAP_DATA/postgresql/12/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
     command-chain:
       - bin/drop-snap-daemon.sh
@@ -522,7 +519,8 @@ parts:
       - curl
       - jq
       # setpriv with snapd 2.45 + can be used to drop privileges
-      - setpriv
+      # base: core18 snaps should stage setpriv while base: core20 should stage util-linux. 
+      - util-linux
 
   # snapcraft-preload is necessary to make postgres just use a different
   # lockfile location in /dev/shm
@@ -541,7 +539,7 @@ parts:
     source: https://github.com/sergiusens/snapcraft-preload.git
     # unfortunately no tags or releases we can rely on, so just hard-code
     # master at the time of writing for this
-    source-commit: d654bbe8a5add5a4bea14d96342b656990c5c818
+    source-commit: b8ed08c01c4461e69772f9230ee8d30fe2a2ea56
     plugin: cmake
     build-packages:
       - to arm64:
@@ -552,7 +550,12 @@ parts:
           - g++-multilib
     stage-packages:
       - to amd64:
-          - lib32stdc++6
+          - lib32stdc++6 
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC 
+      cmake -DCMAKE_INSTALL_PREFIX=$SNAPCRAFT_PART_INSTALL/ .
+      make install
+
   postgres:
     plugin: nil
     source: snap/local/build-helpers
@@ -569,10 +572,10 @@ parts:
         's@our $binroot = \"/usr/lib/postgresql/\"@our $binroot = \"/snap/'$SNAPCRAFT_PROJECT_NAME'/current/usr/lib/postgresql/\";@' \
         $SNAPCRAFT_PART_INSTALL/usr/share/perl5/PgCommon.pm
     stage-packages:
-      # note: version of postgres in core18 that this resolves to is version 10
-      - postgresql
-      - postgresql-contrib
-      - postgresql-client
+      # note: version of postgres in core20 that this resolves to is version 12
+      # See also https://ubuntu.com/security/notices/USN-5145-1   - postgresql-contrib
+      - postgresql-12
+      - postgresql-client-12
       - perl
     prime:
        - -usr/share/man/*
@@ -636,9 +639,8 @@ parts:
     source-tag: "6.2.6"
     source-depth: 1
     plugin: make
-    # NOTE: make-install-var is deprecated
-    # See https://snapcraft.io/docs/make-plugin
-    make-install-var: PREFIX
+    make-parameters:
+    - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
 
   edgex-go:
     source: .

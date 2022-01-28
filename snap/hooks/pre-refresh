@@ -4,3 +4,8 @@
 snapctl set lastrev="$SNAP_REVISION"
 
 snapctl set release="jakarta"
+ 
+ # back up the Kong database, so that if the new snap contains a newer
+ # postgresql, then the configuration can be imported into the new database
+ # in the post-refresh hook.
+$SNAP/bin/kong-postgres-setup.sh "pre-refresh"
