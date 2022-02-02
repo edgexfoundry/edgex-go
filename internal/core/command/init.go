@@ -20,13 +20,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	clients "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-
 	"github.com/gorilla/mux"
 )
 
@@ -48,22 +43,5 @@ func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
-	configuration := container.ConfigurationFrom(dic.Get)
-
-	// initialize clients required by the service
-	dic.Update(di.ServiceConstructorMap{
-		bootstrapContainer.MetadataDeviceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceClient
-			return clients.NewDeviceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceRoute)
-		},
-		bootstrapContainer.MetadataDeviceProfileClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceProfileClient
-			return clients.NewDeviceProfileClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceProfileRoute)
-		},
-		bootstrapContainer.MetadataDeviceServiceClientName: func(get di.Get) interface{} { // add v2 API MetadataDeviceServiceClient
-			return clients.NewDeviceServiceClient(configuration.Clients[common.CoreMetaDataServiceKey].Url() + common.ApiDeviceServiceRoute)
-		},
-		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
-			return clients.NewDeviceServiceCommandClient()
-		},
-	})
 	return true
 }

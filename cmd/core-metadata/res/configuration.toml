@@ -36,11 +36,6 @@ Type = "consul"
   Host = "localhost"
   Port = 59860
 
-  [Clients.core-data]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 59880
-
 [Databases]
   [Databases.Primary]
   Host = "localhost"
