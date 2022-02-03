@@ -14,7 +14,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-)// DingdingSender is the implementation of the interfaces.ChannelSender, which is used to send the notifications via REST
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
+)
+
+// DingdingSender is the implementation of the interfaces.ChannelSender, which is used to send the notifications via REST
 // add  by edgeGo
 type DingdingSender struct {
 	dic *di.Container
