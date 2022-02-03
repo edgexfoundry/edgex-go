@@ -53,6 +53,21 @@ type SmtpInfo struct {
 	AuthMode string
 }
 
+//add by edgeGo for dingding notification
+type DingdingInfo struct {
+	Webhook string
+	//Secret      string
+	//AccessToken string
+}
+
+//add by edgeGo for dingding notification
+type AliSmsInfo struct {
+	Regin     string
+	AccessKey string
+	Secret    string
+}
+
+
 // The earlier releases do not have Username field and are using Sender field where Usename will
 // be used now, to make it backward compatible fallback to Sender, which is signified by the empty
 // Username field.
