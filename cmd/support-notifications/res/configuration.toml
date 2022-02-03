@@ -45,6 +45,14 @@ Type = "consul"
   Timeout = 5000
   Type = "redisdb"
 
+[Dingding]
+  Webhook     = "https://oapi.dingtalk.com/robot/send"
+
+[AliSms]
+   Regin      = "cn-beijing"
+   AccessKey  = ""
+   Secret     = ""
+
 [Smtp]
   Host = "smtp.gmail.com"
   Port = 587
