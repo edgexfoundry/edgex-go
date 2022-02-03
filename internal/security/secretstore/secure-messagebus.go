@@ -40,7 +40,7 @@ default:
   port: 6379
   protocol: redis
   server: localhost
-  serviceServer: http://localhost:48080
+  connectionSelector: edgex.redisMsgBus
   topic: rules-events
   type: redis
 mqtt_conf:
