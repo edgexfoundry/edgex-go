@@ -866,7 +866,7 @@ parts:
 
   kuiper:
     source: https://github.com/lf-edge/ekuiper.git
-    source-tag: 1.3.1
+    source-tag: 1.4.2
     source-depth: 1
     plugin: make
     after: [go-build-helper]
@@ -878,9 +878,9 @@ parts:
       make build_with_edgex
       make real_pkg
       cd $SNAPCRAFT_PART_INSTALL
-      # TODO: SIMPLIFY THIS!!!
+   
       tar -xvf kuiper*.tar.gz --strip-components=1
-      rm *.zip *.gz
+      rm *.gz
 
       # configure logging & restrict to localhost
       # configure REST API service port to 59720
@@ -890,17 +890,6 @@ parts:
         -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
         -e 's@restPort\: 9081@restPort\: 59720@' \
         $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
-
-      # update the edgex source's port to 5566 to match
-      # app-service-configurable's message bus publish port
-      sed -i -e 's@port\: 5563@port\: 5566@' \
-        $SNAPCRAFT_PART_INSTALL/etc/sources/edgex.yaml
-
-      # update the edgex sink's port to 5567 so that it
-      # doesn't collide with the default port used by
-      # app-service-configurable
-      sed -i -e 's@"default": 5563@"default": 5567@' \
-        $SNAPCRAFT_PART_INSTALL/etc/sinks/edgex.json
 
       install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
