@@ -31,11 +31,7 @@ Host = "localhost"
 Port = 8500
 Type = "consul"
 
-[Clients]
-  [Clients.core-metadata]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 59881
+[Clients] # Core data no longer dependent on "Client" services
 
 [Databases]
   [Databases.Primary]

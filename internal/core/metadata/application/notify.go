@@ -222,7 +222,7 @@ func sendNotification(ctx context.Context, dic *di.Container, name string, actio
 		return
 	}
 	lc := container.LoggingClientFrom(dic.Get)
-	client := clients.NewNotificationClient(config.Clients[common.SupportNotificationsServiceKey].Url())
+	client := container.NotificationClientFrom(dic.Get)
 
 	dto := dtos.Notification{
 		Content:     fmt.Sprintf("%s %s %s", config.Notifications.Content, name, action),

@@ -57,13 +57,14 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 
 	httpServer := handlers.NewHttpServer(router, true)
 
-	bootstrap.Run(
+	wg, deferred, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		common.CoreMetaDataServiceKey,
 		internal.ConfigStemCore,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		true,
@@ -72,6 +73,27 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			NewBootstrap(router, common.CoreMetaDataServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(common.CoreMetaDataServiceKey, edgex.Version).BootstrapHandler,
 		})
+
+	if !success {
+		return
+	}
+
+	// Have to call this handler outside the bootstrapping when configuration is loaded and known
+	configuration = container.ConfigurationFrom(dic.Get)
+	// Only create Notifications Client if going to be using it
+	if configuration.Notifications.PostDeviceChanges {
+		if !handlers.NewClientsBootstrap().BootstrapHandler(ctx, wg, startupTimer, dic) {
+			return
+		}
+	}
+
+	// Call this handler outside the bootstrapping, so it is always last.
+	handlers.NewStartMessage(common.CoreMetaDataServiceKey, edgex.Version).BootstrapHandler(ctx, wg, startupTimer, dic)
+
+	wg.Wait()
+
+	if deferred != nil {
+		deferred()
+	}
 }

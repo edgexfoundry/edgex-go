@@ -2,7 +2,7 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
-	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.1.0
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.0.1-dev.28
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.9
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.8
 	github.com/edgexfoundry/go-mod-registry/v2 v2.1.0
@@ -39,7 +39,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
 	github.com/hashicorp/go-hclog v0.12.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.0.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
 	github.com/hashicorp/serf v0.9.5 // indirect
