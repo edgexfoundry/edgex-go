@@ -20,8 +20,10 @@ import (
 	"context"
 	"sync"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	clients "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http"
 	"github.com/gorilla/mux"
 )
 
@@ -42,6 +44,13 @@ func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
+
+	// DeviceServiceCommandClient is not part of the common clients handled by the NewClientsBootstrap handler
+	dic.Update(di.ServiceConstructorMap{
+		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+			return clients.NewDeviceServiceCommandClient()
+		},
+	})
 
 	return true
 }
