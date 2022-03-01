@@ -5,3 +5,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "github.com/gomodule/redigo"
+        # For github.com/gomodule/redigo, ignore version v2.0.0
+        versions: ["v2.0.0"]
