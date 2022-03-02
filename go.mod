@@ -9,7 +9,7 @@ require (
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.1.0
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
-	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/gomodule/redigo v1.8.8
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.4
