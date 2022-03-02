@@ -56,6 +56,7 @@ var secretStoreTokens = []string{
 	"device-grove",
 	"device-uart",
 	"device-rfid-llrp",
+	"edgex-ekuiper",
 }
 
 var secretStoreKnownSecrets = []string{
@@ -79,6 +80,7 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[device-grove]",
 	"redisdb[device-uart]",
 	"redisdb[device-rfid-llrp]",
+	"redisdb[edgex-ekuiper]",
 }
 
 // services w/configuration that needs to be copied
