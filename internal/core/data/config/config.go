@@ -26,6 +26,7 @@ type ConfigurationStruct struct {
 	Registry     bootstrapConfig.RegistryInfo
 	Service      bootstrapConfig.ServiceInfo
 	SecretStore  bootstrapConfig.SecretStoreInfo
+	MaxEventSize int64
 }
 
 type WritableInfo struct {
