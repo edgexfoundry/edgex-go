@@ -119,5 +119,59 @@
   },
   "security-file-token-provider": {
     "edgex_use_defaults": true
+  },
+  "security-spiffe-token-provider": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "auth/token/create": {
+          "capabilities": [
+            "create",
+            "update",
+            "sudo"
+          ]
+        },
+        "auth/token/create-orphan": {
+          "capabilities": [
+            "create",
+            "update",
+            "sudo"
+          ]
+        },
+        "auth/token/create/*": {
+          "capabilities": [
+            "create",
+            "update",
+            "sudo"
+          ]
+        },
+        "sys/policies/acl/edgex-service-*": {
+          "capabilities": [
+            "create",
+            "read",
+            "update",
+            "delete"
+          ]
+        },
+        "sys/policies/acl": {
+          "capabilities": [
+            "list"
+          ]
+        },
+        "secret/edgex/security-bootstrapper-redis/redisdb": {
+          "capabilities": [
+            "read"
+          ]
+        },
+        "secret/edgex/*": {
+          "capabilities": [
+            "list",
+            "create",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    }
   }
 }

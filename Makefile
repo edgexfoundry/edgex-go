@@ -8,6 +8,12 @@
 .PHONY: build clean unittest hadolint lint test docker run
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
+
+# see https://shibumi.dev/posts/hardening-executables
+CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2"
+CGO_CFLAGS="-O2 -pipe -fno-plt"
+CGO_CXXFLAGS="-O2 -pipe -fno-plt"
+CGO_LDFLAGS="-Wl,-O1,–sort-common,–as-needed,-z,relro,-z,now"
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
 DOCKERS= \
@@ -19,7 +25,11 @@ DOCKERS= \
 	docker_support_scheduler \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
-	docker_security_bootstrapper
+	docker_security_bootstrapper \
+	docker_security_spire_server \
+	docker_security_spire_agent \
+	docker_security_spire_config \
+	docker_security_spiffe_token_provider
 
 .PHONY: $(DOCKERS)
 
@@ -35,14 +45,16 @@ MICROSERVICES= \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
 	cmd/secrets-config/secrets-config \
-	cmd/security-bootstrapper/security-bootstrapper
+	cmd/security-bootstrapper/security-bootstrapper \
+	cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 .PHONY: $(MICROSERVICES)
 
 VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
-GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly 
+CGOFLAGS=-ldflags "-linkmode=external -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly -buildmode=pie
 GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
@@ -58,7 +70,7 @@ cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-data
 
 cmd/core-command/core-command:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
@@ -89,6 +101,9 @@ cmd/secrets-config/secrets-config:
 
 cmd/security-bootstrapper/security-bootstrapper:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
+
+cmd/security-spiffe-token-provider/security-spiffe-token-provider:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
 
 clean:
 	rm -f $(MICROSERVICES)
@@ -201,6 +216,46 @@ docker_security_bootstrapper:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-bootstrapper:$(GIT_SHA) \
 		-t edgexfoundry/security-bootstrapper:$(DOCKER_TAG) \
+		.
+
+docker_security_spire_server:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-server/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-server:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-server:$(DOCKER_TAG) \
+		cmd/security-spire-server
+
+docker_security_spire_agent:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-agent/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-agent:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-agent:$(DOCKER_TAG) \
+		cmd/security-spire-agent
+
+docker_security_spire_config:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-config/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-config:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-config:$(DOCKER_TAG) \
+		cmd/security-spire-config
+
+docker_security_spiffe_token_provider:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spiffe-token-provider/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spiffe-token-provider:$(GIT_SHA) \
+		-t edgexfoundry/security-spiffe-token-provider:$(DOCKER_TAG) \
 		.
 
 vendor:

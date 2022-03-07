@@ -1,0 +1,7 @@
+docker exec -ti edgex-security-test-client bash -l
+apt-get update
+apt-get install -y curl
+cd /tmp
+spire-agent api fetch x509 -socketPath /tmp/edgex/secrets/spiffe/public/api.sock -write /tmp
+curl -kiv -d service_key=security-test-client -d known_secret_names=redisdb --cert svid.0.pem --key svid.0.key "https://edgex-security-spiffe-token-provider:59841/api/v2/gettoken"
+curl -kiv -d service_key=security-test-client -d known_secret_names=redisdb --cert svid.0.pem --key svid.0.key "https://edgex-security-spiffe-token-provider:59841/api/v2/gettoken?raw_token=true"
