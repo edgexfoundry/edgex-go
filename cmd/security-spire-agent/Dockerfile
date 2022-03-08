@@ -21,6 +21,15 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
+RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
+
+RUN apk add --update --no-cache make git
+
+COPY go.mod vendor* ./
+RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
+
+COPY . .
+
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
 #RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
@@ -32,19 +41,21 @@ RUN wget -q "https://github.com/spiffe/spire/releases/download/v${SPIRE_RELEASE}
     tar xv --strip-components=1 -f "spire-${SPIRE_RELEASE}-linux-x86_64-glibc.tar.gz"
 
 # Deployment image
-FROM debian:stable-slim
+#FROM debian:stable-slim
+FROM alpine:3.15
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends dumb-init openssl && apt-get clean && rm -rf /var/lib/apt/lists/*
+#ENV DEBIAN_FRONTEND=noninteractive
+#RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends dumb-init openssl && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
 COPY --from=builder /edgex-go/bin/spire-agent /usr/local/bin
 COPY --from=builder /edgex-go/bin/spire-server /usr/local/bin
-COPY docker-entrypoint.sh /usr/local/bin/
-COPY agent.conf /usr/local/etc/spire/agent.conf.tpl
-COPY openssl.conf /usr/local/etc/
+COPY --from=builder /edgex-go/cmd/security-spire-agent/docker-entrypoint.sh /usr/local/bin/
+COPY --from=builder /edgex-go/cmd/security-spire-agent/agent.conf /usr/local/etc/spire/agent.conf.tpl
+COPY --from=builder /edgex-go/cmd/security-spire-agent/openssl.conf /usr/local/etc/
 
 ENTRYPOINT [ "/usr/bin/dumb-init" ]
 CMD [ "--verbose", "docker-entrypoint.sh" ]

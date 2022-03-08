@@ -226,7 +226,7 @@ docker_security_spire_server:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-server:$(GIT_SHA) \
 		-t edgexfoundry/security-spire-server:$(DOCKER_TAG) \
-		cmd/security-spire-server
+		.
 
 docker_security_spire_agent:
 	docker build \
@@ -236,7 +236,7 @@ docker_security_spire_agent:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-agent:$(GIT_SHA) \
 		-t edgexfoundry/security-spire-agent:$(DOCKER_TAG) \
-		cmd/security-spire-agent
+		.
 
 docker_security_spire_config:
 	docker build \
@@ -246,7 +246,7 @@ docker_security_spire_config:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-config:$(GIT_SHA) \
 		-t edgexfoundry/security-spire-config:$(DOCKER_TAG) \
-		cmd/security-spire-config
+		.
 
 docker_security_spiffe_token_provider:
 	docker build \
