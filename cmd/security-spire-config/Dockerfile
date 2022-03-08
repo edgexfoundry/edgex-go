@@ -30,25 +30,18 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
 
-# The main mirrors are giving us timeout issues on builds periodically.
-# So we can try these.
-#RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
-#RUN apk add --update --no-cache zeromq-dev libsodium-dev pkgconfig build-base git
-
 ARG SPIRE_RELEASE=1.2.0
 
 RUN wget -q "https://github.com/spiffe/spire/releases/download/v${SPIRE_RELEASE}/spire-${SPIRE_RELEASE}-linux-x86_64-glibc.tar.gz" && \
     tar xv --strip-components=1 -f "spire-${SPIRE_RELEASE}-linux-x86_64-glibc.tar.gz"
 
 # Deployment image
-#FROM debian:stable-slim
 FROM alpine:3.15
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
-#ENV DEBIAN_FRONTEND=noninteractive
-#RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends dumb-init && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init gcompat
 
 COPY --from=builder /edgex-go/bin/spire-server /usr/local/bin

@@ -50,7 +50,7 @@ done
 if test ! -f "/srv/spiffe/agent/agent.crt"; then
     openssl ecparam -genkey -name secp521r1 -noout -out "/srv/spiffe/agent/agent.key"
     SAN="" openssl req -subj "/CN=${SPIFFE_AGENT0_CN}" -config "/usr/local/etc/openssl.conf" -key "/srv/spiffe/agent/agent.key" -sha384 -new -out "/run/agent.req.$$"
-    SAN="" openssl x509 -sha384 -extfile /usr/local/etc/openssl.conf -extensions agent_ext -CA "/srv/spiffe/ca/public/agent-ca.crt" -CAkey "/srv/spiffe/ca/private/agent-ca.key" -CAcreateserial -req -in "/run/agent.req.$$" -days 3650 -out "/srv/spiffe/agent/agent.crt"
+    SAN="" openssl x509 -sha512 -extfile /usr/local/etc/openssl.conf -extensions agent_ext -CA "/srv/spiffe/ca/public/agent-ca.crt" -CAkey "/srv/spiffe/ca/private/agent-ca.key" -CAcreateserial -req -in "/run/agent.req.$$" -days 3650 -out "/srv/spiffe/agent/agent.crt"
     rm -f "/run/agent.req.$$"
 fi
 

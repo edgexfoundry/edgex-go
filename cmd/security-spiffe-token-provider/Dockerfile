@@ -21,8 +21,6 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
-#ENV DEBIAN_FRONTEND=noninteractive
-#RUN apt-get update -y && apt-get install -y --no-install-recommends build-essential && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN apk update && apk --no-cache --update add build-base
 
 COPY go.mod vendor* ./
@@ -32,14 +30,12 @@ COPY . .
 RUN make cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 # Deployment image
-#FROM debian:stable-slim
 FROM alpine:3.15
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
-#ENV DEBIAN_FRONTEND=noninteractive
-#RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends dumb-init curl && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init curl gcompat
 
 COPY --from=builder /edgex-go/Attribution.txt /

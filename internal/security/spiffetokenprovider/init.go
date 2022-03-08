@@ -191,7 +191,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 		fmt.Println("PeerSVID:", peerSVID)
 		// TODO: verify the prefix with what we expect like spiffe://edgexfoundry.org/service/*
-		// regex: regexp.MustCompile(`(?m)^(?:spiffe://)(.)*/service/(.)*$`)
+		// regex: regexp.MustCompile(`^spiffe://([^/]*)/service/(.*)$`)
 		spiffeServiceKey := strings.Replace(peerSVID,
 			fmt.Sprintf("spiffe://%s/service/", configuration.Spiffe.TrustDomain.HostName), "", 1)
 
