@@ -24,6 +24,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -56,16 +57,12 @@ const (
 )
 
 type Bootstrap struct {
-	insecureSkipVerify bool
-	vaultInterval      int
-	validKnownSecrets  map[string]bool
+	validKnownSecrets map[string]bool
 }
 
-func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
+func NewBootstrap() *Bootstrap {
 	return &Bootstrap{
-		insecureSkipVerify: insecureSkipVerify,
-		vaultInterval:      vaultInterval,
-		validKnownSecrets:  map[string]bool{redisSecretName: true},
+		validKnownSecrets: map[string]bool{redisSecretName: true},
 	}
 }
 
@@ -135,7 +132,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Handle healthcheck endpoint
 	http.HandleFunc("/api/v2/ping", func(w http.ResponseWriter, r *http.Request) {
 		lc.Info("Request received for /api/v2/ping")
-		_, _ = io.WriteString(w, "pong")
+		_, err = io.WriteString(w, "pong")
+		if err != nil {
+			lc.Errorf("failed to write response: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 
 	//
@@ -159,9 +160,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	http.HandleFunc("/api/v2/gettoken", func(w http.ResponseWriter, r *http.Request) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+		if r.Method != http.MethodPost {
+			lc.Error("only allow POST method")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		// Have to read the connection to finish TLS verification
 		if err := r.ParseForm(); err != nil {
-			lc.Errorf("Could not parse form: %v", err)
+			lc.Errorf("could not parse form: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -173,7 +180,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		knownSecretNames := r.Form["known_secret_names"]
 		rawTokenOnly, err := strconv.ParseBool(r.Form.Get("raw_token"))
 		if err != nil {
-			lc.Errorf("Could not parse bool '%s': %v", r.Form.Get("raw_token"), err)
+			lc.Errorf("could not parse bool '%s': %v", r.Form.Get("raw_token"), err)
 		}
 		peerSVID := ""
 
@@ -189,35 +196,62 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			}
 		}
 
-		fmt.Println("PeerSVID:", peerSVID)
-		// TODO: verify the prefix with what we expect like spiffe://edgexfoundry.org/service/*
-		// regex: regexp.MustCompile(`^spiffe://([^/]*)/service/(.*)$`)
-		spiffeServiceKey := strings.Replace(peerSVID,
-			fmt.Sprintf("spiffe://%s/service/", configuration.Spiffe.TrustDomain.HostName), "", 1)
+		// verify the prefix with what we expect like spiffe://edgexfoundry.org/service/*
+		regex := regexp.MustCompile(`^spiffe://([^/]+)/service/(.*)$`)
+		if !regex.MatchString(peerSVID) {
+			lc.Error("Invalid Spiffe SVID format")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		allSubMatches := regex.FindAllStringSubmatch(peerSVID, -1)[0]
+		domainName := allSubMatches[1]
+		serviceName := allSubMatches[2]
+
+		if domainName != configuration.Spiffe.TrustDomain.HostName {
+			lc.Errorf("Invalid trust domain name: %s", domainName)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// verify serviceName based on some rules
+		if len(strings.TrimSpace(serviceKey)) == 0 {
+			serviceKey = serviceName
+		}
+
+		if strings.HasPrefix(serviceName, "device-"+serviceName) {
+			if !strings.HasPrefix(serviceKey, "device-"+serviceName) &&
+				!strings.HasPrefix(serviceKey, "device-name-") {
+				lc.Errorf("Invalid service key format for device service")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		} else if strings.HasPrefix(serviceName, "app-service-configurable") {
+			if !strings.HasPrefix(serviceKey, "app-") {
+				lc.Errorf("Invalid service key format for app services")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
 
 		privilegedToken, err := b.getPrivilegedToken(dic)
 		if err != nil {
 			lc.Errorf("failed to load secret store token: %v", err)
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		vaultTokenResponse, err := makeToken(spiffeServiceKey, privilegedToken, secretStoreClient, lc)
+		vaultTokenResponse, err := makeToken(serviceName, privilegedToken, secretStoreClient, lc)
 		if err != nil {
 			lc.Errorf("failed create secret store token: %v", err)
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if err := b.seedKnownSecrets(ctx, lc, configuration.SecretStore, knownSecretNames, serviceKey, privilegedToken); err != nil {
 			lc.Errorf("failed to seed known secrets: %v", err)
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		// TODO: Use above logic to compare SPIFFE ID with service key in form
-		retText := fmt.Sprintf("svid=%s; svid_service=%s; service_key=%s; known_secret_names=%s, raw_token=%v\n",
-			peerSVID, spiffeServiceKey, serviceKey, knownSecretNames, rawTokenOnly)
-		lc.Info(retText)
 
 		// Write resulting token
 		if rawTokenOnly {

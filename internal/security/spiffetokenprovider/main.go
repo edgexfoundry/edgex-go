@@ -33,23 +33,40 @@ import (
 func Main(ctx context.Context, cancel context.CancelFunc) {
 	startupTimer := startup.NewStartUpTimer("security-spiffe-token-provider")
 
-	var insecureSkipVerify bool
-	var vaultInterval int
+	// var insecureSkipVerify bool
+	// var vaultInterval int
 
-	// All common command-line flags have been moved to bootstrap. Service specific flags are add here,
-	// but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
-	// Service specific used is passed below.
-	f := flags.NewWithUsage(
-		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
-			"    --vaultInterval=<seconds>       Indicates how long the program will pause between vault initialization attempts until it succeeds",
-	)
+	// // All common command-line flags have been moved to bootstrap. Service specific flags are add here,
+	// // but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
+	// // Service specific used is passed below.
+	// f := flags.NewWithUsage(
+	// 	"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
+	// 		"    --vaultInterval=<seconds>       Indicates how long the program will pause between vault initialization attempts until it succeeds",
+	// )
 
-	if len(os.Args) < 2 {
-		f.Help()
-	}
+	// if len(os.Args) < 2 {
+	// 	f.Help()
+	// }
 
-	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
-	f.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
+	// f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
+	// f.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
+	// f.Parse(os.Args[1:])
+
+	// configuration := &config.ConfigurationStruct{}
+	// dic := di.NewContainer(di.ServiceConstructorMap{
+	// 	container.ConfigurationName: func(get di.Get) interface{} {
+	// 		return configuration
+	// 	},
+	// })
+
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// by inserting service specific flag prior to call to commonFlags.Parse().
+	// Example:
+	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
+	//      ....
+	//      flags.Parse(os.Args[1:])
+	//
+	f := flags.New()
 	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
@@ -70,7 +87,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		dic,
 		true,
 		[]interfaces.BootstrapHandler{
-			NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
+			NewBootstrap().BootstrapHandler,
 		},
 	)
 }

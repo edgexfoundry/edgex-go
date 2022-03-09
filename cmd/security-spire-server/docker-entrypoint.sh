@@ -40,7 +40,7 @@ done
 
 if test ! -f "/srv/spiffe/ca/public/ca.crt"; then
     openssl ecparam -genkey -name secp521r1 -noout -out "/srv/spiffe/ca/private/ca.key"
-    SAN="" openssl req -subj "/CN=SPIFFE Root CA" -config "/usr/local/etc/openssl.conf" -key "/srv/spiffe/ca/private/ca.key" -sha384 -new -out "/run/ca.req.$$"
+    SAN="" openssl req -subj "/CN=SPIFFE Root CA" -config "/usr/local/etc/openssl.conf" -key "/srv/spiffe/ca/private/ca.key" -sha512 -new -out "/run/ca.req.$$"
     SAN="" openssl x509 -sha512 -signkey "/srv/spiffe/ca/private/ca.key" -clrext -extfile /usr/local/etc/openssl.conf -extensions ca_ext -CAkey "/srv/spiffe/ca/private/ca.key" -CAcreateserial -req -in "/run/ca.req.$$" -days 3650 -out "/srv/spiffe/ca/public/ca.crt"
     rm -f "/run/ca.req.$$"
 fi
@@ -49,7 +49,7 @@ fi
 
 if test ! -f "/srv/spiffe/ca/public/agent-ca.crt"; then
     openssl ecparam -genkey -name secp521r1 -noout -out "/srv/spiffe/ca/private/agent-ca.key"
-    SAN="" openssl req -subj "/CN=SPIFFE Agent CA" -config "/usr/local/etc/openssl.conf" -key "/srv/spiffe/ca/private/agent-ca.key" -sha384 -new -out "/run/ca.req.$$"
+    SAN="" openssl req -subj "/CN=SPIFFE Agent CA" -config "/usr/local/etc/openssl.conf" -key "/srv/spiffe/ca/private/agent-ca.key" -sha512 -new -out "/run/ca.req.$$"
     SAN="" openssl x509 -sha512 -signkey "/srv/spiffe/ca/private/agent-ca.key" -clrext -extfile /usr/local/etc/openssl.conf -extensions ca_ext -CAkey "/srv/spiffe/ca/private/agent-ca.key" -CAcreateserial -req -in "/run/ca.req.$$" -days 3650 -out "/srv/spiffe/ca/public/agent-ca.crt"
     rm -f "/run/ca.req.$$"
 fi
