@@ -303,7 +303,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Create a `tls.Config` to allow mTLS connections, and verify that presented certificate has SPIFFE ID `spiffe://example.org/client`
 	tlsConfig := tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeMemberOf(td))
 	tlsConfig.MinVersion = tls.VersionTLS13
-	tlsConfig.CurvePreferences = []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256}
+	tlsConfig.CurvePreferences = []tls.CurveID{tls.CurveP521, tls.CurveP384}
 	tlsConfig.PreferServerCipherSuites = true
 
 	serverAddress := ":" + strconv.Itoa(configuration.GetBootstrap().Service.Port)
