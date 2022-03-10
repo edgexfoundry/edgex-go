@@ -866,7 +866,7 @@ parts:
 
   kuiper:
     source: https://github.com/lf-edge/ekuiper.git
-    source-tag: 1.4.2
+    source-tag: 1.4.3
     source-depth: 1
     plugin: make
     after: [go-build-helper]
