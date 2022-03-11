@@ -158,11 +158,14 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// Handle gettoken endpoint
 	http.HandleFunc("/api/v2/gettoken", func(w http.ResponseWriter, r *http.Request) {
+
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+		lc.Debug("receiving gettoken request")
 
 		if r.Method != http.MethodPost {
 			lc.Error("only allow POST method")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -180,8 +183,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		knownSecretNames := r.Form["known_secret_names"]
 		rawTokenOnly, err := strconv.ParseBool(r.Form.Get("raw_token"))
 		if err != nil {
-			lc.Errorf("could not parse bool '%s': %v", r.Form.Get("raw_token"), err)
+			lc.Warnf("assuming to not use rawToken due to could not parse bool '%s': %v", r.Form.Get("raw_token"), err)
+			rawTokenOnly = false
 		}
+
+		lc.Debugf("extracting peer SVID from TLS peer certificates...")
 		peerSVID := ""
 
 	iterateCertificates:
@@ -196,6 +202,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			}
 		}
 
+		lc.Debug("verifying SVID format and server key...")
+
 		// verify the prefix with what we expect like spiffe://edgexfoundry.org/service/*
 		regex := regexp.MustCompile(`^spiffe://([^/]+)/service/(.*)$`)
 		if !regex.MatchString(peerSVID) {
@@ -208,6 +216,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		domainName := allSubMatches[1]
 		serviceName := allSubMatches[2]
 
+		// this is the similar check that AuthorizeMemberOf() will be doning below
+		// here just the sanity check first comparing configuration with spiffe SVID
 		if domainName != configuration.Spiffe.TrustDomain.HostName {
 			lc.Errorf("Invalid trust domain name: %s", domainName)
 			w.WriteHeader(http.StatusBadRequest)
@@ -232,7 +242,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
+		} else if serviceKey != serviceName {
+			lc.Errorf("unequal service key and servie name for all other service case")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+
+		lc.Debug("successful SVID and service key validation")
 
 		privilegedToken, err := b.getPrivilegedToken(dic)
 		if err != nil {
@@ -246,6 +262,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		lc.Debug("seeding the known secrets if any...")
 
 		if err := b.seedKnownSecrets(ctx, lc, configuration.SecretStore, knownSecretNames, serviceKey, privilegedToken); err != nil {
 			lc.Errorf("failed to seed known secrets: %v", err)
@@ -271,6 +289,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			}
 		}
 
+		lc.Info("successfully got raw token")
+
 	})
 
 	// Get x.509 SVID from specified workload API socket
@@ -287,16 +307,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 	defer source.Close()
 
+	lc.Info("created X509Source successfully")
+
 	// This service can only be connected to by the local trust domain
 
-	trustDomainString := os.Getenv("SPIFFE_TRUST_DOMAIN")
-	if trustDomainString == "" {
-		lc.Error("SPIFFE_TRUST_DOMAIN environment variable must be set")
-		return false
-	}
-	td, err := spiffeid.TrustDomainFromString(trustDomainString)
+	td, err := spiffeid.TrustDomainFromString(configuration.Spiffe.TrustDomain.HostName)
 	if err != nil {
-		lc.Error("Could not get SPIFFE trust domain from string '%s': %v", trustDomainString, err)
+		lc.Error("Could not get SPIFFE trust domain from string '%s': %v", configuration.Spiffe.TrustDomain.HostName, err)
 		return false
 	}
 
@@ -312,6 +329,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		TLSConfig: tlsConfig,
 	}
 
+	lc.Info("spiffe token provider starts listening and serves...")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		lc.Errorf("Error on serve: %v", err)
 	}

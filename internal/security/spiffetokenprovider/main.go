@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/spiffetokenprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/spiffetokenprovider/container"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -31,7 +32,7 @@ import (
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
-	startupTimer := startup.NewStartUpTimer("security-spiffe-token-provider")
+	startupTimer := startup.NewStartUpTimer(common.SecuritySpiffeTokenProviderKey)
 
 	f := flags.New()
 	f.Parse(os.Args[1:])
@@ -47,7 +48,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		ctx,
 		cancel,
 		f,
-		"security-spiffe-token-provider",
+		common.SecuritySpiffeTokenProviderKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		startupTimer,
