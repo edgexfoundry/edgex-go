@@ -53,6 +53,8 @@ LogLevel = "INFO"
           Description = "role for device virtual service"
         [StageGate.Registry.ACL.Roles.device-rest]
           Description = "role for device rest service"
+        [StageGate.Registry.ACL.Roles.security-spiffe-token-provider]
+          Description = "role for device security-spiffe-token-provider service"
           
   [StageGate.KongDb]
     Host = "kong-db"

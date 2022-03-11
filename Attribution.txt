@@ -205,3 +205,24 @@ https://github.com/hashicorp/go-multierror/blob/master/LICENSE
 
 github.com/go-kit/log (MIT) https://github.com/go-kit/log
 https://github.com/go-kit/log/blob/master/LICENSE
+
+github.com/golang/protobuf (BSD-3) https://github.com/golang/protobuf
+https://github.com/golang/protobuf/blob/master/LICENSE
+
+github.com/spiffe/go-spiffe/v2 (Apache-2.0 License) github.com/spiffe/go-spiffe/v2
+https://github.com/spiffe/go-spiffe/blob/main/LICENSE
+
+github.com/zeebo/errs (MIT) https://github.com/zeebo/errs
+https://github.com/zeebo/errs/blob/master/LICENSE
+
+google.golang.org/genproto (Apache-2.0) https://github.com/googleapis/go-genproto
+https://github.com/googleapis/go-genproto/blob/main/LICENSE
+
+google.golang.org/grpc (Apache-2.0) https://github.com/grpc/grpc-go
+https://github.com/grpc/grpc-go/blob/master/LICENSE
+
+google.golang.org/protobuf (Unspecified) https://github.com/protocolbuffers/protobuf-go
+https://github.com/protocolbuffers/protobuf-go/blob/master/LICENSE
+
+gopkg.in/square/go-jose.v2 (Apache-2.0) https://github.com/square/go-jose/tree/v2.6.0
+https://github.com/square/go-jose/blob/v2.6.0/LICENSE
