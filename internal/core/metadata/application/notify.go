@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -58,6 +58,26 @@ func addDeviceCallback(ctx context.Context, dic *di.Container, device dtos.Devic
 	}
 
 	go sendNotification(ctx, dic, device.Name, deviceCreateAction)
+}
+
+// validateDeviceCallback invoke device service's validation function for validating new or updated device
+func validateDeviceCallback(ctx context.Context, dic *di.Container, device dtos.Device) errors.EdgeX {
+	lc := container.LoggingClientFrom(dic.Get)
+	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, device.ServiceName)
+	if err != nil {
+		lc.Errorf("fail to create a device service callback client by serviceName %s, err: %v", device.ServiceName, err)
+		return err
+	}
+
+	// reusing AddDeviceRequest here as it contains the protocols field and opens up
+	// to other validation beyond protocols if ever needed
+	request := requests.NewAddDeviceRequest(device)
+	_, err = deviceServiceCallbackClient.ValidateDeviceCallback(ctx, request)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindServerError, "device validation failed", err)
+	}
+
+	return nil
 }
 
 // updateDeviceCallback invoke device service's callback function for updating device

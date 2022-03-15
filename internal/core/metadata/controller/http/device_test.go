@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -113,7 +113,37 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	return testUpdateDeviceReq
 }
 
+func mockValidationHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+
+	var res commonDTO.BaseResponse
+	var device requests.AddDeviceRequest
+	err := json.NewDecoder(r.Body).Decode(&device)
+	if err != nil {
+		http.Error(w, "json decoding failed", http.StatusBadRequest)
+		return
+	}
+
+	if _, ok := device.Device.Protocols["modbus-ip"]; !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		res = commonDTO.NewBaseResponse("", "validation failed", http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		res = commonDTO.NewBaseResponse("", "", http.StatusOK)
+	}
+
+	resBytes, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, "json encoding failed", http.StatusInternalServerError)
+	}
+	w.Write(resBytes) //nolint:errcheck
+}
+
 func TestAddDevice(t *testing.T) {
+	mockDeviceServiceServer := httptest.NewServer(http.HandlerFunc(mockValidationHandler))
+	defer mockDeviceServiceServer.Close()
+
 	testDevice := buildTestDeviceRequest()
 	deviceModel := requests.AddDeviceReqToDeviceModels([]requests.AddDeviceRequest{testDevice})[0]
 	expectedRequestId := ExampleUUID
@@ -124,7 +154,7 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", deviceModel.ProfileName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
-	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
+	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
 
 	notFoundService := testDevice
 	notFoundService.Device.ServiceName = "notFoundService"
@@ -151,6 +181,8 @@ func TestAddDevice(t *testing.T) {
 	noProtocols.Device.Protocols = nil
 	emptyProtocols := testDevice
 	emptyProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{}
+	invalidProtocols := testDevice
+	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -176,6 +208,7 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusBadRequest},
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest},
 		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest},
+		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusInternalServerError},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -414,6 +447,9 @@ func TestDeviceNameExists(t *testing.T) {
 }
 
 func TestPatchDevice(t *testing.T) {
+	mockDeviceServiceServer := httptest.NewServer(http.HandlerFunc(mockValidationHandler))
+	defer mockDeviceServiceServer.Close()
+
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -440,7 +476,7 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("UpdateDevice", mock.Anything).Return(nil)
-	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
+	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
 
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
@@ -461,6 +497,9 @@ func TestPatchDevice(t *testing.T) {
 	emptyName := testReq
 	emptyName.Device.Id = nil
 	emptyName.Device.Name = &emptyString
+
+	invalidProtocols := testReq
+	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
 
 	invalidNoIdAndName := testReq
 	invalidNoIdAndName.Device.Id = nil
@@ -514,6 +553,7 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
 		{"Invalid - not found service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -15,6 +15,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -38,6 +39,11 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		return id, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if !exists {
 		return id, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", d.ProfileName), nil)
+	}
+
+	err := validateDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
 	addedDevice, err := dbClient.AddDevice(d)
@@ -139,6 +145,11 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
+
+	err = validateDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(device))
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 
 	err = dbClient.UpdateDevice(device)
 	if err != nil {
