@@ -1,9 +1,9 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package application
+package messaging
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -67,7 +68,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Error(err.Error())
 					break
 				}
-				err = AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
+				err = application.AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
 				if err != nil {
 					lc.Errorf("fail to persist the event, %v", err)
 				}
