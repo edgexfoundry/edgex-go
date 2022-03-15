@@ -19,8 +19,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
@@ -51,7 +51,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	lc := container.LoggingClientFrom(dic.Get)
 
 	if configuration.MessageQueue.SubscribeEnabled {
-		err := application.SubscribeEvents(ctx, dic)
+		err := messaging.SubscribeEvents(ctx, dic)
 		if err != nil {
 			lc.Errorf("Failed to subscribe events from message bus, %v", err)
 			return false
