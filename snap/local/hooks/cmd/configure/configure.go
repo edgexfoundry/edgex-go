@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -515,6 +516,27 @@ func checkSecurityConfig(services []string) ([]string, error) {
 	return services, nil
 }
 
+func configureKuiper() error {
+	setupScriptPath, err := exec.LookPath("redis-token-setup.sh")
+	if err != nil {
+		return err
+	}
+
+	cmdSetupKuiper := exec.Cmd{
+		Path:   setupScriptPath,
+		Args:   []string{setupScriptPath},
+		Stdout: os.Stdout,
+		Stderr: os.Stdout,
+	}
+
+	err = cmdSetupKuiper.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func configure() {
 	var debug = false
 	var err error
@@ -599,5 +621,11 @@ func configure() {
 			hooks.Error(fmt.Sprintf("edgexfoundry:install un-setting 'install'; %v", err))
 			os.Exit(1)
 		}
+	}
+
+	err = configureKuiper()
+	if err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:configure:kuiper:can't set up Redis credentials': %v", err))
+		os.Exit(1)
 	}
 }
