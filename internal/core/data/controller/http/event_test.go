@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -261,6 +261,84 @@ func TestAddEvent(t *testing.T) {
 			if actualResponse.RequestId != "" {
 				assert.Equal(t, expectedRequestId, actualResponse.RequestId, "RequestID not as expected")
 			}
+			assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
+		})
+	}
+}
+
+func TestAddEventSize(t *testing.T) {
+
+	dbClientMock := &dbMock.DBClient{}
+
+	validRequest := testAddEvent
+	TestReadingLargeBinaryValue := make([]byte, 26000000)
+	largeBinaryRequest := validRequest
+	largeBinaryRequest.Event.Readings = []dtos.BaseReading{{
+		DeviceName:   TestDeviceName,
+		ResourceName: TestDeviceResourceName,
+		ProfileName:  TestDeviceProfileName,
+		Origin:       TestOriginTime,
+		ValueType:    common.ValueTypeBinary,
+		BinaryReading: dtos.BinaryReading{
+			BinaryValue: []byte(TestReadingLargeBinaryValue),
+			MediaType:   TestBinaryReadingMediaType,
+		},
+	}}
+
+	tests := []struct {
+		Name               string
+		Request            requests.AddEventRequest
+		MaxEventSize       int64
+		RequestContentType string
+		ErrorExpected      bool
+		ExpectedStatusCode int
+	}{
+		{"Valid - AddEventRequest CBOR with default MaxEventSize", validRequest, 25000, common.ContentTypeCBOR, false, http.StatusCreated},
+		{"Valid - AddEventRequest CBOR with unlimit MaxEventSize", validRequest, 0, common.ContentTypeCBOR, false, http.StatusCreated},
+		{"Valid - AddEventRequest CBOR with higher MaxEventSize", largeBinaryRequest, 50000, common.ContentTypeCBOR, false, http.StatusCreated},
+		{"Invalid - AddEventRequest CBOR with invalid event size", largeBinaryRequest, 25000, common.ContentTypeCBOR, true, http.StatusRequestEntityTooLarge},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.Name, func(t *testing.T) {
+			dic := mocks.NewMockDIC()
+			dic.Update(di.ServiceConstructorMap{
+				container.ConfigurationName: func(get di.Get) interface{} {
+					return &config.ConfigurationStruct{
+						MaxEventSize: testCase.MaxEventSize,
+						Writable: config.WritableInfo{
+							PersistData: false,
+						},
+					}
+				},
+				container.DBClientInterfaceName: func(get di.Get) interface{} {
+					return dbClientMock
+				},
+			})
+			ec := NewEventController(dic)
+			byteData, err := toByteArray(testCase.RequestContentType, testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(byteData))
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
+			req.Header.Set(common.ContentType, testCase.RequestContentType)
+			req = mux.SetURLVars(req, map[string]string{common.ProfileName: validRequest.Event.ProfileName, common.DeviceName: validRequest.Event.DeviceName, common.SourceName: validRequest.Event.SourceName})
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(ec.AddEvent)
+			handler.ServeHTTP(recorder, req)
+
+			var actualResponse commonDTO.BaseWithIdResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+
+			if testCase.ErrorExpected {
+				assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, common.ApiVersion, actualResponse.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.ExpectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, testCase.ExpectedStatusCode, int(actualResponse.StatusCode), "BaseResponse status code not as expected")
 			assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 		})
 	}

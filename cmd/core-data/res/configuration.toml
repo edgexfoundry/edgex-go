@@ -1,3 +1,5 @@
+MaxEventSize = 25000  # Defines the maximum event size in kilobytes
+
 [Writable]
 PersistData = true
 LogLevel = "INFO"

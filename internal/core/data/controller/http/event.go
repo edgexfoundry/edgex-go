@@ -2,6 +2,8 @@ package http
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -10,7 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/io"
+	edgexIO "github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -25,7 +27,7 @@ import (
 )
 
 type EventController struct {
-	readers map[string]io.DtoReader
+	readers map[string]edgexIO.DtoReader
 	mux     sync.RWMutex
 	dic     *di.Container
 }
@@ -33,12 +35,12 @@ type EventController struct {
 // NewEventController creates and initializes an EventController
 func NewEventController(dic *di.Container) *EventController {
 	return &EventController{
-		readers: make(map[string]io.DtoReader),
+		readers: make(map[string]edgexIO.DtoReader),
 		dic:     dic,
 	}
 }
 
-func (ec *EventController) getReader(r *http.Request) io.DtoReader {
+func (ec *EventController) getReader(r *http.Request) edgexIO.DtoReader {
 	contentType := strings.ToLower(r.Header.Get(common.ContentType))
 	ec.mux.RLock()
 	reader, ok := ec.readers[contentType]
@@ -49,7 +51,7 @@ func (ec *EventController) getReader(r *http.Request) io.DtoReader {
 
 	ec.mux.Lock()
 	defer ec.mux.Unlock()
-	reader = io.NewDtoReader(contentType)
+	reader = edgexIO.NewDtoReader(contentType)
 	ec.readers[contentType] = reader
 	return reader
 }
@@ -63,6 +65,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
 	ctx := r.Context()
+	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// URL parameters
 	vars := mux.Vars(r)
@@ -71,8 +74,21 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	sourceName := vars[common.SourceName]
 
 	var addEventReqDTO requestDTO.AddEventRequest
+	var err errors.EdgeX
 
-	dataBytes, err := io.ReadAddEventRequestInBytes(r.Body)
+	if config.MaxEventSize > 0 && r.ContentLength > config.MaxEventSize*1000 {
+		err = errors.NewCommonEdgeX(errors.KindLimitExceeded, fmt.Sprintf("request size exceed %d KB", config.MaxEventSize), nil)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	dataBytes, readErr := io.ReadAll(r.Body)
+	if readErr != nil {
+		err = errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", nil)
+	} else if r.ContentLength == -1 { // only check the payload byte array size when the Content-Length of Request is unknown
+		err = utils.CheckPayloadSize(dataBytes, config.MaxEventSize*1000)
+	}
+
 	if err == nil {
 		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
 		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
