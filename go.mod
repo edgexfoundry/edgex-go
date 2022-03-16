@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.4
 	github.com/pelletier/go-toml v1.9.4
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
