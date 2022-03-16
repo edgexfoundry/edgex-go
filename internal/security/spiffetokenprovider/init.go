@@ -218,7 +218,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 		// this is the similar check that AuthorizeMemberOf() will be doning below
 		// here just the sanity check first comparing configuration with spiffe SVID
-		if domainName != configuration.Spiffe.TrustDomain.HostName {
+		if domainName != configuration.Spiffe.TrustDomain {
 			lc.Errorf("Invalid trust domain name: %s", domainName)
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -294,7 +294,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	})
 
 	// Get x.509 SVID from specified workload API socket
-	socketPath := configuration.Spiffe.Endpoint.Socket
+	socketPath := configuration.Spiffe.EndpointSocket
 	if !strings.HasPrefix(socketPath, "unix://") {
 		socketPath = "unix://" + socketPath
 	}
@@ -311,9 +311,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// This service can only be connected to by the local trust domain
 
-	td, err := spiffeid.TrustDomainFromString(configuration.Spiffe.TrustDomain.HostName)
+	td, err := spiffeid.TrustDomainFromString(configuration.Spiffe.TrustDomain)
 	if err != nil {
-		lc.Error("Could not get SPIFFE trust domain from string '%s': %v", configuration.Spiffe.TrustDomain.HostName, err)
+		lc.Error("Could not get SPIFFE trust domain from string '%s': %v", configuration.Spiffe.TrustDomain, err)
 		return false
 	}
 

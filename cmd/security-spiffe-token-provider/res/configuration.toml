@@ -52,7 +52,5 @@ ServerName = ""
   AuthType = "X-Vault-Token"
 
 [SPIFFE]
-  [SPIFFE.Endpoint]
-  Socket = "/tmp/edgex/secrets/spiffe/public/api.sock"
-  [SPIFFE.TrustDomain]
-  HostName = "edgexfoundry.org"
+  EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
+  TrustDomain = "edgexfoundry.org"

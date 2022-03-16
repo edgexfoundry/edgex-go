@@ -24,9 +24,9 @@ umask 027
 # Set default env vars if unassigned
 
 : ${SPIFFE_SERVER_SOCKET:=/tmp/edgex/secrets/spiffe/private/api.sock}
-: ${SPIFFE_ENDPOINT_SOCKET:=/tmp/edgex/secrets/spiffe/public/api.sock}
+: ${SPIFFE_ENDPOINTSOCKET:=/tmp/edgex/secrets/spiffe/public/api.sock}
 : ${SPIFFE_TRUSTBUNDLE_PATH:=/tmp/edgex/secrets/spiffe/trust/bundle}
-: ${SPIFFE_TRUST_DOMAIN:=edgexfoundry.org}
+: ${SPIFFE_TRUSTDOMAIN:=edgexfoundry.org}
 : ${SPIFFE_SERVER_HOST:=edgex-security-spire-server}
 : ${SPIFFE_SERVER_PORT:=59840}
 : ${SPIFFE_AGENT0_CN:=agent0}
@@ -34,7 +34,7 @@ umask 027
 
 for dir in `dirname "${SPIFFE_SERVER_SOCKET}"` \
            `dirname "${SPIFFE_TRUSTBUNDLE_PATH}"` \
-           `dirname "${SPIFFE_ENDPOINT_SOCKET}"` ; do
+           `dirname "${SPIFFE_ENDPOINTSOCKET}"` ; do
     test -d "$dir" || mkdir -p "$dir"
 done
 
@@ -65,17 +65,17 @@ fi
 
 chmod 644 "${SPIFFE_TRUSTBUNDLE_PATH}"
 chmod 755 `dirname "${SPIFFE_TRUSTBUNDLE_PATH}"`
-chmod 755 `dirname "${SPIFFE_ENDPOINT_SOCKET}"`
+chmod 755 `dirname "${SPIFFE_ENDPOINTSOCKET}"`
 
 # Process agent configuration template
 
 CONF_FILE="/srv/spiffe/agent/agent.conf"
 
 cp -fp /usr/local/etc/spire/agent.conf.tpl "${CONF_FILE}"
-sed -i -e "s~SPIFFE_ENDPOINT_SOCKET~${SPIFFE_ENDPOINT_SOCKET}~" "${CONF_FILE}"
+sed -i -e "s~SPIFFE_ENDPOINTSOCKET~${SPIFFE_ENDPOINTSOCKET}~" "${CONF_FILE}"
 sed -i -e "s~SPIFFE_SERVER_SOCKET~${SPIFFE_SERVER_SOCKET}~" "${CONF_FILE}"
 sed -i -e "s~SPIFFE_TRUSTBUNDLE_PATH~${SPIFFE_TRUSTBUNDLE_PATH}~" "${CONF_FILE}"
-sed -i -e "s~SPIFFE_TRUST_DOMAIN~${SPIFFE_TRUST_DOMAIN}~" "${CONF_FILE}"
+sed -i -e "s~SPIFFE_TRUSTDOMAIN~${SPIFFE_TRUSTDOMAIN}~" "${CONF_FILE}"
 sed -i -e "s~SPIFFE_SERVER_HOST~${SPIFFE_SERVER_HOST}~" "${CONF_FILE}"
 sed -i -e "s~SPIFFE_SERVER_PORT~${SPIFFE_SERVER_PORT}~" "${CONF_FILE}"
 

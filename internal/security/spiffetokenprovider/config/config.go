@@ -21,20 +21,10 @@ import (
 
 // SpiffeInfo contains information for Spiffe configuration
 type SpiffeInfo struct {
-	Endpoint    SpiffeEndpointInfo
-	TrustDomain SpiffeTrustDomainInfo
-}
-
-// SpiffeEndpointInfo contains the spiffe end point information
-type SpiffeEndpointInfo struct {
-	// Path to workload API Unix domain socket (go_spiffe interprets env.SPIFFE_ENDPOINT_SOCKET automatically)
-	Socket string
-}
-
-// SpiffeTrustDomainInfo contains the trusted domain host name
-type SpiffeTrustDomainInfo struct {
-	// trusted host name
-	HostName string
+	// Path to workload API Unix domain socket (go_spiffe interprets env.SPIFFE_ENDPOINTSOCKET automatically)
+	EndpointSocket string
+	// trusted domain name
+	TrustDomain string
 }
 
 type ConfigurationStruct struct {
