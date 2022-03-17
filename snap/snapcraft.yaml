@@ -477,6 +477,9 @@ apps:
     daemon: simple
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
+      VAULT_TOKEN_FILE: $SNAP_DATA/secrets/edgex-ekuiper/secrets-token.json
+      SOURCE_FILE: $SNAP_DATA/kuiper/etc/sources/edgex.yaml 
+      CONNECTIONS_FILE: $SNAP_DATA/kuiper/etc/connections/connection.yaml
     plugs: [network, network-bind]
   kuiper-cli:
     adapter: full
@@ -866,6 +869,6 @@ parts:
     stage-snaps:
       # upgrade 1/edge to 1/stable when possible
       - edgex-ekuiper/1/edge
-    stage:
-      - -bin/redis-token-setup.sh
+
+
 
