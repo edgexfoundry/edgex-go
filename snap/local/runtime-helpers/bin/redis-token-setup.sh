@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 logger "edgexfoundry.kuiper:redis-token-setup: started"
 

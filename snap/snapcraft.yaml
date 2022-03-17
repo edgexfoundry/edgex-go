@@ -864,7 +864,8 @@ parts:
   kuiper:
     plugin: nil
     stage-snaps:
-      - edgex-ekuiper/latest/beta
+      # upgrade 1/edge to 1/stable when possible
+      - edgex-ekuiper/1/edge
     stage:
       - -bin/redis-token-setup.sh
 
