@@ -74,7 +74,13 @@ func validateDeviceCallback(ctx context.Context, dic *di.Container, device dtos.
 	request := requests.NewAddDeviceRequest(device)
 	_, err = deviceServiceCallbackClient.ValidateDeviceCallback(ctx, request)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, "device validation failed", err)
+		// TODO: reconsider the validity in v3
+		// allow this case for the backward-compatability in v2
+		if err.Code() == http.StatusServiceUnavailable {
+			lc.Warnf("Skipping device validation for device %s (device service %s unavailable)", device.Name, device.ServiceName)
+		} else {
+			return errors.NewCommonEdgeX(errors.KindServerError, "device validation failed", err)
+		}
 	}
 
 	return nil

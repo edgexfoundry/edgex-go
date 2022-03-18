@@ -3,7 +3,7 @@ module github.com/edgexfoundry/edgex-go
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.6
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.13
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.17
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.8
 	github.com/edgexfoundry/go-mod-registry/v2 v2.1.0
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.1.0
@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/pelletier/go-toml v1.9.4
 	github.com/stretchr/testify v1.7.1
-	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
@@ -31,7 +31,7 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.10.0 // indirect
+	github.com/go-playground/validator/v10 v10.10.1 // indirect
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/consul/api v1.9.1 // indirect
@@ -55,7 +55,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
