@@ -78,6 +78,8 @@ func validateDeviceCallback(ctx context.Context, dic *di.Container, device dtos.
 		// allow this case for the backward-compatability in v2
 		if err.Code() == http.StatusServiceUnavailable {
 			lc.Warnf("Skipping device validation for device %s (device service %s unavailable)", device.Name, device.ServiceName)
+		} else if err.Code() == http.StatusNotFound {
+			lc.Warnf("Skipping device validation for device %s (device service %s < v2.2)", device.Name, device.ServiceName)
 		} else {
 			return errors.NewCommonEdgeX(errors.KindServerError, "device validation failed", err)
 		}
