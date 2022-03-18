@@ -155,6 +155,7 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("DeviceProfileNameExists", deviceModel.ProfileName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
 	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
+	dbClientMock.On("DeviceServiceByName", "unavailable").Return(models.DeviceService{BaseAddress: "http://unavailable"}, nil)
 
 	notFoundService := testDevice
 	notFoundService.Device.ServiceName = "notFoundService"
@@ -183,6 +184,8 @@ func TestAddDevice(t *testing.T) {
 	emptyProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{}
 	invalidProtocols := testDevice
 	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
+	serviceUnavailable := testDevice
+	testDevice.Device.ServiceName = "unavailable"
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -209,6 +212,7 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest},
 		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest},
 		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusInternalServerError},
+		{"Valid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusCreated},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
