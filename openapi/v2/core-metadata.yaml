@@ -280,6 +280,37 @@ components:
         notify:
           type: boolean
           description: If the 'notify' property is set to true, the device service managing the device will receive a notification
+    DeviceProfileBasicInfo:
+      description: "A profile basic information"
+      type: object
+      properties:
+        name:
+          type: string
+          description: Non-database identifier (must be unique)
+        description:
+          type: string
+          description: Description
+        manufacturer:
+          type: string
+          description: Manufacturer of the device
+        model:
+          type: string
+          description: Model of the device
+        labels:
+          type: array
+          description: Labels used to search for groups of profiles
+          items:
+            type: string
+    DeviceProfileBasicInfoRequest:
+      description: "Update basic information of an existing profile"
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      properties:
+        basicinfo:
+          $ref: '#/components/schemas/DeviceProfileBasicInfo'
+      required:
+        - profileName
     DeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
@@ -322,24 +353,9 @@ components:
     CreateDeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
+      allOf:
+        - $ref: '#/components/schemas/DeviceProfileBasicInfo'
       properties:
-        name:
-          type: string
-          description: Non-database identifier (must be unique)
-        description:
-          type: string
-          description: Description.
-        manufacturer:
-          type: string
-          description: Manufacturer of the device
-        model:
-          type: string
-          description: Model of the device
-        labels:
-          type: array
-          description: Labels used to search for groups of profiles
-          items:
-            type: string
         deviceResources:
           type: array
           items:
@@ -350,32 +366,16 @@ components:
             $ref: '#/components/schemas/DeviceCommand'
       required:
         - name
-        - deviceResources
     UpdateDeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
+      allOf:
+        - $ref: '#/components/schemas/DeviceProfileBasicInfo'
       properties:
         id:
           type: string
           format: uuid
           description: ID uniquely identifies the device profile, a UUID for example
-        name:
-          type: string
-          description: Non-database identifier (must be unique)
-        description:
-          type: string
-          description: Description
-        manufacturer:
-          type: string
-          description: Manufacturer of the device
-        model:
-          type: string
-          description: Model of the device
-        labels:
-          type: array
-          description: Labels used to search for groups of profiles
-          items:
-            type: string
         deviceResources:
           type: array
           items:
@@ -422,6 +422,19 @@ components:
             type: string
       required:
         - name
+    DeviceResourceRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
+      properties:
+        profileName:
+          type: string
+          description: "The unique name of a device profile"
+        resource:
+          $ref: '#/components/schemas/DeviceResource'
+      required:
+        - profileName
+        - resource
     DeviceResourceResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -797,6 +810,19 @@ components:
         - name
         - readWrite
         - resourceOperations
+    DeviceCommandRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      type: object
+      properties:
+        profileName:
+          type: string
+          description: "The unique name of a device profile"
+        deviceCommand:
+          $ref: '#/components/schemas/DeviceCommand'
+      required:
+        - profileName
+        - deviceCommand
     ResourceProperties:
       description: "Defines constraints with regard to the range of acceptable values assigned to an event reading and defined as a property within a device profile."
       type: object
@@ -1194,6 +1220,30 @@ components:
                 resourceOperations:
                   - deviceResource: "SwitchButton"
                     DefaultValue: "false"
+    AddDeviceCommandRequest:
+      value:
+        - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
+          deviceProfile: "Simple-Device-Profile"
+          deviceCommand:
+            name: "Switch"
+            readWrite: "RW"
+            resourceOperations:
+              - deviceResource: "SwitchButton"
+                DefaultValue: "false"
+    AddDeviceResourceRequest:
+      value:
+        - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+          apiVersion: v2
+          deviceName: "Simple-Device-Profile"
+          resource:
+            name: "SwitchButton"
+            description: "Switch On/Off."
+            properties:
+              valueType: "String"
+              readWrite: "RW"
+              defaultValue: "On"
+              units: "On/Off"
     AddProvisionWatcherRequest:
       value:
         - requestId: "fb34e122-84d6-4c4c-a0ba-ac181021dc6b"
@@ -2178,6 +2228,421 @@ paths:
                   $ref: '#/components/examples/500Example'
     delete:
       summary: "Delete a device profile by its unique name. This operation will fail if there are devices actively using the profile."
+      responses:
+        '200':
+          description: "Delete successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
+        '409':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/basicinfo':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+    patch:
+      summary: "Allows basic information updates to an existing device profile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceProfileBasicInfoRequest'
+            example:
+              - name: "Device-Virtual-Profile"
+                description: "Example of Device-Virtual"
+                manufacturer: "Simple Corp."
+                model: "Device-Virtual-01"
+                labels:
+                  - device-virtual-example
+      responses:
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/devicecommand':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+    post:
+      summary: "Allows creation of device commands of an existing device profile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceCommandRequest'
+            examples:
+              AddDeviceCommandRequest:
+                $ref: '#/components/examples/AddDeviceCommandRequest'
+      responses:
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+    patch:
+      summary: "Allows device command updates to an existing device service"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceCommandRequest'
+            examples:
+              AddDeviceCommandRequest:
+                $ref: '#/components/examples/AddDeviceCommandRequest'
+      responses:
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/name/{name}/devicecommand/{commandName}':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device profile"
+      - name: commandName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device command"
+    delete:
+      summary: "Delete a device command by its unique name. This operation will fail if there are devices actively using the profile."
+      responses:
+        '200':
+          description: "Delete successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '404':
+          description: "The requested resource does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
+        '409':
+          description: "The requested resource is locked"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/resource':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+    post:
+      summary: "Allows creation of device resources of an existing device profile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceResourceRequest'
+            examples:
+              AddDeviceResourceRequest:
+                $ref: '#/components/examples/AddDeviceResourceRequest'
+      responses:
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+    patch:
+      summary: "Allows updates to an existing device service"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceResourceRequest'
+            examples:
+              AddDeviceResourceRequest:
+                $ref: '#/components/examples/AddDeviceResourceRequest'
+      responses:
+        '207':
+          description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ErrorResponse'
+                    - $ref: '#/components/schemas/BaseWithIdResponse'
+              examples:
+                MultiPOSTStatusExample:
+                  $ref: '#/components/examples/MultiPOSTStatusExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  '/deviceprofile/name/{name}/resource/{resourceName}':
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device profile"
+      - name: resourceName
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The unique name of a device resource"
+    delete:
+      summary: "Delete a device resource by its unique name. This operation will fail if there are devices actively using the profile."
       responses:
         '200':
           description: "Delete successful"
