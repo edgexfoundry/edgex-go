@@ -33,7 +33,7 @@ RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secret
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache curl
+RUN apk add --update --no-cache curl dumb-init
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
@@ -46,5 +46,9 @@ COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
 # as we are splitting security-proxy-setup into two different utilities for ease-of-use.
 COPY --from=builder /edgex-go/cmd/secrets-config/secrets-config .
 
-ENTRYPOINT ["/edgex/security-proxy-setup"]
-CMD ["--init=true"]
+# Setup the entry point script and assign perms
+COPY --from=builder /edgex-go/cmd/security-proxy-setup/entrypoint.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/entrypoint.sh \
+    && ln -s /usr/local/bin/entrypoint.sh /
+
+ENTRYPOINT ["entrypoint.sh"]
