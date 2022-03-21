@@ -54,4 +54,4 @@ done
 echo "$(date) ${API_GATEWAY_HOST} is ready"
 
 echo "$(date) Starting ${PROXY_SETUP_HOST} ..."
-exec /edgex/security-proxy-setup --init=true
+exec /usr/local/bin/entrypoint.sh "$*"
