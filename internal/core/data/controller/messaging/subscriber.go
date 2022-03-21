@@ -15,13 +15,14 @@ import (
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
+	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/fxamacker/cbor/v2"
 )
@@ -31,7 +32,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 	messageBusInfo := dataContainer.ConfigurationFrom(dic.Get).MessageQueue
 	lc := container.LoggingClientFrom(dic.Get)
 
-	messageBus := dataContainer.MessagingClientFrom(dic.Get)
+	messageBus := container.MessagingClientFrom(dic.Get)
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)

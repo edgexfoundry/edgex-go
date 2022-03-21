@@ -19,13 +19,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
+	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapMessaging "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
-	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  if enabled, tt creates and initializes the Messaging client
@@ -86,7 +87,7 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 			}()
 
 			dic.Update(di.ServiceConstructorMap{
-				container.MessagingClientName: func(get di.Get) interface{} {
+				bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
 					return msgClient
 				},
 			})

@@ -19,6 +19,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/gorilla/mux"
+
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
@@ -34,7 +36,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/gorilla/mux"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
@@ -75,6 +76,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			NewBootstrap(router, common.CoreDataServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
+			handlers.NewServiceMetrics(common.CoreDataServiceKey, registerMetrics).BootstrapHandler,
 			handlers.NewStartMessage(common.CoreDataServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)

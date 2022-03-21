@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strings"
 
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -18,9 +20,13 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/google/uuid"
+)
+
+const (
+	EventsPersistedMetricName   = "EventsPersisted"
+	ReadingsPersistedMetricName = "ReadingsPersisted"
 )
 
 // ValidateEvent validates if e is a valid event with corresponding device profile name and device name and source name
@@ -63,6 +69,19 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err error
 			e.Id,
 			correlationId,
 		)
+
+		manager := bootstrapContainer.MetricsManagerFrom(dic.Get)
+		if manager != nil {
+			counter := manager.GetCounter(EventsPersistedMetricName)
+			if counter != nil {
+				counter.Inc(1)
+			}
+
+			counter = manager.GetCounter(ReadingsPersistedMetricName)
+			if counter != nil {
+				counter.Inc(int64(len(addedEvent.Readings)))
+			}
+		}
 	}
 
 	return nil
@@ -71,7 +90,7 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err error
 // PublishEvent publishes incoming AddEventRequest in the format of []byte through MessageClient
 func PublishEvent(data []byte, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	msgClient := container.MessagingClientFrom(dic.Get)
+	msgClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 

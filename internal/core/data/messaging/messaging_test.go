@@ -6,6 +6,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -15,8 +18,6 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
-	"github.com/stretchr/testify/assert"
 )
 
 var lc logger.LoggingClient
@@ -91,7 +92,7 @@ func TestBootstrapHandler(t *testing.T) {
 				bootstrapContainer.SecretProviderName: func(get di.Get) interface{} {
 					return provider
 				},
-				container.MessagingClientName: func(get di.Get) interface{} {
+				bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
 					return nil
 				},
 			})
@@ -99,9 +100,9 @@ func TestBootstrapHandler(t *testing.T) {
 			actual := BootstrapHandler(context.Background(), &sync.WaitGroup{}, startup.NewTimer(1, 1), dic)
 			assert.Equal(t, test.ExpectedResult, actual)
 			if test.ExpectClient {
-				assert.NotNil(t, container.MessagingClientFrom(dic.Get))
+				assert.NotNil(t, bootstrapContainer.MessagingClientFrom(dic.Get))
 			} else {
-				assert.Nil(t, container.MessagingClientFrom(dic.Get))
+				assert.Nil(t, bootstrapContainer.MessagingClientFrom(dic.Get))
 			}
 		})
 	}
