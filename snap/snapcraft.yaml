@@ -867,8 +867,8 @@ parts:
   kuiper:
     plugin: nil
     stage-snaps:
-      # upgrade 1/edge to 1/stable when possible
-      - edgex-ekuiper/1/edge
+      # TODO: switch to 1/stable before the edgex 2.2 release
+      - edgex-ekuiper/1/beta
 
 
 
