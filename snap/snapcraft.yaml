@@ -474,6 +474,8 @@ apps:
     after:
       - security-bootstrapper-redis
     command: bin/kuiperd
+    command-chain:
+      - bin/setup-redis-credentials.sh
     daemon: simple
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
