@@ -1224,7 +1224,7 @@ components:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
           apiVersion: v2
-          deviceProfile: "Simple-Device-Profile"
+          profileName: "Simple-Device-Profile"
           deviceCommand:
             name: "Switch"
             readWrite: "RW"
@@ -1235,7 +1235,7 @@ components:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
           apiVersion: v2
-          deviceName: "Simple-Device-Profile"
+          profileName: "Simple-Device-Profile"
           resource:
             name: "SwitchButton"
             description: "Switch On/Off."
@@ -2281,7 +2281,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     patch:
-      summary: "Allows basic information updates to an existing device profile"
+      summary: "Allows basic information updates to an existing device profile, such as profile's description, manufacturer, model and label fields."
       requestBody:
         required: true
         content:
@@ -2291,12 +2291,11 @@ paths:
               items:
                 $ref: '#/components/schemas/DeviceProfileBasicInfoRequest'
             example:
-              - name: "Device-Virtual-Profile"
-                description: "Example of Device-Virtual"
-                manufacturer: "Simple Corp."
-                model: "Device-Virtual-01"
-                labels:
-                  - device-virtual-example
+              - apiVersion: "v2"
+                requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
+                basicinfo:
+                  name: "Device-Virtual-Profile"
+                  manufacturer: "Simple Corp."
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -2396,7 +2395,7 @@ paths:
                 500Example:
                   $ref: '#/components/examples/500Example'
     patch:
-      summary: "Allows device command updates to an existing device service"
+      summary: "Allows device command updates to an existing device service, such as command's readWrite and isHidden fields."
       requestBody:
         required: true
         content:
@@ -2405,9 +2404,13 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/DeviceCommandRequest'
-            examples:
-              AddDeviceCommandRequest:
-                $ref: '#/components/examples/AddDeviceCommandRequest'
+            example:
+              - apiVersion: "v2"
+                requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
+                profileName: "Device-Virtual-Profile"
+                devicecommand:
+                  "name": "Switch"
+                  "isHidden": "true"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -2573,7 +2576,7 @@ paths:
                 500Example:
                   $ref: '#/components/examples/500Example'
     patch:
-      summary: "Allows updates to an existing device service"
+      summary: "Allows device resource updates to an existing device profile, such as resource's description, isHidden, tag, and attributes fields."
       requestBody:
         required: true
         content:
@@ -2582,9 +2585,14 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/DeviceResourceRequest'
-            examples:
-              AddDeviceResourceRequest:
-                $ref: '#/components/examples/AddDeviceResourceRequest'
+            example:
+              - apiVersion: "v2"
+                requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
+                profileName: "Device-Virtual-Profile"
+                resource:
+                  "name": "Float32"
+                  "description": "random float32 value"
+                  "isHidden": "false"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
