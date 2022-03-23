@@ -8,6 +8,12 @@
 .PHONY: build clean unittest hadolint lint test docker run
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
+
+# see https://shibumi.dev/posts/hardening-executables
+CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2"
+CGO_CFLAGS="-O2 -pipe -fno-plt"
+CGO_CXXFLAGS="-O2 -pipe -fno-plt"
+CGO_LDFLAGS="-Wl,-O1,–sort-common,–as-needed,-z,relro,-z,now"
 GOCGO=CGO_ENABLED=1 GO111MODULE=on go
 
 DOCKERS= \
@@ -42,7 +48,8 @@ MICROSERVICES= \
 VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
-GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)"
+GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
+CGOFLAGS=-ldflags "-linkmode=external -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly -buildmode=pie
 GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
@@ -58,7 +65,7 @@ cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
-	$(GOCGO) build $(GOFLAGS) -o $@ ./cmd/core-data
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-data
 
 cmd/core-command/core-command:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
