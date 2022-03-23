@@ -64,7 +64,7 @@ ARCH=$(shell uname -m)
 build: $(MICROSERVICES)
 
 tidy:
-	go mod tidy
+	go mod tidy -compat=1.17
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -109,7 +109,7 @@ clean:
 	rm -f $(MICROSERVICES)
 
 unittest:
-	go mod tidy
+	go mod tidy -compat=1.17
 	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 
 hadolint:

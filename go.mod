@@ -2,11 +2,11 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
-	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.6
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.8
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.18
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.9
 	github.com/edgexfoundry/go-mod-registry/v2 v2.1.0
-	github.com/edgexfoundry/go-mod-secrets/v2 v2.1.0
+	github.com/edgexfoundry/go-mod-secrets/v2 v2.2.0-dev.5
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/golang-jwt/jwt/v4 v4.4.0
 	github.com/gomodule/redigo v1.8.8
@@ -59,10 +59,10 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/errs v1.2.2 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
-	google.golang.org/grpc v1.38.0 // indirect
+	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
+	google.golang.org/grpc v1.42.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 )
