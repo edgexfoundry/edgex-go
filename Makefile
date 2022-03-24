@@ -25,7 +25,11 @@ DOCKERS= \
 	docker_support_scheduler \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
-	docker_security_bootstrapper
+	docker_security_bootstrapper \
+	docker_security_spire_server \
+	docker_security_spire_agent \
+	docker_security_spire_config \
+	docker_security_spiffe_token_provider
 
 .PHONY: $(DOCKERS)
 
@@ -41,7 +45,8 @@ MICROSERVICES= \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
 	cmd/secrets-config/secrets-config \
-	cmd/security-bootstrapper/security-bootstrapper
+	cmd/security-bootstrapper/security-bootstrapper \
+	cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 .PHONY: $(MICROSERVICES)
 
@@ -59,7 +64,7 @@ ARCH=$(shell uname -m)
 build: $(MICROSERVICES)
 
 tidy:
-	go mod tidy
+	go mod tidy -compat=1.17
 
 cmd/core-metadata/core-metadata:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -97,11 +102,14 @@ cmd/secrets-config/secrets-config:
 cmd/security-bootstrapper/security-bootstrapper:
 	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
+cmd/security-spiffe-token-provider/security-spiffe-token-provider:
+	$(GO) build $(GOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
+
 clean:
 	rm -f $(MICROSERVICES)
 
 unittest:
-	go mod tidy
+	go mod tidy -compat=1.17
 	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 
 hadolint:
@@ -208,6 +216,46 @@ docker_security_bootstrapper:
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-bootstrapper:$(GIT_SHA) \
 		-t edgexfoundry/security-bootstrapper:$(DOCKER_TAG) \
+		.
+
+docker_security_spire_server:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-server/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-server:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-server:$(DOCKER_TAG) \
+		.
+
+docker_security_spire_agent:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-agent/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-agent:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-agent:$(DOCKER_TAG) \
+		.
+
+docker_security_spire_config:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spire-config/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spire-config:$(GIT_SHA) \
+		-t edgexfoundry/security-spire-config:$(DOCKER_TAG) \
+		.
+
+docker_security_spiffe_token_provider:
+	docker build \
+	    --build-arg http_proxy \
+	    --build-arg https_proxy \
+		-f cmd/security-spiffe-token-provider/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-spiffe-token-provider:$(GIT_SHA) \
+		-t edgexfoundry/security-spiffe-token-provider:$(DOCKER_TAG) \
 		.
 
 vendor:

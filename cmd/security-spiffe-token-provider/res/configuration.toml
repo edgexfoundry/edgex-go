@@ -1,0 +1,56 @@
+[Writable]
+PersistData = true
+LogLevel = "DEBUG"
+   [Writable.InsecureSecrets]
+      [Writable.InsecureSecrets.DB]
+         path = "redisdb"
+            [Writable.InsecureSecrets.DB.Secrets]
+            username = ""
+            password = ""
+
+[Service]
+HealthCheckInterval = "10s"
+Host = "localhost"
+Port = 59841
+ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
+StartupMsg = "This is the SPIFFE token provider microservice"
+MaxResultCount = 1024
+MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
+RequestTimeout = "5s"
+  [Service.CORSConfiguration]
+  EnableCORS = false
+  CORSAllowCredentials = false
+  CORSAllowedOrigin = "https://localhost"
+  CORSAllowedMethods = "GET, POST, PUT, PATCH, DELETE"
+  CORSAllowedHeaders = "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
+  CORSExposeHeaders = "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
+  CORSMaxAge = 3600
+
+[Registry]
+Host = "localhost"
+Port = 8500
+Type = "consul"
+
+[Databases]
+  [Databases.Primary]
+  Host = "localhost"
+  Name = "coredata"
+  Port = 6379
+  Timeout = 5000
+  Type = "redisdb"
+
+[SecretStore]
+Type = "vault"
+Protocol = "http"
+Host = "localhost"
+Port = 8200
+Path = "security-spiffe-token-provider/"
+TokenFile = "/tmp/edgex/secrets/security-spiffe-token-provider/secrets-token.json"
+RootCaCertPath = ""
+ServerName = ""
+  [SecretStore.Authentication]
+  AuthType = "X-Vault-Token"
+
+[SPIFFE]
+  EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
+  TrustDomain = "edgexfoundry.org"
