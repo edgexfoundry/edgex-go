@@ -29,6 +29,7 @@ func main() {
 	if len(os.Args) == 1 {
 		// configure everything
 		configure()
+		configureApps()
 		return
 	}
 
