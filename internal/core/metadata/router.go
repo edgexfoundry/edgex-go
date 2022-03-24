@@ -42,6 +42,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)
 	r.HandleFunc(common.ApiDeviceResourceByProfileAndResourceRoute, dr.DeviceResourceByProfileNameAndResourceName).Methods(http.MethodGet)
+	r.HandleFunc(common.ApiDeviceProfileResourceRoute, dr.AddDeviceProfileResource).Methods(http.MethodPost)
 
 	// Device Service
 	ds := metadataController.NewDeviceServiceController(dic)

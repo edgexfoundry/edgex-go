@@ -30,7 +30,7 @@ const (
 
 func TestBuildCoreCommands(t *testing.T) {
 	profile := dtos.DeviceProfile{
-		Name: "testProfile",
+		DeviceProfileBasicInfo: dtos.DeviceProfileBasicInfo{Name: "testProfile"},
 		DeviceResources: []dtos.DeviceResource{
 			{Name: resource1, Properties: dtos.ResourceProperties{ValueType: common.ValueTypeString, ReadWrite: common.ReadWrite_R}},
 			{Name: resource2, Properties: dtos.ResourceProperties{ValueType: common.ValueTypeInt16, ReadWrite: common.ReadWrite_W}},

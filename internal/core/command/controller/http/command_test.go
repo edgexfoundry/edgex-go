@@ -139,8 +139,8 @@ func buildDeviceCommands() []dtos.DeviceCommand {
 func buildDeviceProfileResponse() responseDTO.DeviceProfileResponse {
 	commands := buildDeviceCommands()
 	profile := dtos.DeviceProfile{
-		Name:           testProfileName,
-		DeviceCommands: commands,
+		DeviceProfileBasicInfo: dtos.DeviceProfileBasicInfo{Name: testProfileName},
+		DeviceCommands:         commands,
 	}
 	deviceResponse := responseDTO.DeviceProfileResponse{
 		Profile: profile,

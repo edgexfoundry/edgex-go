@@ -6,10 +6,13 @@
 package application
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
@@ -45,4 +48,31 @@ func resourceByName(resources []models.DeviceResource, resourceName string) (mod
 		}
 	}
 	return models.DeviceResource{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("resource %s not exists", resourceName), nil)
+}
+
+func AddDeviceProfileResource(profileName string, resource models.DeviceResource, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	profile, err := dbClient.DeviceProfileByName(profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	profile.DeviceResources = append(profile.DeviceResources, resource)
+
+	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
+	validateErr := profileDTO.Validate()
+	if validateErr != nil {
+		return errors.NewCommonEdgeXWrapper(validateErr)
+	}
+
+	err = dbClient.UpdateDeviceProfile(profile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debugf("DeviceProfile deviceResources added on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
+
+	return nil
 }
