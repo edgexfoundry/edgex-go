@@ -188,42 +188,22 @@ func installDevProfiles() error {
 // installKuiper execs a shell script to install Kuiper's file into $SNAP_DATA
 func installKuiper() error {
 	// install files using edgex-ekuiper install hook
-	scriptFile := hooks.Snap + "/snap.edgex-ekuiper/hooks/install"
+	filePath := hooks.Snap + "/snap.edgex-ekuiper/hooks/install"
 
-	setupScriptPath, err := exec.LookPath(scriptFile)
-	if err != nil {
+	if err := os.MkdirAll(hooks.SnapData+"/kuiper", 0755); err != nil {
 		return err
 	}
 
 	cmdSetupKuiper := exec.Cmd{
-		Path:   setupScriptPath,
-		Args:   []string{setupScriptPath},
-		Stdout: os.Stdout,
-		Stderr: os.Stdout,
+		Path: filePath,
+		Env:  append(os.Environ(), "KUIPER_BASE_KEY="+hooks.SnapData+"/kuiper"),
 	}
 
-	err = cmdSetupKuiper.Run()
+	stdoutStderr, err := cmdSetupKuiper.CombinedOutput()
 	if err != nil {
 		return err
 	}
-
-	// copy files from $SNAP_DATA/etc to $SNAP_DATA/kuiper
-	copyScriptPath, err := exec.LookPath("install-setup-kuiper.sh")
-	if err != nil {
-		return err
-	}
-
-	cmdCopyKuiper := exec.Cmd{
-		Path:   copyScriptPath,
-		Args:   []string{copyScriptPath},
-		Stdout: os.Stdout,
-		Stderr: os.Stdout,
-	}
-
-	err = cmdCopyKuiper.Run()
-	if err != nil {
-		return err
-	}
+	fmt.Println(fmt.Sprintf("edgexfoundry:install-kuiper: %s", stdoutStderr))
 
 	return nil
 }
