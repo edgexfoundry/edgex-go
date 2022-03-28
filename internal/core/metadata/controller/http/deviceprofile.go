@@ -397,3 +397,23 @@ func (dc *DeviceProfileController) DeleteDeviceResourceByName(w http.ResponseWri
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.EncodeAndWriteResponse(response, w, lc)
 }
+
+func (dc *DeviceProfileController) DeleteDeviceCommandByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+
+	// URL parameters
+	vars := mux.Vars(r)
+	profileName := vars[common.Name]
+	commandName := vars[common.CommandName]
+
+	err := application.DeleteDeviceCommandByName(profileName, commandName, dc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.EncodeAndWriteResponse(response, w, lc)
+}
