@@ -10,8 +10,9 @@ import (
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/gorilla/mux"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	metadataController "github.com/edgexfoundry/edgex-go/internal/core/metadata/controller/http"
 	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/controller/http"
@@ -39,6 +40,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerRoute, dc.DeviceProfilesByManufacturer).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerAndModelRoute, dc.DeviceProfilesByManufacturerAndModel).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileBasicInfoRoute, dc.PatchDeviceProfileBasicInfo).Methods(http.MethodPatch)
+	r.HandleFunc(common.ApiDeviceProfileResourceByNameRoute, dc.DeleteDeviceResourceByName).Methods(http.MethodDelete)
 
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)

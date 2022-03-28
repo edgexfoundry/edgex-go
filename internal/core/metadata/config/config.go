@@ -31,10 +31,16 @@ type ConfigurationStruct struct {
 
 type WritableInfo struct {
 	LogLevel        string
+	ProfileChange   ProfileChange
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
-// Notification Info provides properties related to the assembly of notification content
+type ProfileChange struct {
+	StrictDeviceProfileChanges bool
+	StrictDeviceProfileDeletes bool
+}
+
+// NotificationInfo provides properties related to the assembly of notification content
 type NotificationInfo struct {
 	Content           string
 	Description       string
