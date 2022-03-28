@@ -475,7 +475,9 @@ apps:
       - security-bootstrapper-redis
     command: bin/kuiperd
     command-chain:
-      - bin/setup-redis-credentials.sh
+    # this script is original staged from edgex-ekuiper stage-snap, 
+    # and has been renamed 
+      - bin/kuiper-setup-redis-credentials.sh
     daemon: simple
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
@@ -871,6 +873,8 @@ parts:
     stage-snaps:
       # TODO: switch to 1/stable before the edgex 2.2 release
       - edgex-ekuiper/1/beta
+    organize: 
+      bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
 
 
 

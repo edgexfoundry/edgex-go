@@ -190,20 +190,17 @@ func installKuiper() error {
 	// install files using edgex-ekuiper install hook
 	filePath := hooks.Snap + "/snap.edgex-ekuiper/hooks/install"
 
-	if err := os.MkdirAll(hooks.SnapData+"/kuiper", 0755); err != nil {
-		return err
-	}
-
 	cmdSetupKuiper := exec.Cmd{
-		Path: filePath,
-		Env:  append(os.Environ(), "KUIPER_BASE_KEY="+hooks.SnapData+"/kuiper"),
+		Path:   filePath,
+		Env:    append(os.Environ(), "KUIPER_BASE_KEY="+hooks.SnapData+"/kuiper"),
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
 	}
 
-	stdoutStderr, err := cmdSetupKuiper.CombinedOutput()
+	err := cmdSetupKuiper.Run()
 	if err != nil {
 		return err
 	}
-	fmt.Println(fmt.Sprintf("edgexfoundry:install-kuiper: %s", stdoutStderr))
 
 	return nil
 }
