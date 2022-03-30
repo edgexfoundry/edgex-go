@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -38,6 +38,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.HandleFunc(common.ApiDeviceProfileByModelRoute, dc.DeviceProfilesByModel).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerRoute, dc.DeviceProfilesByManufacturer).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerAndModelRoute, dc.DeviceProfilesByManufacturerAndModel).Methods(http.MethodGet)
+	r.HandleFunc(common.ApiDeviceProfileBasicInfoRoute, dc.PatchDeviceProfileBasicInfo).Methods(http.MethodPatch)
 
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)

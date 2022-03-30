@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,11 +8,12 @@ package redis
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
 
 	"github.com/google/uuid"
 )
@@ -182,6 +183,19 @@ func (c *Client) UpdateDeviceService(ds model.DeviceService) errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
 	return updateDeviceService(conn, ds)
+}
+
+// DeviceProfileById gets a device profile by id
+func (c *Client) DeviceProfileById(id string) (deviceProfile model.DeviceProfile, err errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	deviceProfile, err = deviceProfileById(conn, id)
+	if err != nil {
+		return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return
 }
 
 // DeviceProfileByName gets a device profile by name

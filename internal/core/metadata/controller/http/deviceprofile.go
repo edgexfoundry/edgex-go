@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -339,4 +339,40 @@ func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(w http.R
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+	lc := container.LoggingClientFrom(dc.dic.Get)
+
+	var reqDTOs []requestDTO.DeviceProfileBasicInfoRequest
+	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	var updateResponses []interface{}
+	for _, dto := range reqDTOs {
+		var response interface{}
+		reqId := dto.RequestId
+		err := application.PatchDeviceProfileBasicInfo(ctx, dto.BasicInfo, dc.dic)
+		if err != nil {
+			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(reqId, err.Message(), err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(reqId, "", http.StatusOK)
+		}
+		updateResponses = append(updateResponses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+
 }

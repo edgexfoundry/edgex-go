@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -15,11 +15,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"gopkg.in/yaml.v3"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
@@ -32,6 +29,10 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -84,6 +85,31 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 	}
 
 	return testDeviceProfileReq
+}
+
+func buildTestDeviceProfileBasicInfoRequest() requests.DeviceProfileBasicInfoRequest {
+	testUUID := ExampleUUID
+	testName := TestDeviceProfileName
+	testDescription := TestDescription
+	testManufacturer := TestManufacturer
+	testModel := TestModel
+
+	var testBasicInfoReq = requests.DeviceProfileBasicInfoRequest{
+		BaseRequest: commonDTO.BaseRequest{
+			Versionable: commonDTO.NewVersionable(),
+			RequestId:   ExampleUUID,
+		},
+		BasicInfo: dtos.UpdateDeviceProfileBasicInfo{
+			Id:           &testUUID,
+			Name:         &testName,
+			Manufacturer: &testManufacturer,
+			Description:  &testDescription,
+			Model:        &testModel,
+			Labels:       testDeviceProfileLabels,
+		},
+	}
+
+	return testBasicInfoReq
 }
 
 func mockDic() *di.Container {
@@ -407,6 +433,99 @@ func TestUpdateDeviceProfile(t *testing.T) {
 			// Act
 			recorder := httptest.NewRecorder()
 			handler := http.HandlerFunc(controller.UpdateDeviceProfile)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusBadRequest {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			} else {
+				var res []commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			}
+		})
+	}
+}
+
+func TestPatchDeviceProfileBasicInfo(t *testing.T) {
+	expectedRequestId := ExampleUUID
+	testReq := buildTestDeviceProfileBasicInfoRequest()
+	dpModel := requests.DeviceProfileReqToDeviceProfileModel(buildTestDeviceProfileRequest())
+
+	valid := testReq
+	noRequestId := testReq
+	noRequestId.RequestId = ""
+	noName := testReq
+	noName.BasicInfo.Name = nil
+	noId := testReq
+	noId.BasicInfo.Id = nil
+
+	noIdAndName := testReq
+	noIdAndName.BasicInfo.Id = nil
+	noIdAndName.BasicInfo.Name = nil
+	emptyName := testReq
+	emptyString := ""
+	emptyName.BasicInfo.Name = &emptyString
+	notFound := testReq
+	notFound.BasicInfo.Id = nil
+	notFoundName := "testDevice"
+	notFound.BasicInfo.Name = &notFoundName
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfileById", *valid.BasicInfo.Id).Return(dpModel, nil)
+	dbClientMock.On("DeviceProfileByName", *valid.BasicInfo.Name).Return(dpModel, nil)
+	dbClientMock.On("DeviceProfileByName", notFoundName).Return(dpModel, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		request            []requests.DeviceProfileBasicInfoRequest
+		expectedStatusCode int
+	}{
+		{"valid", []requests.DeviceProfileBasicInfoRequest{valid}, http.StatusOK},
+		{"valid - no request id", []requests.DeviceProfileBasicInfoRequest{noRequestId}, http.StatusOK},
+		{"valid - no name", []requests.DeviceProfileBasicInfoRequest{noName}, http.StatusOK},
+		{"invalid - no id and name", []requests.DeviceProfileBasicInfoRequest{noIdAndName}, http.StatusBadRequest},
+		{"invalid - empty name", []requests.DeviceProfileBasicInfoRequest{emptyName}, http.StatusBadRequest},
+		{"invalid - device profile not found", []requests.DeviceProfileBasicInfoRequest{notFound}, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceProfileBasicInfoRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchDeviceProfileBasicInfo)
 			handler.ServeHTTP(recorder, req)
 
 			if testCase.expectedStatusCode == http.StatusBadRequest {

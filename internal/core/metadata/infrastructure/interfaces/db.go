@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -15,6 +15,7 @@ type DBClient interface {
 
 	AddDeviceProfile(e model.DeviceProfile) (model.DeviceProfile, errors.EdgeX)
 	UpdateDeviceProfile(e model.DeviceProfile) errors.EdgeX
+	DeviceProfileById(id string) (model.DeviceProfile, errors.EdgeX)
 	DeviceProfileByName(name string) (model.DeviceProfile, errors.EdgeX)
 	DeleteDeviceProfileById(id string) errors.EdgeX
 	DeleteDeviceProfileByName(name string) errors.EdgeX
