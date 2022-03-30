@@ -9,25 +9,32 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/application"
+	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 
 	"github.com/gorilla/mux"
 )
 
 type DeviceResourceController struct {
-	dic *di.Container
+	reader io.DtoReader
+	dic    *di.Container
 }
 
 // NewDeviceResourceController creates and initializes an DeviceResourceController
 func NewDeviceResourceController(dic *di.Container) *DeviceResourceController {
 	return &DeviceResourceController{
-		dic: dic,
+		reader: io.NewJsonDtoReader(),
+		dic:    dic,
 	}
 }
 
@@ -50,4 +57,47 @@ func (dc *DeviceResourceController) DeviceResourceByProfileNameAndResourceName(w
 	response := responseDTO.NewDeviceResourceResponse("", "", http.StatusOK, resource)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+func (dc *DeviceResourceController) AddDeviceProfileResource(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	var reqDTOs []requestDTO.AddDeviceResourceRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	var addResponses []interface{}
+	for _, dto := range reqDTOs {
+		var response interface{}
+		reqId := dto.RequestId
+		profileName := dto.ProfileName
+		deviceResource := dtos.ToDeviceResourceModel(dto.Resource)
+		err = application.AddDeviceProfileResource(profileName, deviceResource, ctx, dc.dic)
+		if err != nil {
+			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"",
+				http.StatusCreated)
+		}
+		addResponses = append(addResponses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }

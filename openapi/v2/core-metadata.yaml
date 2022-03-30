@@ -1120,6 +1120,23 @@ components:
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
           message: "Internal Server Error"
+    MultiPOSTNoIdStatusExample:
+      value:
+        - apiVersion: "v2"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 201
+        - apiVersion: "v2"
+          requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
+          statusCode: 400
+          message: "Duplicated"         
+        - apiVersion: "v2"
+          requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
+          statusCode: 404
+          message: "Not Found"  
+        - apiVersion: "v2"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error" 
     MultiUpdateStatusExample:
       value:
         - apiVersion: "v2"
@@ -2545,12 +2562,12 @@ paths:
               schema:
                 type: array
                 items:
-                  anyOf:
+                  anyOf: 
+                    - $ref: '#/components/schemas/BaseResponse'
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseWithIdResponse'
               examples:
                 MultiPOSTStatusExample:
-                  $ref: '#/components/examples/MultiPOSTStatusExample'
+                  $ref: '#/components/examples/MultiPOSTNoIdStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
