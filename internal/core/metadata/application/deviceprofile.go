@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,7 +9,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -178,4 +181,46 @@ func DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer st
 		deviceProfiles[i] = dtos.FromDeviceProfileModelToDTO(dp)
 	}
 	return deviceProfiles, totalCount, nil
+}
+
+func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfileBasicInfo, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	deviceProfile, err := deviceProfileByDTO(dbClient, dto)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	requests.ReplaceDeviceProfileModelBasicInfoFieldsWithDTO(&deviceProfile, dto)
+	err = dbClient.UpdateDeviceProfile(deviceProfile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debugf(
+		"DeviceProfile basic info patched on DB successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	)
+
+	return nil
+}
+
+func deviceProfileByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDeviceProfileBasicInfo) (deviceProfile models.DeviceProfile, err errors.EdgeX) {
+	// The ID or Name is required by DTO and the DTO also accepts empty string ID if the Name is provided
+	if dto.Id != nil && *dto.Id != "" {
+		deviceProfile, err = dbClient.DeviceProfileById(*dto.Id)
+		if err != nil {
+			return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		deviceProfile, err = dbClient.DeviceProfileByName(*dto.Name)
+		if err != nil {
+			return deviceProfile, errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	if dto.Name != nil && *dto.Name != deviceProfile.Name {
+		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device profile name '%s' not match the exsting '%s' ", *dto.Name, deviceProfile.Name), nil)
+	}
+	return deviceProfile, nil
 }
