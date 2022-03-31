@@ -45,7 +45,7 @@ func NewPasswordGenerator(lc logger.LoggingClient, passwordProvider string, pass
 		pp := NewPasswordProvider(lc, NewDefaultExecRunner())
 		err := pp.SetConfiguration(passwordProvider, passwordProviderArgs)
 		if err != nil {
-			lc.Warn(fmt.Sprintf("Could not configure password generator %s: error: %s", passwordProvider, err.Error()))
+			lc.Warnf("Could not configure password generator %s: error: %s", passwordProvider, err.Error())
 			return gk // fall-back to builtin
 		}
 		gk.generatorImplementation = pp
@@ -138,7 +138,7 @@ func (cr *Cred) retrieve(path string) (*UserPasswordPair, error) {
 	cred := CredCollect{}
 
 	if resp.StatusCode == http.StatusNotFound {
-		cr.loggingClient.Info(fmt.Sprintf("credential pair NOT found in secret store @/%s, status: %s", path, resp.Status))
+		cr.loggingClient.Infof("credential pair NOT found in secret store @/%s, status: %s", path, resp.Status)
 		return nil, errNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the credential pair on path %s with error code %d", path, resp.StatusCode)

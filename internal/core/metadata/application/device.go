@@ -51,11 +51,11 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"Device created on DB successfully. Device ID: %s, Correlation-ID: %s ",
 		addedDevice.Id,
 		correlation.FromContext(ctx),
-	))
+	)
 	go addDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
 	return addedDevice.Id, nil
 }
@@ -156,10 +156,10 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"Device patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
-	))
+	)
 
 	if oldServiceName != "" {
 		go updateDeviceCallback(ctx, dic, oldServiceName, device)

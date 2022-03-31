@@ -60,7 +60,7 @@ func (p *PasswordProvider) Generate(ctx context.Context) (string, error) {
 
 	p.execRunner.SetStdout(&outputBuffer)
 
-	p.loggingClient.Info(fmt.Sprintf("Launching password provider %s with arguments %s", p.resolvedPath, strings.Join(p.passwordProviderArgs, " ")))
+	p.loggingClient.Infof("Launching password provider %s with arguments %s", p.resolvedPath, strings.Join(p.passwordProviderArgs, " "))
 	cmd := p.execRunner.CommandContext(ctx, p.resolvedPath, p.passwordProviderArgs...)
 	if err := cmd.Start(); err != nil {
 		// For example, this might occur if a shared library was missing

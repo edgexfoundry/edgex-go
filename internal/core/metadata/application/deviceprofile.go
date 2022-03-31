@@ -34,11 +34,11 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"DeviceProfile created on DB successfully. DeviceProfile-id: %s, Correlation-id: %s ",
 		addedDeviceProfile.Id,
 		correlationId,
-	))
+	)
 
 	return addedDeviceProfile.Id, nil
 }
@@ -54,10 +54,10 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug(fmt.Sprintf(
+	lc.Debugf(
 		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
 		correlation.FromContext(ctx),
-	))
+	)
 	go updateDeviceProfileCallback(ctx, dic, dtos.FromDeviceProfileModelToDTO(d))
 	return nil
 }

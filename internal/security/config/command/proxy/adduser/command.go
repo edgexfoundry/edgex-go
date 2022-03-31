@@ -142,7 +142,7 @@ func (c *cmd) createConsumer() error {
 		"username": []string{c.username},
 	}
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("creating consumer (user) on the endpoint of %s", kongURL))
+	c.loggingClient.Infof("creating consumer (user) on the endpoint of %s", kongURL)
 
 	formVal := form.Encode()
 	req, err := http.NewRequest(http.MethodPost, kongURL, strings.NewReader(formVal))
@@ -164,9 +164,9 @@ func (c *cmd) createConsumer() error {
 	switch resp.StatusCode {
 	case http.StatusOK:
 	case http.StatusCreated:
-		c.loggingClient.Info(fmt.Sprintf("created consumer (user) '%s'", c.username))
+		c.loggingClient.Infof("created consumer (user) '%s'", c.username)
 	case http.StatusConflict:
-		c.loggingClient.Info(fmt.Sprintf("consumer '%s' already created", c.username))
+		c.loggingClient.Infof("consumer '%s' already created", c.username)
 	default:
 		c.loggingClient.Error(string(responseBody))
 		return fmt.Errorf("Create consumer request failed with code: %d", resp.StatusCode)
@@ -183,7 +183,7 @@ func (c *cmd) addUserToGroup() error {
 		"group": []string{c.group},
 	}
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "acls"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("Associating consumer to acl using endpoint %s", kongURL))
+	c.loggingClient.Infof("Associating consumer to acl using endpoint %s", kongURL)
 
 	formVal := form.Encode()
 	req, err := http.NewRequest(http.MethodPost, kongURL, strings.NewReader(formVal))
@@ -205,9 +205,9 @@ func (c *cmd) addUserToGroup() error {
 	switch resp.StatusCode {
 	case http.StatusOK:
 	case http.StatusCreated:
-		c.loggingClient.Info(fmt.Sprintf("associated consumer %s to group %s", c.username, c.group))
+		c.loggingClient.Infof("associated consumer %s to group %s", c.username, c.group)
 	case http.StatusConflict:
-		c.loggingClient.Info(fmt.Sprintf("consumer %s already associated to group %s", c.username, c.group))
+		c.loggingClient.Infof("consumer %s already associated to group %s", c.username, c.group)
 	default:
 		c.loggingClient.Error(string(responseBody))
 		return fmt.Errorf("failed to associate consumer to group with status: %d", resp.StatusCode)
@@ -249,7 +249,7 @@ func (c *cmd) ExecuteAddJwt() (int, error) {
 	}
 
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "jwt"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("associating JWT on the endpoint of %s", kongURL))
+	c.loggingClient.Infof("associating JWT on the endpoint of %s", kongURL)
 
 	formVal := form.Encode()
 	req, err := http.NewRequest(http.MethodPost, kongURL, strings.NewReader(formVal))
@@ -319,7 +319,7 @@ func (c *cmd) ExecuteAddOAuth2() (statusCode int, err error) {
 	}
 
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username, "oauth2"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("creating oauth application at %s", kongURL))
+	c.loggingClient.Infof("creating oauth application at %s", kongURL)
 
 	formVal := form.Encode()
 	req, err := http.NewRequest(http.MethodPost, kongURL, strings.NewReader(formVal))

@@ -34,8 +34,6 @@ For Fuji.DOT/Geneva, all root tokens will be revoked.
 */
 
 import (
-	"fmt"
-
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -77,7 +75,7 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 	createTokenParameters["ttl"] = "1h"
 	createTokenResponse, err := tm.secretClient.CreateToken(rootToken, createTokenParameters)
 	if err != nil {
-		tm.logging.Error(fmt.Sprintf("failed creation of token-issuing-token: %s", err.Error()))
+		tm.logging.Errorf("failed creation of token-issuing-token: %s", err.Error())
 		return nil, nil, err
 	}
 
@@ -85,7 +83,7 @@ func (tm *TokenMaintenance) CreateTokenIssuingToken(rootToken string) (map[strin
 	revokeFunc := func() {
 		tm.logging.Info("revoking token-issuing-token")
 		if err2 := tm.secretClient.RevokeToken(newToken); err2 != nil {
-			tm.logging.Warn("failed revocation of token-issuing-token: %s", err2.Error())
+			tm.logging.Warnf("failed revocation of token-issuing-token: %s", err2.Error())
 		}
 	}
 	return createTokenResponse, revokeFunc, nil

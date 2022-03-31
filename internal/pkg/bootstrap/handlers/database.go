@@ -7,7 +7,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -90,7 +89,7 @@ func (d Database) BootstrapHandler(
 			break
 		}
 
-		lc.Warn(fmt.Sprintf("couldn't retrieve database credentials: %v", err.Error()))
+		lc.Warnf("couldn't retrieve database credentials: %v", err.Error())
 		startupTimer.SleepForInterval()
 	}
 
@@ -104,7 +103,7 @@ func (d Database) BootstrapHandler(
 			break
 		}
 		dbClient = nil
-		lc.Warn(fmt.Sprintf("couldn't create database client: %v", err.Error()))
+		lc.Warnf("couldn't create database client: %v", err.Error())
 		startupTimer.SleepForInterval()
 	}
 

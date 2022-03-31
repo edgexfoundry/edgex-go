@@ -35,7 +35,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 	//start a transaction to get all events
 	events, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(eventIds))
 	if edgeXerr != nil {
-		c.loggingClient.Error(fmt.Sprintf("Deleted events failed while retrieving objects by Ids.  Err: %s", edgeXerr.DebugMessages()))
+		c.loggingClient.Errorf("Deleted events failed while retrieving objects by Ids.  Err: %s", edgeXerr.DebugMessages())
 		return
 	}
 
@@ -46,7 +46,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 	for i, event := range events {
 		err := json.Unmarshal(event, &e)
 		if err != nil {
-			c.loggingClient.Error(fmt.Sprintf("unable to marshal event.  Err: %s", err.Error()))
+			c.loggingClient.Errorf("unable to marshal event.  Err: %s", err.Error())
 			continue
 		}
 		storedKey := eventStoredKey(e.Id)
@@ -60,7 +60,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 		if queriesInQueue >= c.BatchSize {
 			_, err = conn.Do(EXEC)
 			if err != nil {
-				c.loggingClient.Error(fmt.Sprintf("unable to execute batch event deletion.  Err: %s", err.Error()))
+				c.loggingClient.Errorf("unable to execute batch event deletion.  Err: %s", err.Error())
 				continue
 			}
 			// reset queriesInQueue to zero if EXEC is successfully executed without error
@@ -75,7 +75,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 	if queriesInQueue > 0 {
 		_, err := conn.Do(EXEC)
 		if err != nil {
-			c.loggingClient.Error(fmt.Sprintf("unable to execute batch event deletion.  Err: %s", err.Error()))
+			c.loggingClient.Errorf("unable to execute batch event deletion.  Err: %s", err.Error())
 		}
 	}
 }
@@ -90,9 +90,9 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.Ed
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v readings", len(readingIds)))
+	c.loggingClient.Debugf("Prepare to delete %v readings", len(readingIds))
 	go c.asyncDeleteReadingsByIds(readingIds)
-	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v events", len(eventIds)))
+	c.loggingClient.Debugf("Prepare to delete %v events", len(eventIds))
 	go c.asyncDeleteEventsByIds(eventIds)
 
 	return nil
@@ -110,9 +110,9 @@ func (c *Client) DeleteEventsByAge(age int64) (edgeXerr errors.EdgeX) {
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v readings", len(readingIds)))
+	c.loggingClient.Debugf("Prepare to delete %v readings", len(readingIds))
 	go c.asyncDeleteReadingsByIds(readingIds)
-	c.loggingClient.Debug(fmt.Sprintf("Prepare to delete %v events", len(eventIds)))
+	c.loggingClient.Debugf("Prepare to delete %v events", len(eventIds))
 	go c.asyncDeleteEventsByIds(eventIds)
 
 	return nil

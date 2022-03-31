@@ -18,7 +18,6 @@ package fileprovider
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -74,19 +73,19 @@ func (p *fileTokenProvider) Run() error {
 
 	privilegedToken, err := p.tokenProvider.Load(p.tokenConfig.PrivilegedTokenPath)
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("failed to read privileged access token: %s", err.Error()))
+		p.logger.Errorf("failed to read privileged access token: %s", err.Error())
 		return err
 	}
 
 	tokenConfEnv, err := GetTokenConfigFromEnv()
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("failed to get token config from environment variable %s with error: %s", addSecretstoreTokensEnvKey, err.Error()))
+		p.logger.Errorf("failed to get token config from environment variable %s with error: %s", addSecretstoreTokensEnvKey, err.Error())
 		return err
 	}
 
 	var tokenConf TokenConfFile
 	if err := LoadTokenConfig(p.fileOpener, p.tokenConfig.ConfigFile, &tokenConf); err != nil {
-		p.logger.Error(fmt.Sprintf("failed to read token configuration file %s: %s", p.tokenConfig.ConfigFile, err.Error()))
+		p.logger.Errorf("failed to read token configuration file %s: %s", p.tokenConfig.ConfigFile, err.Error())
 		return err
 	}
 
@@ -97,13 +96,13 @@ func (p *fileTokenProvider) Run() error {
 	tokenConf = tokenConfEnv.mergeWith(tokenConf)
 
 	for serviceName, serviceConfig := range tokenConf {
-		p.logger.Info(fmt.Sprintf("generating policy/token defaults for service %s", serviceName))
+		p.logger.Infof("generating policy/token defaults for service %s", serviceName)
 
 		servicePolicy := make(map[string]interface{})
 		createTokenParameters := make(map[string]interface{})
 
 		if serviceConfig.UseDefaults {
-			p.logger.Info(fmt.Sprintf("using policy/token defaults for service %s", serviceName))
+			p.logger.Infof("using policy/token defaults for service %s", serviceName)
 			servicePolicy = makeDefaultTokenPolicy(serviceName)
 			defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 			for pathKey, policy := range defaultPolicyPaths {
@@ -140,33 +139,33 @@ func (p *fileTokenProvider) Run() error {
 
 		policyBytes, err := json.Marshal(servicePolicy)
 		if err != nil {
-			p.logger.Error(fmt.Sprintf("failed encode service policy for %s: %s", serviceName, err.Error()))
+			p.logger.Errorf("failed encode service policy for %s: %s", serviceName, err.Error())
 			return err
 		}
 
 		if err := p.secretStoreClient.InstallPolicy(privilegedToken, policyName, string(policyBytes)); err != nil {
-			p.logger.Error(fmt.Sprintf("failed to install policy %s: %s", policyName, err.Error()))
+			p.logger.Errorf("failed to install policy %s: %s", policyName, err.Error())
 			return err
 		}
 
 		var createTokenResponse interface{}
 
 		if createTokenResponse, err = p.secretStoreClient.CreateToken(privilegedToken, createTokenParameters); err != nil {
-			p.logger.Error(fmt.Sprintf("failed to create vault token for service %s: %s", serviceName, err.Error()))
+			p.logger.Errorf("failed to create vault token for service %s: %s", serviceName, err.Error())
 			return err
 		}
 
 		outputTokenDir := filepath.Join(p.tokenConfig.OutputDir, serviceName)
 		outputTokenFilename := filepath.Join(outputTokenDir, p.tokenConfig.OutputFilename)
 		if err := p.fileOpener.MkdirAll(outputTokenDir, os.FileMode(0700)); err != nil {
-			p.logger.Error(fmt.Sprintf("failed to create base directory path(s) %s: %s", outputTokenDir, err.Error()))
+			p.logger.Errorf("failed to create base directory path(s) %s: %s", outputTokenDir, err.Error())
 			return err
 		}
 
-		p.logger.Info(fmt.Sprintf("creating token file %s", outputTokenFilename))
+		p.logger.Infof("creating token file %s", outputTokenFilename)
 		writeCloser, err := p.fileOpener.OpenFileWriter(outputTokenFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600))
 		if err != nil {
-			p.logger.Error(fmt.Sprintf("failed open token file for writing %s: %s", outputTokenFilename, err.Error()))
+			p.logger.Errorf("failed open token file for writing %s: %s", outputTokenFilename, err.Error())
 			return err
 		}
 		// writeCloser is writable file -- explicitly close() to ensure we catch errors writing to it
@@ -178,12 +177,12 @@ func (p *fileTokenProvider) Run() error {
 				mode, err := strconv.ParseInt(*(serviceConfig.FilePermissions).ModeOctal, 8, 32)
 				if err != nil {
 					_ = writeCloser.Close()
-					p.logger.Error(fmt.Sprintf("invalid file mode %s: %s", *(serviceConfig.FilePermissions).ModeOctal, err.Error()))
+					p.logger.Errorf("invalid file mode %s: %s", *(serviceConfig.FilePermissions).ModeOctal, err.Error())
 					return err
 				}
 				if err := permissionable.Chmod(os.FileMode(mode)); err != nil {
 					_ = writeCloser.Close()
-					p.logger.Error(fmt.Sprintf("failed to set file mode on %s: %s", outputTokenFilename, err.Error()))
+					p.logger.Errorf("failed to set file mode on %s: %s", outputTokenFilename, err.Error())
 					return err
 				}
 			}
@@ -193,7 +192,7 @@ func (p *fileTokenProvider) Run() error {
 				err := permissionable.Chown(*(serviceConfig.FilePermissions).Uid, *(serviceConfig.FilePermissions).Gid)
 				if err != nil {
 					_ = writeCloser.Close()
-					p.logger.Error(fmt.Sprintf("failed to set file user/group on %s: %s", outputTokenFilename, err.Error()))
+					p.logger.Errorf("failed to set file user/group on %s: %s", outputTokenFilename, err.Error())
 					return err
 				}
 			}
@@ -202,12 +201,12 @@ func (p *fileTokenProvider) Run() error {
 		// Write resulting token
 		if err := json.NewEncoder(writeCloser).Encode(createTokenResponse); err != nil {
 			_ = writeCloser.Close()
-			p.logger.Error(fmt.Sprintf("failed to write token file: %s", err.Error()))
+			p.logger.Errorf("failed to write token file: %s", err.Error())
 			return err
 		}
 
 		if err := writeCloser.Close(); err != nil {
-			p.logger.Error(fmt.Sprintf("failed to close %s: %s", outputTokenFilename, err.Error()))
+			p.logger.Errorf("failed to close %s: %s", outputTokenFilename, err.Error())
 			return err
 		}
 	}

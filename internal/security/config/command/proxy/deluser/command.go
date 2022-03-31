@@ -71,7 +71,7 @@ func (c *cmd) Execute() (int, error) {
 	// https://docs.konghq.com/2.1.x/admin-api/#delete-consumer
 
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "consumers", c.username}, "/")
-	c.loggingClient.Info(fmt.Sprintf("deleting consumer (user) on the endpoint of %s", kongURL))
+	c.loggingClient.Infof("deleting consumer (user) on the endpoint of %s", kongURL)
 
 	// Setup request
 	req, err := http.NewRequest(http.MethodDelete, kongURL, nil)
@@ -88,7 +88,7 @@ func (c *cmd) Execute() (int, error) {
 
 	switch resp.StatusCode {
 	case http.StatusNoContent:
-		c.loggingClient.Info(fmt.Sprintf("deleted consumer (user) '%s'", c.username))
+		c.loggingClient.Infof("deleted consumer (user) '%s'", c.username)
 	default:
 		responseBody, _ := io.ReadAll(resp.Body)
 		c.loggingClient.Error(fmt.Sprintf("Error response: %s", responseBody))

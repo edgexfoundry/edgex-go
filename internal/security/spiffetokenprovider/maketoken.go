@@ -73,8 +73,8 @@ func makeToken(serviceName string,
 	secretStoreClient secrets.SecretStoreClient,
 	lc logger.LoggingClient) (interface{}, error) {
 
-	lc.Info(fmt.Sprintf("generating policy/token defaults for service %s", serviceName))
-	lc.Info(fmt.Sprintf("using policy/token defaults for service %s", serviceName))
+	lc.Infof("generating policy/token defaults for service %s", serviceName)
+	lc.Infof("using policy/token defaults for service %s", serviceName)
 	servicePolicy := makeDefaultTokenPolicy(serviceName)
 	defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 	for pathKey, policy := range defaultPolicyPaths {
