@@ -25,7 +25,11 @@ echo "local_agent_svid=${local_agent_svid}"
 echo "SPIFFE_SERVER_SOCKET=${SPIFFE_SERVER_SOCKET}"
 echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
-# will replace security-test-client with all core-services later
-for service in security-spiffe-token-provider security-test-client; do
+# add pre-authorized services into spire server entry
+for service in security-spiffe-token-provider \
+    device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
+    device-virtual device-rfid-llrp device-coap device-gpio \
+    app-service-http-export app-service-mqtt-export app-service-sample app-rfid-llrp-inventory \
+    app-service-external-mqtt-trigger; do
     spire-server entry create -socketPath "${SPIFFE_SERVER_SOCKET}" -parentID "${local_agent_svid}" -dns "edgex-${service}" -spiffeID "${SPIFFE_EDGEX_SVID_BASE}/${service}" -selector "docker:label:com.docker.compose.service:${service}"
 done
