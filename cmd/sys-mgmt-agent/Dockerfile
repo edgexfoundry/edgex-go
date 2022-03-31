@@ -27,7 +27,7 @@ RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
 RUN make cmd/sys-mgmt-executor/sys-mgmt-executor
 
 # Get the Docker-in-Docker image layered-in now.
-FROM docker:20.10.10
+FROM docker:20.10.14
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell, Copyright (c) 2021: Intel Corporation'
