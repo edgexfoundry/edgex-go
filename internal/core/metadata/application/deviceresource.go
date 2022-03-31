@@ -15,6 +15,7 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
@@ -73,6 +74,39 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	}
 
 	lc.Debugf("DeviceProfile deviceResources added on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
+
+	return nil
+}
+
+func PatchDeviceProfileResource(profileName string, dto dtos.UpdateDeviceResource, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	profile, err := dbClient.DeviceProfileByName(profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// Find matched deviceResource
+	index := -1
+	for i := range profile.DeviceResources {
+		if profile.DeviceResources[i].Name == *dto.Name {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device resource not found", nil)
+	}
+
+	requests.ReplaceDeviceResourceModelFieldsWithDTO(&profile.DeviceResources[index], dto)
+
+	err = dbClient.UpdateDeviceProfile(profile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debugf("DeviceProfile deviceResources patched on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
 
 	return nil
 }
