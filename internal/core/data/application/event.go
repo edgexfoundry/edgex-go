@@ -58,11 +58,11 @@ func AddEvent(e models.Event, ctx context.Context, dic *di.Container) (err error
 		}
 		e = addedEvent
 
-		lc.Debug(fmt.Sprintf(
+		lc.Debugf(
 			"Event created on DB successfully. Event-id: %s, Correlation-id: %s ",
 			e.Id,
 			correlationId,
-		))
+		)
 	}
 
 	return nil
@@ -76,16 +76,15 @@ func PublishEvent(data []byte, profileName string, deviceName string, sourceName
 	correlationId := correlation.FromContext(ctx)
 
 	publishTopic := fmt.Sprintf("%s/%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName, sourceName)
-	lc.Debug(fmt.Sprintf("Publishing V2 AddEventRequest to message queue. Topic: %s", publishTopic), common.CorrelationHeader, correlationId)
+	lc.Debugf("Publishing V2 AddEventRequest to message queue. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
 	err := msgClient.Publish(msgEnvelope, publishTopic)
 	if err != nil {
-		lc.Error(fmt.Sprintf("Unable to send message for V2 API event. Correlation-id: %s, Profile Name: %s, "+
-			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err))
+		lc.Errorf("Unable to send message for V2 API event. Correlation-id: %s, Profile Name: %s, "+
+			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err)
 	} else {
-		lc.Debug(fmt.Sprintf(
-			"V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId))
+		lc.Debugf("V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId)
 	}
 }
 

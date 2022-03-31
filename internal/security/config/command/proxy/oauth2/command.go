@@ -82,7 +82,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	// Setup the URL to send a request to
 	kongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), c.configuration.KongAuth.Resource, "oauth2/token"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("creating token on the endpoint of %s", kongURL))
+	c.loggingClient.Infof("creating token on the endpoint of %s", kongURL)
 
 	// Setup the request
 	req, err := http.NewRequest(

@@ -16,7 +16,6 @@ package messaging
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 
@@ -92,14 +91,14 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 				},
 			})
 
-			lc.Info(fmt.Sprintf(
+			lc.Infof(
 				"Connected to %s Message Bus @ %s://%s:%d publishing on '%s' prefix topic with AuthMode='%s'",
 				messageBusInfo.Type,
 				messageBusInfo.Protocol,
 				messageBusInfo.Host,
 				messageBusInfo.Port,
 				messageBusInfo.PublishTopicPrefix,
-				messageBusInfo.AuthMode))
+				messageBusInfo.AuthMode)
 
 			return true
 		}

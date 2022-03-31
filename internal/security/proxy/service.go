@@ -100,7 +100,7 @@ func (s *Service) checkServiceStatus(path string) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		s.loggingClient.Info(fmt.Sprintf("the service on %s is up successfully", path))
+		s.loggingClient.Infof("the service on %s is up successfully", path)
 	default:
 		err = fmt.Errorf("unexpected http status %v %s", resp.StatusCode, path)
 		s.loggingClient.Error(err.Error())
@@ -194,7 +194,7 @@ func (s *Service) Init() error {
 			return fmt.Errorf("unsupported authetication method: %s", s.configuration.KongAuth.Name)
 		}
 
-		s.loggingClient.Info(fmt.Sprintf("selected auth method %s", s.configuration.KongAuth.Name))
+		s.loggingClient.Infof("selected auth method %s", s.configuration.KongAuth.Name)
 
 		if err := s.initRouteAuthentication(strings.ToLower(route.Name), formVals.Encode()); err != nil {
 			return err
@@ -294,9 +294,9 @@ func (s *Service) mergeRoutesWith(additional map[string]models.KongService) map[
 	for serviceName, route := range additional {
 		_, exists := merged[serviceName]
 		if exists {
-			s.loggingClient.Warn(fmt.Sprintf(
+			s.loggingClient.Warnf(
 				"attempting to add additional service name %s that already exists in the config. "+
-					"Ignoring additional", serviceName))
+					"Ignoring additional", serviceName)
 			continue
 		}
 		merged[serviceName] = route
@@ -321,12 +321,12 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
 	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	if err != nil {
-		s.loggingClient.Error("failed to create upload cert request -- %s", err.Error())
+		s.loggingClient.Errorf("failed to create upload cert request -- %s", err.Error())
 		return &CertError{err.Error(), InternalError}
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
-		s.loggingClient.Error("failed to upload cert to proxy server with error %s", err.Error())
+		s.loggingClient.Errorf("failed to upload cert to proxy server with error %s", err.Error())
 		return &CertError{err.Error(), InternalError}
 	}
 	defer resp.Body.Close()
@@ -377,9 +377,9 @@ func (s *Service) initKongService(service *models.KongService) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
-		s.loggingClient.Info(fmt.Sprintf("successful to set up proxy service for `%s` at `%s:%d`", service.Name, service.Host, service.Port))
+		s.loggingClient.Infof("successful to set up proxy service for `%s` at `%s:%d`", service.Name, service.Host, service.Port)
 	case http.StatusConflict:
-		s.loggingClient.Info(fmt.Sprintf("proxy service for %s has been set up", service.Name))
+		s.loggingClient.Infof("proxy service for %s has been set up", service.Name)
 	default:
 		err = fmt.Errorf("proxy service for %s returned status %d", service.Name, resp.StatusCode)
 		s.loggingClient.Error(err.Error())
@@ -417,7 +417,7 @@ func (s *Service) initKongRoutes(r *models.KongRoute, name string) error {
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
 		s.routes[name] = r
-		s.loggingClient.Info(fmt.Sprintf("successful to set up route for `%s` at `%v`", name, r.Paths))
+		s.loggingClient.Infof("successful to set up route for `%s` at `%v`", name, r.Paths)
 	default:
 		e := fmt.Sprintf("failed to set up route for %s with error %s", name, resp.Status)
 		s.loggingClient.Error(e)
@@ -467,7 +467,7 @@ func (s *Service) initCORSRoutes(corsConfig *bootstrapConfig.CORSConfigurationIn
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		s.loggingClient.Info(fmt.Sprintf("successful to set up CORS at `%s`", name))
+		s.loggingClient.Infof("successful to set up CORS at `%s`", name)
 	default:
 		e := fmt.Sprintf("failed to set up CORS for %s with error %s", name, resp.Status)
 		s.loggingClient.Error(e)
@@ -500,7 +500,7 @@ func (s *Service) initRouteAuthentication(routeName string, formVals string) err
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusConflict:
-		s.loggingClient.Info(fmt.Sprintf("successful to set up route authentication for `%s`", routeName))
+		s.loggingClient.Infof("successful to set up route authentication for `%s`", routeName)
 	default:
 		body, _ := io.ReadAll(resp.Body)
 		e := fmt.Sprintf("failed to set up route authentication for %s with error %s, %s", routeName, resp.Status, string(body))

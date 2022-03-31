@@ -109,7 +109,7 @@ func (cs *Certs) retrieve() (*CertPair, error) {
 	cc := CertCollect{}
 
 	if resp.StatusCode == http.StatusNotFound {
-		cs.loggingClient.Info(fmt.Sprintf("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status))
+		cs.loggingClient.Infof("proxy cert pair NOT found in secret store @/%s, status: %s", cs.certPath, resp.Status)
 		return nil, errNotFound
 	} else if resp.StatusCode != http.StatusOK {
 		e := fmt.Errorf("failed to retrieve the proxy cert pair on path %s with error code %d", cs.certPath, resp.StatusCode)

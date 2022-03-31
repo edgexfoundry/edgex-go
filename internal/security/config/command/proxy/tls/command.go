@@ -120,7 +120,7 @@ func (c *cmd) uploadProxyTlsCert() error {
 		return err
 	}
 
-	c.loggingClient.Debug(fmt.Sprintf("number of existing Kong tls certs = %d", len(existingCertIDs)))
+	c.loggingClient.Debugf("number of existing Kong tls certs = %d", len(existingCertIDs))
 
 	if len(existingCertIDs) > 0 {
 		// delete the existing certs first
@@ -160,7 +160,7 @@ func (c *cmd) listKongTLSCertificates() (certificateIDs, error) {
 
 	// list snis certificates association to see if any already exists
 	certKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(), "snis"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("list snis tls certificates on the endpoint of %s", certKongURL))
+	c.loggingClient.Infof("list snis tls certificates on the endpoint of %s", certKongURL)
 
 	req, err := http.NewRequest(http.MethodGet, certKongURL, http.NoBody)
 	if err != nil {
@@ -211,7 +211,7 @@ func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 	// Delete the Kong TLS certificate
 	delCertKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(),
 		"certificates", certId}, "/")
-	c.loggingClient.Info(fmt.Sprintf("deleting tls certificate on the endpoint of %s", delCertKongURL))
+	c.loggingClient.Infof("deleting tls certificate on the endpoint of %s", delCertKongURL)
 
 	req, err := http.NewRequest(http.MethodDelete, delCertKongURL, http.NoBody)
 	if err != nil {
@@ -230,7 +230,7 @@ func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 		c.loggingClient.Info("Successfully deleted Kong tls cert")
 	case http.StatusNotFound:
 		// not able to find this certId but should be ok to proceed and post a new certificate
-		c.loggingClient.Warn(fmt.Sprintf("Unable to delete Kong tls cert because the certificate Id %s not found", certId))
+		c.loggingClient.Warnf("Unable to delete Kong tls cert because the certificate Id %s not found", certId)
 	default:
 		return fmt.Errorf("delete Kong tls certificate request failed with code: %d", resp.StatusCode)
 	}
@@ -240,7 +240,7 @@ func (c *cmd) deleteKongTLSCertificateById(certId string) error {
 func (c *cmd) postKongTLSCertificate(certKeyPair *bootstrapConfig.CertKeyPair) error {
 	postCertKongURL := strings.Join([]string{c.configuration.KongURL.GetSecureURL(),
 		"certificates"}, "/")
-	c.loggingClient.Info(fmt.Sprintf("posting tls certificate on the endpoint of %s", postCertKongURL))
+	c.loggingClient.Infof("posting tls certificate on the endpoint of %s", postCertKongURL)
 
 	form := url.Values{
 		"cert": []string{certKeyPair.Cert},
