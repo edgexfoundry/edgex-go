@@ -605,7 +605,7 @@ func configure() {
 
 func configureApps() {
 	hooks.Info("edgexfoundry:configure Processing apps.* and config.* configuration")
-	err := snaphookoptions.ProcessOptions(
+	err := snaphookoptions.ProcessAppConfig(
 		"core-data",
 		"core-metadata",
 		"core-command",
