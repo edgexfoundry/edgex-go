@@ -202,11 +202,6 @@ apps:
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
       KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
 
-      # enable secure message bus setup for kuiper
-      SECUREMESSAGEBUS_TYPE: "redis"
-      SECUREMESSAGEBUS_KUIPERCONFIGPATH: "$SNAP_DATA/kuiper/etc/sources/edgex.yaml"
-      SECUREMESSAGEBUS_KUIPERCONNECTIONSPATH: "$SNAP_DATA/kuiper/etc/connections/connection.yaml"
-
     start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
@@ -476,10 +471,19 @@ apps:
     plugs: [home, removable-media, network]
   kuiper:
     adapter: full
+    after:
+      - security-bootstrapper-redis
     command: bin/kuiperd
+    command-chain:
+    # this script is original staged from edgex-ekuiper stage-snap, 
+    # and has been renamed 
+      - bin/kuiper-setup-redis-credentials.sh
     daemon: simple
     environment:
       KuiperBaseKey: $SNAP_DATA/kuiper
+      VAULT_TOKEN_FILE: $SNAP_DATA/secrets/edgex-ekuiper/secrets-token.json
+      SOURCE_FILE: $SNAP_DATA/kuiper/etc/sources/edgex.yaml 
+      CONNECTION_FILE: $SNAP_DATA/kuiper/etc/connections/connection.yaml
     plugs: [network, network-bind]
   kuiper-cli:
     adapter: full
@@ -865,36 +869,12 @@ parts:
       - -usr/share/doc/libzmq5/*
 
   kuiper:
-    source: https://github.com/lf-edge/ekuiper.git
-    source-tag: 1.4.3
-    source-depth: 1
-    plugin: make
-    after: [go-build-helper]
-    override-build: |
+    plugin: nil
+    stage-snaps:
+      # TODO: switch to 1/stable before the edgex 2.2 release
+      - edgex-ekuiper/1/beta
+    organize: 
+      bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
 
-      cd $SNAPCRAFT_PART_SRC
-      export BUILD_PATH=$SNAPCRAFT_PART_BUILD
-      export PACKAGES_PATH=$SNAPCRAFT_PART_INSTALL
-      make build_with_edgex
-      make real_pkg
-      cd $SNAPCRAFT_PART_INSTALL
-   
-      tar -xvf kuiper*.tar.gz --strip-components=1
-      rm *.gz
 
-      # configure logging & restrict to localhost
-      # configure REST API service port to 59720
-      sed -i -e 's@consoleLog\: false@consoleLog\: true@' \
-        -e 's@fileLog\: true@fileLog\: false@' \
-        -e 's@ip\: 0.0.0.0@ip\: localhost@' \
-        -e 's@restIp\: 0.0.0.0@restIp\: localhost@' \
-        -e 's@restPort\: 9081@restPort\: 59720@' \
-        $SNAPCRAFT_PART_INSTALL/etc/kuiper.yaml
 
-      install -DT "$SNAPCRAFT_PART_SRC/LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/kuiper/LICENSE"
-    stage:
-      - -etc/mqtt_source.yaml
-      - -etc/services/
-    stage-packages:
-      - libzmq5

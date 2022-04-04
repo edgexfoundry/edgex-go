@@ -187,19 +187,17 @@ func installDevProfiles() error {
 
 // installKuiper execs a shell script to install Kuiper's file into $SNAP_DATA
 func installKuiper() error {
-	setupScriptPath, err := exec.LookPath("install-setup-kuiper.sh")
-	if err != nil {
-		return err
-	}
+	// install files using edgex-ekuiper install hook
+	filePath := hooks.Snap + "/snap.edgex-ekuiper/hooks/install"
 
 	cmdSetupKuiper := exec.Cmd{
-		Path:   setupScriptPath,
-		Args:   []string{setupScriptPath},
+		Path:   filePath,
+		Env:    append(os.Environ(), "KUIPER_BASE_KEY="+hooks.SnapData+"/kuiper"),
 		Stdout: os.Stdout,
-		Stderr: os.Stdout,
+		Stderr: os.Stderr,
 	}
 
-	err = cmdSetupKuiper.Run()
+	err := cmdSetupKuiper.Run()
 	if err != nil {
 		return err
 	}
