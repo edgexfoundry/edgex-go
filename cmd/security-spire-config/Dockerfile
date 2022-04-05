@@ -33,8 +33,9 @@ COPY . .
 ARG SPIRE_RELEASE=1.2.1
 
 # build spire from the source in order to be compatible with arch arm64 as well
-RUN mkdir -p spire-build && cd spire-build && \
-    wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
+RUN mkdir -p spire-build
+WORKDIR /edgex-go/spire-build
+RUN wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
     tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
     echo "building spire from source..." && \
     make bin/spire-server bin/spire-agent
