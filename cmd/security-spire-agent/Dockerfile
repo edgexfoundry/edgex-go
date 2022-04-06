@@ -23,17 +23,22 @@ WORKDIR /edgex-go
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache make git
+RUN apk add --update --no-cache make git build-base curl
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
 
-ARG SPIRE_RELEASE=1.2.0
+ARG SPIRE_RELEASE=1.2.1
 
-RUN wget -q "https://github.com/spiffe/spire/releases/download/v${SPIRE_RELEASE}/spire-${SPIRE_RELEASE}-linux-x86_64-glibc.tar.gz" && \
-    tar xv --strip-components=1 -f "spire-${SPIRE_RELEASE}-linux-x86_64-glibc.tar.gz"
+# build spire from the source in order to be compatible with arch arm64 as well
+RUN mkdir -p spire-build
+WORKDIR /edgex-go/spire-build
+RUN wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
+    tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
+    echo "building spire from source..." && \
+    make bin/spire-server bin/spire-agent
 
 # Deployment image
 FROM alpine:3.15
@@ -44,8 +49,8 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
-COPY --from=builder /edgex-go/bin/spire-agent /usr/local/bin
-COPY --from=builder /edgex-go/bin/spire-server /usr/local/bin
+COPY --from=builder /edgex-go/spire-build/bin/spire-agent /usr/local/bin
+COPY --from=builder /edgex-go/spire-build/bin/spire-server /usr/local/bin
 COPY --from=builder /edgex-go/cmd/security-spire-agent/docker-entrypoint.sh /usr/local/bin/
 COPY --from=builder /edgex-go/cmd/security-spire-agent/agent.conf /usr/local/etc/spire/agent.conf.tpl
 COPY --from=builder /edgex-go/cmd/security-spire-agent/openssl.conf /usr/local/etc/
