@@ -71,10 +71,11 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, offset i
 		end = limit
 	}
 	count, _ := redis.Int(conn.Do(ZCOUNT, key, InfiniteMin, InfiniteMax))
-	if count == 0 { // return nil slice when there is no records in the DB
-		return nil, nil
-	} else if count > 0 && start > count { // return RangeNotSatisfiable error when start is out of range
+	if start > count { // return RangeNotSatisfiable error when start is out of range
 		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", count), nil)
+	}
+	if count == 0 { // return nil slice when there is no records satisfied with the score range in the DB, so there is no need to query the DB further
+		return nil, nil
 	}
 	ids, err := redis.Values(conn.Do(command, key, start, end))
 	if err == redis.ErrNil {
@@ -92,10 +93,11 @@ func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, off
 		return
 	}
 	count, _ := redis.Int(conn.Do(ZCOUNT, key, start, end))
-	if count == 0 { // return nil slice when there is no records satisfied with the score range in the DB
-		return nil, nil
-	} else if count > 0 && offset >= count { // return RangeNotSatisfiable error when offset is out of range
+	if offset > count { // return RangeNotSatisfiable error when offset is out of range
 		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v offset:%v", count, offset), nil)
+	}
+	if count == 0 { // return nil slice when there is no records satisfied with the score range in the DB, so there is no need to query the DB further
+		return nil, nil
 	}
 	// Use following redis command to retrieve the id of objects satisfied with score range/offset/limit
 	// ZREVRANGEBYSCORE key max min LIMIT offset count
@@ -254,10 +256,10 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query storeKeys", err)
 	}
 	count := len(storeKeys)
-	if count == 0 || count == offset {
-		return nil, nil
-	} else if count > 0 && offset > count { // return RangeNotSatisfiable error when offset is out of range
+	if offset > count { // return RangeNotSatisfiable error when offset is out of range
 		return nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", count), nil)
+	} else if count == 0 || count == offset {
+		return nil, nil
 	} else if end >= count || end == -1 {
 		storeKeys = storeKeys[offset:]
 	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
