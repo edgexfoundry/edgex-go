@@ -50,6 +50,14 @@ RootCaCertPath = ""
 ServerName = ""
   [SecretStore.Authentication]
   AuthType = "X-Vault-Token"
+  [SecretStore.RuntimeTokenProvider]
+  Enabled = false # This is the implementation of RuntimeTokenProvider; must always be false!
+  Protocol = ""
+  Host = ""
+  Port = 0
+  TrustDomain = ""
+  EndpointSocket = ""
+  RequiredSecrets = ""
 
 [SPIFFE]
   EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
