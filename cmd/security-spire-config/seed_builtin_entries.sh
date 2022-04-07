@@ -33,3 +33,6 @@ for service in security-spiffe-token-provider \
     app-service-external-mqtt-trigger; do
     spire-server entry create -socketPath "${SPIFFE_SERVER_SOCKET}" -parentID "${local_agent_svid}" -dns "edgex-${service}" -spiffeID "${SPIFFE_EDGEX_SVID_BASE}/${service}" -selector "docker:label:com.docker.compose.service:${service}"
 done
+
+# Always exit successfully even if couldn't (re-)create server entries.
+exit 0
