@@ -127,7 +127,7 @@ make run no-secty dev
 
 #### Community
 
-- Chat: <https://slack.edgexfoundry.org/>
+- Chat: <https://edgexfoundry.slack.com/>
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 ## License
