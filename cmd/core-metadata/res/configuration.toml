@@ -1,5 +1,8 @@
 [Writable]
 LogLevel = "INFO"
+  [Writable.ProfileChange]
+  StrictDeviceProfileChanges = false
+  StrictDeviceProfileDeletes = false
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"
