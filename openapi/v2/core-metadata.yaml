@@ -2354,7 +2354,7 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  '/deviceprofile/devicecommand':
+  '/deviceprofile/deviceCommand':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
@@ -2383,10 +2383,10 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseWithIdResponse'
+                    - $ref: '#/components/schemas/BaseResponse'
               examples:
                 MultiPOSTStatusExample:
-                  $ref: '#/components/examples/MultiPOSTStatusExample'
+                  $ref: '#/components/examples/MultiPOSTNoIdStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -2469,7 +2469,7 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  '/deviceprofile/name/{name}/devicecommand/{commandName}':
+  '/deviceprofile/name/{name}/deviceCommand/{commandName}':
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
       - name: name
