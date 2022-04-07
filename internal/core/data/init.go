@@ -19,15 +19,8 @@ import (
 	"context"
 	"sync"
 
-	gometrics "github.com/rcrowley/go-metrics"
-
-	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -65,16 +58,4 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	}
 
 	return true
-}
-
-func registerMetrics(lc logger.LoggingClient, telemetry bootstrapConfig.TelemetryInfo, manager interfaces.MetricsManager) {
-	if telemetry.MetricEnabled(application.EventsPersistedMetricName) {
-		manager.Register(application.EventsPersistedMetricName, gometrics.NewCounter(), nil)
-		lc.Infof("Registered metrics counter %s", application.EventsPersistedMetricName)
-	}
-
-	if telemetry.MetricEnabled(application.ReadingsPersistedMetricName) {
-		manager.Register(application.ReadingsPersistedMetricName, gometrics.NewCounter(), nil)
-		lc.Infof("Registered metrics counter %s", application.ReadingsPersistedMetricName)
-	}
 }

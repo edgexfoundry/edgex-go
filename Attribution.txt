@@ -77,6 +77,9 @@ https://github.com/hashicorp/serf/blob/master/LICENSE
 armon/go-metrics (MIT) https://github.com/armon/go-metrics
 https://github.com/armon/go-metrics/blob/master/LICENSE
 
+rcrowley/go-metrics (Unspecified) https://github.com/rcrowley/go-metrics
+https://github.com/rcrowley/go-metrics/blob/master/LICENSE
+
 hashicorp/go-immutable-radix (Mozilla Public License 2.0) https://github.com/hashicorp/go-immutable-radix
 https://github.com/hashicorp/go-immutable-radix/blob/master/LICENSE
 

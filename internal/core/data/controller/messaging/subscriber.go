@@ -37,6 +37,8 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
 
+	app := application.CoreDataAppFrom(dic.Get)
+
 	topics := []types.TopicChannel{
 		{
 			Topic:    messageBusInfo.SubscribeTopic,
@@ -77,7 +79,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Error(err.Error())
 					break
 				}
-				err = application.AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
+				err = app.AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
 				if err != nil {
 					lc.Errorf("fail to persist the event, %v", err)
 				}

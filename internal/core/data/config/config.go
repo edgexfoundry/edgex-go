@@ -101,6 +101,6 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 }
 
 // GetTelemetryInfo returns the service's Telemetry settings.
-func (c *ConfigurationStruct) GetTelemetryInfo() bootstrapConfig.TelemetryInfo {
-	return c.Writable.Telemetry
+func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
+	return &c.Writable.Telemetry
 }

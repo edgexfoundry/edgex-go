@@ -23,6 +23,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
@@ -73,10 +74,11 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			messaging.BootstrapHandler,
+			handlers.NewServiceMetrics(common.CoreDataServiceKey).BootstrapHandler, // Must be after Messaging
+			application.BootstrapHandler, // Must be after Service Metrics and before next handler
 			NewBootstrap(router, common.CoreDataServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewServiceMetrics(common.CoreDataServiceKey, registerMetrics).BootstrapHandler,
 			handlers.NewStartMessage(common.CoreDataServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)
