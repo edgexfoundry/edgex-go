@@ -1099,6 +1099,12 @@ components:
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "associated object exists"
+    423Example:
+      value:
+        apiVersion: "v2"
+        requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
+        statusCode: 423
+        message: "Locked"
     500Example:
       value:
         apiVersion: "v2"
@@ -1970,6 +1976,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '423':
+          description: "profile change is not allowed when StrictDeviceProfileDeletes config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: An unexpected error occurred on the server
           headers:
@@ -2102,6 +2120,18 @@ paths:
               examples:
                 409Example:
                   $ref: '#/components/examples/409Example'
+        '423':
+          description: "profile change is not allowed when StrictDeviceProfileChanges config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "An unexpected error happened on the server."
           headers:
@@ -2282,6 +2312,18 @@ paths:
               examples:
                 409DeleteExample:
                   $ref: '#/components/examples/409DeleteExample'
+        '423':
+          description: "profile deletion is not allowed when StrictDeviceProfileDeletes config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2523,6 +2565,18 @@ paths:
               examples:
                 409DeleteExample:
                   $ref: '#/components/examples/409DeleteExample'
+        '423':
+          description: "profile change is not allowed when StrictDeviceProfileChanges config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2592,24 +2646,6 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-    patch:
-      summary: "Allows device resource updates to an existing device profile, such as resource's description, isHidden, tag, and attributes fields."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/DeviceResourceRequest'
-            example:
-              - apiVersion: "v2"
-                requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
-                profileName: "Device-Virtual-Profile"
-                resource:
-                  "name": "Float32"
-                  "description": "random float32 value"
-                  "isHidden": "false"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
@@ -2639,6 +2675,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '423':
+          description: "profile change is not allowed when StrictDeviceProfileDeletes config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: An unexpected error occurred on the server
           headers:
@@ -2705,6 +2753,18 @@ paths:
               examples:
                 409DeleteExample:
                   $ref: '#/components/examples/409DeleteExample'
+        '423':
+          description: "profile change is not allowed when StrictDeviceProfileChanges config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:

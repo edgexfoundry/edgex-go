@@ -100,6 +100,12 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
+	strictProfileChanges := metadataContainer.ConfigurationFrom(dc.dic.Get).Writable.ProfileChange.StrictDeviceProfileChanges
+	if strictProfileChanges {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
+		return
+	}
+
 	var reqDTOs []requestDTO.DeviceProfileRequest
 	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
@@ -184,6 +190,12 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 		return
 	} else if fileErr != nil {
 		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
+		return
+	}
+
+	strictProfileChanges := metadataContainer.ConfigurationFrom(dc.dic.Get).Writable.ProfileChange.StrictDeviceProfileChanges
+	if strictProfileChanges {
+		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
 		return
 	}
 

@@ -79,6 +79,10 @@ func DeviceProfileByName(name string, ctx context.Context, dic *di.Container) (d
 
 // DeleteDeviceProfileByName delete the device profile by name
 func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	strictProfileDeletes := container.ConfigurationFrom(dic.Get).Writable.ProfileChange.StrictDeviceProfileDeletes
+	if strictProfileDeletes {
+		return errors.NewCommonEdgeX(errors.KindServiceLocked, "profile deletion is not allowed when StrictDeviceProfileDeletes config is enabled", nil)
+	}
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}

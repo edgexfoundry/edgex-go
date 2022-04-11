@@ -473,6 +473,45 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}
 }
 
+func TestUpdateDeviceProfile_StrictProfileChanges(t *testing.T) {
+	valid := buildTestDeviceProfileRequest()
+
+	dic := mockDic()
+	configuration := container.ConfigurationFrom(dic.Get)
+	configuration.Writable.ProfileChange.StrictDeviceProfileChanges = true
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	jsonData, err := json.Marshal(valid)
+	require.NoError(t, err)
+
+	reader := strings.NewReader(string(jsonData))
+	req, err := http.NewRequest(http.MethodPost, common.ApiDeviceProfileRoute, reader)
+	require.NoError(t, err)
+
+	// Act
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(controller.UpdateDeviceProfile)
+	handler.ServeHTTP(recorder, req)
+
+	var res commonDTO.BaseWithIdResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusLocked, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusLocked, res.StatusCode, "HTTP status code not as expected")
+	assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+
+}
+
 func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 	expectedRequestId := ExampleUUID
 	testReq := buildTestDeviceProfileBasicInfoRequest()
@@ -839,6 +878,42 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	}
 }
 
+func TestUpdateDeviceProfileByYaml_StrictProfileChanges(t *testing.T) {
+	valid := buildTestDeviceProfileRequest().Profile
+
+	dic := mockDic()
+	configuration := container.ConfigurationFrom(dic.Get)
+	configuration.Writable.ProfileChange.StrictDeviceProfileChanges = true
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	validBytes, err := yaml.Marshal(valid)
+	require.NoError(t, err)
+	req, err := createDeviceProfileRequestWithFile(validBytes)
+	require.NoError(t, err)
+
+	// Act
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(controller.UpdateDeviceProfileByYaml)
+	handler.ServeHTTP(recorder, req)
+
+	var res commonDTO.BaseWithIdResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusLocked, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusLocked, res.StatusCode, "HTTP status code not as expected")
+	assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+}
+
 func TestDeviceProfileByName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	emptyName := ""
@@ -944,7 +1019,7 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiDeviceProfileRoute, common.Name, testCase.deviceProfileName)
-			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
 			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceProfileName})
 			require.NoError(t, err)
 
@@ -967,6 +1042,39 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteDeviceProfileByName_StrictProfileChanges(t *testing.T) {
+	dic := mockDic()
+	configuration := container.ConfigurationFrom(dic.Get)
+	configuration.Writable.ProfileChange.StrictDeviceProfileDeletes = true
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	require.NotNil(t, controller)
+
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileByNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName})
+	require.NoError(t, err)
+
+	// Act
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(controller.DeleteDeviceProfileByName)
+	handler.ServeHTTP(recorder, req)
+
+	var res commonDTO.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusLocked, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusLocked, res.StatusCode, "BaseResponse status code not as expected")
+	assert.NotEmpty(t, res.Message, "Message is empty")
 }
 
 func TestAllDeviceProfiles(t *testing.T) {
