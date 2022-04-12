@@ -1,17 +1,7 @@
 name: edgexfoundry
 base: core20
 type: app
-adopt-info: version
-summary: Open-source framework for IoT edge computing
-description: |
-  EdgeX Foundry is a vendor-neutral open source project hosted by The Linux 
-  Foundation building a common open framework for IoT edge computing. This 
-  snap contains all of the EdgeX core, security, and support reference 
-  services, as well as Consul, Kong, Redis, Vault, and device-virtual.
-  The packaging for this snap can be found at:
-    https://github.com/edgexfoundry/edgex-go
-
-icon: snap/local/assets/edgex-snap-icon.png
+adopt-info: metadata
 
 # Different epochs prevent refreshes between major versions of EdgeX due
 # to continued configuration changes.
@@ -493,21 +483,6 @@ apps:
     plugs: [home, network, network-bind]
 
 parts:
-  version:
-    plugin: nil
-    # we need to include git, in case we are building the minimal-snap-build
-    build-packages:
-      - git
-    # as with static-packages part, the source dir is unrelated to this part and is used
-    # since it changes rarely and therefore will not trigger a new pull
-    source: snap/local/build-helpers
-    override-pull: |
-      cd $SNAPCRAFT_PROJECT_DIR
-      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
-      if [ -z "$GIT_VERSION" ]; then
-        GIT_VERSION="0.0.0"
-      fi
-      snapcraftctl set-version ${GIT_VERSION}
   static-packages:
     plugin: nil
     # the default source for a part that doesn't specify one is ".", which
@@ -647,18 +622,16 @@ parts:
     - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
 
   edgex-go:
+    after: 
+      - metadata
+      - go-build-helper
     source: .
     plugin: make
-    after: [go-build-helper]
     override-build: |
       cd $SNAPCRAFT_PART_SRC
 
-      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
-      if [ -z "$GIT_VERSION" ]; then
-        GIT_VERSION="0.0.0"
-      fi
-
-      echo $GIT_VERSION > ./VERSION
+      # the version is needed for the build
+      cat ./VERSION
 
       [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
@@ -876,5 +849,27 @@ parts:
     organize: 
       bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
 
+  metadata:
+    plugin: nil
+    source: https://github.com/canonical/edgex-snap-metadata.git
+    source-branch: appstream
+    source-depth: 1
+    override-build: |
+      # install the icon at the default internal path
+      install -DT edgex-snap-icon.png \
+        $SNAPCRAFT_PART_INSTALL/meta/gui/icon.png
+      
+      # change to this project's repo to get the version
+      cd $SNAPCRAFT_PROJECT_DIR
+      if git describe ; then
+        VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      else
+        VERSION="0.0.0"
+      fi
 
+      # write version to file for the build
+      echo $VERSION > ./VERSION
+      # set the version of this snap
+      snapcraftctl set-version $VERSION
+    parse-info: [edgexfoundry.metainfo.xml]  
 

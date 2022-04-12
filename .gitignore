@@ -35,6 +35,7 @@ docs/_build/
 
 # snap files
 *.snap
+*.assert
 *.bz2
 *.pyc
 parts/*
