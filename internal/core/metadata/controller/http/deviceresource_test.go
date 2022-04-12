@@ -49,6 +49,25 @@ var testDeviceResourceRequest = requests.AddDeviceResourceRequest{
 	},
 }
 
+func buildTestUpdateDeviceResourceRequest() requests.UpdateDeviceResourceRequest {
+	testDeviceResourceName := TestDeviceResourceName
+	testDescription := TestDescription
+	testIsHidden := false
+	var testUpdateDeviceResourceReq = requests.UpdateDeviceResourceRequest{
+		BaseRequest: commonDTO.BaseRequest{
+			RequestId:   ExampleUUID,
+			Versionable: commonDTO.NewVersionable(),
+		},
+		ProfileName: TestDeviceProfileName,
+		Resource: dtos.UpdateDeviceResource{
+			Name:        &testDeviceResourceName,
+			Description: &testDescription,
+			IsHidden:    &testIsHidden,
+		},
+	}
+	return testUpdateDeviceResourceReq
+}
+
 func TestDeviceResourceByProfileNameAndResourceName(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	emptyName := ""
@@ -223,6 +242,108 @@ func TestAddDeviceProfileResource_BadRequest(t *testing.T) {
 			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode, "BaseResponse status code not as expected")
 			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+		})
+	}
+}
+
+func TestPatchDeviceProfileResource(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	testReq := buildTestUpdateDeviceResourceRequest()
+	deviceExistsProfileName := "deviceExists"
+	deviceExistsProfile := deviceProfile
+	deviceExistsProfile.Name = deviceExistsProfileName
+	expectedRequestId := ExampleUUID
+	emptyString := ""
+	notFound := "notFoundName"
+
+	valid := testReq
+	validWithNoReqID := testReq
+	validWithNoReqID.RequestId = emptyString
+	deviceExists := testReq
+	deviceExists.ProfileName = deviceExistsProfileName
+	notFoundResource := testReq
+	notFoundResource.Resource.Name = &notFound
+	notFoundProfile := testReq
+	notFoundProfile.ProfileName = notFound
+	notFoundDBError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exists", notFoundProfile.ProfileName), nil)
+
+	noProfileName := testReq
+	noProfileName.ProfileName = emptyString
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceProfileByName", valid.ProfileName).Return(deviceProfile, nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, valid.ProfileName).Return([]models.Device{}, nil)
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+
+	dbClientMock.On("DeviceProfileByName", deviceExistsProfileName).Return(deviceExistsProfile, nil)
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExistsProfileName).Return([]models.Device{{}}, nil)
+
+	dbClientMock.On("DeviceProfileByName", notFound).Return(deviceProfile, notFoundDBError)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceResourceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name                 string
+		Request              []requests.UpdateDeviceResourceRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+	}{
+		{"Valid - PatchDeviceProfileResourceRequest", []requests.UpdateDeviceResourceRequest{valid}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - PatchDeviceProfileResourceRequest no requestId", []requests.UpdateDeviceResourceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
+		{"Valid - Profile is in use by other device", []requests.UpdateDeviceResourceRequest{deviceExists}, http.StatusMultiStatus, http.StatusOK},
+		{"Invalid - Not found device resource", []requests.UpdateDeviceResourceRequest{notFoundResource}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - Not found device profile", []requests.UpdateDeviceResourceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
+		{"Invalid - No profile name", []requests.UpdateDeviceResourceRequest{noProfileName}, http.StatusBadRequest, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+
+			req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceProfileResourceRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.PatchDeviceProfileResource)
+			handler.ServeHTTP(recorder, req)
+
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
+				var res []commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+				if res[0].RequestId != "" {
+					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+				}
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusOK {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
 		})
 	}
 }
