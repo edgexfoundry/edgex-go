@@ -21,5 +21,5 @@ edgeXBuildGoParallel(
     buildScript: 'make build',
     publishSwaggerDocs: true,
     swaggerApiFolders: ['openapi/v2'],
-    buildSnap: true
+    buildSnap: false
 )

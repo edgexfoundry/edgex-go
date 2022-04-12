@@ -1,0 +1,30 @@
+name: Snap Testing
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and upload snap
+        id: build
+        uses: canonical/edgex-snap-testing/build@v2
+    outputs:
+      snap: ${{steps.build.outputs.snap}}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and test snap
+        uses: canonical/edgex-snap-testing/test@v2
+        with:
+          name: edgexfoundry
+          snap: ${{needs.build.outputs.snap}}
+
