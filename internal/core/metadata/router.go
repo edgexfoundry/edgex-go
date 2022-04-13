@@ -52,6 +52,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	// Deivce Command
 	dcm := metadataController.NewDeviceCommandController(dic)
 	r.HandleFunc(common.ApiDeviceProfileDeviceCommandRoute, dcm.AddDeviceProfileDeviceCommand).Methods(http.MethodPost)
+	r.HandleFunc(common.ApiDeviceProfileDeviceCommandRoute, dcm.PatchDeviceProfileDeviceCommand).Methods(http.MethodPatch)
 
 	// Device Service
 	ds := metadataController.NewDeviceServiceController(dic)
