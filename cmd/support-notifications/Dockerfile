@@ -25,7 +25,7 @@ WORKDIR /edgex-go
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache make bash git ca-certificates
+RUN apk add --update --no-cache make bash git ca-certificates zeromq-dev libsodium-dev pkgconfig build-base
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -35,7 +35,7 @@ RUN make cmd/support-notifications/support-notifications
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache ca-certificates dumb-init
+RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium, Copyright (c) 2021: Intel Corporation'

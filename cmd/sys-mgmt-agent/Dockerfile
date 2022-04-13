@@ -14,7 +14,7 @@ WORKDIR /edgex-go
 # So we can try these.
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache make bash git
+RUN apk add --update --no-cache make bash git zeromq-dev libsodium-dev pkgconfig build-base
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -33,7 +33,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell, Copyright (c) 2021: Intel Corporation'
 
 # consul token needs to be security-bootstrappable and for security-bootstrappable, dumb-init is required
-RUN apk add --update --no-cache bash dumb-init py3-pip curl && \
+RUN apk add --update --no-cache bash dumb-init py3-pip curl zeromq && \
       pip install --no-cache-dir docker-compose==1.23.2
 
 ENV APP_PORT=58890

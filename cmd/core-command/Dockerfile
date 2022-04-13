@@ -26,7 +26,7 @@ WORKDIR /edgex-go
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache make git
+RUN apk add --update --no-cache make git zeromq-dev libsodium-dev pkgconfig build-base
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -36,7 +36,7 @@ RUN make cmd/core-command/core-command
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache dumb-init
+RUN apk add --update --no-cache dumb-init zeromq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2021: Intel Corporation'
