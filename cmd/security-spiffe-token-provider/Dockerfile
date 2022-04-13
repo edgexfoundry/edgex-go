@@ -21,7 +21,7 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
-RUN apk update && apk --no-cache --update add build-base
+RUN apk update && apk --no-cache --update add build-base zeromq-dev libsodium-dev pkgconfig
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
