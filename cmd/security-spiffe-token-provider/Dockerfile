@@ -21,7 +21,7 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
-RUN apk update && apk --no-cache --update add build-base zeromq-dev libsodium-dev pkgconfig
+RUN apk update && apk --no-cache --update add build-base
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -36,7 +36,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
-RUN apk update && apk --no-cache --update add dumb-init curl gcompat zeromq
+RUN apk update && apk --no-cache --update add dumb-init curl gcompat
 
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/security-spiffe-token-provider /

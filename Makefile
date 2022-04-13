@@ -1,4 +1,5 @@
 #
+# Copyright 2022 Intel Corporation
 # Copyright (c) 2018 Cavium
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -6,6 +7,9 @@
 
 
 .PHONY: build clean unittest hadolint lint test docker run
+
+# change the following boolean flag to include or exclude the delayed start libs for builds
+INCLUDE_DELAYED_START_BUILD:="false"
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
 
@@ -61,49 +65,58 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 ARCH=$(shell uname -m)
 
+# DO NOT change the following flag, as it is automatically set based on the boolean switch INCLUDE_DELAYED_START_BUILD
+NON_DELAYED_START_GO_BUILD_TAG:=non_delayedstart
+ifeq ($(INCLUDE_DELAYED_START_BUILD),"true")
+	NON_DELAYED_START_GO_BUILD_TAG:=
+endif
+
+NO_MESSAGEBUS_GO_BUILD_TAG:=no_messagebus
+
+
 build: $(MICROSERVICES)
 
 tidy:
 	go mod tidy -compat=1.17
 
 cmd/core-metadata/core-metadata:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-metadata
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-data
+	$(GOCGO) build -tags "$(NON_DELAYED_START_GO_BUILD_TAG)" $(CGOFLAGS) -o $@ ./cmd/core-data
 
 cmd/core-command/core-command:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-command
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/core-command
 
 cmd/support-notifications/support-notifications:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/support-notifications
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
 
 cmd/sys-mgmt-agent/sys-mgmt-agent:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/sys-mgmt-agent
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
 cmd/support-scheduler/support-scheduler:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/security-proxy-setup/security-proxy-setup:
-	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
 
 cmd/security-secretstore-setup/security-secretstore-setup:
-	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
 
 cmd/security-file-token-provider/security-file-token-provider:
-	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
 cmd/secrets-config/secrets-config:
-	$(GOCGO) build $(CGOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
 
 cmd/security-bootstrapper/security-bootstrapper:
-	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
 cmd/security-spiffe-token-provider/security-spiffe-token-provider:
-	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
 
 clean:
 	rm -f $(MICROSERVICES)

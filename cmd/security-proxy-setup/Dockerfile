@@ -23,7 +23,7 @@ WORKDIR /edgex-go
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 
-RUN apk add --update --no-cache make git zeromq-dev libsodium-dev pkgconfig build-base
+RUN apk add --update --no-cache make git
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -33,7 +33,7 @@ RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secret
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache curl dumb-init zeromq
+RUN apk add --update --no-cache curl dumb-init
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
