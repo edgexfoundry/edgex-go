@@ -74,6 +74,11 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 	return nil
 }
 
+// GetTelemetryInfo returns the service's Telemetry settings of which this service doesn't have. I.e. service has no metrics
+func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
+	return nil
+}
+
 // GetRoleNames gets the slice of the keys (i.e. the service keys) from map Roles as ACL role names
 func (acl ACLInfo) GetACLRoleNames() []string {
 	roleNames := make([]string, 0, len(acl.Roles))

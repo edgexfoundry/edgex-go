@@ -93,3 +93,8 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return nil
 }
+
+// GetTelemetryInfo returns the service's Telemetry settings of which this service doesn't have. I.e. service has no metrics
+func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
+	return nil
+}

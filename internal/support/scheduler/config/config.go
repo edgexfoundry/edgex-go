@@ -152,3 +152,10 @@ func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Datab
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return c.Writable.InsecureSecrets
 }
+
+// GetTelemetryInfo returns the service's Telemetry settings.
+func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
+	// TODO: return services actual TelemetryInfo once updated
+	return &bootstrapConfig.TelemetryInfo{}
+	//return &c.Writable.Telemetry
+}

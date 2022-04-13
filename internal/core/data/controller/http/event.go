@@ -30,13 +30,16 @@ type EventController struct {
 	readers map[string]edgexIO.DtoReader
 	mux     sync.RWMutex
 	dic     *di.Container
+	app     *application.CoreDataApp
 }
 
 // NewEventController creates and initializes an EventController
 func NewEventController(dic *di.Container) *EventController {
+	app := application.CoreDataAppFrom(dic.Get)
 	return &EventController{
 		readers: make(map[string]edgexIO.DtoReader),
 		dic:     dic,
+		app:     app,
 	}
 }
 
@@ -92,7 +95,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
 		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
-		go application.PublishEvent(dataBytes, profileName, deviceName, sourceName, ctx, ec.dic)
+		go ec.app.PublishEvent(dataBytes, profileName, deviceName, sourceName, ctx, ec.dic)
 		// unmarshal bytes to AddEventRequest
 		reader := ec.getReader(r)
 		err = reader.Read(bytes.NewReader(dataBytes), &addEventReqDTO)
@@ -103,9 +106,9 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	event := requestDTO.AddEventReqToEventModel(addEventReqDTO)
-	err = application.ValidateEvent(event, profileName, deviceName, sourceName, ctx, ec.dic)
+	err = ec.app.ValidateEvent(event, profileName, deviceName, sourceName, ctx, ec.dic)
 	if err == nil {
-		err = application.AddEvent(event, ctx, ec.dic)
+		err = ec.app.AddEvent(event, ctx, ec.dic)
 	}
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, addEventReqDTO.RequestId)
@@ -129,7 +132,7 @@ func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
 	id := vars[common.Id]
 
 	// Get the event
-	e, err := application.EventById(id, ec.dic)
+	e, err := ec.app.EventById(id, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -152,7 +155,7 @@ func (ec *EventController) DeleteEventById(w http.ResponseWriter, r *http.Reques
 	id := vars[common.Id]
 
 	// Delete the event
-	err := application.DeleteEventById(id, ec.dic)
+	err := ec.app.DeleteEventById(id, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -170,7 +173,7 @@ func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	// Count the event
-	count, err := application.EventTotalCount(ec.dic)
+	count, err := ec.app.EventTotalCount(ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -191,7 +194,7 @@ func (ec *EventController) EventCountByDeviceName(w http.ResponseWriter, r *http
 	deviceName := vars[common.Name]
 
 	// Count the event by device
-	count, err := application.EventCountByDeviceName(deviceName, ec.dic)
+	count, err := ec.app.EventCountByDeviceName(deviceName, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -213,7 +216,7 @@ func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, totalCount, err := application.AllEvents(offset, limit, ec.dic)
+	events, totalCount, err := ec.app.AllEvents(offset, limit, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -237,7 +240,7 @@ func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Req
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, totalCount, err := application.EventsByDeviceName(offset, limit, name, ec.dic)
+	events, totalCount, err := ec.app.EventsByDeviceName(offset, limit, name, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -257,7 +260,7 @@ func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *ht
 	deviceName := vars[common.Name]
 
 	// Delete events with associated Device deviceName
-	err := application.DeleteEventsByDeviceName(deviceName, ec.dic)
+	err := ec.app.DeleteEventsByDeviceName(deviceName, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -280,7 +283,7 @@ func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Requ
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	events, totalCount, err := application.EventsByTimeRange(start, end, offset, limit, ec.dic)
+	events, totalCount, err := ec.app.EventsByTimeRange(start, end, offset, limit, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -304,7 +307,7 @@ func (ec *EventController) DeleteEventsByAge(w http.ResponseWriter, r *http.Requ
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
 	}
-	err := application.DeleteEventsByAge(age, ec.dic)
+	err := ec.app.DeleteEventsByAge(age, ec.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

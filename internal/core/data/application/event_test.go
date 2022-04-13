@@ -10,6 +10,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
@@ -19,10 +24,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -167,7 +168,9 @@ func TestValidateEvent(t *testing.T) {
 					return dbClientMock
 				},
 			})
-			err := ValidateEvent(evt, testCase.profileName, testCase.deviceName, testCase.sourceName, context.Background(), dic)
+
+			app := NewCoreDataApp(dic)
+			err := app.ValidateEvent(evt, testCase.profileName, testCase.deviceName, testCase.sourceName, context.Background(), dic)
 
 			if testCase.errorExpected {
 				assert.Error(t, err)
@@ -213,7 +216,10 @@ func TestAddEvent(t *testing.T) {
 					return dbClientMock
 				},
 			})
-			err := AddEvent(evt, context.Background(), dic)
+
+			// TODO: Add Metric dependencies to DIC??
+			app := NewCoreDataApp(dic)
+			err := app.AddEvent(evt, context.Background(), dic)
 
 			if testCase.errorExpected {
 				assert.Error(t, err)
@@ -259,7 +265,8 @@ func TestEventById(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
-			evt, err := EventById(testCase.EventId, dic)
+			app := NewCoreDataApp(dic)
+			evt, err := app.EventById(testCase.EventId, dic)
 
 			if testCase.ErrorExpected {
 				require.Error(t, err)
@@ -304,7 +311,8 @@ func TestDeleteEventById(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
-			err := DeleteEventById(testCase.EventId, dic)
+			app := NewCoreDataApp(dic)
+			err := app.DeleteEventById(testCase.EventId, dic)
 
 			if testCase.ErrorExpected {
 				require.Error(t, err)
@@ -328,7 +336,8 @@ func TestEventTotalCount(t *testing.T) {
 		},
 	})
 
-	count, err := EventTotalCount(dic)
+	app := NewCoreDataApp(dic)
+	count, err := app.EventTotalCount(dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }
@@ -343,7 +352,8 @@ func TestEventCountByDeviceName(t *testing.T) {
 		},
 	})
 
-	count, err := EventCountByDeviceName(testDeviceName, dic)
+	app := NewCoreDataApp(dic)
+	count, err := app.EventCountByDeviceName(testDeviceName, dic)
 	require.NoError(t, err)
 	assert.Equal(t, testEventCount, count, "Event total count is not expected")
 }
@@ -372,7 +382,8 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
-			err := DeleteEventsByDeviceName(testCase.deviceName, dic)
+			app := NewCoreDataApp(dic)
+			err := app.DeleteEventsByDeviceName(testCase.deviceName, dic)
 
 			if testCase.ErrorExpected {
 				require.Error(t, err)
@@ -430,7 +441,8 @@ func TestEventsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			events, totalCount, err := EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
+			app := NewCoreDataApp(dic)
+			events, totalCount, err := app.EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
 			if testCase.errorExpected {
 				require.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -455,6 +467,7 @@ func TestDeleteEventsByAge(t *testing.T) {
 		},
 	})
 
-	err := DeleteEventsByAge(0, dic)
+	app := NewCoreDataApp(dic)
+	err := app.DeleteEventsByAge(0, dic)
 	require.NoError(t, err)
 }

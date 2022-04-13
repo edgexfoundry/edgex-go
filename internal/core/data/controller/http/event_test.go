@@ -13,6 +13,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fxamacker/cbor/v2"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
@@ -25,11 +32,6 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
-	"github.com/fxamacker/cbor/v2"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var expectedEventId = uuid.New().String()
@@ -96,6 +98,7 @@ func TestAddEvent(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
@@ -106,6 +109,9 @@ func TestAddEvent(t *testing.T) {
 		},
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -302,6 +308,7 @@ func TestAddEventSize(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
 			dic := mocks.NewMockDIC()
+			app := application.NewCoreDataApp(dic)
 			dic.Update(di.ServiceConstructorMap{
 				container.ConfigurationName: func(get di.Get) interface{} {
 					return &config.ConfigurationStruct{
@@ -313,6 +320,9 @@ func TestAddEventSize(t *testing.T) {
 				},
 				container.DBClientInterfaceName: func(get di.Get) interface{} {
 					return dbClientMock
+				},
+				application.CoreDataAppName: func(get di.Get) interface{} {
+					return app
 				},
 			})
 			ec := NewEventController(dic)
@@ -355,9 +365,13 @@ func TestEventById(t *testing.T) {
 	dbClientMock.On("EventById", validEventId).Return(persistedEvent, nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -418,9 +432,13 @@ func TestDeleteEventById(t *testing.T) {
 	dbClientMock.On("DeleteEventById", validEventId).Return(nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -469,9 +487,13 @@ func TestEventTotalCount(t *testing.T) {
 	dbClientMock.On("EventTotalCount").Return(expectedEventCount, nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -500,9 +522,13 @@ func TestEventCountByDeviceName(t *testing.T) {
 	dbClientMock.On("EventCountByDeviceName", deviceName).Return(expectedEventCount, nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -531,9 +557,13 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 	dbClientMock.On("DeleteEventsByDeviceName", deviceName).Return(nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -567,9 +597,13 @@ func TestAllEvents(t *testing.T) {
 	dbClientMock.On("AllEvents", 0, 20).Return(events, nil)
 	dbClientMock.On("AllEvents", 1, 1).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("AllEvents", 4, 1).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	controller := NewEventController(dic)
@@ -652,9 +686,13 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	dbClientMock.On("EventsByDeviceName", 0, 5, testDeviceB).Return([]models.Event{events[2]}, nil)
 	dbClientMock.On("EventsByDeviceName", 1, 1, testDeviceA).Return([]models.Event{events[1]}, nil)
 	dbClientMock.On("EventsByDeviceName", 4, 1, testDeviceB).Return([]models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -721,9 +759,13 @@ func TestAllEventsByTimeRange(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventCountByTimeRange", 0, 100).Return(totalCount, nil)
 	dbClientMock.On("EventsByTimeRange", 0, 100, 0, 10).Return([]models.Event{}, nil)
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)
@@ -792,9 +834,13 @@ func TestDeleteEventsByAge(t *testing.T) {
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteEventsByAge", int64(0)).Return(nil)
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	ec := NewEventController(dic)

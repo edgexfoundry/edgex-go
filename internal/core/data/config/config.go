@@ -33,6 +33,7 @@ type WritableInfo struct {
 	PersistData     bool
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
+	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -97,4 +98,9 @@ func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Datab
 // GetInsecureSecrets returns the service's InsecureSecrets.
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
 	return c.Writable.InsecureSecrets
+}
+
+// GetTelemetryInfo returns the service's Telemetry settings.
+func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
+	return &c.Writable.Telemetry
 }

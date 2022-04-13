@@ -67,43 +67,43 @@ tidy:
 	go mod tidy -compat=1.17
 
 cmd/core-metadata/core-metadata:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-metadata
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
 	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-data
 
 cmd/core-command/core-command:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/core-command
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/core-command
 
 cmd/support-notifications/support-notifications:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/support-notifications
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
 	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
 
 cmd/sys-mgmt-agent/sys-mgmt-agent:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
 cmd/support-scheduler/support-scheduler:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/security-proxy-setup/security-proxy-setup:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
+	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
 
 cmd/security-secretstore-setup/security-secretstore-setup:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
+	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
 
 cmd/security-file-token-provider/security-file-token-provider:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
+	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
 cmd/secrets-config/secrets-config:
-	$(GO) build $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
+	$(GOCGO) build $(CGOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
 
 cmd/security-bootstrapper/security-bootstrapper:
-	$(GO) build $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
+	$(GOCGO) build $(CGOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
 cmd/security-spiffe-token-provider/security-spiffe-token-provider:
-	$(GO) build $(GOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
+	$(GOCGO) build $(CGOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
 
 clean:
 	rm -f $(MICROSERVICES)

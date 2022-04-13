@@ -9,7 +9,14 @@ LogLevel = "INFO"
             [Writable.InsecureSecrets.DB.Secrets]
             username = ""
             password = ""
-
+  [Writable.Telemetry]
+  Interval = "30s"
+  PublishTopicPrefix  = "edgex/telemetry" # /<service-name>/<metric-name> will be added to this Publish Topic prefix
+    [Writable.Telemetry.Metrics] # All service's metric names must be present in this list.
+    EventsPersisted = false
+    ReadingsPersisted = false
+    [Writable.Telemetry.Tags] # Contains the service level tags to be attached to all the service's metrics
+#    Gateway="my-iot-gateway" # Tag must be added here or via Consul Env Override can only chnage existing value, not added new ones.
 [Service]
 HealthCheckInterval = "10s"
 Host = "localhost"
