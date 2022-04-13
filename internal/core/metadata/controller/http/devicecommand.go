@@ -78,3 +78,45 @@ func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(w http.Response
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
+
+func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(w http.ResponseWriter, r *http.Request) {
+	if r.Body != nil {
+		defer func() { _ = r.Body.Close() }()
+	}
+
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+	correlationId := correlation.FromContext(ctx)
+
+	var reqDTOs []requestDTO.UpdateDeviceCommandRequest
+	err := dc.reader.Read(r.Body, &reqDTOs)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	var updateResponses []interface{}
+	for _, dto := range reqDTOs {
+		var response interface{}
+		reqId := dto.RequestId
+		profileName := dto.ProfileName
+		err = application.PatchDeviceProfileDeviceCommand(profileName, dto.DeviceCommand, ctx, dc.dic)
+		if err != nil {
+			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				err.Message(),
+				err.Code())
+		} else {
+			response = commonDTO.NewBaseResponse(
+				reqId,
+				"",
+				http.StatusOK)
+		}
+		updateResponses = append(updateResponses, response)
+	}
+
+	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+}
