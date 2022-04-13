@@ -36,7 +36,7 @@ RUN make cmd/support-scheduler/support-scheduler
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache dumb-init
+RUN apk add --update --no-cache dumb-init zeromq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2021: Intel Corporation'

@@ -36,7 +36,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
-RUN apk update && apk --no-cache --update add dumb-init curl gcompat
+RUN apk update && apk --no-cache --update add dumb-init curl gcompat zeromq
 
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/security-spiffe-token-provider /

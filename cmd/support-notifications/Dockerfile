@@ -35,7 +35,7 @@ RUN make cmd/support-notifications/support-notifications
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache ca-certificates dumb-init
+RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Cavium, Copyright (c) 2021: Intel Corporation'

@@ -33,7 +33,7 @@ RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secret
 
 FROM alpine:3.14
 
-RUN apk add --update --no-cache curl dumb-init
+RUN apk add --update --no-cache curl dumb-init zeromq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'

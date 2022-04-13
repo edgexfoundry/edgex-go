@@ -37,7 +37,7 @@ FROM alpine:3.14
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2021 Intel Corporation'
 
-RUN apk add --update --no-cache dumb-init su-exec
+RUN apk add --update --no-cache dumb-init su-exec zeromq
 
 ENV SECURITY_INIT_DIR /edgex-init
 ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_DIR}/bootstrap-redis
