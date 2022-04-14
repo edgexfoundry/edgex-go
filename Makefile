@@ -8,8 +8,10 @@
 
 .PHONY: build clean unittest hadolint lint test docker run
 
-# change the following boolean flag to include or exclude the delayed start libs for builds
-INCLUDE_DELAYED_START_BUILD:="false"
+# change the following boolean flag to include or exclude the delayed start libs for builds for most of core services except support services
+INCLUDE_DELAYED_START_BUILD_CORE:="false"
+# change the following boolean flag to include or exclude the delayed start libs for builds for support services exculsively
+INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"
 
 GO=CGO_ENABLED=0 GO111MODULE=on go
 
@@ -65,10 +67,14 @@ GIT_SHA=$(shell git rev-parse HEAD)
 
 ARCH=$(shell uname -m)
 
-# DO NOT change the following flag, as it is automatically set based on the boolean switch INCLUDE_DELAYED_START_BUILD
+# DO NOT change the following flag, as it is automatically set based on the boolean switch INCLUDE_DELAYED_START_BUILD_CORE
 NON_DELAYED_START_GO_BUILD_TAG:=non_delayedstart
-ifeq ($(INCLUDE_DELAYED_START_BUILD),"true")
+ifeq ($(INCLUDE_DELAYED_START_BUILD_CORE),"true")
 	NON_DELAYED_START_GO_BUILD_TAG:=
+endif
+NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT:=
+ifeq ($(INCLUDE_DELAYED_START_BUILD_SUPPORT),"false")
+	NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT:=non_delayedstart
 endif
 
 NO_MESSAGEBUS_GO_BUILD_TAG:=no_messagebus
@@ -89,7 +95,7 @@ cmd/core-command/core-command:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/core-command
 
 cmd/support-notifications/support-notifications:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
@@ -98,7 +104,7 @@ cmd/sys-mgmt-agent/sys-mgmt-agent:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
 cmd/support-scheduler/support-scheduler:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/security-proxy-setup/security-proxy-setup:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG)" $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
