@@ -115,6 +115,15 @@ Follow the "Installation and Execution" steps above for obtaining and building t
 make docker 
 ```
 
+#### Delayed Start Go Builds For Developers
+
+Currently for EdgeX core services, the delayed start feature from the dependency go-mod-bootstrap / go-mod-secrets modules are excluded in go builds.
+If you want to **include** the delayed start feature in the builds, please change the [Makefile in this directory](Makefile). In particular, change the following boolean flag from `false` to `true` before the whole docker builds.
+
+```text
+INCLUDE_DELAYED_START_BUILD:="false"
+```
+
 #### Run 
 
 The **Compose Builder** tool has the `dev` option to generate and run EdgeX compose files using locally built images for above. See [Compose Builder README](https://github.com/edgexfoundry/edgex-compose/tree/main/compose-builder#readme) for more details.
