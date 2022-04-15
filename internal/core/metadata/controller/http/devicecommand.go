@@ -19,6 +19,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
+	"github.com/gorilla/mux"
 )
 
 type DeviceCommandController struct {
@@ -119,4 +120,24 @@ func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(w http.Respon
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+}
+
+func (dc *DeviceCommandController) DeleteDeviceCommandByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+
+	// URL parameters
+	vars := mux.Vars(r)
+	profileName := vars[common.Name]
+	commandName := vars[common.CommandName]
+
+	err := application.DeleteDeviceCommandByName(profileName, commandName, dc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.EncodeAndWriteResponse(response, w, lc)
 }

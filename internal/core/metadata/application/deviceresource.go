@@ -110,3 +110,56 @@ func PatchDeviceProfileResource(profileName string, dto dtos.UpdateDeviceResourc
 
 	return nil
 }
+
+func DeleteDeviceResourceByName(profileName string, resourceName string, dic *di.Container) errors.EdgeX {
+	if profileName == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "profile name is empty", nil)
+	}
+	if resourceName == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "resource name is empty", nil)
+	}
+
+	strictProfileChanges := container.ConfigurationFrom(dic.Get).Writable.ProfileChange.StrictDeviceProfileChanges
+	if strictProfileChanges {
+		return errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	// Check the associated Device existence
+	devices, err := dbClient.DevicesByProfileName(0, 1, profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	} else if len(devices) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to update the device profile when associated device exists", nil)
+	}
+
+	profile, err := dbClient.DeviceProfileByName(profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	index := -1
+	for i := range profile.DeviceResources {
+		if profile.DeviceResources[i].Name == resourceName {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device resource not found", nil)
+	}
+
+	profile.DeviceResources = append(profile.DeviceResources[:index], profile.DeviceResources[index+1:]...)
+	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
+	e := (&profileDTO).Validate()
+	if e != nil {
+		return errors.NewCommonEdgeXWrapper(e)
+	}
+
+	err = dbClient.UpdateDeviceProfile(profile)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}

@@ -40,19 +40,19 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerRoute, dc.DeviceProfilesByManufacturer).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileByManufacturerAndModelRoute, dc.DeviceProfilesByManufacturerAndModel).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileBasicInfoRoute, dc.PatchDeviceProfileBasicInfo).Methods(http.MethodPatch)
-	r.HandleFunc(common.ApiDeviceProfileResourceByNameRoute, dc.DeleteDeviceResourceByName).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiDeviceProfileDeviceCommandByNameRoute, dc.DeleteDeviceCommandByName).Methods(http.MethodDelete)
 
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)
 	r.HandleFunc(common.ApiDeviceResourceByProfileAndResourceRoute, dr.DeviceResourceByProfileNameAndResourceName).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiDeviceProfileResourceRoute, dr.AddDeviceProfileResource).Methods(http.MethodPost)
 	r.HandleFunc(common.ApiDeviceProfileResourceRoute, dr.PatchDeviceProfileResource).Methods(http.MethodPatch)
+	r.HandleFunc(common.ApiDeviceProfileResourceByNameRoute, dr.DeleteDeviceResourceByName).Methods(http.MethodDelete)
 
 	// Deivce Command
 	dcm := metadataController.NewDeviceCommandController(dic)
 	r.HandleFunc(common.ApiDeviceProfileDeviceCommandRoute, dcm.AddDeviceProfileDeviceCommand).Methods(http.MethodPost)
 	r.HandleFunc(common.ApiDeviceProfileDeviceCommandRoute, dcm.PatchDeviceProfileDeviceCommand).Methods(http.MethodPatch)
+	r.HandleFunc(common.ApiDeviceProfileDeviceCommandByNameRoute, dcm.DeleteDeviceCommandByName).Methods(http.MethodDelete)
 
 	// Device Service
 	ds := metadataController.NewDeviceServiceController(dic)
