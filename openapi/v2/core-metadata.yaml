@@ -2357,18 +2357,6 @@ paths:
               examples:
                 409DeleteExample:
                   $ref: '#/components/examples/409DeleteExample'
-        '423':
-          description: "profile deletion is not allowed when StrictDeviceProfileDeletes config is enabled"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2413,10 +2401,10 @@ paths:
                 items:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
-                    - $ref: '#/components/schemas/BaseWithIdResponse'
+                    - $ref: '#/components/schemas/BaseResponse'
               examples:
-                MultiPOSTStatusExample:
-                  $ref: '#/components/examples/MultiPOSTStatusExample'
+                MultiUpdateStatusExample:
+                  $ref: '#/components/examples/MultiUpdateStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
