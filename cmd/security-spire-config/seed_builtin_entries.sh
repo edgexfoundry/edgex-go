@@ -26,7 +26,7 @@ echo "SPIFFE_SERVER_SOCKET=${SPIFFE_SERVER_SOCKET}"
 echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
 # add pre-authorized services into spire server entry
-for service in security-spiffe-token-provider \
+for service in security-spiffe-token-provider notifications scheduler \
     device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
     device-virtual device-rfid-llrp device-coap device-gpio \
     app-service-http-export app-service-mqtt-export app-service-sample app-rfid-llrp-inventory \

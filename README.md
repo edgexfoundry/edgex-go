@@ -117,11 +117,17 @@ make docker
 
 #### Delayed Start Go Builds For Developers
 
-Currently for EdgeX core services, the delayed start feature from the dependency go-mod-bootstrap / go-mod-secrets modules are excluded in go builds.
-If you want to **include** the delayed start feature in the builds, please change the [Makefile in this directory](Makefile). In particular, change the following boolean flag from `false` to `true` before the whole docker builds.
+Currently for EdgeX core services except support services (support-notification and support-scheduler services), the delayed start feature from the dependency go-mod-bootstrap / go-mod-secrets modules are excluded in go builds by default.
+If you want to **include** the delayed start feature in the builds for these services, please change the [Makefile in this directory](Makefile). In particular, change the following boolean flag from `false` to `true` before the whole docker builds.
 
 ```text
-INCLUDE_DELAYED_START_BUILD:="false"
+INCLUDE_DELAYED_START_BUILD_CORE:="false"
+```
+
+For support services, the delayed start feature is included by default as the default behavior of them are not started right away in Snap. Similarly, you can change the default and **exclude** it by modifying the boolean flag from `true` to `false` in the Makefile:
+
+```text
+INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"
 ```
 
 #### Run 
