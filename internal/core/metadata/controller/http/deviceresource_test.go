@@ -347,3 +347,100 @@ func TestPatchDeviceProfileResource(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteDeviceResourceByName(t *testing.T) {
+	dpModel := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DevicesByProfileName", 0, 1, TestDeviceProfileName).Return([]models.Device{}, nil)
+	dbClientMock.On("DeviceProfileByName", TestDeviceProfileName).Return(dpModel, nil)
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
+
+	dbClientMock.On("DevicesByProfileName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("DeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceResourceController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		profileName        string
+		resourceName       string
+		expectedStatusCode int
+	}{
+		{"valid", TestDeviceProfileName, TestDeviceResourceName + "-dup", http.StatusOK},
+		{"invalid - empty profile name", "", TestDeviceResourceName, http.StatusBadRequest},
+		{"invalid - empty resource name", "", TestDeviceResourceName, http.StatusBadRequest},
+		{"invalid - profile is in use by other device", deviceExists, TestDeviceResourceName, http.StatusConflict},
+		{"invalid - profile not found", notFoundName, TestDeviceResourceName, http.StatusNotFound},
+		{"invalid - resource not found in profile", TestDeviceProfileName, notFoundName, http.StatusNotFound},
+		{"invalid - device resource is referenced by device command", TestDeviceProfileName, TestDeviceResourceName, http.StatusBadRequest},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName, common.ResourceName: testCase.resourceName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteDeviceResourceByName)
+			handler.ServeHTTP(recorder, req)
+
+			var res commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
+			if testCase.expectedStatusCode != http.StatusOK {
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			}
+		})
+	}
+
+}
+
+func TestDeleteDeviceResourceByName_StrictProfileChanges(t *testing.T) {
+	dic := mockDic()
+	configuration := container.ConfigurationFrom(dic.Get)
+	configuration.Writable.ProfileChange.StrictDeviceProfileChanges = true
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
+
+	controller := NewDeviceResourceController(dic)
+	require.NotNil(t, controller)
+
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName, common.ResourceName: TestDeviceResourceName})
+	require.NoError(t, err)
+
+	// Act
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(controller.DeleteDeviceResourceByName)
+	handler.ServeHTTP(recorder, req)
+
+	var res commonDTO.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusLocked, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusLocked, res.StatusCode, "BaseResponse status code not as expected")
+}

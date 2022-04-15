@@ -144,3 +144,23 @@ func (dc *DeviceResourceController) PatchDeviceProfileResource(w http.ResponseWr
 	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 
 }
+
+func (dc *DeviceResourceController) DeleteDeviceResourceByName(w http.ResponseWriter, r *http.Request) {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	ctx := r.Context()
+
+	// URL parameters
+	vars := mux.Vars(r)
+	profileName := vars[common.Name]
+	resourceName := vars[common.ResourceName]
+
+	err := application.DeleteDeviceResourceByName(profileName, resourceName, dc.dic)
+	if err != nil {
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	pkg.EncodeAndWriteResponse(response, w, lc)
+}

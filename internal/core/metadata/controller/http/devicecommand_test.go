@@ -8,11 +8,14 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/gorilla/mux"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
@@ -262,4 +265,101 @@ func TestPatchDeviceProfileDeviceCommand(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeleteDeviceCommandByName(t *testing.T) {
+	dpModel := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	notFoundName := "notFoundName"
+	deviceExists := "deviceExists"
+
+	dic := mockDic()
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DevicesByProfileName", 0, 1, TestDeviceProfileName).Return([]models.Device{}, nil)
+	dbClientMock.On("DeviceProfileByName", TestDeviceProfileName).Return(dpModel, nil)
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+
+	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
+
+	dbClientMock.On("DevicesByProfileName", 0, 1, notFoundName).Return([]models.Device{}, nil)
+	dbClientMock.On("DeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	controller := NewDeviceCommandController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		profileName        string
+		commandName        string
+		expectedStatusCode int
+	}{
+		{"valid", TestDeviceProfileName, TestDeviceCommandName, http.StatusOK},
+		{"invalid - empty profile name", "", TestDeviceCommandName, http.StatusBadRequest},
+		{"invalid - empty command name", TestDeviceProfileName, "", http.StatusBadRequest},
+		{"invalid - profile is in use by other device", deviceExists, TestDeviceCommandName, http.StatusConflict},
+		{"invalid - profile not found", notFoundName, TestDeviceCommandName, http.StatusNotFound},
+		{"invalid - command not found in profile", TestDeviceProfileName, notFoundName, http.StatusNotFound},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameRoute, http.NoBody)
+			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName, common.CommandName: testCase.commandName})
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.DeleteDeviceCommandByName)
+			handler.ServeHTTP(recorder, req)
+
+			var res commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+			assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
+			if testCase.expectedStatusCode != http.StatusOK {
+				assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+			}
+		})
+	}
+
+}
+
+func TestDeleteDeviceCommandByName_StrictProfileChanges(t *testing.T) {
+	dic := mockDic()
+	configuration := container.ConfigurationFrom(dic.Get)
+	configuration.Writable.ProfileChange.StrictDeviceProfileChanges = true
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+	})
+
+	controller := NewDeviceCommandController(dic)
+	require.NotNil(t, controller)
+
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameRoute, http.NoBody)
+	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName, common.CommandName: TestDeviceResourceName})
+	require.NoError(t, err)
+
+	// Act
+	recorder := httptest.NewRecorder()
+	handler := http.HandlerFunc(controller.DeleteDeviceCommandByName)
+	handler.ServeHTTP(recorder, req)
+
+	var res commonDTO.BaseResponse
+	err = json.Unmarshal(recorder.Body.Bytes(), &res)
+	require.NoError(t, err)
+
+	// Assert
+	assert.Equal(t, http.StatusLocked, recorder.Result().StatusCode, "HTTP status code not as expected")
+	assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+	assert.Equal(t, http.StatusLocked, res.StatusCode, "BaseResponse status code not as expected")
 }
