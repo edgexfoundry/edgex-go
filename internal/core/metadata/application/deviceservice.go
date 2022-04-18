@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -77,6 +78,10 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 		"DeviceService patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
+	// Don't invoke callback if only lastConnected field is updated
+	if dto.LastConnected != nil && utils.OnlyOneFieldUpdated("LastConnected", dto) {
+		return nil
+	}
 	go updateDeviceServiceCallback(ctx, dic, deviceService)
 	return nil
 }
