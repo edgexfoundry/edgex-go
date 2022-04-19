@@ -26,12 +26,15 @@ echo "SPIFFE_SERVER_SOCKET=${SPIFFE_SERVER_SOCKET}"
 echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
 # add pre-authorized services into spire server entry
-for service in security-spiffe-token-provider notifications scheduler \
+for dockerservice in security-spiffe-token-provider notifications scheduler \
     device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
     device-virtual device-rfid-llrp device-coap device-gpio \
     app-service-http-export app-service-mqtt-export app-service-sample app-rfid-llrp-inventory \
     app-service-external-mqtt-trigger; do
-    spire-server entry create -socketPath "${SPIFFE_SERVER_SOCKET}" -parentID "${local_agent_svid}" -dns "edgex-${service}" -spiffeID "${SPIFFE_EDGEX_SVID_BASE}/${service}" -selector "docker:label:com.docker.compose.service:${service}"
+    # Temporary workaround because service name in dockerfile is not consistent with service key.
+    # TAF scripts depend on legacy docker-compose service name. Fix in EdgeX 3.0.
+    service=`echo -n ${dockerservice} | sed -e 's/app-service-/app-/'` 
+    spire-server entry create -socketPath "${SPIFFE_SERVER_SOCKET}" -parentID "${local_agent_svid}" -dns "edgex-${service}" -spiffeID "${SPIFFE_EDGEX_SVID_BASE}/${service}" -selector "docker:label:com.docker.compose.service:${dockerservice}"
 done
 
 # Always exit successfully even if couldn't (re-)create server entries.
