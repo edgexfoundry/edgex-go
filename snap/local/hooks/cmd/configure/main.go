@@ -27,9 +27,10 @@ var cli *hooks.CtlCli = hooks.NewSnapCtl()
 func main() {
 	// no subcommand, as called by snapd
 	if len(os.Args) == 1 {
-		// configure everything
+		// process the EdgeX >=2.2 snap options
+		processAppOptions()
+		// configure everything else, incl. the legacy snap options
 		configure()
-		configureApps()
 		return
 	}
 

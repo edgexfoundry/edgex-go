@@ -26,7 +26,6 @@ import (
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
-	snaphookoptions "github.com/canonical/edgex-snap-hooks/v2/options"
 )
 
 const ( // iota is reset to 0
@@ -601,27 +600,4 @@ func configure() {
 			os.Exit(1)
 		}
 	}
-}
-
-func configureApps() {
-	hooks.Info("edgexfoundry:configure Processing apps.* and config.* configuration")
-	err := snaphookoptions.ProcessAppConfig(
-		"core-data",
-		"core-metadata",
-		"core-command",
-		"support-notifications",
-		"support-scheduler",
-		"app-service-configurable",
-		"device-virtual",
-		"security-secret-store",
-		"security-secretstore-setup",
-		"security-proxy-setup",
-		"security-bootstrapper",
-		"sys-mgmgt-agent")
-
-	if err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure could not process options: %v", err))
-		os.Exit(1)
-	}
-
 }

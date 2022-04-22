@@ -22,6 +22,7 @@ import (
 	"os"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
+	app_options "github.com/canonical/edgex-snap-hooks/v2/options"
 )
 
 func applyConfigOptions(service string) error {
@@ -60,8 +61,59 @@ func options() {
 
 	hooks.Info("edgexfoundry:configure-options: handling config options for a single service: " + *service)
 
+	// process the EdgeX >=2.2 snap options
+	err = app_options.ProcessAppCustomOptions(*service)
+	if err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:configure-options: could not process custom options: %v", err))
+		os.Exit(1)
+	}
+
+	// process the legacy snap options
 	if err := applyConfigOptions(*service); err != nil {
 		hooks.Error(fmt.Sprintf("edgexfoundry:configure-options: error handling config options for %s: %v", *service, err))
 		os.Exit(1)
+	}
+}
+
+func processAppOptions() {
+	err := app_options.ProcessAppConfig(
+		"core-data",
+		"core-metadata",
+		"core-command",
+		"support-notifications",
+		"support-scheduler",
+		"app-service-configurable",
+		"device-virtual",
+		"security-secret-store",
+		"security-secretstore-setup",
+		"security-proxy-setup",
+		"security-bootstrapper",
+		"sys-mgmgt-agent",
+	)
+	if err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:configure could not process config options: %v", err))
+		os.Exit(1)
+	}
+
+	// After installation, the configure hook initiates the deferred startup of services,
+	// 	processes snap options and exits. The actual services startup happens only
+	// 	after the configure hook exits.
+	//
+	// The following options should not be processed within the configure hook during
+	//	the initial installation (install-mode=defer-startup). They should be processed
+	//	only on follow-up calls to the configure hook (i.e. when snap set/unset is called)
+	installMode, err := hooks.NewSnapCtl().Config("install-mode") // this set in the install hook
+	if err != nil {
+		hooks.Error(fmt.Sprintf("edgexfoundry:configure failed to read 'install-mode': %s", err))
+		os.Exit(1)
+	}
+	if installMode != "defer-startup" {
+		err = app_options.ProcessAppCustomOptions(
+			"secrets-config", // also processed in security-proxy-post-setup.sh
+		)
+		if err != nil {
+			hooks.Error(fmt.Sprintf("edgexfoundry:configure: could not process custom options: %v", err))
+			os.Exit(1)
+		}
 	}
 }
