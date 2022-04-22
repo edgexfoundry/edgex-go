@@ -2357,6 +2357,18 @@ paths:
               examples:
                 409DeleteExample:
                   $ref: '#/components/examples/409DeleteExample'
+        '423':
+          description: "profile deletion is not allowed when StrictDeviceProfileDeletes config is enabled"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                423Example:
+                  $ref: '#/components/examples/423Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2726,18 +2738,6 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
-        '423':
-          description: "profile change is not allowed when StrictDeviceProfileDeletes config is enabled"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                423Example:
-                  $ref: '#/components/examples/423Example'
         '500':
           description: An unexpected error occurred on the server
           headers:
