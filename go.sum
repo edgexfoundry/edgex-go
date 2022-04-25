@@ -57,12 +57,11 @@ github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
 github.com/eclipse/paho.mqtt.golang v1.3.5 h1:sWtmgNxYM9P2sP+xEItMozsR3w0cqZFlqnNN1bdl41Y=
 github.com/eclipse/paho.mqtt.golang v1.3.5/go.mod h1:eTzb4gxwwyWpqBUHGQZ4ABAV7+Jgm1PklsYT/eo8Hcc=
-github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.14 h1:o2uXu/cM41AgwIimbth6Ho8n5ANJhY6FzCH7+njvATM=
-github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.14/go.mod h1:eolD76cvsIAUzn63YN7MGyeOWWMidsFKCJjIpo+DK14=
+github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.16 h1:e6/XBUP88TVPUpKW+CiHdi6WNQfJape1FQq2ygXTMb0=
+github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0-dev.16/go.mod h1:6Q+rUmzAizdpU3sqnzMzSHmX7Z69qN69xxl0up/mQQA=
 github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0-dev.3 h1:dTTExUFHza9eJmTABr8G4KOE8JKBMzZCVC3wARiwIg4=
 github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0-dev.3/go.mod h1:YP17JhMnXTitowXE13QJwFaKo0oc03iyoKLjWAYl4FE=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.1.0/go.mod h1:I6UhBPCREubcU0ouIGBdZlNG5Xx4NijUVN5rvEtD03k=
-github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.22/go.mod h1:jyfVSx7mI3u/o/oo10COxBRBvJ8O/9I3z2xAwPmNt/Q=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.26 h1:YebVI3gAJwFTMXKzB2erUonBC8eNrr+qLUGdtXFMjKs=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0-dev.26/go.mod h1:jyfVSx7mI3u/o/oo10COxBRBvJ8O/9I3z2xAwPmNt/Q=
 github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0-dev.12 h1:u4ndXe8j1xYR1+axSgcgbD2OGvx7Z9v9thv0KBZp2TI=
