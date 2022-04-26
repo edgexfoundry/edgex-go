@@ -102,7 +102,7 @@ func allIntervalActions(conn redis.Conn, offset, limit int) (intervalActions []m
 func intervalActionByName(conn redis.Conn, name string) (action models.IntervalAction, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, IntervalActionCollectionName, name, &action)
 	if edgeXerr != nil {
-		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return action, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query intervalAction by name %s", name), edgeXerr)
 	}
 	return
 }
@@ -135,7 +135,7 @@ func deleteIntervalActionByName(conn redis.Conn, name string) errors.EdgeX {
 func intervalActionById(conn redis.Conn, id string) (action models.IntervalAction, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, intervalActionStoredKey(id), &action)
 	if edgeXerr != nil {
-		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return action, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query intervalAction by id %s", id), edgeXerr)
 	}
 	return
 }

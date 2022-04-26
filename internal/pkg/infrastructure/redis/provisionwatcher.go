@@ -86,7 +86,7 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 func provisionWatcherById(conn redis.Conn, id string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
 	edgexErr = getObjectById(conn, provisionWatcherStoredKey(id), &provisionWatcher)
 	if edgexErr != nil {
-		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+		return provisionWatcher, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("fail to query provision watcher by id %s", id), edgexErr)
 	}
 
 	return
@@ -96,7 +96,7 @@ func provisionWatcherById(conn redis.Conn, id string) (provisionWatcher models.P
 func provisionWatcherByName(conn redis.Conn, name string) (provisionWatcher models.ProvisionWatcher, edgexErr errors.EdgeX) {
 	edgexErr = getObjectByHash(conn, ProvisionWatcherCollectionName, name, &provisionWatcher)
 	if edgexErr != nil {
-		return provisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+		return provisionWatcher, errors.NewCommonEdgeX(errors.Kind(edgexErr), fmt.Sprintf("fail to query provision watcher by name %s", name), edgexErr)
 	}
 
 	return

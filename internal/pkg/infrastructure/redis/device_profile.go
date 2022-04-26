@@ -109,7 +109,7 @@ func addDeviceProfile(conn redis.Conn, dp models.DeviceProfile) (models.DevicePr
 func deviceProfileById(conn redis.Conn, id string) (deviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, deviceProfileStoredKey(id), &deviceProfile)
 	if edgeXerr != nil {
-		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceProfile, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device profile by id %s", id), edgeXerr)
 	}
 	return
 }
@@ -118,7 +118,7 @@ func deviceProfileById(conn redis.Conn, id string) (deviceProfile models.DeviceP
 func deviceProfileByName(conn redis.Conn, name string) (deviceProfile models.DeviceProfile, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, DeviceProfileCollectionName, name, &deviceProfile)
 	if edgeXerr != nil {
-		return deviceProfile, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceProfile, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device profile by name %s", name), edgeXerr)
 	}
 	return
 }
