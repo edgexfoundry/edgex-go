@@ -103,7 +103,7 @@ func addDeviceService(conn redis.Conn, ds models.DeviceService) (addedDeviceServ
 func deviceServiceById(conn redis.Conn, id string) (deviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, deviceServiceStoredKey(id), &deviceService)
 	if edgeXerr != nil {
-		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceService, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device service by id %s", id), edgeXerr)
 	}
 	return
 }
@@ -112,7 +112,7 @@ func deviceServiceById(conn redis.Conn, id string) (deviceService models.DeviceS
 func deviceServiceByName(conn redis.Conn, name string) (deviceService models.DeviceService, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, DeviceServiceCollectionName, name, &deviceService)
 	if edgeXerr != nil {
-		return deviceService, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceService, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query device service by name %s", name), edgeXerr)
 	}
 	return
 }

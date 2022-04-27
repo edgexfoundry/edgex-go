@@ -80,7 +80,7 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 func intervalByName(conn redis.Conn, name string) (interval models.Interval, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectByHash(conn, IntervalCollectionName, name, &interval)
 	if edgeXerr != nil {
-		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return interval, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query interval by name %s", name), edgeXerr)
 	}
 	return
 }
@@ -89,7 +89,7 @@ func intervalByName(conn redis.Conn, name string) (interval models.Interval, edg
 func intervalById(conn redis.Conn, id string) (interval models.Interval, edgeXerr errors.EdgeX) {
 	edgeXerr = getObjectById(conn, intervalStoredKey(id), &interval)
 	if edgeXerr != nil {
-		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return interval, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query interval by id %s", id), edgeXerr)
 	}
 	return
 }

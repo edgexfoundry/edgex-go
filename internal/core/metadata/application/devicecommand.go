@@ -18,9 +18,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
-// The AdddDeviceProfileDeviceCommand function accepts the device profile name and device command model from the controller functions
+// The AddDeviceProfileDeviceCommand function accepts the device profile name and device command model from the controller functions
 // and invokes updateDeviceProfile function in the infrastructure layer
-func AdddDeviceProfileDeviceCommand(profileName string, deviceCommand models.DeviceCommand, ctx context.Context, dic *di.Container) errors.EdgeX {
+func AddDeviceProfileDeviceCommand(profileName string, deviceCommand models.DeviceCommand, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 

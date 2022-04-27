@@ -58,7 +58,7 @@ func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(w http.Response
 		reqId := dto.RequestId
 		profileName := dto.ProfileName
 		deviceCommand := dtos.ToDeviceCommandModel(dto.DeviceCommand)
-		err = application.AdddDeviceProfileDeviceCommand(profileName, deviceCommand, ctx, dc.dic)
+		err = application.AddDeviceProfileDeviceCommand(profileName, deviceCommand, ctx, dc.dic)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)

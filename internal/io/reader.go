@@ -42,7 +42,7 @@ func NewJsonDtoReader() DtoReader {
 func (jsonDtoReader) Read(reader io.Reader, v interface{}) errors.EdgeX {
 	err := json.NewDecoder(reader).Decode(v)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("%T json decoding failed", v), err)
+		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	return nil

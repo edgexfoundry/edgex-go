@@ -57,7 +57,7 @@ func (c *Client) EventById(id string) (event model.Event, edgeXerr errors.EdgeX)
 
 	event, edgeXerr = eventById(conn, id)
 	if edgeXerr != nil {
-		return event, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return event, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query event by id %s", id), edgeXerr)
 	}
 
 	return
