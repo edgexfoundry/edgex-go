@@ -844,8 +844,7 @@ parts:
   kuiper:
     plugin: nil
     stage-snaps:
-      # TODO: switch to 1/stable before the edgex 2.2 release
-      - edgex-ekuiper/1/beta
+      - edgex-ekuiper/1/stable
     organize: 
       bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
 
