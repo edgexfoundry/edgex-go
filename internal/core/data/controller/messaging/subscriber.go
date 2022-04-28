@@ -64,7 +64,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 				event := &requests.AddEventRequest{}
 				// decoding the large payload may cause memory issues so checking before decoding
 				maxEventSize := dataContainer.ConfigurationFrom(dic.Get).MaxEventSize
-				edgeXerr := utils.CheckPayloadSize(msgEnvelope.Payload, maxEventSize*1000)
+				edgeXerr := utils.CheckPayloadSize(msgEnvelope.Payload, maxEventSize*1024)
 				if edgeXerr != nil {
 					lc.Errorf("event size exceed MaxEventSize(%d KB)", maxEventSize)
 					break

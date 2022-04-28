@@ -79,7 +79,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	var addEventReqDTO requestDTO.AddEventRequest
 	var err errors.EdgeX
 
-	if config.MaxEventSize > 0 && r.ContentLength > config.MaxEventSize*1000 {
+	if config.MaxEventSize > 0 && r.ContentLength > config.MaxEventSize*1024 {
 		err = errors.NewCommonEdgeX(errors.KindLimitExceeded, fmt.Sprintf("request size exceed %d KB", config.MaxEventSize), nil)
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return
@@ -89,7 +89,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if readErr != nil {
 		err = errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", nil)
 	} else if r.ContentLength == -1 { // only check the payload byte array size when the Content-Length of Request is unknown
-		err = utils.CheckPayloadSize(dataBytes, config.MaxEventSize*1000)
+		err = utils.CheckPayloadSize(dataBytes, config.MaxEventSize*1024)
 	}
 
 	if err == nil {
