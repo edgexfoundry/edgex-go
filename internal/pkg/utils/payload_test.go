@@ -10,7 +10,7 @@ import (
 
 func TestCheckPayloadSize(t *testing.T) {
 	smallpayload := make([]byte, 10)
-	largePayload := make([]byte, 25000000)
+	largePayload := make([]byte, 25000*1024)
 	tests := []struct {
 		name            string
 		payload         []byte
