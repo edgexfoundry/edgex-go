@@ -847,6 +847,12 @@ parts:
       - edgex-ekuiper/1/stable
     organize: 
       bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
+    stage:
+      # Exclude redundant curl files
+      - -usr/bin/curl
+      - -usr/lib/*/libcurl*
+      - -usr/share/doc/libcurl*
+      - -usr/share/doc/curl
 
   metadata:
     plugin: nil
