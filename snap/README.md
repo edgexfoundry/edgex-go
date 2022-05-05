@@ -1,38 +1,11 @@
-# EdgeX Foundry Core Snap
-[![snap store badge](https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-black-uneditable.png)](https://snapcraft.io/edgexfoundry)
+# EdgeX Platform Snap
+[![edgexfoundry](https://snapcraft.io/edgexfoundry/badge.svg)][edgexfoundry]
 
+This directory contains the snap packaging of the EdgeX platform snap containing all reference core services along with several other security, supporting, application, and device services.
 
-  * [Overview](#overview)
-  * [Installation](#installation)
-    + [Installing snapd](#installing-snapd)
-    + [Installing EdgeX Foundry as a snap](#installing-edgex-foundry-as-a-snap)
-  * [Using the EdgeX snap](#using-the-edgex-snap)
-    + [Configuring individual services](#configuring-individual-services)
-    + [Viewing logs](#viewing-logs)
-    + [Configuration overrides](#configuration-overrides)
-    + [Security services](#security-services)
-      - [Secret Store](#secret-store)
-      - [API Gateway](#api-gateway)
-        * [API Gateway user setup](#api-gateway-user-setup)
-          + [JWT tokens](#jwt-tokens) 
-        * [API Gateway TLS certificate setup](#api-gateway-tls-certificate-setup)
-  * [Limitations](#limitations)
-  * [Service environment configuration overrides](#service-environment-configuration-overrides)
-    + [API Gateway settings](#api-gateway-settings-prefix-envsecurity-proxy)
-    + [Secret Store settings](#secret-store-settings-prefix-envsecurity-secret-store)
-    + [Support Notifications settings](#support-notifications-settings-prefix-envsupport-notifications)
-  * [Building](#building)
-    + [Installing snapcraft](#installing-snapcraft)
-      - [Running snapcraft on MacOS](#running-snapcraft-on-macos)
-      - [Running snapcraft on Windows](#running-snapcraft-on-windows)
-    + [Building with Multipass](#building-with-multipass)
-    + [Building with LXD containers](#building-with-lxd-containers)
-    + [Building inside external container/VM using native snapcraft](#building-inside-external-containervm-using-native-snapcraft)
-      - [LXD](#lxd)
-      - [Docker](#docker)
-      - [Multipass / Generic VM](#multipass--generic-vm)
-    + [Developing the snap](#developing-the-snap)
-      - [Interfaces](#interfaces)
+The platform snap is built automatically and published on the Snap Store as [edgexfoundry].
+
+For usage instructions, please refer to App Service Configurable section in [Getting Started using Snaps][docs].
 
 ## Overview
 
@@ -664,4 +637,9 @@ Here is an example:
 sudo snap connect edgexfoundry:edgex-secretstore-token <your-snap>:<slot>
 ```
 
-For more details about the snap interface, please refer [here](https://snapcraft.io/docs/interface-management).
+Please refer [here][secret-store-token] for further information.
+
+
+[edgexfoundry]: https://snapcraft.io/edgexfoundry
+[docs]: https://docs.edgexfoundry.org/2.2/getting-started/Ch-GettingStartedSnapUsers/#platform-snap
+[secret-store-token]: https://docs.edgexfoundry.org/2.2/getting-started/Ch-GettingStartedSnapUsers/#secret-store-token
