@@ -5,7 +5,7 @@ This directory contains the snap packaging of the EdgeX platform snap containing
 
 The platform snap is built automatically and published on the Snap Store as [edgexfoundry].
 
-For usage instructions, please refer to App Service Configurable section in [Getting Started using Snaps][docs].
+For usage instructions, please refer to Platform Snap section in [Getting Started using Snaps][docs].
 
 ## Limitations
 
