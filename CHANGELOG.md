@@ -15,7 +15,6 @@
 ## [v2.2.0] Kamakura - 2022-5-11 (Only compatible with the 2.x release)
 
 ### Features ✨
-
 - **all:** Make support services include spiffe in buildtime from Makefile ([#3969](https://github.com/edgexfoundry/edgex-go/issues/3969)) ([#efde56b5](https://github.com/edgexfoundry/edgex-go/commits/efde56b5))
 - **all:** Location of client service obtained from the registry ([#3879](https://github.com/edgexfoundry/edgex-go/issues/3879)) ([#2ec8c03a](https://github.com/edgexfoundry/edgex-go/commits/2ec8c03a))
 - **all:** Implement service metrics for Events and Readings persisted ([#3922](https://github.com/edgexfoundry/edgex-go/issues/3922)) ([#e06225a2](https://github.com/edgexfoundry/edgex-go/commits/e06225a2))
@@ -53,7 +52,41 @@
 - **snap:** Deploy secrets token into separate mount points ([#3826](https://github.com/edgexfoundry/edgex-go/issues/3826)) ([#b0e5e643](https://github.com/edgexfoundry/edgex-go/commits/b0e5e643))
 
 ### Code Refactoring ♻
+- Rename Encode func to better name ([#3822](https://github.com/edgexfoundry/edgex-go/issues/3822)) ([#b2bbeb2b](https://github.com/edgexfoundry/edgex-go/commits/b2bbeb2b))
 - **all:** Use formatted alternative log function instead of fmt.Sprintf ([#46183a66](https://github.com/edgexfoundry/edgex-go/commits/46183a66))
+- **data:** Move subscriber.go from application to controller ([#3903](https://github.com/edgexfoundry/edgex-go/issues/3903)) ([#55644671](https://github.com/edgexfoundry/edgex-go/commits/55644671))
+- **metadata:** Move DeleteDeviceResourceByName and DeleteDeviceCommandByName to correct files ([#80f156bd](https://github.com/edgexfoundry/edgex-go/commits/80f156bd))
+
+### Documentation 📖
+- Add 503 response code to core-command API document ([#3839](https://github.com/edgexfoundry/edgex-go/issues/3839)) ([#f0bf1273](https://github.com/edgexfoundry/edgex-go/commits/f0bf1273))
+- Update core-metadata API doc PATCH/PUT examples ([#0cef4b84](https://github.com/edgexfoundry/edgex-go/commits/0cef4b84))
+- Update ([#c6553be1](https://github.com/edgexfoundry/edgex-go/commits/c6553be1))
+- Update issue templates to indicate required sections ([#95e17dcf](https://github.com/edgexfoundry/edgex-go/commits/95e17dcf))
+- Add path field to support-scheduler intervalAction API example ([#8b40f194](https://github.com/edgexfoundry/edgex-go/commits/8b40f194))
+- **all:** Upgrade the API Docs version to 2.2.0 ([#3857](https://github.com/edgexfoundry/edgex-go/issues/3857)) ([#1e28c249](https://github.com/edgexfoundry/edgex-go/commits/1e28c249))
+- **metadata:** Update metadata swagger API docs for device profile changes ([#a6fe8a26](https://github.com/edgexfoundry/edgex-go/commits/a6fe8a26))
+- **metadata:** Fix Swagger metadata PATCH deviceprofile/resource response ([#a6024f17](https://github.com/edgexfoundry/edgex-go/commits/a6024f17))
+- **metadata:** Update metadata Swagger PATCH API responses ([#380509e6](https://github.com/edgexfoundry/edgex-go/commits/380509e6))
+- **snap:** Update env config overrides description ([#35f1a85d](https://github.com/edgexfoundry/edgex-go/commits/35f1a85d))
+- **snap:** Update env configuration overrides ([#50ed3c20](https://github.com/edgexfoundry/edgex-go/commits/50ed3c20))
+- **snap:** Revert to `csv` in snap/README.md ([#023217a9](https://github.com/edgexfoundry/edgex-go/commits/023217a9))
+
+### Build 👷
+- Update to latest go-mod-messaging w/o ZMQ on windows ([#3833](https://github.com/edgexfoundry/edgex-go/issues/3833)) ([#240e6fd7](https://github.com/edgexfoundry/edgex-go/commits/240e6fd7))
+    ```
+    BREAKING CHANGE:
+    ZeroMQ no longer supported on native Windows for EdgeX
+    MessageBus
+    ```
+- Update to latest go-mod-messaging with ZMQ fix ([#3876](https://github.com/edgexfoundry/edgex-go/issues/3876)) ([#6e64952c](https://github.com/edgexfoundry/edgex-go/commits/6e64952c))
+- Updated formating from gofmt 1.17 ([#3861](https://github.com/edgexfoundry/edgex-go/issues/3861)) ([#76a2231e](https://github.com/edgexfoundry/edgex-go/commits/76a2231e))
+- **snap:** Upgrade kuiper to 1.4.2 ([#3867](https://github.com/edgexfoundry/edgex-go/issues/3867)) ([#85bf44e2](https://github.com/edgexfoundry/edgex-go/commits/85bf44e2))
+- **snap:** Upgrade to device-virtual v2.2.0-dev.7 and app-service-configurable latest/beta ([#3914](https://github.com/edgexfoundry/edgex-go/issues/3914)) ([#7794663b](https://github.com/edgexfoundry/edgex-go/commits/7794663b))
+- **snap:** Source metadata from central repo ([#3959](https://github.com/edgexfoundry/edgex-go/issues/3959)) ([#ad3b9b7a](https://github.com/edgexfoundry/edgex-go/commits/ad3b9b7a))
+- **snap:** Update edgexfoundry snap base to core20 ([#3848](https://github.com/edgexfoundry/edgex-go/issues/3848)) ([#2940d6a5](https://github.com/edgexfoundry/edgex-go/commits/2940d6a5))
+
+### Continuous Integration 🔄
+- Go 1.17 related changes ([#3864](https://github.com/edgexfoundry/edgex-go/issues/3864)) ([#da06b860](https://github.com/edgexfoundry/edgex-go/commits/da06b860))
 
 ## [v2.1.0] Jakarta - 2021-11-17 (Only compatible with the 2.x release)
 
