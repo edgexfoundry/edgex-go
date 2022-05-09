@@ -36,6 +36,7 @@
 - **security:** Use conditional go build tags for delayed start and no_messagebus ([#3967](https://github.com/edgexfoundry/edgex-go/issues/3967)) ([#0af16247](https://github.com/edgexfoundry/edgex-go/commits/0af16247))
 - **snap:** Add secretstore tokens for edgex-ekuiper ([#3888](https://github.com/edgexfoundry/edgex-go/issues/3888)) ([#d0bb8bce](https://github.com/edgexfoundry/edgex-go/commits/d0bb8bce))
 - **snap:** Add additional tokens for app-service-configurable profiles ([#3825](https://github.com/edgexfoundry/edgex-go/issues/3825)) ([#23881e65](https://github.com/edgexfoundry/edgex-go/commits/23881e65))
+- **snap:** Add support for environment variable injection ([#3986](https://github.com/edgexfoundry/edgex-go/issues/3986)) ([#780750f1](https://github.com/edgexfoundry/edgex-go/commits/780750f1))
 
 ### Bug Fixes 🐛
 - **all:** Correct jwt error when reading private key ([#3843](https://github.com/edgexfoundry/edgex-go/issues/3843)) ([#1876cd19](https://github.com/edgexfoundry/edgex-go/commits/1876cd19))
@@ -67,6 +68,7 @@
 - **metadata:** Update metadata swagger API docs for device profile changes ([#a6fe8a26](https://github.com/edgexfoundry/edgex-go/commits/a6fe8a26))
 - **metadata:** Fix Swagger metadata PATCH deviceprofile/resource response ([#a6024f17](https://github.com/edgexfoundry/edgex-go/commits/a6024f17))
 - **metadata:** Update metadata Swagger PATCH API responses ([#380509e6](https://github.com/edgexfoundry/edgex-go/commits/380509e6))
+- **snap:** Move usage instructions to docs ([#4006](https://github.com/edgexfoundry/edgex-go/issues/4006)) ([#75ae4c63](https://github.com/edgexfoundry/edgex-go/commits/75ae4c63))
 - **snap:** Update env config overrides description ([#35f1a85d](https://github.com/edgexfoundry/edgex-go/commits/35f1a85d))
 - **snap:** Update env configuration overrides ([#50ed3c20](https://github.com/edgexfoundry/edgex-go/commits/50ed3c20))
 - **snap:** Revert to `csv` in snap/README.md ([#023217a9](https://github.com/edgexfoundry/edgex-go/commits/023217a9))
@@ -135,14 +137,23 @@
 - **security:** secrets-config user connect using TLS ([#3698](https://github.com/edgexfoundry/edgex-go/issues/3698)) ([#258ae4e0](https://github.com/edgexfoundry/edgex-go/commits/258ae4e0))
 - **security:** remove unused curl executable from secretstore-setup Dockerfile - curl command executable is not used, so it is removed from the Docker file of service secretstore-setup ([#49239b82](https://github.com/edgexfoundry/edgex-go/commits/49239b82))
 - **security:** Mismatched types int and int32 ([#3655](https://github.com/edgexfoundry/edgex-go/issues/3655)) ([#dbae55fc](https://github.com/edgexfoundry/edgex-go/commits/dbae55fc))
-- **snap:** fix app-rules-engine ([#651aaa83](https://github.com/edgexfoundry/edgex-go/commits/651aaa83))
-- **snap:** configure kuiper's REST service port ([#3770](https://github.com/edgexfoundry/edgex-go/issues/3770)) ([#a2b69b26](https://github.com/edgexfoundry/edgex-go/commits/a2b69b26))
-- **snap:** add kuiper message-bus config ([#602d7f53](https://github.com/edgexfoundry/edgex-go/commits/602d7f53))
+- **snap:** Update edgex-snap-hooks to v2.0.5 ([#6106f566](https://github.com/edgexfoundry/edgex-go/commits/6106f566))
+- **snap:** Configure kuiper's REST service port ([#3770](https://github.com/edgexfoundry/edgex-go/issues/3770)) ([#a2b69b26](https://github.com/edgexfoundry/edgex-go/commits/a2b69b26))
+- **snap:** Make secretstore connect hook idempotent ([#3815](https://github.com/edgexfoundry/edgex-go/issues/3815)) ([#387e8ab1](https://github.com/edgexfoundry/edgex-go/commits/387e8ab1))
+- **snap:** Fix app-rules-engine ([#651aaa83](https://github.com/edgexfoundry/edgex-go/commits/651aaa83))
+- **snap:** Add kuiper message-bus config ([#602d7f53](https://github.com/edgexfoundry/edgex-go/commits/602d7f53))
+- **snap:** Remove config logic from install hook ([#af5ffab8](https://github.com/edgexfoundry/edgex-go/commits/af5ffab8))
+- **snap:** Defer service start on install ([#0e26993c](https://github.com/edgexfoundry/edgex-go/commits/0e26993c))
+- **snap:** Create empty redis.conf file ([#793f35af](https://github.com/edgexfoundry/edgex-go/commits/793f35af))
+- **snap:** Support app/dev services w/secretstore=off ([#e36a01fe](https://github.com/edgexfoundry/edgex-go/commits/e36a01fe))
+- **snap:** Support non-secure consul ([#9375f9f3](https://github.com/edgexfoundry/edgex-go/commits/9375f9f3))
+- **snap:** Support disabling security ([#6f85a457](https://github.com/edgexfoundry/edgex-go/commits/6f85a457))
 
 ### Code Refactoring ♻
 - **all:** Clean up TOML quotes ([#3666](https://github.com/edgexfoundry/edgex-go/issues/3666)) ([#729eb473](https://github.com/edgexfoundry/edgex-go/commits/729eb473))
 - **all:** Refactor io.Reader for reusing ([#3627](https://github.com/edgexfoundry/edgex-go/issues/3627)) ([#7434bcad](https://github.com/edgexfoundry/edgex-go/commits/7434bcad))
 - **all:** Remove unused Redis client variables ([#905a639d](https://github.com/edgexfoundry/edgex-go/commits/905a639d))
+- **snap:** Convert store lists into slice in install hook ([#e09eec38](https://github.com/edgexfoundry/edgex-go/commits/e09eec38))
 
 ## [v2.0.0] Ireland - 2021-06-30  (Not Compatible with 1.x releases)
 
