@@ -84,11 +84,10 @@ func processAppOptions() {
 		"support-scheduler",
 		"app-service-configurable",
 		"device-virtual",
-		"security-secret-store",
 		"security-secretstore-setup",
+		"security-bootstrapper", // local executable
 		"security-proxy-setup",
-		"security-bootstrapper",
-		"sys-mgmgt-agent",
+		"sys-mgmt-agent",
 	)
 	if err != nil {
 		hooks.Error(fmt.Sprintf("edgexfoundry:configure could not process config options: %v", err))
