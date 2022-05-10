@@ -12,6 +12,84 @@
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
 
+## [v2.2.0] Kamakura - 2022-5-11 (Only compatible with the 2.x release)
+
+### Features ✨
+- **all:** Make support services include spiffe in buildtime from Makefile ([#3969](https://github.com/edgexfoundry/edgex-go/issues/3969)) ([#efde56b5](https://github.com/edgexfoundry/edgex-go/commits/efde56b5))
+- **all:** Location of client service obtained from the registry ([#3879](https://github.com/edgexfoundry/edgex-go/issues/3879)) ([#2ec8c03a](https://github.com/edgexfoundry/edgex-go/commits/2ec8c03a))
+- **all:** Implement service metrics for Events and Readings persisted ([#3922](https://github.com/edgexfoundry/edgex-go/issues/3922)) ([#e06225a2](https://github.com/edgexfoundry/edgex-go/commits/e06225a2))
+- **all:** Create Common DTOs with ServiceName ([#3870](https://github.com/edgexfoundry/edgex-go/issues/3870)) ([#d6b89ac6](https://github.com/edgexfoundry/edgex-go/commits/d6b89ac6))
+- **data:** Make MaxEventSize a service configuration setting ([#3891](https://github.com/edgexfoundry/edgex-go/issues/3891)) ([#de3e46c9](https://github.com/edgexfoundry/edgex-go/commits/de3e46c9))
+- **metadata:** Implement Writable.ProfileChange configurations ([#a20eafb3](https://github.com/edgexfoundry/edgex-go/commits/a20eafb3))
+- **metadata:** Implement PATCH deviceprofile/resource API ([#a40e21f6](https://github.com/edgexfoundry/edgex-go/commits/a40e21f6))
+- **metadata:** Implement DELETE device command API ([#ac0e4352](https://github.com/edgexfoundry/edgex-go/commits/ac0e4352))
+- **metadata:** Implement DELETE device resource API ([#691b12bf](https://github.com/edgexfoundry/edgex-go/commits/691b12bf))
+- **metadata:** Implement PATCH /deviceprofile/deviceCommand API ([#0fa976f9](https://github.com/edgexfoundry/edgex-go/commits/0fa976f9))
+- **metadata:** Invoke validation before adding/updating device ([#3900](https://github.com/edgexfoundry/edgex-go/issues/3900)) ([#b3afc0ae](https://github.com/edgexfoundry/edgex-go/commits/b3afc0ae))
+- **metadata:** Implement Post device command API ([#dcb0ece3](https://github.com/edgexfoundry/edgex-go/commits/dcb0ece3))
+- **metadata:** Implement PATCH device profile basic info API ([#243ad5ab](https://github.com/edgexfoundry/edgex-go/commits/243ad5ab))
+- **metadata:** Implement POST device resource ([#3930](https://github.com/edgexfoundry/edgex-go/issues/3930)) ([#7587fe9d](https://github.com/edgexfoundry/edgex-go/commits/7587fe9d))
+- **security:** Add secret store config for delayed start ([#3948](https://github.com/edgexfoundry/edgex-go/issues/3948)) ([#6b188fc4](https://github.com/edgexfoundry/edgex-go/commits/6b188fc4))
+- **security:** Enable security-hardened go binaries for cgo flags ([#3893](https://github.com/edgexfoundry/edgex-go/issues/3893)) ([#7a573170](https://github.com/edgexfoundry/edgex-go/commits/7a573170))
+- **security:** Implement spiffe token provider services ([#3897](https://github.com/edgexfoundry/edgex-go/issues/3897)) ([#81bad761](https://github.com/edgexfoundry/edgex-go/commits/81bad761))
+- **security:** Update the pre-authorized service list for spire server config ([#3942](https://github.com/edgexfoundry/edgex-go/issues/3942)) ([#c716e684](https://github.com/edgexfoundry/edgex-go/commits/c716e684))
+- **security:** Use conditional go build tags for delayed start and no_messagebus ([#3967](https://github.com/edgexfoundry/edgex-go/issues/3967)) ([#0af16247](https://github.com/edgexfoundry/edgex-go/commits/0af16247))
+- **snap:** Add secretstore tokens for edgex-ekuiper ([#3888](https://github.com/edgexfoundry/edgex-go/issues/3888)) ([#d0bb8bce](https://github.com/edgexfoundry/edgex-go/commits/d0bb8bce))
+- **snap:** Add additional tokens for app-service-configurable profiles ([#3825](https://github.com/edgexfoundry/edgex-go/issues/3825)) ([#23881e65](https://github.com/edgexfoundry/edgex-go/commits/23881e65))
+- **snap:** Add support for environment variable injection ([#3986](https://github.com/edgexfoundry/edgex-go/issues/3986)) ([#780750f1](https://github.com/edgexfoundry/edgex-go/commits/780750f1))
+
+### Bug Fixes 🐛
+- **all:** Correct jwt error when reading private key ([#3843](https://github.com/edgexfoundry/edgex-go/issues/3843)) ([#1876cd19](https://github.com/edgexfoundry/edgex-go/commits/1876cd19))
+- **all:** return 416 code when count is zero and offset > count ([#2c16b7b0](https://github.com/edgexfoundry/edgex-go/commits/2c16b7b0))
+- **core-command:** Restore creation of DeviceServiceCommandClient in handler ([#89cc48a7](https://github.com/edgexfoundry/edgex-go/commits/89cc48a7))
+- **metadata:** Fix the typo of notification message ([#5146f317](https://github.com/edgexfoundry/edgex-go/commits/5146f317))
+- **metadata:** Not trigger DS callback if only lastConnected is updated ([#3976](https://github.com/edgexfoundry/edgex-go/issues/3976)) ([#7c172932](https://github.com/edgexfoundry/edgex-go/commits/7c172932))
+- **metadata:** Add 404 case for not-yet-upgraded device-service ([#79655804](https://github.com/edgexfoundry/edgex-go/commits/79655804))
+- **metadata:** Ignore validation result if device service unavailable ([#b9439831](https://github.com/edgexfoundry/edgex-go/commits/b9439831))
+- **security:** Security-proxy-setup will not terminate on success ([#3917](https://github.com/edgexfoundry/edgex-go/issues/3917)) ([#d0a5aad2](https://github.com/edgexfoundry/edgex-go/commits/d0a5aad2))
+- **security:** Fix for spiffe-config crashloop ([#3947](https://github.com/edgexfoundry/edgex-go/issues/3947)) ([#1a2a9fb2](https://github.com/edgexfoundry/edgex-go/commits/1a2a9fb2))
+- **sma:** Update Docker base image in sys mgmt agent Dockerfile ([#3847](https://github.com/edgexfoundry/edgex-go/issues/3847)) ([#9e663fa0](https://github.com/edgexfoundry/edgex-go/commits/9e663fa0))
+- **snap:** Apply proxy's runtime config options after startup ([#3856](https://github.com/edgexfoundry/edgex-go/issues/3856)) ([#3825f82a](https://github.com/edgexfoundry/edgex-go/commits/3825f82a))
+- **snap:** Deploy secrets token into separate mount points ([#3826](https://github.com/edgexfoundry/edgex-go/issues/3826)) ([#b0e5e643](https://github.com/edgexfoundry/edgex-go/commits/b0e5e643))
+
+### Code Refactoring ♻
+- Rename Encode func to better name ([#3822](https://github.com/edgexfoundry/edgex-go/issues/3822)) ([#b2bbeb2b](https://github.com/edgexfoundry/edgex-go/commits/b2bbeb2b))
+- **all:** Use formatted alternative log function instead of fmt.Sprintf ([#46183a66](https://github.com/edgexfoundry/edgex-go/commits/46183a66))
+- **data:** Move subscriber.go from application to controller ([#3903](https://github.com/edgexfoundry/edgex-go/issues/3903)) ([#55644671](https://github.com/edgexfoundry/edgex-go/commits/55644671))
+- **metadata:** Move DeleteDeviceResourceByName and DeleteDeviceCommandByName to correct files ([#80f156bd](https://github.com/edgexfoundry/edgex-go/commits/80f156bd))
+
+### Documentation 📖
+- Add 503 response code to core-command API document ([#3839](https://github.com/edgexfoundry/edgex-go/issues/3839)) ([#f0bf1273](https://github.com/edgexfoundry/edgex-go/commits/f0bf1273))
+- Update core-metadata API doc PATCH/PUT examples ([#0cef4b84](https://github.com/edgexfoundry/edgex-go/commits/0cef4b84))
+- Update ([#c6553be1](https://github.com/edgexfoundry/edgex-go/commits/c6553be1))
+- Update issue templates to indicate required sections ([#95e17dcf](https://github.com/edgexfoundry/edgex-go/commits/95e17dcf))
+- Add path field to support-scheduler intervalAction API example ([#8b40f194](https://github.com/edgexfoundry/edgex-go/commits/8b40f194))
+- **all:** Upgrade the API Docs version to 2.2.0 ([#3857](https://github.com/edgexfoundry/edgex-go/issues/3857)) ([#1e28c249](https://github.com/edgexfoundry/edgex-go/commits/1e28c249))
+- **metadata:** Update metadata swagger API docs for device profile changes ([#a6fe8a26](https://github.com/edgexfoundry/edgex-go/commits/a6fe8a26))
+- **metadata:** Fix Swagger metadata PATCH deviceprofile/resource response ([#a6024f17](https://github.com/edgexfoundry/edgex-go/commits/a6024f17))
+- **metadata:** Update metadata Swagger PATCH API responses ([#380509e6](https://github.com/edgexfoundry/edgex-go/commits/380509e6))
+- **snap:** Move usage instructions to docs ([#4006](https://github.com/edgexfoundry/edgex-go/issues/4006)) ([#75ae4c63](https://github.com/edgexfoundry/edgex-go/commits/75ae4c63))
+- **snap:** Update env config overrides description ([#35f1a85d](https://github.com/edgexfoundry/edgex-go/commits/35f1a85d))
+- **snap:** Update env configuration overrides ([#50ed3c20](https://github.com/edgexfoundry/edgex-go/commits/50ed3c20))
+- **snap:** Revert to `csv` in snap/README.md ([#023217a9](https://github.com/edgexfoundry/edgex-go/commits/023217a9))
+
+### Build 👷
+- Update to latest go-mod-messaging w/o ZMQ on windows ([#3833](https://github.com/edgexfoundry/edgex-go/issues/3833)) ([#240e6fd7](https://github.com/edgexfoundry/edgex-go/commits/240e6fd7))
+    ```
+    BREAKING CHANGE:
+    ZeroMQ no longer supported on native Windows for EdgeX
+    MessageBus
+    ```
+- Update to latest go-mod-messaging with ZMQ fix ([#3876](https://github.com/edgexfoundry/edgex-go/issues/3876)) ([#6e64952c](https://github.com/edgexfoundry/edgex-go/commits/6e64952c))
+- Updated formating from gofmt 1.17 ([#3861](https://github.com/edgexfoundry/edgex-go/issues/3861)) ([#76a2231e](https://github.com/edgexfoundry/edgex-go/commits/76a2231e))
+- **snap:** Upgrade kuiper to 1.4.2 ([#3867](https://github.com/edgexfoundry/edgex-go/issues/3867)) ([#85bf44e2](https://github.com/edgexfoundry/edgex-go/commits/85bf44e2))
+- **snap:** Upgrade to device-virtual v2.2.0-dev.7 and app-service-configurable latest/beta ([#3914](https://github.com/edgexfoundry/edgex-go/issues/3914)) ([#7794663b](https://github.com/edgexfoundry/edgex-go/commits/7794663b))
+- **snap:** Source metadata from central repo ([#3959](https://github.com/edgexfoundry/edgex-go/issues/3959)) ([#ad3b9b7a](https://github.com/edgexfoundry/edgex-go/commits/ad3b9b7a))
+- **snap:** Update edgexfoundry snap base to core20 ([#3848](https://github.com/edgexfoundry/edgex-go/issues/3848)) ([#2940d6a5](https://github.com/edgexfoundry/edgex-go/commits/2940d6a5))
+
+### Continuous Integration 🔄
+- Go 1.17 related changes ([#3864](https://github.com/edgexfoundry/edgex-go/issues/3864)) ([#da06b860](https://github.com/edgexfoundry/edgex-go/commits/da06b860))
+
 ## [v2.1.0] Jakarta - 2021-11-17 (Only compatible with the 2.x release)
 
 ### Features ✨
@@ -59,14 +137,23 @@
 - **security:** secrets-config user connect using TLS ([#3698](https://github.com/edgexfoundry/edgex-go/issues/3698)) ([#258ae4e0](https://github.com/edgexfoundry/edgex-go/commits/258ae4e0))
 - **security:** remove unused curl executable from secretstore-setup Dockerfile - curl command executable is not used, so it is removed from the Docker file of service secretstore-setup ([#49239b82](https://github.com/edgexfoundry/edgex-go/commits/49239b82))
 - **security:** Mismatched types int and int32 ([#3655](https://github.com/edgexfoundry/edgex-go/issues/3655)) ([#dbae55fc](https://github.com/edgexfoundry/edgex-go/commits/dbae55fc))
-- **snap:** fix app-rules-engine ([#651aaa83](https://github.com/edgexfoundry/edgex-go/commits/651aaa83))
-- **snap:** configure kuiper's REST service port ([#3770](https://github.com/edgexfoundry/edgex-go/issues/3770)) ([#a2b69b26](https://github.com/edgexfoundry/edgex-go/commits/a2b69b26))
-- **snap:** add kuiper message-bus config ([#602d7f53](https://github.com/edgexfoundry/edgex-go/commits/602d7f53))
+- **snap:** Update edgex-snap-hooks to v2.0.5 ([#6106f566](https://github.com/edgexfoundry/edgex-go/commits/6106f566))
+- **snap:** Configure kuiper's REST service port ([#3770](https://github.com/edgexfoundry/edgex-go/issues/3770)) ([#a2b69b26](https://github.com/edgexfoundry/edgex-go/commits/a2b69b26))
+- **snap:** Make secretstore connect hook idempotent ([#3815](https://github.com/edgexfoundry/edgex-go/issues/3815)) ([#387e8ab1](https://github.com/edgexfoundry/edgex-go/commits/387e8ab1))
+- **snap:** Fix app-rules-engine ([#651aaa83](https://github.com/edgexfoundry/edgex-go/commits/651aaa83))
+- **snap:** Add kuiper message-bus config ([#602d7f53](https://github.com/edgexfoundry/edgex-go/commits/602d7f53))
+- **snap:** Remove config logic from install hook ([#af5ffab8](https://github.com/edgexfoundry/edgex-go/commits/af5ffab8))
+- **snap:** Defer service start on install ([#0e26993c](https://github.com/edgexfoundry/edgex-go/commits/0e26993c))
+- **snap:** Create empty redis.conf file ([#793f35af](https://github.com/edgexfoundry/edgex-go/commits/793f35af))
+- **snap:** Support app/dev services w/secretstore=off ([#e36a01fe](https://github.com/edgexfoundry/edgex-go/commits/e36a01fe))
+- **snap:** Support non-secure consul ([#9375f9f3](https://github.com/edgexfoundry/edgex-go/commits/9375f9f3))
+- **snap:** Support disabling security ([#6f85a457](https://github.com/edgexfoundry/edgex-go/commits/6f85a457))
 
 ### Code Refactoring ♻
 - **all:** Clean up TOML quotes ([#3666](https://github.com/edgexfoundry/edgex-go/issues/3666)) ([#729eb473](https://github.com/edgexfoundry/edgex-go/commits/729eb473))
 - **all:** Refactor io.Reader for reusing ([#3627](https://github.com/edgexfoundry/edgex-go/issues/3627)) ([#7434bcad](https://github.com/edgexfoundry/edgex-go/commits/7434bcad))
 - **all:** Remove unused Redis client variables ([#905a639d](https://github.com/edgexfoundry/edgex-go/commits/905a639d))
+- **snap:** Convert store lists into slice in install hook ([#e09eec38](https://github.com/edgexfoundry/edgex-go/commits/e09eec38))
 
 ## [v2.0.0] Ireland - 2021-06-30  (Not Compatible with 1.x releases)
 
