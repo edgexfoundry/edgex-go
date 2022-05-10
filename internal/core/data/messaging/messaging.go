@@ -22,11 +22,12 @@ import (
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapMessaging "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 )
 
 // BootstrapHandler fulfills the BootstrapHandler contract.  if enabled, tt creates and initializes the Messaging client
@@ -100,6 +101,9 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 				messageBusInfo.Port,
 				messageBusInfo.PublishTopicPrefix,
 				messageBusInfo.AuthMode)
+
+			// Make sure the MessageBus password is not leaked into the Service Config that can be retrieved via the /config endpoint
+			delete(messageBusInfo.Optional, bootstrapMessaging.OptionsPasswordKey)
 
 			return true
 		}
