@@ -793,7 +793,7 @@ parts:
     source-depth: 1
     # Set source-branch to tag so that depth of 1 is relative to that tag.
     # This is equivalent to "git clone --depth 1 --branch <tag> <url>"
-    source-branch: v2.2.0-dev.7
+    source-branch: v2.2.0
     plugin: make
     after: [go-build-helper]
     override-build: |
@@ -825,7 +825,7 @@ parts:
   app-service-configurable:
     plugin: nil
     stage-snaps:
-      - edgex-app-service-configurable/latest/beta
+      - edgex-app-service-configurable/latest/stable
     stage:
       # Exclude every profile other than the "rules-engine":
       - -res/external-mqtt-trigger/configuration.toml
