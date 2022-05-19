@@ -229,3 +229,7 @@ https://github.com/protocolbuffers/protobuf-go/blob/master/LICENSE
 
 gopkg.in/square/go-jose.v2 (Apache-2.0) https://github.com/square/go-jose/tree/v2.6.0
 https://github.com/square/go-jose/blob/v2.6.0/LICENSE
+
+github.com/Microsoft/go-winio (MIT) https://github.com/Microsoft/go-winio
+https://github.com/microsoft/go-winio/blob/master/LICENSE
+
