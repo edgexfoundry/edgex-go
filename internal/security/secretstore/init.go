@@ -371,15 +371,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 
 		lc.Info("Generating new password for Redis DB")
-		redis5Password, err := cred.GeneratePassword(ctx)
+		defaultPassword, err := cred.GeneratePassword(ctx)
 		if err != nil {
-			lc.Error("failed to generate redis5 password")
+			lc.Error("failed to generate default password")
 			os.Exit(1)
 		}
 
 		redis5Pair = UserPasswordPair{
-			User:     "redis5",
-			Password: redis5Password,
+			User:     "default",
+			Password: defaultPassword,
 		}
 	} else {
 		lc.Info("Redis DB credentials exist, skipping generating new password")
