@@ -56,6 +56,8 @@ var secretStoreTokens = []string{
 	"device-grove",
 	"device-uart",
 	"device-rfid-llrp",
+	"device-usb-camera",
+	"device-onvif-camera",
 	"edgex-ekuiper",
 }
 
@@ -80,6 +82,8 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[device-grove]",
 	"redisdb[device-uart]",
 	"redisdb[device-rfid-llrp]",
+	"redisdb[device-usb-camera]",
+	"redisdb[device-onvif-camera]",
 	"redisdb[edgex-ekuiper]",
 }
 
