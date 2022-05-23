@@ -848,11 +848,15 @@ parts:
     organize: 
       bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
     stage:
-      # Exclude redundant curl files
+      # Exclude redundant files
       - -usr/bin/curl
       - -usr/lib/*/libcurl*
       - -usr/share/doc/libcurl*
       - -usr/share/doc/curl
+      - -usr/lib/x86_64-linux-gnu/*
+      - -usr/share/doc/libldap-2.4-2/*
+      - -usr/share/doc/libldap-common/*
+
 
   metadata:
     plugin: nil
