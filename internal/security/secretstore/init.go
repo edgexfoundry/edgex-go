@@ -363,7 +363,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
 
-	redis5Pair, err := getDBCredential("security-bootstrapper-redis", cred, "redisdb")
+	redisCredentials, err := getDBCredential("security-bootstrapper-redis", cred, "redisdb")
 	if err != nil {
 		if err != errNotFound {
 			lc.Error("failed to determine if Redis credentials already exist or not: %w", err)
@@ -371,15 +371,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 
 		lc.Info("Generating new password for Redis DB")
-		redis5Password, err := cred.GeneratePassword(ctx)
+		defaultPassword, err := cred.GeneratePassword(ctx)
 		if err != nil {
-			lc.Error("failed to generate redis5 password")
+			lc.Error("failed to generate default password")
 			os.Exit(1)
 		}
 
-		redis5Pair = UserPasswordPair{
-			User:     "redis5",
-			Password: redis5Password,
+		redisCredentials = UserPasswordPair{
+			User:     "default",
+			Password: defaultPassword,
 		}
 	} else {
 		lc.Info("Redis DB credentials exist, skipping generating new password")
@@ -400,7 +400,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 		// add credentials to service path if specified and they're not already there
 		if len(service) != 0 {
-			err = addServiceCredential(lc, "redisdb", cred, service, redis5Pair)
+			err = addServiceCredential(lc, "redisdb", cred, service, redisCredentials)
 			if err != nil {
 				lc.Error(err.Error())
 				os.Exit(1)
@@ -410,13 +410,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
 	// with append the DB type (redisdb)
-	err = addDBCredential(lc, "security-bootstrapper-redis", cred, "redisdb", redis5Pair)
+	err = addDBCredential(lc, "security-bootstrapper-redis", cred, "redisdb", redisCredentials)
 	if err != nil {
 		lc.Error(err.Error())
 		os.Exit(1)
 	}
 
-	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redis5Pair, lc)
+	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redisCredentials, lc)
 	if err != nil {
 		lc.Errorf("failed to configure for Secure Message Bus: %s", err.Error())
 		os.Exit(1)
