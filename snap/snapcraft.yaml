@@ -342,25 +342,6 @@ apps:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
-  device-virtual:
-    adapter: full
-    after:
-      - security-bootstrapper-redis
-      # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
-      - security-proxy-setup
-      - core-data
-      - core-metadata
-    command: bin/device-virtual -confdir $SNAP_DATA/config/device-virtual/res -cp -r
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-      - bin/service-config-overrides.sh
-    daemon: simple
-    environment:
-      DEVICE_DEVICESDIR: $SNAP_DATA/config/device-virtual/res/devices
-      DEVICE_PROFILESDIR: $SNAP_DATA/config/device-virtual/res/profiles
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/device-virtual/secrets-token.json
-    plugs: [network, network-bind]
   app-service-configurable:
     adapter: full
     after:
@@ -783,44 +764,6 @@ parts:
       vault: bin/vault
 
   # DEVICE SERVICES parts
-  #
-  # NOTE - it would be nice to also just use stage-snaps to include
-  # device-virtual, however we currently don't publish an independent
-  # snap of device-virtual. Maybe we should, as this would simplify
-  # this snap.
-  device-virtual-go:
-    source: https://github.com/edgexfoundry/device-virtual-go.git
-    source-depth: 1
-    # Set source-branch to tag so that depth of 1 is relative to that tag.
-    # This is equivalent to "git clone --depth 1 --branch <tag> <url>"
-    source-branch: v2.2.0
-    plugin: make
-    after: [go-build-helper]
-    override-build: |
-
-      # get the short tag without commit count and hash when there are untagged commits
-      # drop the v prefix
-      echo VERSION=$(git describe --tags --abbrev=0 | sed 's/v//') > ./VERSION
-      make build
-
-      install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
-      install -DT "./cmd/res/configuration.toml" \
-        "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/configuration.toml"
-      install -DT "./cmd/res/devices/devices.toml" \
-          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/devices/devices.toml"
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles
-      
-      for profileType in bool float int uint binary; do
-        install -T "./cmd/res/profiles/device.virtual.$profileType.yaml" \
-          "$SNAPCRAFT_PART_INSTALL/config/device-virtual/res/profiles/device.virtual.$profileType.yaml"
-      done
-
-      install -DT "./Attribution.txt" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/Attribution.txt"
-      install -DT "./LICENSE" \
-         "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
-
   # TODO: vet all the correct files are available...
   app-service-configurable:
     plugin: nil

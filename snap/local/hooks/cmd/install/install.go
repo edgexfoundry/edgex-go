@@ -94,7 +94,7 @@ func getServicesWithConfig() []string {
 		"security-file-token-provider", "security-proxy-setup",
 		"security-secretstore-setup", "core-command", "core-data",
 		"core-metadata", "support-notifications", "support-scheduler",
-		"sys-mgmt-agent", "device-virtual", "app-service-configurable"}
+		"sys-mgmt-agent", "app-service-configurable"}
 }
 
 // TODO: re-factor to get this list from snapd using snapctl
@@ -104,7 +104,7 @@ func getAllServices() []string {
 		"security-proxy-setup", "security-bootstrapper-redis",
 		"security-consul-bootstrapper", "core-command",
 		"core-data", "core-metadata", "support-notifications",
-		"support-scheduler", "sys-mgmt-agent", "device-virtual",
+		"support-scheduler", "sys-mgmt-agent",
 		"kuiper", "app-service-configurable"}
 }
 
@@ -139,49 +139,6 @@ func installConfFiles() error {
 
 		err = hooks.CopyFile(srcPath, destPath)
 		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// installDevices installs device-virtual's static device files to $SNAP_DATA
-func installDevices() error {
-	var err error
-
-	destDir := hooks.SnapDataConf + "/device-virtual/res/devices"
-	destPath := destDir + "/devices.toml"
-	srcPath := hooks.SnapConf + "/device-virtual/res/devices/devices.toml"
-
-	if err = os.MkdirAll(destDir, 0755); err != nil {
-		return err
-	}
-
-	if err = hooks.CopyFile(srcPath, destPath); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// installDevProfiles installs device-virtual's device profiles to $SNAP_DATA
-func installDevProfiles() error {
-	var err error
-	profiles := []string{"bool", "float", "int", "uint", "binary"}
-
-	srcDir := hooks.SnapConf + "/device-virtual/res/profiles"
-	destDir := hooks.SnapDataConf + "/device-virtual/res/profiles"
-	if err = os.MkdirAll(destDir, 0755); err != nil {
-		return err
-	}
-
-	for _, v := range profiles {
-		fileName := "/device.virtual." + v + ".yaml"
-		srcPath := srcDir + fileName
-		destPath := destDir + fileName
-
-		if err = hooks.CopyFile(srcPath, destPath); err != nil {
 			return err
 		}
 	}
@@ -379,16 +336,6 @@ func main() {
 	}
 
 	if err = installConfFiles(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
-	}
-
-	if err = installDevices(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
-	}
-
-	if err = installDevProfiles(); err != nil {
 		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
 		os.Exit(1)
 	}
