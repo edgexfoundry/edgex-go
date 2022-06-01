@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
@@ -36,6 +37,10 @@ const (
 type Client struct {
 	// Client used for functionality related to reading messages
 	subscribeClient RedisClient
+
+	// Used to avoid multiple subscriptions to the same topic
+	existingTopics map[string]struct{}
+	mapMutex       *sync.Mutex
 
 	// Client used for functionality related to sending messages
 	publishClient RedisClient
@@ -101,6 +106,8 @@ func NewClientWithCreator(
 
 	return Client{
 		subscribeClient: subscribeClient,
+		existingTopics:  make(map[string]struct{}),
+		mapMutex:        new(sync.Mutex),
 		publishClient:   publishClient,
 	}, nil
 }
@@ -133,11 +140,15 @@ func (c Client) Subscribe(topics []types.TopicChannel, messageErrors chan error)
 		return pkg.NewMissingConfigurationErr("SubscribeHostInfo", "Unable to create a connection for subscribing")
 	}
 
-	for _, topic := range topics {
-		topicName := convertToRedisTopicScheme(topic.Topic)
-		messageChannel := topic.Messages
+	err := c.validateTopics(topics)
+	if err != nil {
+		return err
+	}
 
-		go func() {
+	for i := range topics {
+		go func(topic types.TopicChannel) {
+			topicName := convertToRedisTopicScheme(topic.Topic)
+			messageChannel := topic.Messages
 			for {
 				message, err := c.subscribeClient.Receive(topicName)
 				if err != nil {
@@ -149,7 +160,7 @@ func (c Client) Subscribe(topics []types.TopicChannel, messageErrors chan error)
 
 				messageChannel <- *message
 			}
-		}()
+		}(topics[i])
 	}
 
 	return nil
@@ -176,6 +187,23 @@ func (c Client) Disconnect() error {
 
 	if len(disconnectErrors) > 0 {
 		return NewDisconnectErr(disconnectErrors)
+	}
+
+	return nil
+}
+
+func (c Client) validateTopics(topics []types.TopicChannel) error {
+	c.mapMutex.Lock()
+	defer c.mapMutex.Unlock()
+
+	// First validate all the topics are unique, i.e. not existing subscription
+	for _, topic := range topics {
+		_, exists := c.existingTopics[topic.Topic]
+		if exists {
+			return fmt.Errorf("subscription for '%s' topic already exists, must be unique", topic.Topic)
+		}
+
+		c.existingTopics[topic.Topic] = struct{}{}
 	}
 
 	return nil

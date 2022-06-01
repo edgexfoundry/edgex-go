@@ -308,6 +308,8 @@ func (cp *Processor) ListenForCustomConfigChanges(
 
 		configClient.WatchForChanges(updateStream, errorStream, configToWatch, sectionName)
 
+		isFirstUpdate := true
+
 		for {
 			select {
 			case <-cp.ctx.Done():
@@ -319,6 +321,14 @@ func (cp *Processor) ListenForCustomConfigChanges(
 				cp.lc.Error(ex.Error())
 
 			case raw := <-updateStream:
+				// Config Provider sends an update as soon as the watcher is connected even though there are not
+				// any changes to the configuration. This causes an issue during start-up if there is an
+				// envVars override of one of the Writable fields, so we must ignore the first update.
+				if isFirstUpdate {
+					isFirstUpdate = false
+					continue
+				}
+
 				cp.lc.Infof("Updated custom configuration '%s' has been received from the Configuration Provider", sectionName)
 				changedCallback(raw)
 			}

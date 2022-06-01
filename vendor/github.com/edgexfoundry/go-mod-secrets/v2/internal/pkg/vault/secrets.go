@@ -370,14 +370,13 @@ func (c *Client) getAllKeys(subPath string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, pkg.NewErrSecretStore(fmt.Sprintf("Received a '%d' response from the secret store", resp.StatusCode))
 	}
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
 
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
@@ -440,9 +439,7 @@ func (c *Client) store(subPath string, secrets map[string]string) error {
 		return err
 	}
 	defer func() {
-		if resp.Body != nil {
-			_ = resp.Body.Close()
-		}
+		_ = resp.Body.Close()
 	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

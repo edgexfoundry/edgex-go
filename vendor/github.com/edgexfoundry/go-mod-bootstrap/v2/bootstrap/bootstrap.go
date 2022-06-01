@@ -54,7 +54,7 @@ func translateInterruptToCancel(ctx context.Context, wg *sync.WaitGroup, cancel 
 	go func() {
 		defer wg.Done()
 
-		signalStream := make(chan os.Signal)
+		signalStream := make(chan os.Signal, 1)
 		defer func() {
 			signal.Stop(signalStream)
 			close(signalStream)
