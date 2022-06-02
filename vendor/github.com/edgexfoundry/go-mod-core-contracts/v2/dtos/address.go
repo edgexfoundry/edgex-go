@@ -54,7 +54,7 @@ func (a *Address) Validate() error {
 
 type RESTAddress struct {
 	Path       string `json:"path,omitempty"`
-	HTTPMethod string `json:"httpMethod,omitempty" validate:"required,oneof='GET' 'HEAD' 'POST' 'PUT' 'DELETE' 'TRACE' 'CONNECT'"`
+	HTTPMethod string `json:"httpMethod,omitempty" validate:"required,oneof='GET' 'HEAD' 'POST' 'PUT' 'PATCH' 'DELETE' 'TRACE' 'CONNECT'"`
 }
 
 func NewRESTAddress(host string, port int, httpMethod string) Address {

@@ -10,7 +10,7 @@ github.com/davecgh/go-spew/spew
 # github.com/eclipse/paho.mqtt.golang v1.3.5
 github.com/eclipse/paho.mqtt.golang
 github.com/eclipse/paho.mqtt.golang/packets
-# github.com/edgexfoundry/go-mod-bootstrap/v2 v2.1.1-dev.2
+# github.com/edgexfoundry/go-mod-bootstrap/v2 v2.1.1
 ## explicit
 github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap
 github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/config
@@ -30,7 +30,7 @@ github.com/edgexfoundry/go-mod-bootstrap/v2/di
 github.com/edgexfoundry/go-mod-configuration/v2/configuration
 github.com/edgexfoundry/go-mod-configuration/v2/internal/pkg/consul
 github.com/edgexfoundry/go-mod-configuration/v2/pkg/types
-# github.com/edgexfoundry/go-mod-core-contracts/v2 v2.1.0
+# github.com/edgexfoundry/go-mod-core-contracts/v2 v2.1.1
 ## explicit
 github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http
 github.com/edgexfoundry/go-mod-core-contracts/v2/clients/http/utils
@@ -44,7 +44,7 @@ github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests
 github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses
 github.com/edgexfoundry/go-mod-core-contracts/v2/errors
 github.com/edgexfoundry/go-mod-core-contracts/v2/models
-# github.com/edgexfoundry/go-mod-messaging/v2 v2.1.1-dev.2
+# github.com/edgexfoundry/go-mod-messaging/v2 v2.1.1
 ## explicit
 github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg
 github.com/edgexfoundry/go-mod-messaging/v2/internal/pkg/mqtt
@@ -58,7 +58,7 @@ github.com/edgexfoundry/go-mod-registry/v2/internal/pkg/consul
 github.com/edgexfoundry/go-mod-registry/v2/pkg/types
 github.com/edgexfoundry/go-mod-registry/v2/registry
 github.com/edgexfoundry/go-mod-registry/v2/registry/mocks
-# github.com/edgexfoundry/go-mod-secrets/v2 v2.1.1-dev.1
+# github.com/edgexfoundry/go-mod-secrets/v2 v2.1.1
 ## explicit
 github.com/edgexfoundry/go-mod-secrets/v2/internal/pkg/vault
 github.com/edgexfoundry/go-mod-secrets/v2/pkg
