@@ -633,7 +633,7 @@ parts:
   redis:
     source: https://github.com/redis/redis.git
     source-tag: "6.2.6"
-    source-depth: 0
+    source-depth: 1
     plugin: make
     # NOTE: make-install-var is deprecated
     # See https://snapcraft.io/docs/make-plugin
@@ -811,12 +811,16 @@ parts:
   device-virtual-go:
     source: https://github.com/edgexfoundry/device-virtual-go.git
     source-depth: 1
-    # TODO: ideally this should be changed to v2.0.0
-    source-tag: v2.0.0
+    # Set source-branch to tag so that depth of 1 is relative to that tag.
+    # This is equivalent to "git clone --depth 1 --branch <tag> <url>"
+    source-branch: v2.1.0
     plugin: make
     after: [go-build-helper]
     override-build: |
-      echo "2.0.0" > ./VERSION
+
+      # get the short tag without commit count and hash when there are untagged commits
+      # drop the v prefix
+      echo VERSION=$(git describe --tags --abbrev=0 | sed 's/v//') > ./VERSION
       make build
 
       install -DT "./cmd/device-virtual" "$SNAPCRAFT_PART_INSTALL/bin/device-virtual"
@@ -838,21 +842,29 @@ parts:
          "$SNAPCRAFT_PART_INSTALL/usr/share/doc/device-virtual/LICENSE"
 
   # TODO: vet all the correct files are available...
-  app-service-config:
+  app-service-configurable:
     plugin: nil
     stage-snaps:
-      - edgex-app-service-configurable/2.0/stable
+      - edgex-app-service-configurable/2.1/stable
     stage:
+      # Exclude every profile other than the "rules-engine":
+      - -res/external-mqtt-trigger/configuration.toml
       - -res/functional-tests/configuration.toml
       - -res/http-export/configuration.toml
       - -res/mqtt-export/configuration.toml
       - -res/push-to-core/configuration.toml
       - -res/sample/configuration.toml
+      # Exclude files in usr folder other than the "Attribution.txt" and "LICENSE":
+      - -usr/lib/*
+      - -usr/share/doc/libnorm1/*
+      - -usr/share/doc/libpgm-5.2-0/*
+      - -usr/share/doc/libsodium23/*
+      - -usr/share/doc/libzmq5/*
 
   kuiper:
     source: https://github.com/lf-edge/ekuiper.git
     source-tag: 1.3.1
-    source-depth: 0
+    source-depth: 1
     plugin: make
     after: [go-build-helper]
     override-build: |
