@@ -67,7 +67,7 @@ func getSecretStoreServices() []string {
 // (excludes all non-EdgeX runtime dependencies, and security-*-setup jobs).
 func getEdgeXRefServices() []string {
 	return []string{"core-data", "core-metadata", "core-command",
-		"device-virtual", "support-notifications",
+		"support-notifications",
 		"support-scheduler", "sys-mgmt-agent"}
 }
 
@@ -93,7 +93,7 @@ func getCoreDefaultServices() []string {
 // - kuiper isn't included because it's not yet possible
 //   to provide kuiper configuration via content interface
 func getOptServices() []string {
-	return []string{"support-notifications", "support-scheduler", "device-virtual"}
+	return []string{"support-notifications", "support-scheduler"}
 }
 
 func isDisableAllowed(s string) error {

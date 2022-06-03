@@ -83,7 +83,6 @@ func processAppOptions() {
 		"support-notifications",
 		"support-scheduler",
 		"app-service-configurable",
-		"device-virtual",
 		"security-secretstore-setup",
 		"security-bootstrapper", // local executable
 		"security-proxy-setup",
