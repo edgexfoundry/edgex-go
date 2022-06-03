@@ -878,7 +878,7 @@ parts:
       cd $SNAPCRAFT_PART_INSTALL
    
       tar -xvf kuiper*.tar.gz --strip-components=1
-      rm *.gz
+      rm *.zip *.gz
 
       # configure logging & restrict to localhost
       # configure REST API service port to 59720
