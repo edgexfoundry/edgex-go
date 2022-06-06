@@ -33,12 +33,17 @@ COPY . .
 ARG SPIRE_RELEASE=1.2.1
 
 # build spire from the source in order to be compatible with arch arm64 as well
-RUN mkdir -p spire-build
+# in CI the BUILDER_BASE will already contain a compiled spire-server/agent
+# so we check to see if the binary is already in the image before compilation
 WORKDIR /edgex-go/spire-build
-RUN wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
+RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
     tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
     echo "building spire from source..." && \
-    make bin/spire-server bin/spire-agent
+    make bin/spire-server bin/spire-agent && \
+    cp bin/spire* /usr/local/bin/; \
+    fi
+
+WORKDIR /edgex-go
 
 # Deployment image
 FROM alpine:3.15
@@ -49,7 +54,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init gcompat
 
-COPY --from=builder /edgex-go/spire-build/bin/spire-server /usr/local/bin
+COPY --from=builder /usr/local/bin/spire-server /usr/local/bin
 COPY --from=builder /edgex-go/cmd/security-spire-config/docker-entrypoint.sh /usr/local/bin/
 
 WORKDIR /usr/local/etc/spiffe-scripts.d
