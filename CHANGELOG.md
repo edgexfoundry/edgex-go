@@ -17,10 +17,14 @@
 ### Bug Fixes 🐛
 
 - **data:** Use deepCopy of messageBusInfo to avoid external adds ([#4039](https://github.com/edgexfoundry/edgex-go/issues/4039)) ([#720c6cf9](https://github.com/edgexfoundry/edgex-go/commits/720c6cf9))
+- **snap:** Apply proxy's runtime config options after startup to avoid seed error ([#4046](https://github.com/edgexfoundry/edgex-go/pull/4046)) ([#bc2756e](https://github.com/edgexfoundry/edgex-go/commits/bc2756e))
+- **snap:** Deploy secrets token into separate mount points to resolve orchestration issues ([#4044](https://github.com/edgexfoundry/edgex-go/pull/4044)) ([#6c505b6](https://github.com/edgexfoundry/edgex-go/commits/6c505b6))
 
 ### Build 👷
 
 - Update go-mod versions for those that changed for 2.1.1 patch ([#f08ebb17](https://github.com/edgexfoundry/edgex-go/commits/f08ebb17))
+- **security:** Add connection selector to config file of eKuiper 1.4.x ([#4047](https://github.com/edgexfoundry/edgex-go/issues/3856)) ([#db608d2](https://github.com/edgexfoundry/edgex-go/commits/db608d2))
+- **snap:** Upgrade to eKuiper 1.4.4 ([#4047](https://github.com/edgexfoundry/edgex-go/issues/3856)) ([#db608d2](https://github.com/edgexfoundry/edgex-go/commits/db608d2))
 
 ## [v2.1.0] Jakarta - 2021-11-17 (Only compatible with the 2.x release)
 
