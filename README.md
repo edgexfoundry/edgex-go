@@ -43,7 +43,7 @@ Sample steps to create an access token and use the token to access EdgeX resourc
 ### Snap Package
 
 EdgeX Foundry is also available as a snap package, for more details
-on the snap, including how to install it, please refer to [EdgeX snap](https://github.com/edgexfoundry/edgex-go/blob/main/snap/README.md)
+on the snap, including how to install it, please refer to [Snap README](https://github.com/edgexfoundry/edgex-go/blob/jakarta/snap/README.md).
 
 ### Native binaries
 
