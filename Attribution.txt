@@ -35,7 +35,7 @@ https://github.com/influxdata/influxdb/blob/master/LICENSE
 influxdata/platform (MIT) https://github.com/influxdata/platform
 https://github.com/influxdata/platform/blob/master/LICENSE
 
-eclipse/paho.mqtt.golang (Eclipse Public License 1.0) https://github.com/eclipse/paho.mqtt.golang
+eclipse/paho.mqtt.golang (Eclipse Public License 2.0) https://github.com/eclipse/paho.mqtt.golang
 https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
 
 mattn/go-xmpp (BSD-3) https://github.com/mattn/go-xmpp
@@ -233,3 +233,5 @@ https://github.com/square/go-jose/blob/v2.6.0/LICENSE
 github.com/Microsoft/go-winio (MIT) https://github.com/Microsoft/go-winio
 https://github.com/microsoft/go-winio/blob/master/LICENSE
 
+golang.org/x/sync (Unspecified) https://cs.opensource.google/go/x/sync
+https://cs.opensource.google/go/x/sync/+/master:LICENSE
