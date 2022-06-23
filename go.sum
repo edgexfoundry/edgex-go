@@ -41,8 +41,8 @@ github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0/go.mod h1:YP17JhMnXTitowX
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0 h1:Sfi9jAIgRXZaJQw8Ji6+8//47D+iOyGiXQSNZXhy3HE=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0/go.mod h1:jyfVSx7mI3u/o/oo10COxBRBvJ8O/9I3z2xAwPmNt/Q=
 github.com/edgexfoundry/go-mod-messaging/v2 v2.2.0/go.mod h1:+X6C0h8ZTJe+lLU2AGJfiAzCJK3zL+yM6cej9VC+79E=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.2.1-dev.4 h1:xxUBucLA1xtObGPx3b93PcMGWlTRXLBoE1vv2s5oMRg=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.2.1-dev.4/go.mod h1:j/jMQPPLdi6Dj2eQeFAoD7c2su9xZXFSdsrUqiOM6jA=
+github.com/edgexfoundry/go-mod-messaging/v2 v2.2.1-dev.5 h1:QVT2qvW6DnYs68FbN0GL6UGz18h7XYnL3ZbZSOhgzBI=
+github.com/edgexfoundry/go-mod-messaging/v2 v2.2.1-dev.5/go.mod h1:YOeHj8uONVNqc4gXwgEanvWT6A8ni6Xjub75GpVWt30=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0 h1:dk9ul1t7INAiyZXeu/GrpinFE3qOekdy8uZOqEGgIiE=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0/go.mod h1:DUQRnAd5fVzoROc5SI+PTFUD/vCNeZmZHBMrLElbmwI=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.2.0 h1:Rqr1CgBXppAeehCkPAHQ6hjyLlm2KTR4IKiKpExm7gg=
@@ -235,7 +235,7 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
+github.com/stretchr/testify v1.7.3/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.7.4 h1:wZRexSlwd7ZXfKINDLsO4r7WBt3gTKONc6K/VesHvHM=
 github.com/stretchr/testify v1.7.4/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
