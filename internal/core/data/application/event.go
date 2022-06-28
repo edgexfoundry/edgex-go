@@ -167,11 +167,14 @@ func (a *CoreDataApp) DeleteEventsByDeviceName(deviceName string, dic *di.Contai
 		return errors.NewCommonEdgeX(errors.KindInvalidId, "blank device name is not allowed", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	err := dbClient.DeleteEventsByDeviceName(deviceName)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
+	go func() {
+		err := dbClient.DeleteEventsByDeviceName(deviceName)
+		if err != nil {
+			lc.Errorf("Delete events by device name failed: %v", err)
+		}
+	}()
 	return nil
 }
 
@@ -234,10 +237,13 @@ func (a *CoreDataApp) EventsByTimeRange(startTime int, endTime int, offset int, 
 // events that are older than age.  Age is supposed in milliseconds since created timestamp.
 func (a *CoreDataApp) DeleteEventsByAge(age int64, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	err := dbClient.DeleteEventsByAge(age)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
+	go func() {
+		err := dbClient.DeleteEventsByAge(age)
+		if err != nil {
+			lc.Errorf("Delete events by age failed: %v", err)
+		}
+	}()
 	return nil
 }
