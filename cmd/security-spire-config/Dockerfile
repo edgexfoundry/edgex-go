@@ -16,7 +16,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Build utility container
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go

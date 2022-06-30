@@ -16,7 +16,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -31,7 +31,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
 
-FROM alpine:3.14
+FROM alpine:3.16
 
 RUN apk add --update --no-cache curl dumb-init
 

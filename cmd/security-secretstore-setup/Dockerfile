@@ -16,7 +16,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -32,7 +32,7 @@ COPY . .
 RUN make cmd/security-file-token-provider/security-file-token-provider \
   cmd/security-secretstore-setup/security-secretstore-setup
 
-FROM alpine:3.14
+FROM alpine:3.16
 
 RUN apk add --update --no-cache ca-certificates dumb-init su-exec
 

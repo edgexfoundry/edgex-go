@@ -26,8 +26,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/stretchr/testify/require"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 )
 
 type registryTestServer struct {
@@ -238,7 +239,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				_, _ = w.Write([]byte("permission denied"))
 			} else {
 				w.WriteHeader(http.StatusInternalServerError)
-				t.Fatal(fmt.Sprintf("Unexpected method %s to URL %s", r.Method, r.URL.EscapedPath()))
+				t.Fatalf("Unexpected method %s to URL %s", r.Method, r.URL.EscapedPath())
 			}
 		case fmt.Sprintf(consulSetAgentTokenAPI, AgentType):
 			require.Equal(t, http.MethodPut, r.Method)
@@ -297,7 +298,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				_, _ = w.Write([]byte("Invalid Policy: A Policy with Name " + edgeXServicePolicyName + " already exists"))
 			}
 		default:
-			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
+			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
 	}))
 	tsURL, err := url.Parse(testSrv.URL)

@@ -17,7 +17,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -32,7 +32,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/security-bootstrapper/security-bootstrapper
 
-FROM alpine:3.14
+FROM alpine:3.16
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2021 Intel Corporation'

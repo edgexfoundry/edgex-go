@@ -83,7 +83,7 @@ NO_MESSAGEBUS_GO_BUILD_TAG:=no_messagebus
 build: $(MICROSERVICES)
 
 tidy:
-	go mod tidy -compat=1.17
+	go mod tidy
 
 cmd/core-metadata/core-metadata:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -128,7 +128,6 @@ clean:
 	rm -f $(MICROSERVICES)
 
 unittest:
-	go mod tidy -compat=1.17
 	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 
 hadolint:

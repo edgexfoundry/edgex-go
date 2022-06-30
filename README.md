@@ -51,8 +51,8 @@ For more details on the snap, including how to build and install it, please refe
 
 ##### Go
 
-- The current targeted version of the Go language runtime for release artifacts is v1.17.x
-- The minimum supported version of the Go language runtime is v1.17.x
+- The current targeted version of the Go language runtime for release artifacts is v1.18.x
+- The minimum supported version of the Go language runtime is v1.18.x
 
 ##### ZeroMQ
 
