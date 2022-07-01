@@ -83,7 +83,7 @@ func (c *Client) TransmissionsByTimeRange(start int64, end int64, offset, limit 
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	transmission, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithTimeRangeAndPagination(transmissionTableName), validStart, validEnd, offset, validLimit)
+	transmission, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithTimeRangeAndPagination(transmissionTableName), validStart, validEnd, map[string]any{}, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all transmission by time range", err)
 	}

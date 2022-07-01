@@ -8,14 +8,17 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 )
 
 const (
@@ -26,6 +29,7 @@ const (
 	NotificationCollectionSeverity = NotificationCollection + DBKeySeparator + common.Severity
 	NotificationCollectionStatus   = NotificationCollection + DBKeySeparator + common.Status
 	NotificationCollectionCreated  = NotificationCollection + DBKeySeparator + common.Created
+	NotificationCollectionAck      = NotificationCollection + DBKeySeparator + common.Ack
 )
 
 // notificationStoredKey return the notification's stored key which combines the collection name and object id
@@ -51,6 +55,7 @@ func sendAddNotificationCmd(conn redis.Conn, storedKey string, n models.Notifica
 	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSender, n.Sender), n.Modified, storedKey)
 	_ = conn.Send(ZADD, CreateKey(NotificationCollectionSeverity, string(n.Severity)), n.Modified, storedKey)
 	_ = conn.Send(ZADD, CreateKey(NotificationCollectionStatus, string(n.Status)), n.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(NotificationCollectionAck, strconv.FormatBool(n.Acknowledged)), n.Modified, storedKey)
 	return nil
 }
 
@@ -84,13 +89,9 @@ func addNotification(conn redis.Conn, notification models.Notification) (models.
 }
 
 // notificationsByCategory queries notifications by offset, limit, and category
-func notificationsByCategory(conn redis.Conn, offset int, limit int, category string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionCategory, category), offset, limit)
-	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
-	}
-
-	return convertObjectsToNotifications(objects)
+func notificationsByCategory(conn redis.Conn, offset int, limit int, ack, category string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	redisKey := CreateKey(NotificationCollectionCategory, category)
+	return getNotificationsByRedisKeyAndAck(conn, offset, limit, ack, redisKey)
 }
 
 func convertObjectsToNotifications(objects [][]byte) (notifications []models.Notification, edgeXerr errors.EdgeX) {
@@ -107,13 +108,9 @@ func convertObjectsToNotifications(objects [][]byte) (notifications []models.Not
 }
 
 // notificationsByLabel queries notifications by offset, limit, and label
-func notificationsByLabel(conn redis.Conn, offset int, limit int, label string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionLabel, label), offset, limit)
-	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
-	}
-
-	return convertObjectsToNotifications(objects)
+func notificationsByLabel(conn redis.Conn, offset int, limit int, ack, label string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	redisKey := CreateKey(NotificationCollectionLabel, label)
+	return getNotificationsByRedisKeyAndAck(conn, offset, limit, ack, redisKey)
 }
 
 // notificationById query notification by id from DB
@@ -125,23 +122,102 @@ func notificationById(conn redis.Conn, id string) (notification models.Notificat
 	return
 }
 
-// notificationsByStatus queries notifications by offset, limit, and status
-func notificationsByStatus(conn redis.Conn, offset int, limit int, status string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRevRange(conn, CreateKey(NotificationCollectionStatus, status), offset, limit)
-	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+// notificationByIds query notification by ids from DB
+func notificationByIds(conn redis.Conn, ids []string) (notifications []models.Notification, edgexErr errors.EdgeX) {
+	var storeKeys []string
+	for _, id := range ids {
+		storeKeys = append(storeKeys, notificationStoredKey(id))
 	}
-
+	objects, edgexErr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(storeKeys))
+	if edgexErr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
 	return convertObjectsToNotifications(objects)
 }
 
-// notificationsByTimeRange query notifications by time range, offset, and limit
-func notificationsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
-	objects, edgeXerr := getObjectsByScoreRange(conn, NotificationCollectionCreated, startTime, endTime, offset, limit)
-	if edgeXerr != nil {
-		return notifications, edgeXerr
+// notificationsByStatus queries notifications by offset, limit, and status
+func notificationsByStatus(conn redis.Conn, offset int, limit int, ack, status string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	redisKey := CreateKey(NotificationCollectionStatus, status)
+	return getNotificationsByRedisKeyAndAck(conn, offset, limit, ack, redisKey)
+}
+
+// notificationsByTimeRange query notifications by time range, offset, limit, and ack
+func notificationsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int, ack string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	redisKey := NotificationCollectionCreated
+	if len(ack) > 0 {
+		args := redis.Args{}
+		cacheSet := uuid.New().String()
+		defer func() {
+			// delete cache set
+			_, _ = conn.Do(DEL, cacheSet)
+		}()
+		command := ZINTERSTORE
+		args = args.Add(cacheSet, 2, redisKey, CreateKey(NotificationCollectionAck, ack), WEIGHTS, 1, 0)
+		_, err := conn.Do(command, args...)
+		if err != nil {
+			return notifications, errors.NewCommonEdgeX(errors.KindDatabaseError,
+				fmt.Sprintf("failed to execute %s command with args %v", command, args), err)
+		}
+		redisKey = cacheSet
 	}
-	return convertObjectsToNotifications(objects)
+
+	objects, edgeXerr := getObjectsByScoreRange(conn, redisKey, startTime, endTime, offset, limit)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	notifications, edgeXerr = convertObjectsToNotifications(objects)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return notifications, nil
+}
+
+// notificationByQueryConditions query notifications by offset, limit, categories and time range
+func notificationByQueryConditions(conn redis.Conn, offset, limit int, condition requests.NotificationQueryCondition,
+	ack string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	if len(condition.Category) == 0 {
+		return notificationsByTimeRange(conn, condition.Start, condition.End, offset, limit, ack)
+	}
+
+	cacheSetUnionCategory := uuid.New().String()
+	cacheSetIntersectionCreatedAndCategory := uuid.New().String()
+	cacheSetIntersectionAck := uuid.New().String()
+	cacheSet := cacheSetIntersectionCreatedAndCategory
+	defer func() {
+		// delete cache set
+		_, _ = conn.Do(DEL, cacheSetUnionCategory, cacheSetIntersectionCreatedAndCategory, cacheSetIntersectionAck)
+	}()
+
+	var redisKeys []string
+	for _, c := range condition.Category {
+		redisKeys = append(redisKeys, CreateKey(NotificationCollectionCategory, c))
+	}
+	args := redis.Args{}
+	args = args.Add(cacheSetUnionCategory, len(redisKeys))
+	for _, key := range redisKeys {
+		args = args.Add(key)
+	}
+	// find all notifications by category and store the result to cache
+	command := ZUNIONSTORE
+	_, err := conn.Do(command, args...)
+	if err != nil {
+		return notifications, errors.NewCommonEdgeX(errors.KindDatabaseError,
+			fmt.Sprintf("failed to execute %s command with args %v", command, args), err)
+	}
+
+	if len(ack) > 0 {
+		cacheSet = cacheSetIntersectionAck
+	}
+
+	objects, edgeXerr := getObjectsByScoreRange(conn, cacheSet, condition.Start, condition.End, offset, limit)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	notifications, edgeXerr = convertObjectsToNotifications(objects)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return notifications, nil
 }
 
 // sendDeleteNotificationCmd sends redis command to delete a notification
@@ -158,6 +234,7 @@ func sendDeleteNotificationCmd(conn redis.Conn, storedKey string, n models.Notif
 	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSender, n.Sender), storedKey)
 	_ = conn.Send(ZREM, CreateKey(NotificationCollectionSeverity, string(n.Severity)), storedKey)
 	_ = conn.Send(ZREM, CreateKey(NotificationCollectionStatus, string(n.Status)), storedKey)
+	_ = conn.Send(ZREM, CreateKey(NotificationCollectionAck, strconv.FormatBool(n.Acknowledged)), storedKey)
 }
 
 // deleteNotificationById deletes the notification by id and all of its associated transmissions
@@ -188,6 +265,34 @@ func deleteNotificationById(conn redis.Conn, id string) errors.EdgeX {
 	return nil
 }
 
+// deleteNotificationByIds deletes the notification by id and all of its associated transmissions
+func deleteNotificationByIds(conn redis.Conn, ids []string) errors.EdgeX {
+	notifications, edgexErr := notificationByIds(conn, ids)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	var transmissions []models.Transmission
+	for _, notification := range notifications {
+		trans, edgexErr := transmissionsByNotificationId(conn, 0, -1, notification.Id)
+		if edgexErr != nil {
+			return errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+		transmissions = append(transmissions, trans...)
+	}
+	_ = conn.Send(MULTI)
+	for _, notification := range notifications {
+		sendDeleteNotificationCmd(conn, notificationStoredKey(notification.Id), notification)
+	}
+	for _, transmission := range transmissions {
+		sendDeleteTransmissionCmd(conn, transmissionStoredKey(transmission.Id), transmission)
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification deletion failed", err)
+	}
+	return nil
+}
+
 // updateNotification updates a notification
 func updateNotification(conn redis.Conn, n models.Notification) errors.EdgeX {
 	oldNotification, edgeXerr := notificationById(conn, n.Id)
@@ -210,7 +315,35 @@ func updateNotification(conn redis.Conn, n models.Notification) errors.EdgeX {
 	return nil
 }
 
-func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, categories []string, labels []string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+// updateNotificationAckStatus bulk updates acknowledgement status
+func updateNotificationAckStatus(conn redis.Conn, ack bool, notifications []models.Notification) errors.EdgeX {
+	_ = conn.Send(MULTI)
+	for _, n := range notifications {
+		storedKey := notificationStoredKey(n.Id)
+		sendDeleteNotificationCmd(conn, storedKey, n)
+		n.Modified = pkgCommon.MakeTimestamp()
+		n.Acknowledged = ack
+		edgexErr := sendAddNotificationCmd(conn, storedKey, n)
+		if edgexErr != nil {
+			return errors.NewCommonEdgeXWrapper(edgexErr)
+		}
+	}
+	_, err := conn.Do(EXEC)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "notification acknowledgement status update failed", err)
+	}
+	return nil
+}
+
+func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, categories []string, labels []string, ack string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	cacheSetUnion := uuid.New().String()
+	cacheSetIntersection := uuid.New().String()
+	cacheSet := cacheSetUnion
+	defer func() {
+		// delete cache set
+		_, _ = conn.Do(DEL, cacheSetUnion, cacheSetIntersection)
+	}()
+
 	var redisKeys []string
 	for _, c := range categories {
 		redisKeys = append(redisKeys, CreateKey(NotificationCollectionCategory, c))
@@ -219,11 +352,32 @@ func notificationsByCategoriesAndLabels(conn redis.Conn, offset int, limit int, 
 		redisKeys = append(redisKeys, CreateKey(NotificationCollectionLabel, label))
 	}
 
-	objects, err := unionObjectsByKeys(conn, offset, limit, redisKeys...)
-	if err != nil {
-		return notifications, errors.NewCommonEdgeXWrapper(err)
+	args := redis.Args{}
+	args = args.Add(cacheSetUnion, len(redisKeys))
+	for _, key := range redisKeys {
+		args = args.Add(key)
 	}
-	return convertObjectsToNotifications(objects)
+
+	if len(ack) > 0 {
+		var redisKeys []string
+		redisKeys = append(redisKeys, cacheSetUnion, CreateKey(NotificationCollectionAck, ack))
+		args := redis.Args{}
+		args = args.Add(cacheSetIntersection, len(redisKeys))
+		for _, key := range redisKeys {
+			args = args.Add(key)
+		}
+		cacheSet = cacheSetIntersection
+	}
+
+	objects, edgeXerr := getObjectsByRevRange(conn, cacheSet, offset, limit)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	notifications, edgeXerr = convertObjectsToNotifications(objects)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return notifications, nil
 }
 
 // notificationAndTransmissionStoreKeys return the store keys of the notification and transmission that are older than age.
@@ -378,6 +532,22 @@ func (c *Client) DeleteProcessedNotificationsByAge(age int64) (err errors.EdgeX)
 	go c.asyncDeleteNotificationByStoreKeys(ncStoreKeys)
 	go c.asyncDeleteTransmissionByStoreKeys(transStoreKeys)
 	return nil
+}
+
+func getNotificationsByRedisKeyAndAck(conn redis.Conn, offset, limit int, ack, redisKey string) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+	var objects [][]byte
+	if len(ack) > 0 {
+		objects, edgeXerr = intersectionObjectsByKeys(conn, offset, limit, redisKey, CreateKey(NotificationCollectionAck, ack))
+		if edgeXerr != nil {
+			return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	} else {
+		objects, edgeXerr = getObjectsByRevRange(conn, redisKey, offset, limit)
+		if edgeXerr != nil {
+			return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+	}
+	return convertObjectsToNotifications(objects)
 }
 
 func latestNotificationByOffset(conn redis.Conn, offset int) (notification models.Notification, edgeXerr errors.EdgeX) {

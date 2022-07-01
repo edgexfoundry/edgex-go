@@ -6,6 +6,7 @@
 package interfaces
 
 import (
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 )
@@ -30,20 +31,24 @@ type DBClient interface {
 
 	AddNotification(n models.Notification) (models.Notification, errors.EdgeX)
 	NotificationById(id string) (models.Notification, errors.EdgeX)
-	NotificationsByCategory(offset, limit int, category string) ([]models.Notification, errors.EdgeX)
-	NotificationsByLabel(offset, limit int, label string) ([]models.Notification, errors.EdgeX)
-	NotificationsByStatus(offset, limit int, status string) ([]models.Notification, errors.EdgeX)
-	NotificationsByTimeRange(start int64, end int64, offset int, limit int) ([]models.Notification, errors.EdgeX)
+	NotificationsByCategory(offset, limit int, ack, category string) ([]models.Notification, errors.EdgeX)
+	NotificationsByLabel(offset, limit int, ack, label string) ([]models.Notification, errors.EdgeX)
+	NotificationsByStatus(offset, limit int, ack, status string) ([]models.Notification, errors.EdgeX)
+	NotificationsByTimeRange(start int64, end int64, offset int, limit int, ack string) ([]models.Notification, errors.EdgeX)
+	NotificationsByQueryConditions(offset, limit int, condition requests.NotificationQueryCondition, ack string) ([]models.Notification, errors.EdgeX)
 	DeleteNotificationById(id string) errors.EdgeX
-	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX)
+	DeleteNotificationByIds(ids []string) errors.EdgeX
+	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string, ack string) ([]models.Notification, errors.EdgeX)
 	UpdateNotification(s models.Notification) errors.EdgeX
+	UpdateNotificationAckStatusByIds(ack bool, ids []string) errors.EdgeX
 	CleanupNotificationsByAge(age int64) errors.EdgeX
 	DeleteProcessedNotificationsByAge(age int64) errors.EdgeX
-	NotificationCountByCategory(category string) (uint32, errors.EdgeX)
-	NotificationCountByLabel(label string) (uint32, errors.EdgeX)
-	NotificationCountByStatus(status string) (uint32, errors.EdgeX)
-	NotificationCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX)
-	NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX)
+	NotificationCountByCategory(category string, ack string) (uint32, errors.EdgeX)
+	NotificationCountByLabel(label string, ack string) (uint32, errors.EdgeX)
+	NotificationCountByStatus(status string, ack string) (uint32, errors.EdgeX)
+	NotificationCountByTimeRange(start int64, end int64, ack string) (uint32, errors.EdgeX)
+	NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (uint32, errors.EdgeX)
+	NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (uint32, errors.EdgeX)
 	NotificationTotalCount() (uint32, errors.EdgeX)
 	LatestNotificationByOffset(offset uint32) (models.Notification, errors.EdgeX)
 
