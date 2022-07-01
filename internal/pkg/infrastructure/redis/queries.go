@@ -224,6 +224,7 @@ func getMemberNumber(conn redis.Conn, command string, key string) (uint32, error
 }
 
 // unionObjectsByValues returns the keys of the set resulting from the union of all the given sets.
+// nolint // unused but could be useful
 func unionObjectsByKeys(conn redis.Conn, offset int, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
 	return objectsByKeys(conn, ZUNIONSTORE, offset, limit, redisKeys...)
 }

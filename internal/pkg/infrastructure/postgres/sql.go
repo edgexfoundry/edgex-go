@@ -144,7 +144,7 @@ func sqlQueryContentWithPagination(table string) string {
 
 // sqlQueryContentWithTimeRangeAndPagination returns the SQL statement for selecting content column from the table by the given time range with pagination
 func sqlQueryContentWithTimeRangeAndPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $3 LIMIT $4", table, createdField, createdField)
+	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 AND content @> $3::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $4 LIMIT $5", table, createdField, createdField)
 }
 
 // sqlQueryContentByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string

@@ -121,7 +121,7 @@ func TestAddSubscription(t *testing.T) {
 
 	unsupportedChannelType := addSubscriptionRequestData()
 	unsupportedChannelType.Subscription.Channels = []dtos.Address{
-		dtos.NewMQTTAddress("mqtt-broker", 1883, "publisher", "topic"),
+		{Type: "unknown"},
 	}
 	invalidEmailAddress := addSubscriptionRequestData()
 	invalidEmailAddress.Subscription.Channels = []dtos.Address{

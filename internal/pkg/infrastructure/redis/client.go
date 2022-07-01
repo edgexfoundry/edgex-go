@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
@@ -1125,27 +1126,27 @@ func (c *Client) AddNotification(notification model.Notification) (model.Notific
 }
 
 // NotificationsByCategory queries notifications by offset, limit and category
-func (c *Client) NotificationsByCategory(offset int, limit int, category string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+func (c *Client) NotificationsByCategory(offset int, limit int, ack, category string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr = notificationsByCategory(conn, offset, limit, category)
+	notifications, edgeXerr = notificationsByCategory(conn, offset, limit, ack, category)
 	if edgeXerr != nil {
 		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query notifications by offset %d, limit %d and category %s", offset, limit, category), edgeXerr)
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d, ack %s, and category %s", offset, limit, ack, category), edgeXerr)
 	}
 	return notifications, nil
 }
 
 // NotificationsByLabel queries notifications by offset, limit and label
-func (c *Client) NotificationsByLabel(offset int, limit int, label string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+func (c *Client) NotificationsByLabel(offset int, limit int, ack, label string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr = notificationsByLabel(conn, offset, limit, label)
+	notifications, edgeXerr = notificationsByLabel(conn, offset, limit, ack, label)
 	if edgeXerr != nil {
 		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query notifications by offset %d, limit %d and label %s", offset, limit, label), edgeXerr)
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d, ack %s, and label %s", offset, limit, ack, label), edgeXerr)
 	}
 	return notifications, nil
 }
@@ -1163,106 +1164,128 @@ func (c *Client) NotificationById(id string) (notification model.Notification, e
 }
 
 // NotificationsByStatus queries notifications by offset, limit and status
-func (c *Client) NotificationsByStatus(offset int, limit int, status string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+func (c *Client) NotificationsByStatus(offset int, limit int, ack, status string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr = notificationsByStatus(conn, offset, limit, status)
+	notifications, edgeXerr = notificationsByStatus(conn, offset, limit, ack, status)
 	if edgeXerr != nil {
 		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query notifications by offset %d, limit %d and status %s", offset, limit, status), edgeXerr)
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d, ack %s, and status %s", offset, limit, ack, status), edgeXerr)
 	}
 	return notifications, nil
 }
 
-// NotificationsByTimeRange query notifications by time range, offset, and limit
-func (c *Client) NotificationsByTimeRange(start int64, end int64, offset int, limit int) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+// NotificationsByTimeRange query notifications by time range, ack, offset, and limit
+func (c *Client) NotificationsByTimeRange(start int64, end int64, offset int, limit int, ack string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr = notificationsByTimeRange(conn, start, end, offset, limit)
+	notifications, edgeXerr = notificationsByTimeRange(conn, start, end, offset, limit, ack)
 	if edgeXerr != nil {
 		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query notifications by time range %v ~ %v, offset %d, and limit %d", start, end, offset, limit), edgeXerr)
+			fmt.Sprintf("fail to query notifications by time range %v ~ %v, offset %d, ack %s, and limit %d", start, end, offset, ack, limit), edgeXerr)
 	}
 	return notifications, nil
 }
 
-// NotificationsByCategoriesAndLabels queries notifications by offset, limit, categories and labels
-func (c *Client) NotificationsByCategoriesAndLabels(offset int, limit int, categories []string, labels []string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+// NotificationsByCategoriesAndLabels queries notifications by ack, offset, limit, categories and labels
+func (c *Client) NotificationsByCategoriesAndLabels(offset int, limit int, categories []string, labels []string, ack string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr = notificationsByCategoriesAndLabels(conn, offset, limit, categories, labels)
+	notifications, edgeXerr = notificationsByCategoriesAndLabels(conn, offset, limit, categories, labels, ack)
 	if edgeXerr != nil {
 		return notifications, errors.NewCommonEdgeX(errors.Kind(edgeXerr),
-			fmt.Sprintf("fail to query notifications by offset %d, limit %d, categories %v and labels %v", offset, limit, categories, labels), edgeXerr)
+			fmt.Sprintf("fail to query notifications by offset %d, limit %d, categories %v, ack %s and labels %v", offset, limit, categories, ack, labels), edgeXerr)
 	}
 	return notifications, nil
 }
 
 // NotificationCountByCategory returns the count of Notification associated with specified category from the database
-func (c *Client) NotificationCountByCategory(category string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategory(category, ack string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionCategory, category))
+	notifications, edgeXerr := notificationsByCategory(conn, 0, -1, ack, category)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-
-	return count, nil
+	return uint32(len(notifications)), nil
 }
 
 // NotificationCountByLabel returns the count of Notification associated with specified label from the database
-func (c *Client) NotificationCountByLabel(label string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByLabel(label, ack string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionLabel, label))
+	notifications, edgeXerr := notificationsByLabel(conn, 0, -1, ack, label)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-
-	return count, nil
+	return uint32(len(notifications)), nil
 }
 
 // NotificationCountByStatus returns the count of Notification associated with specified status from the database
-func (c *Client) NotificationCountByStatus(status string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByStatus(status, ack string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberNumber(conn, ZCARD, CreateKey(NotificationCollectionStatus, status))
+	notifications, edgeXerr := notificationsByStatus(conn, 0, -1, ack, status)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-
-	return count, nil
+	return uint32(len(notifications)), nil
 }
 
 // NotificationCountByTimeRange returns the count of Notification from the database within specified time range
-func (c *Client) NotificationCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	count, edgeXerr := getMemberCountByScoreRange(conn, NotificationCollectionCreated, start, end)
+	notifications, edgeXerr := notificationsByTimeRange(conn, start, end, 0, -1, ack)
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	return count, nil
+	return uint32(len(notifications)), nil
 }
 
 // NotificationCountByCategoriesAndLabels returns the count of Notification associated with specified categories and labels from the database
-func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	notifications, edgeXerr := notificationsByCategoriesAndLabels(conn, 0, -1, categories, labels)
+	notifications, edgeXerr := notificationsByCategoriesAndLabels(conn, 0, -1, categories, labels, ack)
 	if edgeXerr != nil {
-		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by categories %v and labels %v", categories, labels), edgeXerr)
+		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by categories %v, labels %v, and ack %s", categories, labels, ack), edgeXerr)
 	}
 	return uint32(len(notifications)), nil
+}
+
+// NotificationCountByQueryConditions returns the count of Notification associated with specified condition from the database
+func (c *Client) NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr := notificationByQueryConditions(conn, 0, -1, condition, ack)
+	if edgeXerr != nil {
+		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by condition %v and ack %s", condition, ack), edgeXerr)
+	}
+	return uint32(len(notifications)), nil
+}
+
+// NotificationsByQueryConditions queries notifications by offset, limit, categories and time range
+func (c *Client) NotificationsByQueryConditions(offset int, limit int, condition requests.NotificationQueryCondition,
+	ack string) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgeXerr = notificationByQueryConditions(conn, offset, limit, condition, ack)
+	if edgeXerr != nil {
+		return notifications, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return notifications, nil
 }
 
 // NotificationTotalCount returns the total count of Notification from the database
@@ -1407,11 +1430,34 @@ func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
 	return nil
 }
 
+// DeleteNotificationById deletes notifications by ids
+func (c *Client) DeleteNotificationByIds(ids []string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+	edgeXerr := deleteNotificationByIds(conn, ids)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return nil
+}
+
 // UpdateNotification updates a notification
 func (c *Client) UpdateNotification(n model.Notification) errors.EdgeX {
 	conn := c.Pool.Get()
 	defer conn.Close()
 	return updateNotification(conn, n)
+}
+
+// UpdateNotificationAckStatusByIds bulk updates acknowledgement status
+func (c *Client) UpdateNotificationAckStatusByIds(ack bool, ids []string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notifications, edgexErr := notificationByIds(conn, ids)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	return updateNotificationAckStatus(conn, ack, notifications)
 }
 
 // AddTransmission adds a new transmission

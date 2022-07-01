@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 // Copyright (C) 2023 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -40,8 +40,10 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	// Notification
 	nc := notificationsController.NewNotificationController(dic)
 	r.POST(common.ApiNotificationRoute, nc.AddNotification, authenticationHook)
+	r.GET(common.ApiNotificationRoute, nc.NotificationsByQueryConditions, authenticationHook)
 	r.GET(common.ApiNotificationByIdRoute, nc.NotificationById, authenticationHook)
 	r.DELETE(common.ApiNotificationByIdRoute, nc.DeleteNotificationById, authenticationHook)
+	r.DELETE(common.ApiNotificationByIdsRoute, nc.DeleteNotificationByIds, authenticationHook)
 	r.GET(common.ApiNotificationByCategoryRoute, nc.NotificationsByCategory, authenticationHook)
 	r.GET(common.ApiNotificationByLabelRoute, nc.NotificationsByLabel, authenticationHook)
 	r.GET(common.ApiNotificationByStatusRoute, nc.NotificationsByStatus, authenticationHook)
@@ -50,6 +52,8 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.DELETE(common.ApiNotificationCleanupByAgeRoute, nc.CleanupNotificationsByAge, authenticationHook)
 	r.DELETE(common.ApiNotificationCleanupRoute, nc.CleanupNotifications, authenticationHook)
 	r.DELETE(common.ApiNotificationByAgeRoute, nc.DeleteProcessedNotificationsByAge, authenticationHook)
+	r.PUT(common.ApiNotificationAcknowledgeByIdsRoute, nc.AcknowledgeNotificationByIds, authenticationHook)
+	r.PUT(common.ApiNotificationUnacknowledgeByIdsRoute, nc.UnacknowledgeNotificationByIds, authenticationHook)
 
 	// Transmission
 	trans := notificationsController.NewTransmissionController(dic)
