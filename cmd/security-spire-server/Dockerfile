@@ -21,7 +21,7 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
+RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk add --update --no-cache make git build-base curl
 
@@ -51,7 +51,7 @@ FROM alpine:3.15
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/nl.alpinelinux.org/g' -i~ /etc/apk/repositories
+RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
 COPY --from=builder /usr/local/bin/spire-server /usr/local/bin
