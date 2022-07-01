@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.10.6
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
-	github.com/spiffe/go-spiffe/v2 v2.1.0
+	github.com/spiffe/go-spiffe/v2 v2.1.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	gopkg.in/eapache/queue.v1 v1.1.0
