@@ -8,15 +8,14 @@ BINPATH="${ARGV[0]}"
 
 # binary name == service name/key
 SERVICE=$(basename "$BINPATH")
-SERVICE_ENV="$SNAP_DATA/config/$SERVICE/res/$SERVICE.env"
+ENV_FILE="$SNAP_DATA/config/$SERVICE/res/$SERVICE.env"
+TAG="edgex-$SERVICE."$(basename "$0")
 
-logger "edgex checking for service env: $SERVICE_ENV"
-
-if [ -f "$SERVICE_ENV" ]; then
-    logger "edgex service override: : sourcing $SERVICE_ENV"
-    source "$SERVICE_ENV"
+if [ -f "$ENV_FILE" ]; then
+    logger --tag=$TAG "sourcing $ENV_FILE"
+    set -o allexport
+    source "$ENV_FILE" set
+    set +o allexport 
 fi
-
-logger "edgex starting: $SERVICE"
 
 exec "$@"
