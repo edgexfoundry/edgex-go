@@ -33,11 +33,13 @@ fi
 DEFAULT_EDGEX_USER_ID=2002
 EDGEX_USER_ID=${EDGEX_USER:-$DEFAULT_EDGEX_USER_ID}
 
+# assumming the target directory ${SECURITY_INIT_DIR} has been created by the framework
+cp -rpd ${SECURITY_INIT_STAGING}/* ${SECURITY_INIT_DIR}/
+
 # During the bootstrapping, environment variables come for compose file environment files,
 # which then injecting into all other related containers on other services' entrypoint scripts
 # if the executable is not 'security-bootstrapper'; then we consider it not running the bootstrapping process
 # for the user may just want to debug into the container shell itself
-cp -rpd ${SECURITY_INIT_STAGING}/* ${SECURITY_INIT_DIR}/
 if [ "$1" = 'security-bootstrapper' ]; then
   # run the executable as ${EDGEX_USER}
   echo "$(date) Executing ./$@"
