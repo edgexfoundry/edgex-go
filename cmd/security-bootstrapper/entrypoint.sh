@@ -4,7 +4,7 @@
 # zombie processes
 #
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2021 Intel Corporation
+#  Copyright (c) 2022 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ EDGEX_USER_ID=${EDGEX_USER:-$DEFAULT_EDGEX_USER_ID}
 # which then injecting into all other related containers on other services' entrypoint scripts
 # if the executable is not 'security-bootstrapper'; then we consider it not running the bootstrapping process
 # for the user may just want to debug into the container shell itself
+cp -rpd ${SECURITY_INIT_STAGING}/* ${SECURITY_INIT_DIR}/
 if [ "$1" = 'security-bootstrapper' ]; then
   # run the executable as ${EDGEX_USER}
   echo "$(date) Executing ./$@"

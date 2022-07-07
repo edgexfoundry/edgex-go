@@ -35,21 +35,21 @@ RUN make cmd/security-bootstrapper/security-bootstrapper
 FROM alpine:3.14
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2021 Intel Corporation'
+      copyright='Copyright (c) 2022 Intel Corporation'
 
 RUN apk add --update --no-cache dumb-init su-exec
 
 ENV SECURITY_INIT_DIR /edgex-init
-ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_DIR}/bootstrap-redis
+ENV SECURITY_INIT_STAGING /edgex-init-staging
+ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_STAGING}/bootstrap-redis
 
-RUN mkdir -p ${SECURITY_INIT_DIR} \
-    && mkdir -p ${BOOTSTRAP_REDIS_DIR}
+RUN mkdir -p ${BOOTSTRAP_REDIS_DIR}
 
-WORKDIR ${SECURITY_INIT_DIR}
+WORKDIR ${SECURITY_INIT_STAGING}
 
 # copy all entrypoint scripts into shared folder
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint-scripts/ ${SECURITY_INIT_DIR}/
-RUN chmod +x ${SECURITY_INIT_DIR}/*.sh
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint-scripts/ ${SECURITY_INIT_STAGING}/
+RUN chmod +x ${SECURITY_INIT_STAGING}/*.sh
 
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/security-bootstrapper .
@@ -59,10 +59,7 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml .
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
 
 # copy Consul ACL related configs
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_DIR}/consul-bootstrapper/
-
-# Expose the file directory as a volume since there's long-running state
-VOLUME ${SECURITY_INIT_DIR}
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_STAGING}/consul-bootstrapper/
 
 # setup entry point script
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint.sh /
