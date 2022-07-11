@@ -101,6 +101,9 @@ func BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer star
 				messageBusInfo.PublishTopicPrefix,
 				messageBusInfo.AuthMode))
 
+			// Make sure the MessageBus password is not leaked into the Service Config that can be retrieved via the /config endpoint
+			delete(messageBusInfo.Optional, bootstrapMessaging.OptionsPasswordKey)
+
 			return true
 		}
 	}
