@@ -4,7 +4,7 @@
 # zombie processes
 #
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2021 Intel Corporation
+#  Copyright (c) 2022 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -32,6 +32,9 @@ fi
 
 DEFAULT_EDGEX_USER_ID=2002
 EDGEX_USER_ID=${EDGEX_USER:-$DEFAULT_EDGEX_USER_ID}
+
+# assumming the target directory ${SECURITY_INIT_DIR} has been created by the framework
+cp -rpd ${SECURITY_INIT_STAGING}/* ${SECURITY_INIT_DIR}/
 
 # During the bootstrapping, environment variables come for compose file environment files,
 # which then injecting into all other related containers on other services' entrypoint scripts
