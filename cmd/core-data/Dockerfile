@@ -17,7 +17,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Docker image for Golang Core Data micro service
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -36,7 +36,7 @@ COPY . .
 RUN make cmd/core-data/core-data
 
 #Next image - Copy built Go binary into new workspace
-FROM alpine:3.14
+FROM alpine:3.16
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium'

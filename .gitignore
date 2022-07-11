@@ -28,6 +28,9 @@ cmd/secrets-config/secrets-config
 cmd/security-bootstrapper/security-bootstrapper
 cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
+internal/security/bootstrapper/command/setupacl/test1/bootstrap_token.json
+internal/security/bootstrapper/command/setupacl/test2/bootstrap_token.json
+
 docs/_build/
 
 # log dirs

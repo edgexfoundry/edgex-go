@@ -16,7 +16,7 @@
 # 
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.17-alpine3.15
+ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -35,7 +35,7 @@ COPY . .
 RUN make cmd/core-metadata/core-metadata
 
 #Next image - Copy built Go binary into new workspace
-FROM alpine:3.14
+FROM alpine:3.16
 
 RUN apk add --update --no-cache dumb-init
 

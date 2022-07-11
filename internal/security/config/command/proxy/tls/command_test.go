@@ -8,7 +8,6 @@ package tls
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -310,7 +309,7 @@ func getTlsCertificateTestServer(listCertCase int, listCertOk bool, deleteCertOk
 				w.WriteHeader(http.StatusBadRequest)
 			}
 		default:
-			t.Fatal(fmt.Sprintf("Unexpected http method %s call to URL %s", r.Method, urlPath))
+			t.Fatalf("Unexpected http method %s call to URL %s", r.Method, urlPath)
 		}
 	}))
 }

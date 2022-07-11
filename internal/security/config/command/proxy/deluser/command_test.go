@@ -7,7 +7,6 @@
 package deluser
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -54,7 +53,7 @@ func delUserWithArgs(t *testing.T, args []string) {
 			require.Equal(t, "DELETE", r.Method)
 			w.WriteHeader(http.StatusNoContent)
 		default:
-			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
+			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
 	}))
 	defer ts.Close()

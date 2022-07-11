@@ -8,7 +8,6 @@ package adduser
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -96,7 +95,7 @@ func TestAddUserJWT(t *testing.T) {
 
 		// Testing --> fail if we don't recognize the URL in the request
 		default:
-			t.Fatal(fmt.Sprintf("Unexpected call to URL %s", r.URL.EscapedPath()))
+			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
 	}))
 	defer ts.Close()
