@@ -1,6 +1,6 @@
 #  ----------------------------------------------------------------------------------
 #  Copyright 2019 Dell Technologies, Inc.
-#  Copyright 2020 Intel Corp.
+#  Copyright 2022 Intel Corp.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -49,11 +49,9 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/kong-admin-conf
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-# Setup the entry point script, create token dir, and assign perms
+# Setup the entry point script
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && ln -s /usr/local/bin/entrypoint.sh / \
-    && mkdir -p /vault/config/assets \
-    && chown -Rh 100:1000 /vault/    
+    && ln -s /usr/local/bin/entrypoint.sh /
 
 ENTRYPOINT ["entrypoint.sh"]

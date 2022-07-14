@@ -1,6 +1,6 @@
 #!/usr/bin/dumb-init /bin/sh
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2020 Intel Corporation
+#  Copyright (c) 2022 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -20,6 +20,10 @@
 set -e
 
 # env settings are populated from env files of docker-compose
+
+# create token dir, and assign perms
+mkdir -p /vault/config/assets
+chown -Rh 100:1000 /vault/
 
 echo "Initializing secret store..."
 /security-secretstore-setup --vaultInterval=10
