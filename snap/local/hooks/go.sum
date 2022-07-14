@@ -1,5 +1,5 @@
-github.com/canonical/edgex-snap-hooks/v2 v2.3.1 h1:6/wlpQGFB6nc293dk05UcpVrbDgnV74pR452DWP7bRM=
-github.com/canonical/edgex-snap-hooks/v2 v2.3.1/go.mod h1:8mjUKSAFNsXYvV0fcfOoYue1dSjTVeJYdaQYtA6pb6Y=
+github.com/canonical/edgex-snap-hooks/v2 v2.3.2 h1:xrHw2PLiDsZegy/qJR84i4ccVBSNd+D2NcuY7FFeZ8Y=
+github.com/canonical/edgex-snap-hooks/v2 v2.3.2/go.mod h1:8mjUKSAFNsXYvV0fcfOoYue1dSjTVeJYdaQYtA6pb6Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
