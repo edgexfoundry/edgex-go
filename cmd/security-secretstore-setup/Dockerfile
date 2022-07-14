@@ -49,7 +49,7 @@ COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/kong-admin-conf
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .
 
-# Setup the entry point script, create token dir, and assign perms
+# Setup the entry point script
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && ln -s /usr/local/bin/entrypoint.sh /

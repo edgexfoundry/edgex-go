@@ -21,6 +21,7 @@ set -e
 
 # env settings are populated from env files of docker-compose
 
+# create token dir, and assign perms
 mkdir -p /vault/config/assets
 chown -Rh 100:1000 /vault/
 
