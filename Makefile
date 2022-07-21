@@ -78,7 +78,7 @@ ifeq ($(INCLUDE_DELAYED_START_BUILD_SUPPORT),"false")
 endif
 
 NO_MESSAGEBUS_GO_BUILD_TAG:=no_messagebus
-
+NO_ZMQ_GO_BUILD_TAG:=no_zmq
 
 build: $(MICROSERVICES)
 
@@ -86,7 +86,7 @@ tidy:
 	go mod tidy
 
 cmd/core-metadata/core-metadata:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
+	$(GO) build -tags "$(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 cmd/core-data/core-data:
 	$(GOCGO) build -tags "$(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(CGOFLAGS) -o $@ ./cmd/core-data

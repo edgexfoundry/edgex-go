@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2022 Intel
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,19 +8,24 @@ package application
 
 import (
 	"context"
+	"encoding/json"
+	goErrors "errors"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+
+	"github.com/google/uuid"
 )
 
 // The AddDevice function accepts the new device model from the controller function
@@ -56,12 +62,22 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		addedDevice.Id,
 		correlation.FromContext(ctx),
 	)
-	go addDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
+
+	device := dtos.FromDeviceModelToDTO(d)
+	go addDeviceCallback(ctx, dic, device)
+
+	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d, lc, dic); err != nil {
+		// Don't fail request if couldn't publish, just log it. Error already has context.
+		lc.Error(err.Error())
+	}
+
 	return addedDevice.Id, nil
 }
 
 // DeleteDeviceByName deletes the device by name
 func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
@@ -75,6 +91,12 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 	go deleteDeviceCallback(ctx, dic, device)
+
+	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device, lc, dic); err != nil {
+		// Don't fail request if couldn't publish, just log it. Error already has context.
+		lc.Error(err.Error())
+	}
+
 	return nil
 }
 
@@ -165,6 +187,12 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 		go updateDeviceCallback(ctx, dic, oldServiceName, device)
 	}
 	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
+
+	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device, lc, dic); err != nil {
+		// Don't fail request if couldn't publish, just log it. Error already has context.
+		lc.Error(err.Error())
+	}
+
 	return nil
 }
 
@@ -236,4 +264,38 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 		devices[i] = dtos.FromDeviceModelToDTO(d)
 	}
 	return devices, totalCount, nil
+}
+
+var noMessagingClientError = goErrors.New("unable to publish Device System Event: MessageBus Client not available")
+
+func publishDeviceSystemEvent(action string, d models.Device, lc logger.LoggingClient, dic *di.Container) error {
+	device := dtos.FromDeviceModelToDTO(d)
+	systemEvent := dtos.NewSystemEvent(common.DeviceSystemEventType, action, common.CoreMetaDataServiceKey, device.ServiceName, nil, device)
+
+	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
+	if messagingClient == nil {
+		return noMessagingClientError
+	}
+
+	publishTopic := fmt.Sprintf("%s/%s/%s/%s/%s/%s",
+		common.SystemEventsPublishTopicPrefix,
+		systemEvent.Source,
+		systemEvent.Type,
+		systemEvent.Action,
+		systemEvent.Owner,
+		device.ProfileName)
+
+	payload, _ := json.Marshal(systemEvent)
+
+	envelope := types.NewMessageEnvelope(payload, context.Background())
+	envelope.CorrelationID = uuid.NewString()
+	envelope.ContentType = common.ContentTypeJSON
+
+	if err := messagingClient.Publish(envelope, publishTopic); err != nil {
+		return fmt.Errorf("unable to publish '%s' Device System Event for %s to %s: %s", action, device.Name, publishTopic, err.Error())
+	}
+
+	lc.Debugf("Published the `%s` Device System Event for device `%s` to %s", action, device.Name, publishTopic)
+
+	return nil
 }
