@@ -6,11 +6,16 @@
 package application
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
+	goErrors "errors"
 	"fmt"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 	"github.com/google/uuid"
@@ -18,7 +23,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
@@ -27,7 +32,6 @@ import (
 )
 
 func TestPublishDeviceSystemEvent(t *testing.T) {
-	mockClient := &mocks.MessageClient{}
 	lc := logger.NewMockClient()
 
 	expectedDevice := models.Device{
@@ -36,6 +40,9 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 		ServiceName: "Device-onvif-camera",
 		ProfileName: "onvif-camera",
 	}
+
+	expectedCorrelationID := uuid.NewString()
+	expectedPublishTopicPrefix := "events/system-event"
 
 	tests := []struct {
 		Name          string
@@ -46,17 +53,26 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 		{"Device Add", common.DeviceSystemEventActionAdd, false, false},
 		{"Device Update", common.DeviceSystemEventActionUpdate, false, false},
 		{"Device Delete", common.DeviceSystemEventActionDelete, false, false},
-		{"Publish Error", common.DeviceSystemEventActionAdd, true, false},
 		{"Client Missing Error", common.DeviceSystemEventActionAdd, false, true},
+		{"Publish Error", common.DeviceSystemEventActionAdd, true, false},
 	}
 
-	pubErrMsg := errors.New("publish failed")
+	pubErrMsg := errors.NewCommonEdgeXWrapper(goErrors.New("publish failed"))
+
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return &config.ConfigurationStruct{
+				MessageQueue: bootstrapConfig.MessageBusInfo{
+					PublishTopicPrefix: expectedPublishTopicPrefix},
+			}
+		},
+	})
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			validatePublishCallFunc := func(envelope types.MessageEnvelope, topic string) error {
 				assert.Equal(t, common.ContentTypeJSON, envelope.ContentType)
-				assert.NotEmpty(t, envelope.CorrelationID)
+				assert.Equal(t, expectedCorrelationID, envelope.CorrelationID)
 				require.NotEmpty(t, envelope.Payload)
 				systemEvent := dtos.SystemEvent{}
 				err := json.Unmarshal(envelope.Payload, &systemEvent)
@@ -80,36 +96,48 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 				return nil
 			}
 
+			mockClient := &mocks.MessageClient{}
+
 			if test.PubError {
-				mockClient.On("Publish", mock.Anything, mock.Anything).Return(pubErrMsg).Once()
+				mockClient.On("Publish", mock.Anything, mock.Anything).Return(pubErrMsg)
 			} else {
-				mockClient.On("Publish", mock.Anything, mock.Anything).Return(validatePublishCallFunc).Once()
+				mockClient.On("Publish", mock.Anything, mock.Anything).Return(validatePublishCallFunc)
 			}
 
-			dic := di.NewContainer(di.ServiceConstructorMap{})
-
-			if !test.ClientMissing {
+			if test.ClientMissing {
 				dic.Update(di.ServiceConstructorMap{
-					container.MessagingClientName: func(get di.Get) interface{} {
+					bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
+						return nil
+					},
+				})
+			} else {
+				dic.Update(di.ServiceConstructorMap{
+					bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
 						return mockClient
 					},
 				})
 			}
 
-			err := publishDeviceSystemEvent(test.Action, expectedDevice, lc, dic)
+			// Use CBOR to make sure publisher override with JSON properly
+			ctx := context.WithValue(context.Background(), common.ContentType, common.ContentTypeCBOR)
+			ctx = context.WithValue(ctx, common.CorrelationHeader, expectedCorrelationID)
+
+			err := publishDeviceSystemEvent(test.Action, expectedDevice, ctx, lc, dic)
 
 			if test.PubError {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), pubErrMsg.Error())
 				return
-			} else if test.ClientMissing {
+			}
+
+			if test.ClientMissing {
 				require.Error(t, err)
-				assert.Equal(t, noMessagingClientError, err)
+				assert.Equal(t, &noMessagingClientError, err)
 				return
 			}
 
 			expectedTopic := fmt.Sprintf("%s/%s/%s/%s/%s/%s",
-				common.SystemEventsPublishTopicPrefix,
+				expectedPublishTopicPrefix,
 				common.CoreMetaDataServiceKey,
 				common.DeviceSystemEventType,
 				test.Action,
