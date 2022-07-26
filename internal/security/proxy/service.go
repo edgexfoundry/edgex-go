@@ -319,11 +319,11 @@ func (s *Service) postCert(cp bootstrapConfig.CertKeyPair) *CertError {
 	}
 	tokens := []string{s.configuration.KongURL.GetProxyBaseURL(), CertificatesPath}
 	req, err := http.NewRequest(http.MethodPost, strings.Join(tokens, "/"), strings.NewReader(string(data)))
-	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	if err != nil {
 		s.loggingClient.Errorf("failed to create upload cert request -- %s", err.Error())
 		return &CertError{err.Error(), InternalError}
 	}
+	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := s.client.Do(req)
 	if err != nil {
 		s.loggingClient.Errorf("failed to upload cert to proxy server with error %s", err.Error())

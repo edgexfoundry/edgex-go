@@ -87,6 +87,34 @@ func TestPostCertExists(t *testing.T) {
 	}
 }
 
+func TestPostCertHttpError(t *testing.T) {
+	fileName := "./testdata/configuration.toml"
+	contents, err := os.ReadFile(fileName)
+	require.NoError(t, err)
+
+	configuration := &config.ConfigurationStruct{}
+	err = toml.Unmarshal(contents, configuration)
+	require.NoError(t, err)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	defer ts.Close()
+
+	// Setting a mal-formatted hostname and port to force error.
+	configuration.KongURL = config.KongUrlInfo{
+		Server:          "{}",
+		ApplicationPort: -1,
+	}
+
+	mockLogger := logger.MockLogger{}
+	service := NewService(NewRequestor(true, 10, "", mockLogger), mockLogger, configuration)
+	mockCertPair := bootstrapConfig.CertKeyPair{Cert: "test-certificate", Key: "test-private-key"}
+	e := service.postCert(mockCertPair)
+	require.Error(t, e)
+	if e.reason != CertExisting {
+		assert.Contains(t, e.Error(), "/admin/certificates")
+	}
+}
+
 func TestInit(t *testing.T) {
 	fileName := "./testdata/configuration.toml"
 	contents, err := os.ReadFile(fileName)
