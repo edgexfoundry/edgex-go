@@ -64,10 +64,12 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	device := dtos.FromDeviceModelToDTO(d)
 	go addDeviceCallback(ctx, dic, device)
 
-	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d, ctx, lc, dic); err != nil {
-		// Don't fail request if couldn't publish, just log it. Error message already has context.
-		lc.Error(err.Error())
-	}
+	go func() {
+		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d, ctx, lc, dic); err != nil {
+			// Don't fail request if couldn't publish, just log it. Error message already has context.
+			lc.Error(err.Error())
+		}
+	}()
 
 	return addedDevice.Id, nil
 }
@@ -90,10 +92,12 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 	}
 	go deleteDeviceCallback(ctx, dic, device)
 
-	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device, ctx, lc, dic); err != nil {
-		// Don't fail request if couldn't publish, just log it. Error message already has context.
-		lc.Error(err.Error())
-	}
+	go func() {
+		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device, ctx, lc, dic); err != nil {
+			// Don't fail request if couldn't publish, just log it. Error message already has context.
+			lc.Error(err.Error())
+		}
+	}()
 
 	return nil
 }
@@ -186,10 +190,12 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	}
 	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
 
-	if err := publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device, ctx, lc, dic); err != nil {
-		// Don't fail request if couldn't publish, just log it. Error message already has context.
-		lc.Error(err.Error())
-	}
+	go func() {
+		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device, ctx, lc, dic); err != nil {
+			// Don't fail request if couldn't publish, just log it. Error message already has context.
+			lc.Error(err.Error())
+		}
+	}()
 
 	return nil
 }
