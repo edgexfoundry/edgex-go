@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -249,14 +249,9 @@ func (c *cmd) saveACLTokens(bootstrapACLToken *BootStrapACLTokenInfo) error {
 	return nil
 }
 
-// createEdgeXACLTokenRoles creates secret store roles that can be used for genearting registry tokens
+// createEdgeXACLTokenRoles creates secret store roles that can be used for generating registry tokens
 // via Consul secret engine API /consul/creds/[role_name] later on for all EdgeX microservices
 func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken string) error {
-	edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, edgeXServicePolicyName, edgeXPolicyRules)
-	if err != nil {
-		return fmt.Errorf("failed to create edgex service policy: %v", err)
-	}
-
 	roleNames, err := c.getUniqueRoleNames()
 	if err != nil {
 		return fmt.Errorf("failed to get unique role names: %v", err)
@@ -264,8 +259,41 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 
 	// create registry roles for EdgeX
 	for roleName := range roleNames {
+		// create policy for each service role
+		servicePolicyRules := `
+			# HCL definition of server agent policy for EdgeX
+			agent "" {
+				policy = "read"
+			}
+			agent_prefix "edgex" {
+				policy = "write"
+			}
+			node "" {
+				policy = "read"
+			}
+			node_prefix "edgex" {
+				policy = "write"
+			}
+			service "` + roleName + `" {
+				policy = "write"
+			}
+			service_prefix "" {
+				policy = "read"
+			}
+			key "" {
+				policy = "write"
+			}
+			key_prefix "" {
+				policy = "write"
+			}
+		`
+
+		edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, "acl_policy_for_"+roleName, servicePolicyRules)
+		if err != nil {
+			return fmt.Errorf("failed to create edgex service policy: %v", err)
+		}
+
 		// create roles based on the service keys as the role names
-		// in phase 2, we are using the same policy rule for all services
 		edgexACLTokenRole := NewRegistryRole(roleName, ClientType, []Policy{
 			*edgexServicePolicy,
 			// localUse set to false as some EdgeX services may be running in a different node
