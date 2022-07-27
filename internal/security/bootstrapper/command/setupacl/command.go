@@ -38,6 +38,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
 
+	baseBootStrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
@@ -262,12 +263,6 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 		// create policy for each service role
 		servicePolicyRules := `
 			# HCL definition of server agent policy for EdgeX
-			agent "" {
-				policy = "read"
-			}
-			agent_prefix "edgex" {
-				policy = "write"
-			}
 			node "" {
 				policy = "read"
 			}
@@ -280,10 +275,7 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 			service_prefix "" {
 				policy = "read"
 			}
-			key "" {
-				policy = "write"
-			}
-			key_prefix "" {
+			key_prefix "` + c.getKeyPrefix(roleName) + `" {
 				policy = "write"
 			}
 		`
@@ -306,6 +298,22 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 	}
 
 	return nil
+}
+
+// getKeyPrefix get the consul ACL key prefix for the service with the input roleName, ie. the service key-based
+// Currently we support 2 types of custom services: app and device services
+// if the input role name does not fall into the above two types, then it is categorized into core type for the key prefix
+func (c *cmd) getKeyPrefix(roleName string) string {
+	if strings.HasPrefix(roleName, "app-") {
+		return internal.ConfigStemApp + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	}
+
+	if strings.HasPrefix(roleName, "device-") {
+		return internal.ConfigStemDevice + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	}
+
+	// anything else falls into the 3rd category: core bucket
+	return internal.ConfigStemCore + baseBootStrapConfig.ConfigVersion + "/" + roleName
 }
 
 func (c *cmd) getUniqueRoleNames() (map[string]struct{}, error) {
