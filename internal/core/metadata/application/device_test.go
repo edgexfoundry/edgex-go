@@ -121,7 +121,11 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 			}
 
 			// Use CBOR to make sure publisher overrides with JSON properly
+			// lint:ignore SA1029 legacy
+			// nolint:staticcheck // See golangci-lint #741
 			ctx := context.WithValue(context.Background(), common.ContentType, common.ContentTypeCBOR)
+			// lint:ignore SA1029 legacy
+			// nolint:staticcheck // See golangci-lint #741
 			ctx = context.WithValue(ctx, common.CorrelationHeader, expectedCorrelationID)
 
 			publishDeviceSystemEvent(test.Action, expectedDevice.ServiceName, expectedDevice, ctx, mockLogger, dic)
