@@ -61,6 +61,7 @@ Protocol = "redis"
 Host = "localhost"
 Port = 6379
 Type = "redis"
+PublishTopicPrefix = "edgex/system-events" # /<source>/<type>/<action>/<owner>/<profile> will be added to this Publish Topic prefix
 AuthMode = "usernamepassword"  # required for redis messagebus (secure or insecure).
 SecretName = "redisdb"
   [MessageQueue.Optional]
