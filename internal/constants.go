@@ -18,7 +18,9 @@ const (
 	BootTimeoutSecondsDefault = 30
 	BootRetrySecondsDefault   = 1
 	ConfigFileName            = "configuration.toml"
+	ConfigStemApp             = "edgex/appservices/"
 	ConfigStemCore            = "edgex/core/"
+	ConfigStemDevice          = "edgex/devices/"
 	ConfigStemSecurity        = "edgex/security/"
 	LogDurationKey            = "duration"
 )
