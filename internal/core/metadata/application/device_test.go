@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
@@ -25,15 +26,12 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 )
 
 func TestPublishDeviceSystemEvent(t *testing.T) {
-	lc := logger.NewMockClient()
-
 	expectedDevice := models.Device{
 		Name:        "Camera-Device",
 		Id:          uuid.NewString(),
@@ -97,14 +95,18 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 			}
 
 			mockClient := &mocks.MessageClient{}
+			mockLogger := &mocks2.LoggingClient{}
+			mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 
 			if test.PubError {
 				mockClient.On("Publish", mock.Anything, mock.Anything).Return(pubErrMsg)
+				mockLogger.On("Errorf", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return()
 			} else {
 				mockClient.On("Publish", mock.Anything, mock.Anything).Return(validatePublishCallFunc)
 			}
 
 			if test.ClientMissing {
+				mockLogger.On("Errorf", mock.Anything, mock.Anything).Return()
 				dic.Update(di.ServiceConstructorMap{
 					bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
 						return nil
@@ -118,21 +120,14 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 				})
 			}
 
-			// Use CBOR to make sure publisher override with JSON properly
+			// Use CBOR to make sure publisher overrides with JSON properly
 			ctx := context.WithValue(context.Background(), common.ContentType, common.ContentTypeCBOR)
 			ctx = context.WithValue(ctx, common.CorrelationHeader, expectedCorrelationID)
 
-			err := publishDeviceSystemEvent(test.Action, expectedDevice, ctx, lc, dic)
-
-			if test.PubError {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), pubErrMsg.Error())
-				return
-			}
+			publishDeviceSystemEvent(test.Action, expectedDevice.ServiceName, expectedDevice, ctx, mockLogger, dic)
 
 			if test.ClientMissing {
-				require.Error(t, err)
-				assert.Equal(t, &noMessagingClientError, err)
+				mockLogger.AssertCalled(t, "Errorf", mock.Anything, noMessagingClientError)
 				return
 			}
 
@@ -143,9 +138,10 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 				test.Action,
 				expectedDevice.ServiceName,
 				expectedDevice.ProfileName)
+			mockClient.AssertCalled(t, "Publish", mock.Anything, expectedTopic)
 
-			if !test.ClientMissing {
-				mockClient.AssertCalled(t, "Publish", mock.Anything, expectedTopic)
+			if test.PubError {
+				mockLogger.AssertCalled(t, "Errorf", mock.Anything, mock.Anything, mock.Anything, mock.Anything, pubErrMsg)
 			}
 		})
 	}

@@ -64,12 +64,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	device := dtos.FromDeviceModelToDTO(d)
 	go addDeviceCallback(ctx, dic, device)
 
-	go func() {
-		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d, ctx, lc, dic); err != nil {
-			// Don't fail request if couldn't publish, just log it. Error message already has context.
-			lc.Error(err.Error())
-		}
-	}()
+	go publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d.ServiceName, d, ctx, lc, dic)
 
 	return addedDevice.Id, nil
 }
@@ -92,12 +87,7 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 	}
 	go deleteDeviceCallback(ctx, dic, device)
 
-	go func() {
-		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device, ctx, lc, dic); err != nil {
-			// Don't fail request if couldn't publish, just log it. Error message already has context.
-			lc.Error(err.Error())
-		}
-	}()
+	go publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device.ServiceName, device, ctx, lc, dic)
 
 	return nil
 }
@@ -187,15 +177,11 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	if oldServiceName != "" {
 		go updateDeviceCallback(ctx, dic, oldServiceName, device)
+		go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, oldServiceName, device, ctx, lc, dic)
 	}
-	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
 
-	go func() {
-		if err := publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device, ctx, lc, dic); err != nil {
-			// Don't fail request if couldn't publish, just log it. Error message already has context.
-			lc.Error(err.Error())
-		}
-	}()
+	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
+	go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device.ServiceName, device, ctx, lc, dic)
 
 	return nil
 }
@@ -270,15 +256,16 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	return devices, totalCount, nil
 }
 
-var noMessagingClientError = errors.NewCommonEdgeXWrapper(goErrors.New("unable to publish Device System Event: MessageBus Client not available"))
+var noMessagingClientError = goErrors.New(": MessageBus Client not available")
 
-func publishDeviceSystemEvent(action string, d models.Device, ctx context.Context, lc logger.LoggingClient, dic *di.Container) errors.EdgeX {
+func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx context.Context, lc logger.LoggingClient, dic *di.Container) {
 	device := dtos.FromDeviceModelToDTO(d)
-	systemEvent := dtos.NewSystemEvent(common.DeviceSystemEventType, action, common.CoreMetaDataServiceKey, device.ServiceName, nil, device)
+	systemEvent := dtos.NewSystemEvent(common.DeviceSystemEventType, action, common.CoreMetaDataServiceKey, owner, nil, device)
 
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	if messagingClient == nil {
-		return &noMessagingClientError
+		lc.Errorf("unable to publish Device System Event: %v", noMessagingClientError)
+		return
 	}
 
 	config := container.ConfigurationFrom(dic.Get)
@@ -298,11 +285,9 @@ func publishDeviceSystemEvent(action string, d models.Device, ctx context.Contex
 	envelope.ContentType = common.ContentTypeJSON
 
 	if err := messagingClient.Publish(envelope, publishTopic); err != nil {
-		msg := fmt.Sprintf("unable to publish '%s' Device System Event for device '%s' to topic '%s'", action, device.Name, publishTopic)
-		return errors.NewCommonEdgeX(errors.KindCommunicationError, msg, err)
+		lc.Errorf("unable to publish '%s' Device System Event for device '%s' to topic '%s': %v", action, device.Name, publishTopic, err)
+		return
 	}
 
 	lc.Debugf("Published the '%s' Device System Event for device '%s' to topic '%s'", action, device.Name, publishTopic)
-
-	return nil
 }
