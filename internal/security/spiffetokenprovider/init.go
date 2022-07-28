@@ -332,9 +332,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	lc.Info("spiffe token provider starts listening and serves...")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		lc.Errorf("Error on serve: %v", err)
+		return false
 	}
 
-	return false
+	return true
 }
 
 // seedKnownSecrets seeds or copies the known secrets from the existing service (e.g. security-bootstrapper-redis)

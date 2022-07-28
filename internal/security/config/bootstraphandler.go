@@ -45,6 +45,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	err = flagSet.Parse(os.Args[1:])
 	if err != nil {
 		lc.Error(err.Error())
+		return false
 	}
 
 	subcommandArgs := []string{}
@@ -74,9 +75,10 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	exitStatusCode, err := command.Execute()
 	if err != nil {
 		lc.Error(err.Error())
+		return false
 	}
 	b.exitStatusCode = exitStatusCode
-	return false
+	return true
 }
 
 func (b *Bootstrap) ExitStatusCode() int {
