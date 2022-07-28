@@ -93,7 +93,8 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	if err != nil {
 		lc.Errorf("error occurred generating tokens: %s", err.Error())
 		b.exitCode = 1
+		return false
 	}
 
-	return false // Tell bootstrap.Run() to exit wait loop and terminate
+	return true
 }
