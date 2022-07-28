@@ -267,7 +267,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	rootToken, err = client.RegenRootToken(initResponse.Keys)
 	if err != nil {
 		lc.Errorf("could not regenerate root token %s", err.Error())
-		os.Exit(1)
+		return false
 	}
 	defer func() {
 		// Revoke transient root token at the end of this function
@@ -285,7 +285,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			initResponse.RootToken = ""
 			if err := saveInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 				lc.Errorf("unable to save init response: %s", err.Error())
-				os.Exit(1)
+				return false
 			}
 			lc.Info("Root token stripped from init response (on disk) for security reasons")
 		}
@@ -309,7 +309,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			CreateAndWrite(rootToken, secretStoreConfig.TokenProviderAdminTokenPath, tokenMaintenance.CreateTokenIssuingToken)
 		if err != nil {
 			lc.Errorf("failed to create token issuing token: %s", err.Error())
-			os.Exit(1)
+			return false
 		}
 		if secretStoreConfig.TokenProviderType == OneShotProvider {
 			// Revoke the admin token at the end of the current function if running a one-shot provider
@@ -323,11 +323,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	if secretStoreConfig.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(secretStoreConfig); err != nil {
 			lc.Errorf("failed to configure token provider: %s", err.Error())
-			os.Exit(1)
+			return false
 		}
 		if err := tokenProvider.Launch(); err != nil {
 			lc.Errorf("token provider failed: %s", err.Error())
-			os.Exit(1)
+			return false
 		}
 	} else {
 		lc.Info("no token provider configured")
@@ -337,13 +337,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	if err := secretsengine.New(secretsengine.KVSecretsEngineMountPoint, secretsengine.KeyValue).
 		Enable(&rootToken, lc, client); err != nil {
 		lc.Errorf("failed to enable KV secrets engine: %s", err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	knownSecretsToAdd, err := b.getKnownSecretsToAdd()
 	if err != nil {
 		lc.Error(err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	// credential creation
@@ -367,14 +367,14 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	if err != nil {
 		if err != errNotFound {
 			lc.Error("failed to determine if Redis credentials already exist or not: %w", err)
-			os.Exit(1)
+			return false
 		}
 
 		lc.Info("Generating new password for Redis DB")
 		defaultPassword, err := cred.GeneratePassword(ctx)
 		if err != nil {
 			lc.Error("failed to generate default password")
-			os.Exit(1)
+			return false
 		}
 
 		redisCredentials = UserPasswordPair{
@@ -403,7 +403,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			err = addServiceCredential(lc, "redisdb", cred, service, redisCredentials)
 			if err != nil {
 				lc.Error(err.Error())
-				os.Exit(1)
+				return false
 			}
 		}
 	}
@@ -413,13 +413,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	err = addDBCredential(lc, "security-bootstrapper-redis", cred, "redisdb", redisCredentials)
 	if err != nil {
 		lc.Error(err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redisCredentials, lc)
 	if err != nil {
 		lc.Errorf("failed to configure for Secure Message Bus: %s", err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	// Concat all cert path secretStore values together to check for empty values
@@ -435,7 +435,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		existing, err := cert.AlreadyInStore()
 		if err != nil {
 			lc.Error(err.Error())
-			os.Exit(1)
+			return false
 		}
 
 		if existing {
@@ -447,7 +447,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		cp, err := cert.ReadFrom(secretStoreConfig.CertFilePath, secretStoreConfig.KeyFilePath)
 		if err != nil {
 			lc.Error("failed to get certificate pair from volume")
-			os.Exit(1)
+			return false
 		}
 
 		lc.Info("proxy certificate pair are loaded from volume successfully, will upload to secret store")
@@ -456,7 +456,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		if err != nil {
 			lc.Error("failed to upload the proxy cert pair into the secret store")
 			lc.Error(err.Error())
-			os.Exit(1)
+			return false
 		}
 
 		lc.Info("proxy certificate pair are uploaded to secret store successfully")
@@ -471,7 +471,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	if err := secretsengine.New(secretsengine.ConsulSecretEngineMountPoint, secretsengine.Consul).
 		Enable(&rootToken, lc, client); err != nil {
 		lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	// generate a management token for Consul secrets engine operations:
@@ -479,7 +479,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	if _, err := tokenFileWriter.CreateAndWrite(rootToken, configuration.SecretStore.ConsulSecretsAdminTokenPath,
 		tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
 		lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
-		os.Exit(1)
+		return false
 	}
 
 	// Configure Kong Admin API
@@ -510,10 +510,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	err = ka.Setup()
 	if err != nil {
 		lc.Errorf("failed to configure the Kong Admin API: %s", err.Error())
+		return false
 	}
 
 	lc.Info("Vault init done successfully")
-	return false
+	return true
 
 }
 
