@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -38,6 +38,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
 
+	baseBootStrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg"
@@ -249,14 +250,9 @@ func (c *cmd) saveACLTokens(bootstrapACLToken *BootStrapACLTokenInfo) error {
 	return nil
 }
 
-// createEdgeXACLTokenRoles creates secret store roles that can be used for genearting registry tokens
+// createEdgeXACLTokenRoles creates secret store roles that can be used for generating registry tokens
 // via Consul secret engine API /consul/creds/[role_name] later on for all EdgeX microservices
 func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken string) error {
-	edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, edgeXServicePolicyName, edgeXPolicyRules)
-	if err != nil {
-		return fmt.Errorf("failed to create edgex service policy: %v", err)
-	}
-
 	roleNames, err := c.getUniqueRoleNames()
 	if err != nil {
 		return fmt.Errorf("failed to get unique role names: %v", err)
@@ -264,8 +260,32 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 
 	// create registry roles for EdgeX
 	for roleName := range roleNames {
+		// create policy for each service role
+		servicePolicyRules := `
+			# HCL definition of server agent policy for EdgeX
+			node "" {
+				policy = "read"
+			}
+			node_prefix "edgex" {
+				policy = "write"
+			}
+			service "` + roleName + `" {
+				policy = "write"
+			}
+			service_prefix "" {
+				policy = "read"
+			}
+			key_prefix "` + c.getKeyPrefix(roleName) + `" {
+				policy = "write"
+			}
+		`
+
+		edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, "acl_policy_for_"+roleName, servicePolicyRules)
+		if err != nil {
+			return fmt.Errorf("failed to create edgex service policy: %v", err)
+		}
+
 		// create roles based on the service keys as the role names
-		// in phase 2, we are using the same policy rule for all services
 		edgexACLTokenRole := NewRegistryRole(roleName, ClientType, []Policy{
 			*edgexServicePolicy,
 			// localUse set to false as some EdgeX services may be running in a different node
@@ -278,6 +298,22 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 	}
 
 	return nil
+}
+
+// getKeyPrefix get the consul ACL key prefix for the service with the input roleName, ie. the service key-based
+// Currently we support 2 types of custom services: app and device services
+// if the input role name does not fall into the above two types, then it is categorized into core type for the key prefix
+func (c *cmd) getKeyPrefix(roleName string) string {
+	if strings.HasPrefix(roleName, "app-") {
+		return internal.ConfigStemApp + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	}
+
+	if strings.HasPrefix(roleName, "device-") {
+		return internal.ConfigStemDevice + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	}
+
+	// anything else falls into the 3rd category: core bucket
+	return internal.ConfigStemCore + baseBootStrapConfig.ConfigVersion + "/" + roleName
 }
 
 func (c *cmd) getUniqueRoleNames() (map[string]struct{}, error) {
