@@ -32,8 +32,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.4.1 h1:tUSpviiL5G3P9SZZJPC4ZULZJsxQKXxfENpMvdbAXAI=
 github.com/eclipse/paho.mqtt.golang v1.4.1/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2b7upDZMK9HRbFvCA=
-github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.10 h1:6gvrvqpXWS68wDkRAzmnkblUBZIadGpjlGZXuahfgyQ=
-github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.10/go.mod h1:HTrESzn1iz6C3Sg+3ZDBtklpkCxHX0Cf8sGFAFlwM8s=
+github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.11 h1:HQpkdjcD6nVimvXYtpVbzJNBOOtcoFOcSLN8uyiBkvs=
+github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.11/go.mod h1:HTrESzn1iz6C3Sg+3ZDBtklpkCxHX0Cf8sGFAFlwM8s=
 github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0 h1:AZeaAPJM5X93ITFgwbwluYDtYEJ7tkCMSlj35GwfLLU=
 github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0/go.mod h1:YP17JhMnXTitowXE13QJwFaKo0oc03iyoKLjWAYl4FE=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.13 h1:lPjtuVk2QXoUxs6sAsb0qflxmREB5kgHIjFrkNNnx6A=
@@ -42,8 +42,8 @@ github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.12 h1:YdO9V8pSFK3L2FSpPru
 github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.12/go.mod h1:yLJ9EK4Feg409FDr0oP87LbaRLyOSGJk/ikaIfEDKcI=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0 h1:dk9ul1t7INAiyZXeu/GrpinFE3qOekdy8uZOqEGgIiE=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0/go.mod h1:DUQRnAd5fVzoROc5SI+PTFUD/vCNeZmZHBMrLElbmwI=
-github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.5 h1:wksbHWGDllkrkjoeRTrhcQcPaP5iiub/i2EuwHyPmEo=
-github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.5/go.mod h1:h/FohFNY8xHalioLg1bhjAuEj0z+danSDtixirvaXmQ=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.2.1-dev.5 h1:B6LCod0L4qh/+zZdzoMucL7lArZrT1NIpT5naya+CXU=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.2.1-dev.5/go.mod h1:h/FohFNY8xHalioLg1bhjAuEj0z+danSDtixirvaXmQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=

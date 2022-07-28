@@ -1,10 +1,5 @@
 module github.com/edgexfoundry/edgex-go
 
-replace (
-	github.com/edgexfoundry/go-mod-bootstrap/v2 => ../MODS/go-mod-bootstrap
-	github.com/edgexfoundry/go-mod-core-contracts/v2 => ../MODS/go-mod-core-contracts
-)
-
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.11
