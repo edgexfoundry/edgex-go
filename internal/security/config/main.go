@@ -51,13 +51,14 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 
 	serviceHandler := NewBootstrap()
 
-	bootstrap.Run(
+	_, _, _ = bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		securitySecretsConfigServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		false,
@@ -65,5 +66,6 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 			serviceHandler.BootstrapHandler,
 		},
 	)
+
 	return serviceHandler.ExitStatusCode()
 }

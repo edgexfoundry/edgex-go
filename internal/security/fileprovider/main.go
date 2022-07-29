@@ -55,13 +55,14 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	bootStrapper := NewBootstrap()
 
-	bootstrap.Run(
+	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		common.SecurityFileTokenProviderServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		false,
@@ -70,5 +71,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		},
 	)
 
-	os.Exit(bootStrapper.ExitCode())
+	if !success {
+		os.Exit(1)
+	}
 }
