@@ -66,13 +66,14 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		},
 	})
 
-	bootstrap.Run(
+	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		common.SecuritySecretStoreSetupServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		false,
@@ -80,4 +81,8 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 			NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
 		},
 	)
+
+	if !success {
+		os.Exit(1)
+	}
 }

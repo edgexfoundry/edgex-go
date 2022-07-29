@@ -36,18 +36,10 @@ import (
 )
 
 type Bootstrap struct {
-	exitCode int
 }
 
 func NewBootstrap() *Bootstrap {
-	return &Bootstrap{
-		exitCode: 0,
-	}
-}
-
-// ExitCode returns desired exit code of program
-func (b *Bootstrap) ExitCode() int {
-	return b.exitCode
+	return &Bootstrap{}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the data service.
@@ -81,7 +73,6 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	client, err := secrets.NewSecretStoreClient(clientConfig, lc, requester)
 	if err != nil {
 		lc.Errorf("error occurred creating SecretStoreClient: %s", err.Error())
-		b.exitCode = 1
 		return false
 	}
 
@@ -92,8 +83,8 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	if err != nil {
 		lc.Errorf("error occurred generating tokens: %s", err.Error())
-		b.exitCode = 1
+		return false
 	}
 
-	return false // Tell bootstrap.Run() to exit wait loop and terminate
+	return true
 }

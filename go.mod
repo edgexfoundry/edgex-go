@@ -2,11 +2,11 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
-	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.2.0
-	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.2.0
+	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0-dev.10
+	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.13
 	github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.12
 	github.com/edgexfoundry/go-mod-registry/v2 v2.2.0
-	github.com/edgexfoundry/go-mod-secrets/v2 v2.2.0
+	github.com/edgexfoundry/go-mod-secrets/v2 v2.2.1-dev.5
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gomodule/redigo v1.8.9
@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.6
 	github.com/pelletier/go-toml v1.9.5
-	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spiffe/go-spiffe/v2 v2.1.1
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
@@ -30,11 +30,11 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.1 // indirect
 	github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/go-kit/log v0.2.0 // indirect
+	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.10.1 // indirect
+	github.com/go-playground/validator/v10 v10.11.0 // indirect
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect

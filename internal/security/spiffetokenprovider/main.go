@@ -44,13 +44,14 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		},
 	})
 
-	bootstrap.Run(
+	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		common.SecuritySpiffeTokenProviderKey,
 		internal.ConfigStemSecurity,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		true,
@@ -58,4 +59,8 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 			NewBootstrap().BootstrapHandler,
 		},
 	)
+
+	if !success {
+		os.Exit(1)
+	}
 }

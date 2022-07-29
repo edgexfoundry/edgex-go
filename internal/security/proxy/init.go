@@ -98,5 +98,5 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		b.haltIfError(lc, s.ResetProxy())
 	}
 
-	return false
+	return true
 }
