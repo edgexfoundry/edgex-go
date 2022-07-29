@@ -51,7 +51,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 
 	serviceHandler := NewBootstrap()
 
-	_, _, _ = bootstrap.RunAndReturnWaitGroup(
+	bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
