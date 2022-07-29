@@ -301,8 +301,8 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 }
 
 // getKeyPrefix get the consul ACL key prefix for the service with the input roleName, ie. the service key-based
-// Currently we support 2 types of custom services: app and device services
-// if the input role name does not fall into the above two types, then it is categorized into core type for the key prefix
+// Currently we support 3 types of services: app services, device services, and security services
+// if the input role name does not fall into the above types, then it is categorized into core type for the key prefix
 func (c *cmd) getKeyPrefix(roleName string) string {
 	if strings.HasPrefix(roleName, "app-") {
 		return internal.ConfigStemApp + baseBootStrapConfig.ConfigVersion + "/" + roleName
@@ -310,6 +310,10 @@ func (c *cmd) getKeyPrefix(roleName string) string {
 
 	if strings.HasPrefix(roleName, "device-") {
 		return internal.ConfigStemDevice + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	}
+
+	if strings.HasPrefix(roleName, "security-") {
+		return internal.ConfigStemSecurity + baseBootStrapConfig.ConfigVersion + "/" + roleName
 	}
 
 	// anything else falls into the 3rd category: core bucket
