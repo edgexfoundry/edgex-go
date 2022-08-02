@@ -27,13 +27,13 @@ RUN make cmd/sys-mgmt-agent/sys-mgmt-agent
 RUN make cmd/sys-mgmt-executor/sys-mgmt-executor
 
 # Get the Docker-in-Docker image layered-in now.
-FROM docker:20.10.14
+FROM alpine:3.16
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2017-2019: Mainflux, Cavium, Dell, Copyright (c) 2021: Intel Corporation'
 
 # consul token needs to be security-bootstrappable and for security-bootstrappable, dumb-init is required
-RUN apk add --update --no-cache bash dumb-init py3-pip curl && \
+RUN apk add --update --no-cache bash dumb-init py3-pip curl docker-cli && \
       pip install --no-cache-dir docker-compose==1.23.2
 
 ENV APP_PORT=58890
