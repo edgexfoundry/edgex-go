@@ -73,10 +73,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
+		Clients:      c.Clients,
+		Service:      c.Service,
+		Registry:     c.Registry,
+		SecretStore:  c.SecretStore,
+		MessageQueue: c.MessageQueue,
 	}
 }
 

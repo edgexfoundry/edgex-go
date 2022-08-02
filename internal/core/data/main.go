@@ -21,14 +21,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/messaging"
-	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -36,7 +29,14 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+
+	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
@@ -73,9 +73,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
-			messaging.BootstrapHandler,
+			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreDataServiceKey).BootstrapHandler, // Must be after Messaging
-			application.BootstrapHandler, // Must be after Service Metrics and before next handler
+			application.BootstrapHandler,                                           // Must be after Service Metrics and before next handler
 			NewBootstrap(router, common.CoreDataServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
