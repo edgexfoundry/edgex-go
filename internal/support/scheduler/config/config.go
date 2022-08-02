@@ -66,8 +66,6 @@ type IntervalActionInfo struct {
 	Name string
 	// Action http method *const prob*
 	Method string
-	// Acton target name
-	Target string
 	// Action target parameters
 	Parameters string
 	// Action target request body
