@@ -81,9 +81,9 @@ func TestGenerateACLConfig(t *testing.T) {
 	}
 
 	require.Equal(t, 1, len(outputlines))
-	require.Equal(t, fmt.Sprintf("user default on allkeys +@all -@dangerous #%x",
+	require.Equal(t, fmt.Sprintf("user default on allkeys &* +@all -@dangerous #%x",
 		sha256.Sum256([]byte(testFakePwd))), outputlines[0])
 	// should not be equal if use different password
-	require.NotEqual(t, fmt.Sprintf("user default on allkeys +@all -@dangerous #%x",
+	require.NotEqual(t, fmt.Sprintf("user default on allkeys &* +@all -@dangerous #%x",
 		sha256.Sum256([]byte("differentPassword"))), outputlines[0])
 }

@@ -103,7 +103,7 @@ const (
 	aclFileConfigTemplate = "aclfile {{.ACLFilePath}}"
 
 	// aclDefaultUserTemplate is the ACL rule for "default" user
-	aclDefaultUserTemplate = "user {{.RedisUser}} on allkeys +@all -@dangerous #{{.Sha256RedisPwd}}"
+	aclDefaultUserTemplate = "user {{.RedisUser}} on allkeys &* +@all -@dangerous #{{.Sha256RedisPwd}}"
 )
 
 // GenerateRedisConfig writes the startup configuration of Redis server based on pre-defined template
