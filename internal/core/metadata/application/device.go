@@ -256,7 +256,7 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	return devices, totalCount, nil
 }
 
-var noMessagingClientError = goErrors.New(": MessageBus Client not available")
+var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageQueue configuration to enable sending System Events via the EdgeX MessageBus")
 
 func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx context.Context, lc logger.LoggingClient, dic *di.Container) {
 	device := dtos.FromDeviceModelToDTO(d)
@@ -264,7 +264,9 @@ func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx 
 
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	if messagingClient == nil {
-		lc.Errorf("unable to publish Device System Event: %v", noMessagingClientError)
+		// For 2.x this is a warning due to backwards compatability
+		// TODO: For change this to be Errorf for EdgeX 3.0
+		lc.Warnf("unable to publish Device System Event: %v", noMessagingClientError)
 		return
 	}
 
