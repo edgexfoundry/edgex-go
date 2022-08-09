@@ -33,7 +33,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -55,6 +55,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Properties: dtos.ResourceProperties{
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
+			Units:     TestUnits,
 		},
 	}, {
 		Name:        TestDeviceResourceName + "-dup",
@@ -64,6 +65,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 		Properties: dtos.ResourceProperties{
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
+			Units:     TestUnits,
 		},
 	}}
 	var testDeviceCommands = []dtos.DeviceCommand{{
@@ -169,7 +171,7 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 	expectedRequestId := ExampleUUID
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddDeviceProfile", deviceProfileModel).Return(deviceProfileModel, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -308,7 +310,7 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 	duplicateNameDBError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile name %s exists", duplicateNameModel.Name), nil)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddDeviceProfile", duplicateNameModel).Return(duplicateNameModel, duplicateNameDBError)
 	dbClientMock.On("AddDeviceProfile", duplicateIdModel).Return(duplicateIdModel, duplicateIdDBError)
 	dic.Update(di.ServiceConstructorMap{
@@ -352,6 +354,84 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 			assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 			assert.Equal(t, http.StatusConflict, res[0].StatusCode, "BaseResponse status code not as expected")
 			assert.Contains(t, res[0].Message, testCase.expectedError.Message(), "Message not as expected")
+		})
+	}
+}
+
+func TestAddDeviceProfile_UnitsOfMeasure_Validation(t *testing.T) {
+	deviceProfileRequest := buildTestDeviceProfileRequest()
+	deviceProfileModel := requests.DeviceProfileReqToDeviceProfileModel(deviceProfileRequest)
+	expectedRequestId := ExampleUUID
+
+	emptyUnits := ""
+	invalidUnits := "invalid"
+	validReq := deviceProfileRequest
+	emptyUnitsReq := buildTestDeviceProfileRequest()
+	for i := range emptyUnitsReq.Profile.DeviceResources {
+		emptyUnitsReq.Profile.DeviceResources[i].Properties.Units = emptyUnits
+	}
+	noUnitsModel := requests.DeviceProfileReqToDeviceProfileModel(emptyUnitsReq)
+	invalidUnitsReq := buildTestDeviceProfileRequest()
+	for i := range invalidUnitsReq.Profile.DeviceResources {
+		invalidUnitsReq.Profile.DeviceResources[i].Properties.Units = invalidUnits
+	}
+
+	dic := mockDic()
+	container.ConfigurationFrom(dic.Get).Writable.UoM.Validation = true
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("AddDeviceProfile", deviceProfileModel).Return(deviceProfileModel, nil)
+	dbClientMock.On("AddDeviceProfile", noUnitsModel).Return(noUnitsModel, nil)
+	uomMock := &mocks.UnitsOfMeasure{}
+	uomMock.On("Validate", TestUnits).Return(true)
+	uomMock.On("Validate", "").Return(true)
+	uomMock.On("Validate", "invalid").Return(false)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+		container.UnitsOfMeasureInterfaceName: func(get di.Get) interface{} {
+			return uomMock
+		},
+	})
+
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		Request            []requests.DeviceProfileRequest
+		expectedStatusCode int
+	}{
+		{"valid - expected units", []requests.DeviceProfileRequest{validReq}, http.StatusCreated},
+		{"valid - units not provided", []requests.DeviceProfileRequest{emptyUnitsReq}, http.StatusCreated},
+		{"invalid - unexpected units", []requests.DeviceProfileRequest{invalidUnitsReq}, http.StatusInternalServerError},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, common.ApiDeviceProfileRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AddDeviceProfile)
+			handler.ServeHTTP(recorder, req)
+
+			var res []commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, common.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+			if res[0].RequestId != "" {
+				assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+			}
+			assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
 		})
 	}
 }
@@ -402,7 +482,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	notFoundDBError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exists", notFound.Profile.Name), nil)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", deviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
 	dbClientMock.On("DeviceCountByProfileName", deviceProfileModel.Name).Return(uint32(1), nil)
@@ -537,7 +617,7 @@ func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 	notFound.BasicInfo.Name = &notFoundName
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileById", *valid.BasicInfo.Id).Return(dpModel, nil)
 	dbClientMock.On("DeviceProfileByName", *valid.BasicInfo.Name).Return(dpModel, nil)
 	dbClientMock.On("DeviceProfileByName", notFoundName).Return(dpModel, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
@@ -610,7 +690,7 @@ func TestAddDeviceProfileByYaml_Created(t *testing.T) {
 	deviceProfileModel := dtos.ToDeviceProfileModel(deviceProfileDTO)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddDeviceProfile", deviceProfileModel).Return(deviceProfileModel, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -721,7 +801,7 @@ func TestAddDeviceProfileByYaml_Duplicated(t *testing.T) {
 	dbError := errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device profile %s already exists", TestDeviceProfileName), nil)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddDeviceProfile", deviceProfileModel).Return(deviceProfileModel, dbError)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -825,7 +905,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	notFoundDBError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exists", notFoundDeviceProfileModel.Name), nil)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("UpdateDeviceProfile", validDeviceProfileModel).Return(nil)
 	dbClientMock.On("UpdateDeviceProfile", notFoundDeviceProfileModel).Return(notFoundDBError)
 	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(uint32(1), nil)
@@ -920,7 +1000,7 @@ func TestDeviceProfileByName(t *testing.T) {
 	notFoundName := "notFoundName"
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
 	dbClientMock.On("DeviceProfileByName", notFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
@@ -985,7 +1065,7 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	provisionWatcherExists := "provisionWatcherExists"
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DevicesByProfileName", 0, 1, deviceProfile.Name).Return([]models.Device{}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, deviceProfile.Name).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", deviceProfile.Name).Return(nil)
@@ -1083,7 +1163,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileCountByLabels", []string(nil)).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfileCountByLabels", testDeviceProfileLabels).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
@@ -1160,7 +1240,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileCountByModel", TestModel).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByModel", 0, 10, TestModel).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByModel", 1, 2, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
@@ -1233,7 +1313,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileCountByManufacturer", TestManufacturer).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 0, 10, TestManufacturer).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 1, 2, TestManufacturer).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
@@ -1306,7 +1386,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	expectedTotalProfileCount := uint32(3)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, expectedTotalProfileCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))

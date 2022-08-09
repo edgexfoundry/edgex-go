@@ -29,6 +29,11 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+	err = deviceProfileUoMValidation(d, dic)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+
 	correlationId := correlation.FromContext(ctx)
 	addedDeviceProfile, err := dbClient.AddDeviceProfile(d)
 	if err != nil {
@@ -49,6 +54,11 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	err = deviceProfileUoMValidation(d, dic)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 
 	err = dbClient.UpdateDeviceProfile(d)
 	if err != nil {
@@ -228,4 +238,17 @@ func deviceProfileByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDeviceProfi
 		return deviceProfile, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device profile name '%s' not match the exsting '%s' ", *dto.Name, deviceProfile.Name), nil)
 	}
 	return deviceProfile, nil
+}
+
+func deviceProfileUoMValidation(p models.DeviceProfile, dic *di.Container) errors.EdgeX {
+	if container.ConfigurationFrom(dic.Get).Writable.UoM.Validation {
+		uom := container.UnitsOfMeasureFrom(dic.Get)
+		for _, dr := range p.DeviceResources {
+			if ok := uom.Validate(dr.Properties.Units); !ok {
+				return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("DeviceResource %s units %s is invalid", dr.Name, dr.Properties.Units), nil)
+			}
+		}
+	}
+
+	return nil
 }
