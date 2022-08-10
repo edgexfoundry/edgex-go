@@ -20,14 +20,16 @@ import (
 
 // Struct used to parse the JSON configuration file
 type ConfigurationStruct struct {
-	Writable      WritableInfo
-	Clients       map[string]bootstrapConfig.ClientInfo
-	Databases     map[string]bootstrapConfig.Database
-	Notifications NotificationInfo
-	Registry      bootstrapConfig.RegistryInfo
-	Service       bootstrapConfig.ServiceInfo
-	MessageQueue  bootstrapConfig.MessageBusInfo
-	SecretStore   bootstrapConfig.SecretStoreInfo
+	//TODO: Remove in EdgeX 3.0 - Is needed now for backward compatability in 2.0
+	RequireMessageBus bool
+	Writable          WritableInfo
+	Clients           map[string]bootstrapConfig.ClientInfo
+	Databases         map[string]bootstrapConfig.Database
+	Notifications     NotificationInfo
+	Registry          bootstrapConfig.RegistryInfo
+	Service           bootstrapConfig.ServiceInfo
+	MessageQueue      bootstrapConfig.MessageBusInfo
+	SecretStore       bootstrapConfig.SecretStoreInfo
 }
 
 type WritableInfo struct {
