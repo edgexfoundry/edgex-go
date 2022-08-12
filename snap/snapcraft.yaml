@@ -275,6 +275,7 @@ apps:
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
+      UOM_UOMFILE: $SNAP_DATA/config/core-metadata/res/uom.toml
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -626,6 +627,10 @@ parts:
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
 
           case "$service" in
+          "core-metadata")
+              install -DT "./cmd/core-metadata/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
+              install -DT "./cmd/core-metadata/res/uom.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.toml"
+          ;;
           "security-file-token-provider")
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"

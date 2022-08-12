@@ -30,17 +30,27 @@ type ConfigurationStruct struct {
 	Service           bootstrapConfig.ServiceInfo
 	MessageQueue      bootstrapConfig.MessageBusInfo
 	SecretStore       bootstrapConfig.SecretStoreInfo
+	UoM               UoM
 }
 
 type WritableInfo struct {
 	LogLevel        string
 	ProfileChange   ProfileChange
+	UoM             WritableUoM
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 }
 
 type ProfileChange struct {
 	StrictDeviceProfileChanges bool
 	StrictDeviceProfileDeletes bool
+}
+
+type WritableUoM struct {
+	Validation bool
+}
+
+type UoM struct {
+	UoMFile string
 }
 
 // NotificationInfo provides properties related to the assembly of notification content

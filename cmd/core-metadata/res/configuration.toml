@@ -8,6 +8,8 @@ LogLevel = "INFO"
   [Writable.ProfileChange]
   StrictDeviceProfileChanges = false
   StrictDeviceProfileDeletes = false
+  [Writable.UoM]
+  Validation = false
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.DB]
     path = "redisdb"
@@ -32,6 +34,9 @@ RequestTimeout = "5s"
   CORSAllowedHeaders = "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
   CORSExposeHeaders = "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
   CORSMaxAge = 3600
+
+[UoM]
+UoMFile = "./res/uom.toml"
 
 [Registry]
 Host = "localhost"

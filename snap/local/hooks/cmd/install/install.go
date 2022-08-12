@@ -134,6 +134,15 @@ func installConfFiles() error {
 			return err
 		}
 
+		if v == "core-metadata" {
+			uomSrcPath := srcDir + "/uom.toml"
+			uomDestPath := destDir + "/uom.toml"
+			err = hooks.CopyFile(uomSrcPath, uomDestPath)
+			if err != nil {
+				return err
+			}
+		}
+
 		srcPath := srcDir + "/configuration.toml"
 		destPath := destDir + "/configuration.toml"
 
