@@ -92,15 +92,19 @@ build: $(MICROSERVICES)
 tidy:
 	go mod tidy
 
+metadata: cmd/core-metadata/core-metadata
 cmd/core-metadata/core-metadata:
 	$(GO) build -tags "$(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
 
+data: cmd/core-data/core-data
 cmd/core-data/core-data:
 	$(GOCGO) build -tags "$(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(CGOFLAGS) -o $@ ./cmd/core-data
 
+command: cmd/core-command/core-command
 cmd/core-command/core-command:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
+notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
 
@@ -110,24 +114,31 @@ cmd/sys-mgmt-executor/sys-mgmt-executor:
 cmd/sys-mgmt-agent/sys-mgmt-agent:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
+scheduler: cmd/support-scheduler/support-scheduler
 cmd/support-scheduler/support-scheduler:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
+proxy: cmd/security-proxy-setup/security-proxy-setup
 cmd/security-proxy-setup/security-proxy-setup:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
 
+secretstore: cmd/security-secretstore-setup/security-secretstore-setup
 cmd/security-secretstore-setup/security-secretstore-setup:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-secretstore-setup/security-secretstore-setup ./cmd/security-secretstore-setup
 
+token: cmd/security-file-token-provider/security-file-token-provider
 cmd/security-file-token-provider/security-file-token-provider:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-file-token-provider/security-file-token-provider ./cmd/security-file-token-provider
 
+secrets-config: cmd/secrets-config/secrets-config
 cmd/secrets-config/secrets-config:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/secrets-config ./cmd/secrets-config
 
+bootstrapper: cmd/security-bootstrapper/security-bootstrapper
 cmd/security-bootstrapper/security-bootstrapper:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-bootstrapper/security-bootstrapper ./cmd/security-bootstrapper
 
+spiffetp: cmd/security-spiffe-token-provider/security-spiffe-token-provider
 cmd/security-spiffe-token-provider/security-spiffe-token-provider:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/security-spiffe-token-provider
 
@@ -168,6 +179,7 @@ docker_base:
 		echo "FROM golang:$(GO_VERSION)-alpine\nRUN apk add --update make git\nWORKDIR /edgex-go\nCOPY go.mod .\nRUN go mod download" | docker build -t $(LOCAL_CACHE_IMAGE) -f - .; \
 	fi
 
+ddata: docker_core_metadata
 docker_core_metadata: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -179,6 +191,7 @@ docker_core_metadata: docker_base
 		-t edgexfoundry/core-metadata:$(DOCKER_TAG) \
 		.
 
+dmetadata: docker_core_data
 docker_core_data: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -190,6 +203,7 @@ docker_core_data: docker_base
 		-t edgexfoundry/core-data:$(DOCKER_TAG) \
 		.
 
+dcommand: docker_core_command
 docker_core_command: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -201,6 +215,7 @@ docker_core_command: docker_base
 		-t edgexfoundry/core-command:$(DOCKER_TAG) \
 		.
 
+dnotifications: docker_support_notifications
 docker_support_notifications: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -212,6 +227,7 @@ docker_support_notifications: docker_base
 		-t edgexfoundry/support-notifications:$(DOCKER_TAG) \
 		.
 
+dscheduler: docker_support_scheduler
 docker_support_scheduler: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -234,6 +250,7 @@ docker_sys_mgmt_agent: docker_base
 		-t edgexfoundry/sys-mgmt-agent:$(DOCKER_TAG) \
 		.
 
+dproxy: docker_security_proxy_setup
 docker_security_proxy_setup: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -245,6 +262,7 @@ docker_security_proxy_setup: docker_base
 		-t edgexfoundry/security-proxy-setup:$(DOCKER_TAG) \
 		.
 
+dsecretstore: docker_security_secretstore_setup
 docker_security_secretstore_setup: docker_base
 		docker build \
 		--build-arg http_proxy \
@@ -256,6 +274,7 @@ docker_security_secretstore_setup: docker_base
 		-t edgexfoundry/security-secretstore-setup:$(DOCKER_TAG) \
 		.
 
+dbootstrapper: docker_security_bootstrapper
 docker_security_bootstrapper: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -267,6 +286,7 @@ docker_security_bootstrapper: docker_base
 		-t edgexfoundry/security-bootstrapper:$(DOCKER_TAG) \
 		.
 
+dspires: docker_security_spire_server
 docker_security_spire_server: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -278,6 +298,7 @@ docker_security_spire_server: docker_base
 		-t edgexfoundry/security-spire-server:$(DOCKER_TAG) \
 		.
 
+dspirea: docker_security_spire_agent
 docker_security_spire_agent: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -289,6 +310,7 @@ docker_security_spire_agent: docker_base
 		-t edgexfoundry/security-spire-agent:$(DOCKER_TAG) \
 		.
 
+dspirec: docker_security_spire_config
 docker_security_spire_config: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -300,6 +322,7 @@ docker_security_spire_config: docker_base
 		-t edgexfoundry/security-spire-config:$(DOCKER_TAG) \
 		.
 
+dspiffetp: docker_security_spiffe_token_provider
 docker_security_spiffe_token_provider: docker_base
 	docker build \
 		--build-arg http_proxy \
