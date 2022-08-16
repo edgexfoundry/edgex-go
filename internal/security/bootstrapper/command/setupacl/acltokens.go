@@ -22,12 +22,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
 )
 
 // AgentTokenType is the type of token to be set on the Consul agent
@@ -64,6 +68,20 @@ type CreateRegistryToken struct {
 	TTL         *string  `json:"ExpirationTTL,omitempty"`
 }
 
+// ACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI
+type ACLTokenInfo struct {
+	SecretID    string   `json:"SecretID"`
+	AccessorID  string   `json:"AccessorID"`
+	Policies    []Policy `json:"Policies"`
+	Description string   `json:"Description"`
+}
+
+// ManagementACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI
+type ManagementACLTokenInfo struct {
+	SecretID string   `json:"SecretID"`
+	Policies []Policy `json:"Policies"`
+}
+
 // NewCreateRegistryToken instantiates a new CreateRegistryToken with a given inputs
 func NewCreateRegistryToken(description string, policies []Policy, local bool, timeToLive *string) CreateRegistryToken {
 	return CreateRegistryToken{
@@ -91,13 +109,13 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken string) (bool, error) {
 
 	req, err := http.NewRequest(http.MethodGet, checkAgentURL, http.NoBody)
 	if err != nil {
-		return false, fmt.Errorf("Failed to prepare checkAgent request for http URL: %w", err)
+		return false, fmt.Errorf("failed to prepare checkAgent request for http URL: %w", err)
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLToken)
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return false, fmt.Errorf("Failed to send checkAgent request for http URL: %w", err)
+		return false, fmt.Errorf("failed to send checkAgent request for http URL: %w", err)
 	}
 
 	defer func() {
@@ -106,7 +124,7 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken string) (bool, error) {
 
 	checkAgentResp, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return false, fmt.Errorf("Failed to read checkAgent response body: %w", err)
+		return false, fmt.Errorf("failed to read checkAgent response body: %w", err)
 	}
 
 	type AgentProperties struct {
@@ -148,14 +166,15 @@ func (c *cmd) createAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string,
 	// error on ACL in legacy mode until timed out otherwise
 	timeoutInSec := int(c.retryTimeout.Seconds())
 	timer := startup.NewTimer(timeoutInSec, 1)
-	var agentToken string
+	var aclTokenInfo *ACLTokenInfo
 	var err error
 	for timer.HasNotElapsed() {
-		agentToken, err = c.getEdgeXAgentToken(bootstrapACLToken)
+		pattern := regexp.MustCompile(`(?i)edgex([0-9a-z\- ]+)agent token`)
+		aclTokenInfo, err = c.getEdgeXTokenByPattern(bootstrapACLToken, pattern)
 
 		if err != nil && !strings.Contains(err.Error(), consulLegacyACLModeError) {
 			// other type of request error, cannot continue
-			return share.EmptyToken, fmt.Errorf("Failed to retrieve EdgeX agent token: %v", err)
+			return share.EmptyToken, fmt.Errorf("failed to retrieve EdgeX agent token: %v", err)
 		} else if err != nil {
 			c.loggingClient.Warnf("found Consul still in ACL legacy mode, will retry once again: %v", err)
 			timer.SleepForInterval()
@@ -169,37 +188,41 @@ func (c *cmd) createAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string,
 
 	// retries reached timeout, aborting
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to retrieve EdgeX agent token: %v", err)
+		return share.EmptyToken, fmt.Errorf("failed to retrieve EdgeX agent token: %v", err)
 	}
 
-	if len(agentToken) == 0 {
+	var agentToken string
+	// when search by pattern not found it shall return empty token struct
+	if reflect.DeepEqual(*aclTokenInfo, ACLTokenInfo{}) {
 		// need to create a new agent token as there is no matched one found
 		agentToken, err = c.insertNewAgentToken(bootstrapACLToken)
 		if err != nil {
-			return share.EmptyToken, fmt.Errorf("Failed to insert a new EdgeX agent token: %v", err)
+			return share.EmptyToken, fmt.Errorf("failed to insert a new EdgeX agent token: %v", err)
 		}
+	} else {
+		agentToken = aclTokenInfo.SecretID
 	}
 	return agentToken, nil
 }
 
-// getEdgeXAgentToken lists tokens and find the matched agent token by the expected key pattern
-// it returns the first matched agent token if many tokens actually are matched
-// it returns empty token if no matching found
-func (c *cmd) getEdgeXAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
+// getEdgeXTokenByPattern lists tokens and find the matched ACL Token info that contains token by the expected key pattern
+// it returns the first matched ACL Token info that contains token if many tokens actually are matched
+// it returns empty ACLTokenInfo if no matching found
+func (c *cmd) getEdgeXTokenByPattern(bootstrapACLToken BootStrapACLTokenInfo, pattern *regexp.Regexp) (*ACLTokenInfo, error) {
 	listTokensURL, err := c.getRegistryApiUrl(consulListTokensAPI)
 	if err != nil {
-		return share.EmptyToken, err
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, listTokensURL, http.NoBody)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to prepare getEdgeXAgentToken request for http URL: %w", err)
+		return nil, fmt.Errorf("failed to prepare getEdgeXTokenByPattern request for http URL: %w", err)
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLToken.SecretID)
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to send getEdgeXAgentToken request for http URL: %w", err)
+		return nil, fmt.Errorf("failed to send getEdgeXTokenByPattern request for http URL: %w", err)
 	}
 
 	defer func() {
@@ -208,12 +231,11 @@ func (c *cmd) getEdgeXAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (strin
 
 	listTokensResp, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to read getEdgeXAgentToken response body: %w", err)
+		return nil, fmt.Errorf("failed to read getEdgeXTokenByPattern response body: %w", err)
 	}
 
 	type ListTokensInfo []struct {
-		AccessorID  string `json:"AccessorID"`
-		Description string `json:"Description"`
+		ACLTokenInfo
 	}
 
 	var listTokens ListTokensInfo
@@ -221,80 +243,25 @@ func (c *cmd) getEdgeXAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (strin
 	switch resp.StatusCode {
 	case http.StatusOK:
 		if err := json.NewDecoder(bytes.NewReader(listTokensResp)).Decode(&listTokens); err != nil {
-			return share.EmptyToken, fmt.Errorf("failed to decode ListTokensInfo json data: %v", err)
+			return nil, fmt.Errorf("failed to decode ListTokensInfo json data: %v", err)
 		}
 
-		edgexAgentToken := share.EmptyToken // initial value
-		// use Description to match the substring to search for EdgeX's agent token
-		// we cannot use policy to search yet as the agent token is created with the global policy
-		// matching anything contains pattern "edgex[alphanumeric_with_space_or_dash] agent token" with case insensitive
-		pattern := regexp.MustCompile(`(?i)edgex([0-9a-z\- ]+)agent token`)
+		edgexTokenByPattern := ACLTokenInfo{} // initial value
+		// use Description to match the substring to search for EdgeX's token
+		// we cannot use policy to search yet as the token is created with the global policy
+		// matching anything contains pattern "edgex[alphanumeric_with_space_or_dash] <example> token" with case insensitive
+		// <example> can be agent or management
 		for _, token := range listTokens {
 			if pattern.MatchString(token.Description) {
-				tokenID, err := c.readTokenIDBy(bootstrapACLToken, strings.TrimSpace(token.AccessorID))
-				if err != nil {
-					return share.EmptyToken, err
-				}
-				edgexAgentToken = tokenID
+				edgexTokenByPattern = token.ACLTokenInfo
 				break
 			}
 		}
 
-		return edgexAgentToken, nil
+		return &edgexTokenByPattern, nil
 	default:
-		return share.EmptyToken, fmt.Errorf("failed to list tokens with status code= %d: %s", resp.StatusCode,
+		return nil, fmt.Errorf("failed to list tokens with status code= %d: %s", resp.StatusCode,
 			string(listTokensResp))
-	}
-}
-
-// readTokenID reads the tokenID (i.e. SecretID) by given accessorID
-// it returns the token's SecretID if found, otherwise empty string
-func (c *cmd) readTokenIDBy(bootstrapACLToken BootStrapACLTokenInfo, accessorID string) (string, error) {
-	if len(accessorID) == 0 {
-		return share.EmptyToken, errors.New("accessorID is required and cannot be empty")
-	}
-
-	readTokenURL, err := c.getRegistryApiUrl(fmt.Sprintf(consulTokenRUDAPI, accessorID))
-	if err != nil {
-		return share.EmptyToken, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, readTokenURL, http.NoBody)
-	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to prepare readTokenID request for http URL: %w", err)
-	}
-
-	req.Header.Add(share.ConsulTokenHeader, bootstrapACLToken.SecretID)
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to send readTokenID request for http URL: %w", err)
-	}
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	readTokenResp, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to read readTokenID response body: %w", err)
-	}
-
-	type TokenReadInfo struct {
-		ID string `json:"SecretID"`
-	}
-
-	var tokenRead TokenReadInfo
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		if err := json.NewDecoder(bytes.NewReader(readTokenResp)).Decode(&tokenRead); err != nil {
-			return share.EmptyToken, fmt.Errorf("failed to decode TokenReadInfo json data: %v", err)
-		}
-
-		return tokenRead.ID, nil
-	default:
-		return share.EmptyToken, fmt.Errorf("failed to read token ID with status code= %d: %s", resp.StatusCode,
-			string(readTokenResp))
 	}
 }
 
@@ -318,15 +285,9 @@ func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (stri
 	if err != nil {
 		return share.EmptyToken, fmt.Errorf("failed to insert new edgex agent token: %v", err)
 	}
-
-	var parsedTokenResponse map[string]interface{}
-	if err := json.NewDecoder(strings.NewReader(newTokenInfo)).Decode(&parsedTokenResponse); err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to decode create token info: %v", err)
-	}
-
 	c.loggingClient.Info("successfully created a new agent token")
 
-	return fmt.Sprintf("%s", parsedTokenResponse["SecretID"]), nil
+	return newTokenInfo.SecretID, nil
 }
 
 // setAgentToken sets the ACL token currently in use by the agent
@@ -354,19 +315,19 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 	}
 	jsonPayload, err := json.Marshal(setToken)
 	if err != nil {
-		return fmt.Errorf("Failed to marshal SetAgentToken JSON string payload: %v", err)
+		return fmt.Errorf("failed to marshal SetAgentToken JSON string payload: %v", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, setAgentTokenURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return fmt.Errorf("Failed to prepare SetAgentToken request for http URL: %w", err)
+		return fmt.Errorf("failed to prepare SetAgentToken request for http URL: %w", err)
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLToken.SecretID)
 	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Failed to send SetAgentToken request for http URL: %w", err)
+		return fmt.Errorf("failed to send SetAgentToken request for http URL: %w", err)
 	}
 
 	defer func() {
@@ -380,7 +341,7 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 	default:
 		setAgentTokenResp, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("Failed to read SetAgentToken response body with status code=%d: %w", resp.StatusCode, err)
+			return fmt.Errorf("failed to read SetAgentToken response body with status code=%d: %w", resp.StatusCode, err)
 		}
 
 		return fmt.Errorf("failed to set agent token with type %s via URL [%s] and status code= %d: %s",
@@ -391,33 +352,33 @@ func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenI
 }
 
 // createNewToken creates a new token based on the provided inputs
-// it returns the whole json string containing the token and thus can be written to the file later
-func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegistryToken) (string, error) {
+// it returns ACLTokenInfo object and thus can be written to the file later
+func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegistryToken) (*ACLTokenInfo, error) {
 	if len(bootstrapACLTokenID) == 0 {
-		return share.EmptyToken, fmt.Errorf("bootstrap token ID cannot be empty")
+		return nil, fmt.Errorf("bootstrap token ID cannot be empty")
 	}
 
 	createTokenURL, err := c.getRegistryApiUrl(consulCreateTokenAPI)
 	if err != nil {
-		return share.EmptyToken, err
+		return nil, err
 	}
 
 	jsonPayload, err := json.Marshal(&createToken)
 	c.loggingClient.Tracef("payload: %v", createToken)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to marshal CreatRegistryToken JSON string payload: %v", err)
+		return nil, fmt.Errorf("failed to marshal CreatRegistryToken JSON string payload: %v", err)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, createTokenURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to prepare creat a new token request for http URL: %w", err)
+		return nil, fmt.Errorf("failed to prepare creat a new token request for http URL: %w", err)
 	}
 
 	req.Header.Add(share.ConsulTokenHeader, bootstrapACLTokenID)
 	req.Header.Add(common.ContentType, common.ContentTypeJSON)
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to send create a new token request for http URL: %w", err)
+		return nil, fmt.Errorf("Failed to send create a new token request for http URL: %w", err)
 	}
 
 	defer func() {
@@ -426,15 +387,115 @@ func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegis
 
 	createTokenResp, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return share.EmptyToken, fmt.Errorf("Failed to read create a new token response body: %w", err)
+		return nil, fmt.Errorf("Failed to read create a new token response body: %w", err)
 	}
 
+	var aclTokenInfo ACLTokenInfo
 	switch resp.StatusCode {
 	case http.StatusOK:
+		err := json.Unmarshal(createTokenResp, &aclTokenInfo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal new token response body: %w", err)
+		}
 		c.loggingClient.Info("successfully created a new registry token")
-		return string(createTokenResp), nil
+		return &aclTokenInfo, nil
 	default:
-		return share.EmptyToken, fmt.Errorf("failed to create a new token via URL [%s] and status code= %d: %s",
+		return nil, fmt.Errorf("failed to create a new token via URL [%s] and status code= %d: %s",
 			consulCreateTokenAPI, resp.StatusCode, string(createTokenResp))
 	}
+}
+
+// insertNewManagementToken creates a new Consul token
+// it returns the ACLTokenInfo and error if any error occurs
+func (c *cmd) insertNewManagementToken(bootstrapACLToken BootStrapACLTokenInfo) (*ACLTokenInfo, error) {
+	// get a policy for this consul token to associate with
+	edgexManagementPolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLToken.SecretID,
+		edgeXManagementPolicyName,
+		edgeXManagementPolicyRules)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create edgex management policy: %v", err)
+	}
+
+	unlimitedDuration := "0s"
+	createToken := NewCreateRegistryToken("edgex-core-consul management token",
+		[]Policy{
+			*edgexManagementPolicy,
+		}, true, &unlimitedDuration)
+	newTokenInfo, err := c.createNewToken(bootstrapACLToken.SecretID, createToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new edgex management token: %v", err)
+	}
+
+	c.loggingClient.Info("successfully created a new management token")
+
+	return newTokenInfo, nil
+}
+
+// createManagementToken uses bootstrapped ACL token to create an manatement token
+// this call requires ACL read/write permission and hence we use the bootstrap ACL token
+// it checks whether there is an management token already existing and re-uses it if so
+// otherwise creates a new management token
+func (c *cmd) createManagementToken(bootstrapACLToken BootStrapACLTokenInfo) (*ManagementACLTokenInfo, error) {
+	if len(bootstrapACLToken.SecretID) == 0 {
+		return nil, errors.New("bootstrap ACL token is required for creating management token")
+	}
+
+	// list tokens and search for the "edgex-core-consul" management token if any
+	pattern := regexp.MustCompile(`(?i)edgex([0-9a-z\- ]+)management token`)
+	aclTokenInfo, err := c.getEdgeXTokenByPattern(bootstrapACLToken, pattern)
+
+	if err != nil {
+		c.loggingClient.Errorf("failed to retrieve EdgeX management token from pattern %s, error %s", pattern, err.Error())
+		return nil, err
+	}
+
+	if reflect.DeepEqual(*aclTokenInfo, ACLTokenInfo{}) {
+		// need to create a new agent token as there is no matched one found
+		aclTokenInfo, err = c.insertNewManagementToken(bootstrapACLToken)
+		if err != nil {
+			return nil, fmt.Errorf("failed to insert a new EdgeX management token: %v", err)
+		}
+	}
+
+	managementACLTokenInfo := ManagementACLTokenInfo{
+		SecretID: aclTokenInfo.SecretID,
+		Policies: aclTokenInfo.Policies,
+	}
+	return &managementACLTokenInfo, nil
+}
+
+// saveManagementACLToken will save the token information to file
+// parameters: tokenInfoToBeSaved for managementACLToken
+func (c *cmd) saveManagementACLToken(tokenInfoToBeSaved *ManagementACLTokenInfo) error {
+	// Write the token to the specified file
+	tokenFileAbsPath, err := filepath.Abs(c.configuration.StageGate.Registry.ACL.ManagementTokenPath)
+	if err != nil {
+		return fmt.Errorf("failed to convert tokenFile to absolute path %s: %s",
+			c.configuration.StageGate.Registry.ACL.ManagementTokenPath, err.Error())
+	}
+
+	// create the directory of tokenfile if not exists yet
+	dirOfToken := filepath.Dir(tokenFileAbsPath)
+	fileIoPerformer := fileioperformer.NewDefaultFileIoPerformer()
+	if err := fileIoPerformer.MkdirAll(dirOfToken, 0700); err != nil {
+		return fmt.Errorf("failed to create tokenpath base dir: %s", err.Error())
+	}
+
+	fileWriter, err := fileIoPerformer.OpenFileWriter(tokenFileAbsPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to open file writer %s: %s", tokenFileAbsPath, err.Error())
+	}
+
+	if err := json.NewEncoder(fileWriter).Encode(tokenInfoToBeSaved); err != nil {
+		_ = fileWriter.Close()
+		return fmt.Errorf("failed to write management token: %s", err.Error())
+	}
+
+	if err := fileWriter.Close(); err != nil {
+		return fmt.Errorf("failed to close token file: %s", err.Error())
+	}
+
+	c.loggingClient.Infof("management token is written to %s", tokenFileAbsPath)
+
+	return nil
 }
