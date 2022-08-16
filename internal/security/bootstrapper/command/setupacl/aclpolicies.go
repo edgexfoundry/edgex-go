@@ -84,7 +84,7 @@ const (
 	node_prefix "edgex" {
 		policy = "write"
 	}
-	service "" {
+	service "edgex-core-consul" {
 		policy = "write"
 	}
 	service_prefix "" {
