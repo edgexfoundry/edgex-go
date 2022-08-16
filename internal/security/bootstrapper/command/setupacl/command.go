@@ -247,6 +247,17 @@ func (c *cmd) saveACLTokens(bootstrapACLToken *BootStrapACLTokenInfo) error {
 		return fmt.Errorf("failed to save registry's bootstrap ACL token: %v", err)
 	}
 
+	// create and save management token into json file in order to use later
+	managementACLTokenInfo, err := c.createManagementToken(*bootstrapACLToken)
+	if err != nil {
+		return fmt.Errorf("failed to create management ACL token: %v", err)
+	}
+
+	err = c.saveManagementACLToken(managementACLTokenInfo)
+	if err != nil {
+		return fmt.Errorf("failed to save management ACL token into json file: %v", err)
+	}
+
 	return nil
 }
 

@@ -21,7 +21,7 @@ LogLevel = "DEBUG"
 SNIS = [""]
 # RequestTimeout for proxy-setup http client caller
 RequestTimeout = 10
-AccessTokenFile = "/tmp/edgex/secrets/consul-acl-token/bootstrap_token.json"
+AccessTokenFile = "/tmp/edgex/secrets/consul-acl-token/mgmt_token.json"
 
 [KongURL]
 Server = "127.0.0.1"

@@ -72,14 +72,47 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 		{
 			"AccessorID":  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
 			"Description": "some other type of agent token",
+			"SecretID":    "000000000000000000000000000",
+			"Policies": []map[string]interface{}{
+				{
+					"ID":   "0000",
+					"Name": "p1",
+				},
+				{
+					"ID":   "1111",
+					"Name": "p2",
+				},
+			},
 		},
 		{
 			"AccessorID":  "00000000-0000-0000-0000-000000000002",
 			"Description": "Anonymous Token",
+			"SecretID":    "11111111111111111111111111",
+			"Policies": []map[string]interface{}{
+				{
+					"ID":   "0000",
+					"Name": "p1",
+				},
+				{
+					"ID":   "1111",
+					"Name": "p2",
+				},
+			},
 		},
 		{
 			"AccessorID":  "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
 			"Description": "Bootstrap Token (Global Management)",
+			"SecretID":    "2222222222222222222222222",
+			"Policies": []map[string]interface{}{
+				{
+					"ID":   "0000",
+					"Name": "p1",
+				},
+				{
+					"ID":   "1111",
+					"Name": "p2",
+				},
+			},
 		},
 	}
 	respCnt := 0
@@ -185,6 +218,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				jsonResponse := map[string]interface{}{
 					"AccessorID":  testAgentTokenAccessorID,
 					"Description": "edgex-core-consul agent token",
+					"SecretID":    "12121212121212121212121",
 					"Policies": []map[string]interface{}{
 						{
 							"ID":   "00000000-0000-0000-0000-000000000001",
@@ -215,6 +249,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				jsonResponse := map[string]interface{}{
 					"AccessorID":  testAgentTokenAccessorID,
 					"Description": "edgex-core-consul agent token",
+					"SecretID":    "888888888888888888888888888888888888",
 					"Policies": []map[string]interface{}{
 						{
 							"ID":   "00000000-0000-0000-0000-000000000001",

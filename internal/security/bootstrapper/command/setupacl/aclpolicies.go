@@ -69,6 +69,40 @@ const (
 	consulReadPolicyByNameAPI = "/v1/acl/policy/name/%s"
 
 	aclNotFoundMessage = "ACL not found"
+
+	edgeXManagementPolicyRules = `
+	# HCL definition of management policy for EdgeX
+	agent "" {
+		policy = "read"
+	}
+	agent_prefix "edgex" {
+		policy = "write"
+	}
+	node "" {
+  		policy = "read"
+	}
+	node_prefix "edgex" {
+		policy = "write"
+	}
+	service "" {
+		policy = "write"
+	}
+	service_prefix "" {
+		policy = "write"
+	}
+	# allow key value store put
+	# once the default_policy is switched to "deny",
+	# this is needed if wants to allow updating Key/Value configuration
+	key "" {
+		policy = "write"
+	}
+	key_prefix "" {
+		policy = "write"
+	}
+	`
+
+	// edgeXServicePolicyName is the name of the management policy for edgex
+	edgeXManagementPolicyName = "edgex-management-policy"
 )
 
 // getOrCreateRegistryPolicy retrieves or creates a new policy
