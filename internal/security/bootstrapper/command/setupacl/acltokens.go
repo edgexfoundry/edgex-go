@@ -76,7 +76,7 @@ type ACLTokenInfo struct {
 	Description string   `json:"Description"`
 }
 
-// ManagementACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI
+// ManagementACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI for management acl token
 type ManagementACLTokenInfo struct {
 	SecretID string   `json:"SecretID"`
 	Policies []Policy `json:"Policies"`
