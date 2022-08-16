@@ -207,7 +207,7 @@ apps:
     environment:
       INIT_ARG: "--init=true"
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
-      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
       KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     daemon: oneshot
     start-timeout: 15m
@@ -238,7 +238,7 @@ apps:
     command: bin/setup-consul-acl.sh
     environment:
       STAGEGATE_REGISTRY_HOST: localhost
-      STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      STAGEGATE_REGISTRY_ACL_MANAGEMENTTOKENPATH:  $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
       STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
       STAGEGATE_REGISTRY_ACL_SENTINELFILEPATH: $SNAP_DATA/consul/config/consul_acl_done
     daemon: oneshot
@@ -365,7 +365,7 @@ apps:
     command: bin/security-proxy-setup
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
-      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
+      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
       KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     plugs: [home, removable-media, network]
   secrets-config:
