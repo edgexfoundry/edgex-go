@@ -6,10 +6,6 @@
 package uom
 
 type UnitsOfMeasureImpl struct {
-	Uom ConfigurationStruct
-}
-
-type ConfigurationStruct struct {
 	Source string
 	Units  map[string]Unit
 }
@@ -20,11 +16,11 @@ type Unit struct {
 }
 
 func (u *UnitsOfMeasureImpl) Validate(unit string) bool {
-	if unit == "" || len(u.Uom.Units) == 0 {
+	if unit == "" || len(u.Units) == 0 {
 		return true
 	}
 
-	for _, units := range u.Uom.Units {
+	for _, units := range u.Units {
 		for _, v := range units.Values {
 			if unit == v {
 				return true
