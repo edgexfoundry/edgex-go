@@ -6,13 +6,13 @@
 package uom
 
 type UnitsOfMeasureImpl struct {
-	Source string
-	Units  map[string]Unit
+	Source string          `json:"source,omitempty"`
+	Units  map[string]Unit `json:"units,omitempty"`
 }
 
 type Unit struct {
-	Source string
-	Values []string
+	Source string   `json:"source,omitempty"`
+	Values []string `json:"values,omitempty"`
 }
 
 func (u *UnitsOfMeasureImpl) Validate(unit string) bool {
