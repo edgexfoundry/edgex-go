@@ -5,7 +5,7 @@ snapctl set pre-refresh.revision=$SNAP_REVISION
 snapctl set pre-refresh.version=$SNAP_VERSION
 
 # unset legacy EdgeX <2.3 options
-snapctl unset lastrev refresh
+snapctl unset lastrev release
 
  # back up the Kong database, so that if the new snap contains a newer
  # postgresql, then the configuration can be imported into the new database
