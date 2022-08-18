@@ -91,11 +91,11 @@ make build
 
 #### Deploy EdgeX
 
-Recommended deployment of EdgeX services is either Docker or Snap. See [Getting Started with Docker](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedUsers/) or [Getting Started with Snap](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedSnapUsers/) for more details. 
+Recommended deployment of EdgeX services is either Docker or Snap. See [Getting Started with Docker](https://docs.edgexfoundry.org/2.1/getting-started/Ch-GettingStartedUsers/) or [Getting Started with Snap](https://docs.edgexfoundry.org/2.1/getting-started/Ch-GettingStartedSnapUsers/) for more details. 
 
 #### Hybrid for debug/testing
 
-If you need to run and/or debug one of the services locally, simply stop the docker container running that service and run the service locally from command-line or from your debugger. All executables are located in the `cmd/<service-name>` folders. See [Working in a Hybrid Environment](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedHybrid/) for more details.
+If you need to run and/or debug one of the services locally, simply stop the docker container running that service and run the service locally from command-line or from your debugger. All executables are located in the `cmd/<service-name>` folders. See [Working in a Hybrid Environment](https://docs.edgexfoundry.org/2.1/getting-started/Ch-GettingStartedHybrid/) for more details.
 
 > *Note that this works best when running the service in non-secure mode. i.e. with environment variable `EDGEX_SECURITY_SECRET_STORE=false`*
 
