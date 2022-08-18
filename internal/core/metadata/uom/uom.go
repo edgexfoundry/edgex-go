@@ -6,25 +6,21 @@
 package uom
 
 type UnitsOfMeasureImpl struct {
-	Uom ConfigurationStruct
-}
-
-type ConfigurationStruct struct {
-	Source string
-	Units  map[string]Unit
+	Source string          `json:"source,omitempty"`
+	Units  map[string]Unit `json:"units,omitempty"`
 }
 
 type Unit struct {
-	Source string
-	Values []string
+	Source string   `json:"source,omitempty"`
+	Values []string `json:"values,omitempty"`
 }
 
 func (u *UnitsOfMeasureImpl) Validate(unit string) bool {
-	if unit == "" || len(u.Uom.Units) == 0 {
+	if unit == "" || len(u.Units) == 0 {
 		return true
 	}
 
-	for _, units := range u.Uom.Units {
+	for _, units := range u.Units {
 		for _, v := range units.Values {
 			if unit == v {
 				return true

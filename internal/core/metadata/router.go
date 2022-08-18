@@ -27,6 +27,10 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.HandleFunc(common.ApiConfigRoute, cc.Config).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiMetricsRoute, cc.Metrics).Methods(http.MethodGet)
 
+	// Units of Measure
+	uc := metadataController.NewUnitOfMeasureController(dic)
+	r.HandleFunc(common.ApiUnitsOfMeasureRoute, uc.UnitsOfMeasure).Methods(http.MethodGet)
+
 	// Device Profile
 	dc := metadataController.NewDeviceProfileController(dic)
 	r.HandleFunc(common.ApiDeviceProfileRoute, dc.AddDeviceProfile).Methods(http.MethodPost)

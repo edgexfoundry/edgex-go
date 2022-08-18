@@ -1076,6 +1076,36 @@ components:
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
+    Unit:
+      description: "express magnitudes of a physical quantity"
+      type: object
+      properties:
+        source:
+          type: string
+          description: "helps provide the location of documentation about the origins and details of the units specified"
+        values:
+          type: array
+          items:
+            type: string
+          description: "a list of arbitrary unit representation to be interpreted by the EdgeX data provider/consumer"
+    UnitsOfMeasure:
+      description: "Units of Measure definition"
+      type: object
+      properties:
+        source:
+          type: string
+          description: "top level location of documentation about the origins and details of the units specified"
+        units:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Unit'
+    UnitsOfMeasureResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+      type: object
+      properties:
+        uom:
+          $ref: '#/components/schemas/UnitsOfMeasure'
   parameters:
     offsetParam:
       in: query
@@ -1103,6 +1133,15 @@ components:
         type: string
         format: uuid
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
+    acceptHeader:
+      in: header
+      name: Accept
+      description: "indicates which content types, expressed as MIME types, the client is able to understand"
+      schema:
+        type: string
+        enum:
+          - application/json
+          - application/toml
     labelsParam:
       in: query
       name: labels
@@ -1481,6 +1520,26 @@ components:
             profileName: "device-simple"
             serviceName: "device-simple"
             adminState: "UNLOCKED"
+    UnitsOfMeasureResponseExample:
+      value:
+        apiVersion: "v2"
+        statusCode: 200
+        uom:
+          source: "reference to source for all UoM if not specified below"
+          units:
+            "temperature":
+              source: "www.weather.com"
+              value:
+                - "C"
+                - "F"
+                - "K"
+            "weights":
+              source: "www.usa.gov/federal-agencies/weights-and-measures-division"
+              value:
+                - "lbs"
+                - "ounces"
+                - "kilos"
+                - "grams"
 paths:
   /device:
     parameters:
@@ -3755,6 +3814,39 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '500':
+          description: "Internal Server Error"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /uom:
+    get:
+      summary: "Returns the Units of Measure definition"
+      parameters:
+        - $ref: '#/components/parameters/acceptHeader'
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitsOfMeasureResponse'
+              examples:
+                UnitsOfMeasureResponse:
+                  $ref: '#/components/examples/UnitsOfMeasureResponseExample'
+            application/toml:
+              schema:
+                $ref: '#/components/schemas/UnitsOfMeasure'
         '500':
           description: "Internal Server Error"
           headers:

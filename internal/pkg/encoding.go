@@ -19,6 +19,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/pelletier/go-toml"
 )
 
 func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
@@ -29,7 +30,20 @@ func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient 
 	// Problems encoding
 	if err != nil {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func EncodeAndWriteTomlResponse(i interface{}, w http.ResponseWriter, lc logger.LoggingClient) {
+	w.Header().Set(common.ContentType, common.ContentTypeTOML)
+
+	enc := toml.NewEncoder(w)
+	err := enc.Encode(i)
+	// Problems encoding
+	if err != nil {
+		lc.Error("Error encoding the data: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
