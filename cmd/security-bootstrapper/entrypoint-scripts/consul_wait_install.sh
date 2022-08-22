@@ -92,7 +92,7 @@ fi
 
 # we need to grant the permission for proxy setup to read consul's token path so as to retrieve consul's token from it
 echo "$(date) Changing ownership of consul token path to ${EDGEX_USER}:${EDGEX_GROUP}"
-chown -Rh "${EDGEX_USER}":"${EDGEX_GROUP}" "${STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH}"
+chown -Rh "${EDGEX_USER}":"${EDGEX_GROUP}" "${STAGEGATE_REGISTRY_ACL_MANAGEMENTTOKENPATH}"
 set -e
 # no need to wait for Consul's port since it is in ready state after all ACL stuff
 

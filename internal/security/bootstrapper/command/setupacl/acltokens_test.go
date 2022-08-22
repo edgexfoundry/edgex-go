@@ -97,16 +97,14 @@ func TestCreateAgentToken(t *testing.T) {
 		listTokensOkResponse        bool
 		listTokensRetriesOkResponse bool
 		createTokenOkResponse       bool
-		readTokenOkResponse         bool
 		policyAlreadyExists         bool
 		expectedErr                 bool
 	}{
-		{"Good:agent token ok response 1st time", testBootstrapToken, true, true, true, true, false, false},
-		{"Good:agent token ok response 2nd time or later", testBootstrapToken, true, true, true, true, true, false},
-		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, true, false, true},
-		{"Bad:create token bad response", testBootstrapToken, true, true, false, true, false, true},
-		{"Bad:read token bad response", testBootstrapToken, true, true, true, false, false, true},
-		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, true, false, true},
+		{"Good:agent token ok response 1st time", testBootstrapToken, true, true, true, false, false},
+		{"Good:agent token ok response 2nd time or later", testBootstrapToken, true, true, true, true, false},
+		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, false, true},
+		{"Bad:create token bad response", testBootstrapToken, true, true, false, false, true},
+		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, false, true},
 	}
 
 	for _, tt := range tests {
@@ -117,7 +115,6 @@ func TestCreateAgentToken(t *testing.T) {
 			responseOpts := serverOptions{
 				listTokensOk:        test.listTokensOkResponse,
 				createTokenOk:       test.createTokenOkResponse,
-				readTokenOk:         test.readTokenOkResponse,
 				policyAlreadyExists: test.policyAlreadyExists,
 				readPolicyByNameOk:  true,
 				createNewPolicyOk:   true,
@@ -136,8 +133,7 @@ func TestCreateAgentToken(t *testing.T) {
 			// first time we don't have the agent token yet
 			agentToken1, err := setupRegistryACL.createAgentToken(test.bootstrapToken)
 
-			// readToken only being executed only on the second time, so the first time should not expected an error
-			if test.expectedErr && test.readTokenOkResponse {
+			if test.expectedErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)

@@ -188,8 +188,33 @@ func (c *cmd) reSetup() error {
 	}
 
 	// set up roles for both static and dynamic again in case there're changes
-	if err := c.reSetupEdgeXACLTokenRoles(); err != nil {
+	err := c.reSetupEdgeXACLTokenRoles()
+	if err != nil {
 		return fmt.Errorf("on 2nd time or later, failed to re-set up roles: %v", err)
+	}
+
+	bootstrapACLToken, err := c.reconstructBootstrapACLToken()
+	if err != nil {
+		return fmt.Errorf("failed on reconstructBootstrapACLToken: %v", err)
+	}
+	// if management token file is not there anymore we need to recreate and save again
+	managmentTokenFilePath := strings.TrimSpace(c.configuration.StageGate.Registry.ACL.ManagementTokenPath)
+	if len(managmentTokenFilePath) == 0 {
+		return errors.New("required StageGate_Registry_ACL_ManagementTokenPath from configuration is empty")
+	}
+
+	tokenFileAbsPath, err := filepath.Abs(managmentTokenFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to convert tokenFile to absolute path %s: %v", managmentTokenFilePath, err)
+	}
+
+	if exists := helper.CheckIfFileExists(tokenFileAbsPath); !exists {
+		err := c.createAndSaveManagementACLToken(bootstrapACLToken)
+		if err != nil {
+			return fmt.Errorf("failed to create and save management ACL token into json file: %v", err)
+		}
+	} else {
+		c.loggingClient.Infof("management ACL token json file already exists!")
 	}
 
 	return nil
@@ -245,6 +270,24 @@ func (c *cmd) saveACLTokens(bootstrapACLToken *BootStrapACLTokenInfo) error {
 	// Save the bootstrap ACL token into json file so that it can be used later on
 	if err := c.saveBootstrapACLToken(bootstrapACLToken); err != nil {
 		return fmt.Errorf("failed to save registry's bootstrap ACL token: %v", err)
+	}
+
+	if err := c.createAndSaveManagementACLToken(bootstrapACLToken); err != nil {
+		return fmt.Errorf("failed to create and save management ACL token: %v", err)
+	}
+	return nil
+}
+
+func (c *cmd) createAndSaveManagementACLToken(bootstrapACLToken *BootStrapACLTokenInfo) error {
+	// create and save management token into json file in order to use later
+	managementACLTokenInfo, err := c.createManagementToken(*bootstrapACLToken)
+	if err != nil {
+		return fmt.Errorf("failed to create management ACL token: %v", err)
+	}
+
+	err = c.saveManagementACLToken(managementACLTokenInfo)
+	if err != nil {
+		return fmt.Errorf("failed to save management ACL token into json file: %v", err)
 	}
 
 	return nil
