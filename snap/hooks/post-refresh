@@ -1,4 +1,28 @@
 #!/bin/bash -e
 
+TAG=$SNAP_INSTANCE_NAME.$(basename "$0")
+
+# read revision/version of the previous installation, set in the pre-refresh hook
+pre_rev=$(snapctl get pre-refresh.revision)
+pre_ver=$(snapctl get pre-refresh.version)
+# read the revision from the legacy lastrev option (EdgeX <2.3)
+[ -z "$pre_rev" ] && pre_rev=$(snapctl get lastrev)
+
+logger --tag $TAG "Refreshing from $pre_ver ($pre_rev) to $SNAP_VERSION ($SNAP_REVISION)"
+
 # set up postgres, if we are upgrading it
 $SNAP/bin/kong-postgres-setup.sh "post-refresh"
+
+# Install the Unit of Measure config file when upgrading from an old version
+# UoM was added in v2.3.0-dev.45 (snap revision 3900):
+# https://github.com/edgexfoundry/edgex-go/pull/4119
+if (( pre_rev < 3900 )); then
+    uom="config/core-metadata/res/uom.toml"
+    logger --tag $TAG "Installing $SNAP/$uom"
+    if [ -f "$SNAP/$uom" ]; then
+        # --no-clobber: copy if missing from target
+        cp --no-clobber "$SNAP/$uom" "$SNAP_DATA/$uom"
+    else
+        logger --stderr --tag $TAG "$SNAP/$uom does not exit."
+    fi
+fi
