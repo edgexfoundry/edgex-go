@@ -1743,16 +1743,6 @@ paths:
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Return a paginated range of readings by deviceName and specified time range while also allowing multiple resource names specified in the request body as query criteria.  If resource names or request body is empty, return all the readings that meet deviceName and specified time range."
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddEventRequest'
-            example:
-              resourceNames:
-                - resource-001
-                - resource-002
       responses:
         '200':
           description: "OK"
