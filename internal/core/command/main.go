@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2020 Dell Inc.
+ * Copyright 2022 IOTech Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,12 +18,7 @@ package command
 import (
 	"context"
 	"os"
-
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
+	"sync"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -30,6 +26,12 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+
+	"github.com/edgexfoundry/edgex-go"
+	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 
@@ -70,6 +72,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
+			MessageBusBootstrapHandler,
 			NewBootstrap(router, common.CoreCommandServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
@@ -77,4 +80,22 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		})
 
 	// code here!
+}
+
+// MessageBusBootstrapHandler sets up the MessageBus connection if MessageBus required is true.
+// This is required for backwards compatability with older versions of 2.x configuration
+// TODO: Remove in EdgeX 3.0
+func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+	configuration := container.ConfigurationFrom(dic.Get)
+	if configuration.MessageQueue.Required {
+		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
+			return false
+		}
+		if !handlers.NewExternalMQTT(nil).BootstrapHandler(ctx, wg, startupTimer, dic) {
+			return false
+		}
+	}
+
+	// Not required so do nothing
+	return true
 }

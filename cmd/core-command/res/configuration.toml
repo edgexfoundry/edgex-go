@@ -6,6 +6,14 @@ LogLevel = "INFO"
       [Writable.InsecureSecrets.DB.Secrets]
       username = ""
       password = ""
+    [Writable.InsecureSecrets.mqtt]
+    path = "mqtt"
+      [Writable.InsecureSecrets.mqtt.Secrets]
+      username = ""
+      password = ""
+      cacert = ""
+      clientcert = ""
+      clientkey = ""
 
 [Service]
 HealthCheckInterval = "10s"
@@ -35,6 +43,50 @@ Type = "consul"
   Protocol = "http"
   Host = "localhost"
   Port = 59881
+
+[MessageQueue]
+  Required = false
+  [MessageQueue.Internal]
+  Type = "redis"
+  Protocol = "redis"
+  Host = "localhost"
+  Port = 6379
+  AuthMode = "usernamepassword"                   # required for redis messagebus (secure or insecure).
+  SecretName = "redisdb"
+    [MessageQueue.Internal.Topics]
+    RequestTopicPrefix = "edgex/command/request/"   # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    ResponseTopic = "edgex/command/response/#"      # for subscribing to device service responses
+    InternalRequestCommandTopic = "/command/request/#"     # for subscribing to internal command requests
+    InternalResponseCommandTopicPrefix = "/command/response/"    # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    InternalRequestQueryTopic = "/commandquery/request"   # for subscribing to internal command query requests
+    InternalResponseQueryTopic = "/commandquery/response"   # for publishing reponsses back to internal service
+    [MessageQueue.Internal.Optional]
+    # Client Identifiers
+    ClientId ="core-command"
+    # Connection information
+    Qos          =  "0" # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
+    KeepAlive    =  "10" # Seconds (must be 2 or greater)
+    Retained     = "false"
+    AutoReconnect  = "true"
+    ConnectTimeout = "5" # Seconds
+    # TLS configuration - Only used if Cert/Key file or Cert/Key PEMblock are specified
+    SkipCertVerify = "false"
+  [MessageQueue.External]
+  Url = "tcp://localhost:1883"
+  ClientId = "core-command"
+  ConnectTimeout = "5s"
+  AutoReconnect = true
+  KeepAlive = 10
+  QoS = 0
+  Retain = true
+  SkipCertVerify = false
+  SecretPath = "mqtt"
+  AuthMode = "none"
+    [MessageQueue.External.Topics]
+    RequestCommandTopic = "edgex/command/request/#"           # for subscribing to 3rd party command requests
+    ResponseCommandTopicPrefix = "edgex/command/response/"    # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    RequestQueryTopic = "edgex/commandquery/request"          # for subscribing to 3rd party command query request
+    ResponseQueryTopic = "edgex/commandquery/response"        # for publishing responses back to 3rd party systems
 
 [SecretStore]
 Type = "vault"
