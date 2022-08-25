@@ -8,6 +8,12 @@
             "list",
             "read"
           ]
+        },
+        "secret/edgex/core-command/mqtt-bus": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
         }
       }
     }
@@ -21,6 +27,12 @@
             "list",
             "read"
           ]
+        },
+        "secret/edgex/core-data/mqtt-bus": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
         }
       }
     }
@@ -30,6 +42,12 @@
     "custom_policy": {
       "path": {
         "secret/edgex/core-metadata/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/core-metadata/mqtt-bus": {
           "capabilities": [
             "list",
             "read"
@@ -51,11 +69,30 @@
       }
     }
   },
+  "security-bootstrapper-mqtt": {
+    "edgex_use_defaults": true,
+    "custom_policy": {
+      "path": {
+        "secret/edgex/security-bootstrapper-mqtt/mqtt-bus": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        }
+      }
+    }
+  },
   "support-notifications": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
         "secret/edgex/support-notifications/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/support-notifications/mqtt-bus": {
           "capabilities": [
             "list",
             "read"
@@ -81,6 +118,12 @@
     "custom_policy": {
       "path": {
         "secret/edgex/support-scheduler/redisdb": {
+          "capabilities": [
+            "list",
+            "read"
+          ]
+        },
+        "secret/edgex/support-scheduler/mqtt-bus": {
           "capabilities": [
             "list",
             "read"

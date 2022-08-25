@@ -1,5 +1,5 @@
 #  ----------------------------------------------------------------------------------
-#  Copyright 2021 Intel Corp.
+#  Copyright 2022 Intel Corp.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -42,8 +42,9 @@ RUN apk add --update --no-cache dumb-init su-exec
 ENV SECURITY_INIT_DIR /edgex-init
 ENV SECURITY_INIT_STAGING /edgex-init-staging
 ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_STAGING}/bootstrap-redis
+ARG BOOTSTRAP_MQTT_DIR=${SECURITY_INIT_STAGING}/bootstrap-mqtt
 
-RUN mkdir -p ${BOOTSTRAP_REDIS_DIR}
+RUN mkdir -p ${BOOTSTRAP_REDIS_DIR} ${BOOTSTRAP_MQTT_DIR}
 
 WORKDIR ${SECURITY_INIT_STAGING}
 
@@ -57,6 +58,9 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml .
 
 # needed for bootstrapping Redis db
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
+
+# needed for bootstrapping message bus
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-messagebus/configuration.toml ${BOOTSTRAP_MQTT_DIR}/res/
 
 # copy Consul ACL related configs
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_STAGING}/consul-bootstrapper/

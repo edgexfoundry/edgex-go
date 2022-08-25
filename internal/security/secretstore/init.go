@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2022 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -53,11 +53,13 @@ import (
 const (
 	addKnownSecretsEnv   = "ADD_KNOWN_SECRETS"
 	redisSecretName      = "redisdb"
+	mqttSecretName       = "mqtt-bus"
 	knownSecretSeparator = ","
 	serviceListBegin     = "["
 	serviceListEnd       = "]"
 	serviceListSeparator = ";"
 	secretBasePath       = "/v1/secret/edgex" // nolint:gosec
+	defaultMqttUser      = "mosquitto"
 )
 
 var errNotFound = errors.New("credential NOT found")
@@ -72,7 +74,7 @@ func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
-		validKnownSecrets:  map[string]bool{redisSecretName: true},
+		validKnownSecrets:  map[string]bool{redisSecretName: true, mqttSecretName: true},
 	}
 }
 
@@ -348,22 +350,22 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// credential creation
 	gen := NewPasswordGenerator(lc, secretStoreConfig.PasswordProvider, secretStoreConfig.PasswordProviderArgs)
-	cred := NewCred(httpCaller, rootToken, gen, secretStoreConfig.GetBaseURL(), lc)
+	secretStore := NewCred(httpCaller, rootToken, gen, secretStoreConfig.GetBaseURL(), lc)
 
 	// continue credential creation
 
-	// A little note on why there are two secrets paths. For each microservice, the
+	// A little note on why there are two secrets paths. For each microservice, the redis
 	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/redisdb and
 	// /v1/secret/edgex/redisdb/%s). The go-mod-secrets client requires a Path property to prefix all
 	// secrets.
 	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
 	// edgex/%s), and edgex/redisdb/* is enumerated to initialize the database.
-	//
+	// Similary for mqtt-bus credential.
 
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
 
-	redisCredentials, err := getDBCredential("security-bootstrapper-redis", cred, "redisdb")
+	redisCredentials, err := getCredential("security-bootstrapper-redis", secretStore, redisSecretName)
 	if err != nil {
 		if err != errNotFound {
 			lc.Error("failed to determine if Redis credentials already exist or not: %w", err)
@@ -371,9 +373,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 
 		lc.Info("Generating new password for Redis DB")
-		defaultPassword, err := cred.GeneratePassword(ctx)
+		defaultPassword, err := secretStore.GeneratePassword(ctx)
 		if err != nil {
-			lc.Error("failed to generate default password")
+			lc.Error("failed to generate default password for redisdb")
 			return false
 		}
 
@@ -385,22 +387,35 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("Redis DB credentials exist, skipping generating new password")
 	}
 
+	// for mqtt-bus creds
+	mqttBusCredentials, err := getCredential("security-bootstrapper-mqtt", secretStore, mqttSecretName)
+	if err != nil {
+		if err != errNotFound {
+			lc.Error("failed to determine if MQTT credentials already exist or not: %w", err)
+			return false
+		}
+
+		lc.Info("Generating new password for MQTT bus")
+		mqttPassword, err := secretStore.GeneratePassword(ctx)
+		if err != nil {
+			lc.Error("failed to generate password for mqtt-bus")
+			return false
+		}
+
+		mqttBusCredentials = UserPasswordPair{
+			User:     defaultMqttUser,
+			Password: mqttPassword,
+		}
+	} else {
+		lc.Info("MQTT credentials already exist, skipping generating new password")
+	}
+
 	// Add any additional services that need the known DB secret
+	lc.Infof("adding any additional services using redisdb for knownSecrets...")
 	services, ok := knownSecretsToAdd[redisSecretName]
 	if ok {
 		for _, service := range services {
-			configuration.Databases[service] = config.Database{
-				Service: service,
-			}
-		}
-	}
-
-	for _, info := range configuration.Databases {
-		service := info.Service
-
-		// add credentials to service path if specified and they're not already there
-		if len(service) != 0 {
-			err = addServiceCredential(lc, "redisdb", cred, service, redisCredentials)
+			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
 			if err != nil {
 				lc.Error(err.Error())
 				return false
@@ -408,9 +423,73 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
+	lc.Infof("adding any additional services using mqtt-bus for knownSecrets...")
+	services, ok = knownSecretsToAdd[mqttSecretName]
+	if ok {
+		for _, service := range services {
+			err = addServiceCredential(lc, mqttSecretName, secretStore, service, mqttBusCredentials)
+			if err != nil {
+				lc.Error(err.Error())
+				return false
+			}
+		}
+	}
+
+	lc.Infof("adding redisdb secret path for internal services...")
+	for _, info := range configuration.Databases {
+		service := info.Service
+
+		// add credentials to service path if specified and they're not already there
+		if len(service) != 0 {
+			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+			if err != nil {
+				lc.Error(err.Error())
+				return false
+			}
+		}
+	}
+
+	// determine the type of message bus
+	// TODO: change the value of type for "redis" to "redisdb" in EdgeX 3.0 as it is a breaking change
+	messageBusType := configuration.SecureMessageBus.Type
+	var creds UserPasswordPair
+	supportedSecureType := true
+	switch messageBusType {
+	case "redis":
+		messageBusType = redisSecretName
+		creds = redisCredentials
+	case "mqtt-bus":
+		creds = mqttBusCredentials
+	default:
+		supportedSecureType = false
+		lc.Warnf("secure message type is not redis or mqtt-bus")
+	}
+
+	if supportedSecureType {
+		lc.Infof("adding message bus %s secret path for internal services...", messageBusType)
+		for _, info := range configuration.SecureMessageBus.Services {
+			service := info.Service
+
+			// add credentials to service path if specified and they're not already there
+			if len(service) != 0 {
+				err = addServiceCredential(lc, messageBusType, secretStore, service, creds)
+				if err != nil {
+					lc.Error(err.Error())
+					return false
+				}
+			}
+		}
+	}
+
 	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
 	// with append the DB type (redisdb)
-	err = addDBCredential(lc, "security-bootstrapper-redis", cred, "redisdb", redisCredentials)
+	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
+
+	err = storeCredential(lc, "security-bootstrapper-mqtt", secretStore, mqttSecretName, mqttBusCredentials)
 	if err != nil {
 		lc.Error(err.Error())
 		return false
@@ -592,14 +671,14 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 // XXX Collapse addServiceCredential and addDBCredential together by passing in the path or using
 // variadic functions
 
-func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
-	path := fmt.Sprintf("%s/%s/%s", secretBasePath, service, db)
-	existing, err := cred.AlreadyInStore(path)
+func addServiceCredential(lc logger.LoggingClient, secretKeyName string, secretStore Cred, service string, pair UserPasswordPair) error {
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, service, secretKeyName)
+	existing, err := secretStore.AlreadyInStore(path)
 	if err != nil {
 		return err
 	}
 	if !existing {
-		err = cred.UploadToStore(&pair, path)
+		err = secretStore.UploadToStore(&pair, path)
 		if err != nil {
 			lc.Errorf("failed to upload credential pair for %s on path %s", service, path)
 			return err
@@ -611,8 +690,8 @@ func addServiceCredential(lc logger.LoggingClient, db string, cred Cred, service
 	return err
 }
 
-func getDBCredential(db string, cred Cred, service string) (UserPasswordPair, error) {
-	path := fmt.Sprintf("%s/%s/%s", secretBasePath, db, service)
+func getCredential(credBootstrapStem string, cred Cred, service string) (UserPasswordPair, error) {
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, credBootstrapStem, service)
 
 	pair, err := cred.getUserPasswordPair(path)
 	if err != nil {
@@ -622,8 +701,9 @@ func getDBCredential(db string, cred Cred, service string) (UserPasswordPair, er
 	return *pair, err
 
 }
-func addDBCredential(lc logger.LoggingClient, db string, cred Cred, service string, pair UserPasswordPair) error {
-	path := fmt.Sprintf("%s/%s/%s", secretBasePath, db, service)
+
+func storeCredential(lc logger.LoggingClient, credBootstrapStem string, cred Cred, secretKeyName string, pair UserPasswordPair) error {
+	path := fmt.Sprintf("%s/%s/%s", secretBasePath, credBootstrapStem, secretKeyName)
 	existing, err := cred.AlreadyInStore(path)
 	if err != nil {
 		lc.Error(err.Error())
@@ -632,11 +712,11 @@ func addDBCredential(lc logger.LoggingClient, db string, cred Cred, service stri
 	if !existing {
 		err = cred.UploadToStore(&pair, path)
 		if err != nil {
-			lc.Errorf("failed to upload credential pair for db %s on path %s", service, path)
+			lc.Errorf("failed to upload credential pair for %s on path %s", secretKeyName, path)
 			return err
 		}
 	} else {
-		lc.Infof("credentials for %s already present at path %s", service, path)
+		lc.Infof("credentials for %s already present at path %s", secretKeyName, path)
 	}
 
 	return err

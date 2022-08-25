@@ -38,6 +38,11 @@ type SecureMessageBusInfo struct {
 	Type                  string
 	KuiperConfigPath      string
 	KuiperConnectionsPath string
+	Services              map[string]ServiceInfo
+}
+
+type ServiceInfo struct {
+	Service string
 }
 
 type SecretStoreInfo struct {

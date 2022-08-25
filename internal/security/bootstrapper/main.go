@@ -28,6 +28,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
@@ -38,6 +39,7 @@ import (
 
 const (
 	configureDatabaseSubcommandName = "configureRedis"
+	setupMsgbusCredsSubcommandName  = "setupMessageBusCreds"
 )
 
 // Main function is the wrapper for the security bootstrapper main
@@ -62,9 +64,13 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		os.Exit(0)
 	}
 
-	// branch out to bootstrap redis if it is configureRedis
-	if flagSet.Arg(0) == configureDatabaseSubcommandName {
+	// branch out to different entrypoints if it is from sub commands
+	switch flagSet.Arg(0) {
+	case configureDatabaseSubcommandName:
 		redis.Configure(ctx, cancel, f)
+		return
+	case setupMsgbusCredsSubcommandName:
+		messagebus.Configure(ctx, cancel, f)
 		return
 	}
 

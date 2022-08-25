@@ -51,7 +51,7 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 		{"valid blank", blankSecureMessageBusType, false, validExpected, nil, false},
 		{"valid none", noneSecureMessageBusType, false, validExpected, nil, false},
 		{"invalid type", "bogus", false, validExpected, nil, true},
-		{"invalid mqtt", mqttSecureMessageBusType, false, validExpected, nil, true},
+		{"invalid mqtt", mqttSecureMessageBusType, false, validExpected, nil, false},
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
