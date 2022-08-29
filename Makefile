@@ -89,24 +89,27 @@ LOCAL_CACHE_IMAGE=edgex-go-local-cache
 
 build: $(MICROSERVICES)
 
+build-nats:
+	make -e ADD_BUILD_TAGS=include_nats_messaging build
+
 tidy:
 	go mod tidy
 
 metadata: cmd/core-metadata/core-metadata
 cmd/core-metadata/core-metadata:
-	$(GO) build -tags "$(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 data: cmd/core-data/core-data
 cmd/core-data/core-data:
-	$(GOCGO) build -tags "$(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(CGOFLAGS) -o $@ ./cmd/core-data
+	$(GOCGO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(CGOFLAGS) -o $@ ./cmd/core-data
 
 command: cmd/core-command/core-command
 cmd/core-command/core-command:
-	$(GO) build -tags "$(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
 notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
@@ -116,7 +119,7 @@ cmd/sys-mgmt-agent/sys-mgmt-agent:
 
 scheduler: cmd/support-scheduler/support-scheduler
 cmd/support-scheduler/support-scheduler:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 proxy: cmd/security-proxy-setup/security-proxy-setup
 cmd/security-proxy-setup/security-proxy-setup:
@@ -164,6 +167,9 @@ test: unittest hadolint lint
 
 docker: $(DOCKERS)
 
+docker-nats:
+	make -e ADD_BUILD_TAGS=include_nats_messaging docker
+
 clean_docker_base:
 	docker rmi -f $(LOCAL_CACHE_IMAGE) $(LOCAL_CACHE_IMAGE_BASE) 
 
@@ -182,6 +188,7 @@ docker_base:
 dmetadata: docker_core_metadata
 docker_core_metadata: docker_base
 	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -194,6 +201,7 @@ docker_core_metadata: docker_base
 ddata: docker_core_data
 docker_core_data: docker_base
 	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -206,6 +214,7 @@ docker_core_data: docker_base
 dcommand: docker_core_command
 docker_core_command: docker_base
 	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -218,6 +227,7 @@ docker_core_command: docker_base
 dnotifications: docker_support_notifications
 docker_support_notifications: docker_base
 	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -230,6 +240,7 @@ docker_support_notifications: docker_base
 dscheduler: docker_support_scheduler
 docker_support_scheduler: docker_base
 	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \

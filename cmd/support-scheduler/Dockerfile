@@ -19,6 +19,8 @@
 ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
+ARG ADD_BUILD_TAGS=""
+
 WORKDIR /edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.

@@ -19,6 +19,8 @@
 ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 
+ARG ADD_BUILD_TAGS=""
+
 WORKDIR /edgex-go
 
 # The main mirrors are giving us timeout issues on builds periodically.
@@ -32,7 +34,7 @@ COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-RUN make cmd/core-metadata/core-metadata
+RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/core-metadata/core-metadata
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine:3.16
