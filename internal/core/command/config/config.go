@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright 2022 IOTech Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,18 +21,27 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable    WritableInfo
-	Clients     map[string]bootstrapConfig.ClientInfo
-	Databases   map[string]bootstrapConfig.Database
-	Registry    bootstrapConfig.RegistryInfo
-	Service     bootstrapConfig.ServiceInfo
-	SecretStore bootstrapConfig.SecretStoreInfo
+	Writable     WritableInfo
+	Clients      map[string]bootstrapConfig.ClientInfo
+	Databases    map[string]bootstrapConfig.Database
+	Registry     bootstrapConfig.RegistryInfo
+	Service      bootstrapConfig.ServiceInfo
+	MessageQueue MessageQueue
+	SecretStore  bootstrapConfig.SecretStoreInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
 type WritableInfo struct {
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
+}
+
+type MessageQueue struct {
+	// This is required for backwards compatability with older versions of 2.x configuration
+	// TODO: remove 'Required' in EdgeX 3.0
+	Required bool
+	Internal bootstrapConfig.MessageBusInfo
+	External bootstrapConfig.ExternalMQTTInfo
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -70,10 +80,12 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
+		Clients:      c.Clients,
+		Service:      c.Service,
+		Registry:     c.Registry,
+		SecretStore:  c.SecretStore,
+		MessageQueue: c.MessageQueue.Internal,
+		ExternalMQTT: c.MessageQueue.External,
 	}
 }
 

@@ -102,7 +102,7 @@ cmd/core-data/core-data:
 
 command: cmd/core-command/core-command
 cmd/core-command/core-command:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
+	$(GO) build -tags "$(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
 notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
