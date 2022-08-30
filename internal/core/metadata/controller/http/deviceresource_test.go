@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
@@ -75,7 +75,7 @@ func TestDeviceResourceByProfileNameAndResourceName(t *testing.T) {
 	resourceNotFoundName := "resourceNotFoundName"
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", deviceProfile.Name).Return(deviceProfile, nil)
 	dbClientMock.On("DeviceProfileByName", profileNotFoundName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
@@ -152,7 +152,7 @@ func TestAddDeviceProfileResource(t *testing.T) {
 	notFoundDBError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile %s does not exists", notFoundProfileName.ProfileName), nil)
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", valid.ProfileName).Return(deviceProfile, nil)
 	dbClientMock.On("DeviceProfileByName", notFoundProfileName.ProfileName).Return(deviceProfile, notFoundDBError)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
@@ -246,6 +246,74 @@ func TestAddDeviceProfileResource_BadRequest(t *testing.T) {
 	}
 }
 
+func TestAddDeviceProfileResource_UnitsOfMeasure_Validation(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	expectedRequestId := ExampleUUID
+
+	emptyUnitsReq := testDeviceResourceRequest
+	validReq := emptyUnitsReq
+	validReq.Resource.Properties.Units = TestUnits
+	invalidUnitsReq := emptyUnitsReq
+	invalidUnitsReq.Resource.Properties.Units = "invalid"
+
+	dic := mockDic()
+	container.ConfigurationFrom(dic.Get).Writable.UoM.Validation = true
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileByName", validReq.ProfileName).Return(deviceProfile, nil)
+	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+	uomMock := &mocks.UnitsOfMeasure{}
+	uomMock.On("Validate", TestUnits).Return(true)
+	uomMock.On("Validate", "").Return(true)
+	uomMock.On("Validate", "invalid").Return(false)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+		container.UnitsOfMeasureInterfaceName: func(get di.Get) interface{} {
+			return uomMock
+		},
+	})
+
+	controller := NewDeviceResourceController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		Request            []requests.AddDeviceResourceRequest
+		expectedStatusCode int
+	}{
+		{"valid - units not provided", []requests.AddDeviceResourceRequest{emptyUnitsReq}, http.StatusCreated},
+		{"valid - expected units", []requests.AddDeviceResourceRequest{validReq}, http.StatusCreated},
+		{"invalid - unexpected units", []requests.AddDeviceResourceRequest{invalidUnitsReq}, http.StatusInternalServerError},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			jsonData, err := json.Marshal(testCase.Request)
+			require.NoError(t, err)
+
+			reader := strings.NewReader(string(jsonData))
+			req, err := http.NewRequest(http.MethodPost, common.ApiDeviceProfileResourceRoute, reader)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			handler := http.HandlerFunc(controller.AddDeviceProfileResource)
+			handler.ServeHTTP(recorder, req)
+
+			var res []commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+			// Assert
+			assert.Equal(t, http.StatusMultiStatus, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, common.ApiVersion, res[0].ApiVersion, "API Version not as expected")
+			if res[0].RequestId != "" {
+				assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
+			}
+			assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+			assert.NotEmpty(t, recorder.Body.String(), "Message is empty")
+		})
+	}
+}
 func TestPatchDeviceProfileResource(t *testing.T) {
 	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
 	testReq := buildTestUpdateDeviceResourceRequest()
@@ -271,7 +339,7 @@ func TestPatchDeviceProfileResource(t *testing.T) {
 	noProfileName.ProfileName = emptyString
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", valid.ProfileName).Return(deviceProfile, nil)
 	dbClientMock.On("DevicesByProfileName", 0, 1, valid.ProfileName).Return([]models.Device{}, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
@@ -354,7 +422,7 @@ func TestDeleteDeviceResourceByName(t *testing.T) {
 	deviceExists := "deviceExists"
 
 	dic := mockDic()
-	dbClientMock := &dbMock.DBClient{}
+	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DevicesByProfileName", 0, 1, TestDeviceProfileName).Return([]models.Device{}, nil)
 	dbClientMock.On("DeviceProfileByName", TestDeviceProfileName).Return(dpModel, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
