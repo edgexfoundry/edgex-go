@@ -179,7 +179,7 @@ docker_base:
 		echo "FROM golang:$(GO_VERSION)-alpine\nRUN apk add --update make git\nWORKDIR /edgex-go\nCOPY go.mod .\nRUN go mod download" | docker build -t $(LOCAL_CACHE_IMAGE) -f - .; \
 	fi
 
-ddata: docker_core_metadata
+dmetadata: docker_core_metadata
 docker_core_metadata: docker_base
 	docker build \
 		--build-arg http_proxy \
@@ -191,7 +191,7 @@ docker_core_metadata: docker_base
 		-t edgexfoundry/core-metadata:$(DOCKER_TAG) \
 		.
 
-dmetadata: docker_core_data
+ddata: docker_core_data
 docker_core_data: docker_base
 	docker build \
 		--build-arg http_proxy \
