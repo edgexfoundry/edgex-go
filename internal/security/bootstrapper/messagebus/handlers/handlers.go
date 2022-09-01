@@ -56,17 +56,16 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 	config := container.ConfigurationFrom(dic.Get)
 	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 
-	var credentials = bootstrapConfig.Credentials{
-		Username: "unset",
-		Password: "unset",
-	}
+	var credentials *bootstrapConfig.Credentials
 
 	for startupTimer.HasNotElapsed() {
 		// retrieve message bus credentials from secretstore
 		secrets, err := secretProvider.GetSecret(config.MessageQueue.SecretName)
 		if err == nil {
-			credentials.Username = secrets[secret.UsernameKey]
-			credentials.Password = secrets[secret.PasswordKey]
+			credentials = &bootstrapConfig.Credentials{
+				Username: secrets[secret.UsernameKey],
+				Password: secrets[secret.PasswordKey],
+			}
 			break
 		}
 
@@ -74,12 +73,12 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 		startupTimer.SleepForInterval()
 	}
 
-	if credentials.Password == "unset" {
+	if credentials == nil {
 		lc.Error("Failed to retrieve message bus credentials before startup timer expired")
 		return false
 	}
 
-	handler.credentials = credentials
+	handler.credentials = *credentials
 	return true
 }
 
