@@ -26,7 +26,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 )
@@ -43,15 +42,14 @@ func setUp(t *testing.T, secretName string, brokerConfigFile string,
 
 	mockLc := logger.NewMockClient()
 	configuration := &config.ConfigurationStruct{
-		MessageQueue: bootstrapConfig.MessageBusInfo{
-			SecretName: secretName,
-			Type:       msqQueueType,
-			Optional: map[string]string{
-				"BrokerConfigFile": brokerConfigFile,
-				"PasswordFile":     passwordFile,
-			},
+		MessageQueue: config.MessageQueueInfo{
+			SecretName:       secretName,
+			Type:             msqQueueType,
+			BrokerConfigFile: brokerConfigFile,
+			PasswordFile:     passwordFile,
 		},
 	}
+
 	return &Testdata{
 		lc: mockLc,
 		dic: di.NewContainer(di.ServiceConstructorMap{

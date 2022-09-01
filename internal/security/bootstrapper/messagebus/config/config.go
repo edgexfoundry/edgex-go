@@ -24,7 +24,14 @@ import (
 type ConfigurationStruct struct {
 	LogLevel     string
 	SecretStore  bootstrapConfig.SecretStoreInfo
-	MessageQueue bootstrapConfig.MessageBusInfo
+	MessageQueue MessageQueueInfo
+}
+type MessageQueueInfo struct {
+	Port             int
+	Type             string
+	PasswordFile     string
+	BrokerConfigFile string
+	SecretName       string
 }
 
 // Implement interface.Configuration

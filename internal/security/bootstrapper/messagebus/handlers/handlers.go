@@ -93,7 +93,7 @@ func (handler *Handler) SetupPasswordFile(ctx context.Context, _ *sync.WaitGroup
 		return true
 	}
 
-	pwdFile := config.MessageQueue.Optional["PasswordFile"]
+	pwdFile := config.MessageQueue.PasswordFile
 	if len(pwdFile) == 0 {
 		lc.Errorf("missing PasswordFile configuration for mqtt")
 		return false
@@ -128,7 +128,7 @@ func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ 
 		return true
 	}
 
-	brokerConfigFile := config.MessageQueue.Optional["BrokerConfigFile"]
+	brokerConfigFile := config.MessageQueue.BrokerConfigFile
 	if len(brokerConfigFile) == 0 {
 		lc.Errorf("missing brokerConfigFile configuration for mqtt")
 		return false
@@ -163,7 +163,7 @@ password_file {{.PwdFilePath}}`
 	fwriter := bufio.NewWriter(confFile)
 	if err := mqttConf.Execute(fwriter, mqttConfig{
 		MQTTPort:    config.MessageQueue.Port,
-		PwdFilePath: config.MessageQueue.Optional["PasswordFile"],
+		PwdFilePath: config.MessageQueue.PasswordFile,
 	}); err != nil {
 		lc.Errorf("failed to execute mqttConfig template %s: %v", configFileTemplate, err)
 		return false

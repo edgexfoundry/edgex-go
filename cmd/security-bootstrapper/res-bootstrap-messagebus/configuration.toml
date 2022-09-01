@@ -28,13 +28,9 @@ ServerName = ""
   AuthType = "X-Vault-Token"
 
 [MessageQueue]
-Protocol = 'mqtt'
-Host = 'localhost'
 Port = 1883
 Type = 'mqtt'
-AuthMode = 'usernamepassword'
+PasswordFile = "/mosquitto/config/pwdfile"
+BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
 SecretName = "mqtt-bus"
-[MessageQueue.Optional]
-  # for secure MQTT related properties
-  PasswordFile = "/mosquitto/config/pwdfile"
-  BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
+
