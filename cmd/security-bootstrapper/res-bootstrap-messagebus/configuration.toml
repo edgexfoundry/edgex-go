@@ -29,7 +29,6 @@ ServerName = ""
 
 [MessageQueue]
 Port = 1883
-Type = 'mqtt'
 PasswordFile = "/mosquitto/config/pwdfile"
 BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
 SecretName = "mqtt-bus"

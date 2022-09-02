@@ -37,8 +37,7 @@ type Testdata struct {
 	ctx        context.Context
 }
 
-func setUp(t *testing.T, secretName string, brokerConfigFile string,
-	msqQueueType string, passwordFile string) *Testdata {
+func setUp(t *testing.T, secretName string, brokerConfigFile string, passwordFile string) *Testdata {
 
 	mockLc := logger.NewMockClient()
 	configuration := &config.ConfigurationStruct{
@@ -121,7 +120,7 @@ func TestHandler_GetCredentials(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testData := setUp(t, tt.secretName, "", "", "")
+		testData := setUp(t, tt.secretName, "", "")
 		tt.args.ctx = testData.ctx
 		tt.args.dic = testData.dic
 		testData.dic.Update(di.ServiceConstructorMap{
@@ -148,7 +147,6 @@ func TestHandler_SetupConfFile(t *testing.T) {
 		name             string
 		args             args
 		brokerConfigFile string
-		msgQueueType     string
 		msqQueuePort     int
 		want             bool
 	}{
@@ -159,17 +157,6 @@ func TestHandler_SetupConfFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			brokerConfigFile: "/tmp/mosquitto.conf",
-			msgQueueType:     "mqtt",
-			want:             true,
-		},
-		{
-			name: "SetupConfFile No message queue type set",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
-			brokerConfigFile: "/tmp/mosquitto.conf",
-			msgQueueType:     "",
 			want:             true,
 		},
 		{
@@ -179,7 +166,6 @@ func TestHandler_SetupConfFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			brokerConfigFile: "/bad/file/path",
-			msgQueueType:     "mqtt",
 			want:             false,
 		},
 		{
@@ -189,13 +175,12 @@ func TestHandler_SetupConfFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			brokerConfigFile: "",
-			msgQueueType:     "mqtt",
 			want:             false,
 		},
 	}
 
 	for _, tt := range tests {
-		testData := setUp(t, "", tt.brokerConfigFile, tt.msgQueueType, "")
+		testData := setUp(t, "", tt.brokerConfigFile, "")
 		tt.args.ctx = testData.ctx
 		tt.args.dic = testData.dic
 
@@ -217,7 +202,6 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 		name         string
 		args         args
 		passwordFile string
-		msgQueueType string
 		msqQueuePort int
 		want         bool
 	}{
@@ -228,7 +212,6 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			passwordFile: "/tmp/passwd",
-			msgQueueType: "mqtt",
 			want:         false,
 		},
 		{
@@ -238,7 +221,6 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			passwordFile: "/bad/file/path",
-			msgQueueType: "mqtt",
 			want:         false,
 		},
 		{
@@ -248,13 +230,12 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 				startupTimer: startup.NewTimer(3, 1),
 			},
 			passwordFile: "",
-			msgQueueType: "mqtt",
 			want:         false,
 		},
 	}
 
 	for _, tt := range tests {
-		testData := setUp(t, "", "", tt.msgQueueType, tt.passwordFile)
+		testData := setUp(t, "", "", tt.passwordFile)
 		tt.args.ctx = testData.ctx
 		tt.args.dic = testData.dic
 
