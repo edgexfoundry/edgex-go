@@ -91,7 +91,7 @@ Type = "consul"
     [MessageQueue.External.Topics]
     RequestCommandTopic = "edgex/command/request/#"           # for subscribing to 3rd party command requests
     ResponseCommandTopicPrefix = "edgex/command/response/"    # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
-    RequestQueryTopic = "edgex/commandquery/request"          # for subscribing to 3rd party command query request
+    RequestQueryTopic = "edgex/commandquery/request/#"        # for subscribing to 3rd party command query request
     ResponseQueryTopic = "edgex/commandquery/response"        # for publishing responses back to 3rd party systems
 
 [SecretStore]
