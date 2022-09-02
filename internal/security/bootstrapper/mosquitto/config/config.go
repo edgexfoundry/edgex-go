@@ -28,7 +28,6 @@ type ConfigurationStruct struct {
 }
 type MessageQueueInfo struct {
 	Port             int
-	Type             string
 	PasswordFile     string
 	BrokerConfigFile string
 	SecretName       string

@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/secret"
@@ -49,7 +49,7 @@ func NewHandler() *Handler {
 	return &Handler{}
 }
 
-// GetCredentials retrieves the message bus credentials from secretstore
+// GetCredentials retrieves the mosquitto credentials from secretstore
 func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, startupTimer startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
@@ -59,7 +59,7 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 	var credentials *bootstrapConfig.Credentials
 
 	for startupTimer.HasNotElapsed() {
-		// retrieve message bus credentials from secretstore
+		// retrieve mosquitto credentials from secretstore
 		secrets, err := secretProvider.GetSecret(config.MessageQueue.SecretName)
 		if err == nil {
 			credentials = &bootstrapConfig.Credentials{
@@ -69,12 +69,12 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 			break
 		}
 
-		lc.Warnf("Could not retrieve message bus credentials (startup timer has not expired): %s", err.Error())
+		lc.Warnf("Could not retrieve mosquitto credentials (startup timer has not expired): %s", err.Error())
 		startupTimer.SleepForInterval()
 	}
 
 	if credentials == nil {
-		lc.Error("Failed to retrieve message bus credentials before startup timer expired")
+		lc.Error("Failed to retrieve mosquitto credentials before startup timer expired")
 		return false
 	}
 
@@ -82,16 +82,11 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 	return true
 }
 
-// SetupPasswordFile sets up the message bus password file for MQTT specific
-func (handler *Handler) SetupPasswordFile(ctx context.Context, _ *sync.WaitGroup, startupTimer startup.Timer,
+// SetupPasswordFile sets up the mosquitto password file
+func (handler *Handler) SetupMosquittoPasswordFile(ctx context.Context, _ *sync.WaitGroup, startupTimer startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
-
-	if config.MessageQueue.Type != "mqtt" {
-		lc.Infof("messaage bus not mqtt type: %s, skip setting up password file", config.MessageQueue.Type)
-		return true
-	}
 
 	pwdFile := config.MessageQueue.PasswordFile
 	if len(pwdFile) == 0 {
@@ -105,7 +100,6 @@ func (handler *Handler) SetupPasswordFile(ctx context.Context, _ *sync.WaitGroup
 		return false
 	}
 
-	// use mqtt password utility to set up password file
 	cmd := exec.Command("mosquitto_passwd", "-c", "-b", pwdFile, handler.credentials.Username, handler.credentials.Password)
 	_, err := cmd.Output()
 
@@ -117,20 +111,15 @@ func (handler *Handler) SetupPasswordFile(ctx context.Context, _ *sync.WaitGroup
 	return true
 }
 
-// SetupConfFile dynamically creates message bus config file
-func (handler *Handler) SetupConfFile(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
+// SetupConfFile dynamically creates mosquitto config file
+func (handler *Handler) SetupMosquittoConfFile(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
 
-	if config.MessageQueue.Type != "mqtt" {
-		lc.Infof("message bus not mqtt type: %s, skip setting up config file", config.MessageQueue.Type)
-		return true
-	}
-
 	brokerConfigFile := config.MessageQueue.BrokerConfigFile
 	if len(brokerConfigFile) == 0 {
-		lc.Errorf("missing brokerConfigFile configuration for mqtt")
+		lc.Errorf("missing brokerConfigFile configuration for mosquitto")
 		return false
 	}
 

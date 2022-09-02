@@ -37,20 +37,16 @@ echo "$(date) Executing waitFor on message bus with waiting on TokensReadyPort \
 # generates the configuration files.
 # The message broker will start with the generated configuration file so that it is
 # started securely.
-echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping ${MESSAGE_BUS_TYPE}..."
+echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping ${BROKER_TYPE}..."
 
-if [ "$MESSAGE_BUS_TYPE" == "mqtt-bus" ]; then 
-  /edgex-init/security-bootstrapper --confdir=/edgex-init/bootstrap-mqtt/res setupMessageBusCreds
-  msgbus_bootstrapping_status=$?
-  if [ $msgbus_bootstrapping_status -ne 0 ]; then
-    echo "$(date) failed to bootstrap ${MESSAGE_BUS_TYPE}"
-    exit 1
-  fi
 
-  # starting mqtt broker with the pre-config'ed file
-  echo "$(date) Starting edgex-${MESSAGE_BUS_TYPE} ..."
-  exec /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf
-else
-  echo "Bootstrapping ${MESSAGE_BUS_TYPE} not supported"
+/edgex-init/security-bootstrapper --confdir=${CONF_DIR} setupMessageBusCreds ${BROKER_TYPE}
+msgbus_bootstrapping_status=$?
+if [ $msgbus_bootstrapping_status -ne 0 ]; then
+  echo "$(date) failed to bootstrap ${BROKER_TYPE}"
   exit 1
 fi
+
+# starting mqtt broker with the pre-config'ed file
+echo "$(date) Starting edgex-${BROKER_TYPE} ..."
+exec /docker-entrypoint.sh ${ENTRYPOINT_ARG}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022 Intel Corporation
+ * Copyright 2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,20 +10,30 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
  *******************************************************************************/
 
-package container
+package bootstrapper
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/config"
+	"context"
+	"fmt"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
 )
 
-// ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.
-var ConfigurationName = di.TypeInstanceToName(config.ConfigurationStruct{})
+const (
+	Mosquitto = "mosquitto"
+)
 
-// ConfigurationFrom helper function queries the DIC and returns the config.ConfigurationStruct implementation.
-func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
-	return get(ConfigurationName).(*config.ConfigurationStruct)
+func ConfigureMessageBus(brokerType string, ctx context.Context, cancel context.CancelFunc, f flags.Common) error {
+	switch brokerType {
+	case Mosquitto:
+		mosquitto.Configure(ctx, cancel, f)
+		return nil
+
+	default:
+		return fmt.Errorf("Broker Type Not Supported: %s", brokerType)
+	}
 }

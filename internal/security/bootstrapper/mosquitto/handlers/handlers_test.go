@@ -20,8 +20,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/config"
-	messagebus "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/config"
+	messagebus "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/messaging"
@@ -44,7 +44,6 @@ func setUp(t *testing.T, secretName string, brokerConfigFile string,
 	configuration := &config.ConfigurationStruct{
 		MessageQueue: config.MessageQueueInfo{
 			SecretName:       secretName,
-			Type:             msqQueueType,
 			BrokerConfigFile: brokerConfigFile,
 			PasswordFile:     passwordFile,
 		},
@@ -202,7 +201,7 @@ func TestHandler_SetupConfFile(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			handler := &Handler{}
-			if got := handler.SetupConfFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
+			if got := handler.SetupMosquittoConfFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
 				t.Errorf("Handler.GetCredentials() = %v, want %v", got, tt.want)
 			}
 		})
@@ -233,16 +232,6 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 			want:         false,
 		},
 		{
-			name: "SetupPasswordFile No message queue type set",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
-			passwordFile: "/tmp/passwd",
-			msgQueueType: "",
-			want:         true,
-		},
-		{
 			name: "SetupPasswordFile password file name not valid",
 			args: args{
 
@@ -271,7 +260,7 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			handler := &Handler{}
-			if got := handler.SetupPasswordFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
+			if got := handler.SetupMosquittoPasswordFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
 				t.Errorf("Handler.GetCredentials() = %v, want %v", got, tt.want)
 			}
 		})

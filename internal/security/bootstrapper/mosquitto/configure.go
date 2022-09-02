@@ -13,16 +13,16 @@
 *
 *******************************************************************************/
 
-package messagebus
+package mosquitto
 
 import (
 	"context"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/container"
-	msgbushandlers "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/messagebus/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/container"
+	msgbushandlers "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -62,8 +62,8 @@ func Configure(ctx context.Context,
 		true,
 		[]interfaces.BootstrapHandler{
 			msgbusBootstrapHdl.GetCredentials,
-			msgbusBootstrapHdl.SetupPasswordFile,
-			msgbusBootstrapHdl.SetupConfFile,
+			msgbusBootstrapHdl.SetupMosquittoPasswordFile,
+			msgbusBootstrapHdl.SetupMosquittoConfFile,
 		},
 	)
 
