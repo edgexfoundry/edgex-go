@@ -387,47 +387,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("Redis DB credentials exist, skipping generating new password")
 	}
 
-	// for mqtt-bus creds
-	mqttBusCredentials, err := getCredential("security-bootstrapper-mqtt", secretStore, mqttSecretName)
-	if err != nil {
-		if err != errNotFound {
-			lc.Error("failed to determine if MQTT credentials already exist or not: %w", err)
-			return false
-		}
-
-		lc.Info("Generating new password for MQTT bus")
-		mqttPassword, err := secretStore.GeneratePassword(ctx)
-		if err != nil {
-			lc.Error("failed to generate password for mqtt-bus")
-			return false
-		}
-
-		mqttBusCredentials = UserPasswordPair{
-			User:     defaultMqttUser,
-			Password: mqttPassword,
-		}
-	} else {
-		lc.Info("MQTT credentials already exist, skipping generating new password")
-	}
-
 	// Add any additional services that need the known DB secret
 	lc.Infof("adding any additional services using redisdb for knownSecrets...")
 	services, ok := knownSecretsToAdd[redisSecretName]
 	if ok {
 		for _, service := range services {
 			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
-			if err != nil {
-				lc.Error(err.Error())
-				return false
-			}
-		}
-	}
-
-	lc.Infof("adding any additional services using mqtt-bus for knownSecrets...")
-	services, ok = knownSecretsToAdd[mqttSecretName]
-	if ok {
-		for _, service := range services {
-			err = addServiceCredential(lc, mqttSecretName, secretStore, service, mqttBusCredentials)
 			if err != nil {
 				lc.Error(err.Error())
 				return false
@@ -448,6 +413,56 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			}
 		}
 	}
+	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
+	// with append the DB type (redisdb)
+	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
+
+	// for mqtt-bus creds
+	var mqttBusCredentials UserPasswordPair
+	if configuration.SecureMessageBus.Type == mqttSecretName {
+		mqttBusCredentials, err = getCredential("security-bootstrapper-mqtt", secretStore, mqttSecretName)
+		if err != nil {
+			if err != errNotFound {
+				lc.Error("failed to determine if MQTT credentials already exist or not: %w", err)
+				return false
+			}
+
+			lc.Info("Generating new password for MQTT bus")
+			mqttPassword, err := secretStore.GeneratePassword(ctx)
+			if err != nil {
+				lc.Error("failed to generate password for mqtt-bus")
+				return false
+			}
+
+			mqttBusCredentials = UserPasswordPair{
+				User:     defaultMqttUser,
+				Password: mqttPassword,
+			}
+		} else {
+			lc.Info("MQTT credentials already exist, skipping generating new password")
+		}
+
+		lc.Infof("adding any additional services using mqtt-bus for knownSecrets...")
+		services, ok := knownSecretsToAdd[mqttSecretName]
+		if ok {
+			for _, service := range services {
+				err = addServiceCredential(lc, mqttSecretName, secretStore, service, mqttBusCredentials)
+				if err != nil {
+					lc.Error(err.Error())
+					return false
+				}
+			}
+		}
+		err = storeCredential(lc, "security-bootstrapper-mqtt", secretStore, mqttSecretName, mqttBusCredentials)
+		if err != nil {
+			lc.Error(err.Error())
+			return false
+		}
+	}
 
 	// determine the type of message bus
 	// TODO: change the value of type for "redis" to "redisdb" in EdgeX 3.0 as it is a breaking change
@@ -458,7 +473,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	case "redis":
 		messageBusType = redisSecretName
 		creds = redisCredentials
-	case "mqtt-bus":
+	case mqttSecretName:
 		creds = mqttBusCredentials
 	default:
 		supportedSecureType = false
@@ -479,20 +494,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				}
 			}
 		}
-	}
-
-	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
-	// with append the DB type (redisdb)
-	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
-	if err != nil {
-		lc.Error(err.Error())
-		return false
-	}
-
-	err = storeCredential(lc, "security-bootstrapper-mqtt", secretStore, mqttSecretName, mqttBusCredentials)
-	if err != nil {
-		lc.Error(err.Error())
-		return false
 	}
 
 	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redisCredentials, lc)
