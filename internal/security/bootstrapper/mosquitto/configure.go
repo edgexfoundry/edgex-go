@@ -22,7 +22,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/container"
-	msgbushandlers "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/handlers"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
@@ -31,11 +31,15 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
-// Configure is the main entry point for configuring the database redis before startup
+const (
+	ServiceKey string = "security-bootstrapper-mosquitto"
+)
+
+// Configure is the main entry point for configuring the mosquitto broker before startup
 func Configure(ctx context.Context,
 	cancel context.CancelFunc,
 	flags flags.Common) {
-	startupTimer := startup.NewStartUpTimer("security-bootstrapper-mqtt")
+	startupTimer := startup.NewStartUpTimer(ServiceKey)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -44,7 +48,7 @@ func Configure(ctx context.Context,
 		},
 	})
 
-	msgbusBootstrapHdl := msgbushandlers.NewHandler()
+	msgbusBootstrapHdl := handlers.NewHandler()
 
 	// bootstrap.RunAndReturnWaitGroup is needed for the underlying configuration system.
 	// Conveniently, it also creates a pipeline of functions as the list of BootstrapHandler's is
@@ -53,7 +57,7 @@ func Configure(ctx context.Context,
 		ctx,
 		cancel,
 		flags,
-		"security-bootstrapper-mqtt",
+		ServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		nil,
@@ -68,7 +72,7 @@ func Configure(ctx context.Context,
 	)
 
 	if !ok {
-		// had some issue(s) during bootstrapping message bus
+		// had some issue(s) during bootstrapping secure mosquitto broker
 		os.Exit(1)
 	}
 }
