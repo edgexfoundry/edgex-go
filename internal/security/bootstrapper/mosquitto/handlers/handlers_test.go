@@ -36,6 +36,11 @@ type Testdata struct {
 	secretData map[string]string
 	ctx        context.Context
 }
+type args struct {
+	ctx          context.Context
+	startupTimer startup.Timer
+	dic          *di.Container
+}
 
 func setUp(t *testing.T, secretName string, brokerConfigFile string, passwordFile string) *Testdata {
 
@@ -79,11 +84,6 @@ func TestHandler_GetCredentials(t *testing.T) {
 	mockSecretProvider.On("GetSecret", "").Return(nil, errors.New("Empty Secret Name"))
 	mockSecretProvider.On("GetSecret", "notfound").Return(nil, errors.New("Not Found"))
 
-	type args struct {
-		ctx          context.Context
-		startupTimer startup.Timer
-		dic          *di.Container
-	}
 	tests := []struct {
 		name       string
 		args       args
@@ -91,29 +91,17 @@ func TestHandler_GetCredentials(t *testing.T) {
 		want       bool
 	}{
 		{
-			name: "GetCredentials ok",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:       "GetCredentials ok",
 			secretName: "mqtt-bus",
 			want:       true,
 		},
 		{
-			name: "GetCredentials no secret name",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:       "GetCredentials no secret name",
 			secretName: "",
 			want:       false,
 		},
 		{
-			name: "GetCredentials secret name not found",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:       "GetCredentials secret name not found",
 			secretName: "notfound",
 			want:       false,
 		},
@@ -121,8 +109,11 @@ func TestHandler_GetCredentials(t *testing.T) {
 
 	for _, tt := range tests {
 		testData := setUp(t, tt.secretName, "", "")
-		tt.args.ctx = testData.ctx
-		tt.args.dic = testData.dic
+		args := args{
+			startupTimer: startup.NewTimer(3, 1),
+			ctx:          testData.ctx,
+			dic:          testData.dic,
+		}
 		testData.dic.Update(di.ServiceConstructorMap{
 			container.SecretProviderName: func(get di.Get) interface{} {
 				return mockSecretProvider
@@ -131,18 +122,13 @@ func TestHandler_GetCredentials(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			handler := &Handler{}
-			if got := handler.GetCredentials(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
+			if got := handler.GetCredentials(args.ctx, nil, args.startupTimer, args.dic); got != tt.want {
 				t.Errorf("Handler.GetCredentials() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 func TestHandler_SetupConfFile(t *testing.T) {
-	type args struct {
-		ctx          context.Context
-		startupTimer startup.Timer
-		dic          *di.Container
-	}
 	tests := []struct {
 		name             string
 		args             args
@@ -151,29 +137,17 @@ func TestHandler_SetupConfFile(t *testing.T) {
 		want             bool
 	}{
 		{
-			name: "SetupConfFile ok",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:             "SetupConfFile ok",
 			brokerConfigFile: "/tmp/mosquitto.conf",
 			want:             true,
 		},
 		{
-			name: "SetupConfFile broker file name not valid",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:             "SetupConfFile broker file name not valid",
 			brokerConfigFile: "/bad/file/path",
 			want:             false,
 		},
 		{
-			name: "SetupConfFile config file name not set",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:             "SetupConfFile config file name not set",
 			brokerConfigFile: "",
 			want:             false,
 		},
@@ -181,23 +155,20 @@ func TestHandler_SetupConfFile(t *testing.T) {
 
 	for _, tt := range tests {
 		testData := setUp(t, "", tt.brokerConfigFile, "")
-		tt.args.ctx = testData.ctx
-		tt.args.dic = testData.dic
-
+		args := args{
+			startupTimer: startup.NewTimer(3, 1),
+			ctx:          testData.ctx,
+			dic:          testData.dic,
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			handler := &Handler{}
-			if got := handler.SetupMosquittoConfFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
+			if got := handler.SetupMosquittoConfFile(args.ctx, nil, args.startupTimer, args.dic); got != tt.want {
 				t.Errorf("Handler.GetCredentials() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 func TestHandler_SetupPasswordFile(t *testing.T) {
-	type args struct {
-		ctx          context.Context
-		startupTimer startup.Timer
-		dic          *di.Container
-	}
 	tests := []struct {
 		name         string
 		args         args
@@ -206,29 +177,17 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 		want         bool
 	}{
 		{
-			name: "SetupPasswordFile no mosquitto",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:         "SetupPasswordFile no mosquitto",
 			passwordFile: "/tmp/passwd",
 			want:         false,
 		},
 		{
-			name: "SetupPasswordFile password file name not valid",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:         "SetupPasswordFile password file name not valid",
 			passwordFile: "/bad/file/path",
 			want:         false,
 		},
 		{
-			name: "SetupPasswordFile password file name not set",
-			args: args{
-
-				startupTimer: startup.NewTimer(3, 1),
-			},
+			name:         "SetupPasswordFile password file name not set",
 			passwordFile: "",
 			want:         false,
 		},
@@ -236,12 +195,14 @@ func TestHandler_SetupPasswordFile(t *testing.T) {
 
 	for _, tt := range tests {
 		testData := setUp(t, "", "", tt.passwordFile)
-		tt.args.ctx = testData.ctx
-		tt.args.dic = testData.dic
-
+		args := args{
+			startupTimer: startup.NewTimer(3, 1),
+			ctx:          testData.ctx,
+			dic:          testData.dic,
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			handler := &Handler{}
-			if got := handler.SetupMosquittoPasswordFile(tt.args.ctx, nil, tt.args.startupTimer, tt.args.dic); got != tt.want {
+			if got := handler.SetupMosquittoPasswordFile(args.ctx, nil, args.startupTimer, args.dic); got != tt.want {
 				t.Errorf("Handler.GetCredentials() = %v, want %v", got, tt.want)
 			}
 		})
