@@ -41,7 +41,7 @@ func setUp(t *testing.T, secretName string, brokerConfigFile string, passwordFil
 
 	mockLc := logger.NewMockClient()
 	configuration := &config.ConfigurationStruct{
-		MessageQueue: config.MessageQueueInfo{
+		SecureMessageBus: config.SecureMessageBusInfo{
 			SecretName:       secretName,
 			BrokerConfigFile: brokerConfigFile,
 			PasswordFile:     passwordFile,

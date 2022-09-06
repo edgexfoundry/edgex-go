@@ -27,7 +27,7 @@ ServerName = ""
   [SecretStore.Authentication]
   AuthType = "X-Vault-Token"
 
-[MessageQueue]
+[SecureMessageBus]
 Port = 1883
 PasswordFile = "/mosquitto/config/pwdfile"
 BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
