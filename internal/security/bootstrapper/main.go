@@ -70,7 +70,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		redis.Configure(ctx, cancel, f)
 		return
 	case setupMsgbusCredsSubcommandName:
-		err = ConfigureMessageBus(flagSet.Arg(1), ctx, cancel, f)
+		err = ConfigureSecureMessageBus(flagSet.Arg(1), ctx, cancel, f)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -27,7 +27,7 @@ const (
 	Mosquitto = "mosquitto"
 )
 
-func ConfigureMessageBus(brokerType string, ctx context.Context, cancel context.CancelFunc, f flags.Common) error {
+func ConfigureSecureMessageBus(brokerType string, ctx context.Context, cancel context.CancelFunc, f flags.Common) error {
 	switch brokerType {
 	case Mosquitto:
 		mosquitto.Configure(ctx, cancel, f)
