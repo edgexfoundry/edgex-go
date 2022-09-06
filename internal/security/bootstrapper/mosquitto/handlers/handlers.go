@@ -82,7 +82,7 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 	return true
 }
 
-// SetupPasswordFile sets up the mosquitto password file
+// SetupMosquittoPasswordFile sets up the mosquitto password file
 func (handler *Handler) SetupMosquittoPasswordFile(ctx context.Context, _ *sync.WaitGroup, startupTimer startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
@@ -111,7 +111,7 @@ func (handler *Handler) SetupMosquittoPasswordFile(ctx context.Context, _ *sync.
 	return true
 }
 
-// SetupConfFile dynamically creates mosquitto config file
+// SetupMosquittoConfFile dynamically creates mosquitto config file
 func (handler *Handler) SetupMosquittoConfFile(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
@@ -126,23 +126,23 @@ func (handler *Handler) SetupMosquittoConfFile(ctx context.Context, _ *sync.Wait
 	configFileTemplate := `listener {{.MQTTPort}}
 password_file {{.PwdFilePath}}`
 
-	type mqttConfig struct {
+	type mosquittoConfig struct {
 		MQTTPort    int
 		PwdFilePath string
 	}
 
-	mqttConf, err := template.New("mqtt-config").Parse(configFileTemplate + fmt.Sprintln())
+	mosquittoConf, err := template.New("mosquitto-config").Parse(configFileTemplate + fmt.Sprintln())
 	if err != nil {
-		lc.Errorf("failed to parse MQTT config file template %s: %v", configFileTemplate, err)
+		lc.Errorf("failed to parse mosquitto config file template %s: %v", configFileTemplate, err)
 		return false
 	}
 
-	lc.Infof("Creating the broker config file: %s", brokerConfigFile)
+	lc.Infof("Creating the mosquitto config file: %s", brokerConfigFile)
 
 	// open config file with read-write and overwritten attribute (TRUNC)
 	confFile, err := os.OpenFile(brokerConfigFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
 	if err != nil {
-		lc.Errorf("failed to open config file %s: %v", brokerConfigFile, err)
+		lc.Errorf("failed to open mosquitto config file %s: %v", brokerConfigFile, err)
 		return false
 	}
 	defer func() {
@@ -150,11 +150,11 @@ password_file {{.PwdFilePath}}`
 	}()
 
 	fwriter := bufio.NewWriter(confFile)
-	if err := mqttConf.Execute(fwriter, mqttConfig{
+	if err := mosquittoConf.Execute(fwriter, mosquittoConfig{
 		MQTTPort:    config.SecureMessageBus.Port,
 		PwdFilePath: config.SecureMessageBus.PasswordFile,
 	}); err != nil {
-		lc.Errorf("failed to execute mqttConfig template %s: %v", configFileTemplate, err)
+		lc.Errorf("failed to execute mosquittoConfig template %s: %v", configFileTemplate, err)
 		return false
 	}
 
@@ -163,7 +163,7 @@ password_file {{.PwdFilePath}}`
 		return false
 	}
 
-	lc.Info("MQTT config file has been successfully set up")
+	lc.Info("mosquitto config file has been successfully set up")
 
 	return true
 }
