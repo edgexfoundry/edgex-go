@@ -66,7 +66,7 @@ edgex:
 `
 	// Can't use constants from go-mod-messaging since that will create ZMQ dependency, which we do not want!
 	redisSecureMessageBusType = "redis"
-	mqttSecureMessageBusType  = "mqtt-bus"
+	mqttSecureMessageBusType  = "mqtt"
 	noneSecureMessageBusType  = "none"
 	blankSecureMessageBusType = ""
 )

@@ -25,6 +25,7 @@ import (
 
 const (
 	Mosquitto = "mosquitto"
+	Redis     = "redis"
 )
 
 func ConfigureSecureMessageBus(brokerType string, ctx context.Context, cancel context.CancelFunc, f flags.Common) error {
@@ -32,7 +33,9 @@ func ConfigureSecureMessageBus(brokerType string, ctx context.Context, cancel co
 	case Mosquitto:
 		mosquitto.Configure(ctx, cancel, f)
 		return nil
-
+	case Redis:
+		//no op as Redis message bus is handled in configureRedis
+		return nil
 	default:
 		return fmt.Errorf("Broker Type Not Supported: %s", brokerType)
 	}

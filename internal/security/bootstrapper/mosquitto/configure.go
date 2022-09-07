@@ -31,15 +31,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 )
 
-const (
-	ServiceKey string = "security-bootstrapper-mosquitto"
-)
-
 // Configure is the main entry point for configuring the mosquitto broker before startup
 func Configure(ctx context.Context,
 	cancel context.CancelFunc,
 	flags flags.Common) {
-	startupTimer := startup.NewStartUpTimer(ServiceKey)
+	startupTimer := startup.NewStartUpTimer(internal.BootstrapMessageBusServiceKey)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -57,7 +53,7 @@ func Configure(ctx context.Context,
 		ctx,
 		cancel,
 		flags,
-		ServiceKey,
+		internal.BootstrapMessageBusServiceKey,
 		internal.ConfigStemSecurity,
 		configuration,
 		nil,

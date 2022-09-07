@@ -46,7 +46,7 @@ func setUp(t *testing.T, secretName string, brokerConfigFile string, passwordFil
 
 	mockLc := logger.NewMockClient()
 	configuration := &config.ConfigurationStruct{
-		SecureMessageBus: config.SecureMessageBusInfo{
+		SecureMosquitto: config.SecureMosquittoInfo{
 			SecretName:       secretName,
 			BrokerConfigFile: brokerConfigFile,
 			PasswordFile:     passwordFile,
@@ -79,7 +79,7 @@ func TestHandler_GetCredentials(t *testing.T) {
 	}
 
 	mockSecretProvider := &mocks.SecretProvider{}
-	mockSecretProvider.On("GetSecret", "mqtt-bus").Return(expectedSecretData, nil)
+	mockSecretProvider.On("GetSecret", "message-bus").Return(expectedSecretData, nil)
 
 	mockSecretProvider.On("GetSecret", "").Return(nil, errors.New("Empty Secret Name"))
 	mockSecretProvider.On("GetSecret", "notfound").Return(nil, errors.New("Not Found"))
@@ -92,7 +92,7 @@ func TestHandler_GetCredentials(t *testing.T) {
 	}{
 		{
 			name:       "GetCredentials ok",
-			secretName: "mqtt-bus",
+			secretName: "message-bus",
 			want:       true,
 		},
 		{

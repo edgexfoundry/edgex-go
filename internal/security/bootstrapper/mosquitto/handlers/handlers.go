@@ -60,7 +60,7 @@ func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, s
 
 	for startupTimer.HasNotElapsed() {
 		// retrieve mosquitto credentials from secretstore
-		secrets, err := secretProvider.GetSecret(config.SecureMessageBus.SecretName)
+		secrets, err := secretProvider.GetSecret(config.SecureMosquitto.SecretName)
 		if err == nil {
 			credentials = &bootstrapConfig.Credentials{
 				Username: secrets[secret.UsernameKey],
@@ -88,7 +88,7 @@ func (handler *Handler) SetupMosquittoPasswordFile(ctx context.Context, _ *sync.
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
 
-	pwdFile := config.SecureMessageBus.PasswordFile
+	pwdFile := config.SecureMosquitto.PasswordFile
 	if len(pwdFile) == 0 {
 		lc.Errorf("missing PasswordFile configuration for mqtt")
 		return false
@@ -117,7 +117,7 @@ func (handler *Handler) SetupMosquittoConfFile(ctx context.Context, _ *sync.Wait
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
 
-	brokerConfigFile := config.SecureMessageBus.BrokerConfigFile
+	brokerConfigFile := config.SecureMosquitto.BrokerConfigFile
 	if len(brokerConfigFile) == 0 {
 		lc.Errorf("missing brokerConfigFile configuration for mosquitto")
 		return false
@@ -151,8 +151,8 @@ password_file {{.PwdFilePath}}`
 
 	fwriter := bufio.NewWriter(confFile)
 	if err := mosquittoConf.Execute(fwriter, mosquittoConfig{
-		MQTTPort:    config.SecureMessageBus.Port,
-		PwdFilePath: config.SecureMessageBus.PasswordFile,
+		MQTTPort:    config.SecureMosquitto.Port,
+		PwdFilePath: config.SecureMosquitto.PasswordFile,
 	}); err != nil {
 		lc.Errorf("failed to execute mosquittoConfig template %s: %v", configFileTemplate, err)
 		return false

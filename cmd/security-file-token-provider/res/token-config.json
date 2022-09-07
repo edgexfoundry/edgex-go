@@ -11,7 +11,7 @@
   "security-bootstrapper-redis": {
     "edgex_use_defaults": true
   },
-  "security-bootstrapper-mqtt": {
+  "security-bootstrapper-messagebus": {
     "edgex_use_defaults": true
   },
   "support-notifications": {

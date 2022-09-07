@@ -53,13 +53,13 @@ import (
 const (
 	addKnownSecretsEnv   = "ADD_KNOWN_SECRETS"
 	redisSecretName      = "redisdb"
-	mqttSecretName       = "mqtt-bus"
+	messagebusSecretName = "message-bus"
 	knownSecretSeparator = ","
 	serviceListBegin     = "["
 	serviceListEnd       = "]"
 	serviceListSeparator = ";"
 	secretBasePath       = "/v1/secret/edgex" // nolint:gosec
-	defaultMqttUser      = "mosquitto"
+	defaultMsgBusUser    = "msgbususer"
 )
 
 var errNotFound = errors.New("credential NOT found")
@@ -74,7 +74,7 @@ func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
-		validKnownSecrets:  map[string]bool{redisSecretName: true, mqttSecretName: true},
+		validKnownSecrets:  map[string]bool{redisSecretName: true, messagebusSecretName: true},
 	}
 }
 
@@ -360,7 +360,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// secrets.
 	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
 	// edgex/%s), and edgex/redisdb/* is enumerated to initialize the database.
-	// Similary for mqtt-bus credential.
+	// Similary for secure message bus credential.
 
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
@@ -421,43 +421,45 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		return false
 	}
 
-	// for mqtt-bus creds
-	var mqttBusCredentials UserPasswordPair
-	if configuration.SecureMessageBus.Type == mqttSecretName {
-		mqttBusCredentials, err = getCredential("security-bootstrapper-mqtt", secretStore, mqttSecretName)
+	// for secure message bus creds
+	var msgBusCredentials UserPasswordPair
+	if configuration.SecureMessageBus.Type != redisSecureMessageBusType &&
+		configuration.SecureMessageBus.Type != noneSecureMessageBusType &&
+		configuration.SecureMessageBus.Type != blankSecureMessageBusType {
+		msgBusCredentials, err = getCredential(internal.BootstrapMessageBusServiceKey, secretStore, messagebusSecretName)
 		if err != nil {
 			if err != errNotFound {
-				lc.Error("failed to determine if MQTT credentials already exist or not: %w", err)
+				lc.Errorf("failed to determine if %s credentials already exist or not: %w", configuration.SecureMessageBus.Type, err)
 				return false
 			}
 
-			lc.Info("Generating new password for MQTT bus")
-			mqttPassword, err := secretStore.GeneratePassword(ctx)
+			lc.Infof("Generating new password for %s bus", configuration.SecureMessageBus.Type)
+			msgBusPassword, err := secretStore.GeneratePassword(ctx)
 			if err != nil {
-				lc.Error("failed to generate password for mqtt-bus")
+				lc.Errorf("failed to generate password for %s", messagebusSecretName)
 				return false
 			}
 
-			mqttBusCredentials = UserPasswordPair{
-				User:     defaultMqttUser,
-				Password: mqttPassword,
+			msgBusCredentials = UserPasswordPair{
+				User:     defaultMsgBusUser,
+				Password: msgBusPassword,
 			}
 		} else {
-			lc.Info("MQTT credentials already exist, skipping generating new password")
+			lc.Infof("%s credentials already exist, skipping generating new password", configuration.SecureMessageBus.Type)
 		}
 
-		lc.Infof("adding any additional services using mqtt-bus for knownSecrets...")
-		services, ok := knownSecretsToAdd[mqttSecretName]
+		lc.Infof("adding any additional services using %s for knownSecrets...", configuration.SecureMessageBus.Type)
+		services, ok := knownSecretsToAdd[messagebusSecretName]
 		if ok {
 			for _, service := range services {
-				err = addServiceCredential(lc, mqttSecretName, secretStore, service, mqttBusCredentials)
+				err = addServiceCredential(lc, messagebusSecretName, secretStore, service, msgBusCredentials)
 				if err != nil {
 					lc.Error(err.Error())
 					return false
 				}
 			}
 		}
-		err = storeCredential(lc, "security-bootstrapper-mqtt", secretStore, mqttSecretName, mqttBusCredentials)
+		err = storeCredential(lc, internal.BootstrapMessageBusServiceKey, secretStore, messagebusSecretName, msgBusCredentials)
 		if err != nil {
 			lc.Error(err.Error())
 			return false
@@ -465,29 +467,30 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// determine the type of message bus
-	// TODO: change the value of type for "redis" to "redisdb" in EdgeX 3.0 as it is a breaking change
 	messageBusType := configuration.SecureMessageBus.Type
 	var creds UserPasswordPair
 	supportedSecureType := true
+	var secretName string
 	switch messageBusType {
-	case "redis":
-		messageBusType = redisSecretName
+	case redisSecureMessageBusType:
 		creds = redisCredentials
-	case mqttSecretName:
-		creds = mqttBusCredentials
+		secretName = redisSecretName
+	case mqttSecureMessageBusType:
+		creds = msgBusCredentials
+		secretName = messagebusSecretName
 	default:
 		supportedSecureType = false
-		lc.Warnf("secure message type is not redis or mqtt-bus")
+		lc.Warnf("secure message bus %s is not supported", messageBusType)
 	}
 
 	if supportedSecureType {
-		lc.Infof("adding message bus %s secret path for internal services...", messageBusType)
+		lc.Infof("adding credentials for %s message bus for internal services...", messageBusType)
 		for _, info := range configuration.SecureMessageBus.Services {
 			service := info.Service
 
 			// add credentials to service path if specified and they're not already there
 			if len(service) != 0 {
-				err = addServiceCredential(lc, messageBusType, secretStore, service, creds)
+				err = addServiceCredential(lc, secretName, secretStore, service, creds)
 				if err != nil {
 					lc.Error(err.Error())
 					return false

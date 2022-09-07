@@ -22,11 +22,11 @@ import (
 // ConfigurationStruct has a 1:1 relationship to the configuration.toml for the service. Writable is
 // the runtime extension of the static configuration.
 type ConfigurationStruct struct {
-	LogLevel         string
-	SecretStore      bootstrapConfig.SecretStoreInfo
-	SecureMessageBus SecureMessageBusInfo
+	LogLevel        string
+	SecretStore     bootstrapConfig.SecretStoreInfo
+	SecureMosquitto SecureMosquittoInfo
 }
-type SecureMessageBusInfo struct {
+type SecureMosquittoInfo struct {
 	Port             int
 	PasswordFile     string
 	BrokerConfigFile string

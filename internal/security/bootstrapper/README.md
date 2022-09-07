@@ -30,7 +30,7 @@ services:
     volumes:
     - mqtt:/mosquitto:z
     - edgex-init:/edgex-init:ro,z
-    - /tmp/edgex/secrets/security-bootstrapper-mqtt:/tmp/edgex/secrets/security-bootstrapper-mqtt:ro,z
+    - /tmp/edgex/secrets/security-bootstrapper-messagebus:/tmp/edgex/secrets/security-bootstrapper-messagebus:ro,z
     depends_on:
       - security-bootstrapper
       - secretstore-setup      

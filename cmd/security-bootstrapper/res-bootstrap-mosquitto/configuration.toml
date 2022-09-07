@@ -20,16 +20,16 @@ Type = "vault"
 Protocol = "http"
 Host = "localhost"          ## Override in environment variables, if necessary
 Port = 8200
-Path = "security-bootstrapper-mqtt/"
-TokenFile = "/tmp/edgex/secrets/security-bootstrapper-mqtt/secrets-token.json"
+Path = "security-bootstrapper-messagebus/"
+TokenFile = "/tmp/edgex/secrets/security-bootstrapper-messagebus/secrets-token.json"
 RootCaCertPath = ""
 ServerName = ""
   [SecretStore.Authentication]
   AuthType = "X-Vault-Token"
 
-[SecureMessageBus]
+[SecureMosquitto]
 Port = 1883
 PasswordFile = "/mosquitto/config/pwdfile"
 BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
-SecretName = "mqtt-bus"
+SecretName = "message-bus"
 

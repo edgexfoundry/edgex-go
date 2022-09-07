@@ -35,3 +35,6 @@ const (
 	AuthHeaderTitle = "Authorization"
 	BearerLabel     = "Bearer "
 )
+const (
+	BootstrapMessageBusServiceKey = "security-bootstrapper-messagebus"
+)
