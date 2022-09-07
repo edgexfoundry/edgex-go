@@ -436,7 +436,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			lc.Infof("Generating new password for %s bus", configuration.SecureMessageBus.Type)
 			msgBusPassword, err := secretStore.GeneratePassword(ctx)
 			if err != nil {
-				lc.Errorf("failed to generate password for %s", messagebusSecretName)
+				lc.Errorf("failed to generate password for %s bus", configuration.SecureMessageBus.Type)
 				return false
 			}
 
@@ -445,10 +445,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				Password: msgBusPassword,
 			}
 		} else {
-			lc.Infof("%s credentials already exist, skipping generating new password", configuration.SecureMessageBus.Type)
+			lc.Infof("%s bus credentials already exist, skipping generating new password", configuration.SecureMessageBus.Type)
 		}
 
-		lc.Infof("adding any additional services using %s for knownSecrets...", configuration.SecureMessageBus.Type)
+		lc.Infof("adding any additional services using %s for knownSecrets...", messagebusSecretName)
 		services, ok := knownSecretsToAdd[messagebusSecretName]
 		if ok {
 			for _, service := range services {
@@ -480,11 +480,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		secretName = messagebusSecretName
 	default:
 		supportedSecureType = false
-		lc.Warnf("secure message bus %s is not supported", messageBusType)
+		lc.Warnf("secure message bus '%s' is not supported", messageBusType)
 	}
 
 	if supportedSecureType {
-		lc.Infof("adding credentials for %s message bus for internal services...", messageBusType)
+		lc.Infof("adding credentials for '%s' message bus for internal services...", messageBusType)
 		for _, info := range configuration.SecureMessageBus.Services {
 			service := info.Service
 
