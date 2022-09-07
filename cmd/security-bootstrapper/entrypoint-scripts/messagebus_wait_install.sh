@@ -49,4 +49,4 @@ fi
 
 # starting mqtt broker with the pre-config'ed file
 echo "$(date) Starting edgex-${BROKER_TYPE} ..."
-exec /docker-entrypoint.sh ${ENTRYPOINT_ARG}
+exec ${ENTRYPOINT}
