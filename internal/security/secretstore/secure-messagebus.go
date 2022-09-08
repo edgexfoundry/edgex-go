@@ -89,7 +89,8 @@ func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, red
 
 	// TODO: Add support for secure MQTT MessageBus
 	case mqttSecureMessageBusType:
-		return fmt.Errorf("secure MQTT MessageBus not yet supported")
+		lc.Errorf("secure MQTT MessageBus not yet supported for eKuiper")
+		return nil
 
 	case noneSecureMessageBusType, blankSecureMessageBusType:
 		return nil

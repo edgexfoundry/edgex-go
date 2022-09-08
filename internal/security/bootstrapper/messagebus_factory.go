@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2018 Dell Inc.
+ * Copyright 2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -10,31 +10,33 @@
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
+ *
  *******************************************************************************/
-package internal
 
-const (
-	BootTimeoutDefault        = BootTimeoutSecondsDefault * 1000
-	BootTimeoutSecondsDefault = 30
-	BootRetrySecondsDefault   = 1
-	ConfigFileName            = "configuration.toml"
-	// TODO: move the config stem constants in go-mod-contracts
-	ConfigStemApp      = "edgex/appservices/"
-	ConfigStemCore     = "edgex/core/"
-	ConfigStemDevice   = "edgex/devices/"
-	ConfigStemSecurity = "edgex/security/"
-	LogDurationKey     = "duration"
+package bootstrapper
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
 )
 
 const (
-	ConfigProviderEnvVar = "edgex_configuration_provider"
-	WritableKey          = "/Writable"
+	Mosquitto = "mosquitto"
+	Redis     = "redis"
 )
 
-const (
-	AuthHeaderTitle = "Authorization"
-	BearerLabel     = "Bearer "
-)
-const (
-	BootstrapMessageBusServiceKey = "security-bootstrapper-messagebus"
-)
+func ConfigureSecureMessageBus(brokerType string, ctx context.Context, cancel context.CancelFunc, f flags.Common) error {
+	switch brokerType {
+	case Mosquitto:
+		mosquitto.Configure(ctx, cancel, f)
+		return nil
+	case Redis:
+		//no op as Redis message bus is handled in configureRedis
+		return nil
+	default:
+		return fmt.Errorf("Broker Type Not Supported: %s", brokerType)
+	}
+}

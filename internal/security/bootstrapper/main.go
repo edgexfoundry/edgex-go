@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2022 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -38,6 +38,7 @@ import (
 
 const (
 	configureDatabaseSubcommandName = "configureRedis"
+	setupMsgbusCredsSubcommandName  = "setupMessageBusCreds"
 )
 
 // Main function is the wrapper for the security bootstrapper main
@@ -62,9 +63,18 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		os.Exit(0)
 	}
 
-	// branch out to bootstrap redis if it is configureRedis
-	if flagSet.Arg(0) == configureDatabaseSubcommandName {
+	// branch out to different entrypoints if it is from sub commands
+	switch flagSet.Arg(0) {
+
+	case configureDatabaseSubcommandName:
 		redis.Configure(ctx, cancel, f)
+		return
+	case setupMsgbusCredsSubcommandName:
+		err = ConfigureSecureMessageBus(flagSet.Arg(1), ctx, cancel, f)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		return
 	}
 

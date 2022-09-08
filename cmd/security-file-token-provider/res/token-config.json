@@ -1,68 +1,21 @@
 {
   "core-command": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/core-command/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "core-data": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/core-data/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "core-metadata": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/core-metadata/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "security-bootstrapper-redis": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/security-bootstrapper-redis/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
+  },
+  "security-bootstrapper-messagebus": {
+    "edgex_use_defaults": true
   },
   "support-notifications": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/support-notifications/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "app-rules-engine": {
     "edgex_use_defaults": true
@@ -77,17 +30,7 @@
     "edgex_use_defaults": true
   },
   "support-scheduler": {
-    "edgex_use_defaults": true,
-    "custom_policy": {
-      "path": {
-        "secret/edgex/support-scheduler/redisdb": {
-          "capabilities": [
-            "list",
-            "read"
-          ]
-        }
-      }
-    }
+    "edgex_use_defaults": true
   },
   "security-secretstore-setup": {
     "edgex_use_defaults": true,
