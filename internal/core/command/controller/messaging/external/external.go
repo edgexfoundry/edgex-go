@@ -6,6 +6,7 @@
 package external
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -25,8 +26,12 @@ import (
 )
 
 const (
-	RequestQueryTopic  = "RequestQueryTopic"
-	ResponseQueryTopic = "ResponseQueryTopic"
+	RequestQueryTopic          = "RequestQueryTopic"
+	ResponseQueryTopic         = "ResponseQueryTopic"
+	RequestCommandTopic        = "RequestCommandTopic"
+	ResponseCommandTopicPrefix = "ResponseCommandTopicPrefix"
+	RequestTopicPrefix         = "RequestTopicPrefix"
+	ResponseTopic              = "ResponseTopic"
 )
 
 func OnConnectHandler(dic *di.Container) mqtt.OnConnectHandler {
@@ -41,7 +46,12 @@ func OnConnectHandler(dic *di.Container) mqtt.OnConnectHandler {
 		responseQueryTopic := externalTopics[ResponseQueryTopic]
 		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(responseQueryTopic, qos, retain, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
+			return
+		}
 
+		requestCommandTopic := externalTopics[RequestCommandTopic]
+		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(dic)); token.Wait() && token.Error() != nil {
+			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
 			return
 		}
 	}
@@ -121,6 +131,78 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 
 		responseEnvelope, _ = types.NewMessageEnvelopeForResponse(payloadBytes, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
 		publishMessage(client, responseTopic, qos, retain, responseEnvelope, lc)
+	}
+}
+
+func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
+	return func(client mqtt.Client, message mqtt.Message) {
+		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+		qos := messageBusInfo.External.QoS
+		retain := messageBusInfo.External.Retain
+
+		// expected command request topic scheme: #/<device>/<command-name>/<method>
+		topicLevels := strings.Split(message.Topic(), "/")
+		length := len(topicLevels)
+		deviceName := topicLevels[length-3]
+		commandName := topicLevels[length-2]
+		method := topicLevels[length-1]
+		// expected command response topic scheme: #/<device>/<command-name>/<method>
+		externalResponseTopic := messageBusInfo.External.Topics[ResponseCommandTopicPrefix] + strings.Join([]string{deviceName, commandName, method}, "/")
+
+		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
+		if err != nil {
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+
+		if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "unknown command method")
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+
+		// retrieve device information through Metadata DeviceClient
+		dc := bootstrapContainer.DeviceClientFrom(dic.Get)
+		if dc == nil {
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil Device Client")
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+		deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
+		if err != nil {
+			errorMessage := fmt.Sprintf("Failed to get Device by name %s: %v", deviceName, err)
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+
+		// retrieve device service information through Metadata DeviceClient
+		dsc := bootstrapContainer.DeviceServiceClientFrom(dic.Get)
+		if dsc == nil {
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil DeviceService Client")
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+		deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
+		if err != nil {
+			errorMessage := fmt.Sprintf("Failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+
+		// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
+		internalRequestTopic := messageBusInfo.Internal.Topics[RequestTopicPrefix] + strings.Join([]string{deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/")
+		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
+		err = internalMessageBus.Publish(requestEnvelope, internalRequestTopic)
+		if err != nil {
+			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
 	}
 }
 
