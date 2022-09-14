@@ -37,12 +37,12 @@ default:
   optional:
     Username: {{.User}}
     Password: {{.Password}}
-  port: 6379
-  protocol: redis
+  port: {{.Port}}
+  protocol: {{.Protocol}}
   server: localhost
-  connectionSelector: edgex.redisMsgBus
+  connectionSelector: {{.ConnectionSelector}}
   topic: rules-events
-  type: redis
+  type: {{.Type}}
 mqtt_conf:
   optional:
     ClientId: client1
@@ -55,11 +55,11 @@ mqtt_conf:
 
 	eKuiperConnectionsTemplate = `
 edgex:
-  redisMsgBus: #connection key
-    protocol: redis
+  {{.ConnectorName}}: #connection key
+    protocol: {{.Protocol}}
     server: localhost
-    port: 6379
-    type: redis
+    port: {{.Port}}
+    type: {{.Type}}
     optional:
       Username: {{.User}}
       Password: {{.Password}}
@@ -71,26 +71,35 @@ edgex:
 	blankSecureMessageBusType = ""
 )
 
-func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, redis5Pair UserPasswordPair, lc logger.LoggingClient) error {
+type eKuiperFields struct {
+	User               string
+	Password           string
+	ConnectionSelector string
+	ConnectorName      string
+	Protocol           string
+	Type               string
+	Port               int
+}
+
+func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, creds UserPasswordPair, lc logger.LoggingClient) error {
+	fields := eKuiperFields{
+		User:     creds.User,
+		Password: creds.Password,
+	}
 	switch secureMessageBus.Type {
-	// Currently, only support Secure MessageBus when using the Redis implementation.
 	case redisSecureMessageBusType:
-		// eKuiper now has two configuration files (EdgeX Sources and Connections)
+		fields.ConnectionSelector = "edgex.redisMsgBus"
+		fields.ConnectorName = "redisMsgBus"
+		fields.Protocol = "redis"
+		fields.Type = redisSecureMessageBusType
+		fields.Port = 6379
 
-		err := configureKuiperForSecureMessageBus(redis5Pair, "EdgeX Source", eKuiperEdgeXSourceTemplate, secureMessageBus.KuiperConfigPath, lc)
-		if err != nil {
-			return err
-		}
-
-		err = configureKuiperForSecureMessageBus(redis5Pair, "Connections", eKuiperConnectionsTemplate, secureMessageBus.KuiperConnectionsPath, lc)
-		if err != nil {
-			return err
-		}
-
-	// TODO: Add support for secure MQTT MessageBus
 	case mqttSecureMessageBusType:
-		lc.Errorf("secure MQTT MessageBus not yet supported for eKuiper")
-		return nil
+		fields.ConnectionSelector = "edgex.mqttMsgBus"
+		fields.ConnectorName = "mqttMsgBus"
+		fields.Protocol = "tcp"
+		fields.Type = mqttSecureMessageBusType
+		fields.Port = 1883
 
 	case noneSecureMessageBusType, blankSecureMessageBusType:
 		return nil
@@ -99,10 +108,20 @@ func ConfigureSecureMessageBus(secureMessageBus config.SecureMessageBusInfo, red
 		return fmt.Errorf("invalid Secure MessageBus Type of '%s'", secureMessageBus.Type)
 	}
 
+	// eKuiper now has two configuration files (EdgeX Sources and Connections)
+	err := configureKuiperForSecureMessageBus(fields, "EdgeX Source", eKuiperEdgeXSourceTemplate, secureMessageBus.KuiperConfigPath, lc)
+	if err != nil {
+		return err
+	}
+
+	err = configureKuiperForSecureMessageBus(fields, "Connections", eKuiperConnectionsTemplate, secureMessageBus.KuiperConnectionsPath, lc)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func configureKuiperForSecureMessageBus(credentials UserPasswordPair, fileType string, fileTemplate string, path string, lc logger.LoggingClient) error {
+func configureKuiperForSecureMessageBus(fields eKuiperFields, fileType string, fileTemplate string, path string, lc logger.LoggingClient) error {
 	// This capability depends on the eKuiper file existing, which depends on the version of eKuiper installed.
 	// If the file doesn't exist, then the eKuiper version installed doesn't use it, so skip the injection.
 	_, err := os.Stat(path)
@@ -125,12 +144,12 @@ func configureKuiperForSecureMessageBus(credentials UserPasswordPair, fileType s
 		_ = file.Close()
 	}()
 
-	err = tmpl.Execute(file, credentials)
+	err = tmpl.Execute(file, fields)
 	if err != nil {
 		return fmt.Errorf("failed to write eKuiper  %s file %s: %w", fileType, path, err)
 	}
 
-	lc.Infof("Wrote eKuiper %s at %s with Secure MessageBus credentials", fileType, path)
+	lc.Infof("Wrote eKuiper %s at %s with Secure MessageBus credentials for %s", fileType, path, fields.Type)
 
 	return nil
 }

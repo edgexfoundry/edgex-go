@@ -499,7 +499,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
-	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, redisCredentials, lc)
+	err = ConfigureSecureMessageBus(configuration.SecureMessageBus, creds, lc)
 	if err != nil {
 		lc.Errorf("failed to configure for Secure Message Bus: %s", err.Error())
 		return false
