@@ -28,19 +28,6 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	exists, err := dbClient.DeviceServiceNameExists(pw.ServiceName)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
-	} else if !exists {
-		return "", errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.ServiceName), nil)
-	}
-	exists, err = dbClient.DeviceProfileNameExists(pw.ProfileName)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
-	} else if !exists {
-		return "", errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.ProfileName), nil)
-	}
-
 	addProvisionWatcher, err := dbClient.AddProvisionWatcher(pw)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
@@ -151,23 +138,6 @@ func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Cont
 func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-
-	if dto.ServiceName != nil {
-		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", *dto.ServiceName), edgeXerr)
-		} else if !exists {
-			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", *dto.ServiceName), nil)
-		}
-	}
-	if dto.ProfileName != nil {
-		exists, edgeXerr := dbClient.DeviceProfileNameExists(*dto.ProfileName)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", *dto.ProfileName), edgeXerr)
-		} else if !exists {
-			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", *dto.ProfileName), nil)
-		}
-	}
 
 	pw, err := provisionWatcherByDTO(dbClient, dto)
 	if err != nil {

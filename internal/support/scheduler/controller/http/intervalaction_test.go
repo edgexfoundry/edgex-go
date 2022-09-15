@@ -388,6 +388,11 @@ func TestPatchIntervalAction(t *testing.T) {
 	dbClientMock.On("IntervalByName", intervalNotFoundName).Return(models.Interval{}, intervalNotFoundNameError)
 	invalidIntervalNotFound := testReq
 	invalidIntervalNotFound.Action.IntervalName = &intervalNotFoundName
+	invalidIntervalNotFoundModel := model
+	invalidIntervalNotFoundModel.IntervalName = intervalNotFoundName
+	invalidIntervalNotFound.Action.Id = nil
+	dbClientMock.On("IntervalActionByName", intervalNotFoundName).Return(invalidIntervalNotFoundModel, nil)
+	dbClientMock.On("UpdateIntervalAction", invalidIntervalNotFoundModel).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", intervalNotFoundName), nil))
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {

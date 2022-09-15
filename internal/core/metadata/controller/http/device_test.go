@@ -27,7 +27,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -159,10 +158,16 @@ func TestAddDevice(t *testing.T) {
 
 	notFoundService := testDevice
 	notFoundService.Device.ServiceName = "notFoundService"
-	dbClientMock.On("DeviceServiceNameExists", notFoundService.Device.ServiceName).Return(false, nil)
+	dbClientMock.On("DeviceServiceByName", notFoundService.Device.ServiceName).Return(models.DeviceService{},
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
+			notFoundService.Device.ServiceName), nil))
+
 	notFoundProfile := testDevice
 	notFoundProfile.Device.ProfileName = "notFoundProfile"
-	dbClientMock.On("DeviceProfileNameExists", notFoundProfile.Device.ProfileName).Return(false, nil)
+	notFoundProfileDeviceModel := requests.AddDeviceReqToDeviceModels([]requests.AddDeviceRequest{notFoundProfile})[0]
+	dbClientMock.On("AddDevice", notFoundProfileDeviceModel).Return(notFoundProfileDeviceModel,
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
+			notFoundProfile.Device.ProfileName), nil))
 
 	noName := testDevice
 	noName.Device.Name = ""
@@ -479,7 +484,7 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", *valid.Device.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
-	dbClientMock.On("UpdateDevice", mock.Anything).Return(nil)
+	dbClientMock.On("UpdateDevice", dsModels).Return(nil)
 	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
 
 	validWithNoReqID := testReq
@@ -526,11 +531,19 @@ func TestPatchDevice(t *testing.T) {
 	notFountServiceName := "notFoundService"
 	notFoundService := testReq
 	notFoundService.Device.ServiceName = &notFountServiceName
-	dbClientMock.On("DeviceServiceNameExists", *notFoundService.Device.ServiceName).Return(false, nil)
+	dbClientMock.On("DeviceServiceByName", *notFoundService.Device.ServiceName).Return(models.DeviceService{},
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
+			*notFoundService.Device.ServiceName), nil))
+
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := testReq
 	notFoundProfile.Device.ProfileName = &notFountProfileName
-	dbClientMock.On("DeviceProfileNameExists", *notFoundProfile.Device.ProfileName).Return(false, nil)
+	notFoundProfileDeviceModel := dsModels
+	notFoundProfileDeviceModel.ProfileName = notFountProfileName
+	dbClientMock.On("DeviceById", *notFoundProfile.Device.Id).Return(notFoundProfileDeviceModel, nil)
+	dbClientMock.On("UpdateDevice", notFoundProfileDeviceModel).Return(
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+			fmt.Sprintf("device profile '%s' does not exists", notFountProfileName), nil))
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {

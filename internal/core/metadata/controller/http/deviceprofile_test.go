@@ -1072,8 +1072,10 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	dbClientMock.On("DevicesByProfileName", 0, 1, notFoundName).Return([]models.Device{}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, notFoundName).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceProfileByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device profile doesn't exist in the database", nil))
-	dbClientMock.On("DevicesByProfileName", 0, 1, deviceExists).Return([]models.Device{models.Device{}}, nil)
-	dbClientMock.On("DevicesByProfileName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
+	dbClientMock.On("DeleteDeviceProfileByName", deviceExists).Return(errors.NewCommonEdgeX(
+		errors.KindStatusConflict, "fail to delete the device profile when associated device exists", nil))
+	dbClientMock.On("DeleteDeviceProfileByName", provisionWatcherExists).Return(errors.NewCommonEdgeX(
+		errors.KindStatusConflict, "fail to delete the device profile when associated provisionWatcher exists", nil))
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {

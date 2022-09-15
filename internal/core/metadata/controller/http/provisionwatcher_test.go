@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -167,8 +166,18 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := provisionWatcher
 	notFoundProfile.ProvisionWatcher.ProfileName = notFountProfileName
-	dbClientMock.On("DeviceServiceNameExists", notFoundProfile.ProvisionWatcher.ServiceName).Return(true, nil)
-	dbClientMock.On("DeviceProfileNameExists", notFoundProfile.ProvisionWatcher.ProfileName).Return(false, nil)
+	notFoundServiceProvisionWatcherModel := requests.AddProvisionWatcherReqToProvisionWatcherModels(
+		[]requests.AddProvisionWatcherRequest{notFoundService})[0]
+	dbClientMock.On("AddProvisionWatcher", notFoundServiceProvisionWatcherModel).Return(
+		notFoundServiceProvisionWatcherModel,
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
+			notFountServiceName), nil))
+	notFoundProfileProvisionWatcherModel := requests.AddProvisionWatcherReqToProvisionWatcherModels(
+		[]requests.AddProvisionWatcherRequest{notFoundProfile})[0]
+	dbClientMock.On("AddProvisionWatcher", notFoundProfileProvisionWatcherModel).Return(
+		notFoundProfileProvisionWatcherModel,
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
+			notFountProfileName), nil))
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -667,7 +676,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", *valid.ProvisionWatcher.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", *valid.ProvisionWatcher.ProfileName).Return(true, nil)
 	dbClientMock.On("ProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(pwModels, nil)
-	dbClientMock.On("UpdateProvisionWatcher", mock.Anything).Return(nil)
+	dbClientMock.On("UpdateProvisionWatcher", pwModels).Return(nil)
 	dbClientMock.On("DeviceServiceByName", *valid.ProvisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
@@ -710,12 +719,25 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 
 	notFountServiceName := "notFoundService"
 	notFoundService := testReq
-	notFoundService.ProvisionWatcher.ServiceName = &notFountServiceName
-	dbClientMock.On("DeviceServiceNameExists", *notFoundService.ProvisionWatcher.ServiceName).Return(false, nil)
+	notFoundService.ProvisionWatcher.Id = nil
+	notFoundService.ProvisionWatcher.Name = &notFountServiceName
+	notFoundServiceProvisionWatcherModel := pwModels
+	notFoundServiceProvisionWatcherModel.Name = notFountServiceName
+	dbClientMock.On("ProvisionWatcherByName", notFountServiceName).Return(notFoundServiceProvisionWatcherModel, nil)
+	dbClientMock.On("UpdateProvisionWatcher", notFoundServiceProvisionWatcherModel).Return(
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
+			notFountServiceName), nil))
+
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := testReq
-	notFoundProfile.ProvisionWatcher.ProfileName = &notFountProfileName
-	dbClientMock.On("DeviceProfileNameExists", *notFoundProfile.ProvisionWatcher.ProfileName).Return(false, nil)
+	notFoundProfile.ProvisionWatcher.Id = nil
+	notFoundProfile.ProvisionWatcher.Name = &notFountProfileName
+	notFoundProfileProvisionWatcherModel := pwModels
+	notFoundProfileProvisionWatcherModel.Name = notFountProfileName
+	dbClientMock.On("ProvisionWatcherByName", notFountProfileName).Return(notFoundProfileProvisionWatcherModel, nil)
+	dbClientMock.On("UpdateProvisionWatcher", notFoundProfileProvisionWatcherModel).Return(
+		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
+			notFountProfileName), nil))
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {

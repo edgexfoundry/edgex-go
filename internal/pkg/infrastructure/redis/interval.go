@@ -126,6 +126,13 @@ func deleteIntervalByName(conn redis.Conn, name string) errors.EdgeX {
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
+	actions, edgeXerr := intervalActionsByIntervalName(conn, 0, 1, name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	if len(actions) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the interval when associated intervalAction exists", nil)
+	}
 	storedKey := intervalStoredKey(interval.Id)
 	_ = conn.Send(MULTI)
 	sendDeleteIntervalCmd(conn, storedKey, interval)
@@ -141,6 +148,13 @@ func updateInterval(conn redis.Conn, interval models.Interval) errors.EdgeX {
 	oldInterval, edgeXerr := intervalByName(conn, interval.Name)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	actions, edgeXerr := intervalActionsByIntervalName(conn, 0, 1, interval.Name)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	if len(actions) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to patch the interval when associated intervalAction exists", nil)
 	}
 
 	interval.Modified = pkgCommon.MakeTimestamp()

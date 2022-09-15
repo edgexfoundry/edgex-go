@@ -83,16 +83,7 @@ func DeleteIntervalByName(name string, ctx context.Context, dic *di.Container) e
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
-
-	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	if len(actions) > 0 {
-		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the interval when associated intervalAction exists", nil)
-	}
-
-	err = dbClient.DeleteIntervalByName(name)
+	err := dbClient.DeleteIntervalByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -112,14 +103,6 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 	interval, err := intervalByDTO(dbClient, dto)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
-	}
-
-	actions, err := dbClient.IntervalActionsByIntervalName(0, 1, interval.Name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	if len(actions) > 0 {
-		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to patch the interval when associated intervalAction exists", nil)
 	}
 
 	requests.ReplaceIntervalModelFieldsWithDTO(&interval, dto)
