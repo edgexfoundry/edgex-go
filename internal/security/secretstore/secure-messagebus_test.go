@@ -17,7 +17,6 @@ package secretstore
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
@@ -32,8 +31,80 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 		KuiperConfigPath:      "./testdata/edgex.yaml",
 		KuiperConnectionsPath: "./testdata/connection.yaml",
 	}
+	expectedMqttConfigContent := `
+application_conf:
+  port: 5571
+  protocol: tcp
+  server: localhost
+  topic: application
+default:
+  optional:
+    Username: testUser
+    Password: testPassword
+  port: 1883
+  protocol: tcp
+  server: localhost
+  connectionSelector: edgex.mqttMsgBus
+  topic: rules-events
+  type: mqtt
+mqtt_conf:
+  optional:
+    ClientId: client1
+  port: 1883
+  protocol: tcp
+  server: localhost
+  topic: events
+  type: mqtt
+`
+	expectedRedisConfigContent := `
+application_conf:
+  port: 5571
+  protocol: tcp
+  server: localhost
+  topic: application
+default:
+  optional:
+    Username: testUser
+    Password: testPassword
+  port: 6379
+  protocol: redis
+  server: localhost
+  connectionSelector: edgex.redisMsgBus
+  topic: rules-events
+  type: redis
+mqtt_conf:
+  optional:
+    ClientId: client1
+  port: 1883
+  protocol: tcp
+  server: localhost
+  topic: events
+  type: mqtt
+`
 
-	validExpected := UserPasswordPair{
+	expectedMqttConnectionsContent := `
+edgex:
+  mqttMsgBus: #connection key
+    protocol: tcp
+    server: localhost
+    port: 1883
+    type: mqtt
+    optional:
+      Username: testUser
+      Password: testPassword
+`
+	expectedRedisConnectionsContent := `
+edgex:
+  redisMsgBus: #connection key
+    protocol: redis
+    server: localhost
+    port: 6379
+    type: redis
+    optional:
+      Username: testUser
+      Password: testPassword
+`
+	creds := UserPasswordPair{
 		User:     "testUser",
 		Password: "testPassword",
 	}
@@ -43,15 +114,17 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 		Type                 string
 		ConnectionFileExists bool
 		Credentials          UserPasswordPair
-		Expected             *UserPasswordPair
+		ExpectedConfig       *string
+		ExpectedConnnection  *string
 		ExpectError          bool
 	}{
-		{"valid redis - both files", redisSecureMessageBusType, true, validExpected, &validExpected, false},
-		{"valid redis - no connection file", redisSecureMessageBusType, false, validExpected, &validExpected, false},
-		{"valid blank", blankSecureMessageBusType, false, validExpected, nil, false},
-		{"valid none", noneSecureMessageBusType, false, validExpected, nil, false},
-		{"invalid type", "bogus", false, validExpected, nil, true},
-		{"invalid mqtt", mqttSecureMessageBusType, false, validExpected, nil, false},
+		{"valid redis - both files", redisSecureMessageBusType, true, creds, &expectedRedisConfigContent, &expectedRedisConnectionsContent, false},
+		{"valid redis - no connection file", redisSecureMessageBusType, false, creds, &expectedRedisConfigContent, nil, false},
+		{"valid mqtt - both files", mqttSecureMessageBusType, false, creds, &expectedMqttConfigContent, &expectedMqttConnectionsContent, false},
+		{"valid mqtt - no connection file", mqttSecureMessageBusType, false, creds, &expectedMqttConfigContent, nil, false},
+		{"valid blank", blankSecureMessageBusType, false, creds, nil, nil, false},
+		{"valid none", noneSecureMessageBusType, false, creds, nil, nil, false},
+		{"invalid type", "bogus", false, creds, nil, nil, true},
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
@@ -63,7 +136,7 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 				_ = os.Remove(secureMessageBus.KuiperConnectionsPath)
 			}()
 
-			if test.Expected != nil {
+			if test.ExpectedConfig != nil {
 				_, err := os.Create(secureMessageBus.KuiperConfigPath)
 				require.NoError(t, err)
 
@@ -82,7 +155,7 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 
 			require.NoError(t, err)
 
-			if test.Expected == nil {
+			if test.ExpectedConfig == nil {
 				// Source Config file should not have been written
 				_, err = os.Stat(secureMessageBus.KuiperConfigPath)
 				require.True(t, os.IsNotExist(err))
@@ -97,15 +170,13 @@ func TestConfigureSecureMessageBus(t *testing.T) {
 			// Source Config file should have been written
 			contents, err := os.ReadFile(secureMessageBus.KuiperConfigPath)
 			require.NoError(t, err)
-			assert.True(t, strings.Contains(string(contents), test.Expected.User))
-			assert.True(t, strings.Contains(string(contents), test.Expected.Password))
+			assert.Equal(t, *test.ExpectedConfig, string(contents))
 
 			if test.ConnectionFileExists {
 				// Connections file should have been written
 				contents, err = os.ReadFile(secureMessageBus.KuiperConnectionsPath)
 				require.NoError(t, err)
-				assert.True(t, strings.Contains(string(contents), test.Expected.User))
-				assert.True(t, strings.Contains(string(contents), test.Expected.Password))
+				assert.Equal(t, *test.ExpectedConnnection, string(contents))
 			} else {
 				// Connections file should not have been written
 				_, err = os.Stat(secureMessageBus.KuiperConnectionsPath)
