@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
@@ -39,15 +40,19 @@ const (
 	testResourceName      = "testResource"
 	testDeviceName        = "testDevice"
 	testDeviceServiceName = "testService"
+	testCommandName       = "testCommand"
+	testMethod            = "get"
 
 	testQueryRequestTopic        = "unittest/#"
 	testQueryAllExample          = "unittest/all"
 	testQueryByDeviceNameExample = "unittest/testDevice"
 	testQueryResponseTopic       = "unittest/response"
 
-	testCommandRequestTopic        = "unittest/external/request/#"
-	testCommandRequestExample      = "unittest/external/request/testDevice/testCommand/get"
-	testCommandResponseTopicPrefix = "unittest/external/response/"
+	testExternalCommandRequestTopic        = "unittest/external/request/#"
+	testExternalCommandRequestTopicExample = "unittest/external/request/testDevice/testCommand/get"
+	testExternalCommandResponseTopicPrefix = "unittest/external/response"
+
+	testInternalCommandRequestTopicPrefix = "unittest/internal/request"
 )
 
 func TestOnConnectHandler(t *testing.T) {
@@ -62,8 +67,8 @@ func TestOnConnectHandler(t *testing.T) {
 						Topics: map[string]string{
 							RequestQueryTopic:          testQueryRequestTopic,
 							ResponseQueryTopic:         testQueryResponseTopic,
-							RequestCommandTopic:        testCommandRequestTopic,
-							ResponseCommandTopicPrefix: testCommandResponseTopicPrefix,
+							RequestCommandTopic:        testExternalCommandRequestTopic,
+							ResponseCommandTopicPrefix: testExternalCommandResponseTopicPrefix,
 						},
 						QoS:    0,
 						Retain: true,
@@ -95,7 +100,7 @@ func TestOnConnectHandler(t *testing.T) {
 
 			client := &mqttMocks.Client{}
 			client.On("Subscribe", testQueryRequestTopic, byte(0), mock.Anything).Return(token)
-			client.On("Subscribe", testCommandRequestTopic, byte(0), mock.Anything).Return(token)
+			client.On("Subscribe", testExternalCommandRequestTopic, byte(0), mock.Anything).Return(token)
 
 			fn := OnConnectHandler(dic)
 			fn(client)
@@ -254,14 +259,14 @@ func Test_commandRequestHandler(t *testing.T) {
 					Required: true,
 					Internal: bootstrapConfig.MessageBusInfo{
 						Topics: map[string]string{
-							RequestTopicPrefix: "unittest/internal/request/",
+							RequestTopicPrefix: testInternalCommandRequestTopicPrefix,
 						},
 					},
 					External: bootstrapConfig.ExternalMQTTInfo{
 						QoS:    0,
 						Retain: true,
 						Topics: map[string]string{
-							ResponseCommandTopicPrefix: testCommandResponseTopicPrefix,
+							ResponseCommandTopicPrefix: testExternalCommandResponseTopicPrefix,
 						},
 					},
 				},
@@ -291,8 +296,8 @@ func Test_commandRequestHandler(t *testing.T) {
 		payload             types.MessageEnvelope
 		expectedError       bool
 	}{
-		{"valid", testCommandRequestExample, validPayload, false},
-		{"invalid - invalid request json payload", testCommandRequestExample, invalidRequestPayload, true},
+		{"valid", testExternalCommandRequestTopicExample, validPayload, false},
+		{"invalid - invalid request json payload", testExternalCommandRequestTopicExample, invalidRequestPayload, true},
 		{"invalid - unknown command method", "unittest/request/testDevice/testCommand/invalid", validPayload, true},
 	}
 	for _, tt := range tests {
@@ -316,7 +321,8 @@ func Test_commandRequestHandler(t *testing.T) {
 			if tt.expectedError {
 				lc.AssertCalled(t, "Error", mock.Anything)
 			} else {
-				client.AssertCalled(t, "Publish", tt.payload, mock.Anything)
+				expectedInternalRequestTopic := strings.Join([]string{testInternalCommandRequestTopicPrefix, testDeviceServiceName, testDeviceName, testCommandName, testMethod}, "/")
+				client.AssertCalled(t, "Publish", tt.payload, expectedInternalRequestTopic)
 			}
 		})
 	}

@@ -148,7 +148,7 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 		commandName := topicLevels[length-2]
 		method := topicLevels[length-1]
 		// expected command response topic scheme: #/<device>/<command-name>/<method>
-		externalResponseTopic := messageBusInfo.External.Topics[ResponseCommandTopicPrefix] + strings.Join([]string{deviceName, commandName, method}, "/")
+		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[ResponseCommandTopicPrefix], deviceName, commandName, method}, "/")
 
 		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
 		if err != nil {
@@ -158,7 +158,7 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 		}
 
 		if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "unknown command method")
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, fmt.Sprintf("unknown command method %s received", method))
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
 			return
 		}
@@ -194,7 +194,7 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 		}
 
 		// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
-		internalRequestTopic := messageBusInfo.Internal.Topics[RequestTopicPrefix] + strings.Join([]string{deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/")
+		internalRequestTopic := strings.Join([]string{messageBusInfo.Internal.Topics[RequestTopicPrefix], deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/")
 		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
 		err = internalMessageBus.Publish(requestEnvelope, internalRequestTopic)
 		if err != nil {
