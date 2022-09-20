@@ -84,12 +84,12 @@ apps:
   redis:
     adapter: full
     after: [security-bootstrapper-redis]
-    command: bin/redis-server $CONFIG_FILE $DIR_OPT $SAVE_OPT1 $SAVE_OPT2
+    command: bin/redis-server $CONFIG_FILE $DIR_ARG $SAVE_ARG $BIND_ARG
     environment:
-      DIR_OPT: "--dir $SNAP_DATA/redis"
-      SAVE_OPT1: "--save 900 1"
-      SAVE_OPT2: "--save 300 10"
-      CONFIG_FILE: "$SNAP_DATA/redis/conf/redis.conf"
+      DIR_ARG: --dir $SNAP_DATA/redis
+      SAVE_ARG: --save 900 1 --save 300 10
+      BIND_ARG: --bind 127.0.0.1
+      CONFIG_FILE: $SNAP_DATA/redis/conf/redis.conf
     daemon: simple
     plugs: [network, network-bind]
   postgres:
