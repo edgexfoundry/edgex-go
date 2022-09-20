@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -66,6 +67,7 @@ const (
 	edgeXServicePolicyName = "edgex-service-policy"
 
 	consulCreatePolicyAPI     = "/v1/acl/policy"
+	consulPolicyListAPI       = "/acl/policies"
 	consulReadPolicyByNameAPI = "/v1/acl/policy/name/%s"
 
 	aclNotFoundMessage = "ACL not found"
@@ -104,6 +106,23 @@ const (
 	// edgeXServicePolicyName is the name of the management policy for edgex
 	edgeXManagementPolicyName = "edgex-management-policy"
 )
+
+type PolicyResponse struct {
+	Status   string
+	Code     string
+	Total    int
+	Policies []PolicyList
+}
+
+type PolicyList struct {
+	CreateIndex int         `json:"CreateIndex"`
+	Datacenters interface{} `json:"Datacenters"`
+	Description string      `json:"Description"`
+	Hash        string      `json:"Hash"`
+	ID          string      `json:"ID"`
+	ModifyIndex int         `json:"ModifyIndex"`
+	Name        string      `json:"Name"`
+}
 
 // getOrCreateRegistryPolicy retrieves or creates a new policy
 // it inserts a new policy if the policy name does not exist and returns a policy
@@ -184,6 +203,34 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 
 // getPolicyByName gets policy by policy name, returns nil if not found
 func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
+	policyListReq, err := http.NewRequest(http.MethodGet, consulPolicyListAPI, http.NoBody)
+
+	policyListReq.Header.Add(share.ConsulTokenHeader, tokenID)
+	policyListResp, err := c.client.Do(policyListReq)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to GET policy list request for http URL: %w", err)
+	}
+	defer policyListResp.Body.Close()
+
+	policyListBody, err := ioutil.ReadAll(policyListResp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read policyListBody response body: %w", err)
+	}
+	var policyList PolicyResponse
+	json.Unmarshal(policyListBody, &policyList)
+
+	switch policyListResp.StatusCode {
+	case http.StatusOK:
+		for _, policy := range policyList.Policies {
+			if policyName == policy.Name {
+				break // if we've found it, ok to continue to GET Policy, need to figure out error
+			}
+		}
+	default:
+		return nil, fmt.Errorf("Failed to get consul policy list from [%s] and status code= %d: %s", consulPolicyListAPI,
+			policyListResp.StatusCode, string(policyListBody))
+	}
+
 	readPolicyByNameURL, err := c.getRegistryApiUrl(fmt.Sprintf(consulReadPolicyByNameAPI, policyName))
 	if err != nil {
 		return nil, err
