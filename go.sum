@@ -38,8 +38,8 @@ github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0 h1:AZeaAPJM5X93ITFgwbwluY
 github.com/edgexfoundry/go-mod-configuration/v2 v2.2.0/go.mod h1:YP17JhMnXTitowXE13QJwFaKo0oc03iyoKLjWAYl4FE=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.16 h1:vRGaiLzJhsAgPZTgds1S37q8IScecalZcr6BM704XXQ=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.16/go.mod h1:YdJ0iBWad86sgOs6am01mE3IAX6d22H08f/enVho4TU=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.15 h1:Kddm7MEqId6j3sXVaA5b6nMyI76CxU+yKLFc7zAVVvA=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.15/go.mod h1:yLJ9EK4Feg409FDr0oP87LbaRLyOSGJk/ikaIfEDKcI=
+github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.16 h1:SiM+gUw/Z4F18dAtNSsAk7AaXc/4lftn5QEYNGnLhB4=
+github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.16/go.mod h1:lQm33GX+RGKaRhk0N1RjbtPZ/CW/GbYchqpeh2Bgp5c=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0 h1:dk9ul1t7INAiyZXeu/GrpinFE3qOekdy8uZOqEGgIiE=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0/go.mod h1:DUQRnAd5fVzoROc5SI+PTFUD/vCNeZmZHBMrLElbmwI=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.8 h1:1YqPIpkMGPrpUDecpOEJeqtY7pBZe7EFvVhplZ2PIQA=
@@ -196,8 +196,8 @@ github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx
 github.com/nats-io/jwt/v2 v2.3.0 h1:z2mA1a7tIf5ShggOFlR1oBPgd6hGqcDYsISxZByUzdI=
 github.com/nats-io/jwt/v2 v2.3.0/go.mod h1:0tqz9Hlu6bCBFLWAASKhE5vUA4c24L9KPUUgvwumE/k=
 github.com/nats-io/nats-server/v2 v2.7.4 h1:c+BZJ3rGzUKCBIM4IXO8uNT2u1vajGbD1kPA6wqCEaM=
-github.com/nats-io/nats.go v1.16.0 h1:zvLE7fGBQYW6MWaFaRdsgm9qT39PJDQoju+DS8KsO1g=
-github.com/nats-io/nats.go v1.16.0/go.mod h1:BPko4oXsySz4aSWeFgOHLZs3G4Jq4ZAyE6/zMCxRT6w=
+github.com/nats-io/nats.go v1.17.0 h1:1jp5BThsdGlN91hW0k3YEfJbfACjiOYtUiLXG0RL4IE=
+github.com/nats-io/nats.go v1.17.0/go.mod h1:BPko4oXsySz4aSWeFgOHLZs3G4Jq4ZAyE6/zMCxRT6w=
 github.com/nats-io/nkeys v0.3.0 h1:cgM5tL53EvYRU+2YLXIK0G2mJtK12Ft9oeooSZMA2G8=
 github.com/nats-io/nkeys v0.3.0/go.mod h1:gvUNGjVcM2IPr5rCsRsC6Wb3Hr2CQAm08dsxtV6A5y4=
 github.com/nats-io/nuid v1.0.1 h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=
