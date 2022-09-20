@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2022 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -56,6 +56,11 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	profile, err := dbClient.DeviceProfileByName(profileName)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	err = deviceResourceUoMValidation(resource, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -159,6 +164,17 @@ func DeleteDeviceResourceByName(profileName string, resourceName string, dic *di
 	err = dbClient.UpdateDeviceProfile(profile)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}
+
+func deviceResourceUoMValidation(r models.DeviceResource, dic *di.Container) errors.EdgeX {
+	if container.ConfigurationFrom(dic.Get).Writable.UoM.Validation {
+		uom := container.UnitsOfMeasureFrom(dic.Get)
+		if ok := uom.Validate(r.Properties.Units); !ok {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("DeviceResource %s units %s is invalid", r.Name, r.Properties.Units), nil)
+		}
 	}
 
 	return nil

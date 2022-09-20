@@ -245,7 +245,7 @@ func deviceProfileUoMValidation(p models.DeviceProfile, dic *di.Container) error
 		uom := container.UnitsOfMeasureFrom(dic.Get)
 		for _, dr := range p.DeviceResources {
 			if ok := uom.Validate(dr.Properties.Units); !ok {
-				return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("DeviceResource %s units %s is invalid", dr.Name, dr.Properties.Units), nil)
+				return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("DeviceResource %s units %s is invalid", dr.Name, dr.Properties.Units), nil)
 			}
 		}
 	}
