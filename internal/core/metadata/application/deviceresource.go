@@ -173,7 +173,7 @@ func deviceResourceUoMValidation(r models.DeviceResource, dic *di.Container) err
 	if container.ConfigurationFrom(dic.Get).Writable.UoM.Validation {
 		uom := container.UnitsOfMeasureFrom(dic.Get)
 		if ok := uom.Validate(r.Properties.Units); !ok {
-			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("DeviceResource %s units %s is invalid", r.Name, r.Properties.Units), nil)
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("DeviceResource %s units %s is invalid", r.Name, r.Properties.Units), nil)
 		}
 	}
 

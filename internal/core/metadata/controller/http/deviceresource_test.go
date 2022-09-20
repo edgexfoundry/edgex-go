@@ -284,7 +284,7 @@ func TestAddDeviceProfileResource_UnitsOfMeasure_Validation(t *testing.T) {
 	}{
 		{"valid - units not provided", []requests.AddDeviceResourceRequest{emptyUnitsReq}, http.StatusCreated},
 		{"valid - expected units", []requests.AddDeviceResourceRequest{validReq}, http.StatusCreated},
-		{"invalid - unexpected units", []requests.AddDeviceResourceRequest{invalidUnitsReq}, http.StatusInternalServerError},
+		{"invalid - unexpected units", []requests.AddDeviceResourceRequest{invalidUnitsReq}, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
