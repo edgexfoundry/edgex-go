@@ -65,8 +65,8 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 
 		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
 		if err != nil {
-			responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
-			publishMessage(client, responseTopic, qos, retain, responseEnvelope, lc)
+			lc.Errorf("Failed to decode request MessageEnvelope: %s", err.Error())
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
 
@@ -141,27 +141,31 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 		qos := messageBusInfo.External.QoS
 		retain := messageBusInfo.External.Retain
 
+		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
+		if err != nil {
+			lc.Errorf("Failed to decode request MessageEnvelope: %s", err.Error())
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
+
 		// expected command request topic scheme: #/<device>/<command-name>/<method>
 		topicLevels := strings.Split(message.Topic(), "/")
 		length := len(topicLevels)
+		if length <= 3 {
+			lc.Error("Failed to parse and construct response topic scheme, expected request topic scheme: '#/<device-name>/<command-name>/<method>")
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
 		deviceName := topicLevels[length-3]
 		commandName := topicLevels[length-2]
 		method := topicLevels[length-1]
+		if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
+			lc.Errorf("Unknown request method: %s, only 'get' or 'set' is allowed", method)
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
 		// expected command response topic scheme: #/<device>/<command-name>/<method>
 		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[ResponseCommandTopicPrefix], deviceName, commandName, method}, "/")
-
-		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
-		if err != nil {
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
-
-		if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, fmt.Sprintf("unknown command method %s received", method))
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
 
 		// retrieve device information through Metadata DeviceClient
 		dc := bootstrapContainer.DeviceClientFrom(dic.Get)

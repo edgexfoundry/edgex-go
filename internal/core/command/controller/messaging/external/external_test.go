@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
+	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 	"github.com/stretchr/testify/mock"
@@ -152,7 +153,9 @@ func Test_commandQueryHandler(t *testing.T) {
 
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Error", mock.Anything).Return(nil)
+	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
 	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Warn", mock.Anything).Return(nil)
 	dc := &clientMocks.DeviceClient{}
 	dc.On("AllDevices", context.Background(), []string(nil), common.DefaultOffset, common.DefaultLimit).Return(allDevicesResponse, nil)
 	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
@@ -186,15 +189,16 @@ func Test_commandQueryHandler(t *testing.T) {
 	invalidQueryParamsPayload.QueryParams[common.Offset] = "invalid"
 
 	tests := []struct {
-		name              string
-		requestQueryTopic string
-		payload           types.MessageEnvelope
-		expectedError     bool
+		name                 string
+		requestQueryTopic    string
+		payload              types.MessageEnvelope
+		expectedError        bool
+		expectedPublishError bool
 	}{
-		{"valid - query all", testQueryAllExample, validPayload, false},
-		{"valid - query by device name", testQueryByDeviceNameExample, validPayload, false},
-		{"invalid - invalid request json payload", testQueryByDeviceNameExample, invalidRequestPayload, true},
-		{"invalid - invalid query parameters", testQueryAllExample, invalidQueryParamsPayload, true},
+		{"valid - query all", testQueryAllExample, validPayload, false, false},
+		{"valid - query by device name", testQueryByDeviceNameExample, validPayload, false, false},
+		{"invalid - invalid request json payload", testQueryByDeviceNameExample, invalidRequestPayload, true, false},
+		{"invalid - invalid query parameters", testQueryAllExample, invalidQueryParamsPayload, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -209,26 +213,46 @@ func Test_commandQueryHandler(t *testing.T) {
 			token.On("Wait").Return(true)
 			token.On("Error").Return(nil)
 
-			client := &mqttMocks.Client{}
-			client.On("Publish", testQueryResponseTopic, byte(0), true, mock.Anything).Return(token)
+			mqttClient := &mqttMocks.Client{}
+			mqttClient.On("Publish", testQueryResponseTopic, byte(0), true, mock.Anything).Return(token)
 
 			fn := commandQueryHandler(testQueryResponseTopic, 0, true, dic)
-			fn(client, message)
-			lc.AssertCalled(t, "Debugf", mock.Anything, mock.Anything, mock.Anything)
+			fn(mqttClient, message)
 			if tt.expectedError {
-				lc.AssertCalled(t, "Error", mock.Anything)
+				if tt.expectedPublishError {
+					lc.AssertCalled(t, "Error", mock.Anything)
+					mqttClient.AssertCalled(t, "Publish", testQueryResponseTopic, byte(0), true, mock.Anything)
+					return
+				}
+				lc.AssertCalled(t, "Warn", mock.Anything)
+				return
 			}
+
+			mqttClient.AssertCalled(t, "Publish", testQueryResponseTopic, byte(0), true, mock.Anything)
+			lc.AssertCalled(t, "Debugf", mock.Anything, mock.Anything, mock.Anything)
 		})
 	}
 }
 
 func Test_commandRequestHandler(t *testing.T) {
+	unknownDevice := "unknown-device"
+	unknownServiceDevice := "unknownService-device"
+	unknownService := "unknown-service"
+
 	deviceResponse := responses.DeviceResponse{
 		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
 		Device: dtos.Device{
 			Name:        testDeviceName,
 			ProfileName: testProfileName,
 			ServiceName: testDeviceServiceName,
+		},
+	}
+	unknownServiceDeviceResponse := responses.DeviceResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusOK),
+		Device: dtos.Device{
+			Name:        unknownServiceDevice,
+			ProfileName: testProfileName,
+			ServiceName: unknownService,
 		},
 	}
 	deviceServiceResponse := responses.DeviceServiceResponse{
@@ -240,11 +264,16 @@ func Test_commandRequestHandler(t *testing.T) {
 
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Error", mock.Anything).Return(nil)
+	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
 	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Warn", mock.Anything).Return(nil)
 	dc := &clientMocks.DeviceClient{}
 	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
+	dc.On("DeviceByName", context.Background(), unknownDevice).Return(responses.DeviceResponse{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "unknown device", nil))
+	dc.On("DeviceByName", context.Background(), unknownServiceDevice).Return(unknownServiceDeviceResponse, nil)
 	dsc := &clientMocks.DeviceServiceClient{}
 	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
+	dsc.On("DeviceServiceByName", context.Background(), unknownService).Return(responses.DeviceServiceResponse{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "unknown device service", nil))
 	client := &mocks.MessageClient{}
 	client.On("Publish", mock.Anything, mock.Anything).Return(nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -291,14 +320,18 @@ func Test_commandRequestHandler(t *testing.T) {
 	invalidRequestPayload.ApiVersion = "v1"
 
 	tests := []struct {
-		name                string
-		commandRequestTopic string
-		payload             types.MessageEnvelope
-		expectedError       bool
+		name                 string
+		commandRequestTopic  string
+		payload              types.MessageEnvelope
+		expectedError        bool
+		expectedPublishError bool
 	}{
-		{"valid", testExternalCommandRequestTopicExample, validPayload, false},
-		{"invalid - invalid request json payload", testExternalCommandRequestTopicExample, invalidRequestPayload, true},
-		{"invalid - unknown command method", "unittest/request/testDevice/testCommand/invalid", validPayload, true},
+		{"valid", testExternalCommandRequestTopicExample, validPayload, false, false},
+		{"invalid - invalid request json payload", testExternalCommandRequestTopicExample, invalidRequestPayload, true, false},
+		{"invalid - invalid request topic scheme", "unittest/invalid", validPayload, true, false},
+		{"invalid - unrecognized command method", "unittest/request/testDevice/testCommand/invalid", validPayload, true, false},
+		{"invalid - device not found", "unittest/request/unknown-device/testCommand/get", validPayload, true, true},
+		{"invalid - device service not found", "unittest/request/unknownService-device/testCommand/get", validPayload, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -319,11 +352,17 @@ func Test_commandRequestHandler(t *testing.T) {
 			fn := commandRequestHandler(dic)
 			fn(mqttClient, message)
 			if tt.expectedError {
-				lc.AssertCalled(t, "Error", mock.Anything)
-			} else {
-				expectedInternalRequestTopic := strings.Join([]string{testInternalCommandRequestTopicPrefix, testDeviceServiceName, testDeviceName, testCommandName, testMethod}, "/")
-				client.AssertCalled(t, "Publish", tt.payload, expectedInternalRequestTopic)
+				if tt.expectedPublishError {
+					lc.AssertCalled(t, "Error", mock.Anything)
+					mqttClient.AssertCalled(t, "Publish", mock.Anything, byte(0), true, mock.Anything)
+					return
+				}
+				lc.AssertCalled(t, "Warn", mock.Anything)
+				return
 			}
+
+			expectedInternalRequestTopic := strings.Join([]string{testInternalCommandRequestTopicPrefix, testDeviceServiceName, testDeviceName, testCommandName, testMethod}, "/")
+			client.AssertCalled(t, "Publish", tt.payload, expectedInternalRequestTopic)
 		})
 	}
 }
