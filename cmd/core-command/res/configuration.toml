@@ -54,7 +54,7 @@ Type = "consul"
   AuthMode = "usernamepassword"                   # required for redis messagebus (secure or insecure).
   SecretName = "redisdb"
     [MessageQueue.Internal.Topics]
-    RequestTopicPrefix = "edgex/command/request/"   # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    RequestTopicPrefix = "edgex/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
     ResponseTopic = "edgex/command/response/#"      # for subscribing to device service responses
     InternalRequestCommandTopic = "/command/request/#"     # for subscribing to internal command requests
     InternalResponseCommandTopicPrefix = "/command/response/"    # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
@@ -90,7 +90,7 @@ Type = "consul"
   AuthMode = "none"
     [MessageQueue.External.Topics]
     RequestCommandTopic = "edgex/command/request/#"           # for subscribing to 3rd party command requests
-    ResponseCommandTopicPrefix = "edgex/command/response/"    # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    ResponseCommandTopicPrefix = "edgex/command/response"     # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
     RequestQueryTopic = "edgex/commandquery/request/#"        # for subscribing to 3rd party command query request
     ResponseQueryTopic = "edgex/commandquery/response"        # for publishing responses back to 3rd party systems
 
