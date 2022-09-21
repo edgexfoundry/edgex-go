@@ -189,8 +189,8 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 
 // getPolicyByName gets policy by policy name, returns nil if not found
 func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
-	var isValidPolicy bool
-	isValidPolicy = false
+	var isExistingPolicy bool
+	isExistingPolicy = false
 
 	policyListURL, err := c.getRegistryApiUrl(consulPolicyListAPI)
 	if err != nil {
@@ -220,7 +220,7 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 	case http.StatusOK:
 		for _, policy := range policyList {
 			if policyName == policy.Name {
-				isValidPolicy = true
+				isExistingPolicy = true
 				break
 			}
 		}
@@ -229,9 +229,12 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 			policyListResp.StatusCode)
 	}
 
-	if isValidPolicy == false {
-		return nil, fmt.Errorf("Failed to find policy %s in Policy List Api %s", policyName, consulPolicyListAPI)
+	if !isExistingPolicy {
+		c.loggingClient.Infof("Policy %s does not exist, continuing to create", policyName)
+		return nil, nil
 	}
+
+	c.loggingClient.Infof("Policy %s exists, getting policy", policyName)
 
 	readPolicyByNameURL, err := c.getRegistryApiUrl(fmt.Sprintf(consulReadPolicyByNameAPI, policyName))
 	if err != nil {
