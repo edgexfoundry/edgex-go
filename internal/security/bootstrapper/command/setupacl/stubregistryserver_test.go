@@ -332,6 +332,22 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("Invalid Policy: A Policy with Name " + edgeXServicePolicyName + " already exists"))
 			}
+		case consulPolicyListAPI:
+			require.Equal(t, http.MethodGet, r.Method)
+			w.WriteHeader(http.StatusOK)
+			jsonResponse := []map[string]interface{}{
+				{
+					"Name": "global-management",
+				},
+				{
+					"Name": "node-read",
+				},
+				{
+					"Name": "test-policy-name",
+				},
+			}
+			err := json.NewEncoder(w).Encode(jsonResponse)
+			require.NoError(t, err)
 		default:
 			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
