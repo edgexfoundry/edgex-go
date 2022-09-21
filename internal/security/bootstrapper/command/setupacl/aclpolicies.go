@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -203,6 +202,9 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 
 // getPolicyByName gets policy by policy name, returns nil if not found
 func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
+	var isValidPolicy bool
+	isValidPolicy = false
+
 	policyListReq, err := http.NewRequest(http.MethodGet, consulPolicyListAPI, http.NoBody)
 
 	policyListReq.Header.Add(share.ConsulTokenHeader, tokenID)
@@ -212,23 +214,28 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 	}
 	defer policyListResp.Body.Close()
 
-	policyListBody, err := ioutil.ReadAll(policyListResp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read policyListBody response body: %w", err)
-	}
 	var policyList PolicyResponse
-	json.Unmarshal(policyListBody, &policyList)
+
+	decode_err := json.NewDecoder(policyListResp.Body).Decode(&policyList)
+	if decode_err != nil {
+		return nil, fmt.Errorf("Failed to decode policy list reponse: %w", err)
+	}
 
 	switch policyListResp.StatusCode {
 	case http.StatusOK:
 		for _, policy := range policyList.Policies {
 			if policyName == policy.Name {
-				break // if we've found it, ok to continue to GET Policy, need to figure out error
+				isValidPolicy = true
+				break
 			}
 		}
 	default:
-		return nil, fmt.Errorf("Failed to get consul policy list from [%s] and status code= %d: %s", consulPolicyListAPI,
-			policyListResp.StatusCode, string(policyListBody))
+		return nil, fmt.Errorf("Failed to get consul policy list from [%s] and status code= %d", consulPolicyListAPI,
+			policyListResp.StatusCode)
+	}
+
+	if isValidPolicy != true {
+		return nil, fmt.Errorf("Failed to find policy %s in Policy List Api %s", policyName, consulPolicyListAPI)
 	}
 
 	readPolicyByNameURL, err := c.getRegistryApiUrl(fmt.Sprintf(consulReadPolicyByNameAPI, policyName))
