@@ -66,7 +66,7 @@ const (
 	edgeXServicePolicyName = "edgex-service-policy"
 
 	consulCreatePolicyAPI     = "/v1/acl/policy"
-	consulPolicyListAPI       = "/acl/policies"
+	consulPolicyListAPI       = "/v1/acl/policies"
 	consulReadPolicyByNameAPI = "/v1/acl/policy/name/%s"
 
 	aclNotFoundMessage = "ACL not found"
@@ -106,22 +106,39 @@ const (
 	edgeXManagementPolicyName = "edgex-management-policy"
 )
 
-type PolicyResponse struct {
-	Status   string
-	Code     string
-	Total    int
-	Policies []PolicyList
+type PolicyListResponse []struct {
+	CreateIndex int    `json:"CreateIndex"`
+	Datacenters string `json:"Datacenters"`
+	Description string `json:"Description"`
+	Hash        string `json:"Hash"`
+	ID          string `json:"ID"`
+	ModifyIndex int    `json:"ModifyIndex"`
+	Name        string `json:"Name"`
 }
 
-type PolicyList struct {
-	CreateIndex int         `json:"CreateIndex"`
-	Datacenters interface{} `json:"Datacenters"`
-	Description string      `json:"Description"`
-	Hash        string      `json:"Hash"`
-	ID          string      `json:"ID"`
-	ModifyIndex int         `json:"ModifyIndex"`
-	Name        string      `json:"Name"`
-}
+// type PolicyList struct {
+// 	CreateIndex int    `json:"CreateIndex"`
+// 	Datacenters string `json:"Datacenters"`
+// 	Description string `json:"Description"`
+// 	Hash        string `json:"Hash"`
+// 	ID          string `json:"ID"`
+// 	ModifyIndex int    `json:"ModifyIndex"`
+// 	Name        string `json:"Name"`
+// }
+
+// type PolicyListResponse struct {
+// 	Policies []PolicyList
+// }
+
+// type PolicyList struct {
+// 	CreateIndex int    `json:"CreateIndex"`
+// 	Datacenters string `json:"Datacenters"`
+// 	Description string `json:"Description"`
+// 	Hash        string `json:"Hash"`
+// 	ID          string `json:"ID"`
+// 	ModifyIndex int    `json:"ModifyIndex"`
+// 	Name        string `json:"Name"`
+// }
 
 // getOrCreateRegistryPolicy retrieves or creates a new policy
 // it inserts a new policy if the policy name does not exist and returns a policy
@@ -205,25 +222,33 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 	var isValidPolicy bool
 	isValidPolicy = false
 
-	policyListReq, err := http.NewRequest(http.MethodGet, consulPolicyListAPI, http.NoBody)
+	policyListURL, err := c.getRegistryApiUrl(consulPolicyListAPI)
+	if err != nil {
+		return nil, err
+	}
+
+	policyListReq, err := http.NewRequest(http.MethodGet, policyListURL, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to prepare policyListReq request for http URL %s: %w", policyListURL, err)
+	}
 
 	policyListReq.Header.Add(share.ConsulTokenHeader, tokenID)
 	policyListResp, err := c.client.Do(policyListReq)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to GET policy list request for http URL: %w", err)
+		return nil, fmt.Errorf("Failed to GET policy list request for http URL %s: %w", policyListURL, err)
 	}
 	defer policyListResp.Body.Close()
 
-	var policyList PolicyResponse
+	var policyList PolicyListResponse
 
 	decode_err := json.NewDecoder(policyListResp.Body).Decode(&policyList)
 	if decode_err != nil {
-		return nil, fmt.Errorf("Failed to decode policy list reponse: %w", err)
+		return nil, fmt.Errorf("Failed to decode policy list reponse: %w", decode_err)
 	}
 
 	switch policyListResp.StatusCode {
 	case http.StatusOK:
-		for _, policy := range policyList.Policies {
+		for _, policy := range policyList {
 			if policyName == policy.Name {
 				isValidPolicy = true
 				break
@@ -234,7 +259,7 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 			policyListResp.StatusCode)
 	}
 
-	if isValidPolicy != true {
+	if isValidPolicy == false {
 		return nil, fmt.Errorf("Failed to find policy %s in Policy List Api %s", policyName, consulPolicyListAPI)
 	}
 
@@ -262,7 +287,6 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read readPolicyByName response body: %w", err)
 	}
-
 	switch resp.StatusCode {
 	case http.StatusOK:
 		var existing Policy
