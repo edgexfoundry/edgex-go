@@ -107,38 +107,8 @@ const (
 )
 
 type PolicyListResponse []struct {
-	CreateIndex int    `json:"CreateIndex"`
-	Datacenters string `json:"Datacenters"`
-	Description string `json:"Description"`
-	Hash        string `json:"Hash"`
-	ID          string `json:"ID"`
-	ModifyIndex int    `json:"ModifyIndex"`
-	Name        string `json:"Name"`
+	Name string `json:"Name"`
 }
-
-// type PolicyList struct {
-// 	CreateIndex int    `json:"CreateIndex"`
-// 	Datacenters string `json:"Datacenters"`
-// 	Description string `json:"Description"`
-// 	Hash        string `json:"Hash"`
-// 	ID          string `json:"ID"`
-// 	ModifyIndex int    `json:"ModifyIndex"`
-// 	Name        string `json:"Name"`
-// }
-
-// type PolicyListResponse struct {
-// 	Policies []PolicyList
-// }
-
-// type PolicyList struct {
-// 	CreateIndex int    `json:"CreateIndex"`
-// 	Datacenters string `json:"Datacenters"`
-// 	Description string `json:"Description"`
-// 	Hash        string `json:"Hash"`
-// 	ID          string `json:"ID"`
-// 	ModifyIndex int    `json:"ModifyIndex"`
-// 	Name        string `json:"Name"`
-// }
 
 // getOrCreateRegistryPolicy retrieves or creates a new policy
 // it inserts a new policy if the policy name does not exist and returns a policy

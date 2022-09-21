@@ -334,41 +334,20 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 			}
 		case consulPolicyListAPI:
 			require.Equal(t, http.MethodGet, r.Method)
-			// if registry.serverOptions
-			// should I addd a server option OK for policy lis?
 			w.WriteHeader(http.StatusOK)
 			jsonResponse := []map[string]interface{}{
 				{
-					"CreateIndex": 4,
-					"Datacenters": "dc1",
-					"Description": "Builtin Policy that grants unlimited access",
-					"Hash":        "swIQt6up+s0cV4kePfJ2aRdKCLaQyykF4Hl1Nfdeumk=",
-					"ID":          "00000000-0000-0000-0000-000000000001",
-					"ModifyIndex": 4,
-					"Name":        "global-management",
+					"Name": "global-management",
 				},
 				{
-					"CreateIndex": 14,
-					"Datacenters": "dc1",
-					"Description": "Grants read access to all node information",
-					"Hash":        "OtZUUKhInTLEqTPfNSSOYbRiSBKm3c4vI2p6MxZnGWc=",
-					"ID":          "e359bd81-baca-903e-7e64-1ccd9fdc78f5",
-					"ModifyIndex": 14,
-					"Name":        "node-read",
+					"Name": "node-read",
 				},
 				{
-					"CreateIndex": 14,
-					"Datacenters": "dc1",
-					"Description": "Grants read access to all node information",
-					"Hash":        "OtZUUKhInTLEqTPfNSSOYbRiSBKm3c4vI2p6MxZnGWc=",
-					"ID":          "e359bd81-baca-903e-7e64-1ccd9fdc78f5",
-					"ModifyIndex": 14,
-					"Name":        "test-policy-name",
+					"Name": "test-policy-name",
 				},
 			}
 			err := json.NewEncoder(w).Encode(jsonResponse)
 			require.NoError(t, err)
-
 		default:
 			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
