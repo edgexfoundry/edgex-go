@@ -77,6 +77,7 @@ Type = "consul"
     AutoProvision = "true"
     Deliver = "new"
     DefaultPubRetryAttempts = "2"
+    Subject = "edgex/#" # Required for NATS Jetstram only for stream autoprovsioning
   [MessageQueue.External]
   Url = "tcp://localhost:1883"
   ClientId = "core-command"

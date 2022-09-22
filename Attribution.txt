@@ -235,3 +235,12 @@ https://github.com/microsoft/go-winio/blob/master/LICENSE
 
 golang.org/x/sync (Unspecified) https://cs.opensource.google/go/x/sync
 https://cs.opensource.google/go/x/sync/+/master:LICENSE
+
+github.com/nats-io/nats.go (Apache-2.0) https://github.com/nats-io/nats.go
+https://github.com/nats-io/nats.go/blob/main/LICENSE
+
+github.com/nats-io/nkeys (Apache-2.0) https://github.com/nats-io/nkeys
+https://github.com/nats-io/nkeys/blob/master/LICENSE
+
+github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
+https://github.com/nats-io/nuid/blob/master/LICENSE
