@@ -66,6 +66,7 @@ const (
 	edgeXServicePolicyName = "edgex-service-policy"
 
 	consulCreatePolicyAPI     = "/v1/acl/policy"
+	consulPolicyListAPI       = "/v1/acl/policies"
 	consulReadPolicyByNameAPI = "/v1/acl/policy/name/%s"
 
 	aclNotFoundMessage = "ACL not found"
@@ -104,6 +105,10 @@ const (
 	// edgeXServicePolicyName is the name of the management policy for edgex
 	edgeXManagementPolicyName = "edgex-management-policy"
 )
+
+type PolicyListResponse []struct {
+	Name string `json:"Name"`
+}
 
 // getOrCreateRegistryPolicy retrieves or creates a new policy
 // it inserts a new policy if the policy name does not exist and returns a policy
@@ -184,6 +189,15 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 
 // getPolicyByName gets policy by policy name, returns nil if not found
 func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
+	policyExists, err := c.checkPolicyExists(tokenID, policyName)
+	if err != nil {
+		return nil, err
+	}
+
+	if !policyExists {
+		return nil, nil
+	}
+
 	readPolicyByNameURL, err := c.getRegistryApiUrl(fmt.Sprintf(consulReadPolicyByNameAPI, policyName))
 	if err != nil {
 		return nil, err
@@ -229,4 +243,44 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 		return nil, fmt.Errorf("failed to read policy by name with status code= %d: %s",
 			resp.StatusCode, string(readPolicyResp))
 	}
+}
+
+func (c *cmd) checkPolicyExists(tokenID, policyName string) (bool, error) {
+	policyListURL, err := c.getRegistryApiUrl(consulPolicyListAPI)
+	if err != nil {
+		return false, err
+	}
+
+	policyListReq, err := http.NewRequest(http.MethodGet, policyListURL, http.NoBody)
+	if err != nil {
+		return false, fmt.Errorf("Failed to prepare policyListReq request for http URL %s: %w", policyListURL, err)
+	}
+
+	policyListReq.Header.Add(share.ConsulTokenHeader, tokenID)
+	policyListResp, err := c.client.Do(policyListReq)
+	if err != nil {
+		return false, fmt.Errorf("Failed to GET policy list request for http URL %s: %w", policyListURL, err)
+	}
+	defer policyListResp.Body.Close()
+
+	var policyList PolicyListResponse
+
+	err = json.NewDecoder(policyListResp.Body).Decode(&policyList)
+	if err != nil {
+		return false, fmt.Errorf("Failed to decode policy list reponse: %w", err)
+	}
+
+	switch policyListResp.StatusCode {
+	case http.StatusOK:
+		for _, policy := range policyList {
+			// consul is case-sensitive
+			if policy.Name == policyName {
+				return true, nil
+			}
+		}
+	default:
+		return false, fmt.Errorf("Failed to get consul policy list from [%s] and status code= %d", consulPolicyListAPI,
+			policyListResp.StatusCode)
+	}
+	return false, nil
 }
