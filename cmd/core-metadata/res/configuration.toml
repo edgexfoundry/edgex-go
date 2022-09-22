@@ -91,6 +91,7 @@ SecretName = "redisdb"
   AutoProvision = "true"
   Deliver = "new"
   DefaultPubRetryAttempts = "2"
+  Subject = "edgex/#" # Required for NATS Jetstram only for stream autoprovsioning
 
 [SecretStore]
 Type = "vault"
