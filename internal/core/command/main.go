@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
@@ -93,6 +94,11 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 			return false
 		}
 		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+			return false
+		}
+		if err := messaging.SubscribeCommandResponses(ctx, dic); err != nil {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			lc.Errorf("Failed to subscribe commands from message bus, %v", err)
 			return false
 		}
 	}
