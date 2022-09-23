@@ -31,7 +31,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging/external"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
@@ -92,7 +92,7 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
-		if !handlers.NewExternalMQTT(external.OnConnectHandler(dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
 	}
