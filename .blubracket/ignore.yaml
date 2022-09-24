@@ -1,0 +1,4 @@
+- paths:
+  - Attribution.txt
+  - "**/*_test.go"
+  - "vendor/**"
