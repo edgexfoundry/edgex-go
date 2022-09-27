@@ -6,7 +6,7 @@ TAG=$SNAP_INSTANCE_NAME.$(basename "$0")
 $SNAP/bin/kong-postgres-setup.sh "post-refresh"
 
 # Install the Unit of Measure config file when upgrading from an old version
-# UoM was added in v2.3.0-dev.45 (snap revision 3900):
+# UoM was added in v2.3.0-dev.45:
 # https://github.com/edgexfoundry/edgex-go/pull/4119
 uom="config/core-metadata/res/uom.toml"
 logger --tag $TAG "Installing $SNAP/$uom"
