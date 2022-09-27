@@ -32,6 +32,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 // AgentTokenType is the type of token to be set on the Consul agent
@@ -62,28 +63,28 @@ const (
 
 // CreateRegistryToken is the structure to create a new registry token
 type CreateRegistryToken struct {
-	Description string   `json:"Description"`
-	Policies    []Policy `json:"Policies"`
-	Local       bool     `json:"Local"`
-	TTL         *string  `json:"ExpirationTTL,omitempty"`
+	Description string         `json:"Description"`
+	Policies    []types.Policy `json:"Policies"`
+	Local       bool           `json:"Local"`
+	TTL         *string        `json:"ExpirationTTL,omitempty"`
 }
 
 // ACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI
 type ACLTokenInfo struct {
-	SecretID    string   `json:"SecretID"`
-	AccessorID  string   `json:"AccessorID"`
-	Policies    []Policy `json:"Policies"`
-	Description string   `json:"Description"`
+	SecretID    string         `json:"SecretID"`
+	AccessorID  string         `json:"AccessorID"`
+	Policies    []types.Policy `json:"Policies"`
+	Description string         `json:"Description"`
 }
 
 // ManagementACLTokenInfo is the key portion of the response metadata from consulCreateTokenAPI for management acl token
 type ManagementACLTokenInfo struct {
-	SecretID string   `json:"SecretID"`
-	Policies []Policy `json:"Policies"`
+	SecretID string         `json:"SecretID"`
+	Policies []types.Policy `json:"Policies"`
 }
 
 // NewCreateRegistryToken instantiates a new CreateRegistryToken with a given inputs
-func NewCreateRegistryToken(description string, policies []Policy, local bool, timeToLive *string) CreateRegistryToken {
+func NewCreateRegistryToken(description string, policies []types.Policy, local bool, timeToLive *string) CreateRegistryToken {
 	return CreateRegistryToken{
 		Description: description,
 		Policies:    policies,
@@ -156,7 +157,7 @@ func (c *cmd) isACLTokenPersistent(bootstrapACLToken string) (bool, error) {
 // this call requires ACL read/write permission and hence we use the bootstrap ACL token
 // it checks whether there is an agent token already existing and re-uses it if so
 // otherwise creates a new agent token
-func (c *cmd) createAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
+func (c *cmd) createAgentToken(bootstrapACLToken types.BootStrapACLTokenInfo) (string, error) {
 	if len(bootstrapACLToken.SecretID) == 0 {
 		return share.EmptyToken, errors.New("bootstrap ACL token is required for creating agent token")
 	}
@@ -208,7 +209,7 @@ func (c *cmd) createAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string,
 // getEdgeXTokenByPattern lists tokens and find the matched ACL Token info that contains token by the expected key pattern
 // it returns the first matched ACL Token info that contains token if many tokens actually are matched
 // it returns empty ACLTokenInfo if no matching found
-func (c *cmd) getEdgeXTokenByPattern(bootstrapACLToken BootStrapACLTokenInfo, pattern *regexp.Regexp) (*ACLTokenInfo, error) {
+func (c *cmd) getEdgeXTokenByPattern(bootstrapACLToken types.BootStrapACLTokenInfo, pattern *regexp.Regexp) (*ACLTokenInfo, error) {
 	listTokensURL, err := c.getRegistryApiUrl(consulListTokensAPI)
 	if err != nil {
 		return nil, err
@@ -267,7 +268,7 @@ func (c *cmd) getEdgeXTokenByPattern(bootstrapACLToken BootStrapACLTokenInfo, pa
 
 // insertNewAgentToken creates a new Consul token
 // it returns the token's ID and error if any error occurs
-func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (string, error) {
+func (c *cmd) insertNewAgentToken(bootstrapACLToken types.BootStrapACLTokenInfo) (string, error) {
 	// get a policy for this agent token to associate with
 	edgexAgentPolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLToken.SecretID,
 		"edgex-agent-policy",
@@ -278,7 +279,7 @@ func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (stri
 
 	unlimitedDuration := "0s"
 	createToken := NewCreateRegistryToken("edgex-core-consul agent token",
-		[]Policy{
+		[]types.Policy{
 			*edgexAgentPolicy,
 		}, true, &unlimitedDuration)
 	newTokenInfo, err := c.createNewToken(bootstrapACLToken.SecretID, createToken)
@@ -291,7 +292,7 @@ func (c *cmd) insertNewAgentToken(bootstrapACLToken BootStrapACLTokenInfo) (stri
 }
 
 // setAgentToken sets the ACL token currently in use by the agent
-func (c *cmd) setAgentToken(bootstrapACLToken BootStrapACLTokenInfo, agentTokenID string,
+func (c *cmd) setAgentToken(bootstrapACLToken types.BootStrapACLTokenInfo, agentTokenID string,
 	tokenType AgentTokenType) error {
 	if len(bootstrapACLToken.SecretID) == 0 {
 		return errors.New("bootstrap ACL token is required for setting agent token")
@@ -407,7 +408,7 @@ func (c *cmd) createNewToken(bootstrapACLTokenID string, createToken CreateRegis
 
 // insertNewManagementToken creates a new Consul token
 // it returns the ACLTokenInfo and error if any error occurs
-func (c *cmd) insertNewManagementToken(bootstrapACLToken BootStrapACLTokenInfo) (*ACLTokenInfo, error) {
+func (c *cmd) insertNewManagementToken(bootstrapACLToken types.BootStrapACLTokenInfo) (*ACLTokenInfo, error) {
 	// get a policy for this consul token to associate with
 	edgexManagementPolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLToken.SecretID,
 		edgeXManagementPolicyName,
@@ -418,7 +419,7 @@ func (c *cmd) insertNewManagementToken(bootstrapACLToken BootStrapACLTokenInfo) 
 
 	unlimitedDuration := "0s"
 	createToken := NewCreateRegistryToken("edgex-core-consul management token",
-		[]Policy{
+		[]types.Policy{
 			*edgexManagementPolicy,
 		}, true, &unlimitedDuration)
 	newTokenInfo, err := c.createNewToken(bootstrapACLToken.SecretID, createToken)
@@ -435,7 +436,7 @@ func (c *cmd) insertNewManagementToken(bootstrapACLToken BootStrapACLTokenInfo) 
 // this call requires ACL read/write permission and hence we use the bootstrap ACL token
 // it checks whether there is an management token already existing and re-uses it if so
 // otherwise creates a new management token
-func (c *cmd) createManagementToken(bootstrapACLToken BootStrapACLTokenInfo) (*ManagementACLTokenInfo, error) {
+func (c *cmd) createManagementToken(bootstrapACLToken types.BootStrapACLTokenInfo) (*ManagementACLTokenInfo, error) {
 	if len(bootstrapACLToken.SecretID) == 0 {
 		return nil, errors.New("bootstrap ACL token is required for creating management token")
 	}

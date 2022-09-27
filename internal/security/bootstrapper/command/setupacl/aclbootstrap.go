@@ -25,22 +25,11 @@ import (
 	"path/filepath"
 
 	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
-// BootStrapACLTokenInfo is the key portion of the response metadata from consulACLBootstrapAPI
-type BootStrapACLTokenInfo struct {
-	SecretID string   `json:"SecretID"`
-	Policies []Policy `json:"Policies"`
-}
-
-// Policy is the metadata for ACL policy
-type Policy struct {
-	ID   string `json:"ID"`
-	Name string `json:"Name"`
-}
-
 // generateBootStrapACLToken should only be called once per Consul agent
-func (c *cmd) generateBootStrapACLToken() (*BootStrapACLTokenInfo, error) {
+func (c *cmd) generateBootStrapACLToken() (*types.BootStrapACLTokenInfo, error) {
 	aclBootstrapURL, err := c.getRegistryApiUrl(consulACLBootstrapAPI)
 	if err != nil {
 		return nil, err
@@ -64,7 +53,7 @@ func (c *cmd) generateBootStrapACLToken() (*BootStrapACLTokenInfo, error) {
 		return nil, fmt.Errorf("Failed to read response body of bootstrap ACL: %w", err)
 	}
 
-	var bootstrapACLToken BootStrapACLTokenInfo
+	var bootstrapACLToken types.BootStrapACLTokenInfo
 	switch resp.StatusCode {
 	case http.StatusOK:
 		if err := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&bootstrapACLToken); err != nil {
@@ -77,7 +66,7 @@ func (c *cmd) generateBootStrapACLToken() (*BootStrapACLTokenInfo, error) {
 	}
 }
 
-func (c *cmd) saveBootstrapACLToken(tokenInfoToBeSaved *BootStrapACLTokenInfo) error {
+func (c *cmd) saveBootstrapACLToken(tokenInfoToBeSaved *types.BootStrapACLTokenInfo) error {
 	// Write the token to the specified file
 	tokenFileAbsPath, err := filepath.Abs(c.configuration.StageGate.Registry.ACL.BootstrapTokenPath)
 	if err != nil {

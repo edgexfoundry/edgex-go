@@ -160,7 +160,7 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 			} else {
 				w.WriteHeader(http.StatusForbidden)
 			}
-		case fmt.Sprintf(createConsulRoleVaultAPI, pathBase):
+		case fmt.Sprintf("/v1/consul/roles/%s", pathBase):
 			require.Equal(t, http.MethodPost, r.Method)
 			if registry.serverOptions.createRoleOk {
 				w.WriteHeader(http.StatusNoContent)
