@@ -69,16 +69,16 @@ export KONG_PG_PASSWORD_FILE
 # remove env KONG_PG_PASSWORD: only use KONG_PG_PASSWORD_FILE
 unset KONG_PG_PASSWORD
 
+set +e
 /docker-entrypoint.sh kong migrations bootstrap
-/docker-entrypoint.sh kong migrations list
+/docker-entrypoint.sh kong migrations up
+/docker-entrypoint.sh kong migrations finish
 code=$?
-if [ $code -eq 0 ]; then
-  echo "$(date) kong migrations bootstrap ok, doing migrations up and finish..."
-  /docker-entrypoint.sh kong migrations up && /docker-entrypoint.sh kong migrations finish
-else
+if [ $code -ne 0 ]; then
   echo "$(date) failed to kong migrations, returned code = " $code
+  exit $code
 fi
-
+set -e
 echo "$(date) Configuring Kong Admin API..."
 
 # Running "kong config db_import" will return a non-successful error code even though it 
