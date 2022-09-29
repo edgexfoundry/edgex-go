@@ -7,7 +7,6 @@ package messaging
 
 import (
 	"context"
-	"strings"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
@@ -17,11 +16,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 )
 
-func SubscribeCommandResponses(ctx context.Context, dic *di.Container) errors.EdgeX {
+func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
 	internalResponseTopic := messageBusInfo.Internal.Topics[ResponseTopic]
-	externalResponseTopicPrefix := messageBusInfo.External.Topics[ResponseCommandTopicPrefix]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -47,25 +45,20 @@ func SubscribeCommandResponses(ctx context.Context, dic *di.Container) errors.Ed
 			case <-ctx.Done():
 				lc.Infof("Exiting waiting for MessageBus '%s' topic messages", internalResponseTopic)
 				return
-			case err := <-messageErrors:
+			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case msgEnvelope := <-messages:
-				lc.Debugf("Command response received on message queue. Topic: %s, Correlation-id: %s ", internalResponseTopic, msgEnvelope.CorrelationID)
+				lc.Debugf("Command response received on message queue. Topic: %s, Correlation-id: %s ", msgEnvelope.ReceivedTopic, msgEnvelope.CorrelationID)
 
-				// expected internal command response topic scheme: #/<service-name>/<device-name>/<command-name>/<method>
-				topicLevels := strings.Split(msgEnvelope.ReceivedTopic, "/")
-				length := len(topicLevels)
-				if length < 4 {
-					lc.Error("Failed to parse and construct command response topic scheme, expected request topic scheme: '#/<service-name>/<device-name>/<command-name>/<method>'")
+				responseTopic, external, err := router.ResponseTopic(msgEnvelope.RequestID)
+				if err != nil {
+					lc.Errorf("Received RequestEnvelope with unknown RequestId %s", msgEnvelope.RequestID)
 					continue
 				}
 
-				// expected external command response topic scheme: #/<device-name>/<command-name>/<method>
-				deviceName := topicLevels[length-3]
-				commandName := topicLevels[length-2]
-				method := topicLevels[length-1]
-				externalResponseTopic := strings.Join([]string{externalResponseTopicPrefix, deviceName, commandName, method}, "/")
-				publishMessage(externalMQTT, externalResponseTopic, qos, retain, msgEnvelope, lc)
+				if external {
+					publishMessage(externalMQTT, responseTopic, qos, retain, msgEnvelope, lc)
+				}
 			}
 		}
 	}()

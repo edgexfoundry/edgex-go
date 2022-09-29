@@ -34,7 +34,7 @@ const (
 	ResponseTopic              = "ResponseTopic"
 )
 
-func OnConnectHandler(dic *di.Container) mqtt.OnConnectHandler {
+func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectHandler {
 	return func(client mqtt.Client) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
@@ -50,7 +50,7 @@ func OnConnectHandler(dic *di.Container) mqtt.OnConnectHandler {
 		}
 
 		requestCommandTopic := externalTopics[RequestCommandTopic]
-		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(dic)); token.Wait() && token.Error() != nil {
+		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(router, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
 			return
 		}
@@ -134,7 +134,7 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 	}
 }
 
-func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
+func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
@@ -151,7 +151,7 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 		// expected command request topic scheme: #/<device>/<command-name>/<method>
 		topicLevels := strings.Split(message.Topic(), "/")
 		length := len(topicLevels)
-		if length <= 3 {
+		if length < 3 {
 			lc.Error("Failed to parse and construct response topic scheme, expected request topic scheme: '#/<device-name>/<command-name>/<method>")
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
@@ -207,6 +207,8 @@ func commandRequestHandler(dic *di.Container) mqtt.MessageHandler {
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
 			return
 		}
+
+		router.SetResponseTopic(requestEnvelope.RequestID, externalResponseTopic, true)
 	}
 }
 

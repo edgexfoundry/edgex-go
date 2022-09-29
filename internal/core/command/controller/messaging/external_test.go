@@ -23,14 +23,14 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
+	internalMessagingMocks "github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	mqttMocks "github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging/mocks"
 )
 
 const (
@@ -57,6 +57,7 @@ const (
 )
 
 func TestOnConnectHandler(t *testing.T) {
+	mockRouter := &mocks.MessagingRouter{}
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Errorf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
@@ -91,7 +92,7 @@ func TestOnConnectHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token := &mqttMocks.Token{}
+			token := &mocks.Token{}
 			token.On("Wait").Return(true)
 			if tt.expectedSucceed {
 				token.On("Error").Return(nil)
@@ -99,11 +100,11 @@ func TestOnConnectHandler(t *testing.T) {
 				token.On("Error").Return(errors.New("error"))
 			}
 
-			client := &mqttMocks.Client{}
+			client := &mocks.Client{}
 			client.On("Subscribe", testQueryRequestTopic, byte(0), mock.Anything).Return(token)
 			client.On("Subscribe", testExternalCommandRequestTopic, byte(0), mock.Anything).Return(token)
 
-			fn := OnConnectHandler(dic)
+			fn := OnConnectHandler(mockRouter, dic)
 			fn(client)
 
 			if tt.expectedSucceed {
@@ -205,15 +206,15 @@ func Test_commandQueryHandler(t *testing.T) {
 			payloadBytes, err := json.Marshal(tt.payload)
 			require.NoError(t, err)
 
-			message := &mqttMocks.Message{}
+			message := &mocks.Message{}
 			message.On("Payload").Return(payloadBytes)
 			message.On("Topic").Return(tt.requestQueryTopic)
 
-			token := &mqttMocks.Token{}
+			token := &mocks.Token{}
 			token.On("Wait").Return(true)
 			token.On("Error").Return(nil)
 
-			mqttClient := &mqttMocks.Client{}
+			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", testQueryResponseTopic, byte(0), true, mock.Anything).Return(token)
 
 			fn := commandQueryHandler(testQueryResponseTopic, 0, true, dic)
@@ -262,6 +263,8 @@ func Test_commandRequestHandler(t *testing.T) {
 		},
 	}
 
+	mockRouter := &mocks.MessagingRouter{}
+	mockRouter.On("SetResponseTopic", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Error", mock.Anything).Return(nil)
 	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
@@ -274,7 +277,7 @@ func Test_commandRequestHandler(t *testing.T) {
 	dsc := &clientMocks.DeviceServiceClient{}
 	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
 	dsc.On("DeviceServiceByName", context.Background(), unknownService).Return(responses.DeviceServiceResponse{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "unknown device service", nil))
-	client := &mocks.MessageClient{}
+	client := &internalMessagingMocks.MessageClient{}
 	client.On("Publish", mock.Anything, mock.Anything).Return(nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
@@ -338,18 +341,18 @@ func Test_commandRequestHandler(t *testing.T) {
 			payloadBytes, err := json.Marshal(tt.payload)
 			require.NoError(t, err)
 
-			message := &mqttMocks.Message{}
+			message := &mocks.Message{}
 			message.On("Payload").Return(payloadBytes)
 			message.On("Topic").Return(tt.commandRequestTopic)
 
-			token := &mqttMocks.Token{}
+			token := &mocks.Token{}
 			token.On("Wait").Return(true)
 			token.On("Error").Return(nil)
 
-			mqttClient := &mqttMocks.Client{}
+			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
 
-			fn := commandRequestHandler(dic)
+			fn := commandRequestHandler(mockRouter, dic)
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {
