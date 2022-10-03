@@ -57,7 +57,7 @@ Type = "consul"
     RequestTopicPrefix = "edgex/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
     ResponseTopic = "edgex/command/response/#"      # for subscribing to device service responses
     InternalRequestCommandTopic = "/command/request/#"     # for subscribing to internal command requests
-    InternalResponseCommandTopicPrefix = "/command/response/"    # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    InternalResponseCommandTopicPrefix = "/command/response"     # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
     InternalRequestQueryTopic = "/commandquery/request"   # for subscribing to internal command query requests
     InternalResponseQueryTopic = "/commandquery/response"   # for publishing reponsses back to internal service
     [MessageQueue.Internal.Optional]

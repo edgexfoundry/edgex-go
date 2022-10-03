@@ -8,6 +8,7 @@ package messaging
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,7 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -26,12 +27,14 @@ import (
 )
 
 const (
-	RequestQueryTopic          = "RequestQueryTopic"
-	ResponseQueryTopic         = "ResponseQueryTopic"
-	RequestCommandTopic        = "RequestCommandTopic"
-	ResponseCommandTopicPrefix = "ResponseCommandTopicPrefix"
-	RequestTopicPrefix         = "RequestTopicPrefix"
-	ResponseTopic              = "ResponseTopic"
+	RequestQueryTopic                  = "RequestQueryTopic"
+	ResponseQueryTopic                 = "ResponseQueryTopic"
+	RequestCommandTopic                = "RequestCommandTopic"
+	ResponseCommandTopicPrefix         = "ResponseCommandTopicPrefix"
+	RequestTopicPrefix                 = "RequestTopicPrefix"
+	ResponseTopic                      = "ResponseTopic"
+	InternalRequestCommandTopic        = "InternalRequestCommandTopic"
+	InternalResponseCommandTopicPrefix = "InternalResponseCommandTopicPrefix"
 )
 
 func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectHandler {
@@ -79,7 +82,7 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 		}
 
 		var commands any
-		var edgexErr errors.EdgeX
+		var edgexErr edgexErr.EdgeX
 		switch deviceName {
 		case common.All:
 			offset, limit := common.DefaultOffset, common.DefaultLimit
@@ -148,7 +151,6 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			return
 		}
 
-		// expected command request topic scheme: #/<device>/<command-name>/<method>
 		topicLevels := strings.Split(message.Topic(), "/")
 		length := len(topicLevels)
 		if length < 3 {
@@ -156,6 +158,8 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
+
+		// expected external command request/response topic scheme: #/<device-name>/<command-name>/<method>
 		deviceName := topicLevels[length-3]
 		commandName := topicLevels[length-2]
 		method := topicLevels[length-1]
@@ -164,43 +168,18 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
-		// expected command response topic scheme: #/<device>/<command-name>/<method>
 		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[ResponseCommandTopicPrefix], deviceName, commandName, method}, "/")
 
-		// retrieve device information through Metadata DeviceClient
-		dc := bootstrapContainer.DeviceClientFrom(dic.Get)
-		if dc == nil {
+		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[RequestTopicPrefix], deviceName, commandName, method, dic)
+		if err != nil {
+			lc.Errorf("invalid request topic: %s", err.Error())
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil Device Client")
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
 			return
 		}
-		deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
-		if err != nil {
-			errorMessage := fmt.Sprintf("Failed to get Device by name %s: %v", deviceName, err)
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
 
-		// retrieve device service information through Metadata DeviceClient
-		dsc := bootstrapContainer.DeviceServiceClientFrom(dic.Get)
-		if dsc == nil {
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil DeviceService Client")
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
-		deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
-		if err != nil {
-			errorMessage := fmt.Sprintf("Failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
-			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
-			return
-		}
-
-		// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
-		internalRequestTopic := strings.Join([]string{messageBusInfo.Internal.Topics[RequestTopicPrefix], deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/")
 		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
-		err = internalMessageBus.Publish(requestEnvelope, internalRequestTopic)
+		err = internalMessageBus.Publish(requestEnvelope, deviceRequestTopic)
 		if err != nil {
 			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
@@ -208,6 +187,7 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			return
 		}
 
+		lc.Debugf("Command request sent to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
 		router.SetResponseTopic(requestEnvelope.RequestID, externalResponseTopic, true)
 	}
 }
@@ -220,8 +200,36 @@ func publishMessage(client mqtt.Client, responseTopic string, qos byte, retain b
 	envelopeBytes, _ := json.Marshal(&message)
 
 	if token := client.Publish(responseTopic, qos, retain, envelopeBytes); token.Wait() && token.Error() != nil {
-		lc.Errorf("Could not publish to topic '%s': %s", responseTopic, token.Error())
+		lc.Errorf("Could not publish to external message queue on topic '%s': %s", responseTopic, token.Error())
 	} else {
-		lc.Debugf("Published response message on topic '%s' with %d bytes", responseTopic, len(envelopeBytes))
+		lc.Debugf("Published response message to external message queue on topic '%s' with %d bytes", responseTopic, len(envelopeBytes))
 	}
+}
+
+// validateRequestTopic validates the request topic by checking the existence of device and device service,
+// returns the internal device request topic to which the command request will be sent.
+func validateRequestTopic(prefix string, deviceName string, commandName string, method string, dic *di.Container) (string, error) {
+	// retrieve device information through Metadata DeviceClient
+	dc := bootstrapContainer.DeviceClientFrom(dic.Get)
+	if dc == nil {
+		return "", errors.New("nil Device Client")
+	}
+	deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get Device by name %s: %v", deviceName, err)
+	}
+
+	// retrieve device service information through Metadata DeviceClient
+	dsc := bootstrapContainer.DeviceServiceClientFrom(dic.Get)
+	if dsc == nil {
+		return "", errors.New("nil DeviceService Client")
+	}
+	deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
+	}
+
+	// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
+	return strings.Join([]string{prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/"), nil
+
 }
