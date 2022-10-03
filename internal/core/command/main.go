@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
@@ -31,7 +32,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging/external"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
@@ -89,10 +90,16 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	configuration := container.ConfigurationFrom(dic.Get)
 	if configuration.MessageQueue.Required {
+		router := messaging.NewMessagingRouter()
 		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
-		if !handlers.NewExternalMQTT(external.OnConnectHandler(dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+			return false
+		}
+		if err := messaging.SubscribeCommandResponses(ctx, router, dic); err != nil {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			lc.Errorf("Failed to subscribe commands from message bus, %v", err)
 			return false
 		}
 	}
