@@ -67,10 +67,10 @@ func TestOnConnectHandler(t *testing.T) {
 					Required: false,
 					External: bootstrapConfig.ExternalMQTTInfo{
 						Topics: map[string]string{
-							RequestQueryTopic:          testQueryRequestTopic,
-							ResponseQueryTopic:         testQueryResponseTopic,
-							RequestCommandTopic:        testExternalCommandRequestTopic,
-							ResponseCommandTopicPrefix: testExternalCommandResponseTopicPrefix,
+							QueryRequestTopic:          testQueryRequestTopic,
+							QueryResponseTopic:         testQueryResponseTopic,
+							CommandRequestTopic:        testExternalCommandRequestTopic,
+							CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
 						},
 						QoS:    0,
 						Retain: true,
@@ -291,14 +291,14 @@ func Test_commandRequestHandler(t *testing.T) {
 					Required: true,
 					Internal: bootstrapConfig.MessageBusInfo{
 						Topics: map[string]string{
-							RequestTopicPrefix: testInternalCommandRequestTopicPrefix,
+							DeviceRequestTopicPrefix: testInternalCommandRequestTopicPrefix,
 						},
 					},
 					External: bootstrapConfig.ExternalMQTTInfo{
 						QoS:    0,
 						Retain: true,
 						Topics: map[string]string{
-							ResponseCommandTopicPrefix: testExternalCommandResponseTopicPrefix,
+							CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
 						},
 					},
 				},

@@ -21,7 +21,7 @@ import (
 func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
-	internalResponseTopic := messageBusInfo.Internal.Topics[ResponseTopic]
+	internalResponseTopic := messageBusInfo.Internal.Topics[DeviceResponseTopic]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -81,7 +81,7 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
-	internalRequestCommandTopic := messageBusInfo.Internal.Topics[InternalRequestCommandTopic]
+	internalRequestCommandTopic := messageBusInfo.Internal.Topics[CommandRequestTopic]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -126,9 +126,9 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 					lc.Warn("Not publishing error message back due to insufficient information on response topic")
 					continue
 				}
-				internalResponseTopic := strings.Join([]string{messageBusInfo.Internal.Topics[InternalResponseCommandTopicPrefix], deviceName, commandName, method}, "/")
+				internalResponseTopic := strings.Join([]string{messageBusInfo.Internal.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
 
-				deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[RequestTopicPrefix], deviceName, commandName, method, dic)
+				deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 				if err != nil {
 					lc.Errorf("invalid request topic: %s", err.Error())
 					responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())

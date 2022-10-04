@@ -27,14 +27,12 @@ import (
 )
 
 const (
-	RequestQueryTopic                  = "RequestQueryTopic"
-	ResponseQueryTopic                 = "ResponseQueryTopic"
-	RequestCommandTopic                = "RequestCommandTopic"
-	ResponseCommandTopicPrefix         = "ResponseCommandTopicPrefix"
-	RequestTopicPrefix                 = "RequestTopicPrefix"
-	ResponseTopic                      = "ResponseTopic"
-	InternalRequestCommandTopic        = "InternalRequestCommandTopic"
-	InternalResponseCommandTopicPrefix = "InternalResponseCommandTopicPrefix"
+	QueryRequestTopic          = "QueryRequestTopic"
+	QueryResponseTopic         = "QueryResponseTopic"
+	CommandRequestTopic        = "CommandRequestTopic"
+	CommandResponseTopicPrefix = "CommandResponseTopicPrefix"
+	DeviceRequestTopicPrefix   = "DeviceRequestTopicPrefix"
+	DeviceResponseTopic        = "DeviceResponseTopic"
 )
 
 func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectHandler {
@@ -45,14 +43,14 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 		qos := config.MessageQueue.External.QoS
 		retain := config.MessageQueue.External.Retain
 
-		requestQueryTopic := externalTopics[RequestQueryTopic]
-		responseQueryTopic := externalTopics[ResponseQueryTopic]
+		requestQueryTopic := externalTopics[QueryRequestTopic]
+		responseQueryTopic := externalTopics[QueryResponseTopic]
 		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(responseQueryTopic, qos, retain, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
 			return
 		}
 
-		requestCommandTopic := externalTopics[RequestCommandTopic]
+		requestCommandTopic := externalTopics[CommandRequestTopic]
 		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(router, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
 			return
@@ -168,9 +166,9 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
-		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[ResponseCommandTopicPrefix], deviceName, commandName, method}, "/")
+		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
 
-		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[RequestTopicPrefix], deviceName, commandName, method, dic)
+		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 		if err != nil {
 			lc.Errorf("invalid request topic: %s", err.Error())
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil Device Client")
