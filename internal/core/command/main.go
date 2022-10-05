@@ -97,9 +97,14 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
+		if err := messaging.SubscribeCommandRequests(ctx, router, dic); err != nil {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			lc.Errorf("Failed to subscribe commands request from internal message bus, %v", err)
+			return false
+		}
 		if err := messaging.SubscribeCommandResponses(ctx, router, dic); err != nil {
 			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-			lc.Errorf("Failed to subscribe commands from message bus, %v", err)
+			lc.Errorf("Failed to subscribe commands response from internal message bus, %v", err)
 			return false
 		}
 	}
