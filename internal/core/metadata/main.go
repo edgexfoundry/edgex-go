@@ -76,6 +76,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			uom.BootstrapHandler,
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			MessageBusBootstrapHandler,
+			handlers.NewServiceMetrics(common.CoreMetaDataServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreMetaDataServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,

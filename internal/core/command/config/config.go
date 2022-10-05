@@ -36,6 +36,7 @@ type ConfigurationStruct struct {
 type WritableInfo struct {
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
+	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
 type MessageQueue struct {
@@ -110,7 +111,5 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 
 // GetTelemetryInfo returns the service's Telemetry settings.
 func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
-	// TODO: return services actual TelemetryInfo once updated
-	return &bootstrapConfig.TelemetryInfo{}
-	//return &c.Writable.Telemetry
+	return &c.Writable.Telemetry
 }

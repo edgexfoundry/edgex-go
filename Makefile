@@ -95,6 +95,8 @@ build-nats:
 tidy:
 	go mod tidy
 
+core: metadata data command
+
 metadata: cmd/core-metadata/core-metadata
 cmd/core-metadata/core-metadata:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
@@ -107,19 +109,21 @@ command: cmd/core-command/core-command
 cmd/core-command/core-command:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
+support: notifications scheduler
+
 notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
+
+scheduler: cmd/support-scheduler/support-scheduler
+cmd/support-scheduler/support-scheduler:
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
 
 cmd/sys-mgmt-agent/sys-mgmt-agent:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
-
-scheduler: cmd/support-scheduler/support-scheduler
-cmd/support-scheduler/support-scheduler:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 proxy: cmd/security-proxy-setup/security-proxy-setup
 cmd/security-proxy-setup/security-proxy-setup:
@@ -185,6 +189,8 @@ docker_base:
 		echo "FROM golang:$(GO_VERSION)-alpine\nRUN apk add --update make git\nWORKDIR /edgex-go\nCOPY go.mod .\nRUN go mod download" | docker build -t $(LOCAL_CACHE_IMAGE) -f - .; \
 	fi
 
+dcore: dmetadata ddata dcommand
+
 dmetadata: docker_core_metadata
 docker_core_metadata: docker_base
 	docker build \
@@ -223,6 +229,8 @@ docker_core_command: docker_base
 		-t edgexfoundry/core-command:$(GIT_SHA) \
 		-t edgexfoundry/core-command:$(DOCKER_TAG) \
 		.
+
+dsupport: dnotifications dscheduler
 
 dnotifications: docker_support_notifications
 docker_support_notifications: docker_base
