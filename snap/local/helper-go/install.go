@@ -325,7 +325,7 @@ func installRedis() error {
 	return nil
 }
 
-func main() {
+func install() {
 	var debug = false
 	var err error
 

@@ -21,4 +21,3 @@ test:
 
 clean:
 	rm -f $(HOOKS)
-

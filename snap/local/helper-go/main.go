@@ -18,28 +18,38 @@ package main
 
 import (
 	"os"
-
-	hooks "github.com/canonical/edgex-snap-hooks/v2"
 )
 
-var cli *hooks.CtlCli = hooks.NewSnapCtl()
-
 func main() {
-	// no subcommand, as called by snapd
-	if len(os.Args) == 1 {
-		// process the EdgeX >=2.2 snap options
-		processAppOptions()
-		// configure everything else, incl. the legacy snap options
-		configure()
-		return
-	}
-
 	subCommand := os.Args[1]
 	switch subCommand {
-	case "options":
-		// configure options
-		options()
+	case "install":
+		install()
+	case "configure":
+		configure()
 	default:
-		panic("Unknown CLI sub-command: " + subCommand)
+		panic("Unknown subcommand: " + subCommand)
 	}
 }
+
+// var cli *hooks.CtlCli = hooks.NewSnapCtl()
+
+// func main() {
+// 	// no subcommand, as called by snapd
+// 	if len(os.Args) == 1 {
+// 		// process the EdgeX >=2.2 snap options
+// 		processAppOptions()
+// 		// configure everything else, incl. the legacy snap options
+// 		configure()
+// 		return
+// 	}
+
+// 	subCommand := os.Args[1]
+// 	switch subCommand {
+// 	case "options":
+// 		// configure options
+// 		options()
+// 	default:
+// 		panic("Unknown CLI sub-command: " + subCommand)
+// 	}
+// }
