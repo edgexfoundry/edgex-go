@@ -58,7 +58,7 @@ Type = "consul"
     DeviceResponseTopic = "edgex/command/response/#"      # for subscribing to device service responses
     CommandRequestTopic = "/command/request/#"     # for subscribing to internal command requests
     CommandResponseTopicPrefix = "/command/response"     # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
-    QueryRequestTopic = "/commandquery/request"   # for subscribing to internal command query requests
+    QueryRequestTopic = "/commandquery/request/#"   # for subscribing to internal command query requests
     QueryResponseTopic = "/commandquery/response"   # for publishing reponsses back to internal service
     [MessageQueue.Internal.Optional]
     # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them

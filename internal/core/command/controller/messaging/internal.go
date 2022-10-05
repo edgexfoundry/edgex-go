@@ -11,6 +11,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -149,6 +150,68 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 
 				lc.Debugf("Command request sent to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
 				router.SetResponseTopic(requestEnvelope.RequestID, internalResponseTopic, false)
+			}
+		}
+	}()
+
+	return nil
+}
+
+// SubscribeCommandQueryRequests subscribes command query requests from EdgeX service (e.g., Application Service)
+// via internal MessageBus
+func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+	internalQueryRequestTopic := messageBusInfo.Internal.Topics[QueryRequestTopic]
+	internalQueryResponseTopic := messageBusInfo.Internal.Topics[QueryResponseTopic]
+
+	messages := make(chan types.MessageEnvelope)
+	messageErrors := make(chan error)
+	topics := []types.TopicChannel{
+		{
+			Topic:    internalQueryRequestTopic,
+			Messages: messages,
+		},
+	}
+
+	messageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
+	err := messageBus.Subscribe(topics, messageErrors)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				lc.Infof("Exiting waiting for MessageBus '%s' topic messages", internalQueryRequestTopic)
+				return
+			case err = <-messageErrors:
+				lc.Error(err.Error())
+			case requestEnvelope := <-messages:
+				lc.Debugf("Command query request received on internal MessageBus. Topic: %s, Correlation-id: %s ", requestEnvelope.ReceivedTopic, requestEnvelope.CorrelationID)
+
+				// example topic scheme: /commandquery/request/<device>
+				// deviceName is expected to be at last topic level.
+				topicLevels := strings.Split(requestEnvelope.ReceivedTopic, "/")
+				deviceName := topicLevels[len(topicLevels)-1]
+				if strings.EqualFold(deviceName, common.All) {
+					deviceName = common.All
+				}
+
+				responseEnvelope, edgexErr := getCommandQueryResponseEnvelope(requestEnvelope, deviceName, dic)
+				if edgexErr != nil {
+					lc.Error(edgexErr.Error())
+					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, edgexErr.Error())
+				}
+
+				err = messageBus.Publish(responseEnvelope, internalQueryResponseTopic)
+				if err != nil {
+					lc.Errorf("Could not publish to topic '%s': %s", internalQueryResponseTopic, err.Error())
+					continue
+				}
+
+				lc.Debugf("Command query response sent to internal MessageBus. Topic: %s, Correlation-id: %s", internalQueryResponseTopic, requestEnvelope.CorrelationID)
 			}
 		}
 	}()
