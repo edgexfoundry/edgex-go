@@ -111,24 +111,7 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-
-	// Check the associated Device and ProvisionWatcher existence
-	devices, err := dbClient.DevicesByServiceName(0, 1, name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	if len(devices) > 0 {
-		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device service when associated device exists", nil)
-	}
-	provisionWatchers, err := dbClient.ProvisionWatchersByServiceName(0, 1, name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	if len(provisionWatchers) > 0 {
-		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device service when associated provisionWatcher exists", nil)
-	}
-
-	err = dbClient.DeleteDeviceServiceByName(name)
+	err := dbClient.DeleteDeviceServiceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

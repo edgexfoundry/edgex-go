@@ -65,6 +65,20 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("provision watcher name %s already exists", pw.Name), edgexErr)
 	}
 
+	// check the associated ServiceName and ProfileName existence
+	exists, edgexErr = deviceServiceNameExist(conn, pw.ServiceName)
+	if edgexErr != nil {
+		return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	} else if !exists {
+		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.ServiceName), edgexErr)
+	}
+	exists, edgexErr = deviceProfileNameExists(conn, pw.ProfileName)
+	if edgexErr != nil {
+		return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+	} else if !exists {
+		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.ProfileName), edgexErr)
+	}
+
 	ts := pkgCommon.MakeTimestamp()
 	if pw.Created == 0 {
 		pw.Created = ts
@@ -202,6 +216,19 @@ func deleteProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.
 }
 
 func updateProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.EdgeX {
+	exists, edgeXerr := deviceServiceNameExist(conn, pw.ServiceName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", pw.ServiceName), edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", pw.ServiceName), nil)
+	}
+	exists, edgeXerr = deviceProfileNameExists(conn, pw.ProfileName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", pw.ProfileName), edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", pw.ProfileName), nil)
+	}
+
 	oldProvisionWatcher, edgexErr := provisionWatcherByName(conn, pw.Name)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)

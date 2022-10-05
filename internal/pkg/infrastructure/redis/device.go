@@ -68,7 +68,14 @@ func sendAddDeviceCmd(conn redis.Conn, storedKey string, d models.Device) errors
 
 // addDevice adds a new device into DB
 func addDevice(conn redis.Conn, d models.Device) (models.Device, errors.EdgeX) {
-	exists, edgeXerr := deviceIdExists(conn, d.Id)
+	exists, edgeXerr := deviceProfileNameExists(conn, d.ProfileName)
+	if edgeXerr != nil {
+		return d, errors.NewCommonEdgeXWrapper(edgeXerr)
+	} else if !exists {
+		return d, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", d.ProfileName), nil)
+	}
+
+	exists, edgeXerr = deviceIdExists(conn, d.Id)
 	if edgeXerr != nil {
 		return d, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -228,6 +235,13 @@ func devicesByProfileName(conn redis.Conn, offset int, limit int, profileName st
 }
 
 func updateDevice(conn redis.Conn, d models.Device) errors.EdgeX {
+	exists, edgeXerr := deviceProfileNameExists(conn, d.ProfileName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", d.ProfileName), edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", d.ProfileName), nil)
+	}
+
 	oldDevice, edgexErr := deviceByName(conn, d.Name)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)

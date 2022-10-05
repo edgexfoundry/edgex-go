@@ -32,19 +32,6 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	exists, edgeXerr := dbClient.DeviceServiceNameExists(d.ServiceName)
-	if edgeXerr != nil {
-		return id, errors.NewCommonEdgeXWrapper(edgeXerr)
-	} else if !exists {
-		return id, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", d.ServiceName), nil)
-	}
-	exists, edgeXerr = dbClient.DeviceProfileNameExists(d.ProfileName)
-	if edgeXerr != nil {
-		return id, errors.NewCommonEdgeXWrapper(edgeXerr)
-	} else if !exists {
-		return id, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", d.ProfileName), nil)
-	}
-
 	err := validateDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
@@ -129,23 +116,6 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-
-	if dto.ServiceName != nil {
-		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", *dto.ServiceName), edgeXerr)
-		} else if !exists {
-			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", *dto.ServiceName), nil)
-		}
-	}
-	if dto.ProfileName != nil {
-		exists, edgeXerr := dbClient.DeviceProfileNameExists(*dto.ProfileName)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", *dto.ProfileName), edgeXerr)
-		} else if !exists {
-			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", *dto.ProfileName), nil)
-		}
-	}
 
 	device, err := deviceByDTO(dbClient, dto)
 	if err != nil {

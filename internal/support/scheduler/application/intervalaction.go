@@ -29,12 +29,6 @@ func AddIntervalAction(action models.IntervalAction, ctx context.Context, dic *d
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	// checks the interval existence by name
-	_, edgeXerr = dbClient.IntervalByName(action.IntervalName)
-	if edgeXerr != nil {
-		return id, errors.NewCommonEdgeXWrapper(edgeXerr)
-	}
-
 	addedAction, err := dbClient.AddIntervalAction(action)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
@@ -110,14 +104,6 @@ func PatchIntervalAction(dto dtos.UpdateIntervalAction, ctx context.Context, dic
 	action, err := intervalActionByDTO(dbClient, dto)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
-	}
-
-	// checks the interval existence by name
-	if dto.IntervalName != nil {
-		_, err = dbClient.IntervalByName(*dto.IntervalName)
-		if err != nil {
-			return errors.NewCommonEdgeXWrapper(err)
-		}
 	}
 
 	requests.ReplaceIntervalActionModelFieldsWithDTO(&action, dto)
