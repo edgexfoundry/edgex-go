@@ -19,7 +19,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -27,6 +26,8 @@ import (
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
+	"github.com/canonical/edgex-snap-hooks/v2/log"
+	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
 
 const secretStoreAddTokensCfg = "env.security-secret-store.add-secretstore-tokens"
@@ -95,23 +96,10 @@ func getServicesWithConfig() []string {
 		"sys-mgmt-agent", "app-service-configurable"}
 }
 
-// TODO: re-factor to get this list from snapd using snapctl
-func getAllServices() []string {
-	return []string{"consul", "redis", "postgres",
-		"kong-daemon", "vault", "security-secretstore-setup",
-		"security-proxy-setup", "security-bootstrapper-redis",
-		"security-consul-bootstrapper", "core-command",
-		"core-data", "core-metadata", "support-notifications",
-		"support-scheduler", "sys-mgmt-agent",
-		"kuiper", "app-service-configurable"}
-}
-
 // installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
 func installConfFiles() error {
 	var err error
 
-	// TODO: should we continue to do this, since config overrides are
-	// the preferred way to make configuration changes now?
 	for _, v := range getServicesWithConfig() {
 		destDir := hooks.SnapDataConf + "/"
 		srcDir := hooks.SnapConf + "/"
@@ -183,11 +171,11 @@ func installSecretStore() error {
 	//	ADD_REGISTRY_ACL_ROLES
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = cli.SetConfig(secretStoreAddTokensCfg, strings.Join(secretStoreTokens, ",")); err != nil {
+	if err = snapctl.Set(secretStoreAddTokensCfg, strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
 
-	if err = cli.SetConfig(secretStoreAddKnownSecretsCfg, strings.Join(secretStoreKnownSecrets, ",")); err != nil {
+	if err = snapctl.Set(secretStoreAddKnownSecretsCfg, strings.Join(secretStoreKnownSecrets, ",")).Run(); err != nil {
 		return err
 	}
 
@@ -233,7 +221,7 @@ func installConsul() error {
 	// using the same list of services as used in ADD_KNOWN_SECRETS
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = cli.SetConfig(consulAddRegistryACLRolesCfg, strings.Join(secretStoreTokens, ",")); err != nil {
+	if err = snapctl.Set(consulAddRegistryACLRolesCfg, strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
 
@@ -324,67 +312,52 @@ func installRedis() error {
 }
 
 func install() {
-	var debug = false
+	log.SetComponentName("install")
+
 	var err error
 
-	status, err := cli.Config("debug")
-	if err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:install: can't read value of 'debug': %v", err))
-		os.Exit(1)
-	}
-	if status == "true" {
-		debug = true
-	}
-
-	if err = hooks.Init(debug, "edgexfoundry"); err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:install: initialization failure: %v", err))
-		os.Exit(1)
-
-	}
-
 	if err = installConfFiles(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing config files: %v", err)
 	}
 
 	if err = installKuiper(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing eKuiper: %v", err)
 	}
 
 	if err = installSecretStore(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing secret store: %v", err)
 	}
 
 	if err = installConsul(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install: %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing consul: %v", err)
 	}
 
 	if err = installProxy(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing proxy: %v", err)
 	}
 
 	if err = installRedis(); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install %v", err))
-		os.Exit(1)
+		log.Fatalf("Error installing redis: %v", err)
 	}
 
-	// Stop and disable all *enabled* services as they will be
-	// re-enabled in the configure hook if the config option
-	// 'install-mode=defer-startup'.
-	for _, s := range getAllServices() {
-		hooks.Info(fmt.Sprintf("edgexfoundry:install disabling service: %s", s))
-		if err = cli.Stop(s, true); err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:install can't disable: %s; %v", s, err))
-			os.Exit(1)
+	// Stop and disable all services as they will be
+	// re-enabled in the configure hook if install-mode=defer-startup and
+	// they have their state set to "on".
+	var services []string
+	if serviceMap, err := snapctl.Services().Run(); err != nil {
+		log.Fatalf("Error getting list of services: %v", err)
+	} else {
+		for k := range serviceMap {
+			services = append(services, k)
 		}
 	}
 
-	if err = cli.SetConfig("install-mode", "defer-startup"); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:install setting 'install-mode'; %v", err))
-		os.Exit(1)
+	log.Infof("Disabling all services: %v", services)
+	if err = snapctl.Stop(services...).Disable().Run(); err != nil {
+		log.Fatalf("Error disabling services: %v", err)
+	}
+
+	if err = snapctl.Set("install-mode", "defer-startup").Run(); err != nil {
+		log.Fatalf("Error setting 'install-mode'; %v", err)
 	}
 }

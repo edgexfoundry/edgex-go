@@ -26,6 +26,8 @@ import (
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
+	"github.com/canonical/edgex-snap-hooks/v2/log"
+	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
 
 const ( // iota is reset to 0
@@ -99,7 +101,7 @@ func getOptServices() []string {
 func isDisableAllowed(s string) error {
 	for _, v := range getRequiredServices() {
 		if s == v {
-			return fmt.Errorf("edgexfoundry:configure: can't disable required service: %s", s)
+			return fmt.Errorf("can't disable required service: %s", s)
 		}
 	}
 	return nil
@@ -112,23 +114,23 @@ func handleSingleService(name, state string) error {
 
 	switch state {
 	case OFF:
-		hooks.Debug("edgexfoundry:configure: state: off")
-		if err := cli.Stop(name, true); err != nil {
+		log.Debugf("%s state: off", name)
+		if err := snapctl.Stop(hooks.SnapName + "." + name).Disable().Run(); err != nil {
 			return err
 		}
-		if err := cli.SetConfig(name, OFF); err != nil {
+		if err := snapctl.Set(name, OFF).Run(); err != nil {
 			return err
 		}
 	case ON:
-		hooks.Debug("edgexfoundry:configure: state: on")
-		if err := cli.Start(name, true); err != nil {
+		log.Debugf("%s state: on", name)
+		if err := snapctl.Start(hooks.SnapName + "." + name).Enable().Run(); err != nil {
 			return err
 		}
-		if err := cli.SetConfig(name, ON); err != nil {
+		if err := snapctl.Set(name, ON).Run(); err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf("edgexfoundry:configure: invalid state %s for service: %s", state, name)
+		return fmt.Errorf("invalid state %s for service: %s", state, name)
 	}
 
 	return nil
@@ -194,12 +196,12 @@ func rmConsulAclFile() error {
 }
 
 func disableSecretStoreAndRestart() error {
-	hooks.Info(fmt.Sprintf("edgexfoundry:configure: disabling secret store"))
+	log.Info("disabling secret store")
 
 	// if consul_acls.json doesn't exist, then secret-store has already been
 	// disabled, so just return
 	if !consulAclFileExists() {
-		hooks.Info(fmt.Sprintf("edgexfoundry:configure: secret store is already disabled"))
+		log.Info("secret store is already disabled")
 		return nil
 	}
 
@@ -222,7 +224,7 @@ func disableSecretStoreAndRestart() error {
 	// snap config option for each service to be needlessly set to "off"
 	// then back to "on"; re-factor handleServices/handleSingleService
 	for _, s := range getEdgeXRefServices() {
-		if err := cli.Stop(s, false); err != nil {
+		if err := snapctl.Stop(hooks.SnapName + "." + s).Run(); err != nil {
 			return err
 		}
 	}
@@ -231,18 +233,18 @@ func disableSecretStoreAndRestart() error {
 	// TODO - kuiper will be stopped, but not restarted because
 	// additional re-configuration may be needed.
 	for _, s := range getKuiperServices() {
-		if err := cli.Stop(s, false); err != nil {
+		if err := snapctl.Stop(hooks.SnapName + "." + s).Run(); err != nil {
 			return err
 		}
 	}
 
 	// stop redis
-	if err := cli.Stop("redis", false); err != nil {
+	if err := snapctl.Stop(hooks.SnapName + "." + "redis").Run(); err != nil {
 		return err
 	}
 
 	// stop consul
-	if err := cli.Stop("consul", false); err != nil {
+	if err := snapctl.Stop(hooks.SnapName + "." + "consul").Run(); err != nil {
 		return err
 	}
 
@@ -258,7 +260,7 @@ func disableSecretStoreAndRestart() error {
 
 	// - start required services
 	for _, s := range getRequiredServices() {
-		if err := cli.Start(s, false); err != nil {
+		if err := snapctl.Start(hooks.SnapName + "." + s).Run(); err != nil {
 			return err
 		}
 	}
@@ -266,7 +268,7 @@ func disableSecretStoreAndRestart() error {
 	// Now check config status of the optional EdgeX
 	// services and restart where necessary
 	for _, s := range getEdgeXRefServices() {
-		status, err := cli.Config(s)
+		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return err
 		}
@@ -277,7 +279,7 @@ func disableSecretStoreAndRestart() error {
 		// part of the enabledServices (i.e. services
 		// always started), then also start it
 		if status == ON || (status == "" && strings.HasPrefix(s, "core-")) {
-			if err := cli.Start(s, false); err != nil {
+			if err := snapctl.Start(hooks.SnapName + "." + s).Run(); err != nil {
 				return err
 			}
 		}
@@ -310,12 +312,12 @@ func handleAllServices(deferStartup bool) error {
 	for _, s := range hooks.Services {
 		var serviceList []string
 
-		status, err := cli.Config(s)
+		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return err
 		}
 
-		hooks.Debug(fmt.Sprintf("edgexfoundry:configure: service: %s status: %s", s, status))
+		log.Debugf("service: %s status: %s", s, status)
 
 		err = applyConfigOptions(s)
 		if err != nil {
@@ -339,7 +341,7 @@ func handleAllServices(deferStartup bool) error {
 
 		switch sType {
 		case kuiperService:
-			hooks.Debug("edgexfoundry:configure: kuiper")
+			log.Debug("kuiper")
 
 			switch status {
 			case ON, OFF:
@@ -349,11 +351,11 @@ func handleAllServices(deferStartup bool) error {
 				// configuration has been specified; no-op
 				continue
 			default:
-				return fmt.Errorf("edgexfoundry:configure: invalid value for kuiper: %s", status)
+				return fmt.Errorf("invalid value for kuiper: %s", status)
 			}
 
 		case secProxyService:
-			hooks.Debug("edgexfoundry:configure: proxy")
+			log.Debug("proxy")
 
 			switch status {
 			case ON:
@@ -363,9 +365,7 @@ func handleAllServices(deferStartup bool) error {
 				// does not automatically handle enabling the secret-store
 				// if/when the proxy is dynamically enabled.
 				if !secretStoreActive {
-					err = fmt.Errorf("edgexfoundry:configure security-proxy=on not allowed;" +
-						"secret-store=off")
-					return err
+					return fmt.Errorf("security-proxy=on not allowed when secret-store is off")
 				}
 
 				fallthrough
@@ -376,15 +376,15 @@ func handleAllServices(deferStartup bool) error {
 				// configuration has been specified; no-op
 				continue
 			default:
-				return fmt.Errorf("edgexfoundry:configure: invalid value for security-proxy: %s", status)
+				return fmt.Errorf("invalid value for security-proxy: %s", status)
 			}
 
 		case secStoreService:
-			hooks.Debug("edgexfoundry:configure: secretstore")
+			log.Debug("secretstore")
 
 			switch status {
 			case ON:
-				return fmt.Errorf("edgexfoundry:configure security-secret-store=on not allowed")
+				return fmt.Errorf("security-secret-store=on not allowed")
 			case OFF:
 				// TODO - this var is used by the secProxyCase to ensure that the
 				// secret store is active when the proxy is being enabled at runtime.
@@ -402,11 +402,11 @@ func handleAllServices(deferStartup bool) error {
 				// configuration has been specified; no-op
 				continue
 			default:
-				return fmt.Errorf("edgexfoundry:configure: invalid value for security-secret-store: %s", status)
+				return fmt.Errorf("invalid value for security-secret-store: %s", status)
 			}
 
 		default:
-			hooks.Debug("edgexfoundry:configure: other service")
+			log.Debugf("other service: %s", s)
 			// default case for all other services
 
 			switch status {
@@ -422,11 +422,11 @@ func handleAllServices(deferStartup bool) error {
 				// configuration has been specified; no-op
 				continue
 			default:
-				return fmt.Errorf("edgexfoundry:configure: invalid value for %s: %s", s, status)
+				return fmt.Errorf("invalid value for %s: %s", s, status)
 			}
 		}
 
-		hooks.Debug(fmt.Sprintf("edgexfoundry:configure calling handleServices: %v", serviceList))
+		log.Debugf("calling handleServices: %v", serviceList)
 		if err = handleServices(serviceList, status); err != nil {
 			return err
 		}
@@ -438,7 +438,7 @@ func handleAllServices(deferStartup bool) error {
 func checkCoreConfig(services []string) ([]string, error) {
 	// walk thru the list of default services
 	for _, s := range getCoreDefaultServices() {
-		status, err := cli.Config(s)
+		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return nil, err
 		}
@@ -449,7 +449,7 @@ func checkCoreConfig(services []string) ([]string, error) {
 		case ON, UNSET:
 			services = append(services, s)
 		default:
-			err = fmt.Errorf("edgexfoundry:configure: invalid value: %s for %s", status, s)
+			err = fmt.Errorf("invalid value: %s for %s", status, s)
 			return nil, err
 		}
 	}
@@ -459,7 +459,7 @@ func checkCoreConfig(services []string) ([]string, error) {
 func checkOptConfig(services []string) ([]string, error) {
 	// walk thru the list of default services
 	for _, s := range getOptServices() {
-		status, err := cli.Config(s)
+		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return nil, err
 		}
@@ -470,7 +470,7 @@ func checkOptConfig(services []string) ([]string, error) {
 		case ON:
 			services = append(services, s)
 		default:
-			err = fmt.Errorf("edgexfoundry:configure: invalid value: %s for %s", status, s)
+			err = fmt.Errorf("invalid value: %s for %s", status, s)
 			return nil, err
 		}
 	}
@@ -479,7 +479,7 @@ func checkOptConfig(services []string) ([]string, error) {
 
 func checkSecurityConfig(services []string) ([]string, error) {
 
-	status, err := cli.Config("security-secret-store")
+	status, err := snapctl.Get("security-secret-store").Run()
 	if err != nil {
 		return nil, err
 	}
@@ -492,12 +492,12 @@ func checkSecurityConfig(services []string) ([]string, error) {
 		// default behavior
 		services = append(services, getSecretStoreServices()...)
 	default:
-		err = fmt.Errorf("edgexfoundry:configure: invalid setting for security-secret-store: %s", status)
+		err = fmt.Errorf("invalid setting for security-secret-store: %s", status)
 		return nil, err
 	}
 
 	// check secret-proxy
-	status, err = cli.Config("security-proxy")
+	status, err = snapctl.Get("security-proxy").Run()
 	if err != nil {
 		return nil, err
 	}
@@ -509,48 +509,35 @@ func checkSecurityConfig(services []string) ([]string, error) {
 		// default behavior
 		services = append(services, getProxyServices()...)
 	default:
-		err = fmt.Errorf("edgexfoundry:configure: invalid setting for security-proxy: %s", status)
+		err = fmt.Errorf("invalid setting for security-proxy: %s", status)
 		return nil, err
 	}
 	return services, nil
 }
 
 func configure() {
-	// process the EdgeX >=2.2 app options
-	processAppOptions()
+	log.SetComponentName("configure")
 
-	var debug = false
+	// process the EdgeX >=2.2 app options
+	if err := processAppOptions(); err != nil {
+		log.Fatalf("error processing app options: %v", err)
+	}
+
 	var err error
 	var startServices []string
 
-	status, err := cli.Config("debug")
+	log.Info("Started")
+
+	installMode, err := snapctl.Get("install-mode").Run()
 	if err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:configure: can't read value of 'debug': %v", err))
-		os.Exit(1)
+		log.Fatalf("error reading 'install-mode': %v", err)
 	}
-	if status == "true" {
-		debug = true
-	}
-
-	if err = hooks.Init(debug, "edgexfoundry"); err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:configure: initialization failure: %v", err))
-		os.Exit(1)
-	}
-	hooks.Info("edgexfoundry:configure: started")
-
-	val, err := cli.Config("install-mode")
-	if err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure: reading 'install-mode': %v", err))
-		os.Exit(1)
-	}
-
-	deferStartup := (val == "defer-startup")
-	hooks.Info(fmt.Sprintf("edgexfoundry:configure: deferStartup=%v", deferStartup))
+	log.Info("install-mode=%s", installMode)
+	deferStartup := (installMode == "defer-startup")
 
 	// handle per service configuration and enable/disable services
 	if err = handleAllServices(deferStartup); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure: error handling services: %v", err))
-		os.Exit(1)
+		log.Fatalf("error handling services: %v", err)
 	}
 
 	// Handle deferred startup of services disabled in the install hook.
@@ -562,7 +549,7 @@ func configure() {
 	// before the config hook runs), leaving the duplication means less
 	// re-factoring if/when snapd adds a new hook.
 	if deferStartup {
-		hooks.Info(fmt.Sprintf("edgexfoundry:configure install-mode=defer-startup; starting disabled services"))
+		log.Info("install-mode=defer-startup; starting disabled services")
 
 		// add required services
 		startServices = append(startServices, getRequiredServices()...)
@@ -570,8 +557,7 @@ func configure() {
 		// check security configuration
 		startServices, err = checkSecurityConfig(startServices)
 		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:configure: security config error; %v", err))
-			os.Exit(1)
+			log.Fatalf("security service config error: %v", err)
 		}
 
 		// TODO: don't support kuiper until it's possible to share
@@ -581,26 +567,25 @@ func configure() {
 		// check core services
 		startServices, err = checkCoreConfig(startServices)
 		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:configure: core config error; %v", err))
-			os.Exit(1)
+			log.Fatalf("core service config error: %v", err)
 		}
 
 		// check optional services
 		startServices, err = checkOptConfig(startServices)
 		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:configure: optional config error; %v", err))
-			os.Exit(1)
+			log.Fatalf("optional service config error: %v", err)
 		}
 
-		// NOTE - the services will be started after the configure hook finishes
-		if err = cli.StartMultiple(true, startServices...); err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:configure failure starting/enabling services: %v", err))
-			os.Exit(1)
+		for i, s := range startServices {
+			startServices[i] = hooks.SnapName + "." + s
+		}
+		// NOTE: the services will be scheduled to start by snapd after the configure hook exits
+		if err = snapctl.Start(startServices...).Enable().Run(); err != nil {
+			log.Fatalf("error starting/enabling services: %v", err)
 		}
 
-		if err = cli.UnsetConfig("install-mode"); err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:install un-setting 'install'; %v", err))
-			os.Exit(1)
+		if err = snapctl.Unset("install-mode").Run(); err != nil {
+			log.Fatalf("error un-setting 'install'; %v", err)
 		}
 	}
 }
