@@ -90,12 +90,10 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
-	if configuration.MessageQueue.Required {
-		router := messaging.NewMessagingRouter()
+	router := messaging.NewMessagingRouter()
+
+	if configuration.RequireMessageBus {
 		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
-			return false
-		}
-		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
 		if err := messaging.SubscribeCommandRequests(ctx, router, dic); err != nil {
@@ -109,6 +107,11 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 		if err := messaging.SubscribeCommandQueryRequests(ctx, dic); err != nil {
 			lc.Errorf("Failed to subscribe command query request from internal message bus, %v", err)
 			return false
+		}
+		if configuration.MessageQueue.External.Enabled {
+			if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+				return false
+			}
 		}
 	}
 
