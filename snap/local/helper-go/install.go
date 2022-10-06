@@ -29,8 +29,6 @@ import (
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
 )
 
-var cli *hooks.CtlCli = hooks.NewSnapCtl()
-
 const secretStoreAddTokensCfg = "env.security-secret-store.add-secretstore-tokens"
 const secretStoreAddKnownSecretsCfg = "env.security-secret-store.add-known-secrets"
 const consulAddRegistryACLRolesCfg = "env.security-bootstrapper.add-registry-acl-roles"
