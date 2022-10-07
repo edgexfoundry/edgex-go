@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
+	"github.com/canonical/edgex-snap-hooks/v2/env"
 	"github.com/canonical/edgex-snap-hooks/v2/log"
 	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
@@ -88,21 +89,33 @@ var secretStoreKnownSecrets = []string{
 
 // services w/configuration that needs to be copied
 // to $SNAP_DATA
-func getServicesWithConfig() []string {
-	return []string{"security-bootstrapper", "security-bootstrap-redis",
-		"security-file-token-provider", "security-proxy-setup",
-		"security-secretstore-setup", "core-command", "core-data",
-		"core-metadata", "support-notifications", "support-scheduler",
-		"sys-mgmt-agent", "app-service-configurable"}
+var servicesWithConfig = []string{
+	"security-bootstrapper",
+	"security-bootstrap-redis",
+	"security-file-token-provider",
+	"security-proxy-setup",
+	"security-secretstore-setup",
+	"core-command",
+	"core-data",
+	"core-metadata",
+	"support-notifications",
+	"support-scheduler",
+	"sys-mgmt-agent",
+	"app-service-configurable",
 }
+
+var (
+	snapConf     = env.Snap + "/config"
+	snapDataConf = env.SnapData + "/config"
+)
 
 // installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
 func installConfFiles() error {
 	var err error
 
-	for _, v := range getServicesWithConfig() {
-		destDir := hooks.SnapDataConf + "/"
-		srcDir := hooks.SnapConf + "/"
+	for _, v := range servicesWithConfig {
+		destDir := snapDataConf + "/"
+		srcDir := snapConf + "/"
 
 		// handle exceptions (i.e. config in non-std dirs)
 		if v == "security-bootstrap-redis" {
@@ -144,11 +157,11 @@ func installConfFiles() error {
 // installKuiper execs a shell script to install Kuiper's file into $SNAP_DATA
 func installKuiper() error {
 	// install files using edgex-ekuiper install hook
-	filePath := hooks.Snap + "/snap.edgex-ekuiper/hooks/install"
+	filePath := env.Snap + "/snap.edgex-ekuiper/hooks/install"
 
 	cmdSetupKuiper := exec.Cmd{
 		Path:   filePath,
-		Env:    append(os.Environ(), "KUIPER_BASE_KEY="+hooks.SnapData+"/kuiper"),
+		Env:    append(os.Environ(), "KUIPER_BASE_KEY="+env.SnapData+"/kuiper"),
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	}
@@ -179,30 +192,30 @@ func installSecretStore() error {
 		return err
 	}
 
-	if err = os.MkdirAll(hooks.SnapData+"/secrets", 0700); err != nil {
+	if err = os.MkdirAll(env.SnapData+"/secrets", 0700); err != nil {
 		return err
 	}
 
 	path := "/security-file-token-provider/res/token-config.json"
-	if err = hooks.CopyFile(hooks.SnapConf+path, hooks.SnapDataConf+path); err != nil {
+	if err = hooks.CopyFile(snapConf+path, snapDataConf+path); err != nil {
 		return err
 	}
 
 	// install the template config yaml file for securing Kong's admin
 	// APIs in security-secretstore-setup service
 	path = "/security-secretstore-setup/res/kong-admin-config.template.yml"
-	err = hooks.CopyFile(hooks.SnapConf+path, hooks.SnapDataConf+path)
+	err = hooks.CopyFile(snapConf+path, snapDataConf+path)
 	if err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(hooks.SnapDataConf+"/security-secret-store", 0755); err != nil {
+	if err = os.MkdirAll(snapDataConf+"/security-secret-store", 0755); err != nil {
 		return err
 	}
 
 	path = "/security-secret-store/vault-config.hcl"
-	destPath := hooks.SnapDataConf + path
-	if err = hooks.CopyFile(hooks.SnapConf+path, destPath); err != nil {
+	destPath := snapDataConf + path
+	if err = hooks.CopyFile(snapConf+path, destPath); err != nil {
 		return err
 	}
 
@@ -225,11 +238,11 @@ func installConsul() error {
 		return err
 	}
 
-	if err = os.MkdirAll(hooks.SnapData+"/consul/config", 0755); err != nil {
+	if err = os.MkdirAll(env.SnapData+"/consul/config", 0755); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(hooks.SnapData+"/consul/data", 0755); err != nil {
+	if err = os.MkdirAll(env.SnapData+"/consul/data", 0755); err != nil {
 		return err
 	}
 
@@ -264,24 +277,24 @@ func setupPostgres() error {
 func installProxy() error {
 	var err error
 
-	if err = os.MkdirAll(hooks.SnapCommon+"/logs", 0755); err != nil {
+	if err = os.MkdirAll(env.SnapCommon+"/logs", 0755); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(hooks.SnapDataConf+"/security-proxy-setup", 0755); err != nil {
+	if err = os.MkdirAll(snapDataConf+"/security-proxy-setup", 0755); err != nil {
 		return err
 	}
 
 	// ensure prefix uses the 'current' symlink in it's path, otherwise refreshes to a
 	// new snap revision will break
-	snapDataCurr := strings.Replace(hooks.SnapData, hooks.SnapRev, "current", 1)
+	snapDataCurr := strings.Replace(env.SnapData, env.SnapRev, "current", 1)
 	rStrings := map[string]string{
 		"#prefix = /usr/local/kong/":  "prefix = " + snapDataCurr + "/kong",
 		"#nginx_user = nobody nobody": "nginx_user = root root",
 	}
 
 	path := "/security-proxy-setup/kong.conf"
-	if err = hooks.CopyFileReplace(hooks.SnapConf+path, hooks.SnapDataConf+path, rStrings); err != nil {
+	if err = hooks.CopyFileReplace(snapConf+path, snapDataConf+path, rStrings); err != nil {
 		return err
 	}
 
@@ -298,8 +311,8 @@ func installProxy() error {
 // allows for redis when the config option security-secret-store
 // is "on" or "off".
 func installRedis() error {
-	fileName := filepath.Join(hooks.SnapData, "/redis/conf/redis.conf")
-	if _, err := os.Stat(filepath.Join(hooks.SnapData, "redis")); err != nil {
+	fileName := filepath.Join(env.SnapData, "/redis/conf/redis.conf")
+	if _, err := os.Stat(filepath.Join(env.SnapData, "redis")); err != nil {
 		// dir doesn't exist
 		if err := os.MkdirAll(filepath.Dir(fileName), 0755); err != nil {
 			return err
@@ -352,7 +365,7 @@ func install() {
 		}
 	}
 
-	log.Infof("Disabling all services: %v", services)
+	log.Infof("Disabling all services to defer startup to after configuration: %v", services)
 	if err = snapctl.Stop(services...).Disable().Run(); err != nil {
 		log.Fatalf("Error disabling services: %v", err)
 	}

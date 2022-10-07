@@ -25,16 +25,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	hooks "github.com/canonical/edgex-snap-hooks/v2"
+	"github.com/canonical/edgex-snap-hooks/v2/env"
 	"github.com/canonical/edgex-snap-hooks/v2/log"
 	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
-)
-
-const ( // iota is reset to 0
-	kuiperService = iota
-	secProxyService
-	secStoreService
-	otherService
 )
 
 const (
@@ -43,63 +36,55 @@ const (
 	UNSET = ""
 )
 
-// getKuiperServices returns the list of services used for
-// EdgeX rules-engine processing.
-func getKuiperServices() []string {
-	return []string{hooks.ServiceAppCfg, hooks.ServiceKuiper}
-}
+var (
+	rulesEngineServices = []string{
+		appServiceConfigurable,
+		eKuiper,
+	}
+	proxyServices = []string{
+		kong,
+		postgres,
+		securityProxySetup,
+	}
+	secretStoreServices = []string{
+		vault,
+		securitySecretStoreSetup,
+		securityBootstrapperConsul,
+		securityBootstrapperRedis,
+	}
+	referenceServices = []string{
+		coreData,
+		coreMetadata,
+		coreCommand,
+		supportNotifications,
+		supportScheduler,
+		systemManagementAgent,
+	}
+	requiredServices = []string{
+		consul,
+		redis,
+		coreMetadata,
+	}
+	coreDefaultServices = []string{
+		coreCommand,
+		coreData,
+	}
+	optionalServices = []string{
+		supportNotifications,
+		supportScheduler,
+		eKuiper,
+		appServiceConfigurable,
+		systemManagementAgent,
+	}
+)
 
-// getProxyServices returns the list of services which implement
-// the API Gateway. Note this list *excludes* Consul and the
-// Secret Store services.
-func getProxyServices() []string {
-	return []string{"postgres", "kong-daemon", "security-proxy-setup"}
-}
-
-// getSecretStoreServices returns the list of services which implement
-// the Secret Store and related dependencies (i.e. the services that
-// secure redis and consul which are tightly bound to the secret store
-// being enabled).
-func getSecretStoreServices() []string {
-	return []string{"security-secretstore-setup", "vault",
-		"security-consul-bootstrapper", "security-bootstrapper-redis"}
-}
-
-// getEdgeXRefServices returns the list of EdgeX reference services in the snap
-// (excludes all non-EdgeX runtime dependencies, and security-*-setup jobs).
-func getEdgeXRefServices() []string {
-	return []string{"core-data", "core-metadata", "core-command",
-		"support-notifications",
-		"support-scheduler", "sys-mgmt-agent"}
-}
-
-// getRequiredServices returns the minimum list of required
-// snap services for a working EdgeX instance.
-func getRequiredServices() []string {
-	return []string{"consul", "redis", "core-metadata"}
-}
-
-// getCoreDefaultServices returns the list of core services
-// that are started by default (in addition to the required
-// services)
-func getCoreDefaultServices() []string {
-	return []string{"core-command", "core-data"}
-}
-
-// getOptServices returns the list of optional EdgeX services
-// (i.e. disabled by default).
-//
-// Note:
-// - sys-mgmt-agent isn't included because as of Ireland
-//   it's considered deprecated.
-// - kuiper isn't included because it's not yet possible
-//   to provide kuiper configuration via content interface
-func getOptServices() []string {
-	return []string{"support-notifications", "support-scheduler"}
+// snapService returns the snap service name for the given app as <snap>.<app>
+func snapService(app string) string {
+	return env.SnapName + "." + app
 }
 
 func isDisableAllowed(s string) error {
-	for _, v := range getRequiredServices() {
+	for _, v := range referenceServices {
 		if s == v {
 			return fmt.Errorf("can't disable required service: %s", s)
 		}
@@ -115,7 +100,7 @@ func handleSingleService(name, state string) error {
 	switch state {
 	case OFF:
 		log.Debugf("%s state: off", name)
-		if err := snapctl.Stop(hooks.SnapName + "." + name).Disable().Run(); err != nil {
+		if err := snapctl.Stop(snapService(name)).Disable().Run(); err != nil {
 			return err
 		}
 		if err := snapctl.Set(name, OFF).Run(); err != nil {
@@ -123,7 +108,7 @@ func handleSingleService(name, state string) error {
 		}
 	case ON:
 		log.Debugf("%s state: on", name)
-		if err := snapctl.Start(hooks.SnapName + "." + name).Enable().Run(); err != nil {
+		if err := snapctl.Start(snapService(name)).Enable().Run(); err != nil {
 			return err
 		}
 		if err := snapctl.Set(name, ON).Run(); err != nil {
@@ -145,34 +130,13 @@ func handleServices(serviceList []string, state string) error {
 	return nil
 }
 
-func serviceType(name string) int {
-	switch name {
-	case hooks.ServiceKuiper:
-		return kuiperService
-	case hooks.ServiceProxy:
-		return secProxyService
-	case hooks.ServiceSecStore:
-		return secStoreService
-	default:
-		return otherService
-	}
-}
-
-func buildStartCmd(startServices []string, newServices []string) []string {
-	for _, s := range newServices {
-		s = hooks.SnapName + "." + s
-		startServices = append(startServices, s)
-	}
-	return startServices
-}
-
 // This function creates the redis config dir under $SNAP_DATA,
 // and creates an empty redis.conf file. This allows the command
 // line for the service to always specify the config file, and
 // allows for redis when the config option security-secret-store
 // is "on" or "off".
 func clearRedisConf() error {
-	path := filepath.Join(hooks.SnapData, "/redis/conf/redis.conf")
+	path := filepath.Join(env.SnapData, "/redis/conf/redis.conf")
 	if err := ioutil.WriteFile(path, nil, 0644); err != nil {
 		return err
 	}
@@ -180,7 +144,7 @@ func clearRedisConf() error {
 }
 
 func consulAclFileExists() bool {
-	path := filepath.Join(hooks.SnapData, "/consul/config/consul_acl.json")
+	path := filepath.Join(env.SnapData, "/consul/config/consul_acl.json")
 	_, err := os.Stat(path)
 	return err == nil
 }
@@ -188,7 +152,7 @@ func consulAclFileExists() bool {
 // This function deletes the Consul ACL configuration file. This
 // allows Consul to operate in insecure mode.
 func rmConsulAclFile() error {
-	path := filepath.Join(hooks.SnapData, "/consul/config/consul_acl.json")
+	path := filepath.Join(env.SnapData, "/consul/config/consul_acl.json")
 	if err := os.Remove(path); err != nil {
 		return err
 	}
@@ -206,14 +170,14 @@ func disableSecretStoreAndRestart() error {
 	}
 
 	// stop & disable proxy services
-	for _, s := range getProxyServices() {
+	for _, s := range proxyServices {
 		if err := handleSingleService(s, OFF); err != nil {
 			return err
 		}
 	}
 
 	// stop & disable secret store services
-	for _, s := range getSecretStoreServices() {
+	for _, s := range secretStoreServices {
 		if err := handleSingleService(s, OFF); err != nil {
 			return err
 		}
@@ -223,8 +187,8 @@ func disableSecretStoreAndRestart() error {
 	// TODO: can't use handleServices because that would result in the
 	// snap config option for each service to be needlessly set to "off"
 	// then back to "on"; re-factor handleServices/handleSingleService
-	for _, s := range getEdgeXRefServices() {
-		if err := snapctl.Stop(hooks.SnapName + "." + s).Run(); err != nil {
+	for _, s := range referenceServices {
+		if err := snapctl.Stop(snapService(s)).Run(); err != nil {
 			return err
 		}
 	}
@@ -232,19 +196,19 @@ func disableSecretStoreAndRestart() error {
 	// stop Kuiper-related services
 	// TODO - kuiper will be stopped, but not restarted because
 	// additional re-configuration may be needed.
-	for _, s := range getKuiperServices() {
-		if err := snapctl.Stop(hooks.SnapName + "." + s).Run(); err != nil {
+	for _, s := range rulesEngineServices {
+		if err := snapctl.Stop(snapService(s)).Run(); err != nil {
 			return err
 		}
 	}
 
 	// stop redis
-	if err := snapctl.Stop(hooks.SnapName + "." + "redis").Run(); err != nil {
+	if err := snapctl.Stop(snapService(redis)).Run(); err != nil {
 		return err
 	}
 
 	// stop consul
-	if err := snapctl.Stop(hooks.SnapName + "." + "consul").Run(); err != nil {
+	if err := snapctl.Stop(snapService(consul)).Run(); err != nil {
 		return err
 	}
 
@@ -259,15 +223,15 @@ func disableSecretStoreAndRestart() error {
 	}
 
 	// - start required services
-	for _, s := range getRequiredServices() {
-		if err := snapctl.Start(hooks.SnapName + "." + s).Run(); err != nil {
+	for _, s := range requiredServices {
+		if err := snapctl.Start(snapService(s)).Run(); err != nil {
 			return err
 		}
 	}
 
 	// Now check config status of the optional EdgeX
 	// services and restart where necessary
-	for _, s := range getEdgeXRefServices() {
+	for _, s := range referenceServices {
 		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return err
@@ -279,7 +243,7 @@ func disableSecretStoreAndRestart() error {
 		// part of the enabledServices (i.e. services
 		// always started), then also start it
 		if status == ON || (status == "" && strings.HasPrefix(s, "core-")) {
-			if err := snapctl.Start(hooks.SnapName + "." + s).Run(); err != nil {
+			if err := snapctl.Start(snapService(s)).Run(); err != nil {
 				return err
 			}
 		}
@@ -308,8 +272,30 @@ func disableSecretStoreAndRestart() error {
 func handleAllServices(deferStartup bool) error {
 	secretStoreActive := true
 
+	var services = []string{
+		// core services
+		consul,
+		redis,
+		coreData,
+		coreMetadata,
+		coreCommand,
+		// support services
+		supportNotifications,
+		supportScheduler,
+		eKuiper,
+		// app-services
+		appServiceConfigurable,
+		// security services
+		securitySecretStore,
+		securityProxy,
+		// management
+		systemManagementAgent,
+		// others
+		securityBootstrapper, // oneshot service
+	}
+
 	// grab and log the current service configuration
-	for _, s := range hooks.Services {
+	for _, s := range services {
 		var serviceList []string
 
 		status, err := snapctl.Get(s).Run()
@@ -317,7 +303,7 @@ func handleAllServices(deferStartup bool) error {
 			return err
 		}
 
-		log.Debugf("service: %s status: %s", s, status)
+		log.Debugf("Handling service: %s, status: '%s'", s, status)
 
 		err = applyConfigOptions(s)
 		if err != nil {
@@ -333,19 +319,17 @@ func handleAllServices(deferStartup bool) error {
 		// purposes, however it isn't individually controlable
 		// using on|off, so once configuration has been handled
 		// skip to the next service.
-		if s == hooks.ServiceSecBootstrapper {
+		if s == securityBootstrapper {
 			continue
 		}
 
-		sType := serviceType(s)
+		// sType := serviceType(s)
 
-		switch sType {
-		case kuiperService:
-			log.Debug("kuiper")
-
+		switch s {
+		case eKuiper:
 			switch status {
 			case ON, OFF:
-				serviceList = getKuiperServices()
+				serviceList = rulesEngineServices
 			case UNSET:
 				// this is the default status of all services if no
 				// configuration has been specified; no-op
@@ -354,9 +338,7 @@ func handleAllServices(deferStartup bool) error {
 				return fmt.Errorf("invalid value for kuiper: %s", status)
 			}
 
-		case secProxyService:
-			log.Debug("proxy")
-
+		case securityProxy:
 			switch status {
 			case ON:
 				// NOTE: the original bash based implementation would
@@ -370,7 +352,7 @@ func handleAllServices(deferStartup bool) error {
 
 				fallthrough
 			case OFF:
-				serviceList = getProxyServices()
+				serviceList = proxyServices
 			case UNSET:
 				// this is the default status of all services if no
 				// configuration has been specified; no-op
@@ -379,9 +361,7 @@ func handleAllServices(deferStartup bool) error {
 				return fmt.Errorf("invalid value for security-proxy: %s", status)
 			}
 
-		case secStoreService:
-			log.Debug("secretstore")
-
+		case securitySecretStore:
 			switch status {
 			case ON:
 				return fmt.Errorf("security-secret-store=on not allowed")
@@ -405,10 +385,7 @@ func handleAllServices(deferStartup bool) error {
 				return fmt.Errorf("invalid value for security-secret-store: %s", status)
 			}
 
-		default:
-			log.Debugf("other service: %s", s)
-			// default case for all other services
-
+		default: // default case for all other services
 			switch status {
 			case ON:
 				serviceList = []string{s}
@@ -437,7 +414,7 @@ func handleAllServices(deferStartup bool) error {
 
 func checkCoreConfig(services []string) ([]string, error) {
 	// walk thru the list of default services
-	for _, s := range getCoreDefaultServices() {
+	for _, s := range coreDefaultServices {
 		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return nil, err
@@ -458,7 +435,7 @@ func checkCoreConfig(services []string) ([]string, error) {
 
 func checkOptConfig(services []string) ([]string, error) {
 	// walk thru the list of default services
-	for _, s := range getOptServices() {
+	for _, s := range optionalServices {
 		status, err := snapctl.Get(s).Run()
 		if err != nil {
 			return nil, err
@@ -490,7 +467,7 @@ func checkSecurityConfig(services []string) ([]string, error) {
 		return services, nil
 	case UNSET:
 		// default behavior
-		services = append(services, getSecretStoreServices()...)
+		services = append(services, secretStoreServices...)
 	default:
 		err = fmt.Errorf("invalid setting for security-secret-store: %s", status)
 		return nil, err
@@ -507,7 +484,7 @@ func checkSecurityConfig(services []string) ([]string, error) {
 		break
 	case UNSET:
 		// default behavior
-		services = append(services, getProxyServices()...)
+		services = append(services, proxyServices...)
 	default:
 		err = fmt.Errorf("invalid setting for security-proxy: %s", status)
 		return nil, err
@@ -517,23 +494,19 @@ func checkSecurityConfig(services []string) ([]string, error) {
 
 func configure() {
 	log.SetComponentName("configure")
+	log.Debug("Start")
 
-	// process the EdgeX >=2.2 app options
-	if err := processAppOptions(); err != nil {
-		log.Fatalf("error processing app options: %v", err)
-	}
-
-	var err error
-	var startServices []string
-
-	log.Info("Started")
-
-	installMode, err := snapctl.Get("install-mode").Run()
+	installMode, err := snapctl.Get(installModeOption).Run()
 	if err != nil {
 		log.Fatalf("error reading 'install-mode': %v", err)
 	}
-	log.Info("install-mode=%s", installMode)
-	deferStartup := (installMode == "defer-startup")
+	deferStartup := (installMode == installModeDeferStartup)
+	log.Infof("Defer startup: %t", deferStartup)
+
+	// process the EdgeX >=2.2 app options
+	if err := processAppOptions(deferStartup); err != nil {
+		log.Fatalf("error processing app options: %v", err)
+	}
 
 	// handle per service configuration and enable/disable services
 	if err = handleAllServices(deferStartup); err != nil {
@@ -548,11 +521,12 @@ func configure() {
 	// an underlying snapd limitation (namely that services are started
 	// before the config hook runs), leaving the duplication means less
 	// re-factoring if/when snapd adds a new hook.
+	var startServices []string
 	if deferStartup {
-		log.Info("install-mode=defer-startup; starting disabled services")
+		log.Info("Defer startup: starting disabled services")
 
 		// add required services
-		startServices = append(startServices, getRequiredServices()...)
+		startServices = append(startServices, requiredServices...)
 
 		// check security configuration
 		startServices, err = checkSecurityConfig(startServices)
@@ -577,7 +551,7 @@ func configure() {
 		}
 
 		for i, s := range startServices {
-			startServices[i] = hooks.SnapName + "." + s
+			startServices[i] = snapService(s)
 		}
 		// NOTE: the services will be scheduled to start by snapd after the configure hook exits
 		if err = snapctl.Start(startServices...).Enable().Run(); err != nil {
@@ -588,4 +562,6 @@ func configure() {
 			log.Fatalf("error un-setting 'install'; %v", err)
 		}
 	}
+
+	log.Debug("End")
 }

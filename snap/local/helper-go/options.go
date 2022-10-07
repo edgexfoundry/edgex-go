@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
 	"github.com/canonical/edgex-snap-hooks/v2/log"
@@ -27,6 +28,8 @@ import (
 	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
 
+// Deprecated
+// Legacy options starting with "env." are superseded by app options
 func applyConfigOptions(service string) error {
 	envJSON, err := snapctl.Get(hooks.EnvConfig + "." + service).Run()
 	if err != nil {
@@ -34,7 +37,7 @@ func applyConfigOptions(service string) error {
 	}
 
 	if envJSON != "" {
-		log.Debugf("service: %s envJSON: %s", service, envJSON)
+		log.Debugf("Applying env options to service: %s: %s", service, strings.ReplaceAll(envJSON, "\n", ""))
 		if err := hooks.HandleEdgeXConfig(service, envJSON, nil); err != nil {
 			return err
 		}
@@ -63,19 +66,19 @@ func options() {
 	}
 }
 
-func processAppOptions() error {
+func processAppOptions(deferStartup bool) error {
 	log.Info("Processing config options")
 	err := opt.ProcessConfig(
-		"core-data",
-		"core-metadata",
-		"core-command",
-		"support-notifications",
-		"support-scheduler",
-		"app-service-configurable",
-		"security-secretstore-setup",
-		"security-bootstrapper", // local executable
-		"security-proxy-setup",
-		"sys-mgmt-agent",
+		coreData,
+		coreMetadata,
+		coreCommand,
+		supportNotifications,
+		supportScheduler,
+		appServiceConfigurable,
+		securitySecretStoreSetup,
+		securityBootstrapper, // local executable
+		securityProxySetup,
+		systemManagementAgent,
 	)
 	if err != nil {
 		return fmt.Errorf("could not process config options: %v", err)
@@ -88,13 +91,9 @@ func processAppOptions() error {
 	// The following options should not be processed within the configure hook during
 	//	the initial installation (install-mode=defer-startup). They should be processed
 	//	only on follow-up calls to the configure hook (i.e. when snap set/unset is called)
-	installMode, err := snapctl.Get("install-mode").Run() // this set in the install hook
-	if err != nil {
-		return fmt.Errorf("failed to read 'install-mode': %s", err)
-	}
-	if installMode != "defer-startup" {
+	if !deferStartup {
 		err = opt.ProcessAppCustomOptions(
-			"secrets-config", // also processed in security-proxy-post-setup.sh
+			secretsConfig, // also processed in security-proxy-post-setup.sh
 		)
 		if err != nil {
 			return fmt.Errorf("could not process custom options: %v", err)
