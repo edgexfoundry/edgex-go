@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec $SNAP/bin/helper-go configure

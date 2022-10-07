@@ -10,7 +10,7 @@ export PATH="$SNAP/bin:$PATH"
 
 # Several config options depend on resources that only exist after proxy 
 # setup. This re-applies the config options logic after deferred startup:
-$SNAP/snap/hooks/configure options --service=security-proxy
+$SNAP/bin/helper-go options --service=security-proxy
 
 # Process the EdgeX >=2.2 snap options
-$SNAP/snap/hooks/configure options --service=secrets-config
+$SNAP/bin/helper-go options --service=secrets-config

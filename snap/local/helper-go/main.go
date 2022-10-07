@@ -25,21 +25,15 @@ import (
 var cli *hooks.CtlCli = hooks.NewSnapCtl()
 
 func main() {
-	// no subcommand, as called by snapd
-	if len(os.Args) == 1 {
-		// process the EdgeX >=2.2 snap options
-		processAppOptions()
-		// configure everything else, incl. the legacy snap options
-		configure()
-		return
-	}
-
 	subCommand := os.Args[1]
 	switch subCommand {
-	case "options":
-		// configure options
+	case "install": // snap install hook
+		install()
+	case "configure": // snap configure hook
+		configure()
+	case "options": // apply snap options to apps
 		options()
 	default:
-		panic("Unknown CLI sub-command: " + subCommand)
+		panic("Unknown subcommand: " + subCommand)
 	}
 }

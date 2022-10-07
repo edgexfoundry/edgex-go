@@ -516,6 +516,9 @@ func checkSecurityConfig(services []string) ([]string, error) {
 }
 
 func configure() {
+	// process the EdgeX >=2.2 app options
+	processAppOptions()
+
 	var debug = false
 	var err error
 	var startServices []string
