@@ -20,13 +20,16 @@ import (
 )
 
 type ConfigurationStruct struct {
-	Writable    WritableInfo
-	Clients     map[string]bootstrapConfig.ClientInfo
-	Databases   map[string]bootstrapConfig.Database
-	Registry    bootstrapConfig.RegistryInfo
-	Service     bootstrapConfig.ServiceInfo
-	Smtp        SmtpInfo
-	SecretStore bootstrapConfig.SecretStoreInfo
+	//TODO: Remove in EdgeX 3.0 - Is needed now for backward compatability in 2.0
+	RequireMessageBus bool
+	Writable          WritableInfo
+	Clients           map[string]bootstrapConfig.ClientInfo
+	Databases         map[string]bootstrapConfig.Database
+	Registry          bootstrapConfig.RegistryInfo
+	Service           bootstrapConfig.ServiceInfo
+	MessageQueue      bootstrapConfig.MessageBusInfo
+	Smtp              SmtpInfo
+	SecretStore       bootstrapConfig.SecretStoreInfo
 }
 
 type WritableInfo struct {
@@ -36,6 +39,7 @@ type WritableInfo struct {
 	// ResendInterval is the default interval of resending the notification. The format of this field is to be an unsigned integer followed by a unit which may be "ns", "us" (or "µs"), "ms", "s", "m", "h" representing nanoseconds, microseconds, milliseconds, seconds, minutes or hours. Eg, "100ms", "24h"
 	ResendInterval  string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
+	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
 type SmtpInfo struct {
@@ -100,10 +104,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
+		Clients:      c.Clients,
+		Service:      c.Service,
+		Registry:     c.Registry,
+		SecretStore:  c.SecretStore,
+		MessageQueue: c.MessageQueue,
 	}
 }
 
@@ -129,7 +134,5 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 
 // GetTelemetryInfo returns the service's Telemetry settings.
 func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
-	// TODO: return services actual TelemetryInfo once updated
-	return &bootstrapConfig.TelemetryInfo{}
-	//return &c.Writable.Telemetry
+	return &c.Writable.Telemetry
 }

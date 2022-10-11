@@ -38,6 +38,7 @@ type WritableInfo struct {
 	ProfileChange   ProfileChange
 	UoM             WritableUoM
 	InsecureSecrets bootstrapConfig.InsecureSecrets
+	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
 type ProfileChange struct {
@@ -130,7 +131,5 @@ func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecre
 
 // GetTelemetryInfo returns the service's Telemetry settings.
 func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
-	// TODO: return services actual TelemetryInfo once updated
-	return &bootstrapConfig.TelemetryInfo{}
-	//return &c.Writable.Telemetry
+	return &c.Writable.Telemetry
 }
