@@ -18,11 +18,7 @@ package main
 
 import (
 	"os"
-
-	hooks "github.com/canonical/edgex-snap-hooks/v2"
 )
-
-var cli *hooks.CtlCli = hooks.NewSnapCtl()
 
 func main() {
 	subCommand := os.Args[1]

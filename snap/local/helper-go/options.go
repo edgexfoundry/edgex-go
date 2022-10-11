@@ -22,17 +22,19 @@ import (
 	"os"
 
 	hooks "github.com/canonical/edgex-snap-hooks/v2"
-	app_options "github.com/canonical/edgex-snap-hooks/v2/options"
+	"github.com/canonical/edgex-snap-hooks/v2/log"
+	opt "github.com/canonical/edgex-snap-hooks/v2/options"
+	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
 
 func applyConfigOptions(service string) error {
-	envJSON, err := cli.Config(hooks.EnvConfig + "." + service)
+	envJSON, err := snapctl.Get(hooks.EnvConfig + "." + service).Run()
 	if err != nil {
 		return fmt.Errorf("failed to read config options for %s: %v", service, err)
 	}
 
 	if envJSON != "" {
-		hooks.Debug(fmt.Sprintf("edgexfoundry:configure-options: service: %s envJSON: %s", service, envJSON))
+		log.Debugf("service: %s envJSON: %s", service, envJSON)
 		if err := hooks.HandleEdgeXConfig(service, envJSON, nil); err != nil {
 			return err
 		}
@@ -46,37 +48,24 @@ func options() {
 	service := flagset.String("service", "", "Handle config options of a single service only")
 	flagset.Parse(os.Args[2:])
 
-	fmt.Println("Configuring options for service: " + *service)
+	log.SetComponentName("options")
 
-	debug, err := cli.Config("debug")
-	if err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:configure-options: can't read value of 'debug': %v", err))
-		os.Exit(1)
-	}
-
-	if err = hooks.Init(debug == "true", "edgexfoundry"); err != nil {
-		fmt.Println(fmt.Sprintf("edgexfoundry:configure-options: initialization failure: %v", err))
-		os.Exit(1)
-	}
-
-	hooks.Info("edgexfoundry:configure-options: handling config options for a single service: " + *service)
+	log.Info("Configuring options for " + *service)
 
 	// process the EdgeX >=2.2 snap options
-	err = app_options.ProcessAppCustomOptions(*service)
-	if err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure-options: could not process custom options: %v", err))
-		os.Exit(1)
+	if err := opt.ProcessAppCustomOptions(*service); err != nil {
+		log.Fatalf("Could not process custom options: %v", err)
 	}
 
 	// process the legacy snap options
 	if err := applyConfigOptions(*service); err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure-options: error handling config options for %s: %v", *service, err))
-		os.Exit(1)
+		log.Fatalf("Error handling config options for %s: %v", *service, err)
 	}
 }
 
-func processAppOptions() {
-	err := app_options.ProcessAppConfig(
+func processAppOptions() error {
+	log.Info("Processing config options")
+	err := opt.ProcessConfig(
 		"core-data",
 		"core-metadata",
 		"core-command",
@@ -89,8 +78,7 @@ func processAppOptions() {
 		"sys-mgmt-agent",
 	)
 	if err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure could not process config options: %v", err))
-		os.Exit(1)
+		return fmt.Errorf("could not process config options: %v", err)
 	}
 
 	// After installation, the configure hook initiates the deferred startup of services,
@@ -100,18 +88,18 @@ func processAppOptions() {
 	// The following options should not be processed within the configure hook during
 	//	the initial installation (install-mode=defer-startup). They should be processed
 	//	only on follow-up calls to the configure hook (i.e. when snap set/unset is called)
-	installMode, err := hooks.NewSnapCtl().Config("install-mode") // this set in the install hook
+	installMode, err := snapctl.Get("install-mode").Run() // this set in the install hook
 	if err != nil {
-		hooks.Error(fmt.Sprintf("edgexfoundry:configure failed to read 'install-mode': %s", err))
-		os.Exit(1)
+		return fmt.Errorf("failed to read 'install-mode': %s", err)
 	}
 	if installMode != "defer-startup" {
-		err = app_options.ProcessAppCustomOptions(
+		err = opt.ProcessAppCustomOptions(
 			"secrets-config", // also processed in security-proxy-post-setup.sh
 		)
 		if err != nil {
-			hooks.Error(fmt.Sprintf("edgexfoundry:configure: could not process custom options: %v", err))
-			os.Exit(1)
+			return fmt.Errorf("could not process custom options: %v", err)
 		}
 	}
+
+	return nil
 }
