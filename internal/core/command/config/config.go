@@ -21,13 +21,15 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable     WritableInfo
-	Clients      map[string]bootstrapConfig.ClientInfo
-	Databases    map[string]bootstrapConfig.Database
-	Registry     bootstrapConfig.RegistryInfo
-	Service      bootstrapConfig.ServiceInfo
-	MessageQueue MessageQueue
-	SecretStore  bootstrapConfig.SecretStoreInfo
+	//TODO: Remove in EdgeX 3.0 - Is needed now for backward compatability in 2.0
+	RequireMessageBus bool
+	Writable          WritableInfo
+	Clients           map[string]bootstrapConfig.ClientInfo
+	Databases         map[string]bootstrapConfig.Database
+	Registry          bootstrapConfig.RegistryInfo
+	Service           bootstrapConfig.ServiceInfo
+	MessageQueue      MessageQueue
+	SecretStore       bootstrapConfig.SecretStoreInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -37,9 +39,6 @@ type WritableInfo struct {
 }
 
 type MessageQueue struct {
-	// This is required for backwards compatability with older versions of 2.x configuration
-	// TODO: remove 'Required' in EdgeX 3.0
-	Required bool
 	Internal bootstrapConfig.MessageBusInfo
 	External bootstrapConfig.ExternalMQTTInfo
 }

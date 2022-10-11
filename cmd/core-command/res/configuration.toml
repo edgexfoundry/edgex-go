@@ -1,3 +1,8 @@
+# This is required for backwards compatibility so new version of sevice using older 2.x configuration will not fail bootstrapping
+# This will default to false if not provided in old config. Messagebus is now needed by North-South Messaging
+# TODO: Remove this setting EdgeX 3.0
+RequireMessageBus = true
+
 [Writable]
 LogLevel = "INFO"
   [Writable.InsecureSecrets]
@@ -45,7 +50,6 @@ Type = "consul"
   Port = 59881
 
 [MessageQueue]
-  Required = false
   [MessageQueue.Internal]
   Type = "redis"
   Protocol = "redis"
@@ -54,12 +58,12 @@ Type = "consul"
   AuthMode = "usernamepassword"                   # required for redis messagebus (secure or insecure).
   SecretName = "redisdb"
     [MessageQueue.Internal.Topics]
-    DeviceRequestTopicPrefix = "edgex/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
-    DeviceResponseTopic = "edgex/command/response/#"      # for subscribing to device service responses
-    CommandRequestTopic = "/command/request/#"     # for subscribing to internal command requests
-    CommandResponseTopicPrefix = "/command/response"     # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
-    QueryRequestTopic = "/commandquery/request/#"   # for subscribing to internal command query requests
-    QueryResponseTopic = "/commandquery/response"   # for publishing reponsses back to internal service
+    DeviceRequestTopicPrefix = "edgex/device/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    DeviceResponseTopic = "edgex/device/command/response/#"      # for subscribing to device service responses
+    CommandRequestTopic = "edgex/core/command/request/#"         # for subscribing to internal command requests
+    CommandResponseTopicPrefix = "edgex/core/command/response"   # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    QueryRequestTopic = "edgex/core/commandquery/request/#"      # for subscribing to internal command query requests
+    QueryResponseTopic = "edgex/core/commandquery/response"      # for publishing reponsses back to internal service
     [MessageQueue.Internal.Optional]
     # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
     ClientId ="core-command"
@@ -79,6 +83,7 @@ Type = "consul"
     DefaultPubRetryAttempts = "2"
     Subject = "edgex/#" # Required for NATS Jetstram only for stream autoprovsioning
   [MessageQueue.External]
+  Enabled = false
   Url = "tcp://localhost:1883"
   ClientId = "core-command"
   ConnectTimeout = "5s"

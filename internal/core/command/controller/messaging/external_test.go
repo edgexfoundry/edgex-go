@@ -64,7 +64,6 @@ func TestOnConnectHandler(t *testing.T) {
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				MessageQueue: config.MessageQueue{
-					Required: false,
 					External: bootstrapConfig.ExternalMQTTInfo{
 						Topics: map[string]string{
 							QueryRequestTopic:          testQueryRequestTopic,
@@ -288,7 +287,6 @@ func Test_commandRequestHandler(t *testing.T) {
 					MaxResultCount: 20,
 				},
 				MessageQueue: config.MessageQueue{
-					Required: true,
 					Internal: bootstrapConfig.MessageBusInfo{
 						Topics: map[string]string{
 							DeviceRequestTopicPrefix: testInternalCommandRequestTopicPrefix,
