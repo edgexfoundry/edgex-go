@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
@@ -55,6 +56,7 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+		lc.Debugf("Received command query request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
 
 		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
 		if err != nil {
@@ -83,6 +85,8 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+		lc.Debugf("Received command request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
+
 		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
 		qos := messageBusInfo.External.QoS
 		retain := messageBusInfo.External.Retain

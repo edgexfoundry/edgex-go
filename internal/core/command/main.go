@@ -94,6 +94,11 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 	router := messaging.NewMessagingRouter()
 
 	if configuration.RequireMessageBus {
+		if configuration.MessageQueue.External.Enabled {
+			if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
+				return false
+			}
+		}
 		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
@@ -108,11 +113,6 @@ func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startup
 		if err := messaging.SubscribeCommandQueryRequests(ctx, dic); err != nil {
 			lc.Errorf("Failed to subscribe command query request from internal message bus, %v", err)
 			return false
-		}
-		if configuration.MessageQueue.External.Enabled {
-			if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
-				return false
-			}
 		}
 	}
 

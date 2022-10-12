@@ -13,6 +13,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
@@ -59,11 +60,13 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 					continue
 				}
 
+				// original request is from external MQTT
 				if external {
 					publishMessage(externalMQTT, responseTopic, qos, retain, msgEnvelope, lc)
 					continue
 				}
 
+				// original request is from internal MessageBus
 				err = messageBus.Publish(msgEnvelope, responseTopic)
 				if err != nil {
 					lc.Errorf("Could not publish to internal MessageBus topic '%s': %s", responseTopic, err.Error())
