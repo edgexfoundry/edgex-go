@@ -45,7 +45,14 @@ func sendAddIntervalActionCmd(conn redis.Conn, storedKey string, action models.I
 
 // addIntervalAction adds a new intervalAction into DB
 func addIntervalAction(conn redis.Conn, action models.IntervalAction) (models.IntervalAction, errors.EdgeX) {
-	exists, edgeXerr := objectIdExists(conn, intervalActionStoredKey(action.Id))
+	exists, edgeXerr := intervalNameExists(conn, action.IntervalName)
+	if edgeXerr != nil {
+		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
+	} else if !exists {
+		return action, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("interval '%s' does not exists", action.IntervalName), nil)
+	}
+
+	exists, edgeXerr = objectIdExists(conn, intervalActionStoredKey(action.Id))
 	if edgeXerr != nil {
 		return action, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -142,6 +149,12 @@ func intervalActionById(conn redis.Conn, id string) (action models.IntervalActio
 
 // updateIntervalAction updates an intervalAction
 func updateIntervalAction(conn redis.Conn, action models.IntervalAction) errors.EdgeX {
+	exists, edgeXerr := intervalNameExists(conn, action.IntervalName)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	} else if !exists {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("interval '%s' does not exists", action.IntervalName), nil)
+	}
 	oldAction, edgeXerr := intervalActionByName(conn, action.Name)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)

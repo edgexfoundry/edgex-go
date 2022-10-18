@@ -49,7 +49,7 @@ func addInterval(conn redis.Conn, interval models.Interval) (models.Interval, er
 		return interval, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("interval id %s already exists", interval.Id), edgeXerr)
 	}
 
-	exists, edgeXerr = objectNameExists(conn, IntervalCollectionName, interval.Name)
+	exists, edgeXerr = intervalNameExists(conn, interval.Name)
 	if edgeXerr != nil {
 		return interval, errors.NewCommonEdgeXWrapper(edgeXerr)
 	} else if exists {
@@ -171,4 +171,13 @@ func updateInterval(conn redis.Conn, interval models.Interval) errors.EdgeX {
 	}
 
 	return nil
+}
+
+// intervalNameExists whether the interval exists by name
+func intervalNameExists(conn redis.Conn, name string) (bool, errors.EdgeX) {
+	exists, err := objectNameExists(conn, IntervalCollectionName, name)
+	if err != nil {
+		return false, errors.NewCommonEdgeXWrapper(err)
+	}
+	return exists, nil
 }
