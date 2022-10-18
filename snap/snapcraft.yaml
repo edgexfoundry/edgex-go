@@ -344,6 +344,8 @@ apps:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
+  # Deprecated
+  # Use standalone edgex-app-service-configurable snap
   app-service-configurable:
     adapter: full
     after:
@@ -442,6 +444,8 @@ apps:
       # who is initially created as a role with postgres
       - bin/drop-snap-daemon.sh
     plugs: [home, removable-media, network]
+  # Deprecated
+  # Use standalone edgex-ekuiper snap
   kuiper:
     adapter: full
     after:
@@ -458,6 +462,8 @@ apps:
       SOURCE_FILE: $SNAP_DATA/kuiper/etc/sources/edgex.yaml 
       CONNECTION_FILE: $SNAP_DATA/kuiper/etc/connections/connection.yaml
     plugs: [network, network-bind]
+  # Deprecated
+  # Use standalone edgex-ekuiper snap
   kuiper-cli:
     adapter: full
     command: bin/kuiper
@@ -768,8 +774,7 @@ parts:
     organize:
       vault: bin/vault
 
-  # DEVICE SERVICES parts
-  # TODO: vet all the correct files are available...
+  # Deprecated
   app-service-configurable:
     plugin: nil
     stage-snaps:
@@ -788,7 +793,7 @@ parts:
       - -usr/share/doc/libpgm-5.2-0/*
       - -usr/share/doc/libsodium23/*
       - -usr/share/doc/libzmq5/*
-
+  # Deprecated
   kuiper:
     plugin: nil
     stage-snaps:
@@ -805,6 +810,15 @@ parts:
       - -usr/lib/*/libpgm*
       - -usr/lib/*/libsodium*
       - -usr/lib/*/libzmq*
+      - -usr/lib/*/libasn1*
+      - -usr/lib/*/libgssapi*
+      - -usr/lib/*/libhcrypto*
+      - -usr/lib/*/libheimbase*
+      - -usr/lib/*/libheimntlm*
+      - -usr/lib/*/libhx509*
+      - -usr/lib/*/libkrb5*
+      - -usr/lib/*/libroken*
+      - -usr/lib/*/libwind*
       - -usr/share/doc/libcurl*
       - -usr/share/doc/curl
       - -usr/share/doc/libldap*
@@ -812,6 +826,8 @@ parts:
       - -usr/share/doc/libpgm*
       - -usr/share/doc/libsodium*
       - -usr/share/doc/libzmq*
+      - -usr/share/doc/libheimbase1-heimdal
+      - -usr/share/doc/libroken18-heimdal
 
   metadata:
     plugin: nil
