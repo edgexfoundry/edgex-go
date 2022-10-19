@@ -78,6 +78,12 @@ func TestAddIntervalAction(t *testing.T) {
 	model = dtos.ToIntervalActionModel(duplicatedName.Action)
 	dbClientMock.On("AddIntervalAction", model).Return(model, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("intervalAction name %s already exists", model.Name), nil))
 
+	invalidIntervalNotFound := valid
+	intervalNotFoundName := "intervalNotFoundName"
+	invalidIntervalNotFound.Action.IntervalName = intervalNotFoundName
+	model = dtos.ToIntervalActionModel(invalidIntervalNotFound.Action)
+	dbClientMock.On("AddIntervalAction", model).Return(model, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("interval '%s' does not exists", model.IntervalName), nil))
+
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -97,6 +103,7 @@ func TestAddIntervalAction(t *testing.T) {
 		{"Valid - no request Id", []requests.AddIntervalActionRequest{noRequestId}, http.StatusCreated},
 		{"Invalid - no name", []requests.AddIntervalActionRequest{noName}, http.StatusBadRequest},
 		{"Invalid - duplicated name", []requests.AddIntervalActionRequest{duplicatedName}, http.StatusConflict},
+		{"Invalid - interval not found", []requests.AddIntervalActionRequest{invalidIntervalNotFound}, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
