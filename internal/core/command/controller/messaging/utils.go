@@ -18,8 +18,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
-	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/application"
@@ -54,7 +52,7 @@ func validateRequestTopic(prefix string, deviceName string, commandName string, 
 }
 
 // getCommandQueryResponseEnvelope returns the MessageEnvelope containing the DeviceCoreCommand payload bytes
-func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, deviceName string, dic *di.Container) (types.MessageEnvelope, edgexErr.EdgeX) {
+func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, deviceName string, dic *di.Container) (types.MessageEnvelope, error) {
 	var commandsResponse any
 	var err error
 
@@ -65,27 +63,27 @@ func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, devi
 			if offsetRaw, ok := requestEnvelope.QueryParams[common.Offset]; ok {
 				offset, err = strconv.Atoi(offsetRaw)
 				if err != nil {
-					return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindContractInvalid, fmt.Sprintf("Failed to convert 'offset' query parameter to intger: %s", err.Error()), err)
+					return types.MessageEnvelope{}, fmt.Errorf("failed to convert 'offset' query parameter to intger: %s", err.Error())
 				}
 			}
 			if limitRaw, ok := requestEnvelope.QueryParams[common.Limit]; ok {
 				limit, err = strconv.Atoi(limitRaw)
 				if err != nil {
-					return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindContractInvalid, fmt.Sprintf("Failed to convert 'limit' query parameter to integer: %s", err.Error()), err)
+					return types.MessageEnvelope{}, fmt.Errorf("failed to convert 'limit' query parameter to integer: %s", err.Error())
 				}
 			}
 		}
 
 		commands, totalCounts, edgexError := application.AllCommands(offset, limit, dic)
 		if edgexError != nil {
-			return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindServerError, fmt.Sprintf("Failed to get all commands: %s", edgexError.Error()), edgexError)
+			return types.MessageEnvelope{}, fmt.Errorf("failed to get all commands: %s", edgexError.Error())
 		}
 
 		commandsResponse = responses.NewMultiDeviceCoreCommandsResponse(requestEnvelope.RequestID, "", http.StatusOK, totalCounts, commands)
 	default:
 		commands, edgexError := application.CommandsByDeviceName(deviceName, dic)
 		if edgexError != nil {
-			return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindServerError, fmt.Sprintf("Failed to get commands by device name '%s': %s", deviceName, edgexError.Error()), edgexError)
+			return types.MessageEnvelope{}, fmt.Errorf("failed to get commands by device name '%s': %s", deviceName, edgexError.Error())
 		}
 
 		commandsResponse = responses.NewDeviceCoreCommandResponse(requestEnvelope.RequestID, "", http.StatusOK, commands)
@@ -93,12 +91,12 @@ func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, devi
 
 	responseBytes, err := json.Marshal(commandsResponse)
 	if err != nil {
-		return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindServerError, fmt.Sprintf("Failed to json encoding device commands payload: %s", err.Error()), err)
+		return types.MessageEnvelope{}, fmt.Errorf("failed to json encoding device commands payload: %s", err.Error())
 	}
 
 	responseEnvelope, err := types.NewMessageEnvelopeForResponse(responseBytes, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
 	if err != nil {
-		return types.MessageEnvelope{}, edgexErr.NewCommonEdgeX(edgexErr.KindServerError, fmt.Sprintf("Failed to create response MessageEnvelope: %s", err.Error()), err)
+		return types.MessageEnvelope{}, fmt.Errorf("failed to create response MessageEnvelope: %s", err.Error())
 	}
 
 	return responseEnvelope, nil
