@@ -25,6 +25,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl/share"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 const (
@@ -113,7 +114,7 @@ type PolicyListResponse []struct {
 // getOrCreateRegistryPolicy retrieves or creates a new policy
 // it inserts a new policy if the policy name does not exist and returns a policy
 // it returns the same policy if the policy name already exists
-func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string) (*Policy, error) {
+func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string) (*types.Policy, error) {
 	// try to get the policy to see if it exists or not
 	policy, err := c.getPolicyByName(tokenID, policyName)
 	if err != nil {
@@ -170,7 +171,7 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 		return nil, fmt.Errorf("Failed to read create a new policy response body: %w", err)
 	}
 
-	var created Policy
+	var created types.Policy
 
 	switch resp.StatusCode {
 	case http.StatusOK:
@@ -188,7 +189,7 @@ func (c *cmd) getOrCreateRegistryPolicy(tokenID, policyName, policyRules string)
 }
 
 // getPolicyByName gets policy by policy name, returns nil if not found
-func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
+func (c *cmd) getPolicyByName(tokenID, policyName string) (*types.Policy, error) {
 	policyExists, err := c.checkPolicyExists(tokenID, policyName)
 	if err != nil {
 		return nil, err
@@ -225,7 +226,7 @@ func (c *cmd) getPolicyByName(tokenID, policyName string) (*Policy, error) {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		var existing Policy
+		var existing types.Policy
 		if err := json.NewDecoder(bytes.NewReader(readPolicyResp)).Decode(&existing); err != nil {
 			return nil, fmt.Errorf("failed to decode Policy json data: %v", err)
 		}

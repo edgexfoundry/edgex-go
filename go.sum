@@ -42,8 +42,8 @@ github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.23 h1:ye4sot/XmdsOzAtv6NH
 github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.23/go.mod h1:S78Q/vqwRiu11oJFqB3NoyV1kQ7pGfuzVb41FDWjNsA=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0 h1:dk9ul1t7INAiyZXeu/GrpinFE3qOekdy8uZOqEGgIiE=
 github.com/edgexfoundry/go-mod-registry/v2 v2.2.0/go.mod h1:DUQRnAd5fVzoROc5SI+PTFUD/vCNeZmZHBMrLElbmwI=
-github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.8 h1:1YqPIpkMGPrpUDecpOEJeqtY7pBZe7EFvVhplZ2PIQA=
-github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.8/go.mod h1:h/FohFNY8xHalioLg1bhjAuEj0z+danSDtixirvaXmQ=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.9 h1:K6wGLHXASBcCEJrIec4vvTNkuooduOS+9TtjhrBm3Jc=
+github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.9/go.mod h1:h/FohFNY8xHalioLg1bhjAuEj0z+danSDtixirvaXmQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=

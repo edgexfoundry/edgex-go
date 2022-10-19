@@ -24,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/types"
 )
 
 func TestIsACLTokenPersistent(t *testing.T) {
@@ -81,9 +82,9 @@ func TestCreateAgentToken(t *testing.T) {
 	ctx := context.Background()
 	wg := &sync.WaitGroup{}
 	lc := logger.MockLogger{}
-	testBootstrapToken := BootStrapACLTokenInfo{
+	testBootstrapToken := types.BootStrapACLTokenInfo{
 		SecretID: "test-bootstrap-token",
-		Policies: []Policy{
+		Policies: []types.Policy{
 			{
 				ID:   "00000000-0000-0000-0000-000000000001",
 				Name: "global-management",
@@ -93,7 +94,7 @@ func TestCreateAgentToken(t *testing.T) {
 
 	tests := []struct {
 		name                        string
-		bootstrapToken              BootStrapACLTokenInfo
+		bootstrapToken              types.BootStrapACLTokenInfo
 		listTokensOkResponse        bool
 		listTokensRetriesOkResponse bool
 		createTokenOkResponse       bool
@@ -104,7 +105,7 @@ func TestCreateAgentToken(t *testing.T) {
 		{"Good:agent token ok response 2nd time or later", testBootstrapToken, true, true, true, true, false},
 		{"Bad:list tokens bad response", testBootstrapToken, false, false, true, false, true},
 		{"Bad:create token bad response", testBootstrapToken, true, true, false, false, true},
-		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, false, false, false, false, true},
+		{"Bad:empty bootstrap token", types.BootStrapACLTokenInfo{}, false, false, false, false, true},
 	}
 
 	for _, tt := range tests {
@@ -157,9 +158,9 @@ func TestSetAgentTokenToAgent(t *testing.T) {
 	ctx := context.Background()
 	wg := &sync.WaitGroup{}
 	lc := logger.MockLogger{}
-	testBootstrapToken := BootStrapACLTokenInfo{
+	testBootstrapToken := types.BootStrapACLTokenInfo{
 		SecretID: "test-bootstrap-token",
-		Policies: []Policy{
+		Policies: []types.Policy{
 			{
 				ID:   "00000000-0000-0000-0000-000000000001",
 				Name: "global-management",
@@ -170,14 +171,14 @@ func TestSetAgentTokenToAgent(t *testing.T) {
 
 	tests := []struct {
 		name                    string
-		bootstrapToken          BootStrapACLTokenInfo
+		bootstrapToken          types.BootStrapACLTokenInfo
 		agentToken              string
 		setAgentTokenOkResponse bool
 		expectedErr             bool
 	}{
 		{"Good:set agent token ok response", testBootstrapToken, testAgentToken, true, false},
 		{"Bad:set agent token bad response", testBootstrapToken, testAgentToken, false, true},
-		{"Bad:empty bootstrap token", BootStrapACLTokenInfo{}, testAgentToken, false, true},
+		{"Bad:empty bootstrap token", types.BootStrapACLTokenInfo{}, testAgentToken, false, true},
 		{"Bad:empty agent token", testBootstrapToken, "", false, true},
 	}
 
