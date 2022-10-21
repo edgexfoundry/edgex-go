@@ -9,10 +9,11 @@ import (
 	"context"
 	"strings"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -72,7 +73,7 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 					lc.Errorf("Could not publish to internal MessageBus topic '%s': %s", responseTopic, err.Error())
 					continue
 				}
-				lc.Debugf("Published response message to internal MessageBus on topic '%s'", responseTopic)
+				lc.Debugf("Command response sent to internal MessageBus. Topic: %s, Correlation-id: %s", responseTopic, msgEnvelope.CorrelationID)
 			}
 		}
 	}()
