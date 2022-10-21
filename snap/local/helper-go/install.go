@@ -87,23 +87,6 @@ var secretStoreKnownSecrets = []string{
 	"redisdb[edgex-ekuiper]",
 }
 
-// services w/configuration that needs to be copied
-// to $SNAP_DATA
-var servicesWithConfig = []string{
-	"security-bootstrapper",
-	"security-bootstrap-redis",
-	"security-file-token-provider",
-	"security-proxy-setup",
-	"security-secretstore-setup",
-	"core-command",
-	"core-data",
-	"core-metadata",
-	"support-notifications",
-	"support-scheduler",
-	"sys-mgmt-agent",
-	"app-service-configurable",
-}
-
 var (
 	snapConf     = env.Snap + "/config"
 	snapDataConf = env.SnapData + "/config"
@@ -113,15 +96,32 @@ var (
 func installConfFiles() error {
 	var err error
 
+	// services w/configuration that needs to be copied
+	// to $SNAP_DATA
+	var servicesWithConfig = []string{
+		securityBootstrapper,
+		securityBootstrapperRedis,
+		securityFileTokenProvider,
+		securityProxySetup,
+		securitySecretStoreSetup,
+		coreCommand,
+		coreData,
+		coreMetadata,
+		supportNotifications,
+		supportScheduler,
+		systemManagementAgent,
+		appServiceConfigurable,
+	}
+
 	for _, v := range servicesWithConfig {
 		destDir := snapDataConf + "/"
 		srcDir := snapConf + "/"
 
 		// handle exceptions (i.e. config in non-std dirs)
-		if v == "security-bootstrap-redis" {
+		if v == securityBootstrapperRedis {
 			destDir = destDir + "security-bootstrapper/res-bootstrap-redis"
 			srcDir = srcDir + "security-bootstrapper/res-bootstrap-redis"
-		} else if v == "app-service-configurable" {
+		} else if v == appServiceConfigurable {
 			destDir = destDir + v + "/res/rules-engine"
 			srcDir = srcDir + "/res/rules-engine"
 		} else {
@@ -133,21 +133,21 @@ func installConfFiles() error {
 			return err
 		}
 
-		if v == "core-metadata" {
+		srcPath := srcDir + "/configuration.toml"
+		destPath := destDir + "/configuration.toml"
+		err = hooks.CopyFile(srcPath, destPath)
+		if err != nil {
+			return err
+		}
+
+		// copy additional files
+		if v == coreMetadata {
 			uomSrcPath := srcDir + "/uom.toml"
 			uomDestPath := destDir + "/uom.toml"
 			err = hooks.CopyFile(uomSrcPath, uomDestPath)
 			if err != nil {
 				return err
 			}
-		}
-
-		srcPath := srcDir + "/configuration.toml"
-		destPath := destDir + "/configuration.toml"
-
-		err = hooks.CopyFile(srcPath, destPath)
-		if err != nil {
-			return err
 		}
 	}
 

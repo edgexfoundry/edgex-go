@@ -84,7 +84,7 @@ func snapService(app string) string {
 }
 
 func isDisableAllowed(s string) error {
-	for _, v := range referenceServices {
+	for _, v := range requiredServices {
 		if s == v {
 			return fmt.Errorf("can't disable required service: %s", s)
 		}

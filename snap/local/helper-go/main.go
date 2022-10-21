@@ -18,13 +18,11 @@ package main
 
 import (
 	"os"
-
-	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
 
 func main() {
 	// uncomment to enable snap debugging during development
-	snapctl.Set("debug", "true").Run()
+	// snapctl.Set("debug", "true").Run()
 
 	subCommand := os.Args[1]
 	switch subCommand {
