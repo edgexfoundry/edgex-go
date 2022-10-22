@@ -13,9 +13,6 @@ import (
 	"strings"
 	"testing"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	clientMocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/interfaces/mocks"
 	lcMocks "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
@@ -23,10 +20,14 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/responses"
 	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	internalMessagingMocks "github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
-	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	internalMessagingMocks "github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
+	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
@@ -60,6 +61,7 @@ func TestOnConnectHandler(t *testing.T) {
 	mockRouter := &mocks.MessagingRouter{}
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Errorf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Debugf", mock.Anything, mock.Anything).Return(nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
@@ -169,6 +171,16 @@ func Test_commandQueryHandler(t *testing.T) {
 					Port:           mockPort,
 					MaxResultCount: 20,
 				},
+				MessageQueue: config.MessageQueue{
+					Internal: bootstrapConfig.MessageBusInfo{},
+					External: bootstrapConfig.ExternalMQTTInfo{
+						QoS:    0,
+						Retain: true,
+						Topics: map[string]string{
+							QueryResponseTopic: testQueryResponseTopic,
+						},
+					},
+				},
 			}
 		},
 		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
@@ -216,7 +228,7 @@ func Test_commandQueryHandler(t *testing.T) {
 			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", testQueryResponseTopic, byte(0), true, mock.Anything).Return(token)
 
-			fn := commandQueryHandler(testQueryResponseTopic, 0, true, dic)
+			fn := commandQueryHandler(dic)
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {

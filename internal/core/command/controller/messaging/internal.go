@@ -9,10 +9,11 @@ import (
 	"context"
 	"strings"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
@@ -52,7 +53,7 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case msgEnvelope := <-messages:
-				lc.Debugf("Command response received on internal MessageBus. Topic: %s, Correlation-id: %s ", msgEnvelope.ReceivedTopic, msgEnvelope.CorrelationID)
+				lc.Debugf("Command response received on internal MessageBus. Topic: %s, Correlation-id: %s", msgEnvelope.ReceivedTopic, msgEnvelope.CorrelationID)
 
 				responseTopic, external, err := router.ResponseTopic(msgEnvelope.RequestID)
 				if err != nil {
@@ -72,7 +73,7 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 					lc.Errorf("Could not publish to internal MessageBus topic '%s': %s", responseTopic, err.Error())
 					continue
 				}
-				lc.Debugf("Published response message to internal MessageBus on topic '%s'", responseTopic)
+				lc.Debugf("Command response sent to internal MessageBus. Topic: %s, Correlation-id: %s", responseTopic, msgEnvelope.CorrelationID)
 			}
 		}
 	}()
@@ -111,7 +112,7 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				lc.Debugf("Command request received on internal MessageBus. Topic: %s, Correlation-id: %s ", requestEnvelope.ReceivedTopic, requestEnvelope.CorrelationID)
+				lc.Debugf("Command request received on internal MessageBus. Topic: %s, Correlation-id: %s", requestEnvelope.ReceivedTopic, requestEnvelope.CorrelationID)
 
 				topicLevels := strings.Split(requestEnvelope.ReceivedTopic, "/")
 				length := len(topicLevels)
@@ -192,7 +193,7 @@ func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) error
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				lc.Debugf("Command query request received on internal MessageBus. Topic: %s, Correlation-id: %s ", requestEnvelope.ReceivedTopic, requestEnvelope.CorrelationID)
+				lc.Debugf("Command query request received on internal MessageBus. Topic: %s, Correlation-id: %s", requestEnvelope.ReceivedTopic, requestEnvelope.CorrelationID)
 
 				// example topic scheme: /commandquery/request/<device>
 				// deviceName is expected to be at last topic level.
@@ -202,10 +203,10 @@ func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) error
 					deviceName = common.All
 				}
 
-				responseEnvelope, edgexErr := getCommandQueryResponseEnvelope(requestEnvelope, deviceName, dic)
-				if edgexErr != nil {
-					lc.Error(edgexErr.Error())
-					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, edgexErr.Error())
+				responseEnvelope, err := getCommandQueryResponseEnvelope(requestEnvelope, deviceName, dic)
+				if err != nil {
+					lc.Error(err.Error())
+					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 				}
 
 				err = messageBus.Publish(responseEnvelope, internalQueryResponseTopic)

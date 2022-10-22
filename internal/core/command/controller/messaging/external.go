@@ -15,7 +15,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-
 	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
@@ -36,24 +35,24 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 		config := container.ConfigurationFrom(dic.Get)
 		externalTopics := config.MessageQueue.External.Topics
 		qos := config.MessageQueue.External.QoS
-		retain := config.MessageQueue.External.Retain
 
 		requestQueryTopic := externalTopics[QueryRequestTopic]
-		responseQueryTopic := externalTopics[QueryResponseTopic]
-		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(responseQueryTopic, qos, retain, dic)); token.Wait() && token.Error() != nil {
-			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
-			return
+		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(dic)); token.Wait() && token.Error() != nil {
+			lc.Errorf("could not subscribe to topic '%s': %s", requestQueryTopic, token.Error().Error())
+		} else {
+			lc.Debugf("Subscribed to topic '%s' on external MQTT broker", requestQueryTopic)
 		}
 
 		requestCommandTopic := externalTopics[CommandRequestTopic]
 		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(router, dic)); token.Wait() && token.Error() != nil {
-			lc.Errorf("could not subscribe to topic '%s': %s", responseQueryTopic, token.Error().Error())
-			return
+			lc.Errorf("could not subscribe to topic '%s': %s", requestCommandTopic, token.Error().Error())
+		} else {
+			lc.Debugf("Subscribed to topic '%s' on external MQTT broker", requestCommandTopic)
 		}
 	}
 }
 
-func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Container) mqtt.MessageHandler {
+func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		lc.Debugf("Received command query request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
@@ -65,7 +64,15 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 			return
 		}
 
-		// example topic scheme: edgex/commandquery/request/<device>
+		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+		responseTopic := messageBusInfo.External.Topics[QueryResponseTopic]
+		if responseTopic == "" {
+			lc.Error("QueryResponseTopic not provided in External.Topics")
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
+
+		// example topic scheme: edgex/commandquery/request/<device-name>
 		// deviceName is expected to be at last topic level.
 		topicLevels := strings.Split(message.Topic(), "/")
 		deviceName := topicLevels[len(topicLevels)-1]
@@ -73,11 +80,13 @@ func commandQueryHandler(responseTopic string, qos byte, retain bool, dic *di.Co
 			deviceName = common.All
 		}
 
-		responseEnvelope, edgexErr := getCommandQueryResponseEnvelope(requestEnvelope, deviceName, dic)
-		if edgexErr != nil {
-			responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, edgexErr.Error())
+		responseEnvelope, err := getCommandQueryResponseEnvelope(requestEnvelope, deviceName, dic)
+		if err != nil {
+			responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 		}
 
+		qos := messageBusInfo.External.QoS
+		retain := messageBusInfo.External.Retain
 		publishMessage(client, responseTopic, qos, retain, responseEnvelope, lc)
 	}
 }
@@ -120,7 +129,7 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 		if err != nil {
 			lc.Errorf("invalid request topic: %s", err.Error())
-			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "nil Device Client")
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
 			return
 		}
