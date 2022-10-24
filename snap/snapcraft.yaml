@@ -603,7 +603,7 @@ parts:
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "7.0.5"
+    source-tag: "7.0.0"
     source-depth: 1
     plugin: make
     make-parameters:
