@@ -51,6 +51,22 @@ func validateRequestTopic(prefix string, deviceName string, commandName string, 
 
 }
 
+// validateGetCommandQueryParameters validates the value is valid for device service's reserved query parameters
+func validateGetCommandQueryParameters(queryParams map[string]string) error {
+	if dsReturnEvent, ok := queryParams[common.ReturnEvent]; ok {
+		if dsReturnEvent != common.ValueYes && dsReturnEvent != common.ValueNo {
+			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.ReturnEvent, common.ValueYes, common.ValueNo)
+		}
+	}
+	if dsPushEvent, ok := queryParams[common.PushEvent]; ok {
+		if dsPushEvent != common.ValueYes && dsPushEvent != common.ValueNo {
+			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.PushEvent, common.ValueYes, common.ValueNo)
+		}
+	}
+
+	return nil
+}
+
 // getCommandQueryResponseEnvelope returns the MessageEnvelope containing the DeviceCoreCommand payload bytes
 func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, deviceName string, dic *di.Container) (types.MessageEnvelope, error) {
 	var commandsResponse any
