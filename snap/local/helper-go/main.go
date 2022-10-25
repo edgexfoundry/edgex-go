@@ -21,6 +21,9 @@ import (
 )
 
 func main() {
+	// uncomment to enable snap debugging during development
+	// snapctl.Set("debug", "true").Run()
+
 	subCommand := os.Args[1]
 	switch subCommand {
 	case "install": // snap install hook
