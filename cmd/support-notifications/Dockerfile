@@ -22,9 +22,6 @@ ARG ADD_BUILD_TAGS=""
 
 WORKDIR /edgex-go
 
-# The main mirrors are giving us timeout issues on builds periodically.
-# So we can try these.
-
 RUN apk add --update --no-cache make bash git ca-certificates
 
 COPY go.mod vendor* ./
