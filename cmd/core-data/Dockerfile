@@ -27,8 +27,6 @@ WORKDIR /edgex-go
 # The main mirrors are giving us timeout issues on builds periodically.
 # So we can try these.
 
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
-
 RUN apk add --update --no-cache zeromq-dev libsodium-dev pkgconfig build-base git
 
 COPY go.mod vendor* ./
@@ -46,10 +44,6 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 ENV APP_PORT=59880
 #expose core data port
 EXPOSE $APP_PORT
-
-# The main mirrors are giving us timeout issues on builds periodically.
-# So we can try these.
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
 
 RUN apk add --update --no-cache zeromq dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /

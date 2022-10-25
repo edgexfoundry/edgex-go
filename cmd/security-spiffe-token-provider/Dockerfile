@@ -35,7 +35,6 @@ FROM alpine:3.15
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
 RUN apk update && apk --no-cache --update add dumb-init curl gcompat
 
 COPY --from=builder /edgex-go/Attribution.txt /
