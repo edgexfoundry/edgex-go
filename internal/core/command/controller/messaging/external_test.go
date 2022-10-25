@@ -331,6 +331,9 @@ func Test_commandRequestHandler(t *testing.T) {
 	validPayload := testCommandRequestPayload()
 	invalidRequestPayload := testCommandRequestPayload()
 	invalidRequestPayload.ApiVersion = "v1"
+	invalidQueryParamsPayload := testCommandQueryPayload()
+	invalidQueryParamsPayload.QueryParams[common.PushEvent] = "invalid"
+	invalidQueryParamsPayload.QueryParams[common.ReturnEvent] = "invalid"
 
 	tests := []struct {
 		name                 string
@@ -345,6 +348,7 @@ func Test_commandRequestHandler(t *testing.T) {
 		{"invalid - unrecognized command method", "unittest/request/testDevice/testCommand/invalid", validPayload, true, false},
 		{"invalid - device not found", "unittest/request/unknown-device/testCommand/get", validPayload, true, true},
 		{"invalid - device service not found", "unittest/request/unknownService-device/testCommand/get", validPayload, true, true},
+		{"invalid - invalid device service reserved query parameters", testExternalCommandRequestTopicExample, invalidQueryParamsPayload, true, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

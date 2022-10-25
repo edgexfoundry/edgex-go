@@ -128,7 +128,13 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 
 		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 		if err != nil {
-			lc.Errorf("invalid request topic: %s", err.Error())
+			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
+			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
+			return
+		}
+
+		err = validateGetCommandQueryParameters(requestEnvelope.QueryParams)
+		if err != nil {
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
 			return

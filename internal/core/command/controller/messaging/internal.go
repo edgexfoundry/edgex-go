@@ -145,6 +145,18 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 					continue
 				}
 
+				err = validateGetCommandQueryParameters(requestEnvelope.QueryParams)
+				if err != nil {
+					lc.Errorf(err.Error())
+					responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
+					err = messageBus.Publish(responseEnvelope, internalResponseTopic)
+					if err != nil {
+						lc.Errorf("Could not publish to topic '%s': %s", internalResponseTopic, err.Error())
+					}
+
+					continue
+				}
+
 				// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
 				err = messageBus.Publish(requestEnvelope, deviceRequestTopic)
 				if err != nil {
