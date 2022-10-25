@@ -10,10 +10,6 @@ FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
 
-# The main mirrors are giving us timeout issues on builds periodically.
-# So we can try these.
-RUN sed -e 's/dl-cdn[.]alpinelinux.org/dl-4.alpinelinux.org/g' -i~ /etc/apk/repositories
-
 RUN apk add --update --no-cache make bash git
 
 COPY go.mod vendor* ./
