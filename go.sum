@@ -51,8 +51,8 @@ github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.18 h1:Smkhoqq9+XsMcs
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0-dev.18/go.mod h1:4/e61acxVkhQWCTjQ4XcHVJDnrMDloFsZZB1B6STCRw=
 github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.24 h1:h2hsipXIC72xySkgS/uwq3HOyFQ3iiJCRgXGodeXTUU=
 github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0-dev.24/go.mod h1:S78Q/vqwRiu11oJFqB3NoyV1kQ7pGfuzVb41FDWjNsA=
-github.com/edgexfoundry/go-mod-registry/v2 v2.3.0-dev.10 h1:qKwzfX2Eb2spjzc35omFl+Bx+KIwu4KNFq5D4c2V/iU=
-github.com/edgexfoundry/go-mod-registry/v2 v2.3.0-dev.10/go.mod h1:bpDKvtS7gpvqK2v5D1CKxaolZHFQi4mCXscsPLXdKgo=
+github.com/edgexfoundry/go-mod-registry/v2 v2.3.0-dev.11 h1:OWBQB6AGt7S32afhMS/0FA3NDoaInQQ6EPhrO9dPHF8=
+github.com/edgexfoundry/go-mod-registry/v2 v2.3.0-dev.11/go.mod h1:Gyx8a+7jfzy53ljq9kgiz553xhgYYKNNWhnaTn76i+g=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.9 h1:K6wGLHXASBcCEJrIec4vvTNkuooduOS+9TtjhrBm3Jc=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0-dev.9/go.mod h1:h/FohFNY8xHalioLg1bhjAuEj0z+danSDtixirvaXmQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
@@ -131,8 +131,8 @@ github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB7
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
-github.com/hashicorp/consul/api v1.15.2 h1:3Q/pDqvJ7udgt/60QOOW/p/PeKioQN+ncYzzCdN2av0=
-github.com/hashicorp/consul/api v1.15.2/go.mod h1:v6nvB10borjOuIwNRZYPZiHKrTM/AyrGtd0WVVodKM8=
+github.com/hashicorp/consul/api v1.15.3 h1:WYONYL2rxTXtlekAqblR2SCdJsizMDIj/uXb5wNy9zU=
+github.com/hashicorp/consul/api v1.15.3/go.mod h1:/g/qgcoBcEXALCNZgRRisyTW0nY86++L0KbeAMXYCeY=
 github.com/hashicorp/consul/sdk v0.11.0 h1:HRzj8YSCln2yGgCumN5CL8lYlD3gBurnervJRJAZyC4=
 github.com/hashicorp/consul/sdk v0.11.0/go.mod h1:yPkX5Q6CsxTFMjQQDJwzeNmUUF5NUGGbrDsv9wTb8cw=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
