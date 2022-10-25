@@ -496,11 +496,11 @@ func configure() {
 	log.SetComponentName("configure")
 	log.Debug("Start")
 
-	installMode, err := snapctl.Get(installModeOption).Run()
+	installMode, err := snapctl.Get("install-mode").Run()
 	if err != nil {
 		log.Fatalf("error reading 'install-mode': %v", err)
 	}
-	deferStartup := (installMode == installModeDeferStartup)
+	deferStartup := (installMode == "defer-startup")
 	log.Infof("Defer startup: %t", deferStartup)
 
 	// process the EdgeX >=2.2 app options

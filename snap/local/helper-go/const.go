@@ -33,8 +33,3 @@ const (
 	// management services
 	systemManagementAgent = "sys-mgmt-agent"
 )
-
-const (
-	installModeOption       = "install-mode"
-	installModeDeferStartup = "defer-startup"
-)
