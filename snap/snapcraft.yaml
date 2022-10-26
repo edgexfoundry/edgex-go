@@ -696,23 +696,23 @@ parts:
       - perl
       - zlib1g-dev
     override-build: |
-      VERSION=2.8.0
+      VERSION=2.8.2
 
       # use dpkg architecture to figure out our target arch
       case "$(dpkg --print-architecture)" in
         amd64)
           FILE_NAME=kong_${VERSION}_amd64.deb
-          FILE_HASH=5715ec10547a2de9e7534d0af402fc8dbdad7145d4b43bbccc7bb960152b0314
+          FILE_HASH=d600227d07cb862b2dd2de3925eca5841b2292ef838af21ddf5f412c9ab0f3ee
           ;;
         arm64)
           FILE_NAME=kong_${VERSION}_arm64.deb
-          FILE_HASH=d980f5c106a36142dd86c04bee4adc0deec3470970f8b0f6d3024c17e13d83d6
+          FILE_HASH=c23b22bf34df1f3a8428c998875e868025557d5f9599fd9bed10b12c9fb8ed57
           ;;
       esac
 
       # download the archive and verify the checksum
       curl --silent --show-error --location --output $FILE_NAME \
-        https://download.konghq.com/gateway-2.x-ubuntu-xenial/pool/all/k/kong/$FILE_NAME
+        https://download.konghq.com/gateway-2.x-ubuntu-focal/pool/all/k/kong/$FILE_NAME
       echo "$FILE_HASH $FILE_NAME" > sha256
       sha256sum -c sha256 | grep OK
       
