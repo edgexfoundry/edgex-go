@@ -37,17 +37,6 @@ vault_ready()
 
 # env settings are populated from env files of docker-compose
 
-echo "Script for waiting security bootstrapping on Consul"
-
-echo "$(date) Consul waits on Vault to be initialized"
-# check the http status code from Vault using SECRETSTORE_HOST and SECRETSTORE_PORT as input to the function call
-vault_inited=$(vault_ready "${SECRETSTORE_HOST}" "${SECRETSTORE_PORT}")
-until [ "$vault_inited" -eq 1 ]; do
-    echo "$(date) waiting for Vault ${SECRETSTORE_HOST}:${SECRETSTORE_PORT} to be initialized";
-    sleep 1;
-    vault_inited=$(vault_ready "${SECRETSTORE_HOST}" "${SECRETSTORE_PORT}")
-done
-
 # only in json format according to Consul's documentation
 DEFAULT_CONSUL_LOCAL_CONFIG='
 {
