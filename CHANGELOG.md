@@ -53,8 +53,6 @@
 - **data:** Fix deleting numerous events HTTP request timeout by goroutines ([#4063](https://github.com/edgexfoundry/edgex-go/issues/4063)) ([#e2bcede5](https://github.com/edgexfoundry/edgex-go/commits/e2bcede5))
 - **scheduler:** Check interval when adding intervalAction ([#895df5c4](https://github.com/edgexfoundry/edgex-go/commits/895df5c4))
 - **scheduler:** Remove unused field in scheduler config ([#81b3411d](https://github.com/edgexfoundry/edgex-go/commits/81b3411d))
-- **snap:** Copy UoM file if not exist during upgrade ([#4168](https://github.com/edgexfoundry/edgex-go/issues/4168)) ([#ca92d9d5](https://github.com/edgexfoundry/edgex-go/commits/ca92d9d5))
-- **snap:** Install Unit of Measure config file on upgrade ([#4125](https://github.com/edgexfoundry/edgex-go/issues/4125)) ([#0b67b211](https://github.com/edgexfoundry/edgex-go/commits/0b67b211))
 - **snap:** Bind redis server to loopback interface ([#4154](https://github.com/edgexfoundry/edgex-go/issues/4154)) ([#0ef95e30](https://github.com/edgexfoundry/edgex-go/commits/0ef95e30))
 
 ### Code Refactoring ♻
