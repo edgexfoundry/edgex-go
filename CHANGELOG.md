@@ -38,12 +38,9 @@
 - **snap:** Remove device-virtual ([#4041](https://github.com/edgexfoundry/edgex-go/issues/4041)) ([#fed831e0](https://github.com/edgexfoundry/edgex-go/commits/fed831e0))
 - **snap:** Add secretstore token for device camera services ([#4034](https://github.com/edgexfoundry/edgex-go/issues/4034)) ([#6f84e707](https://github.com/edgexfoundry/edgex-go/commits/6f84e707))
 
-### Fix
-
-- Delayed start services for support- services fail ([#4159](https://github.com/edgexfoundry/edgex-go/issues/4159)) ([#726ff502](https://github.com/edgexfoundry/edgex-go/commits/726ff502))
-
 ### Bug Fixes 🐛
 
+- Delayed start services for support- services fail ([#4159](https://github.com/edgexfoundry/edgex-go/issues/4159)) ([#726ff502](https://github.com/edgexfoundry/edgex-go/commits/726ff502))
 - Fixed security-bootstrapper Docker volume init semantics ([#4085](https://github.com/edgexfoundry/edgex-go/issues/4085)) ([#ad21f989](https://github.com/edgexfoundry/edgex-go/commits/ad21f989))
 - Fix security-secretstore-setup volume init semantics ([#4092](https://github.com/edgexfoundry/edgex-go/issues/4092)) ([#66f7195a](https://github.com/edgexfoundry/edgex-go/commits/66f7195a))
 - Fixed Missing error check ([#4100](https://github.com/edgexfoundry/edgex-go/issues/4100)) ([#062af8d3](https://github.com/edgexfoundry/edgex-go/commits/062af8d3))
