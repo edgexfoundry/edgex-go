@@ -681,11 +681,8 @@ parts:
         "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
     build-packages:
-      - libzmq3-dev
       - zip
       - pkg-config
-    stage-packages:
-      - libzmq5
 
   kong:
     plugin: nil
@@ -791,8 +788,6 @@ parts:
       - -usr/lib/*
       - -usr/share/doc/libnorm1/*
       - -usr/share/doc/libpgm-5.2-0/*
-      - -usr/share/doc/libsodium23/*
-      - -usr/share/doc/libzmq5/*
       # Exclude snap extras
       - -bin/helper-go
       - -bin/source-env-file.sh
@@ -813,8 +808,6 @@ parts:
       - -usr/lib/*/libldap*
       - -usr/lib/*/libnorm*
       - -usr/lib/*/libpgm*
-      - -usr/lib/*/libsodium*
-      - -usr/lib/*/libzmq*
       - -usr/lib/*/libasn1*
       - -usr/lib/*/libgssapi*
       - -usr/lib/*/libhcrypto*
@@ -829,8 +822,6 @@ parts:
       - -usr/share/doc/libldap*
       - -usr/share/doc/libnorm*
       - -usr/share/doc/libpgm*
-      - -usr/share/doc/libsodium*
-      - -usr/share/doc/libzmq*
       - -usr/share/doc/libheimbase1-heimdal
       - -usr/share/doc/libroken18-heimdal
 

@@ -1,5 +1,7 @@
 module github.com/edgexfoundry/edgex-go
 
+replace github.com/edgexfoundry/go-mod-messaging/v2 => github.com/lenny-intel/go-mod-messaging/v2 v2.0.0-dev.4.0.20221114170711-1801bc4576b4
+
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/eclipse/paho.mqtt.golang v1.4.1
@@ -58,7 +60,6 @@ require (
 	github.com/nats-io/nats.go v1.18.0 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/pebbe/zmq4 v1.2.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect

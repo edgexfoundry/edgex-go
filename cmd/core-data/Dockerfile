@@ -24,7 +24,7 @@ ARG ADD_BUILD_TAGS=""
 
 WORKDIR /edgex-go
 
-RUN apk add --update --no-cache zeromq-dev libsodium-dev pkgconfig build-base git
+RUN apk add --update --no-cache make git
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -42,7 +42,7 @@ ENV APP_PORT=59880
 #expose core data port
 EXPOSE $APP_PORT
 
-RUN apk add --update --no-cache zeromq dumb-init
+RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-data/core-data /
 COPY --from=builder /edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml

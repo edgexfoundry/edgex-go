@@ -49,8 +49,6 @@ github.com/edgexfoundry/go-mod-configuration/v2 v2.3.0 h1:VeK7VBiNc/RIR7HXC0ya3f
 github.com/edgexfoundry/go-mod-configuration/v2 v2.3.0/go.mod h1:1tKJhcPEWftFy+I4n7+sNIBOo7H5ys/QaPvyXl0tMtc=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0 h1:8Svk1HTehXEgwxgyA4muVhSkP3D9n1q+oSHI3B1Ac90=
 github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0/go.mod h1:4/e61acxVkhQWCTjQ4XcHVJDnrMDloFsZZB1B6STCRw=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0 h1:aZfDYjj6n2Lo1P1t6NKuShhHjzFk9/mQV9nuJS3ioZ4=
-github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0/go.mod h1:5pFRG0iJ64ulFdvwYMbnyD94ciS+Va4h3bpK2P4CBk0=
 github.com/edgexfoundry/go-mod-registry/v2 v2.3.0 h1:QEZvYSDkQKAo6WVFrjBkQjjfpbn045Lsv4gNdgATgeM=
 github.com/edgexfoundry/go-mod-registry/v2 v2.3.0/go.mod h1:Gyx8a+7jfzy53ljq9kgiz553xhgYYKNNWhnaTn76i+g=
 github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0 h1:MRehbe0ZdIP2jx3Nv18LktENlWdXSmw0E6x6VKvFOfo=
@@ -191,6 +189,8 @@ github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/lenny-intel/go-mod-messaging/v2 v2.0.0-dev.4.0.20221114170711-1801bc4576b4 h1:xxqZu9IKeRAu+osaV7yQwu3FY3q6SPeGEVsGoJx4dZA=
+github.com/lenny-intel/go-mod-messaging/v2 v2.0.0-dev.4.0.20221114170711-1801bc4576b4/go.mod h1:nDjncg1n9kGivIsSr32/vCQh4fqGxn5BF7GUG2tuuwo=
 github.com/leodido/go-urn v1.2.1 h1:BqpAaACuzVSgi/VLzGZIobT2z4v53pjosyNd9Yv6n/w=
 github.com/leodido/go-urn v1.2.1/go.mod h1:zt4jvISO2HfUBqxjfIshjdMTYS56ZS/qv49ictyFfxY=
 github.com/lib/pq v1.10.7 h1:p7ZhMD+KsSRozJr34udlUrhboJwWAgCg34+/ZZNvZZw=
@@ -248,8 +248,6 @@ github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
-github.com/pebbe/zmq4 v1.2.7 h1:6EaX83hdFSRUEhgzSW1E/SPoTS3JeYZgYkBvwdcrA9A=
-github.com/pebbe/zmq4 v1.2.7/go.mod h1:nqnPueOapVhE2wItZ0uOErngczsJdLOGkebMxaO8r48=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
 github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
