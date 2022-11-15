@@ -683,7 +683,6 @@ parts:
     build-packages:
       - zip
       - pkg-config
-    stage-packages:
 
   kong:
     plugin: nil
