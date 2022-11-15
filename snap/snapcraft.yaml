@@ -833,9 +833,6 @@ parts:
       - -usr/share/doc/libzmq*
       - -usr/share/doc/libheimbase1-heimdal
       - -usr/share/doc/libroken18-heimdal
-      # Exclude snap extras
-      - -bin/helper-go
-      - -bin/source-env-file.sh
 
   metadata:
     plugin: nil
