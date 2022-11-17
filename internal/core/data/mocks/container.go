@@ -8,9 +8,8 @@ package mocks
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-
-	"github.com/edgexfoundry/go-mod-messaging/v2/messaging"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
@@ -20,14 +19,8 @@ import (
 
 // NewMockDIC function returns a mock bootstrap di Container
 func NewMockDIC() *di.Container {
-	msgClient, _ := messaging.NewMessageClient(msgTypes.MessageBusConfig{
-		PublishHost: msgTypes.HostInfo{
-			Host:     "*",
-			Protocol: "tcp",
-			Port:     5563,
-		},
-		Type: "zero",
-	})
+	msgClient := &mocks.MessageClient{}
+	msgClient.On("Publish", mock.Anything, mock.Anything).Return(nil)
 
 	return di.NewContainer(di.ServiceConstructorMap{
 		dataContainer.ConfigurationName: func(get di.Get) interface{} {

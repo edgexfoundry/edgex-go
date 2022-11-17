@@ -5,7 +5,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-
 .PHONY: build clean unittest hadolint lint test docker run
 
 # change the following boolean flag to include or exclude the delayed start libs for builds for most of core services except support services
@@ -13,14 +12,7 @@ INCLUDE_DELAYED_START_BUILD_CORE:="false"
 # change the following boolean flag to include or exclude the delayed start libs for builds for support services exculsively
 INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"
 
-GO=CGO_ENABLED=0 GO111MODULE=on go
-
-# see https://shibumi.dev/posts/hardening-executables
-CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2"
-CGO_CFLAGS="-O2 -pipe -fno-plt"
-CGO_CXXFLAGS="-O2 -pipe -fno-plt"
-CGO_LDFLAGS="-Wl,-O1,–sort-common,–as-needed,-z,relro,-z,now"
-GOCGO=CGO_ENABLED=1 GO111MODULE=on go
+GO=go
 
 DOCKERS= \
 	docker_core_data \
@@ -60,7 +52,6 @@ VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
-CGOFLAGS=-ldflags "-linkmode=external -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly -buildmode=pie
 GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
@@ -80,7 +71,6 @@ ifeq ($(INCLUDE_DELAYED_START_BUILD_SUPPORT),"false")
 endif
 
 NO_MESSAGEBUS_GO_BUILD_TAG:=no_messagebus
-NO_ZMQ_GO_BUILD_TAG:=no_zmq
 
 # Base docker image to speed up local builds
 BASE_DOCKERFILE=https://raw.githubusercontent.com/edgexfoundry/ci-build-images/golang-${GO_VERSION}/Dockerfile
@@ -93,31 +83,31 @@ build-nats:
 	make -e ADD_BUILD_TAGS=include_nats_messaging build
 
 tidy:
-	go mod tidy
+	$(GO) mod tidy
 
 core: metadata data command
 
 metadata: cmd/core-metadata/core-metadata
 cmd/core-metadata/core-metadata:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-metadata
 
 data: cmd/core-data/core-data
 cmd/core-data/core-data:
-	$(GOCGO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(CGOFLAGS) -o $@ ./cmd/core-data
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-data
 
 command: cmd/core-command/core-command
 cmd/core-command/core-command:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
 support: notifications scheduler
 
 notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
 
 scheduler: cmd/support-scheduler/support-scheduler
 cmd/support-scheduler/support-scheduler:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NO_ZMQ_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cmd/sys-mgmt-executor/sys-mgmt-executor:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
@@ -153,7 +143,7 @@ clean:
 	rm -f $(MICROSERVICES)
 
 unittest:
-	GO111MODULE=on go test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
+	$(GO) test $(GOTESTFLAGS) -coverprofile=coverage.out ./...
 
 hadolint:
 	if which hadolint > /dev/null ; then hadolint --config .hadolint.yml `find * -type f -name 'Dockerfile*' -print` ; elif test "${ARCH}" = "x86_64" && which docker > /dev/null ; then docker run --rm -v `pwd`:/host:ro,z --entrypoint /bin/hadolint hadolint/hadolint:latest --config /host/.hadolint.yml `find * -type f -name 'Dockerfile*' | xargs -i echo '/host/{}'` ; fi
@@ -164,7 +154,7 @@ lint:
 
 
 test: unittest hadolint lint
-	GO111MODULE=on go vet ./...
+	$(GO) vet ./...
 	gofmt -l $$(find . -type f -name '*.go'| grep -v "/vendor/")
 	[ "`gofmt -l $$(find . -type f -name '*.go'| grep -v "/vendor/")`" = "" ]
 	./bin/test-attribution-txt.sh

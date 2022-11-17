@@ -67,20 +67,6 @@ For more details on the snap, including how to build and install it, please refe
 - The current targeted version of the Go language runtime for release artifacts is v1.18.x
 - The minimum supported version of the Go language runtime is v1.18.x
 
-##### ZeroMQ
-
-Several EdgeX Foundry services depend on ZeroMQ for communications by default.
-
-The easiest way to get and install ZeroMQ on Linux is to use this [setup script](https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00).
-
-For macOS, use brew:
-
-```sh
-brew install zeromq
-```
-
-For directions installing ZeroMQ on Windows, please see [the Windows documentation.](ZMQWindows.md)
-
 #### Installation and Execution
 
 EdgeX is organized as Go Modules; there is no requirement to set the GOPATH or
