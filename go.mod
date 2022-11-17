@@ -1,13 +1,11 @@
 module github.com/edgexfoundry/edgex-go
 
-replace github.com/edgexfoundry/go-mod-messaging/v2 => github.com/lenny-intel/go-mod-messaging/v2 v2.0.0-dev.4.0.20221114170711-1801bc4576b4
-
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0
-	github.com/edgexfoundry/go-mod-messaging/v2 v2.3.0
+	github.com/edgexfoundry/go-mod-messaging/v2 v2.3.1-dev.1
 	github.com/edgexfoundry/go-mod-registry/v2 v2.3.0
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0
 	github.com/fxamacker/cbor/v2 v2.4.0
