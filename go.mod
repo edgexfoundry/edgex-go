@@ -2,10 +2,10 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
-	github.com/eclipse/paho.mqtt.golang v1.4.1
+	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/edgexfoundry/go-mod-bootstrap/v2 v2.3.0
 	github.com/edgexfoundry/go-mod-core-contracts/v2 v2.3.0
-	github.com/edgexfoundry/go-mod-messaging/v2 v2.3.1-dev.1
+	github.com/edgexfoundry/go-mod-messaging/v2 v2.3.1-dev.5
 	github.com/edgexfoundry/go-mod-registry/v2 v2.3.0
 	github.com/edgexfoundry/go-mod-secrets/v2 v2.3.0
 	github.com/fxamacker/cbor/v2 v2.4.0
@@ -55,7 +55,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
-	github.com/nats-io/nats.go v1.18.0 // indirect
+	github.com/nats-io/nats.go v1.20.0 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
