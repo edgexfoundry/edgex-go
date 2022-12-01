@@ -24,7 +24,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
@@ -71,7 +70,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		cancel,
 		f,
 		common.SecuritySecretStoreSetupServiceKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		nil,
 		startupTimer,

@@ -21,7 +21,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/container"
 	redisHandlers "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis/handlers"
@@ -57,7 +56,7 @@ func Configure(ctx context.Context,
 		cancel,
 		flags,
 		common.SecurityBootstrapperRedisKey,
-		internal.ConfigStemCore,
+		common.ConfigStemCore,
 		configuration,
 		nil,
 		startupTimer,

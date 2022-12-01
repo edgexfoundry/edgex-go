@@ -20,7 +20,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
 
@@ -67,7 +66,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		cancel,
 		f,
 		common.SecurityProxySetupServiceKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		nil,
 		startupTimer,

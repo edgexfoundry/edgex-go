@@ -18,12 +18,7 @@ const (
 	BootTimeoutSecondsDefault = 30
 	BootRetrySecondsDefault   = 1
 	ConfigFileName            = "configuration.toml"
-	// TODO: move the config stem constants in go-mod-contracts
-	ConfigStemApp      = "edgex/appservices/"
-	ConfigStemCore     = "edgex/core/"
-	ConfigStemDevice   = "edgex/devices/"
-	ConfigStemSecurity = "edgex/security/"
-	LogDurationKey     = "duration"
+	LogDurationKey            = "duration"
 )
 
 const (
