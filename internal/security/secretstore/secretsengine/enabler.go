@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2021 Intel Corporation
+* Copyright 2021-2023 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 * in compliance with the License. You may obtain a copy of the License at
@@ -78,14 +78,14 @@ func (eng SecretsEngine) Enable(rootToken *string,
 		case KeyValue:
 			// Enable KV storage version 1 at /v1/{eng.path} path (/v1 prefix supplied by Vault)
 			if err := client.EnableKVSecretEngine(*rootToken, eng.mountPoint, kvVersion); err != nil {
-				return fmt.Errorf("failed to enable KV version %s secrets engine: %s", kvVersion, err.Error())
+				return fmt.Errorf("failed to enable KV version %s secrets engine: %w", kvVersion, err)
 			}
 			lc.Infof("KeyValue secrets engine with version %s enabled", kvVersion)
 		case Consul:
 			// Enable Consul secrets storage at /consul path
 			if err := client.EnableConsulSecretEngine(*rootToken,
 				eng.mountPoint, defaultConsulTokenLeaseTtl); err != nil {
-				return fmt.Errorf("failed to enable Consul secrets engine: %s", err.Error())
+				return fmt.Errorf("failed to enable Consul secrets engine: %w", err)
 			}
 			lc.Infof("Consul secrets engine with config default_ttl = %s enabled", defaultConsulTokenLeaseTtl)
 		default:

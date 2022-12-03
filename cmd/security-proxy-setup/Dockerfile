@@ -1,6 +1,6 @@
 #  ----------------------------------------------------------------------------------
 #  Copyright 2019 Dell Technologies, Inc.
-#  Copyright 2020 Intel Corp.
+#  Copyright 2020-2023 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -27,21 +27,20 @@ COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-RUN make cmd/security-proxy-setup/security-proxy-setup cmd/secrets-config/secrets-config
+RUN make cmd/secrets-config/secrets-config
 
 FROM alpine:3.16
 
-RUN apk add --update --no-cache curl dumb-init
+RUN apk add --update --no-cache dumb-init openssl
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.'
 
 WORKDIR /edgex
 
-COPY --from=builder /edgex-go/cmd/security-proxy-setup/res/configuration.toml res/configuration.toml
-COPY --from=builder /edgex-go/cmd/security-proxy-setup/security-proxy-setup .
 # Note that secrets-config shares the same configuration file as security-proxy-setup
 # as we are splitting security-proxy-setup into two different utilities for ease-of-use.
+COPY --from=builder /edgex-go/cmd/secrets-config/res/configuration.toml res/configuration.toml
 COPY --from=builder /edgex-go/cmd/secrets-config/secrets-config .
 
 # Setup the entry point script and assign perms

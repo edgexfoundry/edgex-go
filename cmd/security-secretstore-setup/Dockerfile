@@ -1,6 +1,6 @@
 #  ----------------------------------------------------------------------------------
 #  Copyright 2019 Dell Technologies, Inc.
-#  Copyright 2022 Intel Corp.
+#  Copyright 2022-2023 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -42,7 +42,6 @@ WORKDIR /
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.json /res-file-token-provider/token-config.json
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/configuration.toml  /res-file-token-provider/configuration.toml
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.toml /res/configuration.toml
-COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/kong-admin-config.template.yml /res/kong-admin-config.template.yml
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .

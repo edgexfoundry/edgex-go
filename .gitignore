@@ -17,6 +17,7 @@ cmd/core-command/core-command
 cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 cmd/core-data/core-data
 cmd/core-metadata/core-metadata
+cmd/security-proxy-auth/security-proxy-auth
 cmd/security-proxy-setup/security-proxy-setup
 cmd/security-file-token-provider/security-file-token-provider
 cmd/security-secretstore-setup/security-secretstore-setup

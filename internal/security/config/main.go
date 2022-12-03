@@ -22,8 +22,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 

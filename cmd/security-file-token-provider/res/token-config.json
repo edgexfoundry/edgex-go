@@ -72,7 +72,8 @@
         "auth/userpass/users/*": {
           "capabilities": [
             "create",
-            "update"
+            "update",
+            "delete"
           ]
         },
         "sys/auth": {
@@ -152,11 +153,6 @@
             "read",
             "update",
             "delete"
-          ]
-        },
-        "sys/policies/acl": {
-          "capabilities": [
-            "list"
           ]
         },
         "secret/edgex/security-bootstrapper-redis/redisdb": {
