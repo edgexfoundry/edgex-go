@@ -344,25 +344,6 @@ apps:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
     daemon: simple
     plugs: [network, network-bind]
-  # Deprecated
-  # Use standalone edgex-app-service-configurable snap
-  app-service-configurable:
-    adapter: full
-    after:
-      # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
-    command: >-
-      bin/app-service-configurable -cp -r -s
-      -confdir $SNAP_DATA/config/app-service-configurable/res
-      -profile rules-engine
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-      - bin/service-config-overrides.sh
-    daemon: simple
-    environment:
-      BINDING_PUBLISHTOPIC: events
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/app-rules-engine/secrets-token.json
-    plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
     adapter: none
@@ -444,32 +425,6 @@ apps:
       # who is initially created as a role with postgres
       - bin/drop-snap-daemon.sh
     plugs: [home, removable-media, network]
-  # Deprecated
-  # Use standalone edgex-ekuiper snap
-  kuiper:
-    adapter: full
-    after:
-      - security-bootstrapper-redis
-    command: bin/kuiperd
-    command-chain:
-    # this script is original staged from edgex-ekuiper stage-snap, 
-    # and has been renamed 
-      - bin/kuiper-setup-redis-credentials.sh
-    daemon: simple
-    environment:
-      KuiperBaseKey: $SNAP_DATA/kuiper
-      VAULT_TOKEN_FILE: $SNAP_DATA/secrets/edgex-ekuiper/secrets-token.json
-      SOURCE_FILE: $SNAP_DATA/kuiper/etc/sources/edgex.yaml 
-      CONNECTION_FILE: $SNAP_DATA/kuiper/etc/connections/connection.yaml
-    plugs: [network, network-bind]
-  # Deprecated
-  # Use standalone edgex-ekuiper snap
-  kuiper-cli:
-    adapter: full
-    command: bin/kuiper
-    environment:
-      KuiperBaseKey: $SNAP_DATA/kuiper
-    plugs: [home, network, network-bind]
 
 parts:
   static-packages:
@@ -770,60 +725,6 @@ parts:
       unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       vault: bin/vault
-
-  # Deprecated
-  app-service-configurable:
-    plugin: nil
-    stage-snaps:
-      - edgex-app-service-configurable/latest/stable
-    stage:
-      # Exclude every profile other than the "rules-engine":
-      - -res/external-mqtt-trigger/configuration.toml
-      - -res/functional-tests/configuration.toml
-      - -res/http-export/configuration.toml
-      - -res/mqtt-export/configuration.toml
-      - -res/push-to-core/configuration.toml
-      - -res/sample/configuration.toml
-      # Exclude files in usr folder other than the "Attribution.txt" and "LICENSE":
-      - -usr/lib/*
-      - -usr/share/doc/libnorm1/*
-      - -usr/share/doc/libpgm-5.2-0/*
-      # Exclude snap extras
-      - -bin/helper-go
-      - -bin/source-env-file.sh
-      - -bin/service-wrapper.sh
-
-  # Deprecated
-  kuiper:
-    plugin: nil
-    stage-snaps:
-      - edgex-ekuiper/1/stable
-    organize: 
-      bin/setup-redis-credentials.sh: bin/kuiper-setup-redis-credentials.sh
-    stage:
-      # Exclude redundant dependencies
-      - -usr/bin/curl
-      - -usr/lib/*/libcurl*
-      - -usr/lib/*/liblber*
-      - -usr/lib/*/libldap*
-      - -usr/lib/*/libnorm*
-      - -usr/lib/*/libpgm*
-      - -usr/lib/*/libasn1*
-      - -usr/lib/*/libgssapi*
-      - -usr/lib/*/libhcrypto*
-      - -usr/lib/*/libheimbase*
-      - -usr/lib/*/libheimntlm*
-      - -usr/lib/*/libhx509*
-      - -usr/lib/*/libkrb5*
-      - -usr/lib/*/libroken*
-      - -usr/lib/*/libwind*
-      - -usr/share/doc/libcurl*
-      - -usr/share/doc/curl
-      - -usr/share/doc/libldap*
-      - -usr/share/doc/libnorm*
-      - -usr/share/doc/libpgm*
-      - -usr/share/doc/libheimbase1-heimdal
-      - -usr/share/doc/libroken18-heimdal
 
   metadata:
     plugin: nil

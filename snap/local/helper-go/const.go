@@ -13,8 +13,6 @@ const (
 	// support services
 	supportNotifications = "support-notifications"
 	supportScheduler     = "support-scheduler"
-	eKuiper              = "kuiper"
-	rulesEngine          = eKuiper
 	// security services
 	securitySecretStore        = "security-secret-store"
 	securitySecretStoreSetup   = "security-secretstore-setup"
@@ -28,8 +26,6 @@ const (
 	kong                       = "kong-daemon"
 	postgres                   = "postgres"
 	vault                      = "vault"
-	// app services
-	appServiceConfigurable = "app-service-configurable"
 	// management services
 	systemManagementAgent = "sys-mgmt-agent"
 )
