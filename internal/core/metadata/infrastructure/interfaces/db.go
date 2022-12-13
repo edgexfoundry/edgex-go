@@ -6,8 +6,8 @@
 package interfaces
 
 import (
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
 type DBClient interface {

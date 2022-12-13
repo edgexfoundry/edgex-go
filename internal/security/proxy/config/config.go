@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"path"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/models"
 )

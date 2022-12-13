@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -12,7 +11,6 @@
 // the License.
 //
 // SPDX-License-Identifier: Apache-2.0'
-//
 package fileprovider
 
 import (
@@ -25,13 +23,13 @@ import (
 	"testing"
 
 	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	loaderMock "github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader/mocks"
-	fileMock "github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
-	"github.com/edgexfoundry/go-mod-secrets/v2/secrets/mocks"
+	loaderMock "github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/authtokenloader/mocks"
+	fileMock "github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v3/secrets/mocks"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

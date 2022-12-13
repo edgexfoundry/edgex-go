@@ -14,21 +14,21 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
-	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-messaging/v2/messaging/mocks"
-	"github.com/edgexfoundry/go-mod-messaging/v2/pkg/types"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
+	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-messaging/v3/messaging/mocks"
+	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
 func TestPublishDeviceSystemEvent(t *testing.T) {

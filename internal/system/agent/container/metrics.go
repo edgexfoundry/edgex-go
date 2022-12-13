@@ -6,7 +6,7 @@
 package container
 
 import (
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/interfaces"
 )

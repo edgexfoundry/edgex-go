@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-registry/v2/registry"
-	"github.com/edgexfoundry/go-mod-registry/v2/registry/mocks"
+	"github.com/edgexfoundry/go-mod-registry/v3/registry"
+	"github.com/edgexfoundry/go-mod-registry/v3/registry/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

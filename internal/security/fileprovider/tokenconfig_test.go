@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -12,7 +11,6 @@
 // the License.
 //
 // SPDX-License-Identifier: Apache-2.0'
-//
 package fileprovider
 
 import (
@@ -21,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
