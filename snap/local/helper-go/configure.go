@@ -37,10 +37,6 @@ const (
 )
 
 var (
-	rulesEngineServices = []string{
-		appServiceConfigurable,
-		eKuiper,
-	}
 	proxyServices = []string{
 		kong,
 		postgres,
@@ -72,8 +68,6 @@ var (
 	optionalServices = []string{
 		supportNotifications,
 		supportScheduler,
-		eKuiper,
-		appServiceConfigurable,
 		systemManagementAgent,
 	}
 )
@@ -193,15 +187,6 @@ func disableSecretStoreAndRestart() error {
 		}
 	}
 
-	// stop Kuiper-related services
-	// TODO - kuiper will be stopped, but not restarted because
-	// additional re-configuration may be needed.
-	for _, s := range rulesEngineServices {
-		if err := snapctl.Stop(snapService(s)).Run(); err != nil {
-			return err
-		}
-	}
-
 	// stop redis
 	if err := snapctl.Stop(snapService(redis)).Run(); err != nil {
 		return err
@@ -282,9 +267,6 @@ func handleAllServices(deferStartup bool) error {
 		// support services
 		supportNotifications,
 		supportScheduler,
-		eKuiper,
-		// app-services
-		appServiceConfigurable,
 		// security services
 		securitySecretStore,
 		securityProxy,
@@ -326,18 +308,6 @@ func handleAllServices(deferStartup bool) error {
 		// sType := serviceType(s)
 
 		switch s {
-		case eKuiper:
-			switch status {
-			case ON, OFF:
-				serviceList = rulesEngineServices
-			case UNSET:
-				// this is the default status of all services if no
-				// configuration has been specified; no-op
-				continue
-			default:
-				return fmt.Errorf("invalid value for kuiper: %s", status)
-			}
-
 		case securityProxy:
 			switch status {
 			case ON:
@@ -533,10 +503,6 @@ func configure() {
 		if err != nil {
 			log.Fatalf("security service config error: %v", err)
 		}
-
-		// TODO: don't support kuiper until it's possible to share
-		// kuiper & app-services-configurable (rules-engine) config
-		// via content interface
 
 		// check core services
 		startServices, err = checkCoreConfig(startServices)

@@ -25,15 +25,12 @@ SNAPCRAFT_YAML="$CURRDIR/snap/snapcraft.yaml"
 $CURRDIR/yq e -P -i 'del(.apps.consul,.apps.redis,.apps.postgres,.apps.kong-daemon,.apps.vault,.apps.vault-cli)' "$SNAPCRAFT_YAML"
 
 # remove second chunk of apps
-$CURRDIR/yq e -P -i 'del(.apps.app-service-configurable)' "$SNAPCRAFT_YAML"
-
-# remove third chunk of apps
 $CURRDIR/yq e -P -i 'del(.apps.redis-cli,.apps.consul-cli)' "$SNAPCRAFT_YAML"
 
-# remove fourth chunk of apps
-$CURRDIR/yq e -P -i 'del(.apps.kong,.apps.psql,.apps.psql-any,.apps.createdb,.apps.kuiper,.apps.kuiper-cli)' "$SNAPCRAFT_YAML"
+# remove third chunk of apps
+$CURRDIR/yq e -P -i 'del(.apps.kong,.apps.psql,.apps.psql-any,.apps.createdb)' "$SNAPCRAFT_YAML"
 
 # remove unwanted parts
-$CURRDIR/yq e -P -i 'del(.parts.snapcraft-preload,.parts.postgres,.parts.consul,.parts.redis,.parts.kong,.parts.vault,.parts.kuiper,.parts.app-service-config)' "$SNAPCRAFT_YAML"
+$CURRDIR/yq e -P -i 'del(.parts.snapcraft-preload,.parts.postgres,.parts.consul,.parts.redis,.parts.kong,.parts.vault)' "$SNAPCRAFT_YAML"
 
 

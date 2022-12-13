@@ -74,7 +74,6 @@ func processAppOptions(deferStartup bool) error {
 		coreCommand,
 		supportNotifications,
 		supportScheduler,
-		appServiceConfigurable,
 		securitySecretStoreSetup,
 		securityBootstrapper, // local executable
 		securityProxySetup,

@@ -110,7 +110,6 @@ func installConfFiles() error {
 		supportNotifications,
 		supportScheduler,
 		systemManagementAgent,
-		appServiceConfigurable,
 	}
 
 	for _, v := range servicesWithConfig {
@@ -121,9 +120,6 @@ func installConfFiles() error {
 		if v == securityBootstrapperRedis {
 			destDir = destDir + "security-bootstrapper/res-bootstrap-redis"
 			srcDir = srcDir + "security-bootstrapper/res-bootstrap-redis"
-		} else if v == appServiceConfigurable {
-			destDir = destDir + v + "/res/rules-engine"
-			srcDir = srcDir + "/res/rules-engine"
 		} else {
 			destDir = destDir + v + "/res"
 			srcDir = srcDir + v + "/res"
@@ -149,26 +145,6 @@ func installConfFiles() error {
 				return err
 			}
 		}
-	}
-
-	return nil
-}
-
-// installKuiper execs a shell script to install Kuiper's file into $SNAP_DATA
-func installKuiper() error {
-	// install files using edgex-ekuiper install hook
-	filePath := env.Snap + "/snap.edgex-ekuiper/hooks/install"
-
-	cmdSetupKuiper := exec.Cmd{
-		Path:   filePath,
-		Env:    append(os.Environ(), "KUIPER_BASE_KEY="+env.SnapData+"/kuiper"),
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	}
-
-	err := cmdSetupKuiper.Run()
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -331,10 +307,6 @@ func install() {
 
 	if err = installConfFiles(); err != nil {
 		log.Fatalf("Error installing config files: %v", err)
-	}
-
-	if err = installKuiper(); err != nil {
-		log.Fatalf("Error installing eKuiper: %v", err)
 	}
 
 	if err = installSecretStore(); err != nil {
