@@ -23,7 +23,6 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	bootstrapper "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/container"
@@ -92,7 +91,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		cancel,
 		f,
 		common.SecurityBootstrapperKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		startupTimer,
 		dic,

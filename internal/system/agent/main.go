@@ -19,7 +19,6 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
 	agentConfig "github.com/edgexfoundry/edgex-go/internal/system/agent/config"
 	"github.com/edgexfoundry/edgex-go/internal/system/agent/container"
 
@@ -62,7 +61,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		cancel,
 		f,
 		common.SystemManagementAgentServiceKey,
-		internal.ConfigStemCore,
+		common.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,

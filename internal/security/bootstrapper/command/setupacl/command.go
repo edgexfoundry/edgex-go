@@ -37,16 +37,14 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
 
-	baseBootStrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/authtokenloader"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/types"
 	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
 
 const (
@@ -356,19 +354,19 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 // if the input role name does not fall into the above types, then it is categorized into core type for the key prefix
 func (c *cmd) getKeyPrefix(roleName string) string {
 	if strings.HasPrefix(roleName, "app-") {
-		return internal.ConfigStemApp + baseBootStrapConfig.ConfigVersion + "/" + roleName
+		return common.ConfigStemApp + "/" + roleName
 	}
 
 	if strings.HasPrefix(roleName, "device-") {
-		return internal.ConfigStemDevice + baseBootStrapConfig.ConfigVersion + "/" + roleName
+		return common.ConfigStemDevice + "/" + roleName
 	}
 
 	if strings.HasPrefix(roleName, "security-") {
-		return internal.ConfigStemSecurity + baseBootStrapConfig.ConfigVersion + "/" + roleName
+		return common.ConfigStemSecurity + "/" + roleName
 	}
 
 	// anything else falls into the 3rd category: core bucket
-	return internal.ConfigStemCore + baseBootStrapConfig.ConfigVersion + "/" + roleName
+	return common.ConfigStemCore + "/" + roleName
 }
 
 func (c *cmd) getUniqueRoleNames() (map[string]struct{}, error) {

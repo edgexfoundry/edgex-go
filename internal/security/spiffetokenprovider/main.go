@@ -19,7 +19,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/spiffetokenprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/spiffetokenprovider/container"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
@@ -49,7 +48,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		cancel,
 		f,
 		common.SecuritySpiffeTokenProviderKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		nil,
 		startupTimer,

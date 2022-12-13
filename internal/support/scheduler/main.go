@@ -21,7 +21,6 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
@@ -64,7 +63,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		cancel,
 		f,
 		common.SupportSchedulerServiceKey,
-		internal.ConfigStemCore,
+		common.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,

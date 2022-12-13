@@ -19,7 +19,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
@@ -60,7 +59,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		cancel,
 		f,
 		common.SecurityFileTokenProviderServiceKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		nil,
 		startupTimer,

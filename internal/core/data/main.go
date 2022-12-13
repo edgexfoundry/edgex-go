@@ -31,7 +31,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
@@ -66,7 +65,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		cancel,
 		f,
 		common.CoreDataServiceKey,
-		internal.ConfigStemCore,
+		common.ConfigStemCore,
 		configuration,
 		startupTimer,
 		dic,

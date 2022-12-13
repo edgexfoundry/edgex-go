@@ -23,6 +23,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto/handlers"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
@@ -54,7 +55,7 @@ func Configure(ctx context.Context,
 		cancel,
 		flags,
 		internal.BootstrapMessageBusServiceKey,
-		internal.ConfigStemSecurity,
+		common.ConfigStemSecurity,
 		configuration,
 		nil,
 		startupTimer,
