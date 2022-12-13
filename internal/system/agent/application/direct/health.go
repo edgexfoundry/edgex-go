@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	"github.com/edgexfoundry/go-mod-registry/v2/registry"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-registry/v3/registry"
 )
 
 func GetHealth(services []string, rc registry.Client) ([]common.BaseWithServiceNameResponse, errors.EdgeX) {

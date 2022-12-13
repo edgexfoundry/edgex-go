@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	bootstrapper "github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command"
@@ -30,10 +30,10 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/redis"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
 const (

@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/mosquitto"
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/bootstrap/flags"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 )
 
 const (

@@ -19,7 +19,7 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v2/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
 // ConfigurationName contains the name of the config.ConfigurationStruct implementation in the DIC.

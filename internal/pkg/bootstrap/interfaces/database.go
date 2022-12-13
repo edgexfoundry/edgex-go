@@ -14,7 +14,7 @@
 
 package interfaces
 
-import "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+import "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 
 // Database interface provides an abstraction for obtaining the database configuration information.
 type Database interface {

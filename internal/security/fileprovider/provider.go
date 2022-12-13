@@ -24,12 +24,12 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	"github.com/edgexfoundry/go-mod-secrets/v2/secrets"
+	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/authtokenloader"
-	"github.com/edgexfoundry/go-mod-secrets/v2/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
 )
 
 // permissionable is the subset of the File API that allows setting file permissions

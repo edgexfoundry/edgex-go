@@ -8,9 +8,9 @@ package redis
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v2/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v2/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	redisClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/redis"
@@ -768,7 +768,7 @@ func (c *Client) ProvisionWatcherByName(name string) (provisionWatcher model.Pro
 	return
 }
 
-//ProvisionWatchersByServiceName query provision watchers by offset, limit and service name
+// ProvisionWatchersByServiceName query provision watchers by offset, limit and service name
 func (c *Client) ProvisionWatchersByServiceName(offset int, limit int, name string) (provisionWatchers []model.ProvisionWatcher, edgexErr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
@@ -782,7 +782,7 @@ func (c *Client) ProvisionWatchersByServiceName(offset int, limit int, name stri
 	return
 }
 
-//ProvisionWatchersByProfileName query provision watchers by offset, limit and profile name
+// ProvisionWatchersByProfileName query provision watchers by offset, limit and profile name
 func (c *Client) ProvisionWatchersByProfileName(offset int, limit int, name string) (provisionWatchers []model.ProvisionWatcher, edgexErr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()

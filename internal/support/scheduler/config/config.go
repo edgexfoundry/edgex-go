@@ -17,7 +17,7 @@ package config
 import (
 	"fmt"
 
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v2/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 )
 
 // Configuration V2 for the Support Scheduler Service
