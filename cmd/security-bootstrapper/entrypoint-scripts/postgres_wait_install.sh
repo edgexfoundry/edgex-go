@@ -29,7 +29,7 @@ echo "Script for waiting security bootstrapping on Postgres"
 # Postgres is waiting for BOOTSTRAP_PORT
 echo "$(date) Executing waitFor on Postgres with waiting on \
   tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_BOOTSTRAPPER_STARTPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -37,7 +37,7 @@ echo "$(date) Postgres waits on Vault to be initialized"
 
 vault_inited=0
 until [ $vault_inited -eq 1 ]; do
-  status=$(/edgex-init/security-bootstrapper --confdir=/edgex-init/res getHttpStatus \
+  status=$(/edgex-init/security-bootstrapper --configDir=/edgex-init/res getHttpStatus \
     --url=http://"${SECRETSTORE_HOST}":"${SECRETSTORE_PORT}"/v1/sys/health | tail -n 1)
   if [ ${#status} -gt 0 ] && [[ "${status}" != *ERROR* ]]; then
     echo "$(date) ${SECRETSTORE_HOST}:${SECRETSTORE_PORT} status code = ${status}"
@@ -60,7 +60,7 @@ if [ -n "${POSTGRES_PASSWORD_FILE}" ] && [ -f "${POSTGRES_PASSWORD_FILE}" ]; the
 else
   # create password file for postgres to be used in the compose file
   mkdir -p "$(dirname "${POSTGRES_PASSWORD_FILE}")"
-  out=$(/edgex-init/security-bootstrapper --confdir=/edgex-init/res genPassword | tail -n 1)
+  out=$(/edgex-init/security-bootstrapper --configDir=/edgex-init/res genPassword | tail -n 1)
   if [ ${#out} -gt 0 ] && [[ "${out}" != *ERROR* ]]; then
     echo "${out}" > "${POSTGRES_PASSWORD_FILE}"
   fi
@@ -76,7 +76,7 @@ exec /usr/local/bin/docker-entrypoint.sh postgres &
 passwd=$(cat "${POSTGRES_PASSWORD_FILE}")
 pg_inited=0
 until [ $pg_inited -eq 1 ]; do
-  status=$(/edgex-init/security-bootstrapper --confdir=/edgex-init/res pingPgDb \
+  status=$(/edgex-init/security-bootstrapper --configDir=/edgex-init/res pingPgDb \
     --username=kong --dbname=kong --password="${passwd}" | tail -n 1)
   if [ ${#status} -gt 0 ] && [[ "${status}" != *ERROR* ]]; then
     if [ "${status}" = "ready" ]; then
@@ -93,7 +93,7 @@ done
 echo "$(date) ${STAGEGATE_KONGDB_HOST} is initialized"
 
 # Signal that Postgres is ready for services blocked waiting on Postgres
-exec su-exec postgres /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec postgres /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_KONGDB_READYPORT}" --host="${STAGEGATE_KONGDB_HOST}"
 if [ $? -ne 0 ]; then
   echo "$(date) failed to gating the postgres ready port, exits"

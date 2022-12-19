@@ -50,4 +50,4 @@ COPY --from=builder /edgex-go/cmd/core-metadata/res/configuration.toml /res/conf
 COPY --from=builder /edgex-go/cmd/core-metadata/res/uom.toml /res/uom.toml
 
 ENTRYPOINT ["/core-metadata"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

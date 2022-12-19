@@ -47,4 +47,4 @@ COPY --from=builder /edgex-go/cmd/support-scheduler/support-scheduler /
 COPY --from=builder /edgex-go/cmd/support-scheduler/res/configuration.toml /res/configuration.toml
 
 ENTRYPOINT ["/support-scheduler"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

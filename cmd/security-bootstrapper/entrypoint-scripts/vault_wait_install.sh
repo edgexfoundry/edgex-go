@@ -48,7 +48,7 @@ echo "$(date) VAULT_LOCAL_CONFIG: ${VAULT_LOCAL_CONFIG}"
 if [ "$1" = 'server' ]; then
   echo "$(date) Executing waitFor on vault $* with \
     tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_BOOTSTRAPPER_STARTPORT}"
-  /edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+  /edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
     -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_BOOTSTRAPPER_STARTPORT}" \
     -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 

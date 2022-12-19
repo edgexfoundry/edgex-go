@@ -89,7 +89,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
 	err := flagSet.Parse(args)
 	if err != nil {

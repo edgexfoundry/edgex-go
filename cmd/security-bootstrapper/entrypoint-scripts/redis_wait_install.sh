@@ -29,7 +29,7 @@ echo "Script for waiting security bootstrapping on Redis"
 # gating on the TokensReadyPort
 echo "$(date) Executing waitFor on Redis with waiting on TokensReadyPort \
   tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -38,7 +38,7 @@ echo "$(date) Executing waitFor on Redis with waiting on TokensReadyPort \
 # The redis database server will start with the generated configuration file so that it is 
 # started securely.
 echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping redis..."
-/edgex-init/security-bootstrapper --confdir=/edgex-init/bootstrap-redis/res configureRedis
+/edgex-init/security-bootstrapper --configDir=/edgex-init/bootstrap-redis/res configureRedis
 
 redis_bootstrapping_status=$?
 if [ $redis_bootstrapping_status -ne 0 ]; then

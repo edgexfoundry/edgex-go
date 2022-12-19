@@ -66,7 +66,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	//flagSet.StringVar(&cmd.tokenType, "token-type", "", "Type of token to create: jwt or oauth2")  	// #3564: Deprecate for Ireland; might bring back in Jakarta
 	flagSet.StringVar(&cmd.tokenType, "token-type", "jwt", "Type of token to create: jwt")
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to add")

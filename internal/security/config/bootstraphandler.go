@@ -39,9 +39,9 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	var command interfaces.Command
 	var err error
 
-	var confdir string
+	var configDir string
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-	flagSet.StringVar(&confdir, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&configDir, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	err = flagSet.Parse(os.Args[1:])
 	if err != nil {
 		lc.Error(err.Error())

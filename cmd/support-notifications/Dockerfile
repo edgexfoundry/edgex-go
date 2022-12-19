@@ -46,4 +46,4 @@ COPY --from=builder /edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /edgex-go/cmd/support-notifications/res/configuration.toml /res/configuration.toml
 
 ENTRYPOINT ["/support-notifications"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

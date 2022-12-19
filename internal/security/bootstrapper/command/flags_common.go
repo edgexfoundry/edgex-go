@@ -38,7 +38,7 @@ func NewCommonFlags() flags.Common {
 
 // Parse parses the command-line arguments
 func (f *commonFlags) Parse(_ []string) {
-	flag.StringVar(&f.configDir, "confdir", "", "")
+	flag.StringVar(&f.configDir, "configDir", "", "")
 	flag.Usage = HelpCallback
 
 	flag.Parse()
@@ -94,7 +94,7 @@ func HelpCallback() {
 		"Usage: %s [options] <command> [arg...]\n"+
 			"Options:\n"+
 			"    -h, --help    Show this message\n"+
-			"    --confdir     Specify local configuration directory\n"+
+			"    --configDir     Specify local configuration directory\n"+
 			"\n"+
 			"Commands:\n"+
 			"    gate              Do security bootstrapper gating on stages while starting services\n"+

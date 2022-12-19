@@ -53,9 +53,9 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	// find out the subcommand name before assigning the real concrete configuration
 	// bootstrapRedis has its own configuration settings
-	var confdir string
+	var configDir string
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-	flagSet.StringVar(&confdir, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&configDir, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Println(err)

@@ -33,7 +33,7 @@ echo "Script for waiting on security bootstrapping ready-to-run"
 
 # gating on the ready-to-run port
 echo "$(date) Executing waitFor with $@ waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
