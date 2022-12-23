@@ -28,18 +28,18 @@ echo "Script for waiting security bootstrapping on Kong"
 
 # gating on the ready-to-run port
 echo "$(date) Executing waitFor with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 echo "$(date) Kong waits on Postgres to be initialized"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_KONGDB_HOST}":"${STAGEGATE_KONGDB_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
 # KONG_PG_PASSWORD_FILE is env used by Kong, it is for kong-db's password file
 echo "$(date) Executing waitFor with waiting on file:${KONG_PG_PASSWORD_FILE}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri file://"${KONG_PG_PASSWORD_FILE}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -47,7 +47,7 @@ echo "$(date) Executing waitFor with waiting on file:${KONG_PG_PASSWORD_FILE}"
 passwd=$(cat "${KONG_PG_PASSWORD_FILE}")
 pg_inited=0
 until [ $pg_inited -eq 1 ]; do
-  status=$(/edgex-init/security-bootstrapper --confdir=/edgex-init/res pingPgDb \
+  status=$(/edgex-init/security-bootstrapper --configDir=/edgex-init/res pingPgDb \
     --username=kong --dbname=kong --password="${passwd}" | tail -n 1)
   if [ ${#status} -gt 0 ] && [[ "${status}" != *ERROR* ]]; then
     if [ "${status}" = "ready" ]; then

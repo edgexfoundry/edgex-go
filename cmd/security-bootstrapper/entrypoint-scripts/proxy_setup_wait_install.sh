@@ -29,7 +29,7 @@ echo "Script for waiting security bootstrapping on proxy-setup"
 # gating on the ready-to-run port
 echo "$(date) Executing waitFor for ${PROXY_SETUP_HOST} with waiting on \
   tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -37,7 +37,7 @@ echo "$(date) ${PROXY_SETUP_HOST} waits on Kong to be initialized"
 
 kong_inited=0
 until [ $kong_inited -eq 1 ]; do
-  status=$(/edgex-init/security-bootstrapper --confdir=/edgex-init/res getHttpStatus \
+  status=$(/edgex-init/security-bootstrapper --configDir=/edgex-init/res getHttpStatus \
     --url=http://"${API_GATEWAY_HOST}":"${API_GATEWAY_STATUS_PORT}"/status | tail -n 1)
   if [ ${#status} -gt 0 ] && [[ "${status}" != *ERROR* ]]; then
     echo "$(date) ${API_GATEWAY_HOST}:${API_GATEWAY_STATUS_PORT} status code = ${status}"

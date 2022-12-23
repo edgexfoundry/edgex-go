@@ -44,7 +44,7 @@ COPY --from=builder /edgex-go/cmd/sys-mgmt-agent/res/configuration.toml /res/con
 COPY --from=builder /edgex-go/cmd/sys-mgmt-executor/sys-mgmt-executor /
 
 ENTRYPOINT ["/sys-mgmt-agent"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
 
 # Following (commented-out) line is a life-saving DEBUG statement.
 # ENTRYPOINT tail -f /dev/null

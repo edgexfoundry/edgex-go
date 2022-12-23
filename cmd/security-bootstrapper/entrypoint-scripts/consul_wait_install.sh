@@ -65,7 +65,7 @@ docker-entrypoint.sh agent \
 # wait for the secretstore tokens ready as we need the token for bootstrapping
 echo "$(date) Executing waitFor on Consul with waiting on TokensReadyPort \
   tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -73,7 +73,7 @@ echo "$(date) Executing waitFor on Consul with waiting on TokensReadyPort \
 # Consul won't have ACL to be used
 set +e
 # call setupRegistryACL bootstrapping command, containing both ACL bootstrapping and re-configure consul access steps
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res setupRegistryACL
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res setupRegistryACL
 setupACL_code=$?
 if [ "${setupACL_code}" -ne 0 ]; then
   echo "$(date) failed to set up Consul ACL"
@@ -86,7 +86,7 @@ set -e
 # no need to wait for Consul's port since it is in ready state after all ACL stuff
 
 # Signal that Consul is ready for services blocked waiting on Consul
-exec su-exec consul /edgex-init/security-bootstrapper --confdir=/edgex-init/res listenTcp \
+exec su-exec consul /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_REGISTRY_READYPORT}" --host="${STAGEGATE_REGISTRY_HOST}"
 if [ $? -ne 0 ]; then
     echo "$(date) failed to gating the consul ready port, exits"

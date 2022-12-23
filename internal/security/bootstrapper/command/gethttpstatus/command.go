@@ -62,7 +62,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	flagSet.StringVar(&cmd.httpURL, "url", "", "get the status code returning from the input http URL address")
 
 	err := flagSet.Parse(args)

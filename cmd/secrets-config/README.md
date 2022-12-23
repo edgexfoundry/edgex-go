@@ -18,7 +18,7 @@ Proxy configuration commands (listed below) require access to the secret store m
 
 # OPTIONS
 
-  * **--confdir** _/path/to/directory/with/configuration.toml_ (optional)
+  * **--configDir** _/path/to/directory/with/configuration.toml_ (optional)
 
     Points to directory containing a configuration.toml file.
 

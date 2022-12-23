@@ -42,4 +42,4 @@ COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/security-spiffe
 COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/res/configuration.toml /res/configuration.toml
 
 ENTRYPOINT [ "/security-spiffe-token-provider" ]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry", "--confdir=/res"]
+CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

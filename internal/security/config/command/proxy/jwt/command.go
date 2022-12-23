@@ -46,7 +46,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
 	flagSet.StringVar(&cmd.algorithm, "algorithm", "", "Algorithm used for signing the JWT, RS256 or ES256")
 	flagSet.StringVar(&cmd.privateKeyPath, "private_key", "", "Private key used to sign the JWT (PEM-encoded)")

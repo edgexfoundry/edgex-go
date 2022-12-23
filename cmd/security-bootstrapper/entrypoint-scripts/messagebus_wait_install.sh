@@ -29,7 +29,7 @@ echo "Script for waiting security bootstrapping on message bus"
 # gating on the TokensReadyPort
 echo "$(date) Executing waitFor on message bus with waiting on TokensReadyPort \
   tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-/edgex-init/security-bootstrapper --confdir=/edgex-init/res waitFor \
+/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
   -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
@@ -40,7 +40,7 @@ echo "$(date) Executing waitFor on message bus with waiting on TokensReadyPort \
 echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping ${BROKER_TYPE}..."
 
 
-/edgex-init/security-bootstrapper --confdir=${CONF_DIR} setupMessageBusCreds ${BROKER_TYPE}
+/edgex-init/security-bootstrapper --configDir=${CONF_DIR} setupMessageBusCreds ${BROKER_TYPE}
 msgbus_bootstrapping_status=$?
 if [ $msgbus_bootstrapping_status -ne 0 ]; then
   echo "$(date) failed to bootstrap ${BROKER_TYPE}"

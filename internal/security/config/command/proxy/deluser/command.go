@@ -47,7 +47,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to delete")
 	flagSet.StringVar(&cmd.jwt, "jwt", "", "The JWT for use when accessing the Kong Admin API")

@@ -87,7 +87,7 @@ func NewCommand(
 	var dummy string
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
-	flagSet.StringVar(&dummy, "confdir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
+	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
 	flagSet.Var(&cmd.uris, "uri", "Service (tcp/tcp4/tcp6/http/https/unix/file) to wait for before this one starts. "+
 		"Can be passed multiple times. e.g. tcp://db:5432")
