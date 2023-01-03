@@ -166,7 +166,7 @@ apps:
     adapter: full
     after: [vault]
     command: >-
-      bin/security-secretstore-setup -confdir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+      bin/security-secretstore-setup -configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
@@ -177,7 +177,7 @@ apps:
       # environment vars for security-secretstore-setup (aka vault-worker)
       SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res
       SECRETSTORE_TOKENPROVIDER: $SNAP/bin/security-file-token-provider
-      SECRETSTORE_TOKENPROVIDERARGS: "-confdir, $SNAP_DATA/config/security-file-token-provider/res"
+      SECRETSTORE_TOKENPROVIDERARGS: "-configDir, $SNAP_DATA/config/security-file-token-provider/res"
       SECRETSTORE_TOKENPROVIDERADMINTOKENPATH: $SNAP_DATA/secrets/tokenprovider/secrets-token.json
       # registry consul ACL related environment variables:
       SECRETSTORE_CONSULSECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
@@ -200,7 +200,7 @@ apps:
       - security-secretstore-setup
       - security-consul-bootstrapper
       - kong-daemon
-    command: bin/security-proxy-setup -confdir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    command: bin/security-proxy-setup -configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-proxy-post-setup.sh
@@ -251,7 +251,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-data -confdir $SNAP_DATA/config/core-data/res -cp -r
+    command: bin/core-data -configDir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -270,7 +270,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-metadata -confdir $SNAP_DATA/config/core-metadata/res -cp -r
+    command: bin/core-metadata -configDir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -287,7 +287,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-command -confdir $SNAP_DATA/config/core-command/res -cp -r
+    command: bin/core-command -configDir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -303,7 +303,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-notifications -confdir $SNAP_DATA/config/support-notifications/res -cp -r
+    command: bin/support-notifications -configDir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -319,7 +319,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-scheduler -confdir $SNAP_DATA/config/support-scheduler/res -cp -r
+    command: bin/support-scheduler -configDir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -335,7 +335,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/sys-mgmt-agent -confdir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
+    command: bin/sys-mgmt-agent -configDir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
     command-chain:
       - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
@@ -358,7 +358,7 @@ apps:
     # double-check with bnevis that this is OK, as there is an individual config.toml
     # file for the secrets-config command
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
-    command: bin/secrets-config -confdir $SNAP_DATA/config/security-proxy-setup/res
+    command: bin/secrets-config -configDir $SNAP_DATA/config/security-proxy-setup/res
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full

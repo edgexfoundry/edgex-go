@@ -5,7 +5,7 @@ DBFILE="$DATABASECONFIG_PATH/$DATABASECONFIG_NAME"
 logger "setup-redis-acl: redis config file:: $DBFILE"
 
 # setup Consul's ACL via security-bootstrapper's subcommand
-"$SNAP"/bin/security-bootstrapper -confdir "$SNAP_DATA"/config/security-bootstrapper/res-bootstrap-redis configureRedis
+"$SNAP"/bin/security-bootstrapper -configDir "$SNAP_DATA"/config/security-bootstrapper/res-bootstrap-redis configureRedis
 setupACL_code="$?"
 if [ "${setupACL_code}" -ne 0 ]; then
   logger "$(date) failed to set up Redis ACL"

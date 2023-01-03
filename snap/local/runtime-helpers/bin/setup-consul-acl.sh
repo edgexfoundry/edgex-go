@@ -14,7 +14,7 @@ if [ -f "$SERVICE_ENV" ]; then
 fi
 
 # setup Consul's ACL via security-bootstrapper's subcommand
-"$SNAP"/bin/security-bootstrapper -confdir "$SNAP_DATA"/config/security-bootstrapper/res setupRegistryACL
+"$SNAP"/bin/security-bootstrapper -configDir "$SNAP_DATA"/config/security-bootstrapper/res setupRegistryACL
 setupACL_code=$?
 if [ "${setupACL_code}" -ne 0 ]; then
   echo "$(date) failed to set up Consul ACL"
