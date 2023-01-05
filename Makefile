@@ -19,7 +19,6 @@ DOCKERS= \
 	docker_core_metadata \
 	docker_core_command  \
 	docker_support_notifications \
-	docker_sys_mgmt_agent \
 	docker_support_scheduler \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
@@ -36,8 +35,6 @@ MICROSERVICES= \
 	cmd/core-metadata/core-metadata \
 	cmd/core-command/core-command \
 	cmd/support-notifications/support-notifications \
-	cmd/sys-mgmt-executor/sys-mgmt-executor \
-	cmd/sys-mgmt-agent/sys-mgmt-agent \
 	cmd/support-scheduler/support-scheduler \
 	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
@@ -108,12 +105,6 @@ cmd/support-notifications/support-notifications:
 scheduler: cmd/support-scheduler/support-scheduler
 cmd/support-scheduler/support-scheduler:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
-
-cmd/sys-mgmt-executor/sys-mgmt-executor:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-executor
-
-cmd/sys-mgmt-agent/sys-mgmt-agent:
-	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/sys-mgmt-agent
 
 proxy: cmd/security-proxy-setup/security-proxy-setup
 cmd/security-proxy-setup/security-proxy-setup:
@@ -246,17 +237,6 @@ docker_support_scheduler: docker_base
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/support-scheduler:$(GIT_SHA) \
 		-t edgexfoundry/support-scheduler:$(DOCKER_TAG) \
-		.
-
-docker_sys_mgmt_agent: docker_base
-	docker build \
-		--build-arg http_proxy \
-		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
-		-f cmd/sys-mgmt-agent/Dockerfile \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/sys-mgmt-agent:$(GIT_SHA) \
-		-t edgexfoundry/sys-mgmt-agent:$(DOCKER_TAG) \
 		.
 
 dproxy: docker_security_proxy_setup

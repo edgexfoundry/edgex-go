@@ -98,12 +98,6 @@ ServerName = ""
   Host = "localhost"
   Port = 59861
 
-  [Routes.sys-mgmt-agent]
-  Name = "sys-mgmt-agent"
-  Protocol = "http"
-  Host = "localhost"
-  Port = 58890
-
   [Routes.rules-engine]
   Name = "rules-engine"
   Protocol = "http"

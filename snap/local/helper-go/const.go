@@ -26,6 +26,4 @@ const (
 	kong                       = "kong-daemon"
 	postgres                   = "postgres"
 	vault                      = "vault"
-	// management services
-	systemManagementAgent = "sys-mgmt-agent"
 )
