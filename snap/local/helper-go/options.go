@@ -77,7 +77,6 @@ func processAppOptions(deferStartup bool) error {
 		securitySecretStoreSetup,
 		securityBootstrapper, // local executable
 		securityProxySetup,
-		systemManagementAgent,
 	)
 	if err != nil {
 		return fmt.Errorf("could not process config options: %v", err)
