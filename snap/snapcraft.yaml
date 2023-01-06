@@ -328,22 +328,6 @@ apps:
     daemon: simple
     plugs: [network, network-bind]
     stop-timeout: 10s
-  sys-mgmt-agent:
-    adapter: none
-    after:
-      - security-bootstrapper-redis
-      # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
-      - security-proxy-setup
-    command: bin/sys-mgmt-agent -configDir $SNAP_DATA/config/sys-mgmt-agent/res -cp -r
-    command-chain:
-      - bin/security-secret-store-env-var.sh
-      - bin/service-config-overrides.sh
-    environment:
-      EXECUTORPATH: $SNAP/bin/sys-mgmt-agent-snap-executor.sh
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/sys-mgmt-agent/secrets-token.json
-    daemon: simple
-    plugs: [network, network-bind]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
     adapter: none
@@ -581,7 +565,7 @@ parts:
       make build
 
       # copy service binaries, configuration, and license files into the snap install
-      for service in core-command core-data core-metadata support-notifications support-scheduler sys-mgmt-agent \
+      for service in core-command core-data core-metadata support-notifications support-scheduler \
           security-proxy-setup security-secretstore-setup security-file-token-provider \
           security-bootstrapper secrets-config; do
 

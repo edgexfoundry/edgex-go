@@ -109,7 +109,6 @@ func installConfFiles() error {
 		coreMetadata,
 		supportNotifications,
 		supportScheduler,
-		systemManagementAgent,
 	}
 
 	for _, v := range servicesWithConfig {

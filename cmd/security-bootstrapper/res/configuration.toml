@@ -47,8 +47,6 @@ LogLevel = "INFO"
           Description = "role for notifications"
         [StageGate.Registry.ACL.Roles.support-scheduler]
           Description = "role for scheduler"
-        [StageGate.Registry.ACL.Roles.sys-mgmt-agent]
-          Description = "role for system management agent"
         [StageGate.Registry.ACL.Roles.device-virtual]
           Description = "role for device virtual service"
         [StageGate.Registry.ACL.Roles.device-rest]

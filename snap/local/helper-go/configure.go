@@ -54,7 +54,6 @@ var (
 		coreCommand,
 		supportNotifications,
 		supportScheduler,
-		systemManagementAgent,
 	}
 	requiredServices = []string{
 		consul,
@@ -68,7 +67,6 @@ var (
 	optionalServices = []string{
 		supportNotifications,
 		supportScheduler,
-		systemManagementAgent,
 	}
 )
 
@@ -270,8 +268,6 @@ func handleAllServices(deferStartup bool) error {
 		// security services
 		securitySecretStore,
 		securityProxy,
-		// management
-		systemManagementAgent,
 		// others
 		securityBootstrapper, // oneshot service
 	}
