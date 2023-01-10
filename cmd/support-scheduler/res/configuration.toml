@@ -73,14 +73,16 @@ Type = "consul"
     Interval = "midnight"
     AdminState = "UNLOCKED"
 
-[MessageQueue]
+[MessageBus]
 Protocol = "redis"
 Host = "localhost"
 Port = 6379
 Type = "redis"
 AuthMode = "usernamepassword"  # required for redis messagebus (secure or insecure).
 SecretName = "redisdb"
-  [MessageQueue.Optional]
+  [MessageBus.Topics]
+  # No topic yet. Metrics topic is handler in [Writable.Telemetry] above
+  [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="support-scheduler"
   Qos = "0" # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)

@@ -9,8 +9,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	cbor "github.com/fxamacker/cbor/v2"
 	"strings"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
+	cbor "github.com/fxamacker/cbor/v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
@@ -28,7 +30,7 @@ import (
 
 // SubscribeEvents subscribes to events from message bus
 func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
-	messageBusInfo := dataContainer.ConfigurationFrom(dic.Get).MessageQueue
+	messageBusInfo := dataContainer.ConfigurationFrom(dic.Get).MessageBus
 	lc := container.LoggingClientFrom(dic.Get)
 
 	messageBus := container.MessagingClientFrom(dic.Get)
@@ -38,9 +40,16 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 
 	app := application.CoreDataAppFrom(dic.Get)
 
+	subscribeTopic := messageBusInfo.Topics[config.MessageBusSubscribeTopic]
+	subscribeTopic = strings.TrimSpace(subscribeTopic)
+	if len(subscribeTopic) == 0 {
+		lc.Infof("%s not specified in '[MessageBus.Topics]' configuration. Skipping MessageBus subscription setup.", config.MessageBusSubscribeTopic)
+		return nil
+	}
+
 	topics := []types.TopicChannel{
 		{
-			Topic:    messageBusInfo.SubscribeTopic,
+			Topic:    subscribeTopic,
 			Messages: messages,
 		},
 	}
@@ -54,12 +63,12 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 		for {
 			select {
 			case <-ctx.Done():
-				lc.Infof("Exiting waiting for MessageBus '%s' topic messages", messageBusInfo.SubscribeTopic)
+				lc.Infof("Exiting waiting for MessageBus '%s' topic messages", subscribeTopic)
 				return
 			case e := <-messageErrors:
 				lc.Error(e.Error())
 			case msgEnvelope := <-messages:
-				lc.Debugf("Event received on message queue. Topic: %s, Correlation-id: %s ", messageBusInfo.SubscribeTopic, msgEnvelope.CorrelationID)
+				lc.Debugf("Event received on message queue. Topic: %s, Correlation-id: %s ", subscribeTopic, msgEnvelope.CorrelationID)
 				event := &requests.AddEventRequest{}
 				// decoding the large payload may cause memory issues so checking before decoding
 				maxEventSize := dataContainer.ConfigurationFrom(dic.Get).MaxEventSize

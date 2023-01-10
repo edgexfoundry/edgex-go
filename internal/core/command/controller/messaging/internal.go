@@ -23,7 +23,7 @@ import (
 // SubscribeCommandResponses subscribes command responses from device services via internal MessageBus
 func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 	internalResponseTopic := messageBusInfo.Internal.Topics[DeviceResponseTopic]
 
 	messages := make(chan types.MessageEnvelope)
@@ -85,7 +85,7 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 // via internal MessageBus
 func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 	internalRequestCommandTopic := messageBusInfo.Internal.Topics[CommandRequestTopic]
 
 	messages := make(chan types.MessageEnvelope)
@@ -177,7 +177,7 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 // via internal MessageBus
 func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 	internalQueryRequestTopic := messageBusInfo.Internal.Topics[QueryRequestTopic]
 	internalQueryResponseTopic := messageBusInfo.Internal.Topics[QueryResponseTopic]
 

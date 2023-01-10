@@ -20,7 +20,7 @@ import (
 
 type ConfigurationStruct struct {
 	Writable     WritableInfo
-	MessageQueue bootstrapConfig.MessageBusInfo
+	MessageBus   bootstrapConfig.MessageBusInfo
 	Clients      map[string]bootstrapConfig.ClientInfo
 	Databases    map[string]bootstrapConfig.Database
 	Registry     bootstrapConfig.RegistryInfo
@@ -73,11 +73,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:      c.Clients,
-		Service:      c.Service,
-		Registry:     c.Registry,
-		SecretStore:  c.SecretStore,
-		MessageQueue: c.MessageQueue,
+		Clients:     c.Clients,
+		Service:     c.Service,
+		Registry:    c.Registry,
+		SecretStore: c.SecretStore,
+		MessageBus:  c.MessageBus,
 	}
 }
 

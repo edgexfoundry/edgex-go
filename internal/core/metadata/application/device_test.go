@@ -60,8 +60,11 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
-				MessageQueue: bootstrapConfig.MessageBusInfo{
-					PublishTopicPrefix: expectedPublishTopicPrefix},
+				MessageBus: bootstrapConfig.MessageBusInfo{
+					Topics: map[string]string{
+						bootstrapConfig.MessageBusPublishTopicPrefix: expectedPublishTopicPrefix,
+					},
+				},
 			}
 		},
 	})
@@ -106,8 +109,7 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 			}
 
 			if test.ClientMissing {
-				// TODO: Change to Errorf in EdgeX 3.0
-				mockLogger.On("Warnf", mock.Anything, mock.Anything).Return()
+				mockLogger.On("Errorf", mock.Anything, mock.Anything).Return()
 				dic.Update(di.ServiceConstructorMap{
 					bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
 						return nil
@@ -132,8 +134,7 @@ func TestPublishDeviceSystemEvent(t *testing.T) {
 			publishDeviceSystemEvent(test.Action, expectedDevice.ServiceName, expectedDevice, ctx, mockLogger, dic)
 
 			if test.ClientMissing {
-				// TODO: Change to Errorf in EdgeX 3.0
-				mockLogger.AssertCalled(t, "Warnf", mock.Anything, noMessagingClientError)
+				mockLogger.AssertCalled(t, "Errorf", mock.Anything, noMessagingClientError)
 				return
 			}
 

@@ -19,7 +19,6 @@ import (
 	"context"
 	"sync"
 
-	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
@@ -46,15 +45,12 @@ func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
-	configuration := dataContainer.ConfigurationFrom(dic.Get)
 	lc := container.LoggingClientFrom(dic.Get)
 
-	if configuration.MessageQueue.SubscribeEnabled {
-		err := messaging.SubscribeEvents(ctx, dic)
-		if err != nil {
-			lc.Errorf("Failed to subscribe events from message bus, %v", err)
-			return false
-		}
+	err := messaging.SubscribeEvents(ctx, dic)
+	if err != nil {
+		lc.Errorf("Failed to subscribe events from message bus, %v", err)
+		return false
 	}
 
 	return true

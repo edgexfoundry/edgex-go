@@ -21,15 +21,13 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	//TODO: Remove in EdgeX 3.0 - Is needed now for backward compatability in 2.0
-	RequireMessageBus bool
-	Writable          WritableInfo
-	Clients           map[string]bootstrapConfig.ClientInfo
-	Databases         map[string]bootstrapConfig.Database
-	Registry          bootstrapConfig.RegistryInfo
-	Service           bootstrapConfig.ServiceInfo
-	MessageQueue      MessageQueue
-	SecretStore       bootstrapConfig.SecretStoreInfo
+	Writable    WritableInfo
+	Clients     map[string]bootstrapConfig.ClientInfo
+	Databases   map[string]bootstrapConfig.Database
+	Registry    bootstrapConfig.RegistryInfo
+	Service     bootstrapConfig.ServiceInfo
+	MessageBus  MessageBus
+	SecretStore bootstrapConfig.SecretStoreInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -39,7 +37,7 @@ type WritableInfo struct {
 	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
-type MessageQueue struct {
+type MessageBus struct {
 	Internal bootstrapConfig.MessageBusInfo
 	External bootstrapConfig.ExternalMQTTInfo
 }
@@ -84,8 +82,8 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Service:      c.Service,
 		Registry:     c.Registry,
 		SecretStore:  c.SecretStore,
-		MessageQueue: c.MessageQueue.Internal,
-		ExternalMQTT: c.MessageQueue.External,
+		MessageBus:   c.MessageBus.Internal,
+		ExternalMQTT: c.MessageBus.External,
 	}
 }
 

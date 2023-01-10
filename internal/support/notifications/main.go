@@ -24,7 +24,6 @@ package notifications
 import (
 	"context"
 	"os"
-	"sync"
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
@@ -76,7 +75,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
-			MessageBusBootstrapHandler,
+			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportNotificationsServiceKey).BootstrapHandler, // Must be after Messaging
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, common.SupportNotificationsServiceKey).BootstrapHandler,
@@ -84,17 +83,4 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
 		})
-}
-
-// MessageBusBootstrapHandler sets up the MessageBus connection if MessageBus required is true.
-// This is required for backwards compatability with older versions of 2.x configuration
-// TODO: Remove in EdgeX 3.0
-func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
-	configuration := container.ConfigurationFrom(dic.Get)
-	if configuration.RequireMessageBus {
-		return handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic)
-	}
-
-	// Not required so do nothing
-	return true
 }

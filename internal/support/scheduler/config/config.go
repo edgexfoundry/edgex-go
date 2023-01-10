@@ -22,17 +22,15 @@ import (
 
 // Configuration V2 for the Support Scheduler Service
 type ConfigurationStruct struct {
-	//TODO: Remove in EdgeX 3.0 - Is needed now for backward compatability in 2.0
-	RequireMessageBus bool
-	Writable          WritableInfo
-	Clients           map[string]bootstrapConfig.ClientInfo
-	Databases         map[string]bootstrapConfig.Database
-	Registry          bootstrapConfig.RegistryInfo
-	Service           bootstrapConfig.ServiceInfo
-	MessageQueue      bootstrapConfig.MessageBusInfo
-	Intervals         map[string]IntervalInfo
-	IntervalActions   map[string]IntervalActionInfo
-	SecretStore       bootstrapConfig.SecretStoreInfo
+	Writable        WritableInfo
+	Clients         map[string]bootstrapConfig.ClientInfo
+	Databases       map[string]bootstrapConfig.Database
+	Registry        bootstrapConfig.RegistryInfo
+	Service         bootstrapConfig.ServiceInfo
+	MessageBus      bootstrapConfig.MessageBusInfo
+	Intervals       map[string]IntervalInfo
+	IntervalActions map[string]IntervalActionInfo
+	SecretStore     bootstrapConfig.SecretStoreInfo
 	// ScheduleIntervalTime is a time(Millisecond) to create a ticker to delay the scheduler loop
 	ScheduleIntervalTime int
 }
@@ -128,11 +126,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:      c.Clients,
-		Service:      c.Service,
-		Registry:     c.Registry,
-		SecretStore:  c.SecretStore,
-		MessageQueue: c.MessageQueue,
+		Clients:     c.Clients,
+		Service:     c.Service,
+		Registry:    c.Registry,
+		SecretStore: c.SecretStore,
+		MessageBus:  c.MessageBus,
 	}
 }
 
