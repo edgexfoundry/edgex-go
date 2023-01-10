@@ -1,13 +1,11 @@
 #!/bin/sh -e
 
-# check if security-secret-store is on/off
-# if it's not specified assume it's on
+# This script is used in the command-chain before starting EdgeX apps
 
-SEC_STORE=$(snapctl get security-secret-store)
-if [ "$SEC_STORE" = "off" ]; then
-    # then export the env var as false to turn everything off
-    EDGEX_SECURITY_SECRET_STORE=false
-    export EDGEX_SECURITY_SECRET_STORE
+security=$(snapctl get security)
+if [ "$security" = "disabled" ]; then
+    # set to false so that the app doesn't use the secret store
+    export EDGEX_SECURITY_SECRET_STORE=false
 fi
 
 exec "$@"

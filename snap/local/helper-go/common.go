@@ -26,4 +26,39 @@ const (
 	kong                       = "kong-daemon"
 	postgres                   = "postgres"
 	vault                      = "vault"
+	secretsConfigProcessor     = "secrets-config-processor"
 )
+
+var (
+	securityServices = []string{
+		postgres,
+		kong,
+		vault,
+	}
+	securitySetupServices = []string{
+		securitySecretStoreSetup,
+		securityBootstrapperConsul,
+		securityProxySetup,
+		securityBootstrapperRedis,
+	}
+	coreServices = []string{
+		consul,
+		redis,
+		coreData,
+		coreMetadata,
+		coreCommand,
+	}
+	supportServices = []string{
+		supportNotifications,
+		supportScheduler,
+	}
+)
+
+func allServices() (s []string) {
+	s = make([]string, len(coreServices)+len(supportServices)+len(securityServices)+len(securitySetupServices))
+	s = append(s, coreServices...)
+	s = append(s, supportServices...)
+	s = append(s, securityServices...)
+	s = append(s, securitySetupServices...)
+	return s
+}

@@ -1,5 +1,3 @@
-// -*- Mode: Go; indent-tabs-mode: t -*-
-
 /*
  * Copyright (C) 2021 Canonical Ltd
  *
@@ -30,10 +28,6 @@ import (
 	"github.com/canonical/edgex-snap-hooks/v2/log"
 	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
-
-const secretStoreAddTokensCfg = "env.security-secret-store.add-secretstore-tokens"
-const secretStoreAddKnownSecretsCfg = "env.security-secret-store.add-known-secrets"
-const consulAddRegistryACLRolesCfg = "env.security-bootstrapper.add-registry-acl-roles"
 
 // device-rest and device-virtual are both on the /cmd/security-file-token-provider/res/token-config.json file,
 // so they should not need to be set here as well
@@ -159,11 +153,13 @@ func installSecretStore() error {
 	//	ADD_REGISTRY_ACL_ROLES
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = snapctl.Set(secretStoreAddTokensCfg, strings.Join(secretStoreTokens, ",")).Run(); err != nil {
+	if err = snapctl.Set("apps.security-secretstore-setup.config.add-secretstore-tokens",
+		strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
 
-	if err = snapctl.Set(secretStoreAddKnownSecretsCfg, strings.Join(secretStoreKnownSecrets, ",")).Run(); err != nil {
+	if err = snapctl.Set("apps.security-secretstore-setup.config.add-known-secrets",
+		strings.Join(secretStoreKnownSecrets, ",")).Run(); err != nil {
 		return err
 	}
 
@@ -209,7 +205,8 @@ func installConsul() error {
 	// using the same list of services as used in ADD_KNOWN_SECRETS
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = snapctl.Set(consulAddRegistryACLRolesCfg, strings.Join(secretStoreTokens, ",")).Run(); err != nil {
+	if err = snapctl.Set("apps.security-bootstrapper.config.add-registry-acl-roles",
+		strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
 
@@ -324,24 +321,37 @@ func install() {
 		log.Fatalf("Error installing redis: %v", err)
 	}
 
+	// Enable autostart so that services start by default after seeding configuration
+	// if err = snapctl.Set("autostart", "true").Run(); err != nil {
+	// 	log.Fatalf("Error setting snap option: %v", err)
+	// }
+
+	var autostartKeyValues []string
+	for _, s := range allServices() {
+		autostartKeyValues = append(autostartKeyValues, "apps."+s+".autostart", "true")
+	}
+	if err = snapctl.Set(autostartKeyValues...).Run(); err != nil {
+		log.Fatalf("Error setting snap option: %v", err)
+	}
+
 	// Stop and disable all services as they will be
 	// re-enabled in the configure hook if install-mode=defer-startup and
 	// they have their state set to "on".
-	var services []string
-	if serviceMap, err := snapctl.Services().Run(); err != nil {
-		log.Fatalf("Error getting list of services: %v", err)
-	} else {
-		for k := range serviceMap {
-			services = append(services, k)
-		}
-	}
+	// var services []string
+	// if serviceMap, err := snapctl.Services().Run(); err != nil {
+	// 	log.Fatalf("Error getting list of services: %v", err)
+	// } else {
+	// 	for k := range serviceMap {
+	// 		services = append(services, k)
+	// 	}
+	// }
 
-	log.Infof("Disabling all services to defer startup to after configuration: %v", services)
-	if err = snapctl.Stop(services...).Disable().Run(); err != nil {
-		log.Fatalf("Error disabling services: %v", err)
-	}
+	// log.Infof("Disabling all services to defer startup to after configuration: %v", services)
+	// if err = snapctl.Stop(services...).Disable().Run(); err != nil {
+	// 	log.Fatalf("Error disabling services: %v", err)
+	// }
 
-	if err = snapctl.Set("install-mode", "defer-startup").Run(); err != nil {
-		log.Fatalf("Error setting 'install-mode'; %v", err)
-	}
+	// if err = snapctl.Set("install-mode", "defer-startup").Run(); err != nil {
+	// 	log.Fatalf("Error setting 'install-mode'; %v", err)
+	// }
 }

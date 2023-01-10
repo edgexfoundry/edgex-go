@@ -80,6 +80,7 @@ apps:
     command-chain:
       - bin/security-secret-store-env-var.sh
     daemon: forking
+    install-mode: disable
     plugs: [network, network-bind]
   redis:
     adapter: full
@@ -91,11 +92,13 @@ apps:
       BIND_ARG: --bind 127.0.0.1
       CONFIG_FILE: $SNAP_DATA/redis/conf/redis.conf
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
   postgres:
     adapter: full
     command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/12/main -c $CONFIG_ARG
     daemon: simple
+    install-mode: disable
     environment:
       CONFIG_ARG: config_file=$SNAP_DATA/postgresql/12/main/postgresql.conf
       SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
@@ -116,6 +119,7 @@ apps:
       - bin/perl5lib-launch.sh
       - bin/kong-launch.sh
     daemon: forking
+    install-mode: disable
     environment:
       KONG_CONF: $SNAP_DATA/config/security-proxy-setup/kong.conf
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
@@ -147,6 +151,7 @@ apps:
     adapter: none
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
+    install-mode: disable
     environment:
       VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
       VAULT_ADDR: "http://localhost:8200"
@@ -171,6 +176,7 @@ apps:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
     daemon: oneshot
+    install-mode: disable
     environment:
       VAULT_INTERVAL: "--vaultInterval=10"
       SECRETSTORE_HOST: localhost
@@ -192,7 +198,7 @@ apps:
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
       KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
 
-    start-timeout: 15m
+    start-timeout: 1m
     plugs: [network]
   security-proxy-setup:
     adapter: none
@@ -210,7 +216,8 @@ apps:
       ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
       KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     daemon: oneshot
-    start-timeout: 15m
+    install-mode: disable
+    start-timeout: 1m
     plugs: [network]
   # This is a simple service which calls into vault to retrieve the Redis password and then
   # to generate Redis config file for Redis server to start up with credentials and ACL rules.
@@ -229,6 +236,8 @@ apps:
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
       DATABASECONFIG_NAME: redis.conf
     daemon: oneshot
+    install-mode: disable
+    start-timeout: 1m
     plugs: [network]
   # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
   security-consul-bootstrapper:
@@ -243,6 +252,8 @@ apps:
       STAGEGATE_REGISTRY_ACL_SECRETSADMINTOKENPATH: $SNAP_DATA/secrets/edgex-consul/admin/token.json
       STAGEGATE_REGISTRY_ACL_SENTINELFILEPATH: $SNAP_DATA/consul/config/consul_acl_done
     daemon: oneshot
+    install-mode: disable
+    start-timeout: 1m
     plugs: [network]
   core-data:
     adapter: full
@@ -258,6 +269,7 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
     # for now, specify a shorter stop-timeout until services learn how
     # to handle SIGTERM properly with as per
@@ -278,6 +290,7 @@ apps:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
       UOM_UOMFILE: $SNAP_DATA/config/core-metadata/res/uom.toml
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
   core-command:
@@ -294,6 +307,7 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-notifications:
@@ -310,6 +324,7 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
@@ -326,8 +341,17 @@ apps:
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
+    install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
+  secrets-config-processor:
+    after:
+      - vault
+    command: bin/helper-go options --app secrets-config
+    daemon: oneshot
+    install-mode: disable
+    start-timeout: 1m
+    plugs: [network]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
     adapter: none

@@ -18,85 +18,27 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
-	"strings"
 
-	hooks "github.com/canonical/edgex-snap-hooks/v2"
 	"github.com/canonical/edgex-snap-hooks/v2/log"
 	opt "github.com/canonical/edgex-snap-hooks/v2/options"
-	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
 )
-
-// Deprecated
-// Legacy options starting with "env." are superseded by app options
-func applyConfigOptions(service string) error {
-	envJSON, err := snapctl.Get(hooks.EnvConfig + "." + service).Run()
-	if err != nil {
-		return fmt.Errorf("failed to read config options for %s: %v", service, err)
-	}
-
-	if envJSON != "" {
-		log.Debugf("Applying env options to service: %s: %s", service, strings.ReplaceAll(envJSON, "\n", ""))
-		if err := hooks.HandleEdgeXConfig(service, envJSON, nil); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 // options is called by the main function to configure options
 func options() {
 	flagset := flag.NewFlagSet("options", flag.ExitOnError)
-	service := flagset.String("service", "", "Handle config options of a single service only")
+	app := flagset.String("app", "", "Name of the app")
 	flagset.Parse(os.Args[2:])
 
 	log.SetComponentName("options")
 
-	log.Info("Configuring options for " + *service)
+	if *app == "" {
+		log.Fatalf("Missing app name")
+	}
 
-	// process the EdgeX >=2.2 snap options
-	if err := opt.ProcessAppCustomOptions(*service); err != nil {
+	log.Info("Processing snap options for " + *app)
+	if err := opt.ProcessAppCustomOptions(*app); err != nil {
 		log.Fatalf("Could not process custom options: %v", err)
 	}
 
-	// process the legacy snap options
-	if err := applyConfigOptions(*service); err != nil {
-		log.Fatalf("Error handling config options for %s: %v", *service, err)
-	}
-}
-
-func processAppOptions(deferStartup bool) error {
-	log.Info("Processing config options")
-	err := opt.ProcessConfig(
-		coreData,
-		coreMetadata,
-		coreCommand,
-		supportNotifications,
-		supportScheduler,
-		securitySecretStoreSetup,
-		securityBootstrapper, // local executable
-		securityProxySetup,
-	)
-	if err != nil {
-		return fmt.Errorf("could not process config options: %v", err)
-	}
-
-	// After installation, the configure hook initiates the deferred startup of services,
-	// 	processes snap options and exits. The actual services startup happens only
-	// 	after the configure hook exits.
-	//
-	// The following options should not be processed within the configure hook during
-	//	the initial installation (install-mode=defer-startup). They should be processed
-	//	only on follow-up calls to the configure hook (i.e. when snap set/unset is called)
-	if !deferStartup {
-		err = opt.ProcessAppCustomOptions(
-			secretsConfig, // also processed in security-proxy-post-setup.sh
-		)
-		if err != nil {
-			return fmt.Errorf("could not process custom options: %v", err)
-		}
-	}
-
-	return nil
 }
