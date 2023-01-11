@@ -61,7 +61,30 @@ func rmConsulAclFile() error {
 	return nil
 }
 
-func disableSecurityAndStopAll(securityServices []string) error {
+func processSecuritySwitch() error {
+	edgexSecurity, err := snapctl.Get("security").Run()
+	if err != nil {
+		return fmt.Errorf("error reading snap option: %v", err)
+	}
+
+	switch edgexSecurity {
+	case "":
+		// default - security is enabled
+	case "true":
+		// manually enabling the disabled switching security
+		return fmt.Errorf("security is enabled by default. %s",
+			"Once disabled, it can only be re-enabled by re-installing this snap.")
+	case "false":
+		if err := disableSecurityAndStopAll(); err != nil {
+			return fmt.Errorf("error disabling security: %v", err)
+		}
+	default:
+		return fmt.Errorf("unexpected value for security: %s", edgexSecurity)
+	}
+	return nil
+}
+
+func disableSecurityAndStopAll() error {
 	// If consul_acls.json doesn't exist, then secret-store has already been
 	// disabled, so just return
 	if !consulAclFileExists() {
@@ -79,11 +102,13 @@ func disableSecurityAndStopAll(securityServices []string) error {
 
 	// Disable autostart of security services
 	var autostartKeyValues []string
-	for _, s := range securityServices {
+	for _, s := range append(securityServices, securitySetupServices...) {
 		autostartKeyValues = append(autostartKeyValues, "apps."+s+".autostart", "false")
 	}
 	if err := snapctl.Set(autostartKeyValues...).Run(); err != nil {
-		return fmt.Errorf("error unsetting snap option: %v", err)
+		return fmt.Errorf("error setting snap option: %v", err)
+	}
+
 	}
 
 	// Clear redis config
@@ -102,8 +127,13 @@ func configure() {
 	log.SetComponentName("configure")
 	log.Debug("Start")
 
+	err := processSecuritySwitch()
+	if err != nil {
+		log.Fatalf("Error processing security switch: %v", err)
+	}
+
 	// Process snap config options
-	err := opt.ProcessConfig(
+	err = opt.ProcessConfig(
 		coreData,
 		coreMetadata,
 		coreCommand,
@@ -115,18 +145,6 @@ func configure() {
 	)
 	if err != nil {
 		log.Fatalf("Error processing config options: %v", err)
-	}
-
-	// Check if security needs to be disabled
-	if edgexSecurity, err := snapctl.Get("security").Run(); err != nil {
-		log.Fatalf("Error reading snap option: %v", err)
-	} else if edgexSecurity == "enabled" {
-		log.Fatalf("Security is enabled by default. %s",
-			"Once disabled, it can only be re-enabled by re-installing this snap.")
-	} else if edgexSecurity == "disabled" {
-		if err := disableSecurityAndStopAll(append(securityServices, securitySetupServices...)); err != nil {
-			log.Fatalf("Error disabling security: %v", err)
-		}
 	}
 
 	// Process autostart to schedule the services start/stop
