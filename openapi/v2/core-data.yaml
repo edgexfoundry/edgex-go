@@ -1825,12 +1825,14 @@ paths:
                   Writeable:
                     PersistData: true
                     LogLevel: "INFO"
-                  MessageQueue:
-                    Host: "*"
-                    Port: 5563
-                    Protocol: "tcp"
-                    Type: "zero"
-                    Topic: "events"
+                  MessageBus:
+                    Host: "localhost"
+                    Port: 6379
+                    Protocol: "redis"
+                    Type: "redis"
+                    Topics:
+                      PublishTopicPrefix: "edgex/events/core"
+                      SubscribeTopic: "edgex/events/device/#"
                     Optional:
                       AutoReconnect: "true"
                       ClientId: "core-data"

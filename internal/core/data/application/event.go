@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -79,7 +80,8 @@ func (a *CoreDataApp) PublishEvent(data []byte, profileName string, deviceName s
 	configuration := container.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	publishTopic := fmt.Sprintf("%s/%s/%s/%s", configuration.MessageQueue.PublishTopicPrefix, profileName, deviceName, sourceName)
+	publishPrefix := configuration.MessageBus.Topics[config.MessageBusPublishTopicPrefix]
+	publishTopic := fmt.Sprintf("%s/%s/%s/%s", publishPrefix, profileName, deviceName, sourceName)
 	lc.Debugf("Publishing V2 AddEventRequest to message queue. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)

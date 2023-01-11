@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	config2 "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
@@ -226,7 +227,7 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	return devices, totalCount, nil
 }
 
-var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageQueue configuration to enable sending System Events via the EdgeX MessageBus")
+var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
 
 func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx context.Context, lc logger.LoggingClient, dic *di.Container) {
 	device := dtos.FromDeviceModelToDTO(d)
@@ -234,15 +235,15 @@ func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx 
 
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	if messagingClient == nil {
-		// For 2.x this is a warning due to backwards compatability
-		// TODO: For change this to be Errorf for EdgeX 3.0
-		lc.Warnf("unable to publish Device System Event: %v", noMessagingClientError)
+		lc.Errorf("unable to publish Device System Event: %v", noMessagingClientError)
 		return
 	}
 
 	config := container.ConfigurationFrom(dic.Get)
+
+	prefix := config.MessageBus.Topics[config2.MessageBusPublishTopicPrefix]
 	publishTopic := fmt.Sprintf("%s/%s/%s/%s/%s/%s",
-		config.MessageQueue.PublishTopicPrefix,
+		prefix,
 		systemEvent.Source,
 		systemEvent.Type,
 		systemEvent.Action,

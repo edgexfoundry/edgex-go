@@ -33,8 +33,8 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 	return func(client mqtt.Client) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
-		externalTopics := config.MessageQueue.External.Topics
-		qos := config.MessageQueue.External.QoS
+		externalTopics := config.MessageBus.External.Topics
+		qos := config.MessageBus.External.QoS
 
 		requestQueryTopic := externalTopics[QueryRequestTopic]
 		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(dic)); token.Wait() && token.Error() != nil {
@@ -64,7 +64,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 			return
 		}
 
-		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 		responseTopic := messageBusInfo.External.Topics[QueryResponseTopic]
 		if responseTopic == "" {
 			lc.Error("QueryResponseTopic not provided in External.Topics")
@@ -96,7 +96,7 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		lc.Debugf("Received command request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
 
-		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageQueue
+		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 		qos := messageBusInfo.External.QoS
 		retain := messageBusInfo.External.Retain
 

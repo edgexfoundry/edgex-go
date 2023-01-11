@@ -73,7 +73,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
-			MessageBusBootstrapHandler,
+			MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreCommandServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreCommandServiceKey).BootstrapHandler,
 			telemetry.BootstrapHandler,
@@ -84,37 +84,33 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 	// code here!
 }
 
-// MessageBusBootstrapHandler sets up the MessageBus connection if MessageBus required is true.
-// This is required for backwards compatability with older versions of 2.x configuration
-// TODO: Remove in EdgeX 3.0
-func MessageBusBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+// MessagingBootstrapHandler sets up the MessageBus and External MQTT connections as well as subscriptions
+func MessagingBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 	router := messaging.NewMessagingRouter()
 
-	if configuration.RequireMessageBus {
-		if configuration.MessageQueue.External.Enabled {
-			if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
-				return false
-			}
-		}
-		if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
-			return false
-		}
-		if err := messaging.SubscribeCommandRequests(ctx, router, dic); err != nil {
-			lc.Errorf("Failed to subscribe commands request from internal message bus, %v", err)
-			return false
-		}
-		if err := messaging.SubscribeCommandResponses(ctx, router, dic); err != nil {
-			lc.Errorf("Failed to subscribe commands response from internal message bus, %v", err)
-			return false
-		}
-		if err := messaging.SubscribeCommandQueryRequests(ctx, dic); err != nil {
-			lc.Errorf("Failed to subscribe command query request from internal message bus, %v", err)
+	if configuration.MessageBus.External.Enabled {
+		if !handlers.NewExternalMQTT(messaging.OnConnectHandler(router, dic)).BootstrapHandler(ctx, wg, startupTimer, dic) {
 			return false
 		}
 	}
 
-	// Not required so do nothing
+	if !handlers.MessagingBootstrapHandler(ctx, wg, startupTimer, dic) {
+		return false
+	}
+	if err := messaging.SubscribeCommandRequests(ctx, router, dic); err != nil {
+		lc.Errorf("Failed to subscribe commands request from internal message bus, %v", err)
+		return false
+	}
+	if err := messaging.SubscribeCommandResponses(ctx, router, dic); err != nil {
+		lc.Errorf("Failed to subscribe commands response from internal message bus, %v", err)
+		return false
+	}
+	if err := messaging.SubscribeCommandQueryRequests(ctx, dic); err != nil {
+		lc.Errorf("Failed to subscribe command query request from internal message bus, %v", err)
+		return false
+	}
+
 	return true
 }
