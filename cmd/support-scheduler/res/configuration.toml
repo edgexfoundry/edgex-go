@@ -81,7 +81,7 @@ Type = "redis"
 AuthMode = "usernamepassword"  # required for redis messagebus (secure or insecure).
 SecretName = "redisdb"
   [MessageBus.Topics]
-  # No topic yet. Metrics topic is handler in [Writable.Telemetry] above
+  # No topic yet. Metrics topic is handled in [Writable.Telemetry] above
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="support-scheduler"
