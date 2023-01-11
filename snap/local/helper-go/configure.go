@@ -109,6 +109,9 @@ func disableSecurityAndStopAll() error {
 		return fmt.Errorf("error setting snap option: %v", err)
 	}
 
+	// Disable use of Secret Store for EdgeX services
+	if err := snapctl.Set("config.edgex-security-secret-store", "false").Run(); err != nil {
+		return fmt.Errorf("error setting snap option: %v", err)
 	}
 
 	// Clear redis config

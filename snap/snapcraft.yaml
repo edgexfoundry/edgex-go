@@ -77,8 +77,6 @@ apps:
   consul:
     adapter: full
     command: bin/start-consul.sh
-    command-chain:
-      - bin/security-secret-store-env-var.sh
     daemon: forking
     install-mode: disable
     plugs: [network, network-bind]
@@ -264,7 +262,6 @@ apps:
       - security-proxy-setup
     command: bin/core-data -configDir $SNAP_DATA/config/core-data/res -cp -r
     command-chain:
-      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
@@ -284,7 +281,6 @@ apps:
       - security-proxy-setup
     command: bin/core-metadata -configDir $SNAP_DATA/config/core-metadata/res -cp -r
     command-chain:
-      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
@@ -302,7 +298,6 @@ apps:
       - security-proxy-setup
     command: bin/core-command -configDir $SNAP_DATA/config/core-command/res -cp -r
     command-chain:
-      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
@@ -319,7 +314,6 @@ apps:
       - security-proxy-setup
     command: bin/support-notifications -configDir $SNAP_DATA/config/support-notifications/res -cp -r
     command-chain:
-      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
