@@ -54,13 +54,13 @@ func validateRequestTopic(prefix string, deviceName string, commandName string, 
 // validateGetCommandQueryParameters validates the value is valid for device service's reserved query parameters
 func validateGetCommandQueryParameters(queryParams map[string]string) error {
 	if dsReturnEvent, ok := queryParams[common.ReturnEvent]; ok {
-		if dsReturnEvent != common.ValueYes && dsReturnEvent != common.ValueNo {
-			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.ReturnEvent, common.ValueYes, common.ValueNo)
+		if dsReturnEvent != common.ValueTrue && dsReturnEvent != common.ValueFalse {
+			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.ReturnEvent, common.ValueTrue, common.ValueFalse)
 		}
 	}
 	if dsPushEvent, ok := queryParams[common.PushEvent]; ok {
-		if dsPushEvent != common.ValueYes && dsPushEvent != common.ValueNo {
-			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.PushEvent, common.ValueYes, common.ValueNo)
+		if dsPushEvent != common.ValueTrue && dsPushEvent != common.ValueFalse {
+			return fmt.Errorf("invalid query parameter, %s has to be '%s' or '%s'", common.PushEvent, common.ValueTrue, common.ValueFalse)
 		}
 	}
 

@@ -392,8 +392,8 @@ func testCommandQueryPayload() types.MessageEnvelope {
 
 func testCommandRequestPayload() types.MessageEnvelope {
 	payload := types.NewMessageEnvelopeForRequest(nil, map[string]string{
-		"ds-pushevent":   "yes",
-		"ds-returnevent": "yes",
+		"ds-pushevent":   common.ValueTrue,
+		"ds-returnevent": common.ValueTrue,
 	})
 
 	return payload
