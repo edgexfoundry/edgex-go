@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -65,17 +65,15 @@ func TestOnConnectHandler(t *testing.T) {
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
-				MessageBus: config.MessageBus{
-					External: bootstrapConfig.ExternalMQTTInfo{
-						Topics: map[string]string{
-							QueryRequestTopic:          testQueryRequestTopic,
-							QueryResponseTopic:         testQueryResponseTopic,
-							CommandRequestTopic:        testExternalCommandRequestTopic,
-							CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
-						},
-						QoS:    0,
-						Retain: true,
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					Topics: map[string]string{
+						QueryRequestTopic:          testQueryRequestTopic,
+						QueryResponseTopic:         testQueryResponseTopic,
+						CommandRequestTopic:        testExternalCommandRequestTopic,
+						CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
 					},
+					QoS:    0,
+					Retain: true,
 				},
 			}
 		},
@@ -171,14 +169,11 @@ func Test_commandQueryHandler(t *testing.T) {
 					Port:           mockPort,
 					MaxResultCount: 20,
 				},
-				MessageBus: config.MessageBus{
-					Internal: bootstrapConfig.MessageBusInfo{},
-					External: bootstrapConfig.ExternalMQTTInfo{
-						QoS:    0,
-						Retain: true,
-						Topics: map[string]string{
-							QueryResponseTopic: testQueryResponseTopic,
-						},
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					QoS:    0,
+					Retain: true,
+					Topics: map[string]string{
+						QueryResponseTopic: testQueryResponseTopic,
 					},
 				},
 			}
@@ -298,18 +293,16 @@ func Test_commandRequestHandler(t *testing.T) {
 					Port:           mockPort,
 					MaxResultCount: 20,
 				},
-				MessageBus: config.MessageBus{
-					Internal: bootstrapConfig.MessageBusInfo{
-						Topics: map[string]string{
-							DeviceRequestTopicPrefix: testInternalCommandRequestTopicPrefix,
-						},
+				MessageBus: bootstrapConfig.MessageBusInfo{
+					Topics: map[string]string{
+						DeviceRequestTopicPrefix: testInternalCommandRequestTopicPrefix,
 					},
-					External: bootstrapConfig.ExternalMQTTInfo{
-						QoS:    0,
-						Retain: true,
-						Topics: map[string]string{
-							CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
-						},
+				},
+				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
+					QoS:    0,
+					Retain: true,
+					Topics: map[string]string{
+						CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
 					},
 				},
 			}
