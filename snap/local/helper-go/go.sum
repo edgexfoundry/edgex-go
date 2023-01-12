@@ -1,5 +1,5 @@
-github.com/canonical/edgex-snap-hooks/v3 v3.0.0-20230112121550-e00e09577d45 h1:g4CpPM7YYcOxkLYi9ukpg0RxL+W4xYTw698nmO0qFkw=
-github.com/canonical/edgex-snap-hooks/v3 v3.0.0-20230112121550-e00e09577d45/go.mod h1:RvJ48YbdBPZn7L8OcylOpKIlIJD+nMjo5D7WSnPYusY=
+github.com/canonical/edgex-snap-hooks/v3 v3.0.0-20230112170125-c0580fb68dab h1:wpiKN0hX8tqeZNa4jPvgyrqP8ixm1Xu7lcQA3bypR7w=
+github.com/canonical/edgex-snap-hooks/v3 v3.0.0-20230112170125-c0580fb68dab/go.mod h1:RvJ48YbdBPZn7L8OcylOpKIlIJD+nMjo5D7WSnPYusY=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
