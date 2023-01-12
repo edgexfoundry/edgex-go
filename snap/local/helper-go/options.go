@@ -20,8 +20,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/canonical/edgex-snap-hooks/v2/log"
-	opt "github.com/canonical/edgex-snap-hooks/v2/options"
+	"github.com/canonical/edgex-snap-hooks/v3/log"
+	opt "github.com/canonical/edgex-snap-hooks/v3/options"
 )
 
 // options is called by the main function to configure options

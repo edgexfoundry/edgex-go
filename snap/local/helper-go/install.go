@@ -23,10 +23,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	hooks "github.com/canonical/edgex-snap-hooks/v2"
-	"github.com/canonical/edgex-snap-hooks/v2/env"
-	"github.com/canonical/edgex-snap-hooks/v2/log"
-	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
+	hooks "github.com/canonical/edgex-snap-hooks/v3"
+	"github.com/canonical/edgex-snap-hooks/v3/env"
+	"github.com/canonical/edgex-snap-hooks/v3/log"
+	"github.com/canonical/edgex-snap-hooks/v3/snapctl"
 )
 
 // device-rest and device-virtual are both on the /cmd/security-file-token-provider/res/token-config.json file,

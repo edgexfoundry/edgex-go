@@ -22,10 +22,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/canonical/edgex-snap-hooks/v2/env"
-	"github.com/canonical/edgex-snap-hooks/v2/log"
-	opt "github.com/canonical/edgex-snap-hooks/v2/options"
-	"github.com/canonical/edgex-snap-hooks/v2/snapctl"
+	"github.com/canonical/edgex-snap-hooks/v3/env"
+	"github.com/canonical/edgex-snap-hooks/v3/log"
+	opt "github.com/canonical/edgex-snap-hooks/v3/options"
+	"github.com/canonical/edgex-snap-hooks/v3/snapctl"
 )
 
 // snapService returns the snap service name for the given app as <snap>.<app>
