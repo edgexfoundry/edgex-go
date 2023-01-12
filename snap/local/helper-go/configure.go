@@ -167,10 +167,14 @@ func configure() {
 		log.Fatalf("Error unsetting snap option: %v", err)
 	}
 
-	// Schedule the startup of the oneshot service to apply secrets config options
-	// 	once the dependency services are ready (see snapcraft.yaml)
-	if err := snapctl.Start(snapService(secretsConfigProcessor)).Run(); err != nil {
-		log.Fatalf("Error starting service: %s", err)
+	if v, err := snapctl.Get("apps.secrets-config").Run(); err != nil {
+		log.Fatalf("Error reading snap option: %v", err)
+	} else if v != "" {
+		// Schedule the startup of the oneshot service to apply secrets config options
+		// 	once the depended services are ready (see snapcraft.yaml: apps.secrets-config-processor.after)
+		if err := snapctl.Start(snapService(secretsConfigProcessor)).Run(); err != nil {
+			log.Fatalf("Error starting service: %s", err)
+		}
 	}
 
 	log.Debug("End")
