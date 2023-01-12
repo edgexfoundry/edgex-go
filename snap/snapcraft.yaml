@@ -328,7 +328,6 @@ apps:
       - security-proxy-setup
     command: bin/support-scheduler -configDir $SNAP_DATA/config/support-scheduler/res -cp -r
     command-chain:
-      - bin/security-secret-store-env-var.sh
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
