@@ -196,7 +196,7 @@ apps:
       KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
       KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
 
-    start-timeout: 1m
+    start-timeout: 15m
     plugs: [network]
   security-proxy-setup:
     adapter: none
@@ -215,7 +215,7 @@ apps:
       KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
     daemon: oneshot
     install-mode: disable
-    start-timeout: 1m
+    start-timeout: 15m
     plugs: [network]
   # This is a simple service which calls into vault to retrieve the Redis password and then
   # to generate Redis config file for Redis server to start up with credentials and ACL rules.
@@ -235,7 +235,6 @@ apps:
       DATABASECONFIG_NAME: redis.conf
     daemon: oneshot
     install-mode: disable
-    start-timeout: 1m
     plugs: [network]
   # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
   security-consul-bootstrapper:
@@ -251,7 +250,6 @@ apps:
       STAGEGATE_REGISTRY_ACL_SENTINELFILEPATH: $SNAP_DATA/consul/config/consul_acl_done
     daemon: oneshot
     install-mode: disable
-    start-timeout: 1m
     plugs: [network]
   core-data:
     adapter: full
@@ -344,7 +342,7 @@ apps:
     command: bin/helper-go options --app secrets-config
     daemon: oneshot
     install-mode: disable
-    start-timeout: 1m
+    start-timeout: 15m
     plugs: [network]
   # helper commands the snap exposes
   security-proxy-setup-cmd:

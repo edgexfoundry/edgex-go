@@ -322,10 +322,9 @@ func install() {
 	}
 
 	// Enable autostart so that services start by default after seeding configuration
-	// if err = snapctl.Set("autostart", "true").Run(); err != nil {
-	// 	log.Fatalf("Error setting snap option: %v", err)
-	// }
-
+	// Set the option for each app instead of globally (i.e. autostart=true), so
+	// that the option can be selectively unset for oneshot services after starting
+	// them once!
 	var autostartKeyValues []string
 	for _, s := range allServices() {
 		autostartKeyValues = append(autostartKeyValues, "apps."+s+".autostart", "true")
@@ -333,25 +332,4 @@ func install() {
 	if err = snapctl.Set(autostartKeyValues...).Run(); err != nil {
 		log.Fatalf("Error setting snap option: %v", err)
 	}
-
-	// Stop and disable all services as they will be
-	// re-enabled in the configure hook if install-mode=defer-startup and
-	// they have their state set to "on".
-	// var services []string
-	// if serviceMap, err := snapctl.Services().Run(); err != nil {
-	// 	log.Fatalf("Error getting list of services: %v", err)
-	// } else {
-	// 	for k := range serviceMap {
-	// 		services = append(services, k)
-	// 	}
-	// }
-
-	// log.Infof("Disabling all services to defer startup to after configuration: %v", services)
-	// if err = snapctl.Stop(services...).Disable().Run(); err != nil {
-	// 	log.Fatalf("Error disabling services: %v", err)
-	// }
-
-	// if err = snapctl.Set("install-mode", "defer-startup").Run(); err != nil {
-	// 	log.Fatalf("Error setting 'install-mode'; %v", err)
-	// }
 }
