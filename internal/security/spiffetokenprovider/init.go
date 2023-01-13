@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
@@ -321,12 +322,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	tlsConfig := tlsconfig.MTLSServerConfig(source, source, tlsconfig.AuthorizeMemberOf(td))
 	tlsConfig.MinVersion = tls.VersionTLS13
 	tlsConfig.CurvePreferences = []tls.CurveID{tls.CurveP521, tls.CurveP384}
-	tlsConfig.PreferServerCipherSuites = true
 
 	serverAddress := ":" + strconv.Itoa(configuration.GetBootstrap().Service.Port)
 	server := &http.Server{
-		Addr:      serverAddress,
-		TLSConfig: tlsConfig,
+		Addr:              serverAddress,
+		ReadHeaderTimeout: time.Second * 5,
+		TLSConfig:         tlsConfig,
 	}
 
 	lc.Info("spiffe token provider starts listening and serves...")
