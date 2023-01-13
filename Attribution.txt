@@ -185,11 +185,17 @@ https://github.com/mattn/go-colorable/blob/master/LICENSE
 github.com/mattn/go-isatty (MIT) https://github.com/mattn/go-isatty
 https://github.com/mattn/go-isatty/blob/master/LICENSE
 
-golang.org/x/sys (Unspecified) https://github.com/golang/sys
+golang.org/x/sys (BSD-3) https://github.com/golang/sys
 https://github.com/golang/sys/blob/master/LICENSE
 
-golang.org/x/text (Unspecified) https://github.com/golang/text
+golang.org/x/text (BSD-3) https://github.com/golang/text
 https://github.com/golang/text/blob/master/LICENSE
+
+golang.org/x/mod (BSD-3) https://github.com/golang/mod
+https://github.com/golang/mod/blob/master/LICENSE
+
+golang.org/x/tools (BSD-3) https://github.com/golang/tools
+https://github.com/golang/tools/blob/master/LICENSE
 
 github.com/gorilla/websocket (BSD-2) https://github.com/gorilla/websocket
 https://github.com/gorilla/websocket/blob/master/LICENSE
