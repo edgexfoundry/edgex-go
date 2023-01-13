@@ -43,11 +43,6 @@ type KongRoute struct {
 	Name  string   `json:"name,omitempty"`
 }
 
-type KongACLPlugin struct {
-	Name      string `url:"name"`
-	WhiteList string `url:"config.whitelist"`
-}
-
 type CertInfo struct {
 	Cert string   `json:"cert,omitempty"`
 	Key  string   `json:"key,omitempty"`
