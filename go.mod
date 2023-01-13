@@ -3,9 +3,9 @@ module github.com/edgexfoundry/edgex-go
 require (
 	bitbucket.org/bertimus9/systemstat v0.0.0-20180207000608-0eeff89b0690
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.8
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.9
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.3
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.3
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.4
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.2
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/golang-jwt/jwt/v4 v4.4.3
@@ -21,8 +21,6 @@ require (
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/edgexfoundry/go-mod-messaging/v3 => github.com/jinlinGuan/go-mod-messaging/v3 v3.0.0-20230112093353-d552b7cefe35
 
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
