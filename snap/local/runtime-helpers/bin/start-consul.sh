@@ -15,10 +15,8 @@ cat > "$SNAP_DATA/consul/config/consul_default.json" <<EOF
 }
 EOF
 
-acls=${EDGEX_SECURITY_SECRET_STORE:-true}
-logger "start-consul.sh: acls=$acls"
-
-if [ "$acls" == "true" ]; then
+security=$(snapctl get security)
+if [ "$security" != "false" ]; then
     echo "$(date) deploying additional ACL configuration for Consul"
     cat > "$SNAP_DATA/consul/config/consul_acl.json" <<EOF
 {
