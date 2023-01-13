@@ -32,10 +32,6 @@ TokenTTL = 0
 Resource = "coredata"
 OutputPath = "accessToken.json"
 
-[KongACL]
-Name = "acl"
-WhiteList = "admin"
-
 [SecretStore]
 Type = "vault"
 Protocol = "https"
