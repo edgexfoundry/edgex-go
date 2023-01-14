@@ -39,26 +39,6 @@ Type = "consul"
   Timeout = 5000
   Type = "redisdb"
 
-[SecretStore]
-Type = "vault"
-Protocol = "http"
-Host = "localhost"
-Port = 8200
-Path = "security-spiffe-token-provider/"
-TokenFile = "/tmp/edgex/secrets/security-spiffe-token-provider/secrets-token.json"
-RootCaCertPath = ""
-ServerName = ""
-  [SecretStore.Authentication]
-  AuthType = "X-Vault-Token"
-  [SecretStore.RuntimeTokenProvider]
-  Enabled = false # This is the implementation of RuntimeTokenProvider; must always be false!
-  Protocol = ""
-  Host = ""
-  Port = 0
-  TrustDomain = ""
-  EndpointSocket = ""
-  RequiredSecrets = ""
-
 [SPIFFE]
   EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
   TrustDomain = "edgexfoundry.org"

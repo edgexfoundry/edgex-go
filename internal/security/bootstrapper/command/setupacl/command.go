@@ -36,6 +36,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/environment"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
@@ -63,9 +66,10 @@ const (
 )
 
 type cmd struct {
-	loggingClient logger.LoggingClient
-	client        internal.HttpCaller
-	configuration *config.ConfigurationStruct
+	loggingClient   logger.LoggingClient
+	client          internal.HttpCaller
+	configuration   *config.ConfigurationStruct
+	secretStoreinfo *bootstrapConfig.SecretStoreInfo
 
 	// internal state
 	retryTimeout           time.Duration
@@ -94,6 +98,12 @@ func NewCommand(
 	err := flagSet.Parse(args)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to parse command: %s: %w", strings.Join(args, " "), err)
+	}
+
+	envVars := environment.NewVariables(lc)
+	cmd.secretStoreinfo, err = secret.BuildSecretStoreConfig(common.SecurityBootstrapperKey, envVars, lc)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create SecretStore configuration %v", err)
 	}
 
 	return &cmd, nil
@@ -683,9 +693,9 @@ func (c *cmd) writeSentinelFile() error {
 func (c *cmd) createSecretStoreClient(secretConfig *config.ConfigurationStruct) (secrets.SecretStoreClient, error) {
 	clientConfig := types.SecretConfig{
 		Type:     secrets.Vault,
-		Host:     secretConfig.SecretStore.Host,
-		Port:     secretConfig.SecretStore.Port,
-		Protocol: secretConfig.SecretStore.Protocol,
+		Host:     c.secretStoreinfo.Host,
+		Port:     c.secretStoreinfo.Port,
+		Protocol: c.secretStoreinfo.Protocol,
 	}
 
 	client, err := secrets.NewSecretStoreClient(clientConfig, c.loggingClient, c.client)

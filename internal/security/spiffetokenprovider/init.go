@@ -30,6 +30,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/environment"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/spiffe/go-spiffe/v2/spiffeid"
 	"github.com/spiffe/go-spiffe/v2/spiffetls/tlsconfig"
 	"github.com/spiffe/go-spiffe/v2/workloadapi"
@@ -59,6 +62,7 @@ const (
 
 type Bootstrap struct {
 	validKnownSecrets map[string]bool
+	secretStoreConfig *bootstrapConfig.SecretStoreInfo
 }
 
 func NewBootstrap() *Bootstrap {
@@ -69,29 +73,34 @@ func NewBootstrap() *Bootstrap {
 
 func (b *Bootstrap) getSecretStoreClient(dic *di.Container) (secrets.SecretStoreClient, error) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	configuration := container.ConfigurationFrom(dic.Get)
-	secretStoreConfig := configuration.SecretStore
+	var err error
+
+	envVars := environment.NewVariables(lc)
+	b.secretStoreConfig, err = secret.BuildSecretStoreConfig(common.SecuritySpiffeTokenProviderKey, envVars, lc)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create SecretStore configuration %v", err)
+	}
 
 	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
 
 	var httpCaller internal.HttpCaller
-	if caFilePath := secretStoreConfig.RootCaCertPath; caFilePath != "" {
+	if caFilePath := b.secretStoreConfig.RootCaCertPath; caFilePath != "" {
 		lc.Info("using certificate verification for secret store connection")
 		caReader, err := fileOpener.OpenFileReader(caFilePath, os.O_RDONLY, 0400)
 		if err != nil {
 			return nil, err
 		}
-		httpCaller = pkg.NewRequester(lc).WithTLS(caReader, secretStoreConfig.ServerName)
+		httpCaller = pkg.NewRequester(lc).WithTLS(caReader, b.secretStoreConfig.ServerName)
 	} else {
 		lc.Info("bypassing certificate verification for secret store connection")
 		httpCaller = pkg.NewRequester(lc).Insecure()
 	}
 
 	clientConfig := types.SecretConfig{
-		Type:     secretStoreConfig.Type,
-		Protocol: secretStoreConfig.Protocol,
-		Host:     secretStoreConfig.Host,
-		Port:     secretStoreConfig.Port,
+		Type:     b.secretStoreConfig.Type,
+		Protocol: b.secretStoreConfig.Protocol,
+		Host:     b.secretStoreConfig.Host,
+		Port:     b.secretStoreConfig.Port,
 	}
 	secretClient, err := secrets.NewSecretStoreClient(clientConfig, lc, httpCaller)
 	if err != nil {
@@ -109,8 +118,7 @@ func (b *Bootstrap) getPrivilegedToken(dic *di.Container) (string, error) {
 	}
 
 	// Reload token in case new token was created causing the auth error
-	configuration := container.ConfigurationFrom(dic.Get)
-	token, err := tokenLoader.Load(configuration.GetBootstrap().SecretStore.TokenFile)
+	token, err := tokenLoader.Load(b.secretStoreConfig.TokenFile)
 	if err != nil {
 		return "", err
 	}
@@ -266,7 +274,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 		lc.Debug("seeding the known secrets if any...")
 
-		if err := b.seedKnownSecrets(ctx, lc, configuration.SecretStore, knownSecretNames, serviceKey, privilegedToken); err != nil {
+		if err := b.seedKnownSecrets(ctx, lc, b.secretStoreConfig, knownSecretNames, serviceKey, privilegedToken); err != nil {
 			lc.Errorf("failed to seed known secrets: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -342,7 +350,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 // seedKnownSecrets seeds or copies the known secrets from the existing service (e.g. security-bootstrapper-redis)
 // to the requested new service that also uses the same known secrets
 func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClient,
-	ssConfig bootstrapConfig.SecretStoreInfo,
+	ssConfig *bootstrapConfig.SecretStoreInfo,
 	knownSecretNames []string, serviceKey string, privilegedToken string) error {
 
 	// to see if we can find redisdb as part of known secret name since that is the known secret we can support now

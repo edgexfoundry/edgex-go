@@ -23,7 +23,6 @@ import (
 // the runtime extension of the static configuration.
 type ConfigurationStruct struct {
 	LogLevel       string
-	SecretStore    bootstrapConfig.SecretStoreInfo
 	Databases      map[string]bootstrapConfig.Database
 	DatabaseConfig DatabaseBootstrapConfigInfo
 }
@@ -62,9 +61,7 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
-	return bootstrapConfig.BootstrapConfiguration{
-		SecretStore: c.SecretStore,
-	}
+	return bootstrapConfig.BootstrapConfiguration{}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
