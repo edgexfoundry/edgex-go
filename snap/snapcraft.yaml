@@ -227,8 +227,10 @@ apps:
     after:
       - security-secretstore-setup
     command: bin/setup-redis-acl.sh
+    command-chain:
+      - bin/service-config-overrides.sh
     environment:
-      # TODO: determine the correct cmd-line args & env var overrides...
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
       SECRETSTORE_SERVERNAME: localhost
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-bootstrapper-redis/secrets-token.json
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
@@ -242,7 +244,10 @@ apps:
     after:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
+    command-chain:
+      - bin/service-config-overrides.sh
     environment:
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
       STAGEGATE_REGISTRY_HOST: localhost
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_MANAGEMENTTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
