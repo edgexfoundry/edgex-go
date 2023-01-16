@@ -55,7 +55,7 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-		lc.Debugf("Received command query request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
+		lc.Debugf("Received command query request from external message broker on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
 
 		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
 		if err != nil {
@@ -94,7 +94,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-		lc.Debugf("Received command request from external message queue on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
+		lc.Debugf("Received command request from external message broker on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
 
 		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
 		qos := messageBusInfo.External.QoS
@@ -162,8 +162,8 @@ func publishMessage(client mqtt.Client, responseTopic string, qos byte, retain b
 	envelopeBytes, _ := json.Marshal(&message)
 
 	if token := client.Publish(responseTopic, qos, retain, envelopeBytes); token.Wait() && token.Error() != nil {
-		lc.Errorf("Could not publish to external message queue on topic '%s': %s", responseTopic, token.Error())
+		lc.Errorf("Could not publish to external message broker on topic '%s': %s", responseTopic, token.Error())
 	} else {
-		lc.Debugf("Published response message to external message queue on topic '%s' with %d bytes", responseTopic, len(envelopeBytes))
+		lc.Debugf("Published response message to external message broker on topic '%s' with %d bytes", responseTopic, len(envelopeBytes))
 	}
 }
