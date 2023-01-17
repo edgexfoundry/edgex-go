@@ -68,7 +68,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 			case e := <-messageErrors:
 				lc.Error(e.Error())
 			case msgEnvelope := <-messages:
-				lc.Debugf("Event received on message queue. Topic: %s, Correlation-id: %s ", subscribeTopic, msgEnvelope.CorrelationID)
+				lc.Debugf("Event received from MessageBus. Topic: %s, Correlation-id: %s ", subscribeTopic, msgEnvelope.CorrelationID)
 				event := &requests.AddEventRequest{}
 				// decoding the large payload may cause memory issues so checking before decoding
 				maxEventSize := dataContainer.ConfigurationFrom(dic.Get).MaxEventSize

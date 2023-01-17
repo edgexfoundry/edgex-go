@@ -82,7 +82,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, profileName string, deviceName s
 
 	publishPrefix := configuration.MessageBus.Topics[config.MessageBusPublishTopicPrefix]
 	publishTopic := fmt.Sprintf("%s/%s/%s/%s", publishPrefix, profileName, deviceName, sourceName)
-	lc.Debugf("Publishing V2 AddEventRequest to message queue. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
+	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
 	err := msgClient.Publish(msgEnvelope, publishTopic)
@@ -90,7 +90,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, profileName string, deviceName s
 		lc.Errorf("Unable to send message for V2 API event. Correlation-id: %s, Profile Name: %s, "+
 			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err)
 	} else {
-		lc.Debugf("V2 API Event Published on message queue. Topic: %s, Correlation-id: %s ", publishTopic, correlationId)
+		lc.Debugf("Event Published to MessageBus. Topic: %s, Correlation-id: %s ", publishTopic, correlationId)
 	}
 }
 
