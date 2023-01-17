@@ -564,21 +564,21 @@ paths:
           schema:
             type: string
             enum:
-              - yes
-              - no
-            default: no
-          example: yes
-          description: "If set to yes, a successful GET will result in an event being pushed to the EdgeX system"
+              - true
+              - false
+            default: false
+          example: true
+          description: "If set to true, a successful GET will result in an event being pushed to the EdgeX system"
         - in: query
           name: ds-returnevent
           schema:
             type: string
             enum:
-              - yes
-              - no
-            default: yes
-          example: no
-          description: "If set to no, there will be no Event returned in the http response"
+              - true
+              - false
+            default: true
+          example: false
+          description: "If set to false, there will be no Event returned in the http response"
       responses:
         '200':
           description: "OK"

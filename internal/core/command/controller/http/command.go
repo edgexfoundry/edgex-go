@@ -79,13 +79,13 @@ func (cc *CommandController) CommandsByDeviceName(w http.ResponseWriter, r *http
 }
 
 func validateGetCommandParameters(r *http.Request) (err errors.EdgeX) {
-	dsReturnEvent := utils.ParseQueryStringToString(r, common.ReturnEvent, common.ValueYes)
-	dsPushEvent := utils.ParseQueryStringToString(r, common.PushEvent, common.ValueNo)
-	if dsReturnEvent != common.ValueYes && dsReturnEvent != common.ValueNo {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsReturnEvent, common.ValueYes, common.ValueNo), nil)
+	dsReturnEvent := utils.ParseQueryStringToString(r, common.ReturnEvent, common.ValueTrue)
+	dsPushEvent := utils.ParseQueryStringToString(r, common.PushEvent, common.ValueFalse)
+	if dsReturnEvent != common.ValueTrue && dsReturnEvent != common.ValueFalse {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsReturnEvent, common.ValueTrue, common.ValueFalse), nil)
 	}
-	if dsPushEvent != common.ValueYes && dsPushEvent != common.ValueNo {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsPushEvent, common.ValueYes, common.ValueNo), nil)
+	if dsPushEvent != common.ValueTrue && dsPushEvent != common.ValueFalse {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid query parameter, %s has to be %s or %s", dsPushEvent, common.ValueTrue, common.ValueFalse), nil)
 	}
 	return nil
 }

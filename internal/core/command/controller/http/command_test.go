@@ -46,7 +46,7 @@ const (
 	testDeviceServiceName = "testDeviceService"
 	testCommandName       = "testCommand"
 	testBaseAddress       = "http://localhost:49990"
-	testQueryStrings      = "a=1&b=2&ds-pushevent=no"
+	testQueryStrings      = "a=1&b=2&ds-pushevent=false"
 )
 
 // NewMockDIC function returns a mock bootstrap di Container
