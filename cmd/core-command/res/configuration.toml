@@ -105,17 +105,3 @@ Type = "consul"
     CommandResponseTopicPrefix = "edgex/command/response"     # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
     QueryRequestTopic = "edgex/commandquery/request/#"        # for subscribing to 3rd party command query request
     QueryResponseTopic = "edgex/commandquery/response"        # for publishing responses back to 3rd party systems
-
-[SecretStore]
-Type = "vault"
-Protocol = "http"
-Host = "localhost"
-Port = 8200
-# Use the core-meta data secrets due to core-command using core-meta-data's database for persistance.
-Path = "core-command/"
-TokenFile = "/tmp/edgex/secrets/core-command/secrets-token.json"
-RootCaCertPath = ""
-ServerName = ""
-  [SecretStore.Authentication]
-  AuthType = "X-Vault-Token"
-

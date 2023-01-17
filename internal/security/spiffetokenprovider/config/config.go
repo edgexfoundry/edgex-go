@@ -28,14 +28,13 @@ type SpiffeInfo struct {
 }
 
 type ConfigurationStruct struct {
-	Writable    WritableInfo
-	MessageBus  bootstrapConfig.MessageBusInfo
-	Clients     map[string]bootstrapConfig.ClientInfo
-	Databases   map[string]bootstrapConfig.Database
-	Registry    bootstrapConfig.RegistryInfo
-	Service     bootstrapConfig.ServiceInfo
-	SecretStore bootstrapConfig.SecretStoreInfo
-	Spiffe      SpiffeInfo
+	Writable   WritableInfo
+	MessageBus bootstrapConfig.MessageBusInfo
+	Clients    map[string]bootstrapConfig.ClientInfo
+	Databases  map[string]bootstrapConfig.Database
+	Registry   bootstrapConfig.RegistryInfo
+	Service    bootstrapConfig.ServiceInfo
+	Spiffe     SpiffeInfo
 }
 
 type WritableInfo struct {
@@ -81,10 +80,9 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
+		Clients:  c.Clients,
+		Service:  c.Service,
+		Registry: c.Registry,
 	}
 }
 

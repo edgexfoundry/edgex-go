@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path"
 	"strconv"
 	"testing"
@@ -361,10 +362,11 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 	registryTestConf.StageGate.WaitFor.Timeout = "1m"
 	registryTestConf.StageGate.WaitFor.RetryInterval = "1s"
 	// for the sake of simplicity, we use the same test server as the secret store server
-	registryTestConf.SecretStore.Type = "vault"
-	registryTestConf.SecretStore.Protocol = tsURL.Scheme
-	registryTestConf.SecretStore.Host = tsURL.Hostname()
-	registryTestConf.SecretStore.Port = portNum
+	os.Setenv("SECRETSTORE_PROTOCOL", tsURL.Scheme)
+	os.Setenv("SECRETSTORE_HOST", tsURL.Hostname())
+	os.Setenv("SECRETSTORE_PORT", tsURL.Port())
+
 	registry.server = testSrv
 	return registryTestConf
+
 }

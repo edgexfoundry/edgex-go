@@ -34,7 +34,6 @@ type ConfigurationStruct struct {
 	KongURL           KongUrlInfo
 	KongAuth          KongAuthInfo
 	CORSConfiguration bootstrapConfig.CORSConfigurationInfo
-	SecretStore       bootstrapConfig.SecretStoreInfo
 	Routes            map[string]models.KongService
 }
 
@@ -103,9 +102,7 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(_ interface{}) bool {
 // GetBootstrap returns the configuration elements required by the bootstrap.
 // Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	return bootstrapConfig.BootstrapConfiguration{
-		SecretStore: c.SecretStore,
-	}
+	return bootstrapConfig.BootstrapConfiguration{}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.

@@ -99,23 +99,3 @@ SecretName = "redisdb"
   Deliver = "new"
   DefaultPubRetryAttempts = "2"
   Subject = "edgex/#" # Required for NATS Jetstram only for stream autoprovsioning
-
-[SecretStore]
-Type = "vault"
-Protocol = "http"
-Host = "localhost"
-Port = 8200
-Path = "core-metadata/"
-TokenFile = "/tmp/edgex/secrets/core-metadata/secrets-token.json"
-RootCaCertPath = ""
-ServerName = ""
-  [SecretStore.Authentication]
-  AuthType = "X-Vault-Token"
-  [SecretStore.RuntimeTokenProvider]
-  Enabled = false
-  Protocol = "https"
-  Host = "localhost"
-  Port = 59841
-  TrustDomain = "edgexfoundry.org"
-  EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
-  RequiredSecrets = "redisdb"

@@ -30,7 +30,6 @@ type ConfigurationStruct struct {
 	MessageBus      bootstrapConfig.MessageBusInfo
 	Intervals       map[string]IntervalInfo
 	IntervalActions map[string]IntervalActionInfo
-	SecretStore     bootstrapConfig.SecretStoreInfo
 	// ScheduleIntervalTime is a time(Millisecond) to create a ticker to delay the scheduler loop
 	ScheduleIntervalTime int
 }
@@ -126,11 +125,10 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
-		MessageBus:  c.MessageBus,
+		Clients:    c.Clients,
+		Service:    c.Service,
+		Registry:   c.Registry,
+		MessageBus: c.MessageBus,
 	}
 }
 

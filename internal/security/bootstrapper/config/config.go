@@ -22,9 +22,8 @@ import (
 )
 
 type ConfigurationStruct struct {
-	LogLevel    string
-	StageGate   StageGateInfo
-	SecretStore bootstrapConfig.SecretStoreInfo
+	LogLevel  string
+	StageGate StageGateInfo
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

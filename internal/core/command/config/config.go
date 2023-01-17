@@ -21,13 +21,12 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable    WritableInfo
-	Clients     map[string]bootstrapConfig.ClientInfo
-	Databases   map[string]bootstrapConfig.Database
-	Registry    bootstrapConfig.RegistryInfo
-	Service     bootstrapConfig.ServiceInfo
-	MessageBus  MessageBus
-	SecretStore bootstrapConfig.SecretStoreInfo
+	Writable   WritableInfo
+	Clients    map[string]bootstrapConfig.ClientInfo
+	Databases  map[string]bootstrapConfig.Database
+	Registry   bootstrapConfig.RegistryInfo
+	Service    bootstrapConfig.ServiceInfo
+	MessageBus MessageBus
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -81,7 +80,6 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Clients:      c.Clients,
 		Service:      c.Service,
 		Registry:     c.Registry,
-		SecretStore:  c.SecretStore,
 		MessageBus:   c.MessageBus.Internal,
 		ExternalMQTT: c.MessageBus.External,
 	}

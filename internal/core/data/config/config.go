@@ -25,7 +25,6 @@ type ConfigurationStruct struct {
 	Databases    map[string]bootstrapConfig.Database
 	Registry     bootstrapConfig.RegistryInfo
 	Service      bootstrapConfig.ServiceInfo
-	SecretStore  bootstrapConfig.SecretStoreInfo
 	MaxEventSize int64
 }
 
@@ -73,11 +72,10 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:     c.Clients,
-		Service:     c.Service,
-		Registry:    c.Registry,
-		SecretStore: c.SecretStore,
-		MessageBus:  c.MessageBus,
+		Clients:    c.Clients,
+		Service:    c.Service,
+		Registry:   c.Registry,
+		MessageBus: c.MessageBus,
 	}
 }
 

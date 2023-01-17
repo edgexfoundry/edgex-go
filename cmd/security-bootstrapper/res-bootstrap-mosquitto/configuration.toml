@@ -13,19 +13,7 @@
 #
 #################################################################################
 
-LogLevel = "DEBUG"
-
-[SecretStore]
-Type = "vault"
-Protocol = "http"
-Host = "localhost"          ## Override in environment variables, if necessary
-Port = 8200
-Path = "security-bootstrapper-messagebus/"
-TokenFile = "/tmp/edgex/secrets/security-bootstrapper-messagebus/secrets-token.json"
-RootCaCertPath = ""
-ServerName = ""
-  [SecretStore.Authentication]
-  AuthType = "X-Vault-Token"
+LogLevel = "INFO"
 
 [SecureMosquitto]
 Port = 1883

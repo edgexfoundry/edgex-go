@@ -7,17 +7,17 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces/mocks"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
@@ -113,15 +113,7 @@ func TestAddSecret(t *testing.T) {
 func mockDic() *di.Container {
 	return di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationInterfaceName: func(get di.Get) interface{} {
-			return &config.ConfigurationStruct{
-				SecretStore: bootstrapConfig.SecretStoreInfo{
-					Type:     "vault",
-					Host:     "localhost",
-					Port:     8200,
-					Path:     "/v1/secret/edgex/device-simple/",
-					Protocol: "http",
-				},
-			}
+			return &config.ConfigurationStruct{}
 		},
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()

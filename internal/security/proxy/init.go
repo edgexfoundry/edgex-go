@@ -18,11 +18,15 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/environment"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
@@ -65,12 +69,17 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
+	secretStoreConfig, err := secret.BuildSecretStoreConfig(common.SecurityProxySetupServiceKey, environment.NewVariables(lc), lc)
+	if err != nil {
+		b.haltIfError(lc, fmt.Errorf("unable to get SecretStore configuration: %v", err))
+	}
+
 	var req internal.HttpCaller
-	if len(configuration.SecretStore.RootCaCertPath) > 0 {
+	if len(secretStoreConfig.RootCaCertPath) > 0 {
 		req = NewRequestor(
 			b.insecureSkipVerify,
 			configuration.RequestTimeout,
-			configuration.SecretStore.RootCaCertPath,
+			secretStoreConfig.RootCaCertPath,
 			lc)
 	} else {
 		req = NewRequestor(
