@@ -8,6 +8,9 @@
   "core-metadata": {
     "edgex_use_defaults": true
   },
+  "core-common-config-bootstrapper": {
+    "edgex_use_defaults": true
+  },
   "security-bootstrapper-redis": {
     "edgex_use_defaults": true
   },
