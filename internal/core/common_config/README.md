@@ -5,11 +5,6 @@ Core Common Config Bootstrapper pushes the common settings into the Configuratio
 
 # Install and Deploy Native #
 
-### Prerequisites ###
-Several EdgeX Foundry services depend on ZeroMQ for communications by default.  The easiest way to get and install ZeroMQ is to use or follow the following setup script:  https://gist.github.com/katopz/8b766a5cb0ca96c816658e9407e83d00.
-
-**Note**: Setup of the ZeroMQ library is not supported on Windows platforms.
-
 ### Installation and Execution ###
 To fetch the code and build the microservice execute the following:
 
@@ -23,8 +18,8 @@ make prepare
 make common_config
 # get to the command microservice executable
 cd cmd/core-common-config-bootstrapper
-# run the microservice (may require other dependent services to run correctly)
-./core-common-config-bootstrapper
+# run the microservice (may require other dependent services to run correctly) and provide the configuration provider using -cp
+./core-common-config-bootstrapper -cp
 ```
 
 # Install and Deploy via Docker Container #

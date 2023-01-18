@@ -31,7 +31,7 @@ COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/core-common_config-bootstrapper/core-common_config-bootstrapper
+RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine:3.16
@@ -43,7 +43,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/core-common-config-bootstrapper /
-COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/res/configuration.yaml /res/configuration.yaml
 
 COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/entrypoint.sh \

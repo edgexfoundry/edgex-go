@@ -43,6 +43,8 @@ LogLevel = "INFO"
           Description = "role for metadata"
         [StageGate.Registry.ACL.Roles.core-command]
           Description = "role for command"
+        [StageGate.Registry.ACL.Roles.core-common-config-bootstrapper]
+          Description = "role for common config"
         [StageGate.Registry.ACL.Roles.support-notifications]
           Description = "role for notifications"
         [StageGate.Registry.ACL.Roles.support-scheduler]

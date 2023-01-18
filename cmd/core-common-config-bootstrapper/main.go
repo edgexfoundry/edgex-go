@@ -16,10 +16,9 @@ package main
 import (
 	"context"
 	"github.com/edgexfoundry/edgex-go/internal/core/common_config"
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	common_config.Main(ctx, cancel, mux.NewRouter())
+	common_config.Main(ctx, cancel)
 }

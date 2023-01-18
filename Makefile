@@ -98,7 +98,7 @@ command: cmd/core-command/core-command
 cmd/core-command/core-command:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-command
 
-common_config: cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
+common-config: cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 cmd/core-common-config-bootstrapper/core-common-config-bootstrapper:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-common-config-bootstrapper
 
@@ -217,14 +217,14 @@ docker_core_command: docker_base
 		-t edgexfoundry/core-command:$(DOCKER_TAG) \
 		.
 
-dcommon_config: docker_core_common_config
+dcommon-config: docker_core_common_config
 docker_core_common_config: docker_base
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
-		-f cmd/core-command/Dockerfile \
+		-f cmd/core-common-config-bootstrapper/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-common-config-bootstrapper:$(GIT_SHA) \
 		-t edgexfoundry/core-common-config-bootstrapper:$(DOCKER_TAG) \
