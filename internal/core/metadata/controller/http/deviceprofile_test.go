@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -45,28 +45,31 @@ var testAttributes = map[string]interface{}{
 	"TestAttribute": "TestAttributeValue",
 }
 var testMappings = map[string]string{"0": "off", "1": "on"}
+var testTags = map[string]any{
+	"TestTagKey": "TestTagValue",
+}
 
 func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 	var testDeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
 		},
+		Tags: testTags,
 	}, {
 		Name:        TestDeviceResourceName + "-dup",
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
 		},
+		Tags: testTags,
 	}}
 	var testDeviceCommands = []dtos.DeviceCommand{{
 		Name:      TestDeviceCommandName,
@@ -238,22 +241,22 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	noDeviceResourceName := deviceProfile
 	noDeviceResourceName.Profile.DeviceResources = []dtos.DeviceResource{{
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noDeviceResourcePropertyType := deviceProfile
 	noDeviceResourcePropertyType.Profile.DeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noCommandName := deviceProfile
 	noCommandName.Profile.DeviceCommands = []dtos.DeviceCommand{{
@@ -451,22 +454,22 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	noDeviceResourceName := deviceProfileRequest
 	noDeviceResourceName.Profile.DeviceResources = []dtos.DeviceResource{{
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noDeviceResourcePropertyType := deviceProfileRequest
 	noDeviceResourcePropertyType.Profile.DeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noCommandName := deviceProfileRequest
 	noCommandName.Profile.DeviceCommands = []dtos.DeviceCommand{{
@@ -735,22 +738,22 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	noDeviceResourceName := deviceProfile
 	noDeviceResourceName.DeviceResources = []dtos.DeviceResource{{
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noDeviceResourcePropertyType := deviceProfile
 	noDeviceResourcePropertyType.DeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noCommandName := deviceProfile
 	noCommandName.DeviceCommands = []dtos.DeviceCommand{{
@@ -874,22 +877,22 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	noDeviceResourceName := deviceProfile
 	noDeviceResourceName.DeviceResources = []dtos.DeviceResource{{
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: "INT16",
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noDeviceResourcePropertyType := deviceProfile
 	noDeviceResourcePropertyType.DeviceResources = []dtos.DeviceResource{{
 		Name:        TestDeviceResourceName,
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	}}
 	noCommandName := deviceProfile
 	noCommandName.DeviceCommands = []dtos.DeviceCommand{{
