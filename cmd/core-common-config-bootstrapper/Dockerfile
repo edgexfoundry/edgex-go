@@ -16,8 +16,7 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
-
-# Docker image for Golang Core Data micro service
+# Docker image for Golang Core common config bootstrapper service
 ARG BUILDER_BASE=golang:1.18-alpine3.16
 FROM ${BUILDER_BASE} AS builder
 

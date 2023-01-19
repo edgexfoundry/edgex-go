@@ -1,4 +1,4 @@
-# EdgeX Foundry Core Command Service
+# EdgeX Foundry Core Common Config Bootstrapper Service
 [![license](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
 
 Core Common Config Bootstrapper pushes the common settings into the Configuration Provider on start-up and provides the override flag common to all services to force re-pushing the configuration into the Configuration Provider.

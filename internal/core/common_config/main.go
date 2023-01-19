@@ -44,7 +44,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	// TODO: figure out how to eliminate registry and profile flags
 	f := flags.New()
 	f.Parse(os.Args[1:])
-	
+
 	var wg sync.WaitGroup
 	translateInterruptToCancel(ctx, &wg, cancel)
 
@@ -65,13 +65,13 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	lc.Info("Secret Provider created")
 
-	accessToken, err := secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
+	_, err = secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
 	if err != nil {
 		lc.Errorf("failed to get Access Token for config provider: %v", err)
 		os.Exit(1)
 	}
 
-	lc.Infof("Got Config Provider Access Token: '%s'", accessToken)
+	lc.Info("Got Config Provider Access Token")
 	lc.Info("Core Common Config Ready for stage two")
 	lc.Info("Core Common Config exiting")
 	os.Exit(0)

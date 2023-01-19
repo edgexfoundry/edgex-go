@@ -61,7 +61,6 @@ all-services:
       SubscribeTopic: "edgex/events/device/#"  # required for subscribing to Events from MessageBus
     Optional:
       # Default MQTT Specific options that need to be here to enable environment variable overrides of them
-      ClientId: "core-data"
       Qos:  "0" # Quality of Service values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
       KeepAlive: "10" # Seconds (must be 2 or greater)
       Retained: "false"
