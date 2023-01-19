@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2022 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -40,12 +40,12 @@ var testDeviceResourceRequest = requests.AddDeviceResourceRequest{
 	Resource: dtos.DeviceResource{
 		Name:        "TestDeviceResourceNewName",
 		Description: TestDescription,
-		Tag:         TestTag,
 		Attributes:  testAttributes,
 		Properties: dtos.ResourceProperties{
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 		},
+		Tags: testTags,
 	},
 }
 
