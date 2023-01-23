@@ -48,5 +48,6 @@ COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/entrypoint.sh 
 RUN chmod 755 /usr/local/bin/entrypoint.sh \
     && ln -s /usr/local/bin/entrypoint.sh /
 
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["/core-common-config-bootstrapper", "-cp=consul.http://edgex-core-consul:8500"]
+# Due to security mode compose file overriding overriding entry point script, we must specify this service entrypoint \
+# script in CMD
+CMD ["entrypoint.sh"]

@@ -19,4 +19,6 @@
 
 set -e
 
-"$@" && exec tail -f /dev/null
+# Due to security mode compose file overriding entry point script, we must specify explicitly specify the command here
+# since CMD is set to this script in the Dockerfile and the secure compose file
+/core-common-config-bootstrapper -cp=consul.http://edgex-core-consul:8500 && exec tail -f /dev/null
