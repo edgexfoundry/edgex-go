@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	commonConfigDone = "isCommonConfigReady"
+	commonConfigDone = "IsCommonConfigReady"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
@@ -76,22 +76,22 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	var accessToken string
 	var getAccessToken types.GetAccessTokenCallback
 
-	if secretProvider != nil {
-		getAccessToken = func() (string, error) {
-			accessToken, err = secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
-			if err != nil {
-				return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
-			}
-			return accessToken, err
-		}
-		_, err = getAccessToken()
+	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
+	// access to the config provider in secure mode
+	getAccessToken = func() (string, error) {
+		accessToken, err = secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
 		if err != nil {
-			lc.Errorf("failed to get Access Token for config provider: %s", err.Error())
-			os.Exit(1)
+			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
 		}
+		return accessToken, err
+	}
+	_, err = getAccessToken()
+	if err != nil {
+		lc.Errorf("failed to get Access Token for config provider: %s", err.Error())
+		os.Exit(1)
 	}
 
-	lc.Info("Got Config Provider Access Token")
+	lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
 	// create config client
 	envVars := environment.NewVariables(lc)
 	configProviderInfo, err := config.NewProviderInfo(envVars, f.ConfigProviderUrl())
@@ -107,7 +107,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	// check to see if the configuration exists in the config provider
 	hasConfig, err := configClient.HasConfiguration()
 	if err != nil {
-		lc.Errorf("failed to determine if configuration exists in the provider: %s", err.Error())
+		lc.Errorf("failed to determine if common configuration exists in the provider: %s", err.Error())
 		os.Exit(1)
 	}
 	lc.Infof("configuration exists: %v", hasConfig)
@@ -181,7 +181,6 @@ func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configurati
 
 	for _, k := range keys {
 		v := kv[k]
-		// Push key/value into Consul rather than print
 		err = configClient.PutConfigurationValue(k, []byte(fmt.Sprint(v)))
 		if err != nil {
 			return fmt.Errorf("failed to push common configuration key %s with value %v: %s", k, v, err.Error())
@@ -196,7 +195,7 @@ func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configurati
 	return nil
 }
 
-// buildKeyValues is a helper function to parse the configuration yaml file
+// buildKeyValues is a helper function to parse the configuration yaml file contents
 func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, origKey string) map[string]interface{} {
 	key := origKey
 	for k, v := range data {
