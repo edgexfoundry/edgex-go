@@ -73,25 +73,20 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	}
 
 	lc.Info("Secret Provider created")
-	var accessToken string
+
 	var getAccessToken types.GetAccessTokenCallback
 
 	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
 	// access to the config provider in secure mode
 	getAccessToken = func() (string, error) {
-		accessToken, err = secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
+		accessToken, err := secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
 		if err != nil {
 			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
 		}
+		lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
 		return accessToken, err
 	}
-	_, err = getAccessToken()
-	if err != nil {
-		lc.Errorf("failed to get Access Token for config provider: %s", err.Error())
-		os.Exit(1)
-	}
 
-	lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
 	// create config client
 	envVars := environment.NewVariables(lc)
 	configProviderInfo, err := config.NewProviderInfo(envVars, f.ConfigProviderUrl())
