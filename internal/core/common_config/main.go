@@ -25,7 +25,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-configuration/v3/configuration"
-	"github.com/edgexfoundry/go-mod-configuration/v3/pkg/types"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
@@ -74,11 +73,9 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	lc.Info("Secret Provider created")
 
-	var getAccessToken types.GetAccessTokenCallback
-
 	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
 	// access to the config provider in secure mode
-	getAccessToken = func() (string, error) {
+	getAccessToken := func() (string, error) {
 		accessToken, err := secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
 		if err != nil {
 			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
@@ -195,7 +192,7 @@ func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, orig
 	key := origKey
 	for k, v := range data {
 		if len(key) == 0 {
-			key = fmt.Sprintf("%s", k)
+			key = fmt.Sprint(k)
 		} else {
 			key = fmt.Sprintf("%s/%s", key, k)
 		}
