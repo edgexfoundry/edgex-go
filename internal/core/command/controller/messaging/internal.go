@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,8 +23,8 @@ import (
 // SubscribeCommandResponses subscribes command responses from device services via internal MessageBus
 func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-	internalResponseTopic := messageBusInfo.Internal.Topics[DeviceResponseTopic]
+	internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
+	internalResponseTopic := internalMessageBusInfo.Topics[DeviceResponseTopic]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -41,8 +41,9 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	qos := messageBusInfo.External.QoS
-	retain := messageBusInfo.External.Retain
+	externalMQTTInfo := container.ConfigurationFrom(dic.Get).ExternalMQTT
+	qos := externalMQTTInfo.QoS
+	retain := externalMQTTInfo.Retain
 	externalMQTT := bootstrapContainer.ExternalMQTTMessagingClientFrom(dic.Get)
 	go func() {
 		for {
@@ -85,8 +86,8 @@ func SubscribeCommandResponses(ctx context.Context, router MessagingRouter, dic 
 // via internal MessageBus
 func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-	internalRequestCommandTopic := messageBusInfo.Internal.Topics[CommandRequestTopic]
+	internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
+	internalRequestCommandTopic := internalMessageBusInfo.Topics[CommandRequestTopic]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -131,9 +132,9 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 					lc.Warn("Not publishing error message back due to insufficient information on response topic")
 					continue
 				}
-				internalResponseTopic := strings.Join([]string{messageBusInfo.Internal.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
+				internalResponseTopic := strings.Join([]string{internalMessageBusInfo.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
 
-				deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
+				deviceRequestTopic, err := validateRequestTopic(internalMessageBusInfo.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 				if err != nil {
 					lc.Errorf("invalid request topic: %s", err.Error())
 					responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
@@ -177,9 +178,9 @@ func SubscribeCommandRequests(ctx context.Context, router MessagingRouter, dic *
 // via internal MessageBus
 func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-	internalQueryRequestTopic := messageBusInfo.Internal.Topics[QueryRequestTopic]
-	internalQueryResponseTopic := messageBusInfo.Internal.Topics[QueryResponseTopic]
+	internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
+	internalQueryRequestTopic := internalMessageBusInfo.Topics[QueryRequestTopic]
+	internalQueryResponseTopic := internalMessageBusInfo.Topics[QueryResponseTopic]
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)

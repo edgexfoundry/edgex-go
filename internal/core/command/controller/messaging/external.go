@@ -33,8 +33,8 @@ func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectH
 	return func(client mqtt.Client) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
-		externalTopics := config.MessageBus.External.Topics
-		qos := config.MessageBus.External.QoS
+		externalTopics := config.ExternalMQTT.Topics
+		qos := config.ExternalMQTT.QoS
 
 		requestQueryTopic := externalTopics[QueryRequestTopic]
 		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(dic)); token.Wait() && token.Error() != nil {
@@ -64,8 +64,8 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 			return
 		}
 
-		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-		responseTopic := messageBusInfo.External.Topics[QueryResponseTopic]
+		externalMQTTInfo := container.ConfigurationFrom(dic.Get).ExternalMQTT
+		responseTopic := externalMQTTInfo.Topics[QueryResponseTopic]
 		if responseTopic == "" {
 			lc.Error("QueryResponseTopic not provided in External.Topics")
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
@@ -85,8 +85,8 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 			responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 		}
 
-		qos := messageBusInfo.External.QoS
-		retain := messageBusInfo.External.Retain
+		qos := externalMQTTInfo.QoS
+		retain := externalMQTTInfo.Retain
 		publishMessage(client, responseTopic, qos, retain, responseEnvelope, lc)
 	}
 }
@@ -96,9 +96,9 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		lc.Debugf("Received command request from external message broker on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
 
-		messageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-		qos := messageBusInfo.External.QoS
-		retain := messageBusInfo.External.Retain
+		externalMQTTInfo := container.ConfigurationFrom(dic.Get).ExternalMQTT
+		qos := externalMQTTInfo.QoS
+		retain := externalMQTTInfo.Retain
 
 		requestEnvelope, err := types.NewMessageEnvelopeFromJSON(message.Payload())
 		if err != nil {
@@ -124,9 +124,10 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
-		externalResponseTopic := strings.Join([]string{messageBusInfo.External.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
+		externalResponseTopic := strings.Join([]string{externalMQTTInfo.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
 
-		deviceRequestTopic, err := validateRequestTopic(messageBusInfo.Internal.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
+		internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
+		deviceRequestTopic, err := validateRequestTopic(internalMessageBusInfo.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
 		if err != nil {
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)

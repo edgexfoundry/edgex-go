@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
- * Copyright 2022 IOTech Ltd.
+ * Copyright 2022-2023 IOTech Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -21,12 +21,13 @@ import (
 
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
-	Writable   WritableInfo
-	Clients    map[string]bootstrapConfig.ClientInfo
-	Databases  map[string]bootstrapConfig.Database
-	Registry   bootstrapConfig.RegistryInfo
-	Service    bootstrapConfig.ServiceInfo
-	MessageBus MessageBus
+	Writable     WritableInfo
+	Clients      map[string]bootstrapConfig.ClientInfo
+	Databases    map[string]bootstrapConfig.Database
+	Registry     bootstrapConfig.RegistryInfo
+	Service      bootstrapConfig.ServiceInfo
+	MessageBus   bootstrapConfig.MessageBusInfo
+	ExternalMQTT bootstrapConfig.ExternalMQTTInfo
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
@@ -34,11 +35,6 @@ type WritableInfo struct {
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 	Telemetry       bootstrapConfig.TelemetryInfo
-}
-
-type MessageBus struct {
-	Internal bootstrapConfig.MessageBusInfo
-	External bootstrapConfig.ExternalMQTTInfo
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -80,8 +76,8 @@ func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfigurat
 		Clients:      c.Clients,
 		Service:      c.Service,
 		Registry:     c.Registry,
-		MessageBus:   c.MessageBus.Internal,
-		ExternalMQTT: c.MessageBus.External,
+		MessageBus:   c.MessageBus,
+		ExternalMQTT: c.ExternalMQTT,
 	}
 }
 
