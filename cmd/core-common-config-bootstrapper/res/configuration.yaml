@@ -43,11 +43,10 @@ all-services:
     Type: "consul"
   
   Databases:
-    Primary:
-      Host: "localhost"
-      Port: 6379
-      Timeout: 5000
-      Type: "redisdb"
+    Host: "localhost"
+    Port: 6379
+    Timeout: 5000
+    Type: "redisdb"
   
   MessageBus:
     Protocol: "redis"

@@ -21,7 +21,6 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 )
 
 // httpServer defines the contract used to determine whether or not the http httpServer is running.
@@ -49,7 +48,7 @@ func NewDatabase(httpServer httpServer, database bootstrapInterfaces.Database, d
 func (d Database) newDBClient(
 	lc logger.LoggingClient,
 	credentials bootstrapConfig.Credentials) (interfaces.DBClient, error) {
-	databaseInfo := d.database.GetDatabaseInfo()[common.Primary]
+	databaseInfo := d.database.GetDatabaseInfo()
 	switch databaseInfo.Type {
 	case "redisdb":
 		return redis.NewClient(
@@ -79,7 +78,7 @@ func (d Database) BootstrapHandler(
 	for startupTimer.HasNotElapsed() {
 		var err error
 
-		secrets, err := secretProvider.GetSecret(d.database.GetDatabaseInfo()[common.Primary].Type)
+		secrets, err := secretProvider.GetSecret(d.database.GetDatabaseInfo().Type)
 		if err == nil {
 			credentials = bootstrapConfig.Credentials{
 				Username: secrets[secret.UsernameKey],

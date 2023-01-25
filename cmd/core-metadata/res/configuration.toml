@@ -55,15 +55,12 @@ Type = "consul"
   Host = "localhost"
   Port = 59860
 
-[Databases]
-  [Databases.Primary]
-  Host = "localhost"
-  Name = "metadata"
-  Password = "password"
-  Username = "meta"
-  Port = 6379
-  Timeout = 5000
-  Type = "redisdb"
+[Database]
+Host = "localhost"
+Name = "metadata"
+Port = 6379
+Timeout = 5000
+Type = "redisdb"
 
 [Notifications]
 PostDeviceChanges = false

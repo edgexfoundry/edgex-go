@@ -23,7 +23,7 @@ import (
 // the runtime extension of the static configuration.
 type ConfigurationStruct struct {
 	LogLevel       string
-	Databases      map[string]bootstrapConfig.Database
+	Database       bootstrapConfig.Database
 	DatabaseConfig DatabaseBootstrapConfigInfo
 }
 
@@ -74,9 +74,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 	return bootstrapConfig.RegistryInfo{}
 }
 
-// GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
-	return c.Databases
+// GetDatabaseInfo returns a database information.
+func (c *ConfigurationStruct) GetDatabaseInfo() bootstrapConfig.Database {
+	return c.Database
 }
 
 // GetInsecureSecrets returns the service's InsecureSecrets which this service doesn't support
