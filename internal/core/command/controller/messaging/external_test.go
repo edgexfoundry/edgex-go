@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2022-2023 IOTech Ltd
+// Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	clientMocks "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces/mocks"
 	lcMocks "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger/mocks"
@@ -53,12 +55,10 @@ const (
 	testExternalCommandRequestTopic        = "unittest/external/request/#"
 	testExternalCommandRequestTopicExample = "unittest/external/request/testDevice/testCommand/get"
 	testExternalCommandResponseTopicPrefix = "unittest/external/response"
-
-	testInternalCommandRequestTopicPrefix = "unittest/internal/request"
+	testInternalCommandRequestTopicPrefix  = "unittest/internal/request"
 )
 
 func TestOnConnectHandler(t *testing.T) {
-	mockRouter := &mocks.MessagingRouter{}
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Errorf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	lc.On("Debugf", mock.Anything, mock.Anything).Return(nil)
@@ -67,10 +67,10 @@ func TestOnConnectHandler(t *testing.T) {
 			return &config.ConfigurationStruct{
 				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
 					Topics: map[string]string{
-						QueryRequestTopic:          testQueryRequestTopic,
-						QueryResponseTopic:         testQueryResponseTopic,
-						CommandRequestTopic:        testExternalCommandRequestTopic,
-						CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
+						common.CommandRequestTopicKey:                testExternalCommandRequestTopic,
+						common.ExternalCommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+						common.CommandQueryRequestTopicKey:           testQueryRequestTopic,
+						common.ExternalCommandQueryResponseTopicKey:  testQueryResponseTopic,
 					},
 					QoS:    0,
 					Retain: true,
@@ -103,7 +103,7 @@ func TestOnConnectHandler(t *testing.T) {
 			client.On("Subscribe", testQueryRequestTopic, byte(0), mock.Anything).Return(token)
 			client.On("Subscribe", testExternalCommandRequestTopic, byte(0), mock.Anything).Return(token)
 
-			fn := OnConnectHandler(mockRouter, dic)
+			fn := OnConnectHandler(time.Second*10, dic)
 			fn(client)
 
 			if tt.expectedSucceed {
@@ -124,7 +124,7 @@ func Test_commandQueryHandler(t *testing.T) {
 				Name: testProfileName,
 			},
 			DeviceResources: []dtos.DeviceResource{
-				dtos.DeviceResource{
+				{
 					Name: testResourceName,
 					Properties: dtos.ResourceProperties{
 						ValueType: common.ValueTypeString,
@@ -144,7 +144,7 @@ func Test_commandQueryHandler(t *testing.T) {
 	allDevicesResponse := responses.MultiDevicesResponse{
 		BaseWithTotalCountResponse: commonDTO.NewBaseWithTotalCountResponse("", "", http.StatusOK, 1),
 		Devices: []dtos.Device{
-			dtos.Device{
+			{
 				Name:        testDeviceName,
 				ProfileName: testProfileName,
 			},
@@ -173,7 +173,7 @@ func Test_commandQueryHandler(t *testing.T) {
 					QoS:    0,
 					Retain: true,
 					Topics: map[string]string{
-						QueryResponseTopic: testQueryResponseTopic,
+						common.ExternalCommandQueryResponseTopicKey: testQueryResponseTopic,
 					},
 				},
 			}
@@ -269,12 +269,12 @@ func Test_commandRequestHandler(t *testing.T) {
 		},
 	}
 
-	mockRouter := &mocks.MessagingRouter{}
-	mockRouter.On("SetResponseTopic", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	expectedResponse := &types.MessageEnvelope{}
+
 	lc := &lcMocks.LoggingClient{}
 	lc.On("Error", mock.Anything).Return(nil)
 	lc.On("Errorf", mock.Anything, mock.Anything).Return(nil)
-	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	lc.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	lc.On("Warn", mock.Anything).Return(nil)
 	dc := &clientMocks.DeviceClient{}
 	dc.On("DeviceByName", context.Background(), testDeviceName).Return(deviceResponse, nil)
@@ -284,7 +284,7 @@ func Test_commandRequestHandler(t *testing.T) {
 	dsc.On("DeviceServiceByName", context.Background(), testDeviceServiceName).Return(deviceServiceResponse, nil)
 	dsc.On("DeviceServiceByName", context.Background(), unknownService).Return(responses.DeviceServiceResponse{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "unknown device service", nil))
 	client := &internalMessagingMocks.MessageClient{}
-	client.On("Publish", mock.Anything, mock.Anything).Return(nil)
+	client.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(expectedResponse, nil)
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
@@ -295,14 +295,14 @@ func Test_commandRequestHandler(t *testing.T) {
 				},
 				MessageBus: bootstrapConfig.MessageBusInfo{
 					Topics: map[string]string{
-						DeviceRequestTopicPrefix: testInternalCommandRequestTopicPrefix,
+						common.DeviceCommandRequestTopicPrefixKey: testInternalCommandRequestTopicPrefix,
 					},
 				},
 				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
 					QoS:    0,
 					Retain: true,
 					Topics: map[string]string{
-						CommandResponseTopicPrefix: testExternalCommandResponseTopicPrefix,
+						common.ExternalCommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
 					},
 				},
 			}
@@ -359,7 +359,7 @@ func Test_commandRequestHandler(t *testing.T) {
 			mqttClient := &mocks.Client{}
 			mqttClient.On("Publish", mock.Anything, byte(0), true, mock.Anything).Return(token)
 
-			fn := commandRequestHandler(mockRouter, dic)
+			fn := commandRequestHandler(time.Second*10, dic)
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {
@@ -372,7 +372,7 @@ func Test_commandRequestHandler(t *testing.T) {
 			}
 
 			expectedInternalRequestTopic := strings.Join([]string{testInternalCommandRequestTopicPrefix, testDeviceServiceName, testDeviceName, testCommandName, testMethod}, "/")
-			client.AssertCalled(t, "Publish", tt.payload, expectedInternalRequestTopic)
+			client.AssertCalled(t, "Request", tt.payload, testDeviceServiceName, expectedInternalRequestTopic, mock.Anything)
 		})
 	}
 }

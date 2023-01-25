@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -25,29 +26,29 @@ import (
 
 // validateRequestTopic validates the request topic by checking the existence of device and device service,
 // returns the internal device request topic to which the command request will be sent.
-func validateRequestTopic(prefix string, deviceName string, commandName string, method string, dic *di.Container) (string, error) {
+func validateRequestTopic(prefix string, deviceName string, commandName string, method string, dic *di.Container) (string, string, error) {
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.DeviceClientFrom(dic.Get)
 	if dc == nil {
-		return "", errors.New("nil Device Client")
+		return "", "", errors.New("nil Device Client")
 	}
 	deviceResponse, err := dc.DeviceByName(context.Background(), deviceName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get Device by name %s: %v", deviceName, err)
+		return "", "", fmt.Errorf("failed to get Device by name %s: %v", deviceName, err)
 	}
 
 	// retrieve device service information through Metadata DeviceClient
 	dsc := bootstrapContainer.DeviceServiceClientFrom(dic.Get)
 	if dsc == nil {
-		return "", errors.New("nil DeviceService Client")
+		return "", "", errors.New("nil DeviceService Client")
 	}
 	deviceServiceResponse, err := dsc.DeviceServiceByName(context.Background(), deviceResponse.Device.ServiceName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
+		return "", "", fmt.Errorf("failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
 	}
 
 	// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
-	return strings.Join([]string{prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/"), nil
+	return deviceServiceResponse.Service.Name, strings.Join([]string{prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/"), nil
 
 }
 

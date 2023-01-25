@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -20,31 +22,22 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 )
 
-const (
-	QueryRequestTopic          = "QueryRequestTopic"
-	QueryResponseTopic         = "QueryResponseTopic"
-	CommandRequestTopic        = "CommandRequestTopic"
-	CommandResponseTopicPrefix = "CommandResponseTopicPrefix"
-	DeviceRequestTopicPrefix   = "DeviceRequestTopicPrefix"
-	DeviceResponseTopic        = "DeviceResponseTopic"
-)
-
-func OnConnectHandler(router MessagingRouter, dic *di.Container) mqtt.OnConnectHandler {
+func OnConnectHandler(requestTimeout time.Duration, dic *di.Container) mqtt.OnConnectHandler {
 	return func(client mqtt.Client) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		config := container.ConfigurationFrom(dic.Get)
 		externalTopics := config.ExternalMQTT.Topics
 		qos := config.ExternalMQTT.QoS
 
-		requestQueryTopic := externalTopics[QueryRequestTopic]
+		requestQueryTopic := externalTopics[common.CommandQueryRequestTopicKey]
 		if token := client.Subscribe(requestQueryTopic, qos, commandQueryHandler(dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", requestQueryTopic, token.Error().Error())
 		} else {
 			lc.Debugf("Subscribed to topic '%s' on external MQTT broker", requestQueryTopic)
 		}
 
-		requestCommandTopic := externalTopics[CommandRequestTopic]
-		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(router, dic)); token.Wait() && token.Error() != nil {
+		requestCommandTopic := externalTopics[common.CommandRequestTopicKey]
+		if token := client.Subscribe(requestCommandTopic, qos, commandRequestHandler(requestTimeout, dic)); token.Wait() && token.Error() != nil {
 			lc.Errorf("could not subscribe to topic '%s': %s", requestCommandTopic, token.Error().Error())
 		} else {
 			lc.Debugf("Subscribed to topic '%s' on external MQTT broker", requestCommandTopic)
@@ -65,7 +58,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 		}
 
 		externalMQTTInfo := container.ConfigurationFrom(dic.Get).ExternalMQTT
-		responseTopic := externalMQTTInfo.Topics[QueryResponseTopic]
+		responseTopic := externalMQTTInfo.Topics[common.ExternalCommandQueryResponseTopicKey]
 		if responseTopic == "" {
 			lc.Error("QueryResponseTopic not provided in External.Topics")
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
@@ -91,7 +84,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 	}
 }
 
-func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.MessageHandler {
+func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt.MessageHandler {
 	return func(client mqtt.Client, message mqtt.Message) {
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 		lc.Debugf("Received command request from external message broker on topic '%s' with %d bytes", message.Topic(), len(message.Payload()))
@@ -124,10 +117,11 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
 			return
 		}
-		externalResponseTopic := strings.Join([]string{externalMQTTInfo.Topics[CommandResponseTopicPrefix], deviceName, commandName, method}, "/")
+
+		externalResponseTopic := strings.Join([]string{externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, commandName, method}, "/")
 
 		internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-		deviceRequestTopic, err := validateRequestTopic(internalMessageBusInfo.Topics[DeviceRequestTopicPrefix], deviceName, commandName, method, dic)
+		deviceServiceName, deviceRequestTopic, err := validateRequestTopic(internalMessageBusInfo.Topics[common.DeviceCommandRequestTopicPrefixKey], deviceName, commandName, method, dic)
 		if err != nil {
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
@@ -142,7 +136,11 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 		}
 
 		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
-		err = internalMessageBus.Publish(requestEnvelope, deviceRequestTopic)
+
+		lc.Debugf("Sending Command request to internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", deviceRequestTopic, requestEnvelope.RequestID, requestEnvelope.CorrelationID)
+
+		// Request waits for the response and returns it.
+		response, err := internalMessageBus.Request(requestEnvelope, deviceServiceName, deviceRequestTopic, requestTimeout)
 		if err != nil {
 			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
@@ -150,8 +148,9 @@ func commandRequestHandler(router MessagingRouter, dic *di.Container) mqtt.Messa
 			return
 		}
 
-		lc.Debugf("Command request sent to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
-		router.SetResponseTopic(requestEnvelope.RequestID, externalResponseTopic, true)
+		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.RequestID, response.CorrelationID)
+
+		publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
 	}
 }
 
