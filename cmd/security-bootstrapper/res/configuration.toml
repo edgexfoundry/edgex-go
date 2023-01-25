@@ -11,7 +11,7 @@ LogLevel = "INFO"
     [StageGate.SecretStoreSetup.Tokens]
       ReadyPort = 54322
   [StageGate.Database]
-    # this is intended to be the same as Database.Primary.Host/.Port for other services
+    # this is intended to be the same as Database.Host/.Port for other services
     Host = "edgex-redis"
     Port = 6379
     ReadyPort = 54323
