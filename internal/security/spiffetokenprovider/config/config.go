@@ -31,7 +31,7 @@ type ConfigurationStruct struct {
 	Writable   WritableInfo
 	MessageBus bootstrapConfig.MessageBusInfo
 	Clients    map[string]bootstrapConfig.ClientInfo
-	Databases  map[string]bootstrapConfig.Database
+	Database   bootstrapConfig.Database
 	Registry   bootstrapConfig.RegistryInfo
 	Service    bootstrapConfig.ServiceInfo
 	Spiffe     SpiffeInfo
@@ -96,9 +96,9 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 	return c.Registry
 }
 
-// GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
-	return c.Databases
+// GetDatabaseInfo returns a database information.
+func (c *ConfigurationStruct) GetDatabaseInfo() bootstrapConfig.Database {
+	return c.Database
 }
 
 // GetInsecureSecrets returns the service's InsecureSecrets.

@@ -1852,15 +1852,14 @@ paths:
                       Host: "edgex-core-metadata"
                       Port: 59881
                       Protocol: "http"
-                  Databases:
-                    Primary:
-                      Username: "core"
-                      Password: "password"
-                      Type: "redisdb"
-                      Timeout: 5000
-                      Host: "edgex-redis"
-                      Port: 6379
-                      Name: "coredata"
+                  Database:
+                    Username: "core"
+                    Password: "password"
+                    Type: "redisdb"
+                    Timeout: 5000
+                    Host: "edgex-redis"
+                    Port: 6379
+                    Name: "coredata"
                   Logging:
                     EnableRemote: false
                     File: ""

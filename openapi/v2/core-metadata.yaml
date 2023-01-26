@@ -3886,15 +3886,14 @@ paths:
                       Host: "edgex-support-notifications"
                       Port: 59860
                       Protocol: "http"
-                  Databases:
-                    Primary:
-                      Username: "meta"
-                      Password: "password"
-                      Type: "redisdb"
-                      Timeout: 5000
-                      Host: "edgex-redis"
-                      Port: 6379
-                      Name: "metadata"
+                  Database:
+                    Username: "meta"
+                    Password: "password"
+                    Type: "redisdb"
+                    Timeout: 5000
+                    Host: "edgex-redis"
+                    Port: 6379
+                    Name: "metadata"
                   Notifications:
                     Content: "Device update: "
                     Description: "Metadata device notice"

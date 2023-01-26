@@ -48,13 +48,12 @@ Type = "consul"
 
 [Clients] # Core data no longer dependent on "Client" services
 
-[Databases]
-  [Databases.Primary]
-  Host = "localhost"
-  Name = "coredata"
-  Port = 6379
-  Timeout = 5000
-  Type = "redisdb"
+[Database]
+Host = "localhost"
+Name = "coredata"
+Port = 6379
+Timeout = 5000
+Type = "redisdb"
 
 [MessageBus]
 Protocol = "redis"
