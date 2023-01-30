@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 // Copyright (C) 2022 Intel
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -12,9 +12,6 @@ import (
 	goErrors "errors"
 	"fmt"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	config2 "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -25,6 +22,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 )
 
 // The AddDevice function accepts the new device model from the controller function
@@ -49,9 +50,6 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		correlation.FromContext(ctx),
 	)
 
-	device := dtos.FromDeviceModelToDTO(d)
-	go addDeviceCallback(ctx, dic, device)
-
 	go publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d.ServiceName, d, ctx, lc, dic)
 
 	return addedDevice.Id, nil
@@ -73,7 +71,6 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	go deleteDeviceCallback(ctx, dic, device)
 
 	go publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device.ServiceName, device, ctx, lc, dic)
 
@@ -147,11 +144,9 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	)
 
 	if oldServiceName != "" {
-		go updateDeviceCallback(ctx, dic, oldServiceName, device)
 		go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, oldServiceName, device, ctx, lc, dic)
 	}
 
-	go updateDeviceCallback(ctx, dic, device.ServiceName, device)
 	go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device.ServiceName, device, ctx, lc, dic)
 
 	return nil
