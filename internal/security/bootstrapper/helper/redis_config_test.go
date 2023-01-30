@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,7 +36,9 @@ func TestGenerateRedisConfig(t *testing.T) {
 		_ = os.RemoveAll(testConfFile)
 	}()
 
-	err = GenerateRedisConfig(confFile, testACLFile)
+	maxClient := 1000
+
+	err = GenerateRedisConfig(confFile, testACLFile, maxClient)
 	require.NoError(t, err)
 
 	inputFile, err := os.Open(testConfFile)
@@ -47,11 +50,14 @@ func TestGenerateRedisConfig(t *testing.T) {
 	// Read until a newline for each Scan
 	for inputScanner.Scan() {
 		line := inputScanner.Text()
-		outputlines = append(outputlines, line)
+		if len(strings.TrimSpace(line)) > 0 { // only take non-empty line
+			outputlines = append(outputlines, line)
+		}
 	}
 
-	require.Equal(t, 1, len(outputlines))
+	require.Equal(t, 2, len(outputlines))
 	require.Equal(t, "aclfile "+testACLFile, outputlines[0])
+	require.Equal(t, fmt.Sprintf("maxclients %d", maxClient), outputlines[1])
 }
 
 func TestGenerateACLConfig(t *testing.T) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -100,14 +100,20 @@ const (
 	redisDefaultUser = "default"
 
 	// aclFileConfigTemplate is the external acl file for redis config
-	aclFileConfigTemplate = "aclfile {{.ACLFilePath}}"
+	aclFileConfigTemplate = `aclfile {{.ACLFilePath}}
+maxclients {{.MaxClients}}
+`
 
 	// aclDefaultUserTemplate is the ACL rule for "default" user
 	aclDefaultUserTemplate = "user {{.RedisUser}} on allkeys allchannels +@all -@dangerous #{{.Sha256RedisPwd}}"
 )
 
 // GenerateRedisConfig writes the startup configuration of Redis server based on pre-defined template
-func GenerateRedisConfig(confFile *os.File, aclfilePath string) error {
+func GenerateRedisConfig(confFile *os.File, aclfilePath string, maxClients int) error {
+	if maxClients <= 0 {
+		return fmt.Errorf("number of maxClient should be greater than 0 but found %d", maxClients)
+	}
+
 	aclfile, err := template.New("redis-conf").Parse(aclFileConfigTemplate + fmt.Sprintln())
 	if err != nil {
 		return fmt.Errorf("failed to parse Redis conf template %s: %v", aclFileConfigTemplate, err)
@@ -117,6 +123,7 @@ func GenerateRedisConfig(confFile *os.File, aclfilePath string) error {
 	fwriter := bufio.NewWriter(confFile)
 	if err := aclfile.Execute(fwriter, map[string]interface{}{
 		"ACLFilePath": aclfilePath,
+		"MaxClients":  maxClients,
 	}); err != nil {
 		return fmt.Errorf("failed to execute external ACL file for config %s: %v", aclFileConfigTemplate, err)
 	}

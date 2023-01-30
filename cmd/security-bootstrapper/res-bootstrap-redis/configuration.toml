@@ -27,3 +27,4 @@ Type = "redisdb"
 [DatabaseConfig]
   Path = "/path/to/redis/conf/dir"
   Name = "redis.conf"
+  MaxClients = 1000

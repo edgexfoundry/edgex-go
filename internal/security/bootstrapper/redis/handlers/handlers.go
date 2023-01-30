@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2021 Intel Corporation
+* Copyright 2023 Intel Corporation
 * Copyright 2020 Redis Labs
 *
 * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -124,7 +124,7 @@ func (handler *Handler) SetupConfFiles(ctx context.Context, _ *sync.WaitGroup, _
 
 	edgeXRedisACLFilePath := filepath.Join(dbConfigDir, redisACLFileName)
 	// writing the config file
-	if err := helper.GenerateRedisConfig(confFile, edgeXRedisACLFilePath); err != nil {
+	if err := helper.GenerateRedisConfig(confFile, edgeXRedisACLFilePath, config.DatabaseConfig.MaxClients); err != nil {
 		lc.Errorf("cannot write the db config file %s: %v", confFile.Name(), err)
 		return false
 	}
