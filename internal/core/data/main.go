@@ -35,7 +35,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
@@ -76,7 +75,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			handlers.NewServiceMetrics(common.CoreDataServiceKey).BootstrapHandler, // Must be after Messaging
 			application.BootstrapHandler,                                           // Must be after Service Metrics and before next handler
 			NewBootstrap(router, common.CoreDataServiceKey).BootstrapHandler,
-			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.CoreDataServiceKey, edgex.Version).BootstrapHandler,
 		},

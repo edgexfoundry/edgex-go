@@ -25,7 +25,6 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiVersionRoute, cc.Version).Methods(http.MethodGet)
 	r.HandleFunc(common.ApiConfigRoute, cc.Config).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiMetricsRoute, cc.Metrics).Methods(http.MethodGet)
 
 	// Events
 	ec := dataController.NewEventController(dic)

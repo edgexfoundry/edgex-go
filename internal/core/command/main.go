@@ -32,7 +32,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/command/controller/messaging"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
@@ -76,7 +75,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreCommandServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreCommandServiceKey).BootstrapHandler,
-			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.CoreCommandServiceKey, edgex.Version).BootstrapHandler,
 		})

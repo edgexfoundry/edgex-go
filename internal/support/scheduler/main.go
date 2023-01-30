@@ -21,7 +21,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 
@@ -73,7 +72,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			handlers.NewServiceMetrics(common.SupportSchedulerServiceKey).BootstrapHandler, // Must be after Messaging
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, common.SupportSchedulerServiceKey).BootstrapHandler,
-			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SupportSchedulerServiceKey, edgex.Version).BootstrapHandler,
 		})
