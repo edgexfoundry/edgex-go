@@ -95,16 +95,6 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	c.loggingClient.Info("Registry is ready")
 
 	if err := tcp.DialTcp(
-		c.config.StageGate.KongDB.Host,
-		c.config.StageGate.KongDB.ReadyPort,
-		c.loggingClient); err != nil {
-		retErr := fmt.Errorf("found error while waiting for readiness of KongDB at %s:%d, err: %v",
-			c.config.StageGate.KongDB.Host, c.config.StageGate.KongDB.ReadyPort, err)
-		return interfaces.StatusCodeExitWithError, retErr
-	}
-	c.loggingClient.Info("KongDB is ready")
-
-	if err := tcp.DialTcp(
 		c.config.StageGate.Database.Host,
 		c.config.StageGate.Database.ReadyPort,
 		c.loggingClient); err != nil {
