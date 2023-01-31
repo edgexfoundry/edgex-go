@@ -11,7 +11,6 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -54,24 +53,6 @@ func (c *CommonController) Version(writer http.ResponseWriter, request *http.Req
 func (c *CommonController) Config(writer http.ResponseWriter, request *http.Request) {
 	response := commonDTO.NewConfigResponse(container.ConfigurationFrom(c.dic.Get), c.serviceName)
 	c.sendResponse(writer, request, common.ApiVersionRoute, response, http.StatusOK)
-}
-
-// Metrics handles the request to the /metrics endpoint, memory and cpu utilization stats
-// It returns a response as specified by the V2 API swagger in openapi/v2
-func (c *CommonController) Metrics(writer http.ResponseWriter, request *http.Request) {
-	telem := telemetry.NewSystemUsage()
-	metrics := commonDTO.Metrics{
-		MemAlloc:       telem.Memory.Alloc,
-		MemFrees:       telem.Memory.Frees,
-		MemLiveObjects: telem.Memory.LiveObjects,
-		MemMallocs:     telem.Memory.Mallocs,
-		MemSys:         telem.Memory.Sys,
-		MemTotalAlloc:  telem.Memory.TotalAlloc,
-		CpuBusyAvg:     uint8(telem.CpuBusyAvg),
-	}
-
-	response := commonDTO.NewMetricsResponse(metrics, c.serviceName)
-	c.sendResponse(writer, request, common.ApiMetricsRoute, response, http.StatusOK)
 }
 
 // sendResponse puts together the response packet for the V2 API

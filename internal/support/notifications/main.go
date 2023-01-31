@@ -27,7 +27,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
@@ -79,7 +78,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			handlers.NewServiceMetrics(common.SupportNotificationsServiceKey).BootstrapHandler, // Must be after Messaging
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, common.SupportNotificationsServiceKey).BootstrapHandler,
-			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,
 		})

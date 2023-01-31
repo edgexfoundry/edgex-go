@@ -23,7 +23,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/uom"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/telemetry"
 
 	"github.com/gorilla/mux"
 
@@ -76,7 +75,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreMetaDataServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreMetaDataServiceKey).BootstrapHandler,
-			telemetry.BootstrapHandler,
 			httpServer.BootstrapHandler,
 		})
 

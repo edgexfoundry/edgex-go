@@ -241,40 +241,6 @@ components:
         config:
           description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
           type: object
-    MetricsResponse:
-      description: "A response from the /metrics endpoint providing memory and cpu utilization stats."
-      type: object
-      properties:
-        apiVersion:
-          description: "A version number shows the API version in DTOs."
-          type: string
-        serviceName:
-          description: "Outputs the name of the service the response is from"
-          type: string
-        metrics:
-          type: object
-          properties:
-            memAlloc:
-              description: "Alloc is bytes of allocated heap objects which is a uint64 type integer."
-              type: integer
-            memFrees:
-              description: "Frees is the cumulative count of heap objects freed which is a uint64 type integer."
-              type: integer
-            memLiveObjects:
-              description: "The uint64 type integer of live objects is Mallocs - Frees."
-              type: integer
-            memMallocs:
-              description: "The cumulative count of heap objects allocated which is a uint64 type integer."
-              type: integer
-            memSys:
-              description: "The total bytes of memory obtained from the OS which is a uint64 type integer."
-              type: integer
-            memTotalAlloc:
-             description: "Cumulative bytes allocated for heap objects which is a uint64 type integer."
-             type: integer
-            cpuBusyAvg:
-              description: "A uint8 type integer indicates the average level of CPU utilization"
-              type: number
     MultiEventsResponse:
       allOf:
         - $ref: '#/components/schemas/BaseWithTotalCountResponse'
@@ -1903,42 +1869,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 500Example:
-                  $ref: '#/components/examples/500Example'
-  /metrics:
-    get:
-      summary: "An endpoint that can be used to obtain CPU/Memory usage stats for a given service."
-      responses:
-        '200':
-          description: "OK"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetricsResponse'
-              example:
-                apiVersion: "v2"
-                metrics:
-                  memAlloc: 877192
-                  memFrees: 2248915
-                  memLiveObjects: 6522
-                  memMallocs: 2255437
-                  memSys: 72876280
-                  memTotalAlloc: 203821192
-                  cpuBusyAvg: 2.2521221920656003
-        '500':
-          description: "Interval Server Error"
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/correlatedResponseHeader'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                500Example:
-                  $ref: '#/components/examples/500Example'          
+                  $ref: '#/components/examples/500Example' 
   /ping:
     get:
       summary: "A simple 'ping' endpoint that can be used as a service healthcheck"
