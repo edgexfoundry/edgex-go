@@ -49,25 +49,12 @@ Host = "localhost"
 Port = 8500
 Type = "consul"
 
-[Clients]
-  [Clients.support-notifications]
-  Protocol = "http"
-  Host = "localhost"
-  Port = 59860
-
 [Database]
 Host = "localhost"
 Name = "metadata"
 Port = 6379
 Timeout = 5000
 Type = "redisdb"
-
-[Notifications]
-PostDeviceChanges = false
-Content = "Metadata notice: "
-Sender = "core-metadata"
-Description = "Metadata change notice"
-Label = "metadata"
 
 [MessageBus]
 Protocol = "redis"
