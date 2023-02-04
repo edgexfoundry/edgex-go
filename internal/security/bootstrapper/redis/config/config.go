@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2023 Intel Corporation
  * Copyright 2020 Redis Labs
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -29,8 +29,9 @@ type ConfigurationStruct struct {
 
 // DatabaseBootstrapConfigInfo contains the configuration properties for bootstrapping the database
 type DatabaseBootstrapConfigInfo struct {
-	Path string
-	Name string
+	Path       string
+	Name       string
+	MaxClients int
 }
 
 // Implement interface.Configuration
