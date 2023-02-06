@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
- * Copyright 2019 Intel Corporation.
+ * Copyright 2019-2023 Intel Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -38,6 +38,10 @@ type TokenFileProviderInfo struct {
 	OutputFilename string
 	// Default duration of issued tokens
 	DefaultTokenTTL string
+	// Default duration of issued OIDC JWT tokens
+	DefaultJWTTTL string
+	// UserPassMountPoint is where the userpass auth engine is mounted (usually "userauth")
+	UserPassMountPoint string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct

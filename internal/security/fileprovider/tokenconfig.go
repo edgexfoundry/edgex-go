@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
 //
 
 package fileprovider
@@ -67,10 +67,9 @@ type FilePermissions struct {
 }
 
 type ServiceKey struct {
-	UseDefaults           bool                   `json:"edgex_use_defaults"`
-	CustomPolicy          map[string]interface{} `json:"custom_policy"` // JSON serialization of HCL
-	CustomTokenParameters map[string]interface{} `json:"custom_token_parameters"`
-	FilePermissions       *FilePermissions       `json:"file_permissions,omitempty"`
+	UseDefaults     bool                   `json:"edgex_use_defaults"`
+	CustomPolicy    map[string]interface{} `json:"custom_policy"` // JSON serialization of HCL
+	FilePermissions *FilePermissions       `json:"file_permissions,omitempty"`
 }
 
 func LoadTokenConfig(fileOpener fileioperformer.FileIoPerformer, path string, tokenConf *TokenConfFile) error {

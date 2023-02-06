@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2022 Intel Corporation
+ * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -147,7 +147,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			switch sCode {
 			case http.StatusOK:
 				// Load the init response from disk since we need it to regenerate root token later
-				if err := loadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
+				if err := LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
@@ -196,7 +196,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 			case http.StatusServiceUnavailable:
 				lc.Infof("vault is sealed (status code: %d). Starting unseal phase", sCode)
-				if err := loadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
+				if err := LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
@@ -320,6 +320,33 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
+	// Enable userpass auth engine
+	upAuthEnabled, err := client.CheckAuthMethodEnabled(rootToken, UPAuthMountPoint, UserPassAuthEngine)
+	if err != nil {
+		lc.Errorf("failed to check if %s auth method enabled: %s", UserPassAuthEngine, err.Error())
+		return false
+	} else if !upAuthEnabled {
+		// Enable userpass engine at /v1/auth/{eng.path} path (/v1 prefix supplied by Vault)
+		lc.Infof("Enabling userpass authentication for the first time...")
+		if err := client.EnablePasswordAuth(rootToken, UPAuthMountPoint); err != nil {
+			lc.Errorf("failed to enable userpass secrets engine: %s", err.Error())
+			return false
+		}
+		lc.Infof("Userpass authentication engine enabled at path %s", UPAuthMountPoint)
+	}
+
+	// Create a key for issuing JWTs
+	keyExists, err := client.CheckIdentityKeyExists(rootToken, "edgex-identity")
+	if err != nil {
+		lc.Errorf("failed to check for JWT issuing key: %s", err.Error())
+		return false
+	} else if !keyExists {
+		if err := client.CreateNamedIdentityKey(rootToken, "edgex-identity", "ES384"); err != nil {
+			lc.Errorf("failed to create JWT issuing key: %s", err.Error())
+			return false
+		}
+	}
+
 	//Step 4: Launch token handler
 	tokenProvider := NewTokenProvider(ctx, lc, NewDefaultExecRunner())
 	if secretStoreConfig.TokenProvider != "" {
@@ -368,7 +395,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	redisCredentials, err := getCredential("security-bootstrapper-redis", secretStore, redisSecretName)
 	if err != nil {
 		if err != errNotFound {
-			lc.Error("failed to determine if Redis credentials already exist or not: %w", err)
+			lc.Errorf("failed to determine if Redis credentials already exist or not: %s", err.Error())
 			return false
 		}
 
@@ -429,7 +456,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		msgBusCredentials, err = getCredential(internal.BootstrapMessageBusServiceKey, secretStore, messagebusSecretName)
 		if err != nil {
 			if err != errNotFound {
-				lc.Errorf("failed to determine if %s credentials already exist or not: %w", configuration.SecureMessageBus.Type, err)
+				lc.Errorf("failed to determine if %s credentials already exist or not: %s", configuration.SecureMessageBus.Type, err.Error())
 				return false
 			}
 
@@ -726,7 +753,7 @@ func storeCredential(lc logger.LoggingClient, credBootstrapStem string, cred Cre
 	return err
 }
 
-func loadInitResponse(
+func LoadInitResponse(
 	lc logger.LoggingClient,
 	fileOpener fileioperformer.FileIoPerformer,
 	secretConfig config.SecretStoreInfo,

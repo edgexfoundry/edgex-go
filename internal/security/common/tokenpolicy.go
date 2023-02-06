@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,23 +11,30 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
 //
 
-package fileprovider
+package common
 
-func makeDefaultTokenPolicy(serviceName string) map[string]interface{} {
+func MakeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 	// protected path for secret/
-	protectedPath := "secret/edgex/" + serviceName + "/*"
-	capabilities := []string{"create", "update", "delete", "list", "read"}
-	acl := map[string]interface{}{"capabilities": capabilities}
+	secretsPath := "secret/edgex/" + serviceName + "/*"
+	secretsAcl := map[string]interface{}{"capabilities": []string{"create", "update", "delete", "list", "read"}}
 	// path for consul tokens
 	registryCredsPath := "consul/creds/" + serviceName
-	registryCredsCapabilities := []string{"read"}
-	registryCredsACL := map[string]interface{}{"capabilities": registryCredsCapabilities}
+	registryCredsACL := map[string]interface{}{"capabilities": []string{"read"}}
+	// allow request identity JWT
+	jwtRequestPath := "identity/oidc/token/" + serviceName
+	jwtRequestACL := map[string]interface{}{"capabilities": []string{"read"}}
+	// allow introspect JWT
+	jwtIntrospectPath := "identity/oidc/introspect"
+	jwtIntrospectACL := map[string]interface{}{"capabilities": []string{"create", "update"}}
+	// access spec
 	pathObject := map[string]interface{}{
-		protectedPath:     acl,
+		secretsPath:       secretsAcl,
 		registryCredsPath: registryCredsACL,
+		jwtRequestPath:    jwtRequestACL,
+		jwtIntrospectPath: jwtIntrospectACL,
 	}
 	retval := map[string]interface{}{"path": pathObject}
 	return retval
@@ -40,18 +47,14 @@ func makeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 			  },
 			  "consul/creds/service-name": {
 				"capabilities": [ "read" ]
+			  },
+			  "identity/oidc/token/service-name": {
+				"capabilities": [ "read" ]
+			  },
+			  "identity/oidc/introspect": {
+				"capabilities": [ "create", "update" ]
 			  }
 			}
 		}
 	*/
-}
-
-func makeDefaultTokenParameters(serviceName string, defaultTTL string, defaultPeriod string) map[string]interface{} {
-	return map[string]interface{}{
-		"display_name": serviceName,
-		"no_parent":    true,
-		"ttl":          defaultTTL,
-		"period":       defaultPeriod,
-		"policies":     []string{"edgex-service-" + serviceName},
-	}
 }

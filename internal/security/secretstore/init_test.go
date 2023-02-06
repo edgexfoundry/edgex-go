@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2021 Intel Corporation
+// Copyright (c) 2021-2023 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -49,7 +49,7 @@ func TestLoadInitResponse(t *testing.T) {
 	initResponse := types.InitResponse{}
 
 	// Act
-	err := loadInitResponse(mockLogger, fileOpener, secretConfig, &initResponse)
+	err := LoadInitResponse(mockLogger, fileOpener, secretConfig, &initResponse)
 
 	// Assert
 	assert.NoError(t, err)

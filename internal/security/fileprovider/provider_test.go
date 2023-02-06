@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -10,7 +10,8 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
+
 package fileprovider
 
 import (
@@ -75,17 +76,24 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 
 	expectedService1Policy := "{}"
 	expectedService2Policy := "{}"
-	expectedService1Parameters := makeMetaServiceName("service1")
-	expectedService2Parameters := makeMetaServiceName("service2")
+
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service1", expectedService1Policy).
-		Return(nil)
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service2", expectedService2Policy).
-		Return(nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
-		Return(createTokenResponse(), nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService2Parameters).
-		Return(createTokenResponse(), nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service1", expectedService1Policy).Return(nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service2", expectedService2Policy).Return(nil)
+
+	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", "service1", map[string]string{"name": "service1"}, []string{"edgex-service-service1"}).Return("service1id", nil)
+	mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", "service1", mock.AnythingOfType("string"), "", []string{}).Return(nil)
+	mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+	mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "service1id", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", "service1").Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", "service1", "edgex-identity", "{\"name\": \"service1\"}", "").Return(nil)
+	mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", "service1", mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
+
+	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", "service2", map[string]string{"name": "service2"}, []string{"edgex-service-service2"}).Return("service2id", nil)
+	mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", "service2", mock.AnythingOfType("string"), "", []string{}).Return(nil)
+	mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+	mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "service2id", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", "service2").Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", "service2", "edgex-identity", "{\"name\": \"service2\"}", "").Return(nil)
+	mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", "service2", mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
 	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
@@ -124,14 +132,6 @@ func createTokenResponse() map[string]interface{} {
 	return t
 }
 
-func makeMetaServiceName(serviceName string) map[string]interface{} {
-	createTokenParameters := make(map[string]interface{})
-	meta := make(map[string]interface{})
-	meta["edgex-service-name"] = serviceName
-	createTokenParameters["meta"] = meta
-	return createTokenParameters
-}
-
 func expectedTokenFile() []byte {
 	tokenResponse := createTokenResponse()
 	b := new(bytes.Buffer)
@@ -157,12 +157,15 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := `{"path":{"secret/non/standard/location/*":{"capabilities":["list","read"]}}}`
-	expectedService1Parameters := makeMetaServiceName("myservice")
+	//expectedService1Parameters := makeMetaServiceName("myservice")
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).
-		Return(nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
-		Return(createTokenResponse(), nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", "myservice", map[string]string{"name": "myservice"}, []string{"edgex-service-myservice"}).Return("myserviceid", nil)
+	mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", "myservice", mock.AnythingOfType("string"), "", []string{}).Return(nil)
+	mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+	mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "myserviceid", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", "myservice").Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", "myservice", "edgex-identity", "{\"name\": \"myservice\"}", "").Return(nil)
+	mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", "myservice", mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
 	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
@@ -178,54 +181,6 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	// Assert
 	// - {OutputDir}/myservice/{OutputFilename} w/proper contents
 	// - Correct policy for myservice
-	// - All other expectations met
-	assert.NoError(t, err)
-	mockFileIoPerformer.AssertExpectations(t)
-	mockAuthTokenLoader.AssertExpectations(t)
-	mockSecretStoreClient.AssertExpectations(t)
-	assert.Equal(t, expectedTokenFile(), service1Buffer.Bytes())
-}
-
-// TestNoDefaultsCustomTokenParameters
-func TestNoDefaultsCustomTokenParameters(t *testing.T) {
-	// Arrange
-	mockLogger := logger.MockLogger{}
-
-	mockFileIoPerformer := &fileMock.FileIoPerformer{}
-	expectedService1Dir := filepath.Join(outputDir, "myservice")
-	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
-	service1Buffer := new(bytes.Buffer)
-	mockFileIoPerformer.On("MkdirAll", expectedService1Dir, os.FileMode(0700)).Return(nil)
-	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(`{"myservice":{"custom_token_parameters":{"key1":"value1"}}}`), nil)
-	mockFileIoPerformer.On("OpenFileWriter", expectedService1File, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600)).Return(&writeCloserBuffer{service1Buffer}, nil)
-
-	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
-	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
-
-	expectedService1Policy := "{}"
-	expectedService1Parameters := make(map[string]interface{})
-	expectedService1Parameters["key1"] = "value1"
-	expectedService1Parameters["meta"] = makeMetaServiceName("myservice")["meta"]
-	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).
-		Return(nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
-		Return(createTokenResponse(), nil)
-
-	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
-	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
-		PrivilegedTokenPath: privilegedTokenPath,
-		ConfigFile:          configFile,
-		OutputDir:           outputDir,
-		OutputFilename:      outputFilename,
-	})
-
-	// Act
-	err := p.Run()
-
-	// Assert
-	// - {OutputDir}/myservice/{OutputFilename} w/proper contents
-	// - Correct token parameters for myservice
 	// - All other expectations met
 	assert.NoError(t, err)
 	mockFileIoPerformer.AssertExpectations(t)
@@ -284,12 +239,14 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockAuthTokenLoader := &loaderMock.AuthTokenLoader{}
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
-	expectedService1Parameters := makeMetaServiceName("myservice")
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", "{}").
-		Return(nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters).
-		Return(createTokenResponse(), nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", "{}").Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", "myservice", map[string]string{"name": "myservice"}, []string{"edgex-service-myservice"}).Return("myserviceid", nil)
+	mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", "myservice", mock.AnythingOfType("string"), "", []string{}).Return(nil)
+	mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+	mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "myserviceid", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", "myservice").Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", "myservice", "edgex-identity", "{\"name\": \"myservice\"}", "").Return(nil)
+	mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", "myservice", mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)
 	p.SetConfiguration(secretstoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{
@@ -430,6 +387,12 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 
 	policy := map[string]interface{}{
 		"path": map[string]interface{}{
+			"identity/oidc/introspect": map[string]interface{}{
+				"capabilities": []string{"create", "update"},
+			},
+			"identity/oidc/token/" + serviceName: map[string]interface{}{
+				"capabilities": []string{"read"},
+			},
 			"secret/edgex/" + serviceName + "/*": map[string]interface{}{
 				"capabilities": []string{"create", "update", "delete", "list", "read"},
 			},
@@ -440,19 +403,26 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	}
 	expectedService1Policy, err := json.Marshal(&policy)
 	require.NoError(t, err)
-	expectedService1Parameters := makeDefaultTokenParameters(serviceName, "1h", "1h")
-	expectedService1Parameters["meta"] = makeMetaServiceName(serviceName)["meta"]
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
-	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, string(expectedService1Policy)).
-		Return(nil)
-	mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedService1Parameters, mock.Anything).
-		Return(createTokenResponse(), nil)
+	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, string(expectedService1Policy)).Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", serviceName, map[string]string{"name": serviceName}, []string{"edgex-service-" + serviceName}).Return("myserviceid", nil)
+	mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", serviceName, mock.AnythingOfType("string"), "1h", []string{}).Return(nil)
+	mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+	mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "myserviceid", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", serviceName).Return(nil)
+	mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", serviceName, "edgex-identity", "{\"name\": \""+serviceName+"\"}", "").Return(nil)
+	mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", serviceName, mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
 
 	// setup expected things for additional services from env if any
 
 	for service := range expectedTokenConfigs {
 		policy := map[string]interface{}{
 			"path": map[string]interface{}{
+				"identity/oidc/introspect": map[string]interface{}{
+					"capabilities": []string{"create", "update"},
+				},
+				"identity/oidc/token/" + service: map[string]interface{}{
+					"capabilities": []string{"read"},
+				},
 				"secret/edgex/" + service + "/*": map[string]interface{}{
 					"capabilities": []string{"create", "update", "delete", "list", "read"},
 				},
@@ -464,14 +434,13 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 		expectedServicePolicy, err := json.Marshal(&policy)
 		require.NoError(t, err)
 
-		expectedServiceParameters := makeDefaultTokenParameters(service, "1h", "1h")
-
-		expectedServiceParameters["meta"] = makeMetaServiceName(service)["meta"]
-
-		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, string(expectedServicePolicy)).
-			Return(nil)
-		mockSecretStoreClient.On("CreateToken", "fake-priv-token", expectedServiceParameters, mock.Anything).
-			Return(createTokenResponse(), nil)
+		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, string(expectedServicePolicy)).Return(nil)
+		mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", service, map[string]string{"name": service}, []string{"edgex-service-" + service}).Return("myserviceid", nil)
+		mockSecretStoreClient.On("CreateOrUpdateUser", "fake-priv-token", "", service, mock.AnythingOfType("string"), "1h", []string{}).Return(nil)
+		mockSecretStoreClient.On("LookupAuthHandle", "fake-priv-token", "").Return(`{"data":{"userpass/":{"accessor","accessorid"}}}`, nil)
+		mockSecretStoreClient.On("BindUserToIdentity", "fake-priv-token", "myserviceid", "{\"data\":{\"userpass/\":{\"accessor\",\"accessorid\"}}}", service).Return(nil)
+		mockSecretStoreClient.On("CreateOrUpdateIdentityRole", "fake-priv-token", service, "edgex-identity", "{\"name\": \""+service+"\"}", "").Return(nil)
+		mockSecretStoreClient.On("InternalServiceLogin", "fake-priv-token", "", service, mock.AnythingOfType("string")).Return(createTokenResponse(), nil)
 	}
 
 	p := NewTokenProvider(mockLogger, mockFileIoPerformer, mockAuthTokenLoader, mockSecretStoreClient)

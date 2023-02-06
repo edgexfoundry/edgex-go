@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2022 Intel Corporation
+ * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -265,7 +265,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		vaultTokenResponse, err := makeToken(serviceName, privilegedToken, secretStoreClient, lc)
+		vaultTokenResponse, err := makeToken(serviceName, privilegedToken, configuration.TokenConfig, secretStoreClient, lc)
 		if err != nil {
 			lc.Errorf("failed create secret store token: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)

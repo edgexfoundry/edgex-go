@@ -38,6 +38,17 @@ Port = 6379
 Timeout = 5000
 Type = "redisdb"
 
+
+[TokenConfig]
+#PrivilegedTokenPath = "UNUSED"
+#ConfigFile = "UNUSED"
+#OutputDir = "UNUSED"
+#OutputFilename = "UNUSED"
+DefaultTokenTTL = "1h"
+DefaultJWTTTL = "15m"
+UserPassMountPoint = "userpass"
+
+
 [SPIFFE]
 EndpointSocket = "/tmp/edgex/secrets/spiffe/public/api.sock"
 TrustDomain = "edgexfoundry.org"
