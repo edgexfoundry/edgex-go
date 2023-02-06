@@ -18,7 +18,7 @@ DOCKERS= \
 	docker_core_data \
 	docker_core_metadata \
 	docker_core_command  \
-	docker_core_common_config_bootstrapper \
+	docker_core_common_config \
 	docker_support_notifications \
 	docker_support_scheduler \
 	docker_security_proxy_setup \
