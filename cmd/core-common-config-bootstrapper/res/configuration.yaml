@@ -42,7 +42,7 @@ all-services:
     Port: 8500
     Type: "consul"
   
-  Databases:
+  Database:
     Host: "localhost"
     Port: 6379
     Timeout: 5000

@@ -338,6 +338,9 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 			key_prefix "` + c.getKeyPrefix(roleName) + `" {
 				policy = "write"
 			}
+			key_prefix "` + c.getKeyPrefix(common.CoreCommonConfigServiceKey) + `" {
+					policy = "read"
+				}
 		`
 
 		edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, "acl_policy_for_"+roleName, servicePolicyRules)

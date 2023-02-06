@@ -31,6 +31,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
@@ -76,6 +77,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		startupTimer,
 		dic,
 		false,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
 		},

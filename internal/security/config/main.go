@@ -23,6 +23,7 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
@@ -62,6 +63,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) int {
 		startupTimer,
 		dic,
 		false,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			serviceHandler.BootstrapHandler,
 		},

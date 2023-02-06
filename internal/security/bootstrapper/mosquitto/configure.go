@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
@@ -61,6 +62,7 @@ func Configure(ctx context.Context,
 		startupTimer,
 		dic,
 		true,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			msgbusBootstrapHdl.GetCredentials,
 			msgbusBootstrapHdl.SetupMosquittoPasswordFile,

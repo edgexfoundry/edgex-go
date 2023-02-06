@@ -189,7 +189,10 @@ func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configurati
 
 	for _, k := range keys {
 		v := kv[k]
-		err = configClient.PutConfigurationValue(k, []byte(fmt.Sprint(v)))
+		// Push key/value into Consul if it is not empty
+		if v != nil {
+			err = configClient.PutConfigurationValue(k, []byte(fmt.Sprint(v)))
+		}
 		if err != nil {
 			return fmt.Errorf("failed to push common configuration key %s with value %v: %s", k, v, err.Error())
 		}

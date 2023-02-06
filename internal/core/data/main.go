@@ -21,14 +21,13 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
@@ -69,6 +68,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		startupTimer,
 		dic,
 		true,
+		"other",
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,

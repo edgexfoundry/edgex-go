@@ -54,10 +54,6 @@ type UoM struct {
 func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
 	configuration, ok := rawConfig.(*ConfigurationStruct)
 	if ok {
-		// Check that information was successfully read from Registry
-		if configuration.Service.Port == 0 {
-			return false
-		}
 		*c = *configuration
 	}
 	return ok

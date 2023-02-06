@@ -23,6 +23,7 @@ package notifications
 
 import (
 	"context"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -72,6 +73,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		startupTimer,
 		dic,
 		true,
+		config.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,

@@ -1,85 +1,23 @@
 [Writable]
-LogLevel = "INFO"
   [Writable.ProfileChange]
   StrictDeviceProfileChanges = false
   StrictDeviceProfileDeletes = false
   [Writable.UoM]
   Validation = false
-  [Writable.InsecureSecrets]
-    [Writable.InsecureSecrets.DB]
-    path = "redisdb"
-      [Writable.InsecureSecrets.DB.Secrets]
-      username = ""
-      password = ""
-  [Writable.Telemetry]
-  Interval = "30s"
-  PublishTopicPrefix  = "edgex/telemetry" # /<service-name>/<metric-name> will be added to this Publish Topic prefix
-    [Writable.Telemetry.Metrics] # All service's metric names must be present in this list.
-    # Common Security Service Metrics
-    SecuritySecretsRequested = false
-    SecuritySecretsStored = false
-    SecurityConsulTokensRequested = false
-    SecurityConsulTokenDuration = false
-    [Writable.Telemetry.Tags] # Contains the service level tags to be attached to all the service's metrics
-#    Gateway="my-iot-gateway" # Tag must be added here or via Consul Env Override can only chnage existing value, not added new ones.
 
 [Service]
-HealthCheckInterval = "10s"
-Host = "localhost"
 Port = 59881
-ServerBindAddr = "" # Leave blank so default to Host value unless different value is needed.
 StartupMsg = "This is the EdgeX Core Metadata Microservice"
-MaxResultCount = 1024
-MaxRequestSize = 0 # Not curently used. Defines the maximum size of http request body in bytes
-RequestTimeout = "5s"
-  [Service.CORSConfiguration]
-  EnableCORS = false
-  CORSAllowCredentials = false
-  CORSAllowedOrigin = "https://localhost"
-  CORSAllowedMethods = "GET, POST, PUT, PATCH, DELETE"
-  CORSAllowedHeaders = "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
-  CORSExposeHeaders = "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
-  CORSMaxAge = 3600
 
 [UoM]
 UoMFile = "./res/uom.toml"
 
-[Registry]
-Host = "localhost"
-Port = 8500
-Type = "consul"
-
 [Database]
-Host = "localhost"
 Name = "metadata"
-Port = 6379
-Timeout = 5000
-Type = "redisdb"
 
 [MessageBus]
-Protocol = "redis"
-Host = "localhost"
-Port = 6379
-Type = "redis"
-AuthMode = "usernamepassword"  # required for redis messagebus (secure or insecure).
-SecretName = "redisdb"
   [MessageBus.Topics]
   PublishTopicPrefix = "edgex/system-events" # /<source>/<type>/<action>/<owner>/<profile> will be added to this Publish Topic prefix
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="core-metadata"
-  Qos = "0" # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
-  KeepAlive = "10" # Seconds (must be 2 or greater)
-  Retained = "false"
-  AutoReconnect = "true"
-  ConnectTimeout = "5" # Seconds
-  SkipCertVerify = "false"
-  # Additional Default NATS Specific options that need to be here to enable evnironment variable overrides of them
-  Format = "nats"
-  RetryOnFailedConnect = "true"
-  QueueGroup = ""
-  Durable = ""
-  AutoProvision = "true"
-  Deliver = "new"
-  DefaultPubRetryAttempts = "2"
-  Subject = "edgex/#" # Required for NATS Jetstram only for stream autoprovsioning
