@@ -17,6 +17,12 @@ package common_config
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"sort"
+	"sync"
+	"syscall"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/environment"
@@ -29,11 +35,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	"gopkg.in/yaml.v3"
-	"os"
-	"os/signal"
-	"sort"
-	"sync"
-	"syscall"
 )
 
 const (
@@ -41,6 +42,7 @@ const (
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc) {
+	startupTimer := startup.NewStartUpTimer(common.CoreCommonConfigServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -59,7 +61,6 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	lc := logger.NewClient(common.CoreCommonConfigServiceKey, models.InfoLog)
 	lc.Info("Core Common Config is starting")
-	startupTimer := startup.NewStartUpTimer(common.CoreCommonConfigServiceKey)
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return lc
@@ -96,13 +97,28 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		lc.Errorf("failed to create provider client for the common configuration: %s", err.Error())
 		os.Exit(1)
 	}
-	// check to see if the configuration exists in the config provider
-	hasConfig, err := configClient.HasConfiguration()
-	if err != nil {
+
+	hasConfig := false
+	hasConfigSuccess := false
+	for startupTimer.HasNotElapsed() {
+		// check to see if the configuration exists in the config provider
+		hasConfig, err = configClient.HasConfiguration()
+		if err == nil {
+			hasConfigSuccess = true
+			break
+		}
+
+		lc.Warnf("Unable to determine if common configuration exists in the provider, will try again: %v", err)
+		startupTimer.SleepForInterval()
+	}
+
+	if !hasConfigSuccess {
 		lc.Errorf("failed to determine if common configuration exists in the provider: %s", err.Error())
 		os.Exit(1)
 	}
+
 	lc.Infof("configuration exists: %v", hasConfig)
+
 	// load the yaml file and push it using the config client
 	if !hasConfig || f.OverwriteConfig() {
 		yamlFile := config.GetConfigLocation(lc, f)
