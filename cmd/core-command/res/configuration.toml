@@ -63,12 +63,10 @@ Port = 6379
 AuthMode = "usernamepassword"                   # required for redis messagebus (secure or insecure).
 SecretName = "redisdb"
   [MessageBus.Topics]
-  DeviceRequestTopicPrefix = "edgex/device/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
-  DeviceResponseTopic = "edgex/device/command/response/#"      # for subscribing to device service responses
-  CommandRequestTopic = "edgex/core/command/request/#"         # for subscribing to internal command requests
-  CommandResponseTopicPrefix = "edgex/core/command/response"   # for publishing responses back to internal service /<device-name>/<command-name>/<method> will be added to this publish topic prefix
-  QueryRequestTopic = "edgex/core/commandquery/request/#"      # for subscribing to internal command query requests
-  QueryResponseTopic = "edgex/core/commandquery/response"      # for publishing reponsses back to internal service
+  DeviceCommandRequestTopicPrefix = "edgex/device/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
+  CommandRequestTopic = "edgex/core/command/request/#"                # for subscribing to internal command requests
+  CommandQueryRequestTopic = "edgex/core/commandquery/request/#"      # for subscribing to internal command query requests
+  ResponseTopicPrefix="edgex/response"                                # for subscribing/publishing internal responses (used by MessageBus Request API)
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="core-command"
@@ -103,5 +101,5 @@ AuthMode = "none"
   [ExternalMQTT.Topics]
   CommandRequestTopic = "edgex/command/request/#"           # for subscribing to 3rd party command requests
   CommandResponseTopicPrefix = "edgex/command/response"     # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
-  QueryRequestTopic = "edgex/commandquery/request/#"        # for subscribing to 3rd party command query request
-  QueryResponseTopic = "edgex/commandquery/response"        # for publishing responses back to 3rd party systems
+  CommandQueryRequestTopic = "edgex/commandquery/request/#" # for subscribing to 3rd party command query request
+  CommandQueryResponseTopic = "edgex/commandquery/response" # for publishing responses back to 3rd party systems
