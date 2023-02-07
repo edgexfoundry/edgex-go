@@ -161,6 +161,7 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 			mockMessaging := &mocks.MessageClient{}
 
 			mockLogger.On("Debugf", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			mockLogger.On("Infof", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			mockLogger.On("Errorf", mock.Anything).Run(func(args mock.Arguments) {
 				require.Fail(t, "Errorf not expected")
 			})

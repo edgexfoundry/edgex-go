@@ -25,7 +25,7 @@ import (
 )
 
 // validateRequestTopic validates the request topic by checking the existence of device and device service,
-// returns the internal device request topic to which the command request will be sent.
+// returns the internal device request topic and service name to which the command request will be sent.
 func validateRequestTopic(prefix string, deviceName string, commandName string, method string, dic *di.Container) (string, string, error) {
 	// retrieve device information through Metadata DeviceClient
 	dc := bootstrapContainer.DeviceClientFrom(dic.Get)
