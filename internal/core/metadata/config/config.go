@@ -20,14 +20,12 @@ import (
 
 // Struct used to parse the JSON configuration file
 type ConfigurationStruct struct {
-	Writable      WritableInfo
-	Clients       map[string]bootstrapConfig.ClientInfo
-	Database      bootstrapConfig.Database
-	Notifications NotificationInfo
-	Registry      bootstrapConfig.RegistryInfo
-	Service       bootstrapConfig.ServiceInfo
-	MessageBus    bootstrapConfig.MessageBusInfo
-	UoM           UoM
+	Writable   WritableInfo
+	Database   bootstrapConfig.Database
+	Registry   bootstrapConfig.RegistryInfo
+	Service    bootstrapConfig.ServiceInfo
+	MessageBus bootstrapConfig.MessageBusInfo
+	UoM        UoM
 }
 
 type WritableInfo struct {
@@ -49,16 +47,6 @@ type WritableUoM struct {
 
 type UoM struct {
 	UoMFile string
-}
-
-// NotificationInfo provides properties related to the assembly of notification content
-type NotificationInfo struct {
-	Content           string
-	Description       string
-	Label             string
-	PostDeviceChanges bool
-	Sender            string
-	Slug              string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -98,7 +86,6 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.toml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:    c.Clients,
 		Service:    c.Service,
 		Registry:   c.Registry,
 		MessageBus: c.MessageBus,
