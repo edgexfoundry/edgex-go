@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 Intel Corporation
+// Copyright (c) 2022-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -17,94 +17,53 @@
 package spiffetokenprovider
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/common"
+	securityCommon "github.com/edgexfoundry/edgex-go/internal/security/common"
+	fileProviderConfig "github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
 )
 
-const (
-	DefaultTokenTTL = "1h"
-)
-
-func makeDefaultTokenPolicy(serviceName string) map[string]interface{} {
-	// protected path for secret/
-	protectedPath := "secret/edgex/" + serviceName + "/*"
-	capabilities := []string{"create", "update", "delete", "list", "read"}
-	acl := map[string]interface{}{"capabilities": capabilities}
-	// path for consul tokens
-	registryCredsPath := "consul/creds/" + serviceName
-	registryCredsCapabilities := []string{"read"}
-	registryCredsACL := map[string]interface{}{"capabilities": registryCredsCapabilities}
-	pathObject := map[string]interface{}{
-		protectedPath:     acl,
-		registryCredsPath: registryCredsACL,
-	}
-	retval := map[string]interface{}{"path": pathObject}
-	return retval
-
-	/*
-		{
-			"path": {
-			  "secret/edgex/service-name/*": {
-				"capabilities": [ "create", "update", "delete", "list", "read" ]
-			  },
-			  "consul/creds/service-name": {
-				"capabilities": [ "read" ]
-			  }
-			}
-		}
-	*/
-}
-
-func makeDefaultTokenParameters(serviceName string, defaultTTL string, defaultPeriod string) map[string]interface{} {
-	return map[string]interface{}{
-		"display_name": serviceName,
-		"no_parent":    true,
-		"ttl":          defaultTTL,
-		"period":       defaultPeriod,
-		"policies":     []string{"edgex-service-" + serviceName},
-	}
-}
-
 func makeToken(serviceName string,
 	privilegedToken string,
+	tokenConfig fileProviderConfig.TokenFileProviderInfo,
 	secretStoreClient secrets.SecretStoreClient,
 	lc logger.LoggingClient) (interface{}, error) {
 
 	lc.Infof("generating policy/token defaults for service %s", serviceName)
 	lc.Infof("using policy/token defaults for service %s", serviceName)
-	servicePolicy := makeDefaultTokenPolicy(serviceName)
+	servicePolicy := securityCommon.MakeDefaultTokenPolicy(serviceName)
 	defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 	for pathKey, policy := range defaultPolicyPaths {
 		servicePolicy["path"].(map[string]interface{})[pathKey] = policy
 	}
-	createTokenParameters := makeDefaultTokenParameters(serviceName, DefaultTokenTTL, DefaultTokenTTL)
 
-	// Set a meta property that consuming serices can use to automatically scope secret queries
-	createTokenParameters["meta"] = map[string]interface{}{
-		"edgex-service-name": serviceName,
-	}
+	credentialGenerator := secretstore.NewDefaultCredentialGenerator()
 
-	// Always create a policy with this name
-	policyName := "edgex-service-" + serviceName
+	userManager := common.NewUserManager(lc, secretStoreClient, tokenConfig.UserPassMountPoint, "edgex-identity",
+		privilegedToken, tokenConfig.DefaultTokenTTL, tokenConfig.DefaultJWTTTL)
 
-	policyBytes, err := json.Marshal(servicePolicy)
+	// Generate a random password
+
+	randomPassword, err := credentialGenerator.Generate(context.TODO())
 	if err != nil {
-		lc.Error(fmt.Sprintf("failed encode service policy for %s: %s", serviceName, err.Error()))
 		return nil, err
 	}
 
-	if err := secretStoreClient.InstallPolicy(privilegedToken, policyName, string(policyBytes)); err != nil {
-		lc.Error(fmt.Sprintf("failed to install policy %s: %s", policyName, err.Error()))
+	// Create a user with the random password
+
+	err = userManager.CreatePasswordUserWithPolicy(serviceName, randomPassword, "edgex-service-", servicePolicy)
+	if err != nil {
 		return nil, err
 	}
+
+	// Immediately log in the user to get a vault token
 
 	var createTokenResponse interface{}
-
-	if createTokenResponse, err = secretStoreClient.CreateToken(privilegedToken, createTokenParameters); err != nil {
-		lc.Error(fmt.Sprintf("failed to create vault token for service %s: %s", serviceName, err.Error()))
+	if createTokenResponse, err = secretStoreClient.InternalServiceLogin(privilegedToken, tokenConfig.UserPassMountPoint, serviceName, randomPassword); err != nil {
 		return nil, err
 	}
 

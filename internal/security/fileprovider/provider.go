@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,18 +11,22 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
 //
 
 package fileprovider
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strconv"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/common"
+	securityCommon "github.com/edgexfoundry/edgex-go/internal/security/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
 
@@ -95,20 +99,23 @@ func (p *fileTokenProvider) Run() error {
 	// The tokenConfEnv only uses default settings.
 	tokenConf = tokenConfEnv.mergeWith(tokenConf)
 
+	credentialGenerator := secretstore.NewDefaultCredentialGenerator()
+
+	userManager := common.NewUserManager(p.logger, p.secretStoreClient, p.tokenConfig.UserPassMountPoint, "edgex-identity",
+		privilegedToken, p.tokenConfig.DefaultTokenTTL, p.tokenConfig.DefaultJWTTTL)
+
 	for serviceName, serviceConfig := range tokenConf {
 		p.logger.Infof("generating policy/token defaults for service %s", serviceName)
 
 		servicePolicy := make(map[string]interface{})
-		createTokenParameters := make(map[string]interface{})
 
 		if serviceConfig.UseDefaults {
 			p.logger.Infof("using policy/token defaults for service %s", serviceName)
-			servicePolicy = makeDefaultTokenPolicy(serviceName)
+			servicePolicy = securityCommon.MakeDefaultTokenPolicy(serviceName)
 			defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 			for pathKey, policy := range defaultPolicyPaths {
 				servicePolicy["path"].(map[string]interface{})[pathKey] = policy
 			}
-			createTokenParameters = makeDefaultTokenParameters(serviceName, p.tokenConfig.DefaultTokenTTL, p.tokenConfig.DefaultTokenTTL)
 		}
 
 		if serviceConfig.CustomPolicy != nil {
@@ -124,36 +131,28 @@ func (p *fileTokenProvider) Run() error {
 			}
 		}
 
-		if serviceConfig.CustomTokenParameters != nil {
-			// Custom token parameters override the defaults
-			createTokenParameters = mergeMaps(createTokenParameters, serviceConfig.CustomTokenParameters)
-		}
+		// Generate a random password
 
-		// Set a meta property that consuming serices can use to automatically scope secret queries
-		createTokenParameters["meta"] = map[string]interface{}{
-			"edgex-service-name": serviceName,
-		}
-
-		// Always create a policy with this name
-		policyName := "edgex-service-" + serviceName
-
-		policyBytes, err := json.Marshal(servicePolicy)
+		randomPassword, err := credentialGenerator.Generate(context.TODO())
 		if err != nil {
-			p.logger.Errorf("failed encode service policy for %s: %s", serviceName, err.Error())
 			return err
 		}
 
-		if err := p.secretStoreClient.InstallPolicy(privilegedToken, policyName, string(policyBytes)); err != nil {
-			p.logger.Errorf("failed to install policy %s: %s", policyName, err.Error())
+		// Create a user with the random password
+
+		err = userManager.CreatePasswordUserWithPolicy(serviceName, randomPassword, "edgex-service-", servicePolicy)
+		if err != nil {
 			return err
 		}
+
+		// Immediately log in the user to get a vault token
 
 		var createTokenResponse interface{}
-
-		if createTokenResponse, err = p.secretStoreClient.CreateToken(privilegedToken, createTokenParameters); err != nil {
-			p.logger.Errorf("failed to create vault token for service %s: %s", serviceName, err.Error())
+		if createTokenResponse, err = p.secretStoreClient.InternalServiceLogin(privilegedToken, p.tokenConfig.UserPassMountPoint, serviceName, randomPassword); err != nil {
 			return err
 		}
+
+		// Serialize the vault token to disk
 
 		outputTokenDir := filepath.Join(p.tokenConfig.OutputDir, serviceName)
 		outputTokenFilename := filepath.Join(outputTokenDir, p.tokenConfig.OutputFilename)

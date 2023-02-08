@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2021-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -39,26 +39,45 @@ const (
 	// per-service tokens and policies
 	// nolint:gosec
 	TokenCreatorPolicy = `
-path "auth/token/create" {
-  capabilities = ["create", "update", "sudo"]
+path "identity/entity/name" {
+  capabilities = ["list"]
 }
 
-path "auth/token/create-orphan" {
-  capabilities = ["create", "update", "sudo"]
+path "identity/entity/name/*" {
+  capabilities = ["create", "update", "read"]
 }
 
-path "auth/token/create/*" {
-  capabilities = ["create", "update", "sudo"]
+path "identity/entity-alias" {
+  capabilities = ["create", "update"]
 }
 
-path "sys/policies/acl/edgex-service-*"
-{
+path "identity/oidc/role" {
+  capabilities = ["list"]
+}
+
+path "identity/oidc/role/*" {
+  capabilities = ["create", "update"]
+}
+  
+path "auth/userpass/users/*" {
+	capabilities = ["create", "update"]
+  }
+  
+path "sys/auth" {
+  capabilities = ["read"]
+}
+  
+path "sys/policies/acl/edgex-service-*" {
   capabilities = ["create", "read", "update", "delete" ]
 }
 
-path "sys/policies/acl"
-{
+path "sys/policies/acl" {
   capabilities = ["list"]
 }
 `
+
+	// UPAuthMountPoint is where the username/password auth engine is mounted
+	UPAuthMountPoint = "userpass"
+	// UserPassAuthEngine is the auth engine name
+	UserPassAuthEngine = "userpass"
 )

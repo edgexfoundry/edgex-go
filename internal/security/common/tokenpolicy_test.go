@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2019 Intel Corporation
+// Copyright (c) 2019-2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -11,9 +11,9 @@
 // or implied. See the License for the specific language governing permissions and limitations under
 // the License.
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
 //
-package fileprovider
+package common
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ import (
 
 func TestDefaultTokenPolicy(t *testing.T) {
 	// Act
-	policies := makeDefaultTokenPolicy("service-name")
+	policies := MakeDefaultTokenPolicy("service-name")
 
 	// Assert
 	bytes, err := json.Marshal(policies)
@@ -39,21 +39,14 @@ func TestDefaultTokenPolicy(t *testing.T) {
 			"consul/creds/service-name": map[string]interface{}{
 				"capabilities": []string{"read"},
 			},
+			"identity/oidc/token/service-name": map[string]interface{}{
+				"capabilities": []string{"read"},
+			},
+			"identity/oidc/introspect": map[string]interface{}{
+				"capabilities": []string{"create", "update"},
+			},
 		},
 	}
 
 	require.Equal(t, expected, policies)
-}
-
-func TestDefaultTokenParameters(t *testing.T) {
-	// Act
-	parameters := makeDefaultTokenParameters("service-name", "1h", "1h")
-
-	// Assert
-	bytes, err := json.Marshal(parameters)
-	require.NoError(t, err)
-
-	expected := `{"display_name":"service-name","no_parent":true,"period":"1h","policies":["edgex-service-service-name"],"ttl":"1h"}`
-	actual := string(bytes)
-	require.Equal(t, expected, actual)
 }

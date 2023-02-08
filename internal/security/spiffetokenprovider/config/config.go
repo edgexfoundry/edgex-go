@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2022 Intel Corporation
+ * Copyright 2022-2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 package config
 
 import (
+	fileProviderConfig "github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 )
 
@@ -28,13 +29,14 @@ type SpiffeInfo struct {
 }
 
 type ConfigurationStruct struct {
-	Writable   WritableInfo
-	MessageBus bootstrapConfig.MessageBusInfo
-	Clients    map[string]bootstrapConfig.ClientInfo
-	Database   bootstrapConfig.Database
-	Registry   bootstrapConfig.RegistryInfo
-	Service    bootstrapConfig.ServiceInfo
-	Spiffe     SpiffeInfo
+	Writable    WritableInfo
+	MessageBus  bootstrapConfig.MessageBusInfo
+	Clients     map[string]bootstrapConfig.ClientInfo
+	Database    bootstrapConfig.Database
+	Registry    bootstrapConfig.RegistryInfo
+	Service     bootstrapConfig.ServiceInfo
+	TokenConfig fileProviderConfig.TokenFileProviderInfo
+	Spiffe      SpiffeInfo
 }
 
 type WritableInfo struct {

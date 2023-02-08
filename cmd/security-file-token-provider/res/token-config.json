@@ -32,22 +32,61 @@
   "support-scheduler": {
     "edgex_use_defaults": true
   },
-  "security-secretstore-setup": {
+  "security-proxy-auth": {
+    "edgex_use_defaults": true
+  },
+  "security-proxy-setup": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "secret/edgex/security-proxy-setup/kong-tls": {
+        "identity/entity/name": {
           "capabilities": [
-            "list",
+            "list"
+          ]
+        },
+        "identity/entity/name/*": {
+          "capabilities": [
             "read",
             "create",
             "update",
             "delete"
           ]
         },
-        "secret/edgex/redis/*": {
+        "identity/entity-alias": {
           "capabilities": [
-            "list",
+            "create",
+            "update"
+          ]
+        },
+        "identity/oidc/role": {
+          "capabilities": [
+            "list"
+          ]
+        },
+        "identity/oidc/role/*": {
+          "capabilities": [
+            "create",
+            "update"
+          ]
+        },
+        "auth/userpass/users/*": {
+          "capabilities": [
+            "create",
+            "update"
+          ]
+        },
+        "sys/auth": {
+          "capabilities": [
+            "read"
+          ]
+        },
+        "sys/policies/acl": {
+          "capabilities": [
+            "list"
+          ]
+        },
+        "sys/policies/acl/edgex-user-*": {
+          "capabilities": [
             "read",
             "create",
             "update",
@@ -57,35 +96,54 @@
       }
     }
   },
-  "security-proxy-setup": {
-    "edgex_use_defaults": true
-  },
-  "security-file-token-provider": {
-    "edgex_use_defaults": true
-  },
   "security-spiffe-token-provider": {
     "edgex_use_defaults": true,
     "custom_policy": {
       "path": {
-        "auth/token/create": {
+        "identity/entity/name": {
           "capabilities": [
-            "create",
-            "update",
-            "sudo"
+            "list"
           ]
         },
-        "auth/token/create-orphan": {
+        "identity/entity/name/*": {
           "capabilities": [
+            "read",
             "create",
             "update",
-            "sudo"
+            "delete"
           ]
         },
-        "auth/token/create/*": {
+        "identity/entity-alias": {
           "capabilities": [
             "create",
-            "update",
-            "sudo"
+            "update"
+          ]
+        },
+        "identity/oidc/role": {
+          "capabilities": [
+            "list"
+          ]
+        },
+        "identity/oidc/role/*": {
+          "capabilities": [
+            "create",
+            "update"
+          ]
+        },
+        "auth/userpass/users/*": {
+          "capabilities": [
+            "create",
+            "update"
+          ]
+        },
+        "sys/auth": {
+          "capabilities": [
+            "read"
+          ]
+        },
+        "sys/policies/acl": {
+          "capabilities": [
+            "list"
           ]
         },
         "sys/policies/acl/edgex-service-*": {

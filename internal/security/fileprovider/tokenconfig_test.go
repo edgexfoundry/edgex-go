@@ -55,7 +55,6 @@ func TestLoadTokenConfig(t *testing.T) {
 	var path = aService.CustomPolicy["path"].(map[string]interface{})
 	assert.Contains(t, path, "secret/non/standard/location/*")
 	// Don't need to go further down the type assertion rabbit hole to prove that this is working
-	assert.Contains(t, aService.CustomTokenParameters, "custom_option")
 }
 
 func TestLoadTokenConfigError1(t *testing.T) {
