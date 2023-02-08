@@ -8,20 +8,16 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	goErrors "errors"
 	"fmt"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	config2 "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
@@ -50,15 +46,14 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		correlation.FromContext(ctx),
 	)
 
-	go publishDeviceSystemEvent(common.DeviceSystemEventActionAdd, d.ServiceName, d, ctx, lc, dic)
+	deviceDTO := dtos.FromDeviceModelToDTO(addedDevice)
+	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionAdd, d.ServiceName, deviceDTO, ctx, dic)
 
 	return addedDevice.Id, nil
 }
 
 // DeleteDeviceByName deletes the device by name
 func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) errors.EdgeX {
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
@@ -72,7 +67,8 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	go publishDeviceSystemEvent(common.DeviceSystemEventActionDelete, device.ServiceName, device, ctx, lc, dic)
+	deviceDTO := dtos.FromDeviceModelToDTO(device)
+	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionDelete, device.ServiceName, deviceDTO, ctx, dic)
 
 	return nil
 }
@@ -128,7 +124,8 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
-	err = validateDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(device))
+	deviceDTO := dtos.FromDeviceModelToDTO(device)
+	err = validateDeviceCallback(ctx, dic, deviceDTO)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -144,10 +141,10 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	)
 
 	if oldServiceName != "" {
-		go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, oldServiceName, device, ctx, lc, dic)
+		go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionUpdate, oldServiceName, deviceDTO, ctx, dic)
 	}
 
-	go publishDeviceSystemEvent(common.DeviceSystemEventActionUpdate, device.ServiceName, device, ctx, lc, dic)
+	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionUpdate, device.ServiceName, deviceDTO, ctx, dic)
 
 	return nil
 }
@@ -223,39 +220,3 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 }
 
 var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
-
-func publishDeviceSystemEvent(action string, owner string, d models.Device, ctx context.Context, lc logger.LoggingClient, dic *di.Container) {
-	device := dtos.FromDeviceModelToDTO(d)
-	systemEvent := dtos.NewSystemEvent(common.DeviceSystemEventType, action, common.CoreMetaDataServiceKey, owner, nil, device)
-
-	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
-	if messagingClient == nil {
-		lc.Errorf("unable to publish Device System Event: %v", noMessagingClientError)
-		return
-	}
-
-	config := container.ConfigurationFrom(dic.Get)
-
-	prefix := config.MessageBus.Topics[config2.MessageBusPublishTopicPrefix]
-	publishTopic := fmt.Sprintf("%s/%s/%s/%s/%s/%s",
-		prefix,
-		systemEvent.Source,
-		systemEvent.Type,
-		systemEvent.Action,
-		systemEvent.Owner,
-		device.ProfileName)
-
-	payload, _ := json.Marshal(systemEvent)
-	envelope := types.NewMessageEnvelope(payload, ctx)
-	// Correlation ID and Content type are set by the above factory function from the context of the request that
-	// triggered this System Event. We'll keep that Correlation ID, but need to make sure the Content Type is set appropriate
-	// for how the payload was encoded above.
-	envelope.ContentType = common.ContentTypeJSON
-
-	if err := messagingClient.Publish(envelope, publishTopic); err != nil {
-		lc.Errorf("unable to publish '%s' Device System Event for device '%s' to topic '%s': %v", action, device.Name, publishTopic, err)
-		return
-	}
-
-	lc.Debugf("Published the '%s' Device System Event for device '%s' to topic '%s'", action, device.Name, publishTopic)
-}

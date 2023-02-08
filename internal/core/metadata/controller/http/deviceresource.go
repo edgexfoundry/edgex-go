@@ -154,7 +154,7 @@ func (dc *DeviceResourceController) DeleteDeviceResourceByName(w http.ResponseWr
 	profileName := vars[common.Name]
 	resourceName := vars[common.ResourceName]
 
-	err := application.DeleteDeviceResourceByName(profileName, resourceName, dc.dic)
+	err := application.DeleteDeviceResourceByName(profileName, resourceName, ctx, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

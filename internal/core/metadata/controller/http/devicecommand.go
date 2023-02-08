@@ -131,7 +131,7 @@ func (dc *DeviceCommandController) DeleteDeviceCommandByName(w http.ResponseWrit
 	profileName := vars[common.Name]
 	commandName := vars[common.CommandName]
 
-	err := application.DeleteDeviceCommandByName(profileName, commandName, dc.dic)
+	err := application.DeleteDeviceCommandByName(profileName, commandName, ctx, dc.dic)
 	if err != nil {
 		utils.WriteErrorResponse(w, ctx, lc, err, "")
 		return

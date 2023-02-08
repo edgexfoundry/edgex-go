@@ -9,8 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
@@ -18,7 +16,9 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
@@ -46,6 +46,9 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 		correlationId,
 	)
 
+	profileDTO := dtos.FromDeviceProfileModelToDTO(addedDeviceProfile)
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionAdd, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+
 	return addedDeviceProfile.Id, nil
 }
 
@@ -69,7 +72,15 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 		"DeviceProfile updated on DB successfully. Correlation-id: %s ",
 		correlation.FromContext(ctx),
 	)
-	go updateDeviceProfileCallback(ctx, dic, dtos.FromDeviceProfileModelToDTO(d))
+
+	profile, err := dbClient.DeviceProfileByName(d.Name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+
 	return nil
 }
 
@@ -97,10 +108,18 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceProfileByName(name)
+	profile, err := dbClient.DeviceProfileByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	err = dbClient.DeleteDeviceProfileByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionDelete, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+
 	return nil
 }
 
@@ -200,6 +219,9 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 		"DeviceProfile basic info patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
+
+	profileDTO := dtos.FromDeviceProfileModelToDTO(deviceProfile)
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
 
 	return nil
 }
