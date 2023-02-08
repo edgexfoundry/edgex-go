@@ -491,6 +491,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	dbClientMock.On("DeviceCountByProfileName", deviceProfileModel.Name).Return(uint32(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, deviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceProfileByName", deviceProfileModel.Name).Return(deviceProfileModel, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -914,6 +915,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	dbClientMock.On("DeviceCountByProfileName", validDeviceProfileModel.Name).Return(uint32(1), nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, validDeviceProfileModel.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dbClientMock.On("DeviceServiceByName", testDeviceServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceProfileByName", validDeviceProfileModel.Name).Return(validDeviceProfileModel, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1080,6 +1082,7 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	dbClientMock.On("DeleteDeviceProfileByName", provisionWatcherExists).Return(errors.NewCommonEdgeX(
 		errors.KindStatusConflict, "fail to delete the device profile when associated provisionWatcher exists", nil))
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
+	dbClientMock.On("DeviceProfileByName", mock.Anything).Return(models.DeviceProfile{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

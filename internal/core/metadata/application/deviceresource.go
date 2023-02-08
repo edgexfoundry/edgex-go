@@ -14,6 +14,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -79,6 +80,7 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	}
 
 	lc.Debugf("DeviceProfile deviceResources added on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
 
 	return nil
 }
@@ -112,11 +114,13 @@ func PatchDeviceProfileResource(profileName string, dto dtos.UpdateDeviceResourc
 	}
 
 	lc.Debugf("DeviceProfile deviceResources patched on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
+	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
 
 	return nil
 }
 
-func DeleteDeviceResourceByName(profileName string, resourceName string, dic *di.Container) errors.EdgeX {
+func DeleteDeviceResourceByName(profileName string, resourceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
 	if profileName == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "profile name is empty", nil)
 	}
@@ -166,6 +170,7 @@ func DeleteDeviceResourceByName(profileName string, resourceName string, dic *di
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
+	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
 	return nil
 }
 
