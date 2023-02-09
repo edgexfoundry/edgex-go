@@ -1,11 +1,15 @@
 #
+<<<<<<< HEAD
 # Copyright 2022-2023 Intel Corporation
+=======
+# Copyright 2023 Intel Corporation
+>>>>>>> feat: generate spdx sbom and add Makefile target for sbom generation
 # Copyright (c) 2018 Cavium
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 
-.PHONY: build clean unittest hadolint lint test docker run
+.PHONY: build clean unittest hadolint lint test docker run sbom
 
 # change the following boolean flag to include or exclude the delayed start libs for builds for most of core services except support services
 INCLUDE_DELAYED_START_BUILD_CORE:="false"
@@ -59,6 +63,8 @@ GIT_SHA=$(shell git rev-parse HEAD)
 ARCH=$(shell uname -m)
 
 GO_VERSION=$(shell grep '^go [0-9].[0-9]*' go.mod | cut -d' ' -f 2)
+
+CUR_DIR=$(shell pwd)
 
 # DO NOT change the following flag, as it is automatically set based on the boolean switch INCLUDE_DELAYED_START_BUILD_CORE
 NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE:=non_delayedstart
@@ -360,3 +366,8 @@ docker_security_spiffe_token_provider: docker_base
 
 vendor:
 	$(GO) mod vendor
+
+sbom:
+	docker run -it --rm \
+		-v "$(CUR_DIR):/edgex-go" -v "$(CUR_DIR)/sbom:/sbom" \
+		spdx/spdx-sbom-generator -p /edgex-go/ -o /sbom/ --include-license-text true

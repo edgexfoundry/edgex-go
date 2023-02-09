@@ -1,0 +1,1299 @@
+SPDXVersion: SPDX-2.2
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: github.com/edgexfoundry/edgex-go
+DocumentNamespace: http://spdx.org/spdxpackages/github.com/edgexfoundry/edgex-go-687e14bb-13bb-4037-b7c3-1c9320b62964
+Creator: Tool: spdx-sbom-generator-source-code
+Created: 2023-02-09T17:44:27Z
+
+
+##### Package representing the github.com/edgexfoundry/edgex-go
+
+PackageName: github.com/edgexfoundry/edgex-go
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.edgex-go
+PackageVersion: 966ddbc
+PackageSupplier: Organization: github.com/edgexfoundry/edgex-go
+PackageDownloadLocation: git+https://github.com/jim-wang-intel/edgex-go.git
+FilesAnalyzed: false
+PackageChecksum: SHA256: 1c81ef806f8a0cac0c8cb8ab179f99e0b520cc5d9be9eff9e1447f97f7ad26a2
+PackageHomePage: https://github.com/edgexfoundry/edgex-go
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-core-contracts/v3
+
+PackageName: github.com/edgexfoundry/go-mod-core-contracts/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10
+PackageVersion: v3.0.0-dev.10
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-core-contracts/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-core-contracts/v3/releases/tag/v3.0.0-dev.10
+FilesAnalyzed: false
+PackageChecksum: SHA256: c720ad645fbf4be39e4b3834818e57c4e613c4251abd71f2c51fee3951511eb6
+PackageHomePage: https://github.com/edgexfoundry/go-mod-core-contracts/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-playground/locales
+
+PackageName: github.com/go-playground/locales
+SPDXID: SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+PackageVersion: v0.14.1
+PackageSupplier: Organization: github.com/go-playground/locales
+PackageDownloadLocation: https://github.com/go-playground/locales/releases/tag/v0.14.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: cfcae2b60355b5fde7c22949eafa1c2dee60ee6728f626ff00fd07cce80ba73d
+PackageHomePage: https://github.com/go-playground/locales
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-playground/universal-translator
+
+PackageName: github.com/go-playground/universal-translator
+SPDXID: SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+PackageVersion: v0.18.1
+PackageSupplier: Organization: github.com/go-playground/universal-translator
+PackageDownloadLocation: https://github.com/go-playground/universal-translator/releases/tag/v0.18.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: eb0811eddeb1b81fda8eb673cfa632cf7481f9bec92c60a50eb2bff23b4aba90
+PackageHomePage: https://github.com/go-playground/universal-translator
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/leodido/go-urn
+
+PackageName: github.com/leodido/go-urn
+SPDXID: SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+PackageVersion: v1.2.1
+PackageSupplier: Organization: github.com/leodido/go-urn
+PackageDownloadLocation: https://github.com/leodido/go-urn/releases/tag/v1.2.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: 8d3614a928d91bfe94894c4b94ed6b3fd834e650cffabad08422fae18f0783a7
+PackageHomePage: https://github.com/leodido/go-urn
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the golang.org/x/crypto
+
+PackageName: golang.org/x/crypto
+SPDXID: SPDXRef-Package-golang.org.x.crypto-v0.5.0
+PackageVersion: v0.5.0
+PackageSupplier: Organization: golang.org/x/crypto
+PackageDownloadLocation: https://golang.org/x/crypto
+FilesAnalyzed: false
+PackageChecksum: SHA256: e1c223b8a0e5551e17727dfb7956c90898f6f58ce9e7efe33d79178fd69e6287
+PackageHomePage: https://golang.org/x/crypto
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the golang.org/x/text
+
+PackageName: golang.org/x/text
+SPDXID: SPDXRef-Package-golang.org.x.text-v0.6.0
+PackageVersion: v0.6.0
+PackageSupplier: Organization: golang.org/x/text
+PackageDownloadLocation: https://golang.org/x/text
+FilesAnalyzed: false
+PackageChecksum: SHA256: 5ddb1f4942fb0a9c9eac56571853017c40d4d519ec37a70e078da499ea2b3c46
+PackageHomePage: https://golang.org/x/text
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-playground/validator/v10
+
+PackageName: github.com/go-playground/validator/v10
+SPDXID: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+PackageVersion: v10.11.2
+PackageSupplier: Organization: github.com/go-playground/validator/v10
+PackageDownloadLocation: https://github.com/go-playground/validator/v10/releases/tag/v10.11.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: e2b18fd382386d9c304e4cba51e2e0507b5cee3f30e76dda5966770afb62b8a4
+PackageHomePage: https://github.com/go-playground/validator/v10
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/google/uuid
+
+PackageName: github.com/google/uuid
+SPDXID: SPDXRef-Package-github.com.google.uuid-v1.3.0
+PackageVersion: v1.3.0
+PackageSupplier: Organization: github.com/google/uuid
+PackageDownloadLocation: https://github.com/google/uuid/releases/tag/v1.3.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 1a8050bb7dac3b776b3a023e5609ca7c8e2a7b568c0b2f29acc32fdfa349e755
+PackageHomePage: https://github.com/google/uuid
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-secrets/v3
+
+PackageName: github.com/edgexfoundry/go-mod-secrets/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7
+PackageVersion: v3.0.0-dev.7
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-secrets/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-secrets/v3/releases/tag/v3.0.0-dev.7
+FilesAnalyzed: false
+PackageChecksum: SHA256: 5f60d59a075cfe4e6348cc82f0d0a05d7bd49e3df9e3ff3598e60baadff87507
+PackageHomePage: https://github.com/edgexfoundry/go-mod-secrets/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-logfmt/logfmt
+
+PackageName: github.com/go-logfmt/logfmt
+SPDXID: SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+PackageVersion: v0.5.1
+PackageSupplier: Organization: github.com/go-logfmt/logfmt
+PackageDownloadLocation: https://github.com/go-logfmt/logfmt/releases/tag/v0.5.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: d0d729ad6c7e7eb56d1fb4910c8887f225321abe63cc065672a52a4128ede84b
+PackageHomePage: https://github.com/go-logfmt/logfmt
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-kit/log
+
+PackageName: github.com/go-kit/log
+SPDXID: SPDXRef-Package-github.com.go-kit.log-v0.2.1
+PackageVersion: v0.2.1
+PackageSupplier: Organization: github.com/go-kit/log
+PackageDownloadLocation: https://github.com/go-kit/log/releases/tag/v0.2.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: f324fa5b0f974a666ce10407ece69a08b9aa8c3fc7641c60c7042aa90dc8cb5a
+PackageHomePage: https://github.com/go-kit/log
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-bootstrap/v3
+
+PackageName: github.com/edgexfoundry/go-mod-bootstrap/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17
+PackageVersion: v3.0.0-dev.17
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-bootstrap/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-bootstrap/v3/releases/tag/v3.0.0-dev.17
+FilesAnalyzed: false
+PackageChecksum: SHA256: e563bf2817ec74d75b7cc8a6d8965176f8bcb5ab8614321811156692b172878b
+PackageHomePage: https://github.com/edgexfoundry/go-mod-bootstrap/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/eclipse/paho.mqtt.golang
+
+PackageName: github.com/eclipse/paho.mqtt.golang
+SPDXID: SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2
+PackageVersion: v1.4.2
+PackageSupplier: Organization: github.com/eclipse/paho.mqtt.golang
+PackageDownloadLocation: https://github.com/eclipse/paho.mqtt.golang/releases/tag/v1.4.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: 5cace1e3a8e9994ecc8a9a8d487f25a7fa9a6ae5f8eebc9717e5afa303c9ffd4
+PackageHomePage: https://github.com/eclipse/paho.mqtt.golang
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/gorilla/websocket
+
+PackageName: github.com/gorilla/websocket
+SPDXID: SPDXRef-Package-github.com.gorilla.websocket-v1.4.2
+PackageVersion: v1.4.2
+PackageSupplier: Organization: github.com/gorilla/websocket
+PackageDownloadLocation: https://github.com/gorilla/websocket/releases/tag/v1.4.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: c2638d033c9d3b484c4fd60d5155f49ab21d8af9199f881dbf8142db0f090a21
+PackageHomePage: https://github.com/gorilla/websocket
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the golang.org/x/net
+
+PackageName: golang.org/x/net
+SPDXID: SPDXRef-Package-golang.org.x.net-v0.5.0
+PackageVersion: v0.5.0
+PackageSupplier: Organization: golang.org/x/net
+PackageDownloadLocation: https://golang.org/x/net
+FilesAnalyzed: false
+PackageChecksum: SHA256: d00b34355e293e336696cecf5c5f71b28c6681e4e1e6891fe142333d73f3c180
+PackageHomePage: https://golang.org/x/net
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the golang.org/x/sync
+
+PackageName: golang.org/x/sync
+SPDXID: SPDXRef-Package-golang.org.x.sync-v0.1.0
+PackageVersion: v0.1.0
+PackageSupplier: Organization: golang.org/x/sync
+PackageDownloadLocation: https://golang.org/x/sync
+FilesAnalyzed: false
+PackageChecksum: SHA256: bc1005e83088c1d8a2b99d0dc72052418c282fc39acf85d3c78d5c163b9a18fd
+PackageHomePage: https://golang.org/x/sync
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-configuration/v3
+
+PackageName: github.com/edgexfoundry/go-mod-configuration/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2
+PackageVersion: v3.0.0-dev.2
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-configuration/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-configuration/v3/releases/tag/v3.0.0-dev.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: 1e38a527bb1113690727f0a5c05356cd3184d2b95f1a19b69d19fd3cdc0f2ed6
+PackageHomePage: https://github.com/edgexfoundry/go-mod-configuration/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/pelletier/go-toml
+
+PackageName: github.com/pelletier/go-toml
+SPDXID: SPDXRef-Package-github.com.pelletier.go-toml-v1.9.5
+PackageVersion: v1.9.5
+PackageSupplier: Organization: github.com/pelletier/go-toml
+PackageDownloadLocation: https://github.com/pelletier/go-toml/releases/tag/v1.9.5
+FilesAnalyzed: false
+PackageChecksum: SHA256: 51e2264987b351a8e9f749564e1108dfdcd52ba436045fc2c3f0f58b3a1e8f28
+PackageHomePage: https://github.com/pelletier/go-toml
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/rcrowley/go-metrics
+
+PackageName: github.com/rcrowley/go-metrics
+SPDXID: SPDXRef-Package-github.com.rcrowley.go-metrics-v0.0.0-20201227073835-cf1acfcdf475
+PackageVersion: v0.0.0-20201227073835-cf1acfcdf475
+PackageSupplier: Organization: github.com/rcrowley/go-metrics
+PackageDownloadLocation: https://github.com/rcrowley/go-metrics/releases/tag/v0.0.0-20201227073835-cf1acfcdf475
+FilesAnalyzed: false
+PackageChecksum: SHA256: 0ee8c07fe09c03ef9a99c8387e39ea8a9a19c622263ef7cdc8fb4889a402d51d
+PackageHomePage: https://github.com/rcrowley/go-metrics
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/go-cleanhttp
+
+PackageName: github.com/hashicorp/go-cleanhttp
+SPDXID: SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+PackageVersion: v0.5.1
+PackageSupplier: Organization: github.com/hashicorp/go-cleanhttp
+PackageDownloadLocation: https://github.com/hashicorp/go-cleanhttp/releases/tag/v0.5.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: c2810ee966868ecdf17dabdba9364f388a4d267f850dae462b599650a2411262
+PackageHomePage: https://github.com/hashicorp/go-cleanhttp
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the golang.org/x/sys
+
+PackageName: golang.org/x/sys
+SPDXID: SPDXRef-Package-golang.org.x.sys-v0.4.0
+PackageVersion: v0.4.0
+PackageSupplier: Organization: golang.org/x/sys
+PackageDownloadLocation: https://golang.org/x/sys
+FilesAnalyzed: false
+PackageChecksum: SHA256: 90676524162d8f2d3cc87e61b5bfe3ddf8384ca16e1551c25758aed4ba472217
+PackageHomePage: https://golang.org/x/sys
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mattn/go-isatty
+
+PackageName: github.com/mattn/go-isatty
+SPDXID: SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+PackageVersion: v0.0.14
+PackageSupplier: Organization: github.com/mattn/go-isatty
+PackageDownloadLocation: https://github.com/mattn/go-isatty/releases/tag/v0.0.14
+FilesAnalyzed: false
+PackageChecksum: SHA256: 7925bae8d10c930a5546f4d0c9b738702724bd995f8fbdc62fc3882505fae298
+PackageHomePage: https://github.com/mattn/go-isatty
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mattn/go-colorable
+
+PackageName: github.com/mattn/go-colorable
+SPDXID: SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+PackageVersion: v0.1.12
+PackageSupplier: Organization: github.com/mattn/go-colorable
+PackageDownloadLocation: https://github.com/mattn/go-colorable/releases/tag/v0.1.12
+FilesAnalyzed: false
+PackageChecksum: SHA256: 14b27ff6ccf9ff3fc2a1601cee474db1214b3cd837c3665ca9887e282fa00941
+PackageHomePage: https://github.com/mattn/go-colorable
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/fatih/color
+
+PackageName: github.com/fatih/color
+SPDXID: SPDXRef-Package-github.com.fatih.color-v1.9.0
+PackageVersion: v1.9.0
+PackageSupplier: Organization: github.com/fatih/color
+PackageDownloadLocation: https://github.com/fatih/color/releases/tag/v1.9.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: c8528129f465a26a17ff3554a8038abc0ab674df76a86d2b58f0a0ab2b5d0718
+PackageHomePage: https://github.com/fatih/color
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/go-hclog
+
+PackageName: github.com/hashicorp/go-hclog
+SPDXID: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+PackageVersion: v0.14.1
+PackageSupplier: Organization: github.com/hashicorp/go-hclog
+PackageDownloadLocation: https://github.com/hashicorp/go-hclog/releases/tag/v0.14.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: 67661558d813458a2b50a9cdf21263acfb69a3cb8e8dbdff9f36866dfd9ad6e1
+PackageHomePage: https://github.com/hashicorp/go-hclog
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/go-rootcerts
+
+PackageName: github.com/hashicorp/go-rootcerts
+SPDXID: SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+PackageVersion: v1.0.2
+PackageSupplier: Organization: github.com/hashicorp/go-rootcerts
+PackageDownloadLocation: https://github.com/hashicorp/go-rootcerts/releases/tag/v1.0.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: 271f4f96f6f22097a113615608793a755a4bb5502beea6a17e80f43b43025fd2
+PackageHomePage: https://github.com/hashicorp/go-rootcerts
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/golang-lru
+
+PackageName: github.com/hashicorp/golang-lru
+SPDXID: SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+PackageVersion: v0.5.4
+PackageSupplier: Organization: github.com/hashicorp/golang-lru
+PackageDownloadLocation: https://github.com/hashicorp/golang-lru/releases/tag/v0.5.4
+FilesAnalyzed: false
+PackageChecksum: SHA256: c1f4d02b6418f3094993179cefcd30ecc82e49a81eafb37da57aa28214e3d6da
+PackageHomePage: https://github.com/hashicorp/golang-lru
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/go-immutable-radix
+
+PackageName: github.com/hashicorp/go-immutable-radix
+SPDXID: SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+PackageVersion: v1.3.0
+PackageSupplier: Organization: github.com/hashicorp/go-immutable-radix
+PackageDownloadLocation: https://github.com/hashicorp/go-immutable-radix/releases/tag/v1.3.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 03331f40da55add0642efd27b413ab2ec5e21538a3e684ea0c1267a3f1b1fd53
+PackageHomePage: https://github.com/hashicorp/go-immutable-radix
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/armon/go-metrics
+
+PackageName: github.com/armon/go-metrics
+SPDXID: SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+PackageVersion: v0.3.10
+PackageSupplier: Organization: github.com/armon/go-metrics
+PackageDownloadLocation: https://github.com/armon/go-metrics/releases/tag/v0.3.10
+FilesAnalyzed: false
+PackageChecksum: SHA256: ee1a2ad5092b4e1e9c3c1fc5bb7ae80368a503346ba47dd4d773f2ec71d0a229
+PackageHomePage: https://github.com/armon/go-metrics
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/serf
+
+PackageName: github.com/hashicorp/serf
+SPDXID: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+PackageVersion: v0.10.1
+PackageSupplier: Organization: github.com/hashicorp/serf
+PackageDownloadLocation: https://github.com/hashicorp/serf/releases/tag/v0.10.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: 03575ec2868f3818ebc148e91de0b393bb40e5ae0a8ed01dfa7331161a3220b7
+PackageHomePage: https://github.com/hashicorp/serf
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mitchellh/mapstructure
+
+PackageName: github.com/mitchellh/mapstructure
+SPDXID: SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+PackageVersion: v1.5.0
+PackageSupplier: Organization: github.com/mitchellh/mapstructure
+PackageDownloadLocation: https://github.com/mitchellh/mapstructure/releases/tag/v1.5.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: e58a753159de0ad700de03af1d793820e69bf8c25ff27b2e7339d1176547fe90
+PackageHomePage: https://github.com/mitchellh/mapstructure
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/consul/api
+
+PackageName: github.com/hashicorp/consul/api
+SPDXID: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0
+PackageVersion: v1.18.0
+PackageSupplier: Organization: github.com/hashicorp/consul/api
+PackageDownloadLocation: https://github.com/hashicorp/consul/api/releases/tag/v1.18.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 56ed921ccfa0466e6f6457052d7e7b30a43d7cb5c032dc430da58f79ae2b52b7
+PackageHomePage: https://github.com/hashicorp/consul/api
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/cenkalti/backoff
+
+PackageName: github.com/cenkalti/backoff
+SPDXID: SPDXRef-Package-github.com.cenkalti.backoff-v2.2.1+incompatible
+PackageVersion: v2.2.1+incompatible
+PackageSupplier: Organization: github.com/cenkalti/backoff
+PackageDownloadLocation: https://github.com/cenkalti/backoff/releases/tag/v2.2.1+incompatible
+FilesAnalyzed: false
+PackageChecksum: SHA256: a0579df5b9ba394b0e66e54e913ff924b601799fa6ee845618ad081e0abe67fb
+PackageHomePage: https://github.com/cenkalti/backoff
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mitchellh/reflectwalk
+
+PackageName: github.com/mitchellh/reflectwalk
+SPDXID: SPDXRef-Package-github.com.mitchellh.reflectwalk-v1.0.0
+PackageVersion: v1.0.0
+PackageSupplier: Organization: github.com/mitchellh/reflectwalk
+PackageDownloadLocation: https://github.com/mitchellh/reflectwalk/releases/tag/v1.0.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 878a9ec59202d1709bf9698e15dcc5df5f2df69ba75345ac8a5fd7ed1ff3264c
+PackageHomePage: https://github.com/mitchellh/reflectwalk
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mitchellh/copystructure
+
+PackageName: github.com/mitchellh/copystructure
+SPDXID: SPDXRef-Package-github.com.mitchellh.copystructure-v1.0.0
+PackageVersion: v1.0.0
+PackageSupplier: Organization: github.com/mitchellh/copystructure
+PackageDownloadLocation: https://github.com/mitchellh/copystructure/releases/tag/v1.0.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: f84f54a08bc0180bb437e1913d628421bdfc51e2d317fcae788b14d2cd68d7e9
+PackageHomePage: https://github.com/mitchellh/copystructure
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/mitchellh/consulstructure
+
+PackageName: github.com/mitchellh/consulstructure
+SPDXID: SPDXRef-Package-github.com.mitchellh.consulstructure-v0.0.0-20190329231841-56fdc4d2da54
+PackageVersion: v0.0.0-20190329231841-56fdc4d2da54
+PackageSupplier: Organization: github.com/mitchellh/consulstructure
+PackageDownloadLocation: https://github.com/mitchellh/consulstructure/releases/tag/v0.0.0-20190329231841-56fdc4d2da54
+FilesAnalyzed: false
+PackageChecksum: SHA256: 7ee1fe1b62aa0a900ed681c27a0ffc333a3ade056ee6674cf12107f5475ec7ed
+PackageHomePage: https://github.com/mitchellh/consulstructure
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/x448/float16
+
+PackageName: github.com/x448/float16
+SPDXID: SPDXRef-Package-github.com.x448.float16-v0.8.4
+PackageVersion: v0.8.4
+PackageSupplier: Organization: github.com/x448/float16
+PackageDownloadLocation: https://github.com/x448/float16/releases/tag/v0.8.4
+FilesAnalyzed: false
+PackageChecksum: SHA256: 09f5623fc2aa52a5d940fa8ca2cba9da3273ec36fb0f325c08843acb37d6dc23
+PackageHomePage: https://github.com/x448/float16
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/fxamacker/cbor/v2
+
+PackageName: github.com/fxamacker/cbor/v2
+SPDXID: SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0
+PackageVersion: v2.4.0
+PackageSupplier: Organization: github.com/fxamacker/cbor/v2
+PackageDownloadLocation: https://github.com/fxamacker/cbor/v2/releases/tag/v2.4.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 60d20dcb0514df089b896bd31ecb4db7a93e4b22a76d1eb6f0897b2e672b05b7
+PackageHomePage: https://github.com/fxamacker/cbor/v2
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-messaging/v3
+
+PackageName: github.com/edgexfoundry/go-mod-messaging/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7
+PackageVersion: v3.0.0-dev.7
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-messaging/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-messaging/v3/releases/tag/v3.0.0-dev.7
+FilesAnalyzed: false
+PackageChecksum: SHA256: abdb7675e21e50c7c82b6fe45215a3eb25066ac96db455f53c913574e0901058
+PackageHomePage: https://github.com/edgexfoundry/go-mod-messaging/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/go-redis/redis/v7
+
+PackageName: github.com/go-redis/redis/v7
+SPDXID: SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0
+PackageVersion: v7.3.0
+PackageSupplier: Organization: github.com/go-redis/redis/v7
+PackageDownloadLocation: https://github.com/go-redis/redis/v7/releases/tag/v7.3.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: dbeaffd0a9873a6d40fdb11579deffbfd89271a4516c4842b3ea904fe5138e9d
+PackageHomePage: https://github.com/go-redis/redis/v7
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/edgexfoundry/go-mod-registry/v3
+
+PackageName: github.com/edgexfoundry/go-mod-registry/v3
+SPDXID: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3
+PackageVersion: v3.0.0-dev.3
+PackageSupplier: Organization: github.com/edgexfoundry/go-mod-registry/v3
+PackageDownloadLocation: https://github.com/edgexfoundry/go-mod-registry/v3/releases/tag/v3.0.0-dev.3
+FilesAnalyzed: false
+PackageChecksum: SHA256: d74ec33d4ea185119065cecf72033649f93f4b2a4e444e60a745853093717476
+PackageHomePage: https://github.com/edgexfoundry/go-mod-registry/v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/spiffe/go-spiffe/v2
+
+PackageName: github.com/spiffe/go-spiffe/v2
+SPDXID: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2
+PackageVersion: v2.1.2
+PackageSupplier: Organization: github.com/spiffe/go-spiffe/v2
+PackageDownloadLocation: https://github.com/spiffe/go-spiffe/v2/releases/tag/v2.1.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: b6b42914332aea4ff0e353f11593d4c6b73931402dafee22f7295a55576e60c6
+PackageHomePage: https://github.com/spiffe/go-spiffe/v2
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/zeebo/errs
+
+PackageName: github.com/zeebo/errs
+SPDXID: SPDXRef-Package-github.com.zeebo.errs-v1.3.0
+PackageVersion: v1.3.0
+PackageSupplier: Organization: github.com/zeebo/errs
+PackageDownloadLocation: https://github.com/zeebo/errs/releases/tag/v1.3.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 5c2c6cbbf3c50a465465d575b2affcdcf20f122cc7eaf7f61da9bbb2198af2c7
+PackageHomePage: https://github.com/zeebo/errs
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the gopkg.in/square/go-jose.v2
+
+PackageName: gopkg.in/square/go-jose.v2
+SPDXID: SPDXRef-Package-gopkg.in.square.go-jose.v2-v2.6.0
+PackageVersion: v2.6.0
+PackageSupplier: Organization: gopkg.in/square/go-jose.v2
+PackageDownloadLocation: https://gopkg.in/square/go-jose.v2
+FilesAnalyzed: false
+PackageChecksum: SHA256: 97f3b5c1804c7eadbc204b2aaebee7faec32438bd0dda586ecb94e65fb81a7d4
+PackageHomePage: https://gopkg.in/square/go-jose.v2
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the google.golang.org/grpc
+
+PackageName: google.golang.org/grpc
+SPDXID: SPDXRef-Package-google.golang.org.grpc-v1.51.0
+PackageVersion: v1.51.0
+PackageSupplier: Organization: google.golang.org/grpc
+PackageDownloadLocation: https://google.golang.org/grpc
+FilesAnalyzed: false
+PackageChecksum: SHA256: a59ccb8685e413af35872775966655ed6e6a3b62cf2337fd889472ca3ef1f5ed
+PackageHomePage: https://google.golang.org/grpc
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the google.golang.org/protobuf
+
+PackageName: google.golang.org/protobuf
+SPDXID: SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+PackageVersion: v1.28.1
+PackageSupplier: Organization: google.golang.org/protobuf
+PackageDownloadLocation: https://google.golang.org/protobuf
+FilesAnalyzed: false
+PackageChecksum: SHA256: 3175fd1882181f12f369046dd6e3c4c7472180d4c3287242277db52ce8cbd4b1
+PackageHomePage: https://google.golang.org/protobuf
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/golang/protobuf
+
+PackageName: github.com/golang/protobuf
+SPDXID: SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+PackageVersion: v1.5.2
+PackageSupplier: Organization: github.com/golang/protobuf
+PackageDownloadLocation: https://github.com/golang/protobuf/releases/tag/v1.5.2
+FilesAnalyzed: false
+PackageChecksum: SHA256: b6bf06c6e4eea611e2d8674914332c3a330fcfaa572e50fe53d9dbc90797bc22
+PackageHomePage: https://github.com/golang/protobuf
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the google.golang.org/genproto
+
+PackageName: google.golang.org/genproto
+SPDXID: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+PackageVersion: v0.0.0-20230109162033-3c3c17ce83e6
+PackageSupplier: Organization: google.golang.org/genproto
+PackageDownloadLocation: https://google.golang.org/genproto
+FilesAnalyzed: false
+PackageChecksum: SHA256: bc90bbfe803024affa5ee0146958ea769fd2be3a7570e278bc8ca1e103b348d0
+PackageHomePage: https://google.golang.org/genproto
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/gorilla/mux
+
+PackageName: github.com/gorilla/mux
+SPDXID: SPDXRef-Package-github.com.gorilla.mux-v1.8.0
+PackageVersion: v1.8.0
+PackageSupplier: Organization: github.com/gorilla/mux
+PackageDownloadLocation: https://github.com/gorilla/mux/releases/tag/v1.8.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 271f883b4f395b12bb9c58a2c189c8790cde9d092665663710b0f8434b2be109
+PackageHomePage: https://github.com/gorilla/mux
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/errwrap
+
+PackageName: github.com/hashicorp/errwrap
+SPDXID: SPDXRef-Package-github.com.hashicorp.errwrap-v1.0.0
+PackageVersion: v1.0.0
+PackageSupplier: Organization: github.com/hashicorp/errwrap
+PackageDownloadLocation: https://github.com/hashicorp/errwrap/releases/tag/v1.0.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: 11524768b4331d818b8e3197f678724fb09ae2d662e826ed50c0cab27269b395
+PackageHomePage: https://github.com/hashicorp/errwrap
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/hashicorp/go-multierror
+
+PackageName: github.com/hashicorp/go-multierror
+SPDXID: SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1
+PackageVersion: v1.1.1
+PackageSupplier: Organization: github.com/hashicorp/go-multierror
+PackageDownloadLocation: https://github.com/hashicorp/go-multierror/releases/tag/v1.1.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: 9da3aa5b8046181f12fd06b7f2e2f6743101569469b40f9b700b688ff9adadc1
+PackageHomePage: https://github.com/hashicorp/go-multierror
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the gopkg.in/yaml.v3
+
+PackageName: gopkg.in/yaml.v3
+SPDXID: SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+PackageVersion: v3.0.1
+PackageSupplier: Organization: gopkg.in/yaml.v3
+PackageDownloadLocation: https://gopkg.in/yaml.v3
+FilesAnalyzed: false
+PackageChecksum: SHA256: 6389dea099db2e6e5729de4200081ca55633a9bff58b4c677f29fbdbec9865d2
+PackageHomePage: https://gopkg.in/yaml.v3
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/gomodule/redigo
+
+PackageName: github.com/gomodule/redigo
+SPDXID: SPDXRef-Package-github.com.gomodule.redigo-v1.8.9
+PackageVersion: v1.8.9
+PackageSupplier: Organization: github.com/gomodule/redigo
+PackageDownloadLocation: https://github.com/gomodule/redigo/releases/tag/v1.8.9
+FilesAnalyzed: false
+PackageChecksum: SHA256: ea469536c61c9bee8b12efd5f33728612fe3899a9a2c87a2fd32a993b7f0f888
+PackageHomePage: https://github.com/gomodule/redigo
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/golang-jwt/jwt/v4
+
+PackageName: github.com/golang-jwt/jwt/v4
+SPDXID: SPDXRef-Package-github.com.golang-jwt.jwt.v4-v4.4.3
+PackageVersion: v4.4.3
+PackageSupplier: Organization: github.com/golang-jwt/jwt/v4
+PackageDownloadLocation: https://github.com/golang-jwt/jwt/v4/releases/tag/v4.4.3
+FilesAnalyzed: false
+PackageChecksum: SHA256: bef0c721074db40d027991b0061f892081995801985bb9e53336aa35da3aad0e
+PackageHomePage: https://github.com/golang-jwt/jwt/v4
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/lib/pq
+
+PackageName: github.com/lib/pq
+SPDXID: SPDXRef-Package-github.com.lib.pq-v1.10.7
+PackageVersion: v1.10.7
+PackageSupplier: Organization: github.com/lib/pq
+PackageDownloadLocation: https://github.com/lib/pq/releases/tag/v1.10.7
+FilesAnalyzed: false
+PackageChecksum: SHA256: f190465220f43225476d39d797567ceb8edec5c9408c921ddd9cd0759775935e
+PackageHomePage: https://github.com/lib/pq
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the gopkg.in/eapache/queue.v1
+
+PackageName: gopkg.in/eapache/queue.v1
+SPDXID: SPDXRef-Package-gopkg.in.eapache.queue.v1-v1.1.0
+PackageVersion: v1.1.0
+PackageSupplier: Organization: gopkg.in/eapache/queue.v1
+PackageDownloadLocation: https://gopkg.in/eapache/queue.v1
+FilesAnalyzed: false
+PackageChecksum: SHA256: 577c02f5b2bb8f8f77cc5c6641155b8a04feb891b04b39f2391a2a5f5a8ef8f3
+PackageHomePage: https://gopkg.in/eapache/queue.v1
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/davecgh/go-spew
+
+PackageName: github.com/davecgh/go-spew
+SPDXID: SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+PackageVersion: v1.1.1
+PackageSupplier: Organization: github.com/davecgh/go-spew
+PackageDownloadLocation: https://github.com/davecgh/go-spew/releases/tag/v1.1.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: f4f96577402e1a21e376c81fa7eb907513f1d1c7b95234117b204b1e46fb483d
+PackageHomePage: https://github.com/davecgh/go-spew
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/pmezard/go-difflib
+
+PackageName: github.com/pmezard/go-difflib
+SPDXID: SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+PackageVersion: v1.0.0
+PackageSupplier: Organization: github.com/pmezard/go-difflib
+PackageDownloadLocation: https://github.com/pmezard/go-difflib/releases/tag/v1.0.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: eb18e2c3180507e823d206bc47791721978c7d4f9638ad0a1de99e104df3b4bd
+PackageHomePage: https://github.com/pmezard/go-difflib
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/stretchr/objx
+
+PackageName: github.com/stretchr/objx
+SPDXID: SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+PackageVersion: v0.5.0
+PackageSupplier: Organization: github.com/stretchr/objx
+PackageDownloadLocation: https://github.com/stretchr/objx/releases/tag/v0.5.0
+FilesAnalyzed: false
+PackageChecksum: SHA256: af02aa8c55e51fb5b0ddbca15ea24907b45b632a74f03f2ed1e815ec46eeb58f
+PackageHomePage: https://github.com/stretchr/objx
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+##### Package representing the github.com/stretchr/testify
+
+PackageName: github.com/stretchr/testify
+SPDXID: SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+PackageVersion: v1.8.1
+PackageSupplier: Organization: github.com/stretchr/testify
+PackageDownloadLocation: https://github.com/stretchr/testify/releases/tag/v1.8.1
+FilesAnalyzed: false
+PackageChecksum: SHA256: daa3926b4ef15135d2abeeb3aec5f2c4639e5a02cc868ee3ea408d03b49f98ee
+PackageHomePage: https://github.com/stretchr/testify
+PackageLicenseConcluded: NOASSERTION
+PackageLicenseDeclared: NOASSERTION
+PackageCopyrightText: NOASSERTION
+PackageLicenseComments: NOASSERTION
+PackageComment: NOASSERTION
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-Package-github.com.edgexfoundry.edgex-go
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.rcrowley.go-metrics-v0.0.0-20201227073835-cf1acfcdf475
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-gopkg.in.square.go-jose.v2-v2.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.gomodule.redigo-v1.8.9
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.gorilla.websocket-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.x448.float16-v0.8.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-google.golang.org.grpc-v1.51.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.cenkalti.backoff-v2.2.1+incompatible
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.lib.pq-v1.10.7
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-gopkg.in.eapache.queue.v1-v1.1.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.errwrap-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.gorilla.mux-v1.8.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-golang.org.x.sync-v0.1.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mitchellh.consulstructure-v0.0.0-20190329231841-56fdc4d2da54
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mitchellh.copystructure-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.pelletier.go-toml-v1.9.5
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.zeebo.errs-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.golang-jwt.jwt.v4-v4.4.3
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.mitchellh.reflectwalk-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.edgex-go DEPENDS_ON SPDXRef-Package-github.com.go-kit.log-v0.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.go-kit.log-v0.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.x448.float16-v0.8.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10 DEPENDS_ON SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+Relationship: SPDXRef-Package-github.com.go-playground.locales-v0.14.1 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.leodido.go-urn-v1.2.1 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-golang.org.x.crypto-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-golang.org.x.crypto-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-golang.org.x.crypto-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-golang.org.x.text-v0.6.0 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2 DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-gopkg.in.square.go-jose.v2-v2.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-google.golang.org.grpc-v1.51.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-kit.log-v0.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.zeebo.errs-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-github.com.go-kit.log-v0.2.1 DEPENDS_ON SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.zeebo.errs-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-google.golang.org.grpc-v1.51.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-golang.org.x.sync-v0.1.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.copystructure-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.gorilla.websocket-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.pelletier.go-toml-v1.9.5
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-secrets.v3-v3.0.0-dev.7
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.rcrowley.go-metrics-v0.0.0-20201227073835-cf1acfcdf475
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.errwrap-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.reflectwalk-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.gorilla.mux-v1.8.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-logfmt.logfmt-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-gopkg.in.square.go-jose.v2-v2.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.cenkalti.backoff-v2.2.1+incompatible
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-kit.log-v0.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.x448.float16-v0.8.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.consulstructure-v0.0.0-20190329231841-56fdc4d2da54
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-bootstrap.v3-v3.0.0-dev.17 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2 DEPENDS_ON SPDXRef-Package-golang.org.x.sync-v0.1.0
+Relationship: SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2 DEPENDS_ON SPDXRef-Package-github.com.gorilla.websocket-v1.4.2
+Relationship: SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-golang.org.x.net-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-golang.org.x.net-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-golang.org.x.net-v0.5.0 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.consulstructure-v0.0.0-20190329231841-56fdc4d2da54
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.cenkalti.backoff-v2.2.1+incompatible
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.reflectwalk-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.pelletier.go-toml-v1.9.5
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.copystructure-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-configuration.v3-v3.0.0-dev.2 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.fatih.color-v1.9.0 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.fatih.color-v1.9.0 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.armon.go-metrics-v0.3.10 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.armon.go-metrics-v0.3.10 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+Relationship: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1
+Relationship: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1 DEPENDS_ON SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+Relationship: SPDXRef-Package-github.com.hashicorp.serf-v0.10.1 DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+Relationship: SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.mitchellh.copystructure-v1.0.0 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.reflectwalk-v1.0.0
+Relationship: SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0 DEPENDS_ON SPDXRef-Package-github.com.x448.float16-v0.8.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.universal-translator-v0.18.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.gorilla.websocket-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.x448.float16-v0.8.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.edgexfoundry.go-mod-core-contracts.v3-v3.0.0-dev.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.sync-v0.1.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.validator.v10-v10.11.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.leodido.go-urn-v1.2.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-playground.locales-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.errwrap-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.eclipse.paho.mqtt.golang-v1.4.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-messaging.v3-v3.0.0-dev.7 DEPENDS_ON SPDXRef-Package-github.com.fxamacker.cbor.v2-v2.4.0
+Relationship: SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.go-redis.redis.v7-v7.3.0 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-isatty-v0.0.14
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.mitchellh.mapstructure-v1.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.consul.api-v1.18.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.armon.go-metrics-v0.3.10
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-cleanhttp-v0.5.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.serf-v0.10.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.mattn.go-colorable-v0.1.12
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.fatih.color-v1.9.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-immutable-radix-v1.3.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-rootcerts-v1.0.2
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.golang-lru-v0.5.4
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.go-hclog-v0.14.1
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.edgexfoundry.go-mod-registry.v3-v3.0.0-dev.3 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-google.golang.org.grpc-v1.51.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-github.com.zeebo.errs-v1.3.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-golang.org.x.crypto-v0.5.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-gopkg.in.square.go-jose.v2-v2.6.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-github.com.spiffe.go-spiffe.v2-v2.1.2 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-github.com.google.uuid-v1.3.0
+Relationship: SPDXRef-Package-google.golang.org.grpc-v1.51.0 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-google.golang.org.protobuf-v1.28.1 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-github.com.golang.protobuf-v1.5.2 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-github.com.golang.protobuf-v1.5.2
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-google.golang.org.grpc-v1.51.0
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-google.golang.org.protobuf-v1.28.1
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-golang.org.x.net-v0.5.0
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-golang.org.x.sys-v0.4.0
+Relationship: SPDXRef-Package-google.golang.org.genproto-v0.0.0-20230109162033-3c3c17ce83e6 DEPENDS_ON SPDXRef-Package-golang.org.x.text-v0.6.0
+Relationship: SPDXRef-Package-github.com.hashicorp.go-multierror-v1.1.1 DEPENDS_ON SPDXRef-Package-github.com.hashicorp.errwrap-v1.0.0
+Relationship: SPDXRef-Package-github.com.gomodule.redigo-v1.8.9 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.stretchr.objx-v0.5.0 DEPENDS_ON SPDXRef-Package-github.com.stretchr.testify-v1.8.1
+Relationship: SPDXRef-Package-github.com.stretchr.objx-v0.5.0 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.stretchr.testify-v1.8.1 DEPENDS_ON SPDXRef-Package-github.com.davecgh.go-spew-v1.1.1
+Relationship: SPDXRef-Package-github.com.stretchr.testify-v1.8.1 DEPENDS_ON SPDXRef-Package-github.com.pmezard.go-difflib-v1.0.0
+Relationship: SPDXRef-Package-github.com.stretchr.testify-v1.8.1 DEPENDS_ON SPDXRef-Package-github.com.stretchr.objx-v0.5.0
+Relationship: SPDXRef-Package-github.com.stretchr.testify-v1.8.1 DEPENDS_ON SPDXRef-Package-gopkg.in.yaml.v3-v3.0.1
