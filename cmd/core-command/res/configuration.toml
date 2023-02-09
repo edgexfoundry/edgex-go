@@ -1,4 +1,5 @@
 [Writable]
+  LogLevel = "INFO"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.mqtt]
     path = "mqtt"

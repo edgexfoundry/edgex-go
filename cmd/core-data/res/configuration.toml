@@ -1,6 +1,7 @@
 MaxEventSize = 25000  # Defines the maximum event size in kilobytes
 
 [Writable]
+LogLevel = "INFO"
 PersistData = true
     [Writable.Telemetry.Metrics] # All service's metric names must be present in this list.
     # Core Data Service Metrics
@@ -13,8 +14,12 @@ PersistData = true
 Port = 59880
 StartupMsg = "This is the Core Data Microservice"
 
-
-[Clients] # Core data no longer dependent on "Client" services
-
 [Database]
 Name = "coredata"
+
+[MessageBus]
+    [MessageBus.Topics]
+    PublishTopicPrefix = "edgex/events/core" # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
+    SubscribeTopic = "edgex/events/device/#" # required for subscribing to Events from MessageBus
+    [MessageBus.Optional]
+    ClientId = "core-data"

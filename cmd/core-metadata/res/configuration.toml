@@ -1,4 +1,5 @@
 [Writable]
+LogLevel = "INFO"
   [Writable.ProfileChange]
   StrictDeviceProfileChanges = false
   StrictDeviceProfileDeletes = false

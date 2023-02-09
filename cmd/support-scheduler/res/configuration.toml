@@ -5,6 +5,9 @@ RequireMessageBus = true
 
 ScheduleIntervalTime = 500
 
+[Writable]
+LogLevel = "INFO"
+
 [Service]
 Port = 59861
 StartupMsg = "This is the Support Scheduler Microservice"
