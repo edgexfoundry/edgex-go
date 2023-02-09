@@ -64,8 +64,6 @@ ARCH=$(shell uname -m)
 
 GO_VERSION=$(shell grep '^go [0-9].[0-9]*' go.mod | cut -d' ' -f 2)
 
-CUR_DIR=$(shell pwd)
-
 # DO NOT change the following flag, as it is automatically set based on the boolean switch INCLUDE_DELAYED_START_BUILD_CORE
 NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE:=non_delayedstart
 ifeq ($(INCLUDE_DELAYED_START_BUILD_CORE),"true")
@@ -369,5 +367,5 @@ vendor:
 
 sbom:
 	docker run -it --rm \
-		-v "$(CUR_DIR):/edgex-go" -v "$(CUR_DIR)/sbom:/sbom" \
+		-v "$$PWD:/edgex-go" -v "$$PWD/sbom:/sbom" \
 		spdx/spdx-sbom-generator -p /edgex-go/ -o /sbom/ --include-license-text true
