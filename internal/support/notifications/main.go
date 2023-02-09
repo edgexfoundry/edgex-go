@@ -2,6 +2,7 @@
  * Copyright 2017 Dell Inc.
  * Copyright 2018 Dell Technologies Inc.
  * Copyright (C) 2020-2021 IOTech Ltd
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,6 +24,7 @@ package notifications
 
 import (
 	"context"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"os"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -72,6 +74,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		startupTimer,
 		dic,
 		true,
+		config.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,

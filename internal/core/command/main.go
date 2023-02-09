@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2020 Dell Inc.
  * Copyright 2022-2023 IOTech Ltd.
- * Copyright 2023 Intel Inc.
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/edgex-go"
@@ -72,6 +73,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		startupTimer,
 		dic,
 		true,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			MessagingBootstrapHandler,

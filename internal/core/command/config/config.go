@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
  * Copyright 2022-2023 IOTech Ltd.
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -42,10 +43,6 @@ type WritableInfo struct {
 func (c *ConfigurationStruct) UpdateFromRaw(rawConfig interface{}) bool {
 	configuration, ok := rawConfig.(*ConfigurationStruct)
 	if ok {
-		// Check that information was successfully read from Registry
-		if configuration.Service.Port == 0 {
-			return false
-		}
 		*c = *configuration
 	}
 	return ok

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2022 Intel Corporation
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -338,6 +338,9 @@ func (c *cmd) createEdgeXACLTokenRoles(bootstrapACLTokenID, secretstoreToken str
 			key_prefix "` + c.getKeyPrefix(roleName) + `" {
 				policy = "write"
 			}
+			key_prefix "` + c.getKeyPrefix(common.CoreCommonConfigServiceKey) + `" {
+					policy = "read"
+				}
 		`
 
 		edgexServicePolicy, err := c.getOrCreateRegistryPolicy(bootstrapACLTokenID, "acl_policy_for_"+roleName, servicePolicyRules)

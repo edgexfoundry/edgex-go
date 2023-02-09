@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2021 Intel Corporation
+* Copyright 2023 Intel Corporation
 * Copyright 2020 Redis Labs
 *
 * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -29,6 +29,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 )
@@ -62,6 +63,7 @@ func Configure(ctx context.Context,
 		startupTimer,
 		dic,
 		true,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			redisBootstrapHdl.GetCredentials,
 			redisBootstrapHdl.SetupConfFiles,

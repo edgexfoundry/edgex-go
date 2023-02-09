@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -21,14 +21,14 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
@@ -69,6 +69,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		startupTimer,
 		dic,
 		true,
+		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
