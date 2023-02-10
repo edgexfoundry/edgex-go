@@ -2,7 +2,7 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.20
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.21
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.10
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.7
@@ -50,10 +50,10 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54 // indirect
-	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/mitchellh/reflectwalk v1.0.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/nats-io/nats.go v1.20.0 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
