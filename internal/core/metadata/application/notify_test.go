@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2022 Intel
-// Copyright (C) 2023 Intel
+// Copyright (C) 2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -57,17 +57,18 @@ func TestPublishSystemEvent(t *testing.T) {
 		Name          string
 		Type          string
 		Action        string
+		Owner         string
 		PubError      bool
 		ClientMissing bool
 	}{
-		{"Device Add", common.DeviceSystemEventType, common.SystemEventActionAdd, false, false},
-		{"Device Update", common.DeviceSystemEventType, common.SystemEventActionUpdate, false, false},
-		{"Device Delete", common.DeviceSystemEventType, common.SystemEventActionDelete, false, false},
-		{"Device Profile Add", common.DeviceProfileSystemEventType, common.SystemEventActionAdd, false, false},
-		{"Device Profile Update", common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, false, false},
-		{"Device Profile Delete", common.DeviceProfileSystemEventType, common.SystemEventActionDelete, false, false},
-		{"Client Missing Error", common.DeviceSystemEventType, common.SystemEventActionAdd, false, true},
-		{"Publish Error", common.DeviceSystemEventType, common.SystemEventActionAdd, true, false},
+		{"Device Add", common.DeviceSystemEventType, common.SystemEventActionAdd, TestDeviceServiceName, false, false},
+		{"Device Update", common.DeviceSystemEventType, common.SystemEventActionUpdate, TestDeviceServiceName, false, false},
+		{"Device Delete", common.DeviceSystemEventType, common.SystemEventActionDelete, TestDeviceServiceName, false, false},
+		{"Device Profile Add", common.DeviceProfileSystemEventType, common.SystemEventActionAdd, common.CoreMetaDataServiceKey, false, false},
+		{"Device Profile Update", common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, TestDeviceServiceName, false, false},
+		{"Device Profile Delete", common.DeviceProfileSystemEventType, common.SystemEventActionDelete, common.CoreMetaDataServiceKey, false, false},
+		{"Client Missing Error", common.DeviceSystemEventType, common.SystemEventActionAdd, TestDeviceServiceName, false, true},
+		{"Publish Error", common.DeviceSystemEventType, common.SystemEventActionAdd, TestDeviceServiceName, true, false},
 	}
 
 	pubErrMsg := errors.NewCommonEdgeXWrapper(goErrors.New("publish failed"))
@@ -107,20 +108,19 @@ func TestPublishSystemEvent(t *testing.T) {
 					assert.Equal(t, expectedDevice.Id, actualDevice.Id)
 					assert.Equal(t, expectedDevice.ServiceName, actualDevice.ServiceName)
 					assert.Equal(t, expectedDevice.ProfileName, actualDevice.ProfileName)
-					assert.Equal(t, expectedDevice.ServiceName, systemEvent.Owner)
 				case common.DeviceProfileSystemEventType:
 					actualDeviceProfile := dtos.DeviceProfile{}
 					err = systemEvent.DecodeDetails(&actualDeviceProfile)
 					require.NoError(t, err)
 					assert.Equal(t, expectedDeviceProfile.Name, actualDeviceProfile.Name)
 					assert.Equal(t, expectedDeviceProfile.Id, actualDeviceProfile.Id)
-					assert.Equal(t, common.CoreMetaDataServiceKey, systemEvent.Owner)
 				}
 
 				assert.Equal(t, common.ApiVersion, systemEvent.ApiVersion)
 				assert.Equal(t, test.Type, systemEvent.Type)
 				assert.Equal(t, test.Action, systemEvent.Action)
 				assert.Equal(t, common.CoreMetaDataServiceKey, systemEvent.Source)
+				assert.Equal(t, test.Owner, systemEvent.Owner)
 				assert.NotZero(t, systemEvent.Timestamp)
 
 				return nil
@@ -158,18 +158,15 @@ func TestPublishSystemEvent(t *testing.T) {
 			// lint:ignore SA1029 legacy
 			// nolint:staticcheck // See golangci-lint #741
 			ctx = context.WithValue(ctx, common.CorrelationHeader, expectedCorrelationID)
-			var expectedOwner string
 			var expectedDetails any
 			switch test.Type {
 			case common.DeviceSystemEventType:
-				expectedOwner = expectedDevice.ServiceName
 				expectedDetails = expectedDevice
 			case common.DeviceProfileSystemEventType:
-				expectedOwner = common.CoreMetaDataServiceKey
 				expectedDetails = expectedDeviceProfile
 			}
 
-			publishSystemEvent(test.Type, test.Action, expectedOwner, expectedDetails, ctx, dic)
+			publishSystemEvent(test.Type, test.Action, test.Owner, expectedDetails, ctx, dic)
 
 			if test.ClientMissing {
 				mockLogger.AssertCalled(t, "Errorf", mock.Anything, mock.Anything, noMessagingClientError)
@@ -181,7 +178,7 @@ func TestPublishSystemEvent(t *testing.T) {
 				common.CoreMetaDataServiceKey,
 				test.Type,
 				test.Action,
-				expectedOwner,
+				test.Owner,
 				expectedDevice.ProfileName)
 			mockClient.AssertCalled(t, "Publish", mock.Anything, expectedTopic)
 

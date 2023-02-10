@@ -7,8 +7,6 @@ package application
 
 import (
 	"context"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -44,7 +42,7 @@ func AddDeviceProfileDeviceCommand(profileName string, deviceCommand models.Devi
 	}
 
 	lc.Debugf("DeviceProfile deviceCommands added on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
-	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
 }
@@ -79,7 +77,7 @@ func PatchDeviceProfileDeviceCommand(profileName string, dto dtos.UpdateDeviceCo
 
 	lc.Debugf("DeviceProfile deviceCommands patched on DB successfully. Correlation-id: %s ", correlation.FromContext(ctx))
 	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
-	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
 }
@@ -134,6 +132,6 @@ func DeleteDeviceCommandByName(profileName string, commandName string, ctx conte
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 	return nil
 }
