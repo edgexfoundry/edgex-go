@@ -62,64 +62,6 @@ func validateDeviceCallback(ctx context.Context, dic *di.Container, device dtos.
 	return nil
 }
 
-// addProvisionWatcherCallback invoke device service's callback function for adding new provision watcher
-func addProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw dtos.ProvisionWatcher) {
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, pw.ServiceName)
-	if err != nil {
-		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
-		return
-	}
-
-	request := requests.NewAddProvisionWatcherRequest(pw)
-	response, err := deviceServiceCallbackClient.AddProvisionWatcherCallback(ctx, request)
-	if err != nil {
-		lc.Errorf("fail to invoke device service callback for adding  provision watcher %s, err: %v", pw.Name, err)
-		return
-	}
-	if response.StatusCode != http.StatusOK {
-		lc.Errorf("fail to invoke device service callback for adding  provision watcher %s, err: %s", pw.Name, response.Message)
-	}
-}
-
-// updateProvisionWatcherCallback invoke device service's callback function for updating provision watcher
-func updateProvisionWatcherCallback(ctx context.Context, dic *di.Container, serviceName string, pw models.ProvisionWatcher) {
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, serviceName)
-	if err != nil {
-		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", serviceName, err)
-		return
-	}
-
-	request := requests.NewUpdateProvisionWatcherRequest(dtos.FromProvisionWatcherModelToUpdateDTO(pw))
-	response, err := deviceServiceCallbackClient.UpdateProvisionWatcherCallback(ctx, request)
-	if err != nil {
-		lc.Errorf("fail to invoke device service callback for updating provision watcher %s, err: %v", pw.Name, err)
-		return
-	}
-	if response.StatusCode != http.StatusOK {
-		lc.Errorf("fail to invoke device service callback for updating provision watcher %s, err: %s", pw.Name, response.Message)
-	}
-}
-
-// deleteProvisionWatcherCallback invoke device service's callback function for deleting provision watcher
-func deleteProvisionWatcherCallback(ctx context.Context, dic *di.Container, pw models.ProvisionWatcher) {
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, pw.ServiceName)
-	if err != nil {
-		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", pw.ServiceName, err)
-		return
-	}
-	response, err := deviceServiceCallbackClient.DeleteProvisionWatcherCallback(ctx, pw.Name)
-	if err != nil {
-		lc.Errorf("fail to invoke device service callback for deleting provision watcher %s, err: %v", pw.Name, err)
-		return
-	}
-	if response.StatusCode != http.StatusOK {
-		lc.Errorf("fail to invoke device service callback for deleting provision watcher %s, err: %s", pw.Name, response.Message)
-	}
-}
-
 // updateDeviceServiceCallback invoke device service's callback function for updating device service
 func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds models.DeviceService) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
@@ -188,6 +130,14 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 			detailName = profile.Name
 		} else {
 			lc.Errorf("can not convert to device profile DTO")
+			return
+		}
+	case common.ProvisionWatcherSystemEventType:
+		if pw, ok := dto.(dtos.ProvisionWatcher); ok {
+			profileName = pw.ProfileName
+			detailName = pw.Name
+		} else {
+			lc.Errorf("can not convert to provision watcher DTO")
 			return
 		}
 	default:
