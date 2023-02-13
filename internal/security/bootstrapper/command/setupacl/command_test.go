@@ -118,7 +118,6 @@ func TestExecute(t *testing.T) {
 	for _, tt := range tests {
 		test := tt // capture as local copy
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
 			// prepare test
 			testSrvOptions := serverOptions{
 				aclBootstrapOkResponse:  test.aclOkResponse,
@@ -209,7 +208,6 @@ func TestMultipleExecuteCalls(t *testing.T) {
 	for _, tt := range tests {
 		test := tt // capture as local copy
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
 			// prepare test
 			testSrvOptions := serverOptions{
 				aclBootstrapOkResponse:  true,
