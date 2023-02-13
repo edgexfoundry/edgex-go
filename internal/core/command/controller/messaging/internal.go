@@ -29,8 +29,8 @@ import (
 // and forwards them to the appropriate Device Service via internal MessageBus
 func SubscribeCommandRequests(ctx context.Context, requestTimeout time.Duration, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusTopics := container.ConfigurationFrom(dic.Get).MessageBus.Topics
-	requestCommandTopic := messageBusTopics[common.CommandRequestTopicKey]
+	baseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
+	requestCommandTopic := common.BuildTopic(baseTopic, common.CoreCommandRequestSubscribeTopic)
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -56,7 +56,7 @@ func SubscribeCommandRequests(ctx context.Context, requestTimeout time.Duration,
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				processDeviceCommandRequest(messageBus, requestEnvelope, messageBusTopics, requestTimeout, lc, dic)
+				processDeviceCommandRequest(messageBus, requestEnvelope, baseTopic, requestTimeout, lc, dic)
 			}
 		}
 	}()
@@ -67,7 +67,7 @@ func SubscribeCommandRequests(ctx context.Context, requestTimeout time.Duration,
 func processDeviceCommandRequest(
 	messageBus messaging.MessageClient,
 	requestEnvelope types.MessageEnvelope,
-	messageBusTopics map[string]string,
+	baseTopic string,
 	requestTimeout time.Duration,
 	lc logger.LoggingClient,
 	dic *di.Container) {
@@ -82,8 +82,7 @@ func processDeviceCommandRequest(
 	}
 
 	// internal response topic scheme: <ResponseTopicPrefix>/<service-name>/<request-id>
-	internalResponseTopic := strings.Join([]string{messageBusTopics[common.ResponseTopicPrefixKey], common.CoreCommandServiceKey, requestEnvelope.RequestID}, "/")
-
+	internalResponseTopic := common.BuildTopic(baseTopic, common.ResponseTopic, common.CoreCommandServiceKey, requestEnvelope.RequestID)
 	topicLevels := strings.Split(requestEnvelope.ReceivedTopic, "/")
 	length := len(topicLevels)
 	if length < 3 {
@@ -112,8 +111,9 @@ func processDeviceCommandRequest(
 		return
 	}
 
+	topicPrefix := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic)
 	// internal command request topic scheme: <DeviceRequestTopicPrefix>/<device-service>/<device>/<command-name>/<method>
-	deviceServiceName, deviceRequestTopic, err := validateRequestTopic(messageBusTopics[common.DeviceCommandRequestTopicPrefixKey], deviceName, commandName, method, dic)
+	deviceServiceName, deviceRequestTopic, err := validateRequestTopic(topicPrefix, deviceName, commandName, method, dic)
 	if err != nil {
 		err = fmt.Errorf("invalid request topic: %s", err.Error())
 		lc.Error(err.Error())
@@ -136,9 +136,10 @@ func processDeviceCommandRequest(
 		return
 	}
 
-	lc.Debugf("Sending Command Device Request to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
+	deviceResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, deviceServiceName)
 
-	deviceResponseTopicPrefix := strings.Join([]string{messageBusTopics[common.ResponseTopicPrefixKey], deviceServiceName}, "/")
+	lc.Debugf("Sending Command Device Request to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
+	lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)
 
 	response, err := messageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
 	if err != nil {
@@ -160,8 +161,8 @@ func processDeviceCommandRequest(
 // via internal MessageBus
 func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) errors.EdgeX {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	messageBusTopics := container.ConfigurationFrom(dic.Get).MessageBus.Topics
-	queryRequestTopic := messageBusTopics[common.CommandQueryRequestTopicKey]
+	baseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
+	queryRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandQueryRequestSubscribeTopic)
 
 	messages := make(chan types.MessageEnvelope)
 	messageErrors := make(chan error)
@@ -190,7 +191,7 @@ func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) error
 			case err = <-messageErrors:
 				lc.Error(err.Error())
 			case requestEnvelope := <-messages:
-				processCommandQueryRequest(messageBus, requestEnvelope, messageBusTopics, lc, dic)
+				processCommandQueryRequest(messageBus, requestEnvelope, baseTopic, lc, dic)
 			}
 		}
 	}()
@@ -201,7 +202,7 @@ func SubscribeCommandQueryRequests(ctx context.Context, dic *di.Container) error
 func processCommandQueryRequest(
 	messageBus messaging.MessageClient,
 	requestEnvelope types.MessageEnvelope,
-	messageBusTopics map[string]string,
+	baseTopic string,
 	lc logger.LoggingClient,
 	dic *di.Container,
 ) {
@@ -228,8 +229,7 @@ func processCommandQueryRequest(
 	}
 
 	// internal response topic scheme: <ResponseTopicPrefix>/<service-name>/<request-id>
-	internalQueryResponseTopic := strings.Join([]string{messageBusTopics[common.ResponseTopicPrefixKey], common.CoreCommandServiceKey, requestEnvelope.RequestID}, "/")
-
+	internalQueryResponseTopic := common.BuildTopic(baseTopic, common.ResponseTopic, common.CoreCommandServiceKey, requestEnvelope.RequestID)
 	lc.Debugf("Responding to command query request on topic: %s", internalQueryResponseTopic)
 
 	err = messageBus.Publish(responseEnvelope, internalQueryResponseTopic)

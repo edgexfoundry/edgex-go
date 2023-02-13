@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
@@ -51,7 +50,7 @@ func TestPublishSystemEvent(t *testing.T) {
 	}
 
 	expectedCorrelationID := uuid.NewString()
-	expectedPublishTopicPrefix := "events/system-event"
+	expectedPublishTopicPrefix := "edgex/system-events"
 
 	tests := []struct {
 		Name          string
@@ -76,13 +75,7 @@ func TestPublishSystemEvent(t *testing.T) {
 
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
-			return &config.ConfigurationStruct{
-				MessageBus: bootstrapConfig.MessageBusInfo{
-					Topics: map[string]string{
-						bootstrapConfig.MessageBusPublishTopicPrefix: expectedPublishTopicPrefix,
-					},
-				},
-			}
+			return &config.ConfigurationStruct{}
 		},
 		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return mockLogger

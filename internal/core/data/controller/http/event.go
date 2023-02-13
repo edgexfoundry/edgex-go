@@ -72,12 +72,19 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 
 	// URL parameters
 	vars := mux.Vars(r)
+	serviceName := vars[common.ServiceName]
 	profileName := vars[common.ProfileName]
 	deviceName := vars[common.DeviceName]
 	sourceName := vars[common.SourceName]
 
 	var addEventReqDTO requestDTO.AddEventRequest
 	var err errors.EdgeX
+
+	if len(strings.TrimSpace(serviceName)) == 0 {
+		err = errors.NewCommonEdgeX(errors.KindContractInvalid, "service name sending event can not be empty", nil)
+		utils.WriteErrorResponse(w, ctx, lc, err, "")
+		return
+	}
 
 	if config.MaxEventSize > 0 && r.ContentLength > config.MaxEventSize*1024 {
 		err = errors.NewCommonEdgeX(errors.KindLimitExceeded, fmt.Sprintf("request size exceed %d KB", config.MaxEventSize), nil)
@@ -95,7 +102,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
 		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
-		go ec.app.PublishEvent(dataBytes, profileName, deviceName, sourceName, ctx, ec.dic)
+		go ec.app.PublishEvent(dataBytes, serviceName, profileName, deviceName, sourceName, ctx, ec.dic)
 		// unmarshal bytes to AddEventRequest
 		reader := ec.getReader(r)
 		err = reader.Read(bytes.NewReader(dataBytes), &addEventReqDTO)

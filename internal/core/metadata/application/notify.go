@@ -8,11 +8,9 @@ package application
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	config2 "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	clients "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/http"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
@@ -145,10 +143,9 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		return
 	}
 
-	config := container.ConfigurationFrom(dic.Get)
-	prefix := config.MessageBus.Topics[config2.MessageBusPublishTopicPrefix]
-	publishTopic := fmt.Sprintf("%s/%s/%s/%s/%s/%s",
-		prefix,
+	publishTopic := common.BuildTopic(
+		container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix(),
+		common.SystemEventPublishTopic,
 		systemEvent.Source,
 		systemEvent.Type,
 		systemEvent.Action,

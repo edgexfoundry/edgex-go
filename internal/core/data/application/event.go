@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -28,7 +27,7 @@ import (
 
 // ValidateEvent validates if e is a valid event with corresponding device profile name and device name and source name
 // ValidateEvent throws error when profileName or deviceName doesn't match to e
-func (a *CoreDataApp) ValidateEvent(e models.Event, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
+func (a *CoreDataApp) ValidateEvent(e models.Event, profileName string, deviceName string, sourceName string, _ context.Context, _ *di.Container) errors.EdgeX {
 	if e.ProfileName != profileName {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches %s", e.ProfileName, profileName), nil)
 	}
@@ -74,14 +73,14 @@ func (a *CoreDataApp) AddEvent(e models.Event, ctx context.Context, dic *di.Cont
 }
 
 // PublishEvent publishes incoming AddEventRequest in the format of []byte through MessageClient
-func (a *CoreDataApp) PublishEvent(data []byte, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
+func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	msgClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	publishPrefix := configuration.MessageBus.Topics[config.MessageBusPublishTopicPrefix]
-	publishTopic := fmt.Sprintf("%s/%s/%s/%s", publishPrefix, profileName, deviceName, sourceName)
+	basePrefix := configuration.MessageBus.GetBaseTopicPrefix()
+	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, serviceName, profileName, deviceName, sourceName)
 	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
@@ -137,7 +136,7 @@ func (a *CoreDataApp) DeleteEventById(id string, dic *di.Container) errors.EdgeX
 	return nil
 }
 
-// EventTotalCount return the count of all of events currently stored in the database and error if any
+// EventTotalCount return the count of all events currently stored in the database and error if any
 func (a *CoreDataApp) EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
@@ -149,7 +148,7 @@ func (a *CoreDataApp) EventTotalCount(dic *di.Container) (uint32, errors.EdgeX) 
 	return count, nil
 }
 
-// EventCountByDeviceName return the count of all of events associated with given device and error if any
+// EventCountByDeviceName return the count of all events associated with given device and error if any
 func (a *CoreDataApp) EventCountByDeviceName(deviceName string, dic *di.Container) (uint32, errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 

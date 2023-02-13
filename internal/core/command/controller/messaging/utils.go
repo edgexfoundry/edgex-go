@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -47,8 +46,8 @@ func validateRequestTopic(prefix string, deviceName string, commandName string, 
 		return "", "", fmt.Errorf("failed to get DeviceService by name %s: %v", deviceResponse.Device.ServiceName, err)
 	}
 
-	// expected internal command request topic scheme: #/<device-service>/<device>/<command-name>/<method>
-	return deviceServiceResponse.Service.Name, strings.Join([]string{prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method}, "/"), nil
+	// expected internal command request topic scheme: <prefix>/<device-service>/<device>/<command-name>/<method>
+	return deviceServiceResponse.Service.Name, common.BuildTopic(prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method), nil
 
 }
 

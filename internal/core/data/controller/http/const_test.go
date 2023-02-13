@@ -7,6 +7,7 @@ package http
 
 const (
 	ExampleUUID            = "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
+	TestServiceName        = "TestService"
 	TestDeviceName         = "TestDevice"
 	TestProfileName        = "TestProfileName"
 	TestCreatedTime        = 1600666214495
