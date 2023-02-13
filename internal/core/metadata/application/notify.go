@@ -140,6 +140,29 @@ func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds mode
 	}
 }
 
+func publishUpdateDeviceProfileSystemEvent(profileDTO dtos.DeviceProfile, ctx context.Context, dic *di.Container) {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	devices, _, err := DevicesByProfileName(0, -1, profileDTO.Name, dic)
+	if err != nil {
+		lc.Errorf("fail to query associated devices by deviceProfile name %s, err: %v", profileDTO.Name, err)
+		return
+	}
+
+	//Publish general system event regardless of associated devices
+	publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	// Publish system event for each device service
+	dsMap := make(map[string]bool)
+	for _, d := range devices {
+		if _, ok := dsMap[d.ServiceName]; ok {
+			// skip the invoked device service
+			continue
+		}
+		dsMap[d.ServiceName] = true
+
+		publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, d.ServiceName, profileDTO, ctx, dic)
+	}
+}
+
 func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	systemEvent := dtos.NewSystemEvent(eventType, action, common.CoreMetaDataServiceKey, owner, nil, dto)

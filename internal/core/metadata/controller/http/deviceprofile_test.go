@@ -626,6 +626,8 @@ func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", *valid.BasicInfo.Name).Return(dpModel, nil)
 	dbClientMock.On("DeviceProfileByName", notFoundName).Return(dpModel, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
+	dbClientMock.On("DeviceCountByProfileName", *valid.BasicInfo.Name).Return(uint32(1), nil)
+	dbClientMock.On("DevicesByProfileName", 0, -1, *valid.BasicInfo.Name).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

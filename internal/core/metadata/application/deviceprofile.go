@@ -79,7 +79,7 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 	}
 
 	profileDTO := dtos.FromDeviceProfileModelToDTO(profile)
-	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
 }
@@ -221,7 +221,7 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 	)
 
 	profileDTO := dtos.FromDeviceProfileModelToDTO(deviceProfile)
-	go publishSystemEvent(common.DeviceProfileSystemEventType, common.SystemEventActionUpdate, common.CoreMetaDataServiceKey, profileDTO, ctx, dic)
+	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
 }
