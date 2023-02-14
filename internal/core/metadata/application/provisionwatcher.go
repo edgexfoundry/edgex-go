@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -15,6 +15,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -37,7 +38,7 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 		addProvisionWatcher.Id,
 		correlationId,
 	)
-	go addProvisionWatcherCallback(ctx, dic, dtos.FromProvisionWatcherModelToDTO(pw))
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionAdd, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return addProvisionWatcher.Id, nil
 }
 
@@ -130,7 +131,7 @@ func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Cont
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	go deleteProvisionWatcherCallback(ctx, dic, pw)
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionDelete, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return nil
 }
 
@@ -160,9 +161,9 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 	lc.Debugf("ProvisionWatcher patched on DB successfully. Correlation-ID: %s ", correlation.FromContext(ctx))
 
 	if oldServiceName != "" {
-		go updateProvisionWatcherCallback(ctx, dic, oldServiceName, pw)
+		go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionUpdate, oldServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	}
-	go updateProvisionWatcherCallback(ctx, dic, pw.ServiceName, pw)
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionUpdate, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return nil
 }
 
