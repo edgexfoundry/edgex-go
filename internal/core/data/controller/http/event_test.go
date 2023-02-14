@@ -245,7 +245,7 @@ func TestAddEvent(t *testing.T) {
 			reader := strings.NewReader(string(byteData))
 			req, err := http.NewRequest(http.MethodPost, common.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
-			req = mux.SetURLVars(req, map[string]string{common.ProfileName: testCase.ProfileName, common.DeviceName: testCase.DeviceName, common.SourceName: testCase.Request.Event.SourceName})
+			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: testCase.ProfileName, common.DeviceName: testCase.DeviceName, common.SourceName: testCase.Request.Event.SourceName})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
@@ -332,7 +332,7 @@ func TestAddEventSize(t *testing.T) {
 			reader := strings.NewReader(string(byteData))
 			req, err := http.NewRequest(http.MethodPost, common.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
-			req = mux.SetURLVars(req, map[string]string{common.ProfileName: validRequest.Event.ProfileName, common.DeviceName: validRequest.Event.DeviceName, common.SourceName: validRequest.Event.SourceName})
+			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: validRequest.Event.ProfileName, common.DeviceName: validRequest.Event.DeviceName, common.SourceName: validRequest.Event.SourceName})
 			require.NoError(t, err)
 			recorder := httptest.NewRecorder()
 			handler := http.HandlerFunc(ec.AddEvent)

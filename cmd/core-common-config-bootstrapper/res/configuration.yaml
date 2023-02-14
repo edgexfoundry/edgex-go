@@ -9,7 +9,6 @@ all-services:
     
     Telemetry:
       Interval: "30s"
-      PublishTopicPrefix : "edgex/telemetry" # /<service-name>/<metric-name> will be added to this Publish Topic prefix
       Metrics:
         # Common Security Service Metrics
         SecuritySecretsRequested: false
@@ -53,6 +52,7 @@ all-services:
     Type: "redis"
     AuthMode: "usernamepassword"  # required for redis MessageBus (secure or insecure).
     SecretName: "redisdb"
+    BaseTopicPrefix: "edgex" # prepended to all topics as "edgex/<additional topic levels>
     Optional:
       # Default MQTT Specific options that need to be here to enable environment variable overrides of them
       Qos:  "0" # Quality of Service values are 0 (At most once), 1 (At least once) or 2 (Exactly once)

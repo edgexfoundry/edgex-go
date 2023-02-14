@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	cbor "github.com/fxamacker/cbor/v2"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
@@ -40,12 +39,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 
 	app := application.CoreDataAppFrom(dic.Get)
 
-	subscribeTopic := messageBusInfo.Topics[config.MessageBusSubscribeTopic]
-	subscribeTopic = strings.TrimSpace(subscribeTopic)
-	if len(subscribeTopic) == 0 {
-		lc.Infof("%s not specified in '[MessageBus.Topics]' configuration. Skipping MessageBus subscription setup.", config.MessageBusSubscribeTopic)
-		return nil
-	}
+	subscribeTopic := common.BuildTopic(messageBusInfo.GetBaseTopicPrefix(), common.CoreDataEventSubscribeTopic)
 
 	topics := []types.TopicChannel{
 		{

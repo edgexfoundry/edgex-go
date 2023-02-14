@@ -46,7 +46,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	lc := container.LoggingClientFrom(dic.Get)
-
 	err := messaging.SubscribeEvents(ctx, dic)
 	if err != nil {
 		lc.Errorf("Failed to subscribe events from message bus, %v", err)

@@ -13,7 +13,6 @@
 [Service]
 Port = 59882
 StartupMsg = "This is the Core Command Microservice"
-RequestTimeout = "45s"
 
 [Clients]
   [Clients.core-metadata]
@@ -22,11 +21,6 @@ RequestTimeout = "45s"
   Port = 59881
 
 [MessageBus]
-  [MessageBus.Topics]
-  DeviceCommandRequestTopicPrefix = "edgex/device/command/request"    # for publishing requests to the device service; <device-service>/<device-name>/<command-name>/<method> will be added to this publish topic prefix
-  CommandRequestTopic = "edgex/core/command/request/#"                # for subscribing to internal command requests
-  CommandQueryRequestTopic = "edgex/core/commandquery/request/#"      # for subscribing to internal command query requests
-  ResponseTopicPrefix="edgex/response"                                # for subscribing/publishing internal responses (used by MessageBus Request API)
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable environment variable overrides of them
   ClientId ="core-command"

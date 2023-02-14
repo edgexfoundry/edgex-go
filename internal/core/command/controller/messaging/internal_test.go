@@ -31,6 +31,7 @@ import (
 
 var expectedResponseTopicPrefix = "edgex/response"
 var expectedProfileName = "TestProfile"
+var baseTopic = "edgex"
 
 func TestSubscribeCommandRequests(t *testing.T) {
 	wg := sync.WaitGroup{}
@@ -42,8 +43,10 @@ func TestSubscribeCommandRequests(t *testing.T) {
 	expectedMethod := "get"
 	expectedDeviceResponseTopicPrefix := strings.Join([]string{expectedResponseTopicPrefix, expectedServiceName}, "/")
 	expectedCommandResponseTopic := strings.Join([]string{expectedResponseTopicPrefix, common.CoreCommandServiceKey, expectedRequestId}, "/")
-	expectedDeviceRequestTopic := strings.Join([]string{"edgex/device/command/request", expectedServiceName, expectedDevice, expectedResource, expectedMethod}, "/")
-
+	expectedCommandRequestSubscribeTopic := common.BuildTopic(baseTopic, common.CoreCommandRequestSubscribeTopic)
+	expectedCommandRequestReceivedTopic := common.BuildTopic(strings.Replace(expectedCommandRequestSubscribeTopic, "/#", "", 1),
+		expectedServiceName, expectedDevice, expectedResource, expectedMethod)
+	expectedDeviceCommandRequestRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, expectedServiceName, expectedDevice, expectedResource, expectedMethod)
 	mockLogger := &lcMocks.LoggingClient{}
 	mockDeviceClient := &mocks2.DeviceClient{}
 	mockDeviceProfileClient := &mocks2.DeviceProfileClient{}
@@ -55,20 +58,20 @@ func TestSubscribeCommandRequests(t *testing.T) {
 	mockMessaging.On("Subscribe", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		topics := args.Get(0).([]types.TopicChannel)
 		require.Len(t, topics, 1)
-		require.Equal(t, expectedDeviceRequestTopic, topics[0].Topic)
+		require.Equal(t, expectedCommandRequestSubscribeTopic, topics[0].Topic)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			topics[0].Messages <- types.MessageEnvelope{
 				RequestID:     expectedRequestId,
 				CorrelationID: expectedCorrelationId,
-				ReceivedTopic: expectedDeviceRequestTopic,
+				ReceivedTopic: expectedCommandRequestReceivedTopic,
 			}
 			time.Sleep(time.Second * 1)
 		}()
 	}).Return(nil)
 
-	mockMessaging.On("Request", mock.Anything, expectedDeviceRequestTopic, expectedDeviceResponseTopicPrefix, mock.Anything).Run(func(args mock.Arguments) {
+	mockMessaging.On("Request", mock.Anything, expectedDeviceCommandRequestRequestTopic, expectedDeviceResponseTopicPrefix, mock.Anything).Run(func(args mock.Arguments) {
 	}).Return(&types.MessageEnvelope{
 		RequestID:     expectedRequestId,
 		CorrelationID: expectedCorrelationId,
@@ -105,11 +108,7 @@ func TestSubscribeCommandRequests(t *testing.T) {
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return &config.ConfigurationStruct{
 				MessageBus: config2.MessageBusInfo{
-					Topics: map[string]string{
-						common.CommandRequestTopicKey:             expectedDeviceRequestTopic,
-						common.ResponseTopicPrefixKey:             expectedResponseTopicPrefix,
-						common.DeviceCommandRequestTopicPrefixKey: "edgex/device/command/request",
-					},
+					BaseTopicPrefix: "edgex",
 				},
 			}
 		},
@@ -169,7 +168,8 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 				require.Fail(t, "Error not expected")
 			})
 
-			expectedRequestTopic := "edgex/commandquery/request/" + test.ExpectedDeviceName
+			expectedSubscribeTopic := common.BuildTopic(baseTopic, common.CoreCommandQueryRequestSubscribeTopic)
+			expectedReceivedTopic := common.BuildTopic(strings.Replace(expectedSubscribeTopic, "/#", "", 1), test.ExpectedDeviceName)
 
 			mockDeviceClient.On("DeviceByName", mock.Anything, test.ExpectedDeviceName).Return(
 				responses.DeviceResponse{
@@ -196,14 +196,14 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 			mockMessaging.On("Subscribe", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 				topics := args.Get(0).([]types.TopicChannel)
 				require.Len(t, topics, 1)
-				require.Equal(t, expectedRequestTopic, topics[0].Topic)
+				require.Equal(t, expectedSubscribeTopic, topics[0].Topic)
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 					topics[0].Messages <- types.MessageEnvelope{
 						RequestID:     expectedRequestId,
 						CorrelationID: expectedCorrelationId,
-						ReceivedTopic: expectedRequestTopic,
+						ReceivedTopic: expectedReceivedTopic,
 					}
 					time.Sleep(time.Second * 1)
 				}()
@@ -220,10 +220,7 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 				container.ConfigurationName: func(get di.Get) interface{} {
 					return &config.ConfigurationStruct{
 						MessageBus: config2.MessageBusInfo{
-							Topics: map[string]string{
-								common.CommandQueryRequestTopicKey: expectedRequestTopic,
-								common.ResponseTopicPrefixKey:      expectedResponseTopicPrefix,
-							},
+							BaseTopicPrefix: "edgex",
 						},
 					}
 				},

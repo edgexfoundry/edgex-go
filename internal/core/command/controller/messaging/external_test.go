@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -55,7 +54,6 @@ const (
 	testExternalCommandRequestTopic        = "unittest/external/request/#"
 	testExternalCommandRequestTopicExample = "unittest/external/request/testDevice/testCommand/get"
 	testExternalCommandResponseTopicPrefix = "unittest/external/response"
-	testInternalCommandRequestTopicPrefix  = "unittest/internal/request"
 )
 
 func TestOnConnectHandler(t *testing.T) {
@@ -294,9 +292,7 @@ func Test_commandRequestHandler(t *testing.T) {
 					MaxResultCount: 20,
 				},
 				MessageBus: bootstrapConfig.MessageBusInfo{
-					Topics: map[string]string{
-						common.DeviceCommandRequestTopicPrefixKey: testInternalCommandRequestTopicPrefix,
-					},
+					BaseTopicPrefix: "edgex",
 				},
 				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
 					QoS:    0,
@@ -371,8 +367,9 @@ func Test_commandRequestHandler(t *testing.T) {
 				return
 			}
 
-			expectedInternalRequestTopic := strings.Join([]string{testInternalCommandRequestTopicPrefix, testDeviceServiceName, testDeviceName, testCommandName, testMethod}, "/")
-			client.AssertCalled(t, "Request", tt.payload, testDeviceServiceName, expectedInternalRequestTopic, mock.Anything)
+			expectedInternalRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, testDeviceServiceName, testDeviceName, testCommandName, testMethod)
+			expectedInternalResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, testDeviceServiceName)
+			client.AssertCalled(t, "Request", tt.payload, expectedInternalRequestTopic, expectedInternalResponseTopicPrefix, mock.Anything)
 		})
 	}
 }

@@ -18,8 +18,5 @@ StartupMsg = "This is the Core Data Microservice"
 Name = "coredata"
 
 [MessageBus]
-    [MessageBus.Topics]
-    PublishTopicPrefix = "edgex/events/core" # /<device-profile-name>/<device-name> will be added to this Publish Topic prefix
-    SubscribeTopic = "edgex/events/device/#" # required for subscribing to Events from MessageBus
     [MessageBus.Optional]
     ClientId = "core-data"

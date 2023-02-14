@@ -17,8 +17,6 @@ UoMFile = "./res/uom.toml"
 Name = "metadata"
 
 [MessageBus]
-  [MessageBus.Topics]
-  PublishTopicPrefix = "edgex/system-events" # /<source>/<type>/<action>/<owner>/<profile> will be added to this Publish Topic prefix
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="core-metadata"

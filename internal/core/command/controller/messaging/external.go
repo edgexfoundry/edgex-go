@@ -120,8 +120,10 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		externalResponseTopic := strings.Join([]string{externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, commandName, method}, "/")
 
-		internalMessageBusInfo := container.ConfigurationFrom(dic.Get).MessageBus
-		deviceServiceName, deviceRequestTopic, err := validateRequestTopic(internalMessageBusInfo.Topics[common.DeviceCommandRequestTopicPrefixKey], deviceName, commandName, method, dic)
+		internalBaseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
+		topicPrefix := common.BuildTopic(internalBaseTopic, common.CoreCommandDeviceRequestPublishTopic)
+
+		deviceServiceName, deviceRequestTopic, err := validateRequestTopic(topicPrefix, deviceName, commandName, method, dic)
 		if err != nil {
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
@@ -135,12 +137,15 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
+		deviceResponseTopicPrefix := common.BuildTopic(internalBaseTopic, common.ResponseTopic, deviceServiceName)
 
 		lc.Debugf("Sending Command request to internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", deviceRequestTopic, requestEnvelope.RequestID, requestEnvelope.CorrelationID)
+		lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)
+
+		internalMessageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
 
 		// Request waits for the response and returns it.
-		response, err := internalMessageBus.Request(requestEnvelope, deviceServiceName, deviceRequestTopic, requestTimeout)
+		response, err := internalMessageBus.Request(requestEnvelope, deviceRequestTopic, deviceResponseTopicPrefix, requestTimeout)
 		if err != nil {
 			errorMessage := fmt.Sprintf("Failed to send DeviceCommand request with internal MessageBus: %v", err)
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, errorMessage)
