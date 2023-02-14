@@ -358,10 +358,9 @@ apps:
   core-common-config-bootstrapper:
     after:
       - security-consul-bootstrapper
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-command/res --configProvider --registry 
-    daemon: simple
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configProvider consul.http://localhost:8500 --registry 
+    daemon: oneshot
     install-mode: disable
-    start-timeout: 15m
     plugs: [network]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
