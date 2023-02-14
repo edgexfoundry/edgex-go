@@ -490,6 +490,7 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 	dbClientMock.On("DeleteDeviceServiceByName", provisionWatcherExists).Return(errors.NewCommonEdgeX(
 		errors.KindStatusConflict, "fail to delete the device service when associated provisionWatcher exists", nil))
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
+	dbClientMock.On("DeviceServiceByName", mock.Anything).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
