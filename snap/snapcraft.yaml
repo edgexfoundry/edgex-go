@@ -358,7 +358,7 @@ apps:
   core-common-config-bootstrapper:
     after:
       - security-consul-bootstrapper
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configProvider consul.http://localhost:8500 --registry 
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider consul.http://localhost:8500 --registry 
     daemon: oneshot
     install-mode: disable
     plugs: [network]
