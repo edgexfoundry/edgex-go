@@ -30,8 +30,8 @@ github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.20 h1:jX540Y6p7XIzxP+DYJk
 github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.20/go.mod h1:qL+ZN99O1nK+vzsmWQefnXKEifkHSkxtQTSB0z4BYqs=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3 h1:0Ew4PzLSFJ+sb7AYtvb9m1mRN45Sh0ELU1HdMCel5t8=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3/go.mod h1:ESOWI4GokQfQ3Bn2hGsdfOVx5idj7QEdCPT/SAQDd9M=
-github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.10 h1:o5yenvmLn8+0AOz0d5GIek011Tt5ZRbvPlgE4VhozEU=
-github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.10/go.mod h1:4lpZUM54ZareGU/yuAJvLEw0BoJ43SvCj1LO+gsKm9c=
+github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.14 h1:o7CFEIyKn/quin5lrAlUbUu9x1dnecK0tZs5waLhdCc=
+github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.14/go.mod h1:4lpZUM54ZareGU/yuAJvLEw0BoJ43SvCj1LO+gsKm9c=
 github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.7 h1:jgDQA/7SENURXQkIX11pNgA/pX9IK9ZULenj/vF17Vw=
 github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.7/go.mod h1:r6Klfz+QBDx1Z5UV0z70MKdK2/cgHwhtqTm2HFXoWug=
 github.com/edgexfoundry/go-mod-registry/v3 v3.0.0-dev.3 h1:QgZF9f70Cwpvkjw3tP1aiVGHc+yNFJNzW6hO8pDs3fg=
