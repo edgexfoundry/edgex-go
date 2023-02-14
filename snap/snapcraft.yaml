@@ -260,6 +260,7 @@ apps:
     adapter: full
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -279,6 +280,7 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -296,6 +298,7 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -312,6 +315,7 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
@@ -328,6 +332,7 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
