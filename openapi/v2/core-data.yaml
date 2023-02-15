@@ -561,9 +561,15 @@ components:
         statusCode: 200
         count: 3
 paths:
-  /event/{profileName}/{deviceName}/{sourceName}:
+  /event/{serviceName}{profileName}/{deviceName}/{sourceName}:
     parameters:
     - $ref: '#/components/parameters/correlatedRequestHeader'
+    - name: serviceName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: "Identifies the device service generating the new event"
     - name: profileName
       in: path
       required: true
