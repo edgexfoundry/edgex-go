@@ -93,6 +93,7 @@ app-services:
       Port: 59881
   Trigger:
     Type: "edgex-messagebus"
+    SubscribeTopics: "events/#" # Base topic is prepended to this topic when using edgex-messagebus
 
 device-services:
   MaxEventSize: 0 # value 0 represents unlimited  maximum event size that can be sent to message bus or core-data
