@@ -140,6 +140,7 @@ func configure() {
 		coreData,
 		coreMetadata,
 		coreCommand,
+		coreCommonConfigBootstrapper,
 		supportNotifications,
 		supportScheduler,
 		securitySecretStoreSetup,
@@ -160,7 +161,7 @@ func configure() {
 
 	// Unset autostart for oneshot services so they don't start again
 	var oneshotAutostart []string
-	for _, s := range securitySetupServices {
+	for _, s := range allOneshotServices() {
 		oneshotAutostart = append(oneshotAutostart, "apps."+s+".autostart")
 	}
 	if err = snapctl.Unset(oneshotAutostart...).Run(); err != nil {
