@@ -2,10 +2,10 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Scheduler API
   description: This is the definition of the API for the Support Scheduler service in the EdgeX Foundry IOT microservice platform. Support Scheduler provides functionality for scheduling different actions in the EdgeX Foundry platform.
-  version: 2.4.0
+  version: 3.0.0
   
 servers:
-  - url: http://localhost:59861/api/v2
+  - url: http://localhost:59861/api/v3
     description: URL for local development and testing
   
 components:
@@ -60,7 +60,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
       required:
         - apiVersion
     BaseResponse:
@@ -78,9 +78,6 @@ components:
         statusCode:
           description: "A numeric code signifying the operational status of the response."
           type: integer
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
     BaseWithTotalCountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -95,6 +92,10 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
+      properties:
+        message:
+          description: "A field that can contain a free-form message, such as an error message."
+          type: string      
     ConfigResponse:
       description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
@@ -102,10 +103,11 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
+          example: "support-scheduler"
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: object
@@ -193,7 +195,7 @@ components:
             host: "192.168.0.102"
             port: 8080
             httpMethod: "GET"
-            path: "/api/v2/ping"
+            path: "/api/v3/ping"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -233,7 +235,7 @@ components:
             host: "192.168.0.102"
             port: 8080
             httpMethod: "GET"
-            path: "/api/v2/ping"
+            path: "/api/v3/ping"
         content:
           description: "The actual content to be sent as the body"
           type: string
@@ -287,7 +289,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -295,60 +297,6 @@ components:
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
-    RequestEnvelope:
-      description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled request type instance. This is the specific, semantically identifiable request -- such as an AddDeviceRequest."
-        strategy:
-          type: string
-          description: "Indicates the expectation of whether a response should be produced synchronously or asynchronously. If asynchronously, desire for either a polling or push/callback should be provided. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the request instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of request DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    ResponseEnvelope:
-      description: "A wrapper type for use when receiving a response from the /batch endpoint. Each individual response type in the HTTP response should be wrapped in an envelope to facilitate unmarshalling by the client. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped response. This should be recapitulated from the originating request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an AddDeviceResponse."
-        strategy:
-          type: string
-          description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the response instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of response DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
     UpdateIntervalRequest:
       allOf:
       - $ref: '#/components/schemas/BaseRequest'
@@ -423,7 +371,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         version:
           description: "The latest version supported by the service."
           type: string
@@ -467,17 +415,17 @@ components:
   examples:
     400Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 400
         message: "Bad Request"
     500Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 500
         message: "Internal Server Error"
     MultiIntervalsExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         intervals:
@@ -497,7 +445,7 @@ components:
             interval: "100m"
     MultiIntervalActionsExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         actions:
@@ -511,7 +459,7 @@ components:
               host: "192.168.0.102"
               port: 8080
               httpMethod: "GET"
-              path: "/api/v2/ping"
+              path: "/api/v3/ping"
             adminState: "UNLOCKED"
           - created: 1634280525302
             modified: 1634280525302
@@ -523,7 +471,7 @@ components:
               host: "192.168.0.102"
               port: 8080
               httpMethod: "GET"
-              path: "/api/v2/test"
+              path: "/api/v3/test"
             adminState: "UNLOCKED"
 paths:
   /interval:
@@ -955,8 +903,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
+                serviceName: "support-scheduler"
         '500':
           description: "Interval Server Error"
           headers:
@@ -983,8 +932,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
-                apiVersion: "v2"
-                version: 2.4.0
+                apiVersion: "v3"
+                version: 3.0.0
+                serviceName: "support-scheduler"
         '500':
           description: "Interval Server Error"
           headers:

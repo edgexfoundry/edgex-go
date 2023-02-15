@@ -2,10 +2,10 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Support Notifications API
   description: This is the definition of the API for the Support Notifications service in the EdgeX Foundry IOT microservice platform. Support Notifications provides functionality for sending notifications via email/REST from the EdgeX Foundry platform.
-  version: 2.4.0
+  version: 3.0.0
 
 servers:
-  - url: http://localhost:59860/api/v2
+  - url: http://localhost:59860/api/v3
     description: URL for local development and testing
 
 components:
@@ -42,7 +42,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
       required:
         - apiVersion
     BaseResponse:
@@ -60,9 +60,6 @@ components:
         statusCode:
           description: "A numeric code signifying the operational status of the response."
           type: integer
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
     BaseWithIdResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -134,6 +131,10 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
+      properties:
+        message:
+          description: "A field that can contain a free-form message, such as an error message."
+          type: string      
     ConfigResponse:
       description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
@@ -141,7 +142,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
@@ -263,7 +264,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         timestamp:
           description: "Outputs the current server timestamp in RFC1123 format"
           example: "Mon, 02 Jan 2006 15:04:05 MST"
@@ -523,7 +524,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
         version:
           description: "The latest version supported by the service."
           type: string
@@ -599,35 +600,35 @@ components:
   examples:
     200Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
     202Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 202
     400Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 400
         message: "Bad Request"
     404Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 404
         message: "Not Found"
     416Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 416
         message: "Range Not Satisfiable"
     500Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 500
         message: "Internal Server Error"
     SubscriptionRequestExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           subscription:
             name: subscriptionA
             channels:
@@ -649,17 +650,17 @@ components:
             adminState: UNLOCKED
     UpdateSubscriptionsExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           statusCode: 200
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           statusCode: 404
           message: "Not Found"
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           statusCode: 500
           message: "Internal Server Error"
     SubscriptionResponseExample:
       value:
-        apiVersion: v2
+        apiVersion: v3
         statusCode: 200
         subscription:
           id: 25d4a9d3-0a9b-469f-8ce0-4a5ba1f7b152
@@ -684,7 +685,7 @@ components:
           adminState: UNLOCKED
     MultiSubscriptionsResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         subscriptions:
@@ -710,7 +711,7 @@ components:
               adminState: UNLOCKED
     NotificationRequestExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           notification:
             category: "daily-notify"
             content: "content"
@@ -723,7 +724,7 @@ components:
             status: "NEW"
     NotificationResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         notification:
           id: e6e8a2f4-eb14-4649-9e2b-175247911369
@@ -739,7 +740,7 @@ components:
           modified: 1616660213552
     MultiNotificationResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         notifications:
@@ -756,7 +757,7 @@ components:
             modified: 1616660213552
     TransmissionResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         transmission:
           id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
@@ -775,7 +776,7 @@ components:
           created: 1616659630356
     MultiTransmissionResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         transmissions:
@@ -795,16 +796,16 @@ components:
             created: 1616659630356
     MultiPOSTStatusExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
           statusCode: 201
           id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
           message: ""
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
           statusCode: 409
           message: "Duplicated"
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
           message: "Internal Server Error"
@@ -1255,7 +1256,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -1831,7 +1832,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -2304,8 +2305,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
+                serviceName: "support-notifications"
         '500':
           description: "Interval Server Error"
           headers:
@@ -2332,8 +2334,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
-                apiVersion: "v2"
-                version: 2.4.0
+                apiVersion: "v3"
+                version: 3.0.0
+                serviceName: "support-notifications"
         '500':
           description: "Interval Server Error"
           headers:
@@ -2368,6 +2371,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
+              example:
+                apiVersion: "v3"
+                statusCode: 201
         '400':
           description: "Invalid request."
           headers:
@@ -2377,6 +2383,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
         '500':
           description: "An unexpected error happened on the server."
           headers:
@@ -2386,3 +2395,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'

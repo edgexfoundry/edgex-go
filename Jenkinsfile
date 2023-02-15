@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2023 IOTech Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +21,6 @@ edgeXBuildGoParallel(
     testScript: 'make test',
     buildScript: 'make build',
     publishSwaggerDocs: true,
-    swaggerApiFolders: ['openapi/v2'],
+    swaggerApiFolders: ['openapi/v3'],
     buildSnap: false
 )
