@@ -14,19 +14,20 @@ const (
 	supportNotifications = "support-notifications"
 	supportScheduler     = "support-scheduler"
 	// security services
-	securitySecretStore        = "security-secret-store"
-	securitySecretStoreSetup   = "security-secretstore-setup"
-	securityProxy              = "security-proxy"
-	securityProxySetup         = "security-proxy-setup"
-	securityBootstrapper       = "security-bootstrapper"
-	securityBootstrapperRedis  = "security-bootstrapper-redis"
-	securityBootstrapperConsul = "security-consul-bootstrapper"
-	securityFileTokenProvider  = "security-file-token-provider"
-	secretsConfig              = "secrets-config"
-	kong                       = "kong-daemon"
-	postgres                   = "postgres"
-	vault                      = "vault"
-	secretsConfigProcessor     = "secrets-config-processor"
+	securitySecretStore          = "security-secret-store"
+	securitySecretStoreSetup     = "security-secretstore-setup"
+	securityProxy                = "security-proxy"
+	securityProxySetup           = "security-proxy-setup"
+	securityBootstrapper         = "security-bootstrapper"
+	securityBootstrapperRedis    = "security-bootstrapper-redis"
+	securityBootstrapperConsul   = "security-consul-bootstrapper"
+	securityFileTokenProvider    = "security-file-token-provider"
+	secretsConfig                = "secrets-config"
+	kong                         = "kong-daemon"
+	postgres                     = "postgres"
+	vault                        = "vault"
+	secretsConfigProcessor       = "secrets-config-processor"
+	coreCommonConfigBootstrapper = "core-common-config-bootstrapper"
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 	securitySetupServices = []string{
 		securitySecretStoreSetup,
 		securityBootstrapperConsul,
+		coreCommonConfigBootstrapper,
 		securityProxySetup,
 		securityBootstrapperRedis,
 	}

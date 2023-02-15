@@ -98,6 +98,7 @@ func installConfFiles() error {
 		securityFileTokenProvider,
 		securityProxySetup,
 		securitySecretStoreSetup,
+		coreCommonConfigBootstrapper,
 		coreCommand,
 		coreData,
 		coreMetadata,
@@ -118,25 +119,9 @@ func installConfFiles() error {
 			srcDir = srcDir + v + "/res"
 		}
 
-		if err = os.MkdirAll(destDir, 0755); err != nil {
-			return err
-		}
-
-		srcPath := srcDir + "/configuration.toml"
-		destPath := destDir + "/configuration.toml"
-		err = hooks.CopyFile(srcPath, destPath)
+		err = hooks.CopyDir(srcDir, destDir)
 		if err != nil {
 			return err
-		}
-
-		// copy additional files
-		if v == coreMetadata {
-			uomSrcPath := srcDir + "/uom.toml"
-			uomDestPath := destDir + "/uom.toml"
-			err = hooks.CopyFile(uomSrcPath, uomDestPath)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
