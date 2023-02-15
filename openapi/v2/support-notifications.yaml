@@ -536,8 +536,8 @@ components:
       description: Defines the secret data to be stored
       type: object
       properties:
-        path:
-          description: Specifies the type or location of the secret to store
+        secretName:
+          description: Specifies the name of the secret
           type: string
         secretData:
           description: A list of the key/value pairs of secret data to store
@@ -545,7 +545,7 @@ components:
           items:
             $ref: '#/components/schemas/SecretDataKeyValue'
       required:
-        - path
+        - secretName
         - secrets
     SecretDataKeyValue:
       description: Defines a key/value pair of secret data
