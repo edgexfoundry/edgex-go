@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
@@ -39,7 +40,8 @@ func AddDeviceService(d models.DeviceService, ctx context.Context, dic *di.Conta
 		addedDeviceService.Id,
 		correlationId,
 	)
-
+	DeviceServiceDTO := dtos.FromDeviceServiceModelToDTO(d)
+	go publishSystemEvent(common.DeviceServiceSystemEventType, common.SystemEventActionAdd, d.Name, DeviceServiceDTO, ctx, dic)
 	return addedDeviceService.Id, nil
 }
 
@@ -82,7 +84,8 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 	if dto.LastConnected != nil && utils.OnlyOneFieldUpdated("LastConnected", dto) {
 		return nil
 	}
-	go updateDeviceServiceCallback(ctx, dic, deviceService)
+	DeviceServiceDTO := dtos.FromDeviceServiceModelToDTO(deviceService)
+	go publishSystemEvent(common.DeviceServiceSystemEventType, common.SystemEventActionUpdate, deviceService.Name, DeviceServiceDTO, ctx, dic)
 	return nil
 }
 
@@ -111,10 +114,16 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	err := dbClient.DeleteDeviceServiceByName(name)
+	deviceService, err := dbClient.DeviceServiceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	err = dbClient.DeleteDeviceServiceByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	DeviceServiceDTO := dtos.FromDeviceServiceModelToDTO(deviceService)
+	go publishSystemEvent(common.DeviceServiceSystemEventType, common.SystemEventActionDelete, deviceService.Name, DeviceServiceDTO, ctx, dic)
 	return nil
 }
 

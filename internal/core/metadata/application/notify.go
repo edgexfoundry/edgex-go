@@ -18,7 +18,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -58,26 +57,6 @@ func validateDeviceCallback(ctx context.Context, dic *di.Container, device dtos.
 	}
 
 	return nil
-}
-
-// updateDeviceServiceCallback invoke device service's callback function for updating device service
-func updateDeviceServiceCallback(ctx context.Context, dic *di.Container, ds models.DeviceService) {
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	deviceServiceCallbackClient, err := newDeviceServiceCallbackClient(ctx, dic, ds.Name)
-	if err != nil {
-		lc.Errorf("fail to new a device service callback client by serviceName %s, err: %v", ds.Name, err)
-		return
-	}
-
-	request := requests.NewUpdateDeviceServiceRequest(dtos.FromDeviceServiceModelToUpdateDTO(ds))
-	response, err := deviceServiceCallbackClient.UpdateDeviceServiceCallback(ctx, request)
-	if err != nil {
-		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %v", ds.Name, err)
-		return
-	}
-	if response.StatusCode != http.StatusOK {
-		lc.Errorf("fail to invoke device service callback for updating device service %s, err: %s", ds.Name, response.Message)
-	}
 }
 
 func publishUpdateDeviceProfileSystemEvent(profileDTO dtos.DeviceProfile, ctx context.Context, dic *di.Container) {
@@ -136,6 +115,12 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 			detailName = pw.Name
 		} else {
 			lc.Errorf("can not convert to provision watcher DTO")
+		}
+	case common.DeviceServiceSystemEventType:
+		if service, ok := dto.(dtos.DeviceService); ok {
+			detailName = service.Name
+		} else {
+			lc.Errorf("can not convert to device service DTO")
 			return
 		}
 	default:
@@ -150,7 +135,14 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		systemEvent.Type,
 		systemEvent.Action,
 		systemEvent.Owner,
-		profileName)
+	)
+
+	if profileName != "" {
+		publishTopic = common.BuildTopic(
+			publishTopic,
+			profileName,
+		)
+	}
 
 	payload, _ := json.Marshal(systemEvent)
 	envelope := types.NewMessageEnvelope(payload, ctx)
