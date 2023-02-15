@@ -169,7 +169,7 @@ apps:
     adapter: full
     after: [vault]
     command: >-
-      bin/security-secretstore-setup -configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+      bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
@@ -204,7 +204,7 @@ apps:
       - security-secretstore-setup
       - security-consul-bootstrapper
       - kong-daemon
-    command: bin/security-proxy-setup -configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    command: bin/security-proxy-setup --configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-proxy-post-setup.sh
@@ -264,7 +264,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-data -configDir $SNAP_DATA/config/core-data/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -284,7 +284,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-metadata -configDir $SNAP_DATA/config/core-metadata/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -302,7 +302,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-command -configDir $SNAP_DATA/config/core-command/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -319,7 +319,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-notifications -configDir $SNAP_DATA/config/support-notifications/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -378,7 +378,7 @@ apps:
     # double-check with bnevis that this is OK, as there is an individual config.toml
     # file for the secrets-config command
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
-    command: bin/secrets-config -configDir $SNAP_DATA/config/security-proxy-setup/res
+    command: bin/secrets-config --configDir $SNAP_DATA/config/security-proxy-setup/res
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
