@@ -169,7 +169,7 @@ apps:
     adapter: full
     after: [vault]
     command: >-
-      bin/security-secretstore-setup -configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+      bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
@@ -204,7 +204,7 @@ apps:
       - security-secretstore-setup
       - security-consul-bootstrapper
       - kong-daemon
-    command: bin/security-proxy-setup -configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+    command: bin/security-proxy-setup --configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
     command-chain:
       - bin/service-config-overrides.sh
     post-stop-command: bin/security-proxy-post-setup.sh
@@ -260,10 +260,11 @@ apps:
     adapter: full
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-data -configDir $SNAP_DATA/config/core-data/res -cp -r
+    command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -279,10 +280,11 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-metadata -configDir $SNAP_DATA/config/core-metadata/res -cp -r
+    command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -296,10 +298,11 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-command -configDir $SNAP_DATA/config/core-command/res -cp -r
+    command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -312,10 +315,11 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-notifications -configDir $SNAP_DATA/config/support-notifications/res -cp -r
+    command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -328,10 +332,11 @@ apps:
     adapter: none
     after:
       - security-bootstrapper-redis
+      - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-scheduler -configDir $SNAP_DATA/config/support-scheduler/res -cp -r
+    command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider consul.http://localhost:8500 --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -349,6 +354,16 @@ apps:
     install-mode: disable
     start-timeout: 1m
     plugs: [network]
+  # this service pushes common configuration source into Configuration Provider
+  core-common-config-bootstrapper:
+    after:
+      - security-consul-bootstrapper
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider consul.http://localhost:8500 --registry 
+    environment:
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
+    daemon: oneshot
+    install-mode: disable
+    plugs: [network]
   # helper commands the snap exposes
   security-proxy-setup-cmd:
     adapter: none
@@ -363,7 +378,7 @@ apps:
     # double-check with bnevis that this is OK, as there is an individual config.toml
     # file for the secrets-config command
     # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
-    command: bin/secrets-config -configDir $SNAP_DATA/config/security-proxy-setup/res
+    command: bin/secrets-config --configDir $SNAP_DATA/config/security-proxy-setup/res
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
@@ -588,7 +603,7 @@ parts:
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-notifications support-scheduler \
           security-proxy-setup security-secretstore-setup security-file-token-provider \
-          security-bootstrapper secrets-config; do
+          security-bootstrapper secrets-config core-common-config-bootstrapper; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
 
@@ -596,6 +611,10 @@ parts:
           "core-metadata")
               install -DT "./cmd/core-metadata/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
               install -DT "./cmd/core-metadata/res/uom.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.toml"
+          ;;
+          "core-common-config-bootstrapper")
+              install -DT "./cmd/core-common-config-bootstrapper/res/configuration.yaml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/core-common-config-bootstrapper/res/configuration.yaml"
           ;;
           "security-file-token-provider")
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \

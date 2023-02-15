@@ -3,13 +3,14 @@ package main
 // snapped apps
 const (
 	// core services
-	coreData       = "core-data"
-	coreMetadata   = "core-metadata"
-	coreCommand    = "core-command"
-	consul         = "consul"
-	redis          = "redis"
-	registry       = consul
-	configProvider = consul
+	coreData                     = "core-data"
+	coreMetadata                 = "core-metadata"
+	coreCommand                  = "core-command"
+	consul                       = "consul"
+	redis                        = "redis"
+	registry                     = consul
+	configProvider               = consul
+	coreCommonConfigBootstrapper = "core-common-config-bootstrapper"
 	// support services
 	supportNotifications = "support-notifications"
 	supportScheduler     = "support-scheduler"
@@ -41,6 +42,9 @@ var (
 		securityProxySetup,
 		securityBootstrapperRedis,
 	}
+	coreSetupServices = []string{
+		coreCommonConfigBootstrapper,
+	}
 	coreServices = []string{
 		consul,
 		redis,
@@ -54,11 +58,15 @@ var (
 	}
 )
 
+func allOneshotServices() (s []string) {
+	return append(securitySetupServices, coreSetupServices...)
+}
+
 func allServices() (s []string) {
-	s = make([]string, len(coreServices)+len(supportServices)+len(securityServices)+len(securitySetupServices))
+	s = make([]string, len(coreServices)+len(supportServices)+len(securityServices)+len(allOneshotServices()))
 	s = append(s, coreServices...)
 	s = append(s, supportServices...)
 	s = append(s, securityServices...)
-	s = append(s, securitySetupServices...)
+	s = append(s, allOneshotServices()...)
 	return s
 }
