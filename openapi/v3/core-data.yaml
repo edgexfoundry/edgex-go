@@ -2,10 +2,10 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Data API
   description: This is the definition of the API for the Core Data service in the EdgeX Foundry IOT microservice platform. Core Data is responsible for storing event and reading data ingested from edge devices in the environment.
-  version: 2.4.0
+  version: 3.0.0
   
 servers:
-  - url: http://localhost:59880/api/v2
+  - url: http://localhost:59880/api/v3
     description: URL for local development and testing
   
 components:
@@ -88,7 +88,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
       required:
         - apiVersion
     BaseResponse:
@@ -103,9 +103,6 @@ components:
           type: string
           format: uuid
           example: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
         statusCode:
           description: "A numeric code signifying the operational status of the response."
           type: integer
@@ -128,6 +125,17 @@ components:
         totalCount:
           description: "The total count of all multi instances."
           type: integer
+    SimpleReading:
+      description: "An event reading for a simple data type"
+      allOf:
+        - $ref: '#/components/schemas/BaseReading'
+        - type: object
+          properties:
+            value:
+              description: "A string representation of the reading's value"
+              type: string
+      required:
+        - value    
     BinaryReading:
       description: "An event reading for a binary data type"
       allOf:
@@ -147,7 +155,7 @@ components:
     ObjectReading:
       description: "An event reading for a object data type"
       allOf:
-        - $ref: '#/components/schemas/ObjectReading'
+        - $ref: '#/components/schemas/BaseReading'
         - type: object
           properties:
             objectValue:
@@ -190,7 +198,10 @@ components:
           description: "One or more readings captured at the time of the event"
           type: array
           items:
-            $ref: '#/components/schemas/BaseReading'
+            oneOf:
+              - $ref: '#/components/schemas/SimpleReading'
+              - $ref: '#/components/schemas/BinaryReading'
+              - $ref: '#/components/schemas/ObjectReading'              
         tags:
           description: "List of zero or more Tags attached to the Event which give more context to the Event"
           title: tags
@@ -220,6 +231,10 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
+      properties:
+        message:
+          description: "A field that can contain a free-form message, such as an error message."
+          type: string
     EventResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -274,25 +289,6 @@ components:
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
-    ReadingResponse:
-      allOf:
-        - $ref: '#/components/schemas/BaseResponse'
-      description: "A response type for returning a Reading to the caller. The Reading may be of either type BinaryReading or type SimpleReading."
-      type: object
-      properties:
-        reading:
-          $ref: '#/components/schemas/BaseReading'
-    SimpleReading:
-      description: "An event reading for a simple data type"
-      allOf:
-        - $ref: '#/components/schemas/BaseReading'
-        - type: object
-          properties:
-            value:
-              description: "A string representation of the reading's value"
-              type: string
-      required:
-        - value
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -343,43 +339,43 @@ components:
   examples:
     200Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
     202Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 202
     400Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 400
         message: "Bad Request" 
     404Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 404
         message: "Not Found"
     409Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 409
         message: "Data Duplicate"
     416Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 416
         message: "Range Not Satisfiable"
     500Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 500
         message: "Interval Server Error" 
     EventExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         event:
-          apiVersion: "v2"
+          apiVersion: "v3"
           id: "040bd523-ec33-440d-9d72-e5813a465f37"
           deviceName: "device-001"
           profileName: "profile-001"
@@ -414,11 +410,11 @@ components:
               value: "75"
     AllEventsExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 3
         events: 
-          - apiVersion: "v2"
+          - apiVersion: "v3"
             id: "040bd523-ec33-440d-9d72-e5813a465f37"
             deviceName: "device-001"
             profileName: "profile-001"
@@ -451,7 +447,7 @@ components:
                 origin: 1602168089665565300
                 valueType: "Int8"
                 value: "75"
-          - apiVersion: "v2"
+          - apiVersion: "v3"
             deviceName: "device-002"
             profileName: "profile-002"
             sourceName: "source-2"
@@ -476,7 +472,7 @@ components:
                   Attr1: "yyz"
                   Attr2: -45
                   Attr3: [ 255, 1, 0 ]
-          - apiVersion: "v2"
+          - apiVersion: "v3"
             deviceName: "device-002"
             profileName: "profile-002"
             sourceName: "source-3"
@@ -492,7 +488,7 @@ components:
                 value: "12.2"
     AllReadingsExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 5
         readings:
@@ -537,7 +533,7 @@ components:
               Attr3: [255, 1, 0]
     ReadingsByResourceNameAndTimeRangeExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         totalCount: 6
         readings:
@@ -557,7 +553,7 @@ components:
             value: "38.6"
     CountExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         count: 3
 paths:
@@ -597,9 +593,9 @@ paths:
             schema:
               $ref: '#/components/schemas/AddEventRequest'
             example:
-              apiVersion: v2
+              apiVersion: v3
               event:
-                apiVersion: v2
+                apiVersion: v3
                 deviceName: device-002
                 profileName: profile-002
                 sourceName: resource-002
@@ -634,7 +630,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 statusCode: 201
                 id: "d5471d59-2810-419a-8744-18eb8fa03465"
         '400':
@@ -1792,7 +1788,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
+                serviceName: "core-data"                    
                 config:
                   Writeable:
                     PersistData: true
@@ -1890,8 +1887,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 timestamp: "Mon, 02 Jan 2006 15:04:05 MST"
+                serviceName: "core-data"                    
         '500':
           description: "Interval Server Error"
           headers:
@@ -1918,8 +1916,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
-                apiVersion: "v2"
-                version: 2.4.0
+                apiVersion: "v3"
+                version: 3.0.0
+                serviceName: "core-data"               
         '500':
           description: "Interval Server Error"
           headers:

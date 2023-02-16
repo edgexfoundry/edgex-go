@@ -2,9 +2,9 @@ openapi: 3.0.0
 info:
   title: Edgex Foundry - Core Metadata API
   description: "This is the definition of the API for the Core Metadata service in the EdgeX Foundry IOT microservice platform. Core Metadata is responsible for all information related to provisioned devices and their associated services."
-  version: 2.4.0
+  version: 3.0.0
 servers:
-  - url: 'http://localhost:59881/api/v2'
+  - url: 'http://localhost:59881/api/v3'
     description: URL for local development and testing
 components:
   schemas:
@@ -75,7 +75,7 @@ components:
         apiVersion:
           description: "A version number shows the API version in DTOs."
           type: string
-          example: v2
+          example: v3
       required:
         - apiVersion
     BaseResponse:
@@ -93,9 +93,6 @@ components:
         statusCode:
           description: "A numeric code signifying the operational status of the response."
           type: integer
-        message:
-          description: "A field that can contain a free-form message, such as an error message."
-          type: string
     BaseWithIdResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -752,6 +749,10 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       description: "A response type for returning a generic error to the caller."
       type: object
+      properties:
+        message:
+          description: "A field that can contain a free-form message, such as an error message."
+          type: string        
     ConfigResponse:
       description: "An object containing the service's configuration. Please refer the configuration documentation of each service for more details at [EdgeX Foundry Documentation](https://docs.edgexfoundry.org)."
       type: object
@@ -935,60 +936,6 @@ components:
             type: string
       required:
         - deviceResource
-    RequestEnvelope:
-      description: "A wrapper type for use when sending a request to the /batch endpoint. Each individual request type in the HTTP request should be wrapped in an envelope to facilitate instantiation of the correct routing handler. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled request type instance. This is the specific, semantically identifiable request -- such as an AddDeviceRequest."
-        strategy:
-          type: string
-          description: "Indicates the expectation of whether a response should be produced synchronously or asynchronously. If asynchronously, desire for either a polling or push/callback should be provided. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the request instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of request DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
-    ResponseEnvelope:
-      description: "A wrapper type for use when receiving a response from the /batch endpoint. Each individual response type in the HTTP response should be wrapped in an envelope to facilitate unmarshalling by the client. See property descriptions below for more details."
-      type: object
-      properties:
-        action:
-          type: string
-          description: "Indicates the type of operation applicable to the wrapped response. This should be recapitulated from the originating request. Valid values are 'create','read','update','delete', and 'command'"
-        content:
-          type: string
-          format: byte
-          description: "A byte array containing a marshalled response type instance. This is the specific, semantically identifiable response -- such as an BaseWithIdResponse."
-        strategy:
-          type: string
-          description: "Recapitulates the expectation with regard to the delivery of response that was specified on the originating request. Valid values are 'sync','async-push','async-poll'"
-        type:
-          type: string
-          description: "The name of the type applicable to the response instance contained in the 'content' property."
-        version:
-          description: "Proposed field for explicitly defining version of response DTO. This is for advertising compatibility between a publisher/subscriber or requester/receiver"
-          type: string
-          example: "2.0.x"
-      required:
-        - action
-        - content
-        - strategy
-        - type
-        - version
     UpdateDeviceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -1125,95 +1072,92 @@ components:
   examples:
     200Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "2463bff9-aa53-4bc4-bebf-42fe81146ea8"
         statusCode: 200
-        message: ""
     400Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
         statusCode: 400
         message: "Bad Request"
     404Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "84c9489c-0148-11eb-adc1-0242ac120002"
         statusCode: 404
         message: "Not Found"
     409Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "Data Duplicate"
     409DeleteExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "associated object exists"
     423Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 423
         message: "Locked"
     500Example:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "9524082e-96c0-42bb-b5d0-50c869444cc7"
         statusCode: 500
         message: "Internal Server Error"
     MultiPOSTStatusExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
           statusCode: 201
           id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
-          message: ""
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
           statusCode: 409
           message: "Duplicated"
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
           message: "Internal Server Error"
     MultiPOSTNoIdStatusExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
           statusCode: 201
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
           statusCode: 400
           message: "Duplicated"         
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
           statusCode: 404
           message: "Not Found"  
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
           message: "Internal Server Error" 
     MultiUpdateStatusExample:
       value:
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
           statusCode: 200
-          message: ""
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
           statusCode: 404
           message: "Not Found"
-        - apiVersion: "v2"
+        - apiVersion: "v3"
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
           message: "Internal Server Error"
     AddDeviceRequest:
       value:
-        - apiVersion: v2
+        - apiVersion: v3
           device:
             name: AWS-IOT-Button1
             description: Home automation system
@@ -1238,7 +1182,7 @@ components:
             notify: false
     UpdateDeviceRequest:
       value:
-        - apiVersion: v2
+        - apiVersion: v3
           device:
             id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
             name: "AWS-IOT-Button1"
@@ -1249,7 +1193,7 @@ components:
               - interval: "100ms"
                 onChange: true
                 sourceName: "CurrentHumidity"
-        - apiVersion: v2
+        - apiVersion: v3
           device:
             id: "771de9f4-b5a3-4eba-b5e7-ec6e14fa3de7"
             name: "AWS-IOT-Button2"
@@ -1259,7 +1203,7 @@ components:
     AddDeviceServiceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-          apiVersion: v2
+          apiVersion: v3
           service:
             name: home-thermostat-device-service
             description: manage homethermostats
@@ -1271,7 +1215,7 @@ components:
     AddDeviceProfileRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-          apiVersion: v2
+          apiVersion: v3
           profile:
             name: "Simple-Device-Profile"
             manufacturer: "Simple Corp."
@@ -1296,7 +1240,7 @@ components:
     AddDeviceCommandRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-          apiVersion: v2
+          apiVersion: v3
           profileName: "Simple-Device-Profile"
           deviceCommand:
             name: "Switch"
@@ -1307,7 +1251,7 @@ components:
     AddDeviceResourceRequest:
       value:
         - requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
-          apiVersion: v2
+          apiVersion: v3
           profileName: "Simple-Device-Profile"
           resource:
             name: "SwitchButton"
@@ -1320,7 +1264,7 @@ components:
     AddProvisionWatcherRequest:
       value:
         - requestId: "fb34e122-84d6-4c4c-a0ba-ac181021dc6b"
-          apiVersion: v2
+          apiVersion: v3
           provisionwatcher:
             name: "Simple-Provision-Watcher"
             labels:
@@ -1338,7 +1282,7 @@ components:
             adminState: "UNLOCKED"
     GetAllDevicesResponse:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "479439fa-0148-11eb-adc1-0242ac120002"
         statusCode: 200
         totalCount: 3
@@ -1392,7 +1336,7 @@ components:
                 Port: "300"
     GetAllDeviceProfilesResponse:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
         statusCode: 200
         totalCount: 3
@@ -1443,7 +1387,7 @@ components:
                   defaultValue: "false"
     GetAllProvisionWatchersResponse:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
         statusCode: 200
         totalCount: 3
@@ -1488,7 +1432,7 @@ components:
             adminState: "UNLOCKED"
     UnitsOfMeasureResponseExample:
       value:
-        apiVersion: "v2"
+        apiVersion: "v3"
         statusCode: 200
         uom:
           source: "reference to source for all UoM if not specified below"
@@ -1745,10 +1689,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "75ca2b65-f8ef-44f7-a995-a29c53ce111b"
                 statusCode: 200
-                message: ""
                 device:
                   id: "55b68fcf-0fd2-445a-9fae-670b37fb9274"
                   name: "Random-Boolean-Device"
@@ -1819,7 +1762,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -2097,11 +2040,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "327d9c1e-ac41-41cb-ae83-e78d74472cd8"
                 statusCode: 201
                 id: "1dc44f6c-a557-4d4a-9d2b-ccdadd674c9d"
-                message: ""
         '400':
           description: "Invalid request."
           headers:
@@ -2162,10 +2104,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseWithIdResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "778b4234-917d-4df7-84dd-a99c33c3ec3b"
                 statusCode: 200
-                message: ""
         '400':
           description: "Invalid request."
           headers:
@@ -2281,10 +2222,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceProfileResponse'
               example:
-               apiVersion: "v2"
+               apiVersion: "v3"
                requestId: "374387ad-18ef-4f5c-8b67-6844bec31310"
                statusCode: 200
-               message: ""
                profile:
                 id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
                 name: ""
@@ -2354,7 +2294,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -2420,7 +2360,7 @@ paths:
               items:
                 $ref: '#/components/schemas/DeviceProfileBasicInfoRequest'
             example:
-              - apiVersion: "v2"
+              - apiVersion: "v3"
                 requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
                 basicinfo:
                   name: "Device-Virtual-Profile"
@@ -2534,7 +2474,7 @@ paths:
               items:
                 $ref: '#/components/schemas/UpdateDeviceCommandRequest'
             example:
-              - apiVersion: "v2"
+              - apiVersion: "v3"
                 requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
                 profileName: "Device-Virtual-Profile"
                 devicecommand:
@@ -2607,7 +2547,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -2727,7 +2667,7 @@ paths:
               items:
                 $ref: '#/components/schemas/UpdateDeviceResourceRequest'
             example:
-              - apiVersion: "v2"
+              - apiVersion: "v3"
                 requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
                 profileName: "Device-Virtual-Profile"
                 resource:
@@ -2801,7 +2741,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -3049,7 +2989,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceResourceResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 statusCode: 200
                 resource:
                   name: "float32-value"
@@ -3160,7 +3100,7 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceServiceRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
-                apiVersion: v2
+                apiVersion: v3
                 service:
                   id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "home-thermostat-device-service"
@@ -3168,7 +3108,7 @@ paths:
                   labels:
                     - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
-                apiVersion: v2
+                apiVersion: v3
                 service:
                   id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "Google-Home-device-service"
@@ -3234,7 +3174,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MultiDeviceServicesResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "4c7c47a7-10e0-4489-99c5-f639b7d7eb5c"
                 statusCode: 200
                 totalCount: 3
@@ -3296,10 +3236,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceServiceResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "5e46b1fe-fb3e-4bc5-b84c-0ea8f9e0b511"
                 statusCode: 200
-                message: ""
                 service:
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "device-virtual"
@@ -3359,7 +3298,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -3466,7 +3405,7 @@ paths:
               $ref: '#/components/schemas/UpdateProvisionWatcherRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
-                apiVersion: v2
+                apiVersion: v3
                 provisionwatcher:
                   id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
                   name: "simple-identifier"
@@ -3477,7 +3416,7 @@ paths:
                   labels:
                     - "simple"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
-                apiVersion: v2
+                apiVersion: v3
                 provisionwatcher:
                   id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
                   name: "virtual-identifier"
@@ -3591,10 +3530,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProvisionWatcherResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
                 statusCode: 200
-                message: ""
                 provisionwatcher:
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "virtual-watcher"
@@ -3664,7 +3602,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BaseResponse'
               examples:
                 200Example:
                   $ref: '#/components/examples/200Example'
@@ -3839,7 +3777,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConfigResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
+                serviceName: "core-metadata"
                 config:
                   Writeable:
                     LogLevel: "INFO"
@@ -3919,8 +3858,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PingResponse'
               example:
-                apiVersion: "v2"
+                apiVersion: "v3"
                 timestamp: 'Thu Jan 28 00:32:42 UTC 2021'
+                serviceName: "core-metadata"
         '500':
           description: "Internal Server Error"
           headers:
@@ -3947,8 +3887,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionResponse'
               example:
-                apiVersion: "v2"
-                version: 2.4.0
+                apiVersion: "v3"
+                version: 3.0.0
+                serviceName: "core-metadata"
         '500':
           description: "Internal Server Error"
           headers:
