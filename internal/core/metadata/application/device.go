@@ -39,7 +39,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	err := validateDeviceCallback(ctx, dic, dtos.FromDeviceModelToDTO(d))
+	err := validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -134,7 +134,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
 	deviceDTO := dtos.FromDeviceModelToDTO(device)
-	err = validateDeviceCallback(ctx, dic, deviceDTO)
+	err = validateDeviceCallback(deviceDTO, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

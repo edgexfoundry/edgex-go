@@ -137,6 +137,7 @@ func mockDic() *di.Container {
 					LogLevel: "DEBUG",
 				},
 				Service: bootstrapConfig.ServiceInfo{
+					RequestTimeout: "30s",
 					MaxResultCount: 30,
 				},
 			}

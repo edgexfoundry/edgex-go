@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,22 +7,28 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	messagingMocks "github.com/edgexfoundry/go-mod-messaging/v3/messaging/mocks"
+	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/gorilla/mux"
@@ -114,39 +120,9 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	return testUpdateDeviceReq
 }
 
-func mockValidationHandler(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	w.Header().Set("Content-Type", "application/json")
-
-	var res commonDTO.BaseResponse
-	var device requests.AddDeviceRequest
-	err := json.NewDecoder(r.Body).Decode(&device)
-	if err != nil {
-		http.Error(w, "json decoding failed", http.StatusBadRequest)
-		return
-	}
-
-	if _, ok := device.Device.Protocols["modbus-ip"]; !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		res = commonDTO.NewBaseResponse("", "validation failed", http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		res = commonDTO.NewBaseResponse("", "", http.StatusOK)
-	}
-
-	resBytes, err := json.Marshal(res)
-	if err != nil {
-		http.Error(w, "json encoding failed", http.StatusInternalServerError)
-	}
-	w.Write(resBytes) //nolint:errcheck
-}
-
 func TestAddDevice(t *testing.T) {
-	mockDeviceServiceServer := httptest.NewServer(http.HandlerFunc(mockValidationHandler))
-	defer mockDeviceServiceServer.Close()
-
 	testDevice := buildTestDeviceRequest()
-	deviceModel := requests.AddDeviceReqToDeviceModels([]requests.AddDeviceRequest{testDevice})[0]
+	deviceModel := dtos.ToDeviceModel(testDevice.Device)
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -155,20 +131,13 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", deviceModel.ProfileName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
-	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
-	dbClientMock.On("DeviceServiceByName", "unavailable").Return(models.DeviceService{BaseAddress: "http://unavailable"}, nil)
-
-	notFoundService := testDevice
-	notFoundService.Device.ServiceName = "notFoundService"
-	dbClientMock.On("DeviceServiceByName", notFoundService.Device.ServiceName).Return(models.DeviceService{},
-		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
-			notFoundService.Device.ServiceName), nil))
+	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{Name: deviceModel.ServiceName}, nil)
 
 	notFoundProfile := testDevice
 	notFoundProfile.Device.ProfileName = "notFoundProfile"
 	notFoundProfileDeviceModel := requests.AddDeviceReqToDeviceModels([]requests.AddDeviceRequest{notFoundProfile})[0]
 	dbClientMock.On("AddDevice", notFoundProfileDeviceModel).Return(notFoundProfileDeviceModel,
-		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
+		edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
 			notFoundProfile.Device.ProfileName), nil))
 
 	noName := testDevice
@@ -207,7 +176,6 @@ func TestAddDevice(t *testing.T) {
 		expectedStatusCode int
 	}{
 		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusCreated},
-		{"Invalid - not found service", []requests.AddDeviceRequest{notFoundService}, http.StatusNotFound},
 		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusNotFound},
 		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest},
 		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest},
@@ -219,12 +187,38 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest},
 		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest},
 		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusInternalServerError},
-		{"Valid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusCreated},
+		{"Invalid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusServiceUnavailable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
+
+			var responseEnvelope types.MessageEnvelope
+			mockMessaging := &messagingMocks.MessageClient{}
+			mockMessaging.On("Publish", mock.Anything, mock.Anything).Return(nil)
+			if testCase.expectedStatusCode == http.StatusInternalServerError {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+					require.True(t, ok)
+					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
+				}).Return(&responseEnvelope, nil)
+			} else if testCase.expectedStatusCode == http.StatusServiceUnavailable {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
+			} else {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+					require.True(t, ok)
+					responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
+					require.NoError(t, err)
+				}).Return(&responseEnvelope, nil)
+			}
+
+			dic.Update(di.ServiceConstructorMap{
+				bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
+					return mockMessaging
+				},
+			})
 
 			reader := strings.NewReader(string(jsonData))
 			req, err := http.NewRequest(http.MethodPost, common.ApiDeviceRoute, reader)
@@ -269,8 +263,8 @@ func TestDeleteDeviceByName(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteDeviceByName", device.Name).Return(nil)
-	dbClientMock.On("DeleteDeviceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
-	dbClientMock.On("DeviceByName", notFoundName).Return(device, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dbClientMock.On("DeleteDeviceByName", notFoundName).Return(edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dbClientMock.On("DeviceByName", notFoundName).Return(device, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
 	dbClientMock.On("DeviceByName", device.Name).Return(device, nil)
 	dbClientMock.On("DeviceServiceByName", device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
 	dic.Update(di.ServiceConstructorMap{
@@ -338,7 +332,7 @@ func TestAllDeviceByServiceName(t *testing.T) {
 	dbClientMock.On("DeviceCountByServiceName", testServiceA).Return(expectedTotalCountServiceA, nil)
 	dbClientMock.On("DevicesByServiceName", 0, 5, testServiceA).Return([]models.Device{devices[0], devices[1]}, nil)
 	dbClientMock.On("DevicesByServiceName", 1, 1, testServiceA).Return([]models.Device{devices[1]}, nil)
-	dbClientMock.On("DevicesByServiceName", 4, 1, testServiceB).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DevicesByServiceName", 4, 1, testServiceB).Return([]models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -458,9 +452,6 @@ func TestDeviceNameExists(t *testing.T) {
 }
 
 func TestPatchDevice(t *testing.T) {
-	mockDeviceServiceServer := httptest.NewServer(http.HandlerFunc(mockValidationHandler))
-	defer mockDeviceServiceServer.Close()
-
 	expectedRequestId := ExampleUUID
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -485,7 +476,6 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("UpdateDevice", dsModels).Return(nil)
-	dbClientMock.On("DeviceServiceByName", *valid.Device.ServiceName).Return(models.DeviceService{BaseAddress: mockDeviceServiceServer.URL}, nil)
 
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
@@ -518,22 +508,19 @@ func TestPatchDevice(t *testing.T) {
 	invalidNotFoundId.Device.Name = nil
 	notFoundId := "12345678-1111-1234-5678-de9dac3fb9bc"
 	invalidNotFoundId.Device.Id = &notFoundId
-	notFoundIdError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
+	notFoundIdError := edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundId), nil)
 	dbClientMock.On("DeviceById", *invalidNotFoundId.Device.Id).Return(dsModels, notFoundIdError)
 
 	invalidNotFoundName := testReq
 	invalidNotFoundName.Device.Id = nil
 	notFoundName := "notFoundName"
 	invalidNotFoundName.Device.Name = &notFoundName
-	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
+	notFoundNameError := edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
 	dbClientMock.On("DeviceByName", *invalidNotFoundName.Device.Name).Return(dsModels, notFoundNameError)
 
-	notFountServiceName := "notFoundService"
-	notFoundService := testReq
-	notFoundService.Device.ServiceName = &notFountServiceName
-	dbClientMock.On("DeviceServiceByName", *notFoundService.Device.ServiceName).Return(models.DeviceService{},
-		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists",
-			*notFoundService.Device.ServiceName), nil))
+	unavailableServiceName := "unavailableService"
+	unavailableService := testReq
+	unavailableService.Device.ServiceName = &unavailableServiceName
 
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := testReq
@@ -542,7 +529,7 @@ func TestPatchDevice(t *testing.T) {
 	notFoundProfileDeviceModel.ProfileName = notFountProfileName
 	dbClientMock.On("DeviceById", *notFoundProfile.Device.Id).Return(notFoundProfileDeviceModel, nil)
 	dbClientMock.On("UpdateDevice", notFoundProfileDeviceModel).Return(
-		errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
+		edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist,
 			fmt.Sprintf("device profile '%s' does not exists", notFountProfileName), nil))
 
 	dic.Update(di.ServiceConstructorMap{
@@ -568,14 +555,40 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - not found service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
 		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError},
+		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{unavailableService}, http.StatusMultiStatus, http.StatusServiceUnavailable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
+
+			var responseEnvelope types.MessageEnvelope
+			mockMessaging := &messagingMocks.MessageClient{}
+			mockMessaging.On("Publish", mock.Anything, mock.Anything).Return(nil)
+			if testCase.expectedResponseCode == http.StatusInternalServerError {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+					require.True(t, ok)
+					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
+				}).Return(&responseEnvelope, nil)
+			} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
+			} else {
+				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+					require.True(t, ok)
+					responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
+					require.NoError(t, err)
+				}).Return(&responseEnvelope, nil)
+			}
+
+			dic.Update(di.ServiceConstructorMap{
+				bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
+					return mockMessaging
+				},
+			})
 
 			reader := strings.NewReader(string(jsonData))
 			req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceRoute, reader)
@@ -632,7 +645,7 @@ func TestAllDevices(t *testing.T) {
 	dbClientMock.On("AllDevices", 0, 10, []string(nil)).Return(devices, nil)
 	dbClientMock.On("AllDevices", 0, 5, testDeviceLabels).Return([]models.Device{devices[0], devices[1]}, nil)
 	dbClientMock.On("AllDevices", 1, 2, []string(nil)).Return([]models.Device{devices[1], devices[2]}, nil)
-	dbClientMock.On("AllDevices", 4, 1, testDeviceLabels).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllDevices", 4, 1, testDeviceLabels).Return([]models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -705,7 +718,7 @@ func TestDeviceByName(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeviceByName", device.Name).Return(device, nil)
-	dbClientMock.On("DeviceByName", notFoundName).Return(models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
+	dbClientMock.On("DeviceByName", notFoundName).Return(models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -779,7 +792,7 @@ func TestDevicesByProfileName(t *testing.T) {
 	dbClientMock.On("DeviceCountByProfileName", testProfileA).Return(expectedTotalCountProfileA, nil)
 	dbClientMock.On("DevicesByProfileName", 0, 5, testProfileA).Return([]models.Device{devices[0], devices[1]}, nil)
 	dbClientMock.On("DevicesByProfileName", 1, 1, testProfileA).Return([]models.Device{devices[1]}, nil)
-	dbClientMock.On("DevicesByProfileName", 4, 1, testProfileB).Return([]models.Device{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DevicesByProfileName", 4, 1, testProfileB).Return([]models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
