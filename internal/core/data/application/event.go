@@ -25,6 +25,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const CoreDataEventTopicPrefix = "core"
+
 // ValidateEvent validates if e is a valid event with corresponding device profile name and device name and source name
 // ValidateEvent throws error when profileName or deviceName doesn't match to e
 func (a *CoreDataApp) ValidateEvent(e models.Event, profileName string, deviceName string, sourceName string, _ context.Context, _ *di.Container) errors.EdgeX {
@@ -80,7 +82,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName 
 	correlationId := correlation.FromContext(ctx)
 
 	basePrefix := configuration.MessageBus.GetBaseTopicPrefix()
-	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, serviceName, profileName, deviceName, sourceName)
+	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, CoreDataEventTopicPrefix, serviceName, profileName, deviceName, sourceName)
 	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
