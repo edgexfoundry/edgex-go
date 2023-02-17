@@ -35,7 +35,7 @@ func prepareSecret(request common.SecretRequest) (string, map[string]string) {
 		secretsKV[secret.Key] = secret.Value
 	}
 
-	path := strings.TrimSpace(request.Path)
+	path := strings.TrimSpace(request.SecretName)
 
 	return path, secretsKV
 }

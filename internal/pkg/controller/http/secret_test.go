@@ -42,7 +42,7 @@ func TestAddSecret(t *testing.T) {
 	)
 
 	NoPath := validRequest
-	NoPath.Path = ""
+	NoPath.SecretName = ""
 	validNoRequestId := validRequest
 	validNoRequestId.RequestId = ""
 	badRequestId := validRequest
@@ -59,7 +59,7 @@ func TestAddSecret(t *testing.T) {
 	}
 
 	mockProvider := &mocks.SecretProvider{}
-	mockProvider.On("StoreSecret", validRequest.Path, map[string]string{"password": "password", "username": "username"}).Return(nil)
+	mockProvider.On("StoreSecret", validRequest.SecretName, map[string]string{"password": "password", "username": "username"}).Return(nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.SecretProviderName: func(get di.Get) interface{} {
 			return mockProvider
