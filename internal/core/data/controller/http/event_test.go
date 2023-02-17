@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,11 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
@@ -32,6 +27,12 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 )
 
 var expectedEventId = uuid.New().String()
@@ -243,7 +244,7 @@ func TestAddEvent(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
 			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: testCase.ProfileName, common.DeviceName: testCase.DeviceName, common.SourceName: testCase.Request.Event.SourceName})
 			require.NoError(t, err)
@@ -330,7 +331,7 @@ func TestAddEventSize(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventProfileNameDeviceNameSourceNameRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
 			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: validRequest.Event.ProfileName, common.DeviceName: validRequest.Event.DeviceName, common.SourceName: validRequest.Event.SourceName})
 			require.NoError(t, err)
