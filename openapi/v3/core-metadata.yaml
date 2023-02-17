@@ -143,12 +143,6 @@ components:
             - UP
             - DOWN
             - UNKNOWN
-        lastConnected:
-          type: integer
-          description: Time (milliseconds) that the device last provided any feedback or responded to any request
-        lastReported:
-          type: integer
-          description: Time (milliseconds) that the device reported data to the core microservice
         labels:
           type: array
           description: Other labels applied to the device to help with searching
@@ -500,12 +494,6 @@ components:
         name:
           type: string
           description: Description of the device service
-        lastConnected:
-          type: integer
-          description: time in milliseconds that the device service last provided any feedback or responded to any request
-        lastReported:
-          type: integer
-          description: time in milliseconds that the device service last reported data to the core microservice
         labels:
           type: array
           description: tags or other labels applied to the device service for search or other identification needs
@@ -1294,8 +1282,6 @@ components:
             modified: 1600927134931
             adminState: "UNLOCKED"
             operatingState: "UP"
-            lastConnected: 0
-            lastReported: 0
             labels:
               - device-virtual-example
             location: ""
@@ -1316,8 +1302,6 @@ components:
             modified: 1600927134949
             adminState: "UNLOCKED"
             operatingState: "UP"
-            lastConnected: 0
-            lastReported: 0
             labels:
               - device-virtual-example
             location: ""
@@ -1700,8 +1684,6 @@ paths:
                   modified: 1600928666321
                   adminState: "UNLOCKED"
                   operatingState: "UP"
-                  lastConnected: 0
-                  lastReported: 0
                   labels:
                     - device-virtual-example
                   location: ""
@@ -3184,8 +3166,6 @@ paths:
                     created: 1600927134890
                     modified: 1600927134890
                     description: "Example"
-                    lastConnected: 0
-                    lastReported: 0
                     adminState: "UNLOCKED"
                     labels:
                       - virtual
@@ -3245,8 +3225,6 @@ paths:
                   description: "Example"
                   created: 1600927134890
                   modified: 1600927134890
-                  lastConnected: 0
-                  lastReported: 0
                   adminState: "UNLOCKED"
                   labels:
                     - virtual
