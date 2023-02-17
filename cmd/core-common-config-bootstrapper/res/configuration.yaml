@@ -117,7 +117,6 @@ device-services:
     DevicesDir: "./res/devices"
     # ProvisionWatchersDir is omitted here since most Device Services don't use it.
     # Those that do will have it in their private config
-    UpdateLastConnected: false
     EnableAsyncReadings: true
     AsyncBufferSize: 16
     Labels: []

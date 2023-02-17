@@ -13,8 +13,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
-
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
@@ -80,10 +78,6 @@ func PatchDeviceService(dto dtos.UpdateDeviceService, ctx context.Context, dic *
 		"DeviceService patched on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
-	// Don't invoke callback if only lastConnected field is updated
-	if dto.LastConnected != nil && utils.OnlyOneFieldUpdated("LastConnected", dto) {
-		return nil
-	}
 	DeviceServiceDTO := dtos.FromDeviceServiceModelToDTO(deviceService)
 	go publishSystemEvent(common.DeviceServiceSystemEventType, common.SystemEventActionUpdate, deviceService.Name, DeviceServiceDTO, ctx, dic)
 	return nil

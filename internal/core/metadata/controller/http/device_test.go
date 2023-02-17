@@ -73,8 +73,6 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	testProfileName := TestDeviceProfileName
 	testAdminState := models.Unlocked
 	testOperatingState := models.Up
-	testLastReported := int64(123546789)
-	testLastConnected := int64(123546789)
 	testNotify := false
 	var testAutoEvents = []dtos.AutoEvent{
 		{SourceName: "TestResource", Interval: "300ms", OnChange: true},
@@ -99,8 +97,6 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 			ProfileName:    &testProfileName,
 			AdminState:     &testAdminState,
 			OperatingState: &testOperatingState,
-			LastReported:   &testLastReported,
-			LastConnected:  &testLastConnected,
 			Labels:         []string{"MODBUS", "TEMP"},
 			Location:       "{40lat;45long}",
 			AutoEvents:     testAutoEvents,
@@ -470,8 +466,6 @@ func TestPatchDevice(t *testing.T) {
 		Labels:         testReq.Device.Labels,
 		AdminState:     models.AdminState(*testReq.Device.AdminState),
 		OperatingState: models.OperatingState(*testReq.Device.OperatingState),
-		LastConnected:  *testReq.Device.LastConnected,
-		LastReported:   *testReq.Device.LastReported,
 		Location:       testReq.Device.Location,
 		ServiceName:    *testReq.Device.ServiceName,
 		ProfileName:    *testReq.Device.ProfileName,
