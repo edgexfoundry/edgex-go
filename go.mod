@@ -8,7 +8,7 @@ require (
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.9
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.7
 	github.com/fxamacker/cbor/v2 v2.4.0
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
