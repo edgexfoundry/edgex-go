@@ -58,6 +58,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
+			Others:    testProperties,
 		},
 		Tags: testTags,
 	}, {
@@ -68,6 +69,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
+			Others:    testProperties,
 		},
 		Tags: testTags,
 	}}
