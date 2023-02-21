@@ -5,7 +5,7 @@ require (
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.25
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.20
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.9
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.11
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.7
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/golang-jwt/jwt/v4 v4.4.3
@@ -54,7 +54,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/nats-io/nats.go v1.20.0 // indirect
+	github.com/nats-io/nats.go v1.23.0 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -62,7 +62,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/errs v1.3.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
