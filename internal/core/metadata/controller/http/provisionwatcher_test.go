@@ -58,6 +58,7 @@ func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {
 			ServiceName:         TestDeviceServiceName,
 			AdminState:          models.Unlocked,
 			AutoEvents:          testProvisionWatcherAutoEvents,
+			Properties:          testProperties,
 		},
 	}
 }
@@ -84,6 +85,7 @@ func buildTestUpdateProvisionWatcherRequest() requests.UpdateProvisionWatcherReq
 			ProfileName:         &testProfileName,
 			AdminState:          &testAdminState,
 			AutoEvents:          testProvisionWatcherAutoEvents,
+			Properties:          testProperties,
 		},
 	}
 
@@ -670,6 +672,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 		ServiceName:         *testReq.ProvisionWatcher.ServiceName,
 		ProfileName:         *testReq.ProvisionWatcher.ProfileName,
 		AutoEvents:          dtos.ToAutoEventModels(testReq.ProvisionWatcher.AutoEvents),
+		Properties:          testProperties,
 	}
 
 	valid := testReq

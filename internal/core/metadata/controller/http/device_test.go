@@ -32,6 +32,12 @@ import (
 
 var testDeviceLabels = []string{"MODBUS", "TEMP"}
 
+var testProperties = map[string]any{
+	"TestProperty1": "property1",
+	"TestProperty2": true,
+	"TestProperty3": 123.45,
+}
+
 func buildTestDeviceRequest() requests.AddDeviceRequest {
 	var testAutoEvents = []dtos.AutoEvent{
 		{SourceName: "TestResource", Interval: "300ms", OnChange: true},
@@ -59,6 +65,7 @@ func buildTestDeviceRequest() requests.AddDeviceRequest {
 			Location:       "{40lat;45long}",
 			AutoEvents:     testAutoEvents,
 			Protocols:      testProtocols,
+			Properties:     testProperties,
 		},
 	}
 
@@ -73,7 +80,6 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 	testProfileName := TestDeviceProfileName
 	testAdminState := models.Unlocked
 	testOperatingState := models.Up
-	testNotify := false
 	var testAutoEvents = []dtos.AutoEvent{
 		{SourceName: "TestResource", Interval: "300ms", OnChange: true},
 	}
@@ -101,7 +107,7 @@ func buildTestUpdateDeviceRequest() requests.UpdateDeviceRequest {
 			Location:       "{40lat;45long}",
 			AutoEvents:     testAutoEvents,
 			Protocols:      testProtocols,
-			Notify:         &testNotify,
+			Properties:     testProperties,
 		},
 	}
 
@@ -471,7 +477,7 @@ func TestPatchDevice(t *testing.T) {
 		ProfileName:    *testReq.Device.ProfileName,
 		AutoEvents:     dtos.ToAutoEventModels(testReq.Device.AutoEvents),
 		Protocols:      dtos.ToProtocolModels(testReq.Device.Protocols),
-		Notify:         *testReq.Device.Notify,
+		Properties:     testProperties,
 	}
 
 	valid := testReq
