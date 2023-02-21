@@ -1187,20 +1187,20 @@ components:
                 Port: "502"
                 UnitID: "1"
             tags:
-              - tag1:
-                  field1: "field1Value"
-                  field2: "field2Value"
-              - tag2:
-                  field3: "field3Value"
-                  field4: "field4Value"
-                  field5: "field5Value"
+              tag1:
+                field1: "field1Value"
+                field2: "field2Value"
+              tag2:
+                field3: "field3Value"
+                field4: "field4Value"
+                field5: "field5Value"
             properties:
-              - DeviceInstance:
-                  instanceName: "myInstance"
-                  instanceId: "instance1"
-              - Firmware:
-                  firmwareId: "firmwareABC"
-                  firmwareVersion: "v1.1.2"
+              DeviceInstance:
+                instanceName: "myInstance"
+                instanceId: "instance1"
+              Firmware:
+                firmwareId: "firmwareABC"
+                firmwareVersion: "v1.1.2"
     UpdateDeviceRequest:
       value:
         - apiVersion: v3
@@ -1302,9 +1302,9 @@ components:
             serviceName: "device-simple"
             adminState: "UNLOCKED"
             properties:
-              - DeviceNameTemplate:
-                  valueReplace: true
-                  template: "device-name-{{Address}}-{{Port}"
+              DeviceNameTemplate:
+                valueReplace: true
+                template: "device-name-{{Address}}-{{Port}"
     GetAllDevicesResponse:
       value:
         apiVersion: "v3"
@@ -1333,20 +1333,20 @@ components:
                 Address: "device-virtual-bool-01"
                 Port: "300"
             tags:
-              - tag1:
-                  field1: "field1Value"
-                  field2: "field2Value"
-              - tag2:
-                  field3: "field3Value"
-                  field4: "field4Value"
-                  field5: "field5Value"
+              tag1:
+                field1: "field1Value"
+                field2: "field2Value"
+              tag2:
+                field3: "field3Value"
+                field4: "field4Value"
+                field5: "field5Value"
             properties:
-              - DeviceInstance:
-                  instanceName: "myInstance"
-                  instanceId: "instance1"
-              - Firmware:
-                  firmwareId: "firmwareABC"
-                  firmwareVersion: "v1.1.2"
+              DeviceInstance:
+                instanceName: "myInstance"
+                instanceId: "instance1"
+              Firmware:
+                firmwareId: "firmwareABC"
+                firmwareVersion: "v1.1.2"
           - id: "03bd5ce0-b967-4165-a335-775fea604142"
             name: "Random-UnsignedInteger-Device"
             description: "Example of Device Virtual"
@@ -1371,20 +1371,20 @@ components:
                 Address: "device-virtual-uint-01"
                 Port: "300"
             tags:
-              - tag1:
-                  field1: "field1Value"
-                  field2: "field2Value"
-              - tag2:
-                  field3: "field3Value"
-                  field4: "field4Value"
-                  field5: "field5Value"
+              tag1:
+                field1: "field1Value"
+                field2: "field2Value"
+              tag2:
+                field3: "field3Value"
+                field4: "field4Value"
+                field5: "field5Value"
             properties:
-              - DeviceInstance:
-                  instanceName: "myInstance"
-                  instanceId: "instance2"
-              - Firmware:
-                  firmwareId: "firmwareXYZ"
-                  firmwareVersion: "v3.1.0"
+              DeviceInstance:
+                instanceName: "myInstance"
+                instanceId: "instance2"
+              Firmware:
+                firmwareId: "firmwareXYZ"
+                firmwareVersion: "v3.1.0"
     GetAllDeviceProfilesResponse:
       value:
         apiVersion: "v3"
@@ -1465,9 +1465,9 @@ components:
                 interval: "10s"
                 onChange: false
             properties:
-              - DeviceNameTemplate:
-                  valueReplace: true
-                  template: "device-name-{{Address}}-{{Port}"
+              DeviceNameTemplate:
+                valueReplace: true
+                template: "device-name-{{Address}}-{{Port}"
           - id: "90c971f0-cb84-4bda-a9f0-d9494196b54d"
             name: "simple-watcher"
             created: 0
@@ -3605,9 +3605,9 @@ paths:
                       interval: "10s"
                       onChange: false
                   properties:
-                    - DeviceNameTemplate:
-                        valueReplace: true
-                        template: "device-name-{{Address}}-{{Port}"
+                    DeviceNameTemplate:
+                      valueReplace: true
+                      template: "device-name-{{Address}}-{{Port}"
         '400':
           description: "Request is in an invalid state"
           headers:
