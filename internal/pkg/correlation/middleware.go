@@ -2,7 +2,9 @@ package correlation
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
@@ -44,6 +46,25 @@ func LoggingMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler 
 			} else {
 				next.ServeHTTP(w, r)
 			}
+		})
+	}
+}
+
+// UrlDecodeMiddleware decode the path variables
+// After invoking the router.UseEncodedPath() func, the path variables needs to decode before passing to the controller
+func UrlDecodeMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			vars := mux.Vars(r)
+			for k, v := range vars {
+				unescape, err := url.QueryUnescape(v)
+				if err != nil {
+					lc.Debugf("failed to decode the %s from the value %s", k, v)
+					return
+				}
+				vars[k] = unescape
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

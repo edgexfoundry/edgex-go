@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2022 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -20,6 +20,8 @@ import (
 )
 
 func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
+	// r.UseEncodedPath() tells the router to match the encoded original path to the routes
+	r.UseEncodedPath()
 	// Common
 	cc := commonController.NewCommonController(dic, serviceName)
 	r.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet)
@@ -88,4 +90,5 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 
 	r.Use(correlation.ManageHeader)
 	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
+	r.Use(correlation.UrlDecodeMiddleware(container.LoggingClientFrom(dic.Get)))
 }

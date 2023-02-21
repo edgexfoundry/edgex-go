@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2022 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
 	cbor "github.com/fxamacker/cbor/v2"
@@ -119,7 +120,10 @@ func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
 	len := len(fields)
 	profileName := fields[len-3]
 	deviceName := fields[len-2]
-	sourceName := fields[len-1]
+	sourceName, err := url.QueryUnescape(fields[len-1])
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 
 	// Check whether the event fields match the message topic
 	if e.ProfileName != profileName {

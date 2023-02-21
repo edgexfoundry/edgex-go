@@ -9,6 +9,7 @@ package messaging
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -98,7 +99,17 @@ func processDeviceCommandRequest(
 
 	// expected internal command request/response topic scheme: #/<device>/<command-name>/<method>
 	deviceName := topicLevels[length-3]
-	commandName := topicLevels[length-2]
+	commandName, err := url.QueryUnescape(topicLevels[length-2])
+	if err != nil {
+		err = fmt.Errorf("failed to unescape command name '%s': %s", commandName, err.Error())
+		lc.Error(err.Error())
+		responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
+		err = messageBus.Publish(responseEnvelope, internalResponseTopic)
+		if err != nil {
+			lc.Errorf("Could not publish to topic '%s': %s", internalResponseTopic, err.Error())
+		}
+		return
+	}
 	method := topicLevels[length-1]
 	if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
 		err = fmt.Errorf("unknown request method: %s, only 'get' or 'set' is allowed", method)

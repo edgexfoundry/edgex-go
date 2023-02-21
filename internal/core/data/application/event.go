@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	msgTypes "github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
@@ -82,7 +83,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName 
 	correlationId := correlation.FromContext(ctx)
 
 	basePrefix := configuration.MessageBus.GetBaseTopicPrefix()
-	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, CoreDataEventTopicPrefix, serviceName, profileName, deviceName, sourceName)
+	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, CoreDataEventTopicPrefix, serviceName, profileName, deviceName, url.QueryEscape(sourceName))
 	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
