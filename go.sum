@@ -26,8 +26,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.4.2 h1:66wOzfUHSSI1zamx7jR6yMEI5EuHnT1G6rNA5PM12m4=
 github.com/eclipse/paho.mqtt.golang v1.4.2/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2b7upDZMK9HRbFvCA=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.29 h1:UWK79Xypm0ixd277Ta3PTweDG0Lm0dF8I7hs2yA4jnc=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.29/go.mod h1:wl51IXgqjQzWZWvCgKjLab78W3Gn1QrIZgH6CpEEe/E=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3 h1:0Ew4PzLSFJ+sb7AYtvb9m1mRN45Sh0ELU1HdMCel5t8=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.3/go.mod h1:ESOWI4GokQfQ3Bn2hGsdfOVx5idj7QEdCPT/SAQDd9M=
 github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.22 h1:8esqptBdtzS1iRNH0g1m4HRJF9tXebdd/q7wFo1W0rc=
@@ -36,8 +34,6 @@ github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.11 h1:f/ECYLJqXXuFrRcGzU6
 github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.11/go.mod h1:FUzX+H9+aokoAHVnIkr997dKnRGpsGO98/thvcx1WR4=
 github.com/edgexfoundry/go-mod-registry/v3 v3.0.0-dev.3 h1:QgZF9f70Cwpvkjw3tP1aiVGHc+yNFJNzW6hO8pDs3fg=
 github.com/edgexfoundry/go-mod-registry/v3 v3.0.0-dev.3/go.mod h1:2w8v0sv+i21nY+DY6JV4PFxsNTuxpGAjlNFlFMTfZkk=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.7 h1:9Mn389IHlgoPgGUpwnLzoe/shylkQI+nXI3E/AfnYDA=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.7/go.mod h1:Og18u4NhNuqnTVnoXo0bXKYlR6iU6o8GquT/ziynCis=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
@@ -250,6 +246,10 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
+github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230222215007-67c83ed98093 h1:c7XU2Y1Mnbyn7sP2q2EuD2aJLne8sXX4KLuFSlhBWr8=
+github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230222215007-67c83ed98093/go.mod h1:cAJJZHtb9VzUXs44nd8VuuaHzSUQgo1JNF1YjI2xXTA=
+github.com/vli11/go-mod-secrets/v3 v3.0.0-20230222214258-c0ec9a3dbd4c h1:fUaczb7Y9BAirYKThsIwH1APl+6w0/PNf+Cgh9MWwaQ=
+github.com/vli11/go-mod-secrets/v3 v3.0.0-20230222214258-c0ec9a3dbd4c/go.mod h1:tjny0Y2/sLTB9qx3pjvT9PfGHpEOdfej7pjV3s1zppk=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/zeebo/errs v1.3.0 h1:hmiaKqgYZzcVgRL1Vkc1Mn2914BbzB0IBxs+ebeutGs=
