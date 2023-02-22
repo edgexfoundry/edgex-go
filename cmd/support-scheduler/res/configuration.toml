@@ -1,8 +1,3 @@
-# This is required for backwards compatibility so new version of sevice using older 2.x configuration will not fail bootstrapping
-# This will default to false if not provided in old config. Messagebus is now needed by Device System Events and Service Metrics
-# TODO: Remove this setting EdgeX 3.0
-RequireMessageBus = true
-
 ScheduleIntervalTime = 500
 
 [Writable]
@@ -33,8 +28,6 @@ Name = "scheduler"
     AdminState = "UNLOCKED"
 
 [MessageBus]
-  [MessageBus.Topics]
-  # No topic yet. Metrics topic is handled in [Writable.Telemetry] above
   [MessageBus.Optional]
   # Default MQTT Specific options that need to be here to enable evnironment variable overrides of them
   ClientId ="support-scheduler"
