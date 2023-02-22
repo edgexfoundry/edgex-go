@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2019-2023 Intel Corporation
  * Copyright (C) 2021 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -20,7 +20,9 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	clients "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/http"
@@ -48,7 +50,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	// DeviceServiceCommandClient is not part of the common clients handled by the NewClientsBootstrap handler
 	dic.Update(di.ServiceConstructorMap{
 		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
-			return clients.NewDeviceServiceCommandClient()
+			jwtSecretProvider := secret.NewJWTSecretProvider(container.SecretProviderFrom(get))
+			return clients.NewDeviceServiceCommandClient(jwtSecretProvider)
 		},
 	})
 
