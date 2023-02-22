@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	messagingMocks "github.com/edgexfoundry/go-mod-messaging/v3/messaging/mocks"
@@ -171,23 +172,26 @@ func TestAddDevice(t *testing.T) {
 	controller := NewDeviceController(dic)
 	assert.NotNil(t, controller)
 	tests := []struct {
-		name               string
-		request            []requests.AddDeviceRequest
-		expectedStatusCode int
+		name                 string
+		request              []requests.AddDeviceRequest
+		expectedStatusCode   int
+		expectedResponseCode int
+		expectedValidation   bool
+		expectedSystemEvent  bool
 	}{
-		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusCreated},
-		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusNotFound},
-		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest},
-		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest},
-		{"Invalid - no operatingState", []requests.AddDeviceRequest{noOperatingState}, http.StatusBadRequest},
-		{"Invalid - invalid adminState", []requests.AddDeviceRequest{invalidAdminState}, http.StatusBadRequest},
-		{"Invalid - invalid operatingState", []requests.AddDeviceRequest{invalidOperatingState}, http.StatusBadRequest},
-		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest},
-		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusBadRequest},
-		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest},
-		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest},
-		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusInternalServerError},
-		{"Invalid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusServiceUnavailable},
+		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true},
+		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
+		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no operatingState", []requests.AddDeviceRequest{noOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - invalid adminState", []requests.AddDeviceRequest{invalidAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - invalid operatingState", []requests.AddDeviceRequest{invalidOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
+		{"Invalid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -196,22 +200,31 @@ func TestAddDevice(t *testing.T) {
 
 			var responseEnvelope types.MessageEnvelope
 			mockMessaging := &messagingMocks.MessageClient{}
-			mockMessaging.On("Publish", mock.Anything, mock.Anything).Return(nil)
-			if testCase.expectedStatusCode == http.StatusInternalServerError {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
-					require.True(t, ok)
-					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
-				}).Return(&responseEnvelope, nil)
-			} else if testCase.expectedStatusCode == http.StatusServiceUnavailable {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
-			} else {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
-					require.True(t, ok)
-					responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
-					require.NoError(t, err)
-				}).Return(&responseEnvelope, nil)
+			if testCase.expectedValidation {
+				if testCase.expectedResponseCode == http.StatusInternalServerError {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+						require.True(t, ok)
+						responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
+					}).Return(&responseEnvelope, nil)
+				} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
+				} else {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+						require.True(t, ok)
+						responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
+						require.NoError(t, err)
+					}).Return(&responseEnvelope, nil)
+				}
+			}
+
+			var wg sync.WaitGroup
+			if testCase.expectedSystemEvent {
+				wg.Add(1)
+				mockMessaging.On("Publish", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					wg.Done()
+				}).Return(nil)
 			}
 
 			dic.Update(di.ServiceConstructorMap{
@@ -228,17 +241,7 @@ func TestAddDevice(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			handler := http.HandlerFunc(controller.AddDevice)
 			handler.ServeHTTP(recorder, req)
-			if testCase.expectedStatusCode == http.StatusBadRequest {
-				var res commonDTO.BaseResponse
-				err = json.Unmarshal(recorder.Body.Bytes(), &res)
-				require.NoError(t, err)
-
-				// Assert
-				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
-				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "BaseResponse status code not as expected")
-				assert.NotEmpty(t, res.Message, "Message is empty")
-			} else {
+			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
 				require.NoError(t, err)
@@ -249,8 +252,26 @@ func TestAddDevice(t *testing.T) {
 				if res[0].RequestId != "" {
 					assert.Equal(t, expectedRequestId, res[0].RequestId, "RequestID not as expected")
 				}
-				assert.Equal(t, testCase.expectedStatusCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res[0].StatusCode, "BaseResponse status code not as expected")
+				if testCase.expectedResponseCode == http.StatusCreated {
+					assert.Empty(t, res[0].Message, "Message should be empty when it is successful")
+				} else {
+					assert.NotEmpty(t, res[0].Message, "Response message doesn't contain the error message")
+				}
+			} else {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+
+				// Assert
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedResponseCode, res.StatusCode, "BaseResponse status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
+
+			wg.Wait()
+			mockMessaging.AssertExpectations(t)
 		})
 	}
 }
@@ -544,20 +565,22 @@ func TestPatchDevice(t *testing.T) {
 		request              []requests.UpdateDeviceRequest
 		expectedStatusCode   int
 		expectedResponseCode int
+		expectedValidation   bool
+		expectedSystemEvent  bool
 	}{
-		{"Valid", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusOK},
-		{"Valid - no requestId", []requests.UpdateDeviceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK},
-		{"Valid - no id", []requests.UpdateDeviceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK},
-		{"Valid - no name", []requests.UpdateDeviceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK},
-		{"Invalid - invalid id", []requests.UpdateDeviceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - empty name", []requests.UpdateDeviceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound},
-		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound},
-		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest},
-		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound},
-		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError},
-		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{unavailableService}, http.StatusMultiStatus, http.StatusServiceUnavailable},
+		{"Valid", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Valid - no requestId", []requests.UpdateDeviceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Valid - no id", []requests.UpdateDeviceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Valid - no name", []requests.UpdateDeviceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Invalid - invalid id", []requests.UpdateDeviceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - empty name", []requests.UpdateDeviceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no id and name", []requests.UpdateDeviceRequest{invalidNoIdAndName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - not found id", []requests.UpdateDeviceRequest{invalidNotFoundId}, http.StatusMultiStatus, http.StatusNotFound, false, false},
+		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound, false, false},
+		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
+		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
+		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{unavailableService}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -566,22 +589,31 @@ func TestPatchDevice(t *testing.T) {
 
 			var responseEnvelope types.MessageEnvelope
 			mockMessaging := &messagingMocks.MessageClient{}
-			mockMessaging.On("Publish", mock.Anything, mock.Anything).Return(nil)
-			if testCase.expectedResponseCode == http.StatusInternalServerError {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
-					require.True(t, ok)
-					responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
-				}).Return(&responseEnvelope, nil)
-			} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
-			} else {
-				mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-					requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
-					require.True(t, ok)
-					responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
-					require.NoError(t, err)
-				}).Return(&responseEnvelope, nil)
+			if testCase.expectedValidation {
+				if testCase.expectedResponseCode == http.StatusInternalServerError {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+						require.True(t, ok)
+						responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
+					}).Return(&responseEnvelope, nil)
+				} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
+				} else {
+					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
+						require.True(t, ok)
+						responseEnvelope, err = types.NewMessageEnvelopeForResponse(nil, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
+						require.NoError(t, err)
+					}).Return(&responseEnvelope, nil)
+				}
+			}
+
+			var wg sync.WaitGroup
+			if testCase.expectedSystemEvent {
+				wg.Add(1)
+				mockMessaging.On("Publish", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+					wg.Done()
+				}).Return(nil)
 			}
 
 			dic.Update(di.ServiceConstructorMap{
@@ -628,6 +660,8 @@ func TestPatchDevice(t *testing.T) {
 				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
 			}
 
+			wg.Wait()
+			mockMessaging.AssertExpectations(t)
 		})
 	}
 
