@@ -2,8 +2,8 @@
   LogLevel = "INFO"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.mqtt]
-    path = "mqtt"
-      [Writable.InsecureSecrets.mqtt.Secrets]
+    SecretName = "mqtt"
+      [Writable.InsecureSecrets.mqtt.SecretData]
       username = ""
       password = ""
       cacert = ""

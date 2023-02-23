@@ -4,8 +4,8 @@ ResendLimit = 2
 ResendInterval = "5s"
   [Writable.InsecureSecrets]
     [Writable.InsecureSecrets.SMTP]
-    path = "smtp"
-      [Writable.InsecureSecrets.SMTP.Secrets]
+    SecretName = "smtp"
+      [Writable.InsecureSecrets.SMTP.SecretData]
       username = "username@mail.example.com"
       password = ""
 

@@ -6,6 +6,10 @@ all-services:
         Secrets:
           username: ""
           password: ""
+        SecretName: "redisdb"
+        SecretData:
+          username: ""
+          password: ""
     
     Telemetry:
       Interval: "30s"
