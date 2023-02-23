@@ -246,8 +246,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
-github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230222215007-67c83ed98093 h1:c7XU2Y1Mnbyn7sP2q2EuD2aJLne8sXX4KLuFSlhBWr8=
-github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230222215007-67c83ed98093/go.mod h1:cAJJZHtb9VzUXs44nd8VuuaHzSUQgo1JNF1YjI2xXTA=
+github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230223001654-2d2e6f29cc26 h1:iziCXokHySe3eHxj7E6BOGzHX8PVw7VwrwdQMdsyT0Y=
+github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230223001654-2d2e6f29cc26/go.mod h1:cAJJZHtb9VzUXs44nd8VuuaHzSUQgo1JNF1YjI2xXTA=
 github.com/vli11/go-mod-secrets/v3 v3.0.0-20230222214258-c0ec9a3dbd4c h1:fUaczb7Y9BAirYKThsIwH1APl+6w0/PNf+Cgh9MWwaQ=
 github.com/vli11/go-mod-secrets/v3 v3.0.0-20230222214258-c0ec9a3dbd4c/go.mod h1:tjny0Y2/sLTB9qx3pjvT9PfGHpEOdfej7pjV3s1zppk=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=

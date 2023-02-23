@@ -24,7 +24,7 @@ require (
 
 replace github.com/edgexfoundry/go-mod-secrets/v3 => github.com/vli11/go-mod-secrets/v3 v3.0.0-20230222214258-c0ec9a3dbd4c
 
-replace github.com/edgexfoundry/go-mod-bootstrap/v3 => github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230222215007-67c83ed98093
+replace github.com/edgexfoundry/go-mod-bootstrap/v3 => github.com/vli11/go-mod-bootstrap/v3 v3.0.0-20230223001654-2d2e6f29cc26
 
 require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
