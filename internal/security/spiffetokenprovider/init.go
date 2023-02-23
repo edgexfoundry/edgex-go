@@ -373,7 +373,7 @@ func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClien
 		Type:           ssConfig.Type,
 		Host:           ssConfig.Host,
 		Port:           ssConfig.Port,
-		BasePath:       secretBasePath, // make sure path is like /v1/edgex/secrets/ in global area
+		BasePath:       secretBasePath, // make sure path is like /v1/edgex/secrets in global area
 		SecretsFile:    ssConfig.SecretsFile,
 		Protocol:       ssConfig.Protocol,
 		Namespace:      ssConfig.Namespace,
@@ -392,12 +392,12 @@ func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClien
 	}
 
 	// copy known secrets redisdb from redis-bootstrapper to the requested service with serviceKey
-	secrets, err := secretClient.GetSecret(fmt.Sprintf("/%s/%s", edgexRedisBootstrapperServiceKey, redisSecretName))
+	secrets, err := secretClient.GetSecret(fmt.Sprintf("%s/%s", edgexRedisBootstrapperServiceKey, redisSecretName))
 	if err != nil {
 		return fmt.Errorf("found error on getting secrets: %v", err)
 	}
 
-	err = secretClient.StoreSecret(fmt.Sprintf("/%s/%s", serviceKey, redisSecretName), secrets)
+	err = secretClient.StoreSecret(fmt.Sprintf("%s/%s", serviceKey, redisSecretName), secrets)
 	if err != nil {
 		return fmt.Errorf("found error on storing secrets: %v", err)
 	}
