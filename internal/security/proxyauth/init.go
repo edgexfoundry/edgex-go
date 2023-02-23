@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
- * Copyright (c) 2019 Intel Corporation
+ * Copyright (c) 2019-2023 Intel Corporation
  * Copyright (C) 2021 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -43,10 +43,13 @@ func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
+// Authentication is always on for this service,
+// as it is called by NGINX to authenticate requests
+// and must always authenticate even if the rest of EdgeX does not
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderFrom(dic.Get)
-	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc) // Auth is always on for this service!
+	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc)
 
 	// Run authentication hook for a nil route
 	b.router.HandleFunc("/auth", authenticationHook(emptyHandler))
