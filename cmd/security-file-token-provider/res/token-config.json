@@ -72,7 +72,8 @@
         "auth/userpass/users/*": {
           "capabilities": [
             "create",
-            "update"
+            "update",
+            "delete"
           ]
         },
         "sys/auth": {

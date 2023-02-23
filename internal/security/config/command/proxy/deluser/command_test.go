@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 
@@ -30,6 +30,7 @@ func TestDelUserBadArg(t *testing.T) {
 	badArgTestcases := [][]string{
 		{},          // missing token type
 		{"-badarg"}, // invalid arg
+		{"-user"},   // missing arg
 	}
 
 	for _, args := range badArgTestcases {
@@ -45,24 +46,42 @@ func TestDelUserBadArg(t *testing.T) {
 func delUserWithArgs(t *testing.T, args []string) {
 	// Arrange
 	lc := logger.MockLogger{}
-	config := &config.ConfigurationStruct{}
 
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.EscapedPath() {
-		case "/admin/consumers/someuser":
-			require.Equal(t, "DELETE", r.Method)
-			w.WriteHeader(http.StatusNoContent)
+		case "/v1/identity/entity/name/someuser":
+			switch r.Method {
+			case "GET":
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"data":{"id":"someguid"}}`))
+			case "DELETE":
+				w.WriteHeader(http.StatusNoContent)
+			default:
+				t.Fatalf("Unexpected call to %s %s", r.Method, r.URL.EscapedPath())
+			}
+		case "/v1/auth/userpass/users/someuser":
+			switch r.Method {
+			case "DELETE":
+				w.WriteHeader(http.StatusNoContent)
+			default:
+				t.Fatalf("Unexpected call to %s %s", r.Method, r.URL.EscapedPath())
+			}
 		default:
 			t.Fatalf("Unexpected call to URL %s", r.URL.EscapedPath())
 		}
 	}))
 	defer ts.Close()
-
 	tsURL, err := url.Parse(ts.URL)
 	require.NoError(t, err)
 
-	config.KongURL.Server = tsURL.Hostname()
-	config.KongURL.ApplicationPortSSL, _ = strconv.Atoi(tsURL.Port())
+	config := &config.ConfigurationStruct{}
+	config.SecretStore.Host = tsURL.Hostname()
+	p, _ := strconv.ParseInt(tsURL.Port(), 10, 32)
+	config.SecretStore.Port = int(p)
+	config.SecretStore.Protocol = "https"
+	config.SecretStore.Type = "vault"
+	config.SecretStore.TokenFolderPath = "testdata/"
+	config.SecretStore.TokenFile = "token.json"
 
 	// Act
 	command, err := NewCommand(lc, config, args)
@@ -79,6 +98,5 @@ func delUserWithArgs(t *testing.T, args []string) {
 func TestDelUser(t *testing.T) {
 	delUserWithArgs(t, []string{
 		"--user", "someuser",
-		"--jwt", "someRandomJWT",
 	})
 }

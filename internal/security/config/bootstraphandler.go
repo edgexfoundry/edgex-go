@@ -16,7 +16,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command/help"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
@@ -57,7 +57,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	switch commandName {
 	case help.CommandName:
-		command, err = help.NewCommand(lc, configuration, subcommandArgs)
+		command, err = help.NewCommand(lc, subcommandArgs)
 	case proxy.CommandName:
 		command, err = proxy.NewCommand(lc, configuration, subcommandArgs)
 	default:

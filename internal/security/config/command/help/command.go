@@ -13,7 +13,6 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
-	"github.com/edgexfoundry/edgex-go/internal/security/proxy/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
@@ -24,13 +23,11 @@ const (
 
 type cmd struct {
 	loggingClient logger.LoggingClient
-	configuration *config.ConfigurationStruct
 	flagSet       *flag.FlagSet
 }
 
 func NewCommand(
 	lc logger.LoggingClient,
-	configuration *config.ConfigurationStruct,
 	args []string) (interfaces.Command, error) {
 
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
@@ -41,7 +38,6 @@ func NewCommand(
 
 	return &cmd{
 		loggingClient: lc,
-		configuration: configuration,
 		flagSet:       flagSet,
 	}, nil
 }
