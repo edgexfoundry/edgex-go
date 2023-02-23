@@ -21,6 +21,7 @@ DOCKERS= \
 	docker_core_common_config \
 	docker_support_notifications \
 	docker_support_scheduler \
+	docker_security_proxy_auth \
 	docker_security_proxy_setup \
 	docker_security_secretstore_setup \
 	docker_security_bootstrapper \
@@ -38,6 +39,7 @@ MICROSERVICES= \
 	cmd/core-common-config-bootstrapper/core-common-config-bootstrapper \
 	cmd/support-notifications/support-notifications \
 	cmd/support-scheduler/support-scheduler \
+	cmd/security-proxy-auth/security-proxy-auth \
 	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
@@ -115,6 +117,10 @@ cmd/support-scheduler/support-scheduler:
 proxy: cmd/security-proxy-setup/security-proxy-setup
 cmd/security-proxy-setup/security-proxy-setup:
 	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-proxy-setup/security-proxy-setup ./cmd/security-proxy-setup
+
+authproxy: cmd/security-proxy-auth/security-proxy-auth
+cmd/security-proxy-auth/security-proxy-auth:
+	$(GO) build -tags "$(NO_MESSAGEBUS_GO_BUILD_TAG) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o ./cmd/security-proxy-auth/security-proxy-auth ./cmd/security-proxy-auth
 
 secretstore: cmd/security-secretstore-setup/security-secretstore-setup
 cmd/security-secretstore-setup/security-secretstore-setup:
@@ -258,7 +264,19 @@ docker_support_scheduler: docker_base
 		-t edgexfoundry/support-scheduler:$(DOCKER_TAG) \
 		.
 
-dproxy: docker_security_proxy_setup
+dproxya: docker_security_proxy_auth
+docker_security_proxy_auth: docker_base
+	docker build \
+		--build-arg http_proxy \
+		--build-arg https_proxy \
+		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		-f cmd/security-proxy-auth/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/security-proxy-auth:$(GIT_SHA) \
+		-t edgexfoundry/security-proxy-auth:$(DOCKER_TAG) \
+		.
+
+dproxys: docker_security_proxy_setup
 docker_security_proxy_setup: docker_base
 	docker build \
 		--build-arg http_proxy \

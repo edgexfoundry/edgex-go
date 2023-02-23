@@ -25,6 +25,7 @@ cmd/support-notifications/support-notifications
 cmd/support-scheduler/support-scheduler
 cmd/secrets-config/secrets-config
 cmd/security-bootstrapper/security-bootstrapper
+cmd/security-proxy-auth/security-proxy-auth
 cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 internal/security/bootstrapper/command/setupacl/test1/bootstrap_token.json
