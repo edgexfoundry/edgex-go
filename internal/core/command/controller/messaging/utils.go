@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -47,7 +48,7 @@ func validateRequestTopic(prefix string, deviceName string, commandName string, 
 	}
 
 	// expected internal command request topic scheme: <prefix>/<device-service>/<device>/<command-name>/<method>
-	return deviceServiceResponse.Service.Name, common.BuildTopic(prefix, deviceServiceResponse.Service.Name, deviceName, commandName, method), nil
+	return deviceServiceResponse.Service.Name, common.BuildTopic(prefix, deviceServiceResponse.Service.Name, deviceName, url.QueryEscape(commandName), method), nil
 
 }
 

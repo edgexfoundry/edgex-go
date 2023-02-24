@@ -9,6 +9,7 @@ package messaging
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -110,7 +111,12 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		// expected external command request/response topic scheme: #/<device-name>/<command-name>/<method>
 		deviceName := topicLevels[length-3]
-		commandName := topicLevels[length-2]
+		commandName, err := url.QueryUnescape(topicLevels[length-2])
+		if err != nil {
+			lc.Errorf("Failed to unescape command name '%s': %s", commandName, err.Error())
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
 		method := topicLevels[length-1]
 		if !strings.EqualFold(method, "get") && !strings.EqualFold(method, "set") {
 			lc.Errorf("Unknown request method: %s, only 'get' or 'set' is allowed", method)
@@ -118,7 +124,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		externalResponseTopic := strings.Join([]string{externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, commandName, method}, "/")
+		externalResponseTopic := common.BuildTopic(externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, url.QueryEscape(commandName), method)
 
 		internalBaseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
 		topicPrefix := common.BuildTopic(internalBaseTopic, common.CoreCommandDeviceRequestPublishTopic)
