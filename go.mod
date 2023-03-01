@@ -18,6 +18,7 @@ require (
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	gopkg.in/eapache/queue.v1 v1.1.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	honnef.co/go/netdb v0.0.0-20210921115105-e902e863d85d // indirect
 )
 
 go 1.16
