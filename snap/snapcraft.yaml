@@ -284,7 +284,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -302,7 +302,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -319,7 +319,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -336,7 +336,7 @@ apps:
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
       - security-proxy-setup
-    command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider consul.http://localhost:8500 --registry
+    command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
@@ -358,7 +358,7 @@ apps:
   core-common-config-bootstrapper:
     after:
       - security-consul-bootstrapper
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider consul.http://localhost:8500 --registry 
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry 
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
     daemon: oneshot
