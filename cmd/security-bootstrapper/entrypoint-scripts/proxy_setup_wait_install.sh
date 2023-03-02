@@ -18,13 +18,12 @@
 #  ----------------------------------------------------------------------------------
 
 # This is customized entrypoint script for proxy-setup.
-# In particular, it waits for ready-to-run port and kong to be ready
 
 set -e
 
 # env settings are populated from env files of docker-compose
 
-echo "Script for waiting security bootstrapping on proxy-setup"
+echo "Awaiting ReadyToRun signal prior to starting running proxy-setup tasks"
 
 # gating on the ready-to-run port
 echo "$(date) Executing waitFor for ${PROXY_SETUP_HOST} with waiting on \

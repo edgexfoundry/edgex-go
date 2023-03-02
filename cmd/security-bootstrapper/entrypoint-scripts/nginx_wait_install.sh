@@ -17,14 +17,11 @@
 #  SPDX-License-Identifier: Apache-2.0
 #  ----------------------------------------------------------------------------------
 
-# This is customized entrypoint script for Kong.
-# In particular, it waits for the security-bootstrapper's ReadyToRunPort and Postgres db ready to roll
-
 set -e
 
 # env settings are populated from env files of docker-compose
 
-echo "Script for waiting security bootstrapping on Kong"
+echo "Awaiting ReadyToRun signal prior to starting NGINX"
 
 # gating on the ready-to-run port
 echo "$(date) Executing waitFor with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_HOST}:${STAGEGATE_READY_TORUNPORT}"
@@ -35,7 +32,10 @@ echo "$(date) Executing waitFor with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_H
 
 echo "$(date) Generating default config ..."
 
-test -f /etc/nginx/templates/edgex-custom-rewrites.inc.template || cat <<'EOH' > /etc/nginx/templates/edgex-custom-rewrites.inc.template
+if test -f /etc/nginx/templates/edgex-custom-rewrites.inc.template; then
+  echo "Using existing custom-rewrites."
+else
+  cat <<'EOH' > /etc/nginx/templates/edgex-custom-rewrites.inc.template
 # Add custom location directives to this file, for example:
 
 # set $upstream_device_virtual edgex-device-virtual;
@@ -49,6 +49,7 @@ test -f /etc/nginx/templates/edgex-custom-rewrites.inc.template || cat <<'EOH' >
 #   auth_request_set   $auth_status $upstream_status;
 # }
 EOH
+fi
 
 cat <<'EOH' > /etc/nginx/templates/edgex-default.conf.template
 #

@@ -34,7 +34,7 @@ FROM alpine:3.16
 RUN apk add --update --no-cache dumb-init openssl
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2019: Dell Technologies, Inc.'
+      copyright='Copyright (c) 2019: Dell Technologies, Inc.; Copyright (C) 2023 Intel Corporation'
 
 WORKDIR /edgex
 

@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2020-2023 Intel Corporation
 //
-// SPDX-License-Identifier: Apache-2.0'
+// SPDX-License-Identifier: Apache-2.0
 //
 
 package shared
@@ -45,7 +45,7 @@ type ProxyUserCommon struct {
 	secretStoreClient secrets.SecretStoreClient
 }
 
-// NewVaultBase sets up everything needed to instantiate a SecretStoreClient
+// NewProxyUserCommon has common logic for adding and deleting users from Vault
 func NewProxyUserCommon(
 	lc logger.LoggingClient,
 	configuration *secretStoreConfig.ConfigurationStruct) (ProxyUserCommon, error) {
@@ -92,7 +92,7 @@ func NewProxyUserCommon(
 	return vb, err
 }
 
-// loadServiceToken loads a vault token from SecretStore.TokenFile (secrets-token.json)
+// LoadServiceToken loads a vault token from SecretStore.TokenFile (secrets-token.json)
 func (vb *ProxyUserCommon) LoadServiceToken() (string, func(), error) {
 
 	// This is not a root token; don't need to revoke when we're done with it
@@ -112,7 +112,7 @@ func (vb *ProxyUserCommon) LoadServiceToken() (string, func(), error) {
 
 }
 
-// loadRootToken regenerates a temporary root token from Vault keyshares
+// LoadRootToken regenerates a temporary root token from Vault keyshares
 func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 	pipedHexReader := pipedhexreader.NewPipedHexReader()
 	keyDeriver := kdf.NewKdf(vb.fileOpener, vb.configuration.SecretStore.TokenFolderPath, sha256.New)

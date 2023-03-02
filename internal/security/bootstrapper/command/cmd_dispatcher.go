@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/genpassword"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/gethttpstatus"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/listen"
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/ping"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/waitfor"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
@@ -45,8 +44,8 @@ func NewCommand(
 	var err error
 
 	if len(args) < 1 {
-		return nil, fmt.Errorf("subcommand required (%s, %s, %s, %s, %s, %s, %s)", gate.CommandName, listen.CommandName,
-			ping.CommandName, gethttpstatus.CommandName, genpassword.CommandName, waitfor.CommandName, setupacl.CommandName)
+		return nil, fmt.Errorf("subcommand required (%s, %s, %s, %s, %s, %s)", gate.CommandName, listen.CommandName,
+			gethttpstatus.CommandName, genpassword.CommandName, waitfor.CommandName, setupacl.CommandName)
 	}
 
 	commandName := args[0]
@@ -56,8 +55,6 @@ func NewCommand(
 		command, err = gate.NewCommand(ctx, wg, lc, configuration, args[1:])
 	case listen.CommandName:
 		command, err = listen.NewCommand(ctx, wg, lc, configuration, args[1:])
-	case ping.CommandName:
-		command, err = ping.NewCommand(ctx, wg, lc, configuration, args[1:])
 	case gethttpstatus.CommandName:
 		command, err = gethttpstatus.NewCommand(ctx, wg, lc, configuration, args[1:])
 	case genpassword.CommandName:
