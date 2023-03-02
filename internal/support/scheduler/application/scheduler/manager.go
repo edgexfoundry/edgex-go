@@ -13,6 +13,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/infrastructure/interfaces"
 
+	bootstrapInterfaces "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
+
+	clientInterfaces "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -30,10 +35,11 @@ type manager struct {
 	executorQueue         *queue.Queue
 	intervalToExecutorMap map[string]*Executor
 	actionToIntervalMap   map[string]string
+	secretProvider        bootstrapInterfaces.SecretProvider
 }
 
 // NewManager creates a new scheduler manager for running the interval job
-func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) interfaces.SchedulerManager {
+func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct, secretProvider bootstrapInterfaces.SecretProvider) interfaces.SchedulerManager {
 	return &manager{
 		ticker:                time.NewTicker(time.Duration(config.ScheduleIntervalTime) * time.Millisecond),
 		lc:                    lc,
@@ -41,6 +47,7 @@ func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct) int
 		executorQueue:         queue.New(),
 		intervalToExecutorMap: make(map[string]*Executor),
 		actionToIntervalMap:   make(map[string]string),
+		secretProvider:        secretProvider,
 	}
 }
 
@@ -134,7 +141,16 @@ func (m *manager) executeAction(action models.IntervalAction) errors.EdgeX {
 		if !ok {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 		}
-		_, err := utils.SendRequestWithRESTAddress(m.lc, action.Content, action.ContentType, restAddress)
+
+		var jwtSecretProvider clientInterfaces.AuthenticationInjector
+		// Awaiting change to go-mod-core-contracts
+		if action.AuthMethod == config.AuthMethodJWT {
+			jwtSecretProvider = secret.NewJWTSecretProvider(m.secretProvider)
+		} else {
+			jwtSecretProvider = secret.NewJWTSecretProvider(nil)
+		}
+
+		_, err := utils.SendRequestWithRESTAddress(m.lc, action.Content, action.ContentType, restAddress, jwtSecretProvider)
 		if err != nil {
 			m.lc.Errorf("fail to send request with RESTAddress, err: %v", err)
 		}

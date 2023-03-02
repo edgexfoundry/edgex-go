@@ -25,6 +25,6 @@ func TestNewManager(t *testing.T) {
 		IntervalActions:      nil,
 		ScheduleIntervalTime: 500,
 	}
-	manager := NewManager(lc, config)
+	manager := NewManager(lc, config, nil)
 	require.NotNil(t, manager)
 }

@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -25,12 +26,20 @@ var methods = map[string]struct{}{
 }
 
 // SendRequestWithRESTAddress sends request with REST address
-func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, contentType string, address models.RESTAddress) (res string, err errors.EdgeX) {
+func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, contentType string,
+	address models.RESTAddress, jwtSecretProvider interfaces.AuthenticationInjector) (res string, err errors.EdgeX) {
+
 	executingUrl := getUrlStr(address)
 
 	req, err := getHttpRequest(address.HTTPMethod, executingUrl, content, contentType)
 	if err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to create http request", err)
+	}
+
+	if jwtSecretProvider != nil {
+		if err2 := jwtSecretProvider.AddAuthenticationData(req); err2 != nil {
+			return "", errors.NewCommonEdgeXWrapper(err2)
+		}
 	}
 
 	client := &http.Client{}
