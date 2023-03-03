@@ -1,0 +1,18 @@
+# This file is intended for inclusion in official EdgeX binary releases,
+# such as containers and snaps.
+
+# To privately report a security vulnerability in EdgeX Foundry
+# in the upstream open source repository hosted on github.com.
+
+Contact: mailto:security-issues@lists.edgexfoundry.org
+
+Preferred-Languages: en
+
+Canonical: https://github.com/edgexfoundry/edgex-go/blob/main/security.txt
+
+Policy: https://wiki.edgexfoundry.org/display/FA/Security
+
+Expires: 2024-06-30T00:00:00.000Z
+
+# This file conforms to RFC 9116: https://www.rfc-editor.org/rfc/rfc9116
+# See also https://securitytxt.org/
