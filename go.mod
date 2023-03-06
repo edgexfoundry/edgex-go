@@ -2,10 +2,10 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.36
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.39
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.6
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.24
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.13
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.14
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.8
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9

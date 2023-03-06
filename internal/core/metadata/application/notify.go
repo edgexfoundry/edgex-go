@@ -26,6 +26,7 @@ import (
 func validateDeviceCallback(device dtos.Device, dic *di.Container) errors.EdgeX {
 	configuration := container.ConfigurationFrom(dic.Get)
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	requestTimeout, err := time.ParseDuration(configuration.Service.RequestTimeout)
 	if err != nil {
@@ -44,12 +45,18 @@ func validateDeviceCallback(device dtos.Device, dic *di.Container) errors.EdgeX 
 	requestTopic := common.BuildTopic(baseTopic, device.ServiceName, common.ValidateDeviceSubscribeTopic)
 	responseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, device.ServiceName)
 	requestEnvelope := types.NewMessageEnvelopeForRequest(requestBytes, nil)
+
+	lc.Debugf("Sending Device Validation request for device=%s, CorrelationId=%s to topic: %s", device.Name, requestEnvelope.CorrelationID, requestTopic)
+	lc.Debugf("Waiting for Device Validation response on topic: %s/%s", responseTopicPrefix, requestEnvelope.RequestID)
+
 	res, err := messagingClient.Request(requestEnvelope, requestTopic, responseTopicPrefix, requestTimeout)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindServiceUnavailable, fmt.Sprintf("Error sending request to topic '%s'", requestTopic), err)
 	} else if res.ErrorCode == 1 {
 		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("Device %s validation failed: %s", device.Name, res.Payload), nil)
 	}
+
+	lc.Debugf("Received Device Validation response for device=%s, CorrelationId=%s on topic: %s", device.Name, res.CorrelationID, res.ReceivedTopic)
 
 	return nil
 }
