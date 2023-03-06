@@ -29,7 +29,7 @@ certfile=nginx.crt
 
 # Check for default TLS certificate for reverse proxy, create if missing
 # Normally we would run the below command in the nginx container itself,
-# but nginx:alpine-slim does not container openssl, thus run it here instead.
+# but nginx:alpine-slim does not include openssl, thus run it here instead.
 if test -d /etc/ssl/nginx ; then
     cd /etc/ssl/nginx
     if test ! -f "${keyfile}" ; then
@@ -43,6 +43,39 @@ if test -d /etc/ssl/nginx ; then
         echo "Default TLS certificate created.  Recommend replace with your own."
     fi
 fi
+
+#
+# Generate custom forwarders based on ADD_PROXY_ROUTE
+#
+
+# Truncate the template file before we start appending
+: >/etc/nginx/templates/generated-routes.inc.template
+
+IFS=', '
+for service in ${ADD_PROXY_ROUTE}; do
+	prefix=$(echo -n "${service}" | sed -n -e 's/\([-0-9a-zA-Z]*\)\..*/\1/p')
+	host=$(echo -n "${service}" | sed -n -e 's/.*\/\/\([-0-9a-zA-Z]*\):.*/\1/p')
+	port=$(echo -n "${service}" | sed -n -e 's/.*:\(\d*\)/\1/p')
+	varname=$(echo -n "${prefix}" | tr '-' '_')
+	echo $service $prefix $host $port
+  cat >> /etc/nginx/templates/generated-routes.inc.template <<EOH
+
+set \$upstream_$varname $host;
+location /$prefix {
+  rewrite            /$prefix/(.*) /\$1 break;
+  resolver           127.0.0.11 valid=30s;
+  proxy_pass         http://\$upstream_$varname:$port;
+  proxy_redirect     off;
+  proxy_set_header   Host \$host;
+  auth_request       /auth;
+  auth_request_set   \$auth_status \$upstream_status;
+}
+EOH
+
+done
+unset IFS
+
+
 
 # Hang the container now that initialization is done.
 cd /
