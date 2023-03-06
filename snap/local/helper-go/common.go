@@ -1,3 +1,7 @@
+// Copyright (C) 2023 Intel Corporation
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package main
 
 // snapped apps
@@ -15,32 +19,33 @@ const (
 	supportNotifications = "support-notifications"
 	supportScheduler     = "support-scheduler"
 	// security services
+	securityNginx              = "nginx"
+	securitySecretsConfig      = "secrets-config"
 	securitySecretStore        = "security-secret-store"
 	securitySecretStoreSetup   = "security-secretstore-setup"
 	securityProxy              = "security-proxy"
-	securityProxySetup         = "security-proxy-setup"
+	securityProxyAuth          = "security-proxy-auth"
 	securityBootstrapper       = "security-bootstrapper"
 	securityBootstrapperRedis  = "security-bootstrapper-redis"
 	securityBootstrapperConsul = "security-consul-bootstrapper"
+	securityBootstrapperNginx  = "security-bootstrapper-nginx"
 	securityFileTokenProvider  = "security-file-token-provider"
 	secretsConfig              = "secrets-config"
-	kong                       = "kong-daemon"
-	postgres                   = "postgres"
 	vault                      = "vault"
 	secretsConfigProcessor     = "secrets-config-processor"
 )
 
 var (
 	securityServices = []string{
-		postgres,
-		kong,
 		vault,
 	}
 	securitySetupServices = []string{
 		securitySecretStoreSetup,
 		securityBootstrapperConsul,
-		securityProxySetup,
+		securityBootstrapperNginx,
+		securityProxyAuth,
 		securityBootstrapperRedis,
+		securityNginx,
 	}
 	coreSetupServices = []string{
 		coreCommonConfigBootstrapper,

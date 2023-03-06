@@ -64,7 +64,6 @@ type testConfig struct {
 	bootstrapperStartPort int
 	registryReadyPort     int
 	databaseReadyPort     int
-	kongDBReadyPort       int
 	readyToRunPort        int
 }
 
@@ -77,7 +76,6 @@ func TestExecuteWithAllDependentsRun(t *testing.T) {
 		bootstrapperStartPort: 28001,
 		registryReadyPort:     28002,
 		databaseReadyPort:     28003,
-		kongDBReadyPort:       28004,
 		readyToRunPort:        28009,
 	}
 	config := setupMockServiceConfigs(testConfig)
@@ -108,10 +106,6 @@ func TestExecuteWithAllDependentsRun(t *testing.T) {
 	// start up all other dependent mock services:
 	go func() {
 		tcpSrvErr <- tcp.NewTcpServer().StartListener(testConfig.registryReadyPort,
-			lc, testHost)
-	}()
-	go func() {
-		tcpSrvErr <- tcp.NewTcpServer().StartListener(testConfig.kongDBReadyPort,
 			lc, testHost)
 	}()
 	go func() {
@@ -146,11 +140,6 @@ func setupMockServiceConfigs(testConf *testConfig) *config.ConfigurationStruct {
 			Host:      testConf.testHost,
 			Port:      12002,
 			ReadyPort: testConf.databaseReadyPort,
-		},
-		KongDB: config.KongDBInfo{
-			Host:      testConf.testHost,
-			Port:      12003,
-			ReadyPort: testConf.kongDBReadyPort,
 		},
 		Ready: config.ReadyInfo{
 			ToRunPort: testConf.readyToRunPort,

@@ -58,10 +58,6 @@ LogLevel = "INFO"
         [StageGate.Registry.ACL.Roles.security-spiffe-token-provider]
           Description = "role for device security-spiffe-token-provider service"
           
-  [StageGate.KongDb]
-    Host = "kong-db"
-    Port = 5432
-    ReadyPort = 54325
   [StageGate.WaitFor]
     Timeout = "10s"
     RetryInterval = "1s"

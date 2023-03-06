@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright (C) 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,7 +26,6 @@ type ConfigurationStruct struct {
 	LogLevel         string
 	SecretStore      SecretStoreInfo
 	Databases        map[string]Database
-	KongAdmin        KongAdminInfo
 	SecureMessageBus SecureMessageBusInfo
 }
 
@@ -67,13 +67,6 @@ type SecretStoreInfo struct {
 	PasswordProviderArgs        []string
 	RevokeRootTokens            bool
 	ConsulSecretsAdminTokenPath string
-}
-
-type KongAdminInfo struct {
-	ConfigTemplatePath string
-	ConfigFilePath     string
-	ConfigJWTPath      string
-	ConfigJWTDuration  string
 }
 
 // GetBaseURL builds and returns the base URL for the SecretStore service

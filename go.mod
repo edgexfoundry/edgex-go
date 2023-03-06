@@ -8,11 +8,9 @@ require (
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.13
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.8
 	github.com/fxamacker/cbor/v2 v2.4.0
-	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/lib/pq v1.10.7
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spiffe/go-spiffe/v2 v2.1.2

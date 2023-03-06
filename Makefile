@@ -1,5 +1,5 @@
 #
-# Copyright 2022 Intel Corporation
+# Copyright 2022-2023 Intel Corporation
 # Copyright (c) 2018 Cavium
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -40,7 +40,6 @@ MICROSERVICES= \
 	cmd/support-notifications/support-notifications \
 	cmd/support-scheduler/support-scheduler \
 	cmd/security-proxy-auth/security-proxy-auth \
-	cmd/security-proxy-setup/security-proxy-setup \
 	cmd/security-secretstore-setup/security-secretstore-setup \
 	cmd/security-file-token-provider/security-file-token-provider \
 	cmd/secrets-config/secrets-config \
@@ -287,7 +286,6 @@ docker_security_proxy_setup: docker_base
 		-t edgexfoundry/security-proxy-setup:$(GIT_SHA) \
 		-t edgexfoundry/security-proxy-setup:$(DOCKER_TAG) \
 		.
-
 dsecretstore: docker_security_secretstore_setup
 docker_security_secretstore_setup: docker_base
 		docker build \

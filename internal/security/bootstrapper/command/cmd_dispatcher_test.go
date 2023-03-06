@@ -48,8 +48,6 @@ func TestNewCommand(t *testing.T) {
 		expectedErr     bool
 	}{
 		{"Good: gate command", []string{"gate"}, "gate", false},
-		{"Good: pingPgDb command only", []string{"pingPgDb"}, "pingPgDb", false},
-		{"Good: pingPgDb command with options", []string{"pingPgDb", "--host=kong-db", "--port=5432"}, "pingPgDb", false},
 		{"Good: listenTcp command", []string{"listenTcp", "--port=55555"}, "listenTcp", false},
 		{"Good: genPassword command", []string{"genPassword"}, "genPassword", false},
 		{"Good: getHttpStatus command", []string{"getHttpStatus", "--url=http://localhost:55555"}, "getHttpStatus", false},

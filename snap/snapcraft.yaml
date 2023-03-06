@@ -68,6 +68,8 @@ layout:
     bind: $SNAP/etc/luarocks
   /usr/local:
     bind: $SNAP/usr/local
+  /usr/nginx:
+    bind: $SNAP_COMMON/nginx
 
 grade: stable
 confinement: strict
@@ -92,59 +94,6 @@ apps:
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
-  postgres:
-    adapter: full
-    command: usr/lib/postgresql/12/bin/postgres -D $SNAP_DATA/postgresql/12/main -c $CONFIG_ARG
-    daemon: simple
-    install-mode: disable
-    environment:
-      CONFIG_ARG: config_file=$SNAP_DATA/postgresql/12/main/postgresql.conf
-      SNAPCRAFT_PRELOAD_REDIRECT_ONLY_SHM: 1
-    command-chain:
-      - bin/drop-snap-daemon.sh
-      - bin/snapcraft-preload
-    plugs:
-      - network
-      - network-bind
-  kong-daemon:
-    adapter: full
-    after:
-      - postgres
-      # to ensure kong.yml is ready for kong to process as the file is set up from security-secretstore-setup
-      - security-secretstore-setup
-    command: bin/kong-daemon.sh
-    command-chain:
-      - bin/perl5lib-launch.sh
-      - bin/kong-launch.sh
-    daemon: forking
-    install-mode: disable
-    environment:
-      KONG_CONF: $SNAP_DATA/config/security-proxy-setup/kong.conf
-      KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
-      KONG_LOGS_DIR: $SNAP_COMMON/logs
-      KONG_PROXY_ACCESS_LOG: $SNAP_COMMON/logs/kong-proxy-access.log
-      KONG_ADMIN_ACCESS_LOG: $SNAP_COMMON/logs/kong-admin-access.log
-      KONG_PROXY_ERROR_LOG: $SNAP_COMMON/logs/kong-proxy-error.log
-      KONG_ADMIN_ERROR_LOG: $SNAP_COMMON/logs/kong-admin-error.log
-      KONG_ADMIN_LISTEN: "localhost:8001, localhost:8444 ssl"
-      KONG_STATUS_LISTEN: "localhost:8100"
-      KONG_SSL_CIPHER_SUITE: "modern"
-      # The DNS order was modified because of an issue with a Windows based host DNS issue.
-      # Keeping the default order would cause the first API request to Kong's admin API much longer time to connect for
-      # taking something minimum of 20 seconds to complete, and then others would complete as expected.
-      # Moreover, changing the DNS order did not impact those non-Windows based systems,
-      # so implementing it across the board seemed pretty low risk.
-      # The work-around that was found in one of the documented issues was to remove the SRV record check
-      # by manipulating the Kong DNS checking order via environment variable. Once we did that,
-      # the prolonged connecting issue went away.
-      KONG_DNS_ORDER: "LAST,A,CNAME"
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-    start-timeout: 15m
-    plugs:
-      - network
-      - network-bind
-    stop-command: bin/kong-stop.sh
   vault:
     adapter: none
     command: bin/vault server --config $VAULT_CONFIG
@@ -191,32 +140,32 @@ apps:
       TOKENFILEPROVIDER_CONFIGFILE: $SNAP_DATA/config/security-file-token-provider/res/token-config.json
       TOKENFILEPROVIDER_OUTPUTDIR: $SNAP_DATA/secrets
 
-      # securing Kong's admin API plugin related environment variables:
-      KONGADMIN_CONFIGTEMPLATEPATH: $SNAP_DATA/config/security-secretstore-setup/res/kong-admin-config.template.yml
-      KONGADMIN_CONFIGFILEPATH: $SNAP_DATA/config/kong.yml
-      KONGADMIN_CONFIGJWTPATH: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
-
     start-timeout: 15m
     plugs: [network]
-  security-proxy-setup:
+  security-proxy-auth:
     adapter: none
     after:
       - security-secretstore-setup
-      - security-consul-bootstrapper
-      - kong-daemon
-    command: bin/security-proxy-setup --configDir $SNAP_DATA/config/security-proxy-setup/res $INIT_ARG
+      - consul
+    command: bin/security-proxy-auth --configDir $SNAP_DATA/config/security-proxy-auth/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
-    post-stop-command: bin/security-proxy-post-setup.sh
     environment:
-      INIT_ARG: "--init=true"
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
-      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
-      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
+      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-auth/secrets-token.json
+    daemon: simple
+    install-mode: disable
+    plugs: [network, network-bind]
+    stop-timeout: 10s
+  # This is a simple one-shot service that creates a default TLS key and certificate for NGINX
+  security-bootstrapper-nginx:
+    adapter: none
+    after:
+      - security-secretstore-setup
+    command: bin/setup-nginx.sh
+    command-chain:
+      - bin/service-config-overrides.sh
     daemon: oneshot
     install-mode: disable
-    start-timeout: 15m
-    plugs: [network]
   # This is a simple service which calls into vault to retrieve the Redis password and then
   # to generate Redis config file for Redis server to start up with credentials and ACL rules.
   # Redis can be started once the confFile is created. Once the config file has been generated,
@@ -263,7 +212,6 @@ apps:
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
-      - security-proxy-setup
     command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
@@ -283,7 +231,6 @@ apps:
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
-      - security-proxy-setup
     command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
@@ -301,7 +248,6 @@ apps:
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
-      - security-proxy-setup
     command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
@@ -318,7 +264,6 @@ apps:
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
-      - security-proxy-setup
     command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
@@ -335,13 +280,25 @@ apps:
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
       - security-consul-bootstrapper
-      - security-proxy-setup
     command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider --registry
     command-chain:
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
+    install-mode: disable
+    plugs: [network, network-bind]
+    stop-timeout: 10s
+  nginx:
+    adapter: none
+    after:
+      - security-bootstrapper-nginx
+    command: usr/nginx/sbin/nginx -e stderr -p $SNAP_COMMON/nginx -c $SNAP_DATA/nginx/nginx.conf
+    reload-command: usr/nginx/sbin/nginx -e stderr -p $SNAP_COMMON/nginx -c $SNAP_DATA/nginx/nginx.conf -s reload
+    stop-command: usr/nginx/sbin/nginx -e stderr -p $SNAP_COMMON/nginx -c $SNAP_DATA/nginx/nginx.conf -s quit
+    daemon: simple
+    command-chain:
+      - bin/service-config-overrides.sh
     install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
@@ -365,20 +322,12 @@ apps:
     install-mode: disable
     plugs: [network]
   # helper commands the snap exposes
-  security-proxy-setup-cmd:
-    adapter: none
-    command: bin/security-proxy-setup
-    environment:
-      SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-setup/secrets-token.json
-      ACCESSTOKENFILE: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
-      KONGAUTH_JWTFILE: $SNAP_DATA/secrets/security-proxy-setup/kong-admin-jwt
-    plugs: [home, removable-media, network]
   secrets-config:
     adapter: none
-    # double-check with bnevis that this is OK, as there is an individual config.toml
-    # file for the secrets-config command
-    # not a mistake--secrets-config re-uses security-proxy-setup's configuration.toml
-    command: bin/secrets-config --configDir $SNAP_DATA/config/security-proxy-setup/res
+    command: bin/secrets-config --configDir $SNAP_DATA/config/secrets-config/res
+    environment:
+      SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res/
+      SECRETSTORE_TOKENFILE: resp-init.json
     plugs: [home, removable-media, network]
   redis-cli:
     adapter: full
@@ -396,55 +345,6 @@ apps:
     adapter: full
     command: usr/bin/jq
     plugs: [home, removable-media]
-  kong:
-    adapter: full
-    command: usr/local/bin/kong
-    command-chain:
-      - bin/perl5lib-launch.sh
-      - bin/kong-launch.sh
-    environment:
-      KONG_LOGS_DIR: $SNAP_COMMON/logs
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-    plugs: [home, removable-media, network, network-bind]
-  psql:
-    adapter: full
-    command: usr/bin/psql
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PGHOST: $SNAP_COMMON/sockets
-      PGDATABASE: kong
-    command-chain:
-      - bin/perl5lib-launch.sh
-      # psql should be run as the snap_daemon user, which is the user
-      # who is initially created as a role with postgres
-      - bin/drop-snap-daemon.sh
-    plugs: [home, removable-media, network]
-  psql-any:
-    adapter: full
-    command: usr/bin/psql
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PGHOST: $SNAP_COMMON/sockets
-      PSQLRC: $SNAP_USER_COMMON/.psqlrc
-    command-chain:
-      - bin/perl5lib-launch.sh
-    plugs: [home, removable-media, network]
-  createdb:
-    adapter: full
-    command: usr/bin/createdb
-    environment:
-      LC_ALL: C.UTF-8
-      LANG: C.UTF-8
-      PGHOST: $SNAP_COMMON/sockets
-    command-chain:
-      - bin/perl5lib-launch.sh
-      # createdb should be run as the snap_daemon user, which is the user
-      # who is initially created as a role with postgres
-      - bin/drop-snap-daemon.sh
-    plugs: [home, removable-media, network]
 
 parts:
   static-packages:
@@ -499,29 +399,83 @@ parts:
       cmake -DCMAKE_INSTALL_PREFIX=$SNAPCRAFT_PART_INSTALL/ .
       make install
 
-  postgres:
-    plugin: nil
-    source: snap/local/build-helpers
+  # For inspiration see
+  # - https://github.com/ogra1/nginx-snap
+  # - https://github.com/kbavishi/nginx-snapcraft
+  # - https://github.com/mbd98/nginx-snap
+  # We enable SSL and reverse proxy and compression and disable almost everything else
+  nginx:
+    source: https://github.com/nginx/nginx.git
+    plugin: autotools
+    autotools-configure-parameters:
+      - --prefix=/usr/nginx
+      - --user=root
+      - --group=root
+      - --with-select_module
+      - --with-poll_module
+      - --with-http_ssl_module
+      - --with-http_auth_request_module
+      - --with-stream
+      - --with-stream_ssl_module
+      - --without-http_charset_module
+      - --without-http_ssi_module
+      - --without-http_userid_module
+      - --without-http_access_module
+      - --without-http_auth_basic_module
+      - --without-http_mirror_module
+      - --without-http_autoindex_module
+      - --without-http_geo_module
+      - --without-http_map_module
+      - --without-http_split_clients_module
+      - --without-http_referer_module
+      - --without-http_fastcgi_module
+      - --without-http_uwsgi_module
+      - --without-http_scgi_module
+      - --without-http_grpc_module
+      - --without-http_memcached_module
+      - --without-http_limit_conn_module
+      - --without-http_limit_req_module
+      - --without-http_empty_gif_module
+      - --without-http_browser_module
+      - --without-http_upstream_hash_module
+      - --without-http_upstream_ip_hash_module
+      - --without-http_upstream_least_conn_module
+      - --without-http_upstream_random_module
+      - --without-http_upstream_keepalive_module
+      - --without-http_upstream_zone_module
+      - --without-http-cache
+      - --without-mail_pop3_module
+      - --without-mail_imap_module
+      - --without-mail_smtp_module
+      - --without-stream_limit_conn_module
+      - --without-stream_access_module
+      - --without-stream_geo_module
+      - --without-stream_map_module
+      - --without-stream_split_clients_module
+      - --without-stream_return_module
+      - --without-stream_set_module
+      - --without-stream_upstream_hash_module
+      - --without-stream_upstream_least_conn_module
+      - --without-stream_upstream_random_module
+      - --without-stream_upstream_zone_module
+      - --error-log-path=stderr
+      - --http-log-path=logs/access.log
+    build-packages:
+      - build-essential
+      - libpcre3-dev
+      - libssl-dev
+      - zlib1g-dev
     override-build: |
+      cp auto/configure .
       snapcraftctl build
-      # the perl package for postgres hard-codes the bin dir as /usr/lib/postgresql
-      # so we need to prepend that with /snap/$SNAP_NAME/current/ before it will
-      # work
-      if [ -z "$SNAPCRAFT_PROJECT_NAME" ]; then
-        echo "SNAPCRAFT_PROJECT_NAME is undefined, snapcraft upstream change?"
-        exit 1
-      fi
-      sed -i -e \
-        's@our $binroot = \"/usr/lib/postgresql/\"@our $binroot = \"/snap/'$SNAPCRAFT_PROJECT_NAME'/current/usr/lib/postgresql/\";@' \
-        $SNAPCRAFT_PART_INSTALL/usr/share/perl5/PgCommon.pm
     stage-packages:
-      # note: version of postgres in core20 that this resolves to is version 12
-      # See also https://ubuntu.com/security/notices/USN-5145-1   - postgresql-contrib
-      - postgresql-12
-      - postgresql-client-12
-      - perl
+      - libpcre3
+      - libssl1.1
+      - zlib1g
+    stage:
+      - -usr/nginx/conf/nginx.conf
     prime:
-       - -usr/share/man/*
+      - -usr/nginx/logs
 
   go-build-helper:
     plugin: dump
@@ -602,7 +556,7 @@ parts:
 
       # copy service binaries, configuration, and license files into the snap install
       for service in core-command core-data core-metadata support-notifications support-scheduler \
-          security-proxy-setup security-secretstore-setup security-file-token-provider \
+          security-proxy-auth security-secretstore-setup security-file-token-provider \
           security-bootstrapper secrets-config core-common-config-bootstrapper; do
 
           install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
@@ -633,7 +587,7 @@ parts:
           # The security-secrets-config doesn't have a default configuration.toml, but since it shares
           # the same config as proxy-setup, just use that one.
           "secrets-config")
-              install -DT "./cmd/security-proxy-setup/res/configuration.toml" \
+              install -DT "./cmd/secrets-config/res/configuration.toml" \
                   "$SNAPCRAFT_PART_INSTALL/config/secrets-config/res/configuration.toml"
           ;;
           *)
@@ -641,13 +595,6 @@ parts:
           esac
 
       done
-
-      # For securing Kong's admin APIs, we also need to install kong-admin-config's template yml
-      # into secretstore-setup service because secretstore-setup uses it to create a JWT file that
-      # proxy-setup can later on enable Kong's JWT plugin on admin API route hence secure it with
-      # JWT authentication and authorization
-      install -DT "./cmd/security-secretstore-setup/res/kong-admin-config.template.yml" \
-        "$SNAPCRAFT_PART_INSTALL/config/security-secretstore-setup/res/kong-admin-config.template.yml"
 
       install -DT "./Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/Attribution.txt"
       install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/LICENSE"
@@ -662,60 +609,6 @@ parts:
     build-packages:
       - zip
       - pkg-config
-
-  kong:
-    plugin: nil
-    build-packages:
-      - curl
-    stage-packages:
-      - libpcre3
-      - perl
-      - zlib1g-dev
-    override-build: |
-      VERSION=2.8.2
-
-      # use dpkg architecture to figure out our target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=kong_${VERSION}_amd64.deb
-          FILE_HASH=d600227d07cb862b2dd2de3925eca5841b2292ef838af21ddf5f412c9ab0f3ee
-          ;;
-        arm64)
-          FILE_NAME=kong_${VERSION}_arm64.deb
-          FILE_HASH=c23b22bf34df1f3a8428c998875e868025557d5f9599fd9bed10b12c9fb8ed57
-          ;;
-      esac
-
-      # download the archive and verify the checksum
-      curl --silent --show-error --location --output $FILE_NAME \
-        https://download.konghq.com/gateway-2.x-ubuntu-focal/pool/all/k/kong/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
-      dpkg --extract $FILE_NAME $SNAPCRAFT_PART_INSTALL
-
-      # make kong world readable & executable to make snapcraft happy
-      chmod 755 $SNAPCRAFT_PART_INSTALL/usr/local/bin/kong
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup
-      cp $SNAPCRAFT_PART_INSTALL/etc/kong/kong.conf.default $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
-
-      # kong 2.2.0 change the default user to "kong" which breaks
-      # under confinement so explicitly set user to "root root"
-      sed -i -e 's/#nginx_user = kong kong/nginx_user = root root/' \
-        $SNAPCRAFT_PART_INSTALL/config/security-proxy-setup/kong.conf
-
-      # by default the Kong deb contains an absolute symlink @ /usr/local/openresty/bin/openresty which points to /usr/local/openresty/nginx/sbin/nginx
-      # because the review-tools for the snap store do not currently allow using absolute symlinks that point outside of the snap
-      # (and are not smart enough to realize there is a layout involved in our usage here), we delete the absolute symlink
-      # and re-create it as a relative symlink pointing to ../nginx/sbin/nginx instead
-      cd $SNAPCRAFT_PART_INSTALL/usr/local/openresty/bin
-      rm openresty
-      ln -s ../nginx/sbin/nginx openresty
-
-    prime:
-       - -lib/systemd/*
-       - -usr/share/man/*
 
   # SECURITY SERVICES PARTS
   vault:    
