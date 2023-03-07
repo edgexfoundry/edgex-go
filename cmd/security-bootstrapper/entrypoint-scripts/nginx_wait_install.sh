@@ -32,6 +32,11 @@ echo "$(date) Executing waitFor with waiting on tcp://${STAGEGATE_BOOTSTRAPPER_H
 
 echo "$(date) Generating default config ..."
 
+# Ensure this file exists since reference below; proxy-setup will regenerate it
+touch /etc/nginx/templates/generated-routes.inc.template
+
+# This file can be modified by the user; deleted when docker volumes are pruned;
+# but preserved across start/up and stop/down actions
 if test -f /etc/nginx/templates/edgex-custom-rewrites.inc.template; then
   echo "Using existing custom-rewrites."
 else
@@ -197,6 +202,7 @@ server {
       proxy_set_header   Host $host;
     }
 
+    include /etc/nginx/conf.d/generated-routes.inc;
     include /etc/nginx/conf.d/edgex-custom-rewrites.inc;
 
 }
