@@ -21,10 +21,13 @@ import (
 	"net/http"
 	"sync"
 
+	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/controller/http"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/gorilla/mux"
 )
 
@@ -50,6 +53,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderFrom(dic.Get)
 	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc)
+
+	// Common
+	cc := commonController.NewCommonController(dic, b.serviceName)
+	b.router.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet) // Health check is always unauthenticated
+	b.router.HandleFunc(common.ApiVersionRoute, authenticationHook(cc.Version)).Methods(http.MethodGet)
+	b.router.HandleFunc(common.ApiConfigRoute, authenticationHook(cc.Config)).Methods(http.MethodGet)
 
 	// Run authentication hook for a nil route
 	b.router.HandleFunc("/auth", authenticationHook(emptyHandler))
