@@ -143,7 +143,6 @@ func (m *manager) executeAction(action models.IntervalAction) errors.EdgeX {
 		}
 
 		var jwtSecretProvider clientInterfaces.AuthenticationInjector
-		// Awaiting change to go-mod-core-contracts
 		if action.AuthMethod == config.AuthMethodJWT {
 			jwtSecretProvider = secret.NewJWTSecretProvider(m.secretProvider)
 		} else {
