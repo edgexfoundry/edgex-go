@@ -152,12 +152,22 @@ server {
       auth_request_set   $auth_status $upstream_status;
     }
 
-
     set $upstream_app_rules_engine edgex-app-rules-engine;
+    location /app-rules-engine {
+      rewrite            /app-rules-engine/(.*) /$1 break;
+      resolver           127.0.0.11 valid=30s;
+      proxy_pass         http://$upstream_app_rules_engine:59701;
+      proxy_redirect     off;
+      proxy_set_header   Host $host;
+      auth_request       /auth;
+      auth_request_set   $auth_status $upstream_status;
+    }
+
+    set $upstream_kuiper edgex-kuiper;
     location /rules-engine {
       rewrite            /rules-engine/(.*) /$1 break;
       resolver           127.0.0.11 valid=30s;
-      proxy_pass         http://$upstream_app_rules_engine:59701;
+      proxy_pass         http://$upstream_kuiper:59720;
       proxy_redirect     off;
       proxy_set_header   Host $host;
       auth_request       /auth;
