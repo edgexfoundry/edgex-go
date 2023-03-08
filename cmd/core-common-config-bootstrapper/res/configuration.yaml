@@ -83,13 +83,13 @@ app-services:
       MaxRetryCount: 10
     Telemetry:
       Metrics:
-        MessagesReceived: true
-        InvalidMessagesReceived: true
-        PipelineMessagesProcessed: true # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        PipelineMessageProcessingTime: true # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        PipelineProcessingErrors: true # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        HttpExportSize: true # Single metric used for all HTTP Exports
-        MqttExportSize: true # BrokerAddress and Topic are added as the tag for this metric for each MqttExport defined
+        MessagesReceived: false
+        InvalidMessagesReceived: false
+        PipelineMessagesProcessed: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
+        PipelineMessageProcessingTime: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
+        PipelineProcessingErrors: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
+        HttpExportSize: false # Single metric used for all HTTP Exports
+        MqttExportSize: false # BrokerAddress and Topic are added as the tag for this metric for each MqttExport defined
   Clients:
     core-metadata:
       Protocol: "http"
