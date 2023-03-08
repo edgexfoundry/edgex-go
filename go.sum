@@ -35,8 +35,8 @@ github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.16 h1:JdZiqZ6CAboZ3+GuWZL
 github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.16/go.mod h1:3q+Ys51HwpR9/kOv6sT7+EwAANgOfFWi509sEP5iPEo=
 github.com/edgexfoundry/go-mod-registry/v3 v3.0.0-dev.5 h1:FUUfsQUKHJqSwOXEj0j/qAn+uoWzM8nV7IOapGf7D80=
 github.com/edgexfoundry/go-mod-registry/v3 v3.0.0-dev.5/go.mod h1:MroNeX/i6ymRu8cyuRB4U5zdBusyUpFhUphko6pInTQ=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.8 h1:rvoSu4fWQNAundG1eRKKCjZkzSBJQoYqCtEfzzV91CY=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.8/go.mod h1:tjny0Y2/sLTB9qx3pjvT9PfGHpEOdfej7pjV3s1zppk=
+github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.9 h1:12UHZG/Nl+dfFOaNnC87ANP/FQ3rOXe0Z6NVlYdmYgU=
+github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.9/go.mod h1:tjny0Y2/sLTB9qx3pjvT9PfGHpEOdfej7pjV3s1zppk=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
