@@ -26,6 +26,8 @@ Name = "scheduler"
     Path = "/api/v2/event/age/604800000000000" # Remove events older than 7 days
     Interval = "midnight"
     AdminState = "UNLOCKED"
+    # AuthMethod = JWT degrades to no auth in security-disabled EdgeX
+    AuthMethod = "JWT"
 
 [MessageBus]
   [MessageBus.Optional]

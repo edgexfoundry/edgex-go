@@ -39,7 +39,9 @@ func (sender *RESTSender) Send(notification models.Notification, address models.
 	if !ok {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 	}
-	return utils.SendRequestWithRESTAddress(lc, notification.Content, notification.ContentType, restAddress)
+	// NOTE: Not currently passing an AuthenticationInjector here;
+	// no current notifications are calling EdgeX services
+	return utils.SendRequestWithRESTAddress(lc, notification.Content, notification.ContentType, restAddress, nil)
 }
 
 // EmailSender is the implementation of the interfaces.ChannelSender, which is used to send the notifications via email

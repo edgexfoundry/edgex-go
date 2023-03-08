@@ -82,7 +82,14 @@ type IntervalActionInfo struct {
 	ContentType string
 	// Administrative state (LOCKED/UNLOCKED)
 	AdminState string
+	// AuthMethod indicates how to authenticate the outbound URL -- "none" (default) or "jwt"
+	AuthMethod string
 }
+
+const (
+	AuthMethodNone = "NONE"
+	AuthMethodJWT  = "JWT"
+)
 
 // URI constructs a URI from the protocol, host and port and returns that as a string.
 func (e IntervalActionInfo) URL() string {

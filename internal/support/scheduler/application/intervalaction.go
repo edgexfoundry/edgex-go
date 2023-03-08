@@ -164,6 +164,7 @@ func LoadIntervalActionToSchedulerManager(dic *di.Container) errors.EdgeX {
 			Content:     configuration.IntervalActions[i].Content,
 			ContentType: configuration.IntervalActions[i].ContentType,
 			AdminState:  configuration.IntervalActions[i].AdminState,
+			AuthMethod:  configuration.IntervalActions[i].AuthMethod,
 		}
 		validateErr := common.Validate(dto)
 		if validateErr != nil {
