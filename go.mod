@@ -2,7 +2,7 @@ module github.com/edgexfoundry/edgex-go
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.41
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.42
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.26
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.16
