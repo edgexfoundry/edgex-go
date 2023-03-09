@@ -11,6 +11,7 @@ debug
 *.dll
 VERSION
 __debug_bin
+sbom/bom-go-mod.spdx
 
 # binary files
 cmd/core-command/core-command

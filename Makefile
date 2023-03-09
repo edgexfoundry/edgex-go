@@ -1,9 +1,5 @@
 #
-<<<<<<< HEAD
 # Copyright 2022-2023 Intel Corporation
-=======
-# Copyright 2023 Intel Corporation
->>>>>>> feat: generate spdx sbom and add Makefile target for sbom generation
 # Copyright (c) 2018 Cavium
 #
 # SPDX-License-Identifier: Apache-2.0
