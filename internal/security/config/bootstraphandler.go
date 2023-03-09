@@ -72,12 +72,12 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		return false
 	}
 
-	exitStatusCode, err := command.Execute()
+	b.exitStatusCode, err = command.Execute()
 	if err != nil {
 		lc.Error(err.Error())
 		return false
 	}
-	b.exitStatusCode = exitStatusCode
+
 	return true
 }
 
