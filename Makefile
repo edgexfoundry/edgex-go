@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-.PHONY: build clean unittest hadolint lint test docker run
+.PHONY: build clean unittest hadolint lint test docker run sbom
 
 # change the following boolean flag to include or exclude the delayed start libs for builds for most of core services except support services
 INCLUDE_DELAYED_START_BUILD_CORE:="false"
@@ -360,3 +360,8 @@ docker_security_spiffe_token_provider: docker_base
 
 vendor:
 	$(GO) mod vendor
+
+sbom:
+	docker run -it --rm \
+		-v "$$PWD:/edgex-go" -v "$$PWD/sbom:/sbom" \
+		spdx/spdx-sbom-generator -p /edgex-go/ -o /sbom/ --include-license-text true
