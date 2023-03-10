@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	// secretKeyUsername is the key to read the username from the secret path
+	// secretKeyUsername is the key to read the username from the secret data
 	secretKeyUsername = "username"
-	// secretKeyPassword is the key to read the password from the secret path
+	// secretKeyPassword is the key to read the password from the secret data
 	secretKeyPassword = "password"
 )
 
@@ -66,7 +66,7 @@ func deduceAuth(dic *di.Container, s config.SmtpInfo) (mail.Auth, errors.EdgeX) 
 	if secretProvider == nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "secret provider is missing. Make sure it is specified to be used in bootstrap.Run()", nil)
 	}
-	secrets, err := secretProvider.GetSecret(s.SecretPath, secretKeyUsername, secretKeyPassword)
+	secrets, err := secretProvider.GetSecret(s.SecretName, secretKeyUsername, secretKeyPassword)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "fail to retrieve the secrets from the secret store", err)
 	}

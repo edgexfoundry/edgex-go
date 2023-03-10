@@ -16,14 +16,14 @@ import (
 
 // AddSecret adds EdgeX Service exclusive secret to the Secret Store
 func AddSecret(dic *di.Container, request common.SecretRequest) errors.EdgeX {
-	path, secret := prepareSecret(request)
+	secretName, secret := prepareSecret(request)
 
 	secretProvider := container.SecretProviderFrom(dic.Get)
 	if secretProvider == nil {
 		return errors.NewCommonEdgeX(errors.KindServerError, "secret provider is missing. Make sure it is specified to be used in bootstrap.Run()", nil)
 	}
 
-	if err := secretProvider.StoreSecret(path, secret); err != nil {
+	if err := secretProvider.StoreSecret(secretName, secret); err != nil {
 		return errors.NewCommonEdgeX(errors.Kind(err), "adding secret failed", err)
 	}
 	return nil
@@ -35,7 +35,7 @@ func prepareSecret(request common.SecretRequest) (string, map[string]string) {
 		secretsKV[secret.Key] = secret.Value
 	}
 
-	path := strings.TrimSpace(request.SecretName)
+	secretName := strings.TrimSpace(request.SecretName)
 
-	return path, secretsKV
+	return secretName, secretsKV
 }

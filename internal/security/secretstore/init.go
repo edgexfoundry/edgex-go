@@ -380,9 +380,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// continue credential creation
 
-	// A little note on why there are two secrets paths. For each microservice, the redis
+	// A little note on why there are two secrets names. For each microservice, the redis
 	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/redisdb and
-	// /v1/secret/edgex/redisdb/%s). The go-mod-secrets client requires a Path property to prefix all
+	// /v1/secret/edgex/redisdb/%s). The go-mod-secrets client requires a SecretName property to prefix all
 	// secrets.
 	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
 	// edgex/%s), and edgex/redisdb/* is enumerated to initialize the database.
@@ -426,7 +426,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
-	lc.Infof("adding redisdb secret path for internal services...")
+	lc.Infof("adding redisdb secret name for internal services...")
 	for _, info := range configuration.Databases {
 		service := info.Service
 

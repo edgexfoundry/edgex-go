@@ -35,7 +35,7 @@ KeepAlive = 10
 QoS = 0
 Retain = true
 SkipCertVerify = false
-SecretPath = "mqtt"
+SecretName = "mqtt"
 AuthMode = "none"
   [ExternalMQTT.Topics]
   CommandRequestTopic = "edgex/command/request/#"           # for subscribing to 3rd party command requests
