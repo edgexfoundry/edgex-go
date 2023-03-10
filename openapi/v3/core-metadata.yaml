@@ -899,19 +899,20 @@ components:
           type: string
           description: Default value set to this property if no argument is passed. If present, should be compatible with the Type field
         mask:
-          type: string
+          type: integer
+          minimum: 0
           description: Mask to be applied prior to get/set of property. Only valid where Type is one of the integer types.
         shift:
-          type: string
+          type: integer
           description: Shift to be applied after masking, prior to get/set of property. Only valid where Type is one of the integer types
         scale:
-          type: string
+          type: number
           description: Multiplicative factor to be applied after shifting, prior to get/set of property. Only valid where Type is one of the integer or float types
         offset:
-          type: string
+          type: number
           description: Additive factor to be applied after multiplying, prior to get/set of property. Only valid where Type is one of the integer or float types
         base:
-          type: string
+          type: number
           description: 'Base for property to be applied to, leave 0 for no power operation (i.e. base ^ property: 2 ^ 10). Only valid where Type is one of the integer or float types.'
         assertion:
           type: string
@@ -919,13 +920,19 @@ components:
         mediaType:
           type: string
           description: A string value used to indicate the type of binary data if Type=binary
+        optional:
+          description: A map of optional properties for the given resource
+          type: object
+          additionalProperties:
+            type: object
       required:
         - valueType
         - readWrite
     ProtocolProperties:
+      description: A map of properties for the given protocol
       type: object
       additionalProperties:
-        type: string
+        type: object
     ResourceOperation:
       description: "Defines an operation of which a device is capable."
       type: object

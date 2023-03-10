@@ -48,6 +48,7 @@ var testMappings = map[string]string{"0": "off", "1": "on"}
 var testTags = map[string]any{
 	"TestTagKey": "TestTagValue",
 }
+var testOptional = map[string]any{"TestOptionalKey": "TestOptionalValue"}
 
 func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 	var testDeviceResources = []dtos.DeviceResource{{
@@ -58,7 +59,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
-			Others:    testProperties,
+			Optional:  testOptional,
 		},
 		Tags: testTags,
 	}, {
@@ -69,7 +70,7 @@ func buildTestDeviceProfileRequest() requests.DeviceProfileRequest {
 			ValueType: common.ValueTypeInt16,
 			ReadWrite: common.ReadWrite_RW,
 			Units:     TestUnits,
-			Others:    testProperties,
+			Optional:  testOptional,
 		},
 		Tags: testTags,
 	}}
