@@ -67,7 +67,10 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	}
 
 	if err != nil {
-		lc.Error(err.Error())
+		if err != flag.ErrHelp {
+			// CLI help already printed by this point, no further output needed
+			lc.Error(err.Error())
+		}
 		b.exitStatusCode = interfaces.StatusCodeExitWithError
 		return false
 	}

@@ -22,95 +22,89 @@ Proxy configuration commands (listed below) require access to the secret store m
 
     Points to directory containing a configuration.toml file.
 
+!!! edgey "EdgeX 3.0"
+    The `--confdir` command line option is replaced by `--configDir` in EdgeX 3.0.
+
 # SUBCOMMANDS
 
   * **tls**
 
-    Configure inbound TLS certificate. This command will provision the TLS secrets into the secret store and re-deploy them to Kong. Requires additional arguments:
+    Configure inbound TLS certificate.
+    This command will replace the default TLS certificate created with EdgeX is started for the first time.
+    Requires additional arguments:
 
-    * **--incert** _/path/to/certchain_ (required)
+    * **--inCert** _/path/to/certchain_ (required)
 
       Path to TLS leaf certificate (PEM-encoded x.509) (the file extension is arbitrary).
       If intermediate certificates are required to chain to a certificate authority,
       these should also be included.
       The root certificate authority should not be included.
 
-    * **--inkey** _/path/to/private\_key_ (required)
+    * **--inKey** _/path/to/private\_key_ (required)
 
       Path to TLS private key (PEM-encoded).
 
-    * **--snis** _comma_separated_list_for_server_names_ (optional)
+    * **--keyFilename** _filename_ (optional)
 
-      A comma separated extra server DNS names in addition to the built-in
-      server name indications.  The built-in names are &quot;localhost,kong&quot;.
-      These names will be associated with the user-provided certificate for Kong's TLS to use.
-      Based on the specification [RFC4366](https://tools.ietf.org/html/rfc4366):
-      &quot;Currently, the only server names supported are DNS hostnames&quot;,
-      so the IP address-based input is not allowed.
+    	Filename of private key file (on target (default "nginx.key")
+
+    * **--targetFolder** _directory-path_ (optional)
+
+    	Path to TLS key file (default "/etc/ssl/nginx")
 
   * **adduser**
 
-    Create an API gateway user using specified token type. Requires additional arguments:
-
-    * **--token-type** jwt | oauth2 (required)
-    
-      Create user using either the JWT or OAuth2 authentication plugin.
-      This value must match the configured authentication plugin
-      (`KongAuth.Name` in security-proxy-setup's `configuration.toml`).
+    Create an API gateway user by creating a user identity the EdgeX secret store.
+    Requires additional arguments:
 
     * **--user** _username_ (required)
 
       Username of the user to add.
 
-    * **--group** _group_ (optional)
+    * **--jwtTTL** _duration_ (optional)
 
-      Group to which the user belongs, defaults to &quot;admin&quot;.
-      This should be the group associated with the route ACL
-      (`KongAuth.WhiteList` in security-proxy-setup's `configuration.toml`).
-      (Note that secrets-config shares the same configuration as security-proxy-setup
-      as they both configure the EdgeX API gateway.)
+    	JWT created by vault identity provider lasts this long (_s, _m, _h, or _d, seconds if no unit) (default "1h")
 
+      Clients have up to `tokenTTL` time available to exchange the secret store token for a signed JWT.
+      The validity period of that JWT is governed by `jwtTTL`.
 
-    The following options are used when token-type == "jwt":
+    * **--tokenTTL** _duration_ (optional)
 
-    * **--algorithm** RS256 | ES256 (required for JWT method)
+    	Vault token created as a result of vault login lasts this long  (_s, _m, _h, or _d, seconds if no unit) (default "1h")
 
-      Algorithm used for signing the JWT.
-      (See [RFC 7518](https://tools.ietf.org/html/rfc7518#section-3.1) for a list of signing algorithms.)
+      The `adduser` command creates a credential that enables a use to request a token for the secret store.
+      The intended purpose of this token is to exchange it for a signed JWT.
+      The duration specified here governs the time period within which a signed JWT can be requested.
 
-    * **--public\_key** _/path/to/public\_key_ (required for JWT tokens)
+      Note that although these tokens are renewable, there is nothing to be done with the token
+      except for requesting a JWT. Thus, the token renew endpoint is not currently exposed externally.
 
-      Public key (in PEM format) used to validate the JWT.
-      (Not an x.509 certificate.)
-      This key is assumed to have been pre-created using some external mechanism such as a TPM, HSM, openssl, or other method.
+    * **--useRootToken** (optional)
 
-    * **--id** _key_ (optional)
+      Normally, `secrets-config` uses a service token in the secret store token file.
+      As this token expires from inactivity an hour after it is created,
+      it is possible to point `secrets-config` at a `resp-init.json`
+      and a root token will be created afresh from the key shares in that file.
+      The `--useRootToken` flag is used to tell `secrets-config`
+      to use this authentication method to talk to the EdgeX secret store.
 
-      Optional user-specified &quot;key&quot; used for linkage with an incoming JWT via Kong&#39;s config.key\_claim\_name setting (defaults to &quot;iss&quot; field).
-      See
-      [Kong documentation for JWT plugin](https://docs.konghq.com/hub/kong-inc/jwt/#craft-a-jwt-with-publicprivate-keys-rs256-or-es256)
-      for an example of how this parameter is used.
+    Upon completion, `adduser` returns a JSON object with a random `password` field set.
+    This password is generated from the kernel random source and overwrites any previous password set on the account.
 
-    Upon completion, for token-type == "jwt", the command outputs the autogenerated _key_ for the **id** command above.
-    This value must be used during later construction of the JWT.
+    A sample shell script to turn this into an token that can be used for API gateway authentication is as follows:
 
+    ```shell
+    password=password-from-above
 
-    The following options are used when token-type == "oauth2":
+    vault_token=$(curl -ks "http://localhost:8200/v1/auth/userpass/login/${username}" -d "{\"password\":\"${password}\"}" | jq -r '.auth.client_token')
 
-    * **--client\_id** (optional)
+    id_token=$(curl -ks -H "Authorization: Bearer ${vault_token}" "http://localhost:8200/v1/identity/oidc/token/${username}" | jq -r '.data.token')
 
-      Optional manually-specified OAuth2 client_id.  Will be generated if not present.  Equivalent to a username.
+    echo "${id_token}"
+    ```
 
-    * **--client\_secret** (optional)
-
-      Optional manually-specified OAuth2 client_secret.  Will be generated if not present.  Equivalent to a password.
-
-    * **--redirect\_uris** _url\_for\_browser\_redirection_ (optional)
-
-      OAuth2 redirect URL for browser-based users. Defaults to "https://localhost".  This is not currently used by EdgeX but the API gateway requires a value.
-
-    Upon completion, for token-type == "oauth2", the command outputs a JSON structure containing the client_id and client_secret.
-    
+    It is expected the the username/password returned from adduser will be saved for later use.
+    However, if the password is lost, adduser can be run a second time to reset the password.
 
   * **deluser**
 
@@ -123,55 +117,8 @@ Proxy configuration commands (listed below) require access to the secret store m
 
   * **jwt**
 
-    Utility function to create a JWT proxy authentication token from a supplied secret. This command does not require secret store access, but the values supplied must match those presented to the adduser command earlier. Requires additional arguments:
-
-    * **--algorithm** `RS256` | `ES256` (required)
-
-      Algorithm used for signing the JWT.
-      (See [RFC 7518](https://tools.ietf.org/html/rfc7518#section-3.1) for a list of signing algorithms.)
-
-    * **--id** _key_ (required)
-
-      The &quot;key&quot; field from the &quot;adduser&quot; command.
-      (This will be either the --id argument passed in, or the automatically generated identifier.)
-      (This is not actually a cryptographic key, but a unique identifier such as would be used in a database.)
-
-    * **--private\_key** _/path/to/private.key_ (required)
-
-      Private key used to sign the JWT (PEM-encoded) with a key type corresponding to the above-supplied algorithm.
-
-    * **--exp** _duration_ (optional)
-
-      Duration of generated JWT expressed as a golang-parseable duration value. Use &quot;never&quot; to omit an expiration field in the JWT. Defaults to &quot;1h&quot; (one hour) if unspecified.
-
-    
-    The generated JWT will be the encoded representation of:
-
-      <pre>
-      {
-        &quot;typ&quot;: &quot;JWT&quot;,
-        &quot;alg&quot;: &quot;RS256 | ES256&quot;
-      }
-      {
-        &quot;iss&quot;: &quot;_key_&quot;,
-        &quot;exp&quot;: (calculated expiration time)
-      }
-      (signature)
-      </pre>
-
-
-  * **oauth2**
-
-    Utility function to create an OAuth2 proxy authentication token using the client_credentials OAuth2 grant flow. This command does not require secret store access, but the values supplied must match those presented to the adduser command earlier. Requires additional arguments:
-
-    * **--client\_id** _client\_id_ (required)
-
-      OAuth2 client_id from previous "adduser" command.  Equivalent to a username.
-
-    * **--client\_secret** _client\_secret_ (required)
-
-      OAuth2 client_secret from previous "adduser" command.  Equivalent to a password.
-
+!!! edgey "EdgeX 3.0"
+    The `jwt` sub-command is no longer supported in EdgeX 3.0.
 
 
 # CONFIGURATION
@@ -188,4 +135,4 @@ Proxy configuration commands (listed below) require access to the secret store m
 
 secrets-config(1)
 
-EdgeX Foundry Last change: 2020
+EdgeX Foundry Last change: 2023
