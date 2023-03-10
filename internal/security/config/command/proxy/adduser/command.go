@@ -51,8 +51,8 @@ func NewCommand(
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
 	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to add")
-	flagSet.StringVar(&cmd.tokenTTL, "tokenTTL", DefaultTokenTTL, "Vault token created as a result of vault login lasts this long")
-	flagSet.StringVar(&cmd.jwtTTL, "jwtTTL", DefaultJWTTTL, "JWT created by vault identity provider lasts this long")
+	flagSet.StringVar(&cmd.tokenTTL, "tokenTTL", DefaultTokenTTL, "Vault token created as a result of vault login lasts this long  (_s, _m, _h, or _d, seconds if no unit)")
+	flagSet.StringVar(&cmd.jwtTTL, "jwtTTL", DefaultJWTTTL, "JWT created by vault identity provider lasts this long (_s, _m, _h, or _d, seconds if no unit)")
 	flagSet.BoolVar(&cmd.useRootToken, "useRootToken", false, "Set to true to TokenFile in config points to a resp-init.json instead of a service token")
 
 	err := flagSet.Parse(args)
