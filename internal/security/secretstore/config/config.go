@@ -86,6 +86,12 @@ func (c *ConfigurationStruct) EmptyWritablePtr() interface{} {
 	return nil
 }
 
+// GetWritablePtr returns pointer to the writable section
+// Not needed for this service, so return nil
+func (c *ConfigurationStruct) GetWritablePtr() any {
+	return nil
+}
+
 // UpdateWritableFromRaw converts configuration received from the registry to a service-specific WritableInfo struct
 // Not needed for this service, so always return false
 func (c *ConfigurationStruct) UpdateWritableFromRaw(_ interface{}) bool {
