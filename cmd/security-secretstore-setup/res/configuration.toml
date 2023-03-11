@@ -76,3 +76,21 @@ ConsulSecretsAdminTokenPath = "/tmp/edgex/secrets/edgex-consul/admin/token.json"
   [Databases.scheduler]
   Service = "support-scheduler"
   Username = "support-scheduler"
+
+
+[SecureMessageBus]
+Type = "none" # blank or none if MessageBus not secured, "redis" if secured. "mqtt" is TBD
+KuiperConfigPath = "/tmp/kuiper/edgex.yaml"
+KuiperConnectionsPath = "/tmp/kuiper-connections/connection.yaml"
+  [SecureMessageBus.Services.command]
+  Service = "core-command"
+  [SecureMessageBus.Services.metadata]
+  Service = "core-metadata"
+  [SecureMessageBus.Services.coredata]
+  Service = "core-data"
+  [SecureMessageBus.Services.rulesengine]
+  Service = "app-rules-engine"
+  [SecureMessageBus.Services.notifications]
+  Service = "support-notifications"
+  [SecureMessageBus.Services.scheduler]
+  Service = "support-scheduler"
