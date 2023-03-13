@@ -30,7 +30,7 @@ COPY . .
 RUN make cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 # Deployment image
-FROM alpine:3.15
+FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'

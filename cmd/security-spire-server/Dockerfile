@@ -37,6 +37,7 @@ WORKDIR /edgex-go/spire-build
 RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
       tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
       echo "building spire from source..." && \
+      go version | sed -n -e 's/.*go\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' > .go-version && \
       make bin/spire-server bin/spire-agent && \
       cp bin/spire* /usr/local/bin/; \
     fi
@@ -44,7 +45,7 @@ RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/s
 WORKDIR /edgex-go
 
 # Deployment image
-FROM alpine:3.15
+FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
