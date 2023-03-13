@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/shared"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
@@ -51,7 +50,7 @@ func NewCommand(
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse command: %s: %w", strings.Join(args, " "), err)
+		return nil, err
 	}
 	if cmd.username == "" {
 		return nil, fmt.Errorf("%s proxy deluser: argument --user is required", os.Args[0])

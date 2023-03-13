@@ -27,13 +27,13 @@ func TestTLSBagArguments(t *testing.T) {
 	badArgTestcases := [][]string{
 		{},                       // missing arg --in
 		{"-badarg"},              // invalid arg
-		{"--incert", "somefile"}, // missing --inkey
-		{"--inkey", "keyfile"},   // missing --incert
-		{"--inkey"},              // missing filename
-		{"--incert"},             // missing filename
-		{"--targetfolder"},       // missing filename
-		{"--certfilename"},       // missing filename
-		{"--keyfilename"},        // missing filename
+		{"--inCert", "somefile"}, // missing --inKey
+		{"--inKey", "keyfile"},   // missing --inCert
+		{"--inKey"},              // missing filename
+		{"--inCert"},             // missing filename
+		{"--targetFolder"},       // missing filename
+		{"--certFilename"},       // missing filename
+		{"--keyFilename"},        // missing filename
 	}
 
 	for _, args := range badArgTestcases {
@@ -51,9 +51,9 @@ func TestTLSErrorFileNotFound(t *testing.T) {
 	// Arrange
 	lc := logger.MockLogger{}
 	fileNotFoundTestcases := [][]string{
-		{"--incert", "missingcertificate", "--inkey", "missingprivatekey"},       // both files missing
-		{"--incert", "testdata/testCert.pem", "--inkey", "missingprivatekey"},    // key file missing
-		{"--incert", "missingcertificate", "--inkey", "testdata/testCert.prkey"}, // cert file missing
+		{"--inCert", "missingcertificate", "--inKey", "missingprivatekey"},       // both files missing
+		{"--inCert", "testdata/testCert.pem", "--inKey", "missingprivatekey"},    // key file missing
+		{"--inCert", "missingcertificate", "--inKey", "testdata/testCert.prkey"}, // cert file missing
 	}
 
 	for _, args := range fileNotFoundTestcases {
@@ -74,14 +74,14 @@ func TestInstallCertificate(t *testing.T) {
 	lc := logger.MockLogger{}
 	validCommandLines := [][]string{
 		{"new.crt", "new.key", "", "", "/etc/ssl/nginx/nginx.crt", "/etc/ssl/nginx/nginx.key"},
-		{"new.crt", "new.key", "--targetfolder", "/foofolder", "/foofolder/nginx.crt", "/foofolder/nginx.key"},
-		{"new.crt", "new.key", "--certfilename", "foo.crt", "/etc/ssl/nginx/foo.crt", "/etc/ssl/nginx/nginx.key"},
-		{"new.crt", "new.key", "--keyfilename", "foo.key", "/etc/ssl/nginx/nginx.crt", "/etc/ssl/nginx/foo.key"},
+		{"new.crt", "new.key", "--targetFolder", "/foofolder", "/foofolder/nginx.crt", "/foofolder/nginx.key"},
+		{"new.crt", "new.key", "--certFilename", "foo.crt", "/etc/ssl/nginx/foo.crt", "/etc/ssl/nginx/nginx.key"},
+		{"new.crt", "new.key", "--keyFilename", "foo.key", "/etc/ssl/nginx/nginx.crt", "/etc/ssl/nginx/foo.key"},
 	}
 
 	for _, args := range validCommandLines {
 		// Arrange
-		command, err := NewCommand(lc, []string{"--incert", args[0], "--inkey", args[1], args[2], args[3]})
+		command, err := NewCommand(lc, []string{"--inCert", args[0], "--inKey", args[1], args[2], args[3]})
 		require.NoError(t, err)
 		mockOpener := &mocks.FileIoPerformer{}
 		command.fileOpener = mockOpener

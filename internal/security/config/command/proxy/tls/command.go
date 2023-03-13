@@ -12,7 +12,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
@@ -62,21 +61,21 @@ func NewCommand(
 	flagSet := flag.NewFlagSet(CommandName, flag.ContinueOnError)
 	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 
-	flagSet.StringVar(&cmd.certificatePath, "incert", "", "Path to PEM-encoded leaf certificate")
-	flagSet.StringVar(&cmd.privateKeyPath, "inkey", "", "Path to PEM-encoded private key")
-	flagSet.StringVar(&cmd.targetFolder, "targetfolder", DefaultNginxTlsFolder, "Path to TLS key file")
-	flagSet.StringVar(&cmd.certFilename, "certfilename", DefaultNginxCertFile, "Filename of certificate file (on target)")
-	flagSet.StringVar(&cmd.keyFilename, "keyfilename", DefaultNginxKeyFile, "Filename of private key file (on target")
+	flagSet.StringVar(&cmd.certificatePath, "inCert", "", "Path to PEM-encoded leaf certificate")
+	flagSet.StringVar(&cmd.privateKeyPath, "inKey", "", "Path to PEM-encoded private key")
+	flagSet.StringVar(&cmd.targetFolder, "targetFolder", DefaultNginxTlsFolder, "Path to TLS key file")
+	flagSet.StringVar(&cmd.certFilename, "certFilename", DefaultNginxCertFile, "Filename of certificate file (on target)")
+	flagSet.StringVar(&cmd.keyFilename, "keyFilename", DefaultNginxKeyFile, "Filename of private key file (on target")
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse command: %s: %w", strings.Join(args, " "), err)
+		return nil, err
 	}
 	if cmd.certificatePath == "" {
-		return nil, fmt.Errorf("%s proxy tls: argument --incert is required", os.Args[0])
+		return nil, fmt.Errorf("%s proxy tls: argument --inCert is required", os.Args[0])
 	}
 	if cmd.privateKeyPath == "" {
-		return nil, fmt.Errorf("%s proxy tls: argument --inkey is required", os.Args[0])
+		return nil, fmt.Errorf("%s proxy tls: argument --inKey is required", os.Args[0])
 	}
 
 	return &cmd, nil
