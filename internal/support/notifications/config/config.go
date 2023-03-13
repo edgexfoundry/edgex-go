@@ -48,9 +48,9 @@ type SmtpInfo struct {
 	Sender               string
 	EnableSelfSignedCert bool
 	Subject              string
-	// SecretPath is used to specify the secret path to store the credential(username and password) for connecting the SMTP server
+	// SecretName is used to specify the secret path to store the credential(username and password) for connecting the SMTP server
 	// User need to store the credential via the /secret API before sending the email notification
-	SecretPath string
+	SecretName string
 	// AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
 	AuthMode string
 }
