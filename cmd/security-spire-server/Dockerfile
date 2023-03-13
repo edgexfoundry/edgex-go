@@ -53,6 +53,8 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
+COPY --from=builder /edgex-go/security.txt /
+
 COPY --from=builder /usr/local/bin/spire-server /usr/local/bin
 COPY --from=builder /edgex-go/cmd/security-spire-server/docker-entrypoint.sh /usr/local/bin/
 COPY --from=builder /edgex-go/cmd/security-spire-server/server.conf /usr/local/etc/spire/server.conf.tpl
