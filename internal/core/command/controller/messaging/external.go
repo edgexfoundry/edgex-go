@@ -18,6 +18,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+
 	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
@@ -111,7 +112,8 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		// expected external command request/response topic scheme: #/<device-name>/<command-name>/<method>
 		deviceName := topicLevels[length-3]
-		commandName, err := url.QueryUnescape(topicLevels[length-2])
+		commandName := topicLevels[length-2]
+		_, err = url.QueryUnescape(topicLevels[length-2])
 		if err != nil {
 			lc.Errorf("Failed to unescape command name '%s': %s", commandName, err.Error())
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
@@ -124,7 +126,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		externalResponseTopic := common.BuildTopic(externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, url.QueryEscape(commandName), method)
+		externalResponseTopic := common.BuildTopic(externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, commandName, method)
 
 		internalBaseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
 		topicPrefix := common.BuildTopic(internalBaseTopic, common.CoreCommandDeviceRequestPublishTopic)
@@ -159,7 +161,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.RequestID, response.CorrelationID)
+		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
 
 		publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
 	}
