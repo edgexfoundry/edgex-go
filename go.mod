@@ -7,7 +7,7 @@ require (
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.46
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.27
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.16
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.18
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9
