@@ -16,7 +16,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Build utility container
-ARG BUILDER_BASE=golang:1.18-alpine3.16
+ARG BUILDER_BASE=golang:1.20-alpine3.17
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -34,9 +34,11 @@ ARG SPIRE_RELEASE=1.2.1
 # in CI the BUILDER_BASE will already contain a compiled spire-server/agent
 # so we check to see if the binary is already in the image before compilation
 WORKDIR /edgex-go/spire-build
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
     tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
     echo "building spire from source..." && \
+    go version | sed -n -e 's/.*go\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' > .go-version && \
     make bin/spire-server bin/spire-agent && \
     cp bin/spire* /usr/local/bin/; \
     fi
@@ -44,7 +46,7 @@ RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/s
 WORKDIR /edgex-go
 
 # Deployment image
-FROM alpine:3.15
+FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'

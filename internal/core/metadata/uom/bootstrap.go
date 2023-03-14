@@ -7,7 +7,7 @@ package uom
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"sync"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -37,7 +37,7 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 		return true
 	}
 
-	contents, err := ioutil.ReadFile(filepath)
+	contents, err := os.ReadFile(filepath)
 	if err != nil {
 		lc.Errorf("could not load unit of measure configuration file (%s): %s", filepath, err.Error())
 		return false

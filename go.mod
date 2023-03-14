@@ -1,5 +1,7 @@
 module github.com/edgexfoundry/edgex-go
 
+go 1.20
+
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.46
@@ -70,5 +72,3 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )
-
-go 1.18
