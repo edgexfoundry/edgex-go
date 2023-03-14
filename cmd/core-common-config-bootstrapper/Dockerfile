@@ -41,6 +41,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
+COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/core-common-config-bootstrapper /
 COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/res/configuration.yaml /res/configuration.yaml
 

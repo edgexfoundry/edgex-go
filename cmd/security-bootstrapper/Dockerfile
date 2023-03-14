@@ -51,6 +51,7 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint-scripts/ ${SE
 RUN chmod +x ${SECURITY_INIT_STAGING}/*.sh
 
 COPY --from=builder /edgex-go/Attribution.txt /
+COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/security-bootstrapper .
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml ./res/
 

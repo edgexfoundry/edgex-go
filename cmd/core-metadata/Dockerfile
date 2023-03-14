@@ -45,6 +45,7 @@ EXPOSE $APP_PORT
 
 WORKDIR /
 COPY --from=builder /edgex-go/Attribution.txt /
+COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/core-metadata/core-metadata /
 COPY --from=builder /edgex-go/cmd/core-metadata/res/configuration.toml /res/configuration.toml
 COPY --from=builder /edgex-go/cmd/core-metadata/res/uom.toml /res/uom.toml

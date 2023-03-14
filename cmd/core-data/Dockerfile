@@ -44,6 +44,7 @@ EXPOSE $APP_PORT
 
 RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
+COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/core-data/core-data /
 COPY --from=builder /edgex-go/cmd/core-data/res/configuration.toml /res/configuration.toml
 
