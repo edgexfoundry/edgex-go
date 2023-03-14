@@ -34,6 +34,7 @@ ARG SPIRE_RELEASE=1.2.1
 # in CI the BUILDER_BASE will already contain a compiled spire-server/agent
 # so we check to see if the binary is already in the image before compilation
 WORKDIR /edgex-go/spire-build
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
     tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
     echo "building spire from source..." && \
