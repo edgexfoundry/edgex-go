@@ -34,6 +34,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	"github.com/pelletier/go-toml"
 	"gopkg.in/yaml.v3"
 )
 
@@ -44,7 +45,7 @@ const (
 func Main(ctx context.Context, cancel context.CancelFunc) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommonConfigServiceKey)
 
-	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
@@ -117,17 +118,18 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		os.Exit(1)
 	}
 
-	lc.Infof("configuration exists: %v", hasConfig)
+	lc.Infof("Common configuration exists in Config Provider is %v and overwrite flag is %v", hasConfig, f.OverwriteConfig())
 
 	// load the yaml file and push it using the config client
 	if !hasConfig || f.OverwriteConfig() {
 		yamlFile := config.GetConfigLocation(lc, f)
-		lc.Infof("parsing %s for configuration", yamlFile)
-		err = loadYaml(lc, yamlFile, configClient)
+		err = pushConfiguration(lc, yamlFile, configClient)
 		if err != nil {
 			lc.Error(err.Error())
 			os.Exit(1)
 		}
+	} else {
+		lc.Infof("Skipped pushing common configuration")
 	}
 
 	lc.Info("Core Common Config exiting")
@@ -157,13 +159,13 @@ func translateInterruptToCancel(ctx context.Context, wg *sync.WaitGroup, cancel 
 	}()
 }
 
-func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configuration.Client) error {
+func pushConfiguration(lc logger.LoggingClient, yamlFile string, configClient configuration.Client) error {
 	// push not done flag to configClient
 	err := configClient.PutConfigurationValue(commonConfigDone, []byte("false"))
 	if err != nil {
 		return fmt.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
 	}
-	lc.Infof("reading %s", yamlFile)
+	lc.Infof("Using common configuration from %s", yamlFile)
 	contents, err := os.ReadFile(yamlFile)
 	if err != nil {
 		return fmt.Errorf("failed to read common configuration file %s: %s", yamlFile, err.Error())
@@ -178,6 +180,11 @@ func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configurati
 	}
 
 	kv = buildKeyValues(data, kv, "")
+
+	kv, err = applyEnvOverrides(kv, lc)
+	if err != nil {
+		return fmt.Errorf("failed to apply env overrides to common configuration: %s", err.Error())
+	}
 
 	keys := make([]string, 0, len(kv))
 
@@ -203,6 +210,9 @@ func loadYaml(lc logger.LoggingClient, yamlFile string, configClient configurati
 	if err != nil {
 		return fmt.Errorf("failed to push %s on completion: %s", commonConfigDone, err.Error())
 	}
+
+	lc.Info("Common configuration has been pushed to into Configuration Provider with overrides applied")
+
 	return nil
 }
 
@@ -228,4 +238,22 @@ func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, orig
 	}
 
 	return kv
+}
+
+func applyEnvOverrides(keyValues map[string]any, lc logger.LoggingClient) (map[string]any, error) {
+	env := environment.NewVariables(lc)
+	tomlTree, err := toml.TreeFromMap(keyValues)
+	if err != nil {
+		return nil, err
+	}
+
+	overrideCount, err := env.OverrideTomlValues(tomlTree)
+	if err != nil {
+		return nil, err
+	}
+
+	keyValues = tomlTree.ToMap()
+	lc.Infof("Common configuration loaded from file with %d overrides applied", overrideCount)
+
+	return keyValues, nil
 }
