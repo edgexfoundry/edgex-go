@@ -118,10 +118,10 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		os.Exit(1)
 	}
 
-	lc.Infof("Common configuration exists in Config Provider is %v and overwrite flag is %v", hasConfig, f.OverwriteConfig())
-
 	// load the yaml file and push it using the config client
 	if !hasConfig || f.OverwriteConfig() {
+		lc.Info("Pushing common configuration. It doesn't exists or overwrite flag is set")
+
 		yamlFile := config.GetConfigLocation(lc, f)
 		err = pushConfiguration(lc, yamlFile, configClient)
 		if err != nil {
@@ -129,7 +129,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 			os.Exit(1)
 		}
 	} else {
-		lc.Infof("Skipped pushing common configuration")
+		lc.Info("Skipped pushing common configuration. It already exists and overwrite flag not set")
 	}
 
 	lc.Info("Core Common Config exiting")
