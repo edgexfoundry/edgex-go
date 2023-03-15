@@ -11,6 +11,7 @@ PersistData = true
 #    Gateway="my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
 
 [Service]
+Host = "localhost"
 Port = 59880
 StartupMsg = "This is the Core Data Microservice"
 
