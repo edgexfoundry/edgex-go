@@ -1,0 +1,27 @@
+Writable:
+  LogLevel: INFO
+  ProfileChange:
+    StrictDeviceProfileChanges: false
+    StrictDeviceProfileDeletes: false
+  UoM:
+    Validation: false
+Service:
+  Host: localhost
+  Port: 59881
+  StartupMsg: "This is the EdgeX Core Metadata Microservice"
+UoM:
+  UoMFile: ./res/uom.yaml
+
+# uncomment when running from command-line in hybrid mode with -cp -o flags
+#Registry:
+#  Host: "localhost"
+
+MessageBus:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Optional:
+    ClientId: core-metadata
+
+Database:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Name: metadata
+

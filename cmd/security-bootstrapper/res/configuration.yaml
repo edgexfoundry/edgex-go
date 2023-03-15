@@ -1,0 +1,68 @@
+LogLevel: INFO
+StageGate:
+  BootStrapper:
+    Host: edgex-security-bootstrapper
+    StartPort: 54321
+  Ready:
+    ToRunPort: 54329
+  SecretStoreSetup:
+    Host: edgex-secretstore-setup
+    Tokens:
+      ReadyPort: 54322
+  Database:  # this is intended to be the same as Database.Host/.Port for other services
+    Host: edgex-redis
+    Port: 6379
+    ReadyPort: 54323
+  Registry:  # this is intended to be the same as Registry.Host/.Port for other services
+    Host: edgex-core-consul
+    Port: 8500
+    ReadyPort: 54324
+    ACL:
+      Protocol: http
+      # this is the filepath for the generated Consul management token from ACL bootstrap
+      BootstrapTokenPath: /tmp/edgex/secrets/consul-acl-token/bootstrap_token.json
+      # this is the filepath for the Vault token created from secretstore-setup
+      SecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
+      # this is the filepath for the sentinel file to indicate the registry ACL is set up successfully
+      SentinelFilePath: /edgex-init/consul-bootstrapper/consul_acl_done
+      # this is the filepath for the created Consul management token
+      ManagementTokenPath: /tmp/edgex/secrets/consul-acl-token/mgmt_token.json
+
+      # this section contains the list of registry roles for EdgeX services
+      # the service keys are the role names
+      Roles:
+        app-rules-engine:
+          Description: role for application service of rules engine
+        core-data:
+          Description: role for coredata
+        core-metadata:
+          Description: role for metadata
+        core-command:
+          Description: role for command
+        core-common-config-bootstrapper:
+          Description: role for common config
+        support-notifications:
+          Description: role for notifications
+        support-scheduler:
+          Description: role for scheduler
+        device-virtual:
+          Description: role for device virtual service
+        device-rest:
+          Description: role for device rest service
+        security-proxy-auth:
+          Description: role for NGINX auth proxy backend service
+        security-spiffe-token-provider:
+          Description: role for device security-spiffe-token-provider service
+  WaitFor:
+    Timeout: 10s
+    RetryInterval: 1s
+
+# this configuration is just part of the whole go-mod-bootstrap's secret store to have
+# protocol, host, and port of secretstore using in the security-bootstrapper
+# we are not really using the secret store provider from go-mod-bootstrap in the code
+# also this is needed as snap does not have those environments from env-files
+SecretStore:
+  Type: vault
+  Protocol: http
+  Host: localhost
+  Port: 8200

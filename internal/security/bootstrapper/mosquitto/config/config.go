@@ -19,7 +19,7 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 )
 
-// ConfigurationStruct has a 1:1 relationship to the configuration.toml for the service. Writable is
+// ConfigurationStruct has a 1:1 relationship to the configuration.yaml for the service. Writable is
 // the runtime extension of the static configuration.
 type ConfigurationStruct struct {
 	LogLevel        string
@@ -61,11 +61,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of
 // the configuration data is returned.  This is intended to be temporary -- since
-// ConfigurationStruct drives the configuration.toml's structure -- until we can make
-// backwards-breaking configuration.toml changes (which would consolidate these fields into an
+// ConfigurationStruct drives the configuration.yaml's structure -- until we can make
+// backwards-breaking configuration.yaml changes (which would consolidate these fields into an
 // bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	// temporary until we can make backwards-breaking configuration.toml change
+	// temporary until we can make backwards-breaking configuration.yaml change
 	return bootstrapConfig.BootstrapConfiguration{}
 }
 

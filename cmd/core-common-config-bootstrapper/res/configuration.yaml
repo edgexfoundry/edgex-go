@@ -24,7 +24,6 @@ all-services:
       
   Service:
     HealthCheckInterval: "10s"
-    Host: "localhost"
     ServerBindAddr: "" # Leave blank so default to Host value unless different value is needed.
     MaxResultCount: 1024
     MaxRequestSize: 0 # Not currently used. Defines the maximum size of http request body in bytes

@@ -128,11 +128,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 }
 
 // GetBootstrap returns the configuration elements required by the bootstrap.  Currently, a copy of the configuration
-// data is returned.  This is intended to be temporary -- since ConfigurationStruct drives the configuration.toml's
-// structure -- until we can make backwards-breaking configuration.toml changes (which would consolidate these fields
+// data is returned.  This is intended to be temporary -- since ConfigurationStruct drives the configuration.yaml's
+// structure -- until we can make backwards-breaking configuration.yaml changes (which would consolidate these fields
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	// temporary until we can make backwards-breaking configuration.toml change
+	// temporary until we can make backwards-breaking configuration.yaml change
 	return bootstrapConfig.BootstrapConfiguration{
 		Clients:    c.Clients,
 		Service:    c.Service,

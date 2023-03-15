@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2023 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func (f *commonFlags) Parse(_ []string) {
 
 // ConfigFileName returns the name of the local configuration file
 func (f *commonFlags) ConfigFileName() string {
-	return internal.ConfigFileName
+	return flags.DefaultConfigFile
 }
 
 // OverwriteConfig returns false since the Configuration provider is not used

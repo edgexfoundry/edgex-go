@@ -23,7 +23,7 @@ import (
 
 func main() {
 	// When running security-bootstrapper's subcommands, we don't want the side effect of
-	// the env var. EDGEX_PROFILE overriding so that unset the env can avoid the TOML's resource
+	// the env var. EDGEX_PROFILE overriding so that unset the env can avoid the config's resource
 	// directory path of the security-bootstrapper itself being modified.
 	_ = os.Unsetenv("EDGEX_PROFILE")
 
