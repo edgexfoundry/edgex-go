@@ -1,7 +1,8 @@
 name: edgexfoundry
 base: core20
-type: app
-adopt-info: metadata
+summary: EdgeX core, security, and supporting components
+description: Refer to https://snapcraft.io/edgexfoundry
+adopt-info: edgex-go
 
 # Different epochs prevent refreshes between major versions of EdgeX due
 # to continued configuration changes.
@@ -455,16 +456,23 @@ parts:
     - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
 
   edgex-go:
-    after: 
-      - metadata
-      - go-builder
+    after: [go-builder]
     source: .
     plugin: make
     override-build: |
       cd $SNAPCRAFT_PART_SRC
 
-      # the version is needed for the build
-      cat ./VERSION
+      if git describe ; then
+        VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      else
+        VERSION="0.0.0"
+      fi
+
+      # set the version of the snap
+      snapcraftctl set-version $VERSION
+
+      # write version to file for the build
+      echo $VERSION > VERSION
 
       [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
@@ -557,28 +565,3 @@ parts:
       unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       vault: bin/vault
-
-  metadata:
-    plugin: nil
-    source: https://github.com/canonical/edgex-snap-metadata.git
-    source-branch: appstream
-    source-depth: 1
-    override-build: |
-      # install the icon at the default internal path
-      install -DT edgex-snap-icon.png \
-        $SNAPCRAFT_PART_INSTALL/meta/gui/icon.png
-      
-      # change to this project's repo to get the version
-      cd $SNAPCRAFT_PROJECT_DIR
-      if git describe ; then
-        VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
-      else
-        VERSION="0.0.0"
-      fi
-
-      # write version to file for the build
-      echo $VERSION > ./VERSION
-      # set the version of this snap
-      snapcraftctl set-version $VERSION
-    parse-info: [edgexfoundry.metainfo.xml]  
-
