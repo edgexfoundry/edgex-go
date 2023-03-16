@@ -374,27 +374,14 @@ parts:
     override-build: |
       VERSION=1.13.0
 
-      # use dpkg architecture to figure out our target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=consul_${VERSION}_linux_amd64.zip
-          FILE_HASH=db771e40126a88e1cfe2968724adbf2d1cdcc41c503fa326f3a93148ea642d38
-          ;;
-        arm64)
-          FILE_NAME=consul_${VERSION}_linux_arm64.zip
-          FILE_HASH=768119d9464685bd39329c537ee140ba19f45f5a2f68ea8fe49403f3141d39ec
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=consul_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
-      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
+
+      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       consul: bin/consul
 
@@ -494,26 +481,13 @@ parts:
     override-build: |
       VERSION=1.11.3
 
-      # use dpkg architecture to figure out the target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=vault_${VERSION}_linux_amd64.zip
-          FILE_HASH=b433413ce524f26abe6292f7fc95f267e809daeacdf7ba92b68dead322f92deb
-          ;;
-        arm64)
-          FILE_NAME=vault_${VERSION}_linux_arm64.zip
-          FILE_HASH=5ccf49bd3601e29d6d1a8c321ece1eacf0f7cc12ea604ac392edd4f7a54d69c4
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=vault_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
-      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
+
+      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
     organize:
       vault: bin/vault
