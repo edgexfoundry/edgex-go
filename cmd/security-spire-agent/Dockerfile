@@ -53,6 +53,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 
 COPY --from=builder /usr/local/bin/spire-agent /usr/local/bin

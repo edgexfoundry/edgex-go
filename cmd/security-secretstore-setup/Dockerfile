@@ -39,6 +39,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 WORKDIR /
 
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.json /res-file-token-provider/token-config.json
