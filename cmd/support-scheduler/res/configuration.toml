@@ -4,6 +4,7 @@ ScheduleIntervalTime = 500
 LogLevel = "INFO"
 
 [Service]
+Host = "localhost"
 Port = 59861
 StartupMsg = "This is the Support Scheduler Microservice"
 

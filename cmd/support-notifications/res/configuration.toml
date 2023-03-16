@@ -10,6 +10,7 @@ ResendInterval = "5s"
       password = ""
 
 [Service]
+Host = "localhost"
 Port = 59860
 StartupMsg = "This is the Support Notifications Microservice"
 

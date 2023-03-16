@@ -2,6 +2,7 @@
 LogLevel = "DEBUG"
 
 [Service]
+Host = "localhost"
 Port = 59841
 StartupMsg = "This is the SPIFFE token provider microservice"
 
