@@ -270,21 +270,8 @@ apps:
       SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res/
       SECRETSTORE_TOKENFILE: resp-init.json
     plugs: [home, removable-media, network]
-  curl:
-    command: usr/bin/curl
-    plugs: [network]
-  jq:
-    command: usr/bin/jq
-    plugs: [home, removable-media]
 
 parts:
-  static-packages:
-    plugin: nil
-    stage-packages:
-      - apg
-      - curl
-      - jq
-
   # For inspiration see
   # - https://github.com/ogra1/nginx-snap
   # - https://github.com/kbavishi/nginx-snapcraft
