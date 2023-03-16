@@ -78,8 +78,7 @@ apps:
       - network-bind
   security-secretstore-setup:
     after: [vault]
-    command: >-
-      bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+    command: bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/source-env-file.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
@@ -257,7 +256,7 @@ apps:
   core-common-config-bootstrapper:
     after:
       - security-bootstrapper-consul
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry 
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
     daemon: oneshot
@@ -391,7 +390,7 @@ parts:
     source-depth: 1
     plugin: make
     make-parameters:
-    - "PREFIX=$CRAFT_PART_INSTALL/"
+      - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
 
   edgex-go:
     source: .
@@ -468,10 +467,6 @@ parts:
       # value of $SNAP_DATA using jq in the install hook
       cp "./cmd/security-file-token-provider/res/token-config.json" \
         "$CRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
-
-    build-packages:
-      - zip
-      - pkg-config
 
   vault:
     plugin: nil
