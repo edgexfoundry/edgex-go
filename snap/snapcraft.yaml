@@ -366,12 +366,6 @@ parts:
     prime:
       - -usr/nginx/logs
 
-  go-builder:
-    plugin: nil
-    build-snaps:
-      - go/1.20/stable
-    prime: [-*]
-
   runtime-helpers:
     plugin: dump
     source: snap/local/runtime-helpers
@@ -379,7 +373,8 @@ parts:
   helper-go:
     source: snap/local/helper-go
     plugin: make
-    after: [go-builder]
+    build-snaps:
+      - go/1.20/stable
     override-build: |
       cd $CRAFT_PART_SRC
       make build
@@ -426,9 +421,10 @@ parts:
     - "PREFIX=$CRAFT_PART_INSTALL/"
 
   edgex-go:
-    after: [go-builder]
     source: .
     plugin: make
+    build-snaps:
+      - go/1.20/stable
     override-build: |
       cd $CRAFT_PART_SRC
 
