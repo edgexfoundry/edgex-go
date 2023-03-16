@@ -36,11 +36,13 @@ grade: stable
 confinement: strict
 
 apps:
-  # edgex microservices
   consul:
     command: bin/start-consul.sh
     daemon: forking
     install-mode: disable
+    plugs: [network, network-bind]
+  consul-cli:
+    command: bin/consul
     plugs: [network, network-bind]
   redis:
     after: [security-bootstrapper-redis]
@@ -53,6 +55,9 @@ apps:
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
+  redis-cli:
+    command: bin/redis-cli
+    plugs: [home, removable-media, network]
   vault:
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
@@ -265,12 +270,6 @@ apps:
       SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res/
       SECRETSTORE_TOKENFILE: resp-init.json
     plugs: [home, removable-media, network]
-  redis-cli:
-    command: bin/redis-cli
-    plugs: [home, removable-media, network]
-  consul-cli:
-    command: bin/consul
-    plugs: [network, network-bind]
   curl:
     command: usr/bin/curl
     plugs: [network]
