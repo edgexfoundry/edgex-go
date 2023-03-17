@@ -30,12 +30,6 @@ const (
 	DefaultNginxKeyFile   = "nginx.key"
 )
 
-// permissionable is the subset of the File API that allows setting file permissions
-type permissionable interface {
-	Chown(uid int, gid int) error
-	Chmod(mode os.FileMode) error
-}
-
 type cmd struct {
 	loggingClient   logger.LoggingClient
 	client          internal.HttpCaller
@@ -115,11 +109,6 @@ func (c *cmd) copyFile(destPath string, srcPath string, perm os.FileMode, uid in
 	destCloser, _ := dest.(io.Closer)
 	if destCloser != nil {
 		defer func() { _ = destCloser.Close() }()
-	}
-
-	permissionable := destCloser.(permissionable)
-	if err := permissionable.Chown(uid, gid); err != nil {
-		return err
 	}
 
 	_, err = io.Copy(dest, src)
