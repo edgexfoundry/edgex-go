@@ -38,6 +38,7 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 WORKDIR /edgex
 
+COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 
 # Note that secrets-config shares the same configuration file as security-proxy-setup
