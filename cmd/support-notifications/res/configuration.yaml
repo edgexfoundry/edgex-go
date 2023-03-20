@@ -13,9 +13,9 @@ Service:
   Port: 59860
   StartupMsg: "This is the Support Notifications Microservice"
 Smtp:
-  Host: smtp.gmail.com
+  Host: my.email.server
   Port: 587
-  Sender: jdoe@gmail.com
+  Sender: some.email.address
   EnableSelfSignedCert: false
   Subject: EdgeX Notification
   # SecretName is used to specify the secret name to store the credential(username and password) for connecting the SMTP server

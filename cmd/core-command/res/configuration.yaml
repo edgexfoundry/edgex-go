@@ -21,7 +21,7 @@ Clients:
 ExternalMQTT:
   Enabled: false
   Url: "tcp://localhost:1883"
-  ClientId: core-command
+  ClientId: ex-core-command
   ConnectTimeout: 5s
   AutoReconnect: true
   KeepAlive: 10
