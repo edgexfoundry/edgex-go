@@ -197,7 +197,7 @@ apps:
       - bin/service-config-overrides.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
-      UOM_UOMFILE: $SNAP_DATA/config/core-metadata/res/uom.toml
+      UOM_UOMFILE: $SNAP_DATA/config/core-metadata/res/uom.yaml
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
@@ -488,7 +488,7 @@ parts:
           case "$service" in
           "core-metadata")
               install -DT "./cmd/core-metadata/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
-              install -DT "./cmd/core-metadata/res/uom.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.toml"
+              install -DT "./cmd/core-metadata/res/uom.yaml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.yaml"
           ;;
           "core-common-config-bootstrapper")
               install -DT "./cmd/core-common-config-bootstrapper/res/configuration.yaml" \
