@@ -1,0 +1,13 @@
+Writable:
+  LogLevel: DEBUG
+Service:
+  Host: localhost
+  Port: 59841
+  StartupMsg: "This is the SPIFFE token provider microservice"
+TokenConfig:
+  DefaultTokenTTL: 1h
+  DefaultJWTTTL: 15m
+  UserPassMountPoint: userpass
+SPIFFE:
+  EndpointSocket: /tmp/edgex/secrets/spiffe/public/api.sock
+  TrustDomain: edgexfoundry.org

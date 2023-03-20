@@ -1,5 +1,5 @@
 #  ----------------------------------------------------------------------------------
-#  Copyright 2022 Intel Corporation
+#  Copyright 2023 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -33,14 +33,14 @@ RUN make cmd/security-spiffe-token-provider/security-spiffe-token-provider
 FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2022 Intel Corporation'
+      copyright='Copyright (c) 2023 Intel Corporation'
 
 RUN apk update && apk --no-cache --update add dumb-init curl gcompat
 
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/security-spiffe-token-provider /
-COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/res/configuration.yaml /res/configuration.yaml
 
 ENTRYPOINT [ "/security-spiffe-token-provider" ]
 CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

@@ -18,9 +18,9 @@ Proxy configuration commands (listed below) require access to the secret store m
 
 # OPTIONS
 
-  * **--configDir** _/path/to/directory/with/configuration.toml_ (optional)
+  * **--configDir** _/path/to/directory/with/configuration.yaml_ (optional)
 
-    Points to directory containing a configuration.toml file.
+    Points to directory containing a configuration.yaml file.
 
 !!! edgey "EdgeX 3.0"
     The `--confdir` command line option is replaced by `--configDir` in EdgeX 3.0.

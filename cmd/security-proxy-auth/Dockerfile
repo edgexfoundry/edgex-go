@@ -42,7 +42,7 @@ RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/security-proxy-auth/security-proxy-auth /
-COPY --from=builder /edgex-go/cmd/security-proxy-auth/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/security-proxy-auth/res/configuration.yaml /res/configuration.yaml
 
 COPY --from=builder /edgex-go/cmd/security-proxy-auth/entrypoint.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/entrypoint.sh \

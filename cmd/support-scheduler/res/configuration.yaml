@@ -1,0 +1,37 @@
+ScheduleIntervalTime: 500
+Writable:
+    LogLevel: INFO
+Service:
+    Host: localhost
+    Port: 59861
+    StartupMsg: "This is the Support Scheduler Microservice"
+Intervals:
+    Midnight:
+        Name: midnight
+        Start: 20180101T000000
+        Interval: 24h
+IntervalActions:
+    ScrubAged:
+        Name: scrub-aged-events
+        Host: localhost
+        Port: 59880
+        Protocol: http
+        Method: DELETE
+        Path: /api/v2/event/age/604800000000000   # Remove events older than 7 days
+        Interval: midnight
+        AdminState: UNLOCKED
+        AuthMethod: JWT     # AuthMethod = JWT degrades to no auth in security-disabled EdgeX
+
+# uncomment when running from command-line in hybrid mode with -cp -o flags
+#Registry:
+#  Host: "localhost"
+
+MessageBus:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Optional:
+    ClientId: support-scheduler
+
+Database:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Name: scheduler
+

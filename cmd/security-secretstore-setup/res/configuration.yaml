@@ -1,0 +1,84 @@
+#################################################################################
+# Copyright 2019 Dell Inc.
+# Copyright 2020-2023 Intel Corp.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License
+# is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+# or implied. See the License for the specific language governing permissions and limitations under
+# the License.
+#
+#################################################################################
+
+LogLevel: DEBUG
+SecretStore:
+  Type: vault
+  Protocol: http
+  Host: localhost
+  Port: 8200
+  CertPath: ""
+  CaFilePath: ""
+  CertFilePath: ""
+  KeyFilePath: ""
+  TokenFolderPath: /vault/config/assets
+  TokenFile: resp-init.json
+  VaultSecretShares: 5
+  VaultSecretThreshold: 3
+  TokenProvider: /security-file-token-provider
+  TokenProviderArgs:
+    - "-configDir"
+    - res-file-token-provider
+  TokenProviderType: oneshot
+  TokenProviderAdminTokenPath: /run/edgex/secrets/tokenprovider/secrets-token.json
+  PasswordProvider: ""
+  PasswordProviderArgs: []
+  RevokeRootTokens: true
+  ConsulSecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
+Databases:
+  admin:
+    Username: admin
+  authorization:
+    Username: admin
+  config:
+    Username: admin
+  local:
+    Username: admin
+  command:
+    Service: core-command
+    Username: core-command
+  metadata:
+    Service: core-metadata
+    Username: core-metadata
+  coredata:
+    Service: core-data
+    Username: core-data
+  rulesengine:
+    Service: app-rules-engine
+    Username: app-rules-engine
+  notifications:
+    Service: support-notifications
+    Username: support-notifications
+  scheduler:
+    Service: support-scheduler
+    Username: support-scheduler
+SecureMessageBus:
+  Type: none
+  KuiperConfigPath: /tmp/kuiper/edgex.yaml
+  KuiperConnectionsPath: /tmp/kuiper-connections/connection.yaml
+  Services:
+    command:
+      Service: core-command
+    metadata:
+      Service: core-metadata
+    coredata:
+      Service: core-data
+    rulesengine:
+      Service: app-rules-engine
+    notifications:
+      Service: support-notifications
+    scheduler:
+      Service: support-scheduler

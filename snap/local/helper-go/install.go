@@ -86,7 +86,7 @@ var (
 	snapDataConf = env.SnapData + "/config"
 )
 
-// installConfFiles copies service configuration.toml files from $SNAP to $SNAP_DATA
+// installConfFiles copies service configuration.yaml files from $SNAP to $SNAP_DATA
 func installConfFiles() error {
 	var err error
 

@@ -18,13 +18,13 @@ This will create an executable located at `cmd/security-secretstore-setup/` if s
 
 The binary supports multiple command line parameters
 
-| Parameter | Description |
-| ---  | ---  |
-| -p, --profile `name` | Indicate configuration profile other than default |
-| -r, --registry | Indicates service should use Registry |
-| --insecureSkipVerify=`true/false` | Indicates if skipping the server side SSL cert verifcation, similar to -k of curl |
-| --configfile=`file.toml` | Use a different config file (default: res/configuration.toml) |
-| --vaultInterval=`seconds` | **Required** Indicates how long the program will pause between vault initialization attempts until it succeeds |
+| Parameter                         | Description                                                                                                    |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| -p, --profile `name`              | Indicate configuration profile other than default                                                              |
+| -r, --registry                    | Indicates service should use Registry                                                                          |
+| --insecureSkipVerify=`true/false` | Indicates if skipping the server side SSL cert verifcation, similar to -k of curl                              |
+| --configfile=`file.yaml`          | Use a different config file (default: res/configuration.yaml)                                                  |
+| --vaultInterval=`seconds`         | **Required** Indicates how long the program will pause between vault initialization attempts until it succeeds |
 
 An example of using the parameters can be found in the following docker compose
 file:
@@ -42,12 +42,12 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
 
 ## Debugging Tips
 
-* The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.toml`](res/configuration.toml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug `security-secretstore-setup`, set this to _false_:
+* The _RevokeRootTokens_ in [`cmd/security-secretstore-setup/res/configuration.yaml`](res/configuration.yaml) controls whether the root token used to populate Vault is deleted at when edgex-vault-worker is done. If you want to debug `security-secretstore-setup`, set this to _false_:
 
-    ```toml
-    [SecretStore]
+    ```yaml
+    SecretStore
     ...
-    RevokeRootTokens = false
+      RevokeRootTokens = false
     ```
 
 * The edgex-vault-worker uses _compose-files_vault-config_ volume to store its token. To copy the root token from edgex-vault-worker, use

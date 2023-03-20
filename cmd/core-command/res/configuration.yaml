@@ -1,0 +1,48 @@
+Writable:
+  LogLevel: INFO
+  InsecureSecrets:
+    mqtt:
+      SecretName: mqtt
+      SecretData:
+        username: ""
+        password: ""
+        cacert: ""
+        clientcert: ""
+        clientkey: ""
+Service:
+  Host: localhost
+  Port: 59882
+  StartupMsg: "This is the Core Command Microservice"
+Clients:
+  core-metadata:
+    Protocol: http
+    Host: localhost
+    Port: 59881
+ExternalMQTT:
+  Enabled: false
+  Url: "tcp://localhost:1883"
+  ClientId: ex-core-command
+  ConnectTimeout: 5s
+  AutoReconnect: true
+  KeepAlive: 10
+  QoS: 0
+  Retain: true
+  SkipCertVerify: false
+  SecretName: mqtt
+  AuthMode: none
+  Topics:
+    CommandRequestTopic: edgex/command/request/#             # for subscribing to 3rd party command requests
+    CommandResponseTopicPrefix: edgex/command/response       # for publishing responses back to 3rd party systems /<device-name>/<command-name>/<method> will be added to this publish topic prefix
+    CommandQueryRequestTopic: edgex/commandquery/request/#   # for subscribing to 3rd party command query request
+    CommandQueryResponseTopic: edgex/commandquery/response   # for publishing responses back to 3rd party systems
+
+# uncomment when running from command-line in hybrid mode with -cp -o flags
+#Registry:
+#  Host: "localhost"
+
+MessageBus:
+#  Host: localhost # uncomment when running from command-line in hybrid mode
+  Optional:
+    ClientId: core-command
+
+

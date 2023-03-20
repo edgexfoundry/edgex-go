@@ -1,5 +1,5 @@
 #################################################################################
-# Copyright 2022 Intel Corp.
+# Copyright 2023 Intel Corp.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -13,11 +13,11 @@
 #
 #################################################################################
 
-LogLevel = "INFO"
+LogLevel: INFO
+SecureMosquitto:
+  Port: 1883
+  PasswordFile: /mosquitto/config/pwdfile
+  BrokerConfigFile: /mosquitto/config/mosquitto.conf
+  SecretName: message-bus
 
-[SecureMosquitto]
-Port = 1883
-PasswordFile = "/mosquitto/config/pwdfile"
-BrokerConfigFile = "/mosquitto/config/mosquitto.conf"
-SecretName = "message-bus"
 

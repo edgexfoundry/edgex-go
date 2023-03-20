@@ -47,7 +47,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	conf := container.ConfigurationFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	lc.Debugf("configuration from the local TOML: %v", *conf)
+	lc.Debugf("configuration from the local file: %v", *conf)
 
 	var command interfaces.Command
 	var err error

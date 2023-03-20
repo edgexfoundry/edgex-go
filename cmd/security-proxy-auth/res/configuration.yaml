@@ -1,0 +1,6 @@
+Writable:
+  LogLevel: INFO
+Service:
+  Host: localhost
+  Port: 59842
+  StartupMsg: "This is the proxy authentication microservice"

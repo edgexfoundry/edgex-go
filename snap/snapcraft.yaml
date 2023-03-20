@@ -487,7 +487,7 @@ parts:
 
           case "$service" in
           "core-metadata")
-              install -DT "./cmd/core-metadata/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.toml"
+              install -DT "./cmd/core-metadata/res/configuration.yaml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.yaml"
               install -DT "./cmd/core-metadata/res/uom.yaml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.yaml"
           ;;
           "core-common-config-bootstrapper")
@@ -495,27 +495,27 @@ parts:
                   "$SNAPCRAFT_PART_INSTALL/config/core-common-config-bootstrapper/res/configuration.yaml"
           ;;
           "security-file-token-provider")
-              install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.toml"
+              install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.yaml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.yaml"
           ;;
           # For security bootstrapping Redis, we only need the configuration file used for "configureRedis"
           # as part of the whole "security-bootstrapper".
           # For security bootstrapping Consul (aka consul-bootstrapper), we then need the security-bootstrapper's
-          # toml file and thus here we install both files.
+          # yaml file and thus here we install both files.
           "security-bootstrapper")
-              install -DT "./cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.toml"
-              install -DT "./cmd/security-bootstrapper/res/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res/configuration.toml"
+              install -DT "./cmd/security-bootstrapper/res-bootstrap-redis/configuration.yaml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.yaml"
+              install -DT "./cmd/security-bootstrapper/res/configuration.yaml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res/configuration.yaml"
           ;;
-          # The security-secrets-config doesn't have a default configuration.toml, but since it shares
+          # The security-secrets-config doesn't have a default configuration.yaml, but since it shares
           # the same config as proxy-setup, just use that one.
           "secrets-config")
-              install -DT "./cmd/secrets-config/res/configuration.toml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/secrets-config/res/configuration.toml"
+              install -DT "./cmd/secrets-config/res/configuration.yaml" \
+                  "$SNAPCRAFT_PART_INSTALL/config/secrets-config/res/configuration.yaml"
           ;;
           *)
-              install -DT "./cmd/$service/res/configuration.toml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.toml"
+              install -DT "./cmd/$service/res/configuration.yaml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.yaml"
           esac
 
       done

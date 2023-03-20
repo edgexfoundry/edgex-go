@@ -1,0 +1,39 @@
+Writable:
+  LogLevel: INFO
+  ResendLimit: 2
+  ResendInterval: 5s
+  InsecureSecrets:
+    SMTP:
+      SecretName: smtp
+      SecretData:
+        username: username@mail.example.com
+        password: ''
+Service:
+  Host: localhost
+  Port: 59860
+  StartupMsg: "This is the Support Notifications Microservice"
+Smtp:
+  Host: my.email.server
+  Port: 587
+  Sender: some.email.address
+  EnableSelfSignedCert: false
+  Subject: EdgeX Notification
+  # SecretName is used to specify the secret name to store the credential(username and password) for connecting the SMTP server
+  # User need to store the credential via the /secret API before sending the email notification
+  SecretName: smtp
+  # AuthMode is the SMTP authentication mechanism. Currently, "usernamepassword" is the only AuthMode supported by this service, and the secret keys are "username" and "password".
+  AuthMode: usernamepassword
+
+# uncomment when running from command-line in hybrid mode with -cp -o flags
+#Registry:
+#  Host: "localhost"
+
+MessageBus:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Optional:
+    ClientId: support-notifications
+
+Database:
+#  Host: "localhost" # uncomment when running from command-line in hybrid mode
+  Name: notifications
+

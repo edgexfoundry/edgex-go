@@ -35,7 +35,7 @@ FROM alpine:3.17
 RUN apk add --update --no-cache ca-certificates dumb-init su-exec
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2019: Dell Technologies, Inc.'
+      copyright='Copyright (c) 2019: Dell Technologies, Inc.; Copyright (C) 2023 Intel Corporation'
 
 WORKDIR /
 
@@ -43,8 +43,8 @@ COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/res/token-config.json /res-file-token-provider/token-config.json
-COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/configuration.toml  /res-file-token-provider/configuration.toml
-COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.toml /res/configuration.toml
+COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res-file-token-provider/configuration.yaml  /res-file-token-provider/configuration.yaml
+COPY --from=builder /edgex-go/cmd/security-secretstore-setup/res/configuration.yaml /res/configuration.yaml
 
 COPY --from=builder /edgex-go/cmd/security-file-token-provider/security-file-token-provider .
 COPY --from=builder /edgex-go/cmd/security-secretstore-setup/security-secretstore-setup .

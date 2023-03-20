@@ -1,5 +1,5 @@
 #  ----------------------------------------------------------------------------------
-#  Copyright 2022 Intel Corp.
+#  Copyright 2023 Intel Corp.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ RUN make cmd/security-bootstrapper/security-bootstrapper
 FROM alpine:3.17
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
-      copyright='Copyright (c) 2022 Intel Corporation'
+      copyright='Copyright (c) 2023 Intel Corporation'
 
 RUN apk add --update --no-cache dumb-init su-exec
 
@@ -53,13 +53,13 @@ RUN chmod +x ${SECURITY_INIT_STAGING}/*.sh
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/security-bootstrapper .
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.toml ./res/
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.yaml ./res/
 
 # needed for bootstrapping Redis db
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.toml ${BOOTSTRAP_REDIS_DIR}/res/
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.yaml ${BOOTSTRAP_REDIS_DIR}/res/
 
 # needed for bootstrapping mosquitto
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-mosquitto/configuration.toml ${BOOTSTRAP_MOSQUITTO_DIR}/res/
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-mosquitto/configuration.yaml ${BOOTSTRAP_MOSQUITTO_DIR}/res/
 
 # copy Consul ACL related configs
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_STAGING}/consul-bootstrapper/

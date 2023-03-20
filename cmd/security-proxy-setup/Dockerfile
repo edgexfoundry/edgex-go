@@ -43,7 +43,7 @@ COPY --from=builder /edgex-go/security.txt /
 
 # Note that secrets-config shares the same configuration file as security-proxy-setup
 # as we are splitting security-proxy-setup into two different utilities for ease-of-use.
-COPY --from=builder /edgex-go/cmd/secrets-config/res/configuration.toml res/configuration.toml
+COPY --from=builder /edgex-go/cmd/secrets-config/res/configuration.yaml res/configuration.yaml
 COPY --from=builder /edgex-go/cmd/secrets-config/secrets-config .
 
 # Setup the entry point script and assign perms

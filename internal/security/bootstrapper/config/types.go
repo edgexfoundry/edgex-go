@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2021 Intel Corporation
+ * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -90,7 +90,7 @@ type KongDBInfo struct {
 }
 
 // StageGateInfo defines the gate info for the security bootstrapper
-// in different stages for services. From the TOML structure perspective,
+// in different stages for services. From the YAML structure perspective,
 // it is segmented in the way that environment variables are easier
 // to read when they become all upper cases in the environment override.
 type StageGateInfo struct {
