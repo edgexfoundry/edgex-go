@@ -12,7 +12,7 @@ Port = 59881
 StartupMsg = "This is the EdgeX Core Metadata Microservice"
 
 [UoM]
-UoMFile = "./res/uom.toml"
+UoMFile = "./res/uom.yaml"
 
 [Database]
 Name = "metadata"

@@ -1,0 +1,15 @@
+Source: reference to source for all UoM if not specified below
+Units:
+  temperature:
+    Source: www.weather.com
+    Values:
+      - C
+      - F
+      - K
+  weights:
+    Source: www.usa.gov/federal-agencies/weights-and-measures-division
+    Values:
+      - lbs
+      - ounces
+      - kilos
+      - grams
