@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 VMware Inc.
+ * Copyright (C) 2023 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -15,11 +16,11 @@ package pkg
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v3"
 	"net/http"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/pelletier/go-toml"
 )
 
 func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
@@ -35,10 +36,10 @@ func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient 
 	}
 }
 
-func EncodeAndWriteTomlResponse(i interface{}, w http.ResponseWriter, lc logger.LoggingClient) {
-	w.Header().Set(common.ContentType, common.ContentTypeTOML)
+func EncodeAndWriteYamlResponse(i interface{}, w http.ResponseWriter, lc logger.LoggingClient) {
+	w.Header().Set(common.ContentType, common.ContentTypeYAML)
 
-	enc := toml.NewEncoder(w)
+	enc := yaml.NewEncoder(w)
 	err := enc.Encode(i)
 	// Problems encoding
 	if err != nil {
