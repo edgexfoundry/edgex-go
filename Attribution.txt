@@ -247,3 +247,6 @@ https://github.com/nats-io/nkeys/blob/master/LICENSE
 
 github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
 https://github.com/nats-io/nuid/blob/master/LICENSE
+
+github.com/go-jose/go-jose/v3 (Apache-2.0) https://github.com/go-jose/go-jose
+https://github.com/go-jose/go-jose/blob/v3/LICENSE
