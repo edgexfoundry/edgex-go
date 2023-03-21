@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +7,7 @@ package http
 
 import (
 	"encoding/json"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,7 +15,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
-	"github.com/pelletier/go-toml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -48,7 +48,7 @@ func TestUnitOfMeasureController_UnitsOfMeasure(t *testing.T) {
 		expectedResponse any
 	}{
 		{"valid - json response", common.ContentTypeJSON, responses.NewUnitsOfMeasureResponse("", "", http.StatusOK, testUoM)},
-		{"valid - toml response", common.ContentTypeTOML, testUoM},
+		{"valid - yaml response", common.ContentTypeYAML, testUoM},
 	}
 
 	for _, testCase := range tests {
@@ -76,10 +76,10 @@ func TestUnitOfMeasureController_UnitsOfMeasure(t *testing.T) {
 				assert.Empty(t, actualResponse.Message, "Message should be empty when it is successful")
 			} else {
 				actualResponse := uom.UnitsOfMeasureImpl{}
-				err = toml.Unmarshal(recorder.Body.Bytes(), &actualResponse)
+				err = yaml.Unmarshal(recorder.Body.Bytes(), &actualResponse)
 				require.NoError(t, err)
 
-				assert.Equal(t, actualResponse, testCase.expectedResponse, "TOML response not as expected")
+				assert.Equal(t, actualResponse, testCase.expectedResponse, "YAML response not as expected")
 			}
 		})
 	}

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -38,8 +38,8 @@ func (uc *UnitOfMeasureController) UnitsOfMeasure(w http.ResponseWriter, r *http
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 
 	switch r.Header.Get(common.Accept) {
-	case common.ContentTypeTOML:
-		pkg.EncodeAndWriteTomlResponse(u, w, lc)
+	case common.ContentTypeYAML:
+		pkg.EncodeAndWriteYamlResponse(u, w, lc)
 	default:
 		pkg.EncodeAndWriteResponse(response, w, lc)
 	}

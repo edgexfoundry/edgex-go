@@ -3808,7 +3808,7 @@ paths:
               examples:
                 UnitsOfMeasureResponse:
                   $ref: '#/components/examples/UnitsOfMeasureResponseExample'
-            application/toml:
+            application/yaml:
               schema:
                 $ref: '#/components/schemas/UnitsOfMeasure'
         '500':
