@@ -2,6 +2,8 @@ module github.com/edgexfoundry/edgex-go
 
 go 1.20
 
+replace github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.54 => github.com/ejlee3/go-mod-bootstrap/v3 v3.0.0-20230320232408-c3ed78377b49
+
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.54
