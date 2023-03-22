@@ -58,6 +58,11 @@ func (f *commonFlags) ConfigFileName() string {
 	return flags.DefaultConfigFile
 }
 
+// CommonConfig returns an empty string since common config is not used
+func (f *commonFlags) CommonConfig() string {
+	return ""
+}
+
 // OverwriteConfig returns false since the Configuration provider is not used
 func (f *commonFlags) OverwriteConfig() bool {
 	return false
