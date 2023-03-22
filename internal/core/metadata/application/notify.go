@@ -113,7 +113,7 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		}
 	case common.ProvisionWatcherSystemEventType:
 		if pw, ok := dto.(dtos.ProvisionWatcher); ok {
-			profileName = pw.ProfileName
+			profileName = pw.DiscoveredDevice.ProfileName
 			detailName = pw.Name
 		} else {
 			lc.Errorf("can not convert to provision watcher DTO")
