@@ -890,10 +890,10 @@ components:
           type: string
           description: A string which describes the measurement units associated with a property value  Examples include "deg/s", "degreesFarenheit", "G", or "% Relative Humidity"
         minimum:
-          type: string
+          type: number
           description: Minimum value that can be get/set from this property
         maximum:
-          type: string
+          type: number
           description: Maximum value that can be get/set from this property
         defaultValue:
           type: string
