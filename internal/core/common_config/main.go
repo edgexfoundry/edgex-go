@@ -34,7 +34,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	"github.com/pelletier/go-toml"
 	"gopkg.in/yaml.v3"
 )
 
@@ -122,7 +121,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	if !hasConfig || f.OverwriteConfig() {
 		lc.Info("Pushing common configuration. It doesn't exists or overwrite flag is set")
 
-		yamlFile := config.GetConfigLocation(lc, f)
+		yamlFile := config.GetConfigFileLocation(lc, f)
 		err = pushConfiguration(lc, yamlFile, configClient)
 		if err != nil {
 			lc.Error(err.Error())
@@ -242,17 +241,12 @@ func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, orig
 
 func applyEnvOverrides(keyValues map[string]any, lc logger.LoggingClient) (map[string]any, error) {
 	env := environment.NewVariables(lc)
-	tomlTree, err := toml.TreeFromMap(keyValues)
+
+	overrideCount, err := env.OverrideConfigMapValues(keyValues)
 	if err != nil {
 		return nil, err
 	}
 
-	overrideCount, err := env.OverrideTomlValues(tomlTree)
-	if err != nil {
-		return nil, err
-	}
-
-	keyValues = tomlTree.ToMap()
 	lc.Infof("Common configuration loaded from file with %d overrides applied", overrideCount)
 
 	return keyValues, nil

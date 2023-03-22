@@ -23,9 +23,6 @@ https://github.com/dgrijalva/jwt-go/blob/master/LICENSE
 google/uuid (BSD-3) https://github.com/google/uuid
 https://github.com/google/uuid/blob/master/LICENSE
 
-pelletier/go-toml (MIT) https://github.com/pelletier/go-toml
-https://github.com/pelletier/go-toml/blob/master/LICENSE
-
 influxdata/influxdb/client/v2 (MIT) https://github.com/influxdata/influxdb
 https://github.com/influxdata/influxdb/blob/master/LICENSE
 

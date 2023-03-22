@@ -25,10 +25,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.4.2 h1:66wOzfUHSSI1zamx7jR6yMEI5EuHnT1G6rNA5PM12m4=
 github.com/eclipse/paho.mqtt.golang v1.4.2/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2b7upDZMK9HRbFvCA=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.55 h1:sWo0k0mV5FCH6oFvikxw/r7gUwjvj5KZBgz4jMIl49w=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.55/go.mod h1:3iv0xrkWY3MlnSMYKwvllieMumSqI52urQTQULHnqGo=
-github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.9 h1:DznnG2F4E+9jHAA+iXsaDaQxYJ+oWS3SddvvdEfQayE=
-github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.9/go.mod h1:ljWfa029h+677rS+khaXWR+8Hv8965UfbMjaxZ4C9QI=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.56 h1:jWVS5yS4dYFJIoXk3GVQxN99+e7mNZnMd/SaiSIiRDE=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.56/go.mod h1:Ohh+MaaGc85p48NpwHLoSfD+NfVJO9PrhVH5M1pb7po=
+github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.10 h1:iDuAO3vpBQnlQuFhai/NATbJkiYXxo3bPCtSnFl07Yw=
+github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.10/go.mod h1:8RlYm5CPzZgUsfXDWVP1TIeUMhsDNIdRdj1HXdomtOI=
 github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.30 h1:diarfNbfUeSYD7Hq8pOqHzxMtIbaPO6W8nWq34W8X6g=
 github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.30/go.mod h1:SYoD+tmUP/zwWuuIySmsQSjPx6MHP+2w9FsLgm0IR7A=
 github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.18 h1:8empqTOIVhKzebC3gnP9C0LGQvwXtHLJF8x8AqlTGLM=
@@ -189,8 +189,6 @@ github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
 github.com/pascaldekloe/goe v0.1.0/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
-github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
-github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
