@@ -39,8 +39,8 @@ func sendAddProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.Pro
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(HSET, ProvisionWatcherCollectionName, pw.Name, storedKey)
 	_ = conn.Send(ZADD, ProvisionWatcherCollection, pw.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), pw.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), pw.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.DiscoveredDevice.ServiceName), pw.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionProfileName, pw.DiscoveredDevice.ProfileName), pw.Modified, storedKey)
 	for _, label := range pw.Labels {
 		_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionLabel, label), pw.Modified, storedKey)
 	}
@@ -66,17 +66,17 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 	}
 
 	// check the associated ServiceName and ProfileName existence
-	exists, edgexErr = deviceServiceNameExist(conn, pw.ServiceName)
+	exists, edgexErr = deviceServiceNameExist(conn, pw.DiscoveredDevice.ServiceName)
 	if edgexErr != nil {
 		return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
 	} else if !exists {
-		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.ServiceName), edgexErr)
+		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.DiscoveredDevice.ServiceName), edgexErr)
 	}
-	exists, edgexErr = deviceProfileNameExists(conn, pw.ProfileName)
+	exists, edgexErr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
 	if edgexErr != nil {
 		return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
 	} else if !exists {
-		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.ProfileName), edgexErr)
+		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.DiscoveredDevice.ProfileName), edgexErr)
 	}
 
 	ts := pkgCommon.MakeTimestamp()
@@ -195,8 +195,8 @@ func sendDeleteProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(HDEL, ProvisionWatcherCollectionName, pw.Name)
 	_ = conn.Send(ZREM, ProvisionWatcherCollection, storedKey)
-	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), storedKey)
-	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.ProfileName), storedKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.DiscoveredDevice.ServiceName), storedKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.DiscoveredDevice.ProfileName), storedKey)
 	for _, label := range pw.Labels {
 		_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionLabel, label), storedKey)
 	}
@@ -216,17 +216,17 @@ func deleteProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.
 }
 
 func updateProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.EdgeX {
-	exists, edgeXerr := deviceServiceNameExist(conn, pw.ServiceName)
+	exists, edgeXerr := deviceServiceNameExist(conn, pw.DiscoveredDevice.ServiceName)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", pw.ServiceName), edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", pw.DiscoveredDevice.ServiceName), edgeXerr)
 	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", pw.ServiceName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", pw.DiscoveredDevice.ServiceName), nil)
 	}
-	exists, edgeXerr = deviceProfileNameExists(conn, pw.ProfileName)
+	exists, edgeXerr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
 	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", pw.ProfileName), edgeXerr)
+		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", pw.DiscoveredDevice.ProfileName), edgeXerr)
 	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", pw.ProfileName), nil)
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", pw.DiscoveredDevice.ProfileName), nil)
 	}
 
 	oldProvisionWatcher, edgexErr := provisionWatcherByName(conn, pw.Name)
