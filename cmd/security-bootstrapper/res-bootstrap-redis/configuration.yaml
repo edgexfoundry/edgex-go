@@ -5,7 +5,7 @@ Database:
   Password: ""      # Will be set from value in Vault
   Username: ""      # Will be set from value in Vault
   Port: 6379
-  Timeout: 5000
+  Timeout: "5s"
   Type: redisdb
 DatabaseConfig:
   Path: /path/to/redis/conf/dir
