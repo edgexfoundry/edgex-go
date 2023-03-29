@@ -45,7 +45,7 @@ all-services:
   Database:
     Host: "localhost"
     Port: 6379
-    Timeout: 5000
+    Timeout: "5s"
     Type: "redisdb"
   
   MessageBus:
