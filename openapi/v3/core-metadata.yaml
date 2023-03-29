@@ -3885,7 +3885,7 @@ paths:
                     Username: "meta"
                     Password: "password"
                     Type: "redisdb"
-                    Timeout: 5000
+                    Timeout: "5s"
                     Host: "edgex-redis"
                     Port: 6379
                     Name: "metadata"
@@ -3909,7 +3909,7 @@ paths:
                     Protocol: "http"
                     StartupMsg: "This is the EdgeX Core Metadata Microservice"
                     MaxResultCount: 50000
-                    Timeout: 5000
+                    Timeout: "5s"
                   SecretStore:
                     Host: "edgex-vault"
                     Port: 8200
