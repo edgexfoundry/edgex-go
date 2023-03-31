@@ -208,6 +208,12 @@ components:
           enum:
             - LOCKED
             - UNLOCKED
+        authmethod:
+          type: string
+          description: AuthMethod indicates how to authenticate the outbound URL
+          enum:
+            - NONE
+            - JWT
       required:
         - name
         - intervalName
@@ -248,6 +254,12 @@ components:
           enum:
             - LOCKED
             - UNLOCKED
+        authmethod:
+          type: string
+          description: AuthMethod indicates how to authenticate the outbound URL 
+          enum:
+            - NONE
+            - JWT
       required:
         - id
         - name
