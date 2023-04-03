@@ -6,15 +6,15 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.61
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.10
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.34
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.35
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.19
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.10
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.12
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/spiffe/go-spiffe/v2 v2.1.3
+	github.com/spiffe/go-spiffe/v2 v2.1.4
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.7.0
 	gopkg.in/eapache/queue.v1 v1.1.0
