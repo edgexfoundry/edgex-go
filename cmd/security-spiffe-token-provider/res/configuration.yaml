@@ -8,6 +8,6 @@ TokenConfig:
   DefaultTokenTTL: 1h
   DefaultJWTTTL: 15m
   UserPassMountPoint: userpass
-SPIFFE:
+Spiffe:
   EndpointSocket: /tmp/edgex/secrets/spiffe/public/api.sock
   TrustDomain: edgexfoundry.org
