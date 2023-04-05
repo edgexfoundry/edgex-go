@@ -29,8 +29,8 @@ echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 for dockerservice in security-spiffe-token-provider support-notifications support-scheduler \
     device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
     device-virtual device-rfid-llrp device-coap device-gpio \
-    app-service-http-export app-service-mqtt-export app-service-sample app-rfid-llrp-inventory \
-    app-service-external-mqtt-trigger; do
+    app-http-export app-mqtt-export app-sample app-rfid-llrp-inventory \
+    app-external-mqtt-trigger; do
     # Temporary workaround because service name in dockerfile is not consistent with service key.
     # TAF scripts depend on legacy docker-compose service name. Fix in EdgeX 3.0.
     service=`echo -n ${dockerservice} | sed -e 's/app-service-/app-/'`
