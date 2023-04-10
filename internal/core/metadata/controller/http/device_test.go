@@ -130,9 +130,7 @@ func TestAddDevice(t *testing.T) {
 
 	valid := testDevice
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
-	dbClientMock.On("DeviceProfileNameExists", deviceModel.ProfileName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
-	dbClientMock.On("DeviceServiceByName", deviceModel.ServiceName).Return(models.DeviceService{Name: deviceModel.ServiceName}, nil)
 
 	notFoundProfile := testDevice
 	notFoundProfile.Device.ProfileName = "notFoundProfile"
@@ -140,6 +138,13 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("AddDevice", notFoundProfileDeviceModel).Return(notFoundProfileDeviceModel,
 		edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists",
 			notFoundProfile.Device.ProfileName), nil))
+
+	notFoundService := testDevice
+	notFoundService.Device.ServiceName = "notFoundService"
+	notFoundServiceDeviceModel := requests.AddDeviceReqToDeviceModels([]requests.AddDeviceRequest{notFoundService})[0]
+	dbClientMock.On("DeviceServiceNameExists", notFoundService.Device.ServiceName).Return(false, nil)
+	dbClientMock.On("AddDevice", notFoundServiceDeviceModel).Return(notFoundServiceDeviceModel,
+		edgexErr.NewCommonEdgeX(edgexErr.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", notFoundService.Device.ServiceName), nil))
 
 	noName := testDevice
 	noName.Device.Name = ""
@@ -161,8 +166,6 @@ func TestAddDevice(t *testing.T) {
 	emptyProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{}
 	invalidProtocols := testDevice
 	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
-	serviceUnavailable := testDevice
-	testDevice.Device.ServiceName = "unavailable"
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -191,7 +194,8 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
-		{"Invalid - device service unavailable", []requests.AddDeviceRequest{serviceUnavailable}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
+		{"Invalid - not found device service", []requests.AddDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
+		{"Invalid - device service unavailable", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -494,7 +498,6 @@ func TestPatchDevice(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("DeviceServiceNameExists", *valid.Device.ServiceName).Return(true, nil)
-	dbClientMock.On("DeviceProfileNameExists", *valid.Device.ProfileName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("UpdateDevice", dsModels).Return(nil)
 
@@ -539,16 +542,16 @@ func TestPatchDevice(t *testing.T) {
 	notFoundNameError := edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
 	dbClientMock.On("DeviceByName", *invalidNotFoundName.Device.Name).Return(dsModels, notFoundNameError)
 
-	unavailableServiceName := "unavailableService"
-	unavailableService := testReq
-	unavailableService.Device.ServiceName = &unavailableServiceName
+	notFoundServiceName := "notFoundService"
+	notFoundService := testReq
+	notFoundService.Device.ServiceName = &notFoundServiceName
+	dbClientMock.On("DeviceServiceNameExists", *notFoundService.Device.ServiceName).Return(false, nil)
 
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := testReq
 	notFoundProfile.Device.ProfileName = &notFountProfileName
 	notFoundProfileDeviceModel := dsModels
 	notFoundProfileDeviceModel.ProfileName = notFountProfileName
-	dbClientMock.On("DeviceById", *notFoundProfile.Device.Id).Return(notFoundProfileDeviceModel, nil)
 	dbClientMock.On("UpdateDevice", notFoundProfileDeviceModel).Return(
 		edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist,
 			fmt.Sprintf("device profile '%s' does not exists", notFountProfileName), nil))
@@ -580,7 +583,8 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - not found name", []requests.UpdateDeviceRequest{invalidNotFoundName}, http.StatusMultiStatus, http.StatusNotFound, false, false},
 		{"Invalid - not found profile", []requests.UpdateDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
 		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
-		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{unavailableService}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
+		{"Invalid - not found device service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
+		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

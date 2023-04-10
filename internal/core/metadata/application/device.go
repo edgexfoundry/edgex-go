@@ -39,6 +39,14 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+	// Check the existence of device service before device validation
+	exists, edgeXerr := dbClient.DeviceServiceNameExists(d.ServiceName)
+	if edgeXerr != nil {
+		return id, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", d.ServiceName), edgeXerr)
+	} else if !exists {
+		return id, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", d.ServiceName), nil)
+	}
+
 	err := validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
@@ -119,6 +127,16 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	// Check the existence of device service before device validation
+	if dto.ServiceName != nil {
+		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device service '%s' existence check failed", *dto.ServiceName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", *dto.ServiceName), nil)
+		}
+	}
 
 	device, err := deviceByDTO(dbClient, dto)
 	if err != nil {
