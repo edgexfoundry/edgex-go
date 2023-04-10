@@ -56,6 +56,7 @@ func (d Database) newDBClient(
 				Host:     databaseInfo.Host,
 				Port:     databaseInfo.Port,
 				Password: credentials.Password,
+				Timeout:  databaseInfo.Timeout,
 			},
 			lc)
 	default:

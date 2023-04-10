@@ -32,7 +32,7 @@ type Configuration struct {
 	DbType       string
 	Host         string
 	Port         int
-	Timeout      int
+	Timeout      string
 	DatabaseName string
 	Username     string
 	Password     string
