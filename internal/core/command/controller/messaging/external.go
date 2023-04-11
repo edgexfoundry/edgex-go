@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -82,6 +82,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 
 		qos := externalMQTTInfo.QoS
 		retain := externalMQTTInfo.Retain
+		responseEnvelope.ReceivedTopic = responseTopic
 		publishMessage(client, responseTopic, qos, retain, responseEnvelope, lc)
 	}
 }
@@ -163,6 +164,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		lc.Debugf("Command response received from internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", response.ReceivedTopic, response.RequestID, response.CorrelationID)
 
+		response.ReceivedTopic = externalResponseTopic
 		publishMessage(client, externalResponseTopic, qos, retain, *response, lc)
 	}
 }
