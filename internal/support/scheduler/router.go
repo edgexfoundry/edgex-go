@@ -21,7 +21,7 @@ import (
 
 func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	lc := container.LoggingClientFrom(dic.Get)
-	secretProvider := container.SecretProviderFrom(dic.Get)
+	secretProvider := container.SecretProviderExtFrom(dic.Get)
 	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
 
 	// Common

@@ -51,7 +51,7 @@ func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
 // and must always authenticate even if the rest of EdgeX does not
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := container.LoggingClientFrom(dic.Get)
-	secretProvider := container.SecretProviderFrom(dic.Get)
+	secretProvider := container.SecretProviderExtFrom(dic.Get)
 	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc)
 
 	// Common

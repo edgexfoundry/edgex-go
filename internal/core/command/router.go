@@ -25,7 +25,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	r.UseEncodedPath()
 
 	lc := container.LoggingClientFrom(dic.Get)
-	secretProvider := container.SecretProviderFrom(dic.Get)
+	secretProvider := container.SecretProviderExtFrom(dic.Get)
 	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
 
 	// Common
