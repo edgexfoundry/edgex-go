@@ -42,10 +42,16 @@ type CoreDataClient struct {
 
 // Return a pointer to the Redis client
 func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error) {
+	var retErr error
 	once.Do(func() {
 		connectionString := fmt.Sprintf("%s:%d", config.Host, config.Port)
+		connectTimeout, err := time.ParseDuration(config.Timeout)
+		if err != nil {
+			retErr = fmt.Errorf("configured database timeout failed to parse: %v", err)
+			return
+		}
 		opts := []redis.DialOption{
-			redis.DialConnectTimeout(time.Duration(config.Timeout) * time.Millisecond),
+			redis.DialConnectTimeout(connectTimeout),
 		}
 		if os.Getenv("EDGEX_SECURITY_SECRET_STORE") != "false" {
 			opts = append(opts, redis.DialPassword(config.Password))
@@ -71,7 +77,7 @@ func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error
 		}
 		currClient = &Client{
 			Pool: &redis.Pool{
-				IdleTimeout: 0,
+				IdleTimeout: connectTimeout,
 				/* The current implementation processes nested structs using concurrent connections.
 				 * With the deepest nesting level being 3, three shall be the number of maximum open
 				 * idle connections in the pool, to allow reuse.
@@ -92,7 +98,7 @@ func NewClient(config db.Configuration, lc logger.LoggingClient) (*Client, error
 		return nil, err
 	}
 
-	return currClient, nil
+	return currClient, retErr
 }
 
 // Connect connects to Redis
