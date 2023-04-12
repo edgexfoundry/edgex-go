@@ -35,11 +35,11 @@ type manager struct {
 	executorQueue         *queue.Queue
 	intervalToExecutorMap map[string]*Executor
 	actionToIntervalMap   map[string]string
-	secretProvider        bootstrapInterfaces.SecretProvider
+	secretProvider        bootstrapInterfaces.SecretProviderExt
 }
 
 // NewManager creates a new scheduler manager for running the interval job
-func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct, secretProvider bootstrapInterfaces.SecretProvider) interfaces.SchedulerManager {
+func NewManager(lc logger.LoggingClient, config *config.ConfigurationStruct, secretProvider bootstrapInterfaces.SecretProviderExt) interfaces.SchedulerManager {
 	return &manager{
 		ticker:                time.NewTicker(time.Duration(config.ScheduleIntervalTime) * time.Millisecond),
 		lc:                    lc,
