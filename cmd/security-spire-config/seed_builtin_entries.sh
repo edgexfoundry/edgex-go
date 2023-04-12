@@ -1,7 +1,7 @@
 #!/bin/sh -x
 #
 #  ----------------------------------------------------------------------------------
-#  Copyright (c) 2022 Intel Corporation
+#  Copyright (c) 2022-2023 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ for dockerservice in security-spiffe-token-provider support-notifications suppor
     # Temporary workaround because service name in dockerfile is not consistent with service key.
     # TAF scripts depend on legacy docker-compose service name. Fix in EdgeX 3.0.
     service=`echo -n ${dockerservice} | sed -e 's/app-service-/app-/'`
-    # support- services have the opposite problem.  service key is right, service name in docker isn't
-    dockerservice=`echo -n ${dockerservice} | sed -e 's/support-//'`
     spire-server entry create -socketPath "${SPIFFE_SERVER_SOCKET}" -parentID "${local_agent_svid}" -dns "edgex-${service}" -spiffeID "${SPIFFE_EDGEX_SVID_BASE}/${service}" -selector "docker:label:com.docker.compose.service:${dockerservice}"
 done
 
