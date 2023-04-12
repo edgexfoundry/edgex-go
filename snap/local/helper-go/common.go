@@ -30,9 +30,7 @@ const (
 	securityBootstrapperConsul = "security-consul-bootstrapper"
 	securityBootstrapperNginx  = "security-bootstrapper-nginx"
 	securityFileTokenProvider  = "security-file-token-provider"
-	secretsConfig              = "secrets-config"
 	vault                      = "vault"
-	secretsConfigProcessor     = "secrets-config-processor"
 )
 
 var (
