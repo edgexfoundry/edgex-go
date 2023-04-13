@@ -158,7 +158,7 @@ func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 }
 
 // DoAddUser creates an identity and a password auth binding for it
-func (vb *ProxyUserCommon) DoAddUser(privilegedToken string, username string, tokenTTL string, jwtTTL string) (CredentialStruct, error) {
+func (vb *ProxyUserCommon) DoAddUser(privilegedToken string, username string, tokenTTL string, jwtAudience string, jwtTTL string) (CredentialStruct, error) {
 	credentialGenerator := secretstore.NewDefaultCredentialGenerator()
 
 	vb.loggingClient.Infof("using policy/token defaults for user %s", username)
@@ -173,7 +173,7 @@ func (vb *ProxyUserCommon) DoAddUser(privilegedToken string, username string, to
 		return CredentialStruct{}, err
 	}
 
-	userManager := common.NewUserManager(vb.loggingClient, vb.secretStoreClient, UserPassMountPoint, JWTIdentityKey, privilegedToken, tokenTTL, jwtTTL)
+	userManager := common.NewUserManager(vb.loggingClient, vb.secretStoreClient, UserPassMountPoint, JWTIdentityKey, privilegedToken, tokenTTL, jwtAudience, jwtTTL)
 
 	err = userManager.CreatePasswordUserWithPolicy(username, randomPassword, UserPolicyPrefix, userPolicy)
 	if err != nil {
@@ -189,7 +189,7 @@ func (vb *ProxyUserCommon) DoAddUser(privilegedToken string, username string, to
 // DoDeleteUser performs user deletion
 func (vb *ProxyUserCommon) DoDeleteUser(privilegedToken string, username string) error {
 
-	userManager := common.NewUserManager(vb.loggingClient, vb.secretStoreClient, UserPassMountPoint, JWTIdentityKey, privilegedToken, "", "")
+	userManager := common.NewUserManager(vb.loggingClient, vb.secretStoreClient, UserPassMountPoint, JWTIdentityKey, privilegedToken, "", "", "")
 
 	err := userManager.DeletePasswordUser(username)
 	if err != nil {

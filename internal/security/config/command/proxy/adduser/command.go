@@ -20,9 +20,10 @@ import (
 )
 
 const (
-	CommandName     string = "adduser"
-	DefaultTokenTTL string = "1h"
-	DefaultJWTTTL   string = "1h"
+	CommandName        string = "adduser"
+	DefaultTokenTTL    string = "1h"
+	DefaultJWTTTL      string = "1h"
+	DefaultJWTAudience string = "edgex"
 )
 
 type cmd struct {
@@ -32,6 +33,7 @@ type cmd struct {
 	useRootToken    bool
 	username        string
 	tokenTTL        string
+	jwtAudience     string
 	jwtTTL          string
 }
 
@@ -51,6 +53,7 @@ func NewCommand(
 	flagSet.StringVar(&dummy, "configDir", "", "") // handled by bootstrap; duplicated here to prevent arg parsing errors
 	flagSet.StringVar(&cmd.username, "user", "", "Username of the user to add")
 	flagSet.StringVar(&cmd.tokenTTL, "tokenTTL", DefaultTokenTTL, "Vault token created as a result of vault login lasts this long  (_s, _m, _h, or _d, seconds if no unit)")
+	flagSet.StringVar(&cmd.jwtAudience, "jwtAudience", DefaultJWTAudience, "Optionally change JWT audience of generated JWT's")
 	flagSet.StringVar(&cmd.jwtTTL, "jwtTTL", DefaultJWTTTL, "JWT created by vault identity provider lasts this long (_s, _m, _h, or _d, seconds if no unit)")
 	flagSet.BoolVar(&cmd.useRootToken, "useRootToken", false, "Set to true to TokenFile in config points to a resp-init.json instead of a service token")
 
@@ -89,7 +92,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	// Perform requested action
 
-	credentials, err := c.proxyUserCommon.DoAddUser(privilegedToken, c.username, c.tokenTTL, c.jwtTTL)
+	credentials, err := c.proxyUserCommon.DoAddUser(privilegedToken, c.username, c.tokenTTL, c.jwtAudience, c.jwtTTL)
 	if err != nil {
 		return interfaces.StatusCodeExitWithError, err
 	}

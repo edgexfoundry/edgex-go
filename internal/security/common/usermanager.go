@@ -21,6 +21,7 @@ type UserManager struct {
 	jwtKeyName         string // jwtKeyName is the key identifier of the JWT signing key (e.g. edgex-identity)
 	privilegedToken    string // privilegedToken is a Vault token that has permissions to do a lot of stuff like below
 	tokenTTL           string // This is the TTL of the Vault token (which is renewable)
+	jwtAudience        string // Value of "aud" claim in JWT's (passed in client_id field for creating JWT identity roles)
 	jwtTTL             string // JWT's created using the Vault token have an independent validity period
 }
 
@@ -31,6 +32,7 @@ func NewUserManager(
 	jwtKeyName string,
 	privilegedToken string,
 	tokenTTL string,
+	jwtAudience string,
 	jwtTTL string,
 ) *UserManager {
 	return &UserManager{
@@ -40,6 +42,7 @@ func NewUserManager(
 		jwtKeyName,
 		privilegedToken,
 		tokenTTL,
+		jwtAudience,
 		jwtTTL,
 	}
 }
@@ -107,7 +110,7 @@ func (m *UserManager) CreatePasswordUserWithPolicy(username string, password str
 	// for including custom claims.  We will include a claim identifying the calling EdgeX service
 	// We will use the OIDC standard "name" claim.
 	customClaims := fmt.Sprintf(`{"name": "%s"}`, username)
-	err = m.secretStoreClient.CreateOrUpdateIdentityRole(m.privilegedToken, username, m.jwtKeyName, customClaims, m.jwtTTL)
+	err = m.secretStoreClient.CreateOrUpdateIdentityRole(m.privilegedToken, username, m.jwtKeyName, customClaims, m.jwtAudience, m.jwtTTL)
 	if err != nil {
 		return err
 	}

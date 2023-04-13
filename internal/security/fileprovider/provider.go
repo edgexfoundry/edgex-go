@@ -102,7 +102,7 @@ func (p *fileTokenProvider) Run() error {
 	credentialGenerator := secretstore.NewDefaultCredentialGenerator()
 
 	userManager := common.NewUserManager(p.logger, p.secretStoreClient, p.tokenConfig.UserPassMountPoint, "edgex-identity",
-		privilegedToken, p.tokenConfig.DefaultTokenTTL, p.tokenConfig.DefaultJWTTTL)
+		privilegedToken, p.tokenConfig.DefaultTokenTTL, p.tokenConfig.DefaultJWTAudience, p.tokenConfig.DefaultJWTTTL)
 
 	for serviceName, serviceConfig := range tokenConf {
 		p.logger.Infof("generating policy/token defaults for service %s", serviceName)

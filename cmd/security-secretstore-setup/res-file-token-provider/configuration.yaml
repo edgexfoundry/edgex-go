@@ -13,4 +13,5 @@ TokenFileProvider:
   OutputFilename: secrets-token.json
   DefaultTokenTTL: 1h
   DefaultJWTTTL: 15m
+  DefaultJWTAudience: edgex
   UserPassMountPoint: userpass
