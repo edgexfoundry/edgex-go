@@ -7,6 +7,7 @@ Service:
 TokenConfig:
   DefaultTokenTTL: 1h
   DefaultJWTTTL: 15m
+  DefaultJWTAudience: edgex
   UserPassMountPoint: userpass
 Spiffe:
   EndpointSocket: /tmp/edgex/secrets/spiffe/public/api.sock

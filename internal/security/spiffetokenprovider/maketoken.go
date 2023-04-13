@@ -44,7 +44,7 @@ func makeToken(serviceName string,
 	credentialGenerator := secretstore.NewDefaultCredentialGenerator()
 
 	userManager := common.NewUserManager(lc, secretStoreClient, tokenConfig.UserPassMountPoint, "edgex-identity",
-		privilegedToken, tokenConfig.DefaultTokenTTL, tokenConfig.DefaultJWTTTL)
+		privilegedToken, tokenConfig.DefaultTokenTTL, tokenConfig.DefaultJWTAudience, tokenConfig.DefaultJWTTTL)
 
 	// Generate a random password
 
