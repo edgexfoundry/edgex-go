@@ -62,7 +62,7 @@ const (
 	emptyLeader                = `""`
 
 	// environment variable contains a comma separated list of registry role names to be added
-	addRegistryRolesEnvKey = "ADD_REGISTRY_ACL_ROLES"
+	addRegistryRolesEnvKey = "EDGEX_ADD_REGISTRY_ACL_ROLES"
 )
 
 type cmd struct {

@@ -134,17 +134,17 @@ func installSecretStore() error {
 	var err error
 
 	// Set the default values of
-	//  ADD_KNOWN_SECRETS
-	//	ADD_SECRETSTORE_TOKENS
-	//	ADD_REGISTRY_ACL_ROLES
+	//  EDGEX_ADD_KNOWN_SECRETS
+	//	EDGEX_ADD_SECRETSTORE_TOKENS
+	//	EDGEX_ADD_REGISTRY_ACL_ROLES
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = snapctl.Set("apps.security-secretstore-setup.config.add-secretstore-tokens",
+	if err = snapctl.Set("apps.security-secretstore-setup.config.edgex-add-secretstore-tokens",
 		strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
 
-	if err = snapctl.Set("apps.security-secretstore-setup.config.add-known-secrets",
+	if err = snapctl.Set("apps.security-secretstore-setup.config.edgex-add-known-secrets",
 		strings.Join(secretStoreKnownSecrets, ",")).Run(); err != nil {
 		return err
 	}
@@ -179,11 +179,11 @@ func installSecretStore() error {
 func installConsul() error {
 	var err error
 
-	// Set the default value of ADD_REGISTRY_ACL_ROLES
-	// using the same list of services as used in ADD_KNOWN_SECRETS
+	// Set the default value of EDGEX_ADD_REGISTRY_ACL_ROLES
+	// using the same list of services as used in EDGEX_ADD_KNOWN_SECRETS
 	// We do not have access to the snap configuration in the install hook,
 	// so this just sets the values to the default list of services
-	if err = snapctl.Set("apps.security-bootstrapper.config.add-registry-acl-roles",
+	if err = snapctl.Set("apps.security-bootstrapper.config.edgex-add-registry-acl-roles",
 		strings.Join(secretStoreTokens, ",")).Run(); err != nil {
 		return err
 	}
