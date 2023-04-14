@@ -30,8 +30,6 @@ func main() {
 		install()
 	case "configure": // snap configure hook
 		configure()
-	case "options": // apply snap options to apps
-		options()
 	default:
 		panic("Unknown subcommand: " + subCommand)
 	}

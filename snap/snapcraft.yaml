@@ -263,15 +263,6 @@ apps:
     install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
-  # this service should be started for processing secrets-config snap options and executing corresponding commands
-  secrets-config-processor:
-    after:
-      - vault
-    command: bin/helper-go options --app secrets-config
-    daemon: oneshot
-    install-mode: disable
-    start-timeout: 1m
-    plugs: [network]
   # this service pushes common configuration source into Configuration Provider
   core-common-config-bootstrapper:
     after:
