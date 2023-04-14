@@ -118,7 +118,7 @@ func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 	keyDeriver := kdf.NewKdf(vb.fileOpener, vb.configuration.SecretStore.TokenFolderPath, sha256.New)
 	vmkEncryption := secretstore.NewVMKEncryption(vb.fileOpener, pipedHexReader, keyDeriver)
 
-	hook := os.Getenv("IKM_HOOK")
+	hook := os.Getenv("EDGEX_IKM_HOOK")
 	if len(hook) > 0 {
 		err := vmkEncryption.LoadIKM(hook)
 		defer vmkEncryption.WipeIKM() // Ensure IKM is wiped from memory
@@ -128,7 +128,7 @@ func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 		}
 		vb.loggingClient.Info("Enabled encryption of Vault master key")
 	} else {
-		vb.loggingClient.Info("vault master key encryption not enabled. IKM_HOOK not set.")
+		vb.loggingClient.Info("vault master key encryption not enabled. EDGEX_IKM_HOOK not set.")
 	}
 
 	var initResponse types.InitResponse

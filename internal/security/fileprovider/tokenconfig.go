@@ -55,7 +55,7 @@ import (
 )
 
 const (
-	addSecretstoreTokensEnvKey = "ADD_SECRETSTORE_TOKENS"
+	addSecretstoreTokensEnvKey = "EDGEX_ADD_SECRETSTORE_TOKENS" // nolint:gosec
 )
 
 type TokenConfFile map[string]ServiceKey

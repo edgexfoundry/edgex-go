@@ -51,7 +51,7 @@ import (
 )
 
 const (
-	addKnownSecretsEnv   = "ADD_KNOWN_SECRETS"
+	addKnownSecretsEnv   = "EDGEX_ADD_KNOWN_SECRETS" // nolint:gosec
 	redisSecretName      = "redisdb"
 	messagebusSecretName = "message-bus"
 	knownSecretSeparator = ","
@@ -122,7 +122,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	keyDeriver := kdf.NewKdf(fileOpener, secretStoreConfig.TokenFolderPath, sha256.New)
 	vmkEncryption := NewVMKEncryption(fileOpener, pipedHexReader, keyDeriver)
 
-	hook := os.Getenv("IKM_HOOK")
+	hook := os.Getenv("EDGEX_IKM_HOOK")
 	if len(hook) > 0 {
 		err := vmkEncryption.LoadIKM(hook)
 		defer vmkEncryption.WipeIKM() // Ensure IKM is wiped from memory
@@ -132,7 +132,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 		lc.Info("Enabled encryption of Vault master key")
 	} else {
-		lc.Info("vault master key encryption not enabled. IKM_HOOK not set.")
+		lc.Info("vault master key encryption not enabled. EDGEX_IKM_HOOK not set.")
 	}
 
 	var initResponse types.InitResponse // reused many places in below flow

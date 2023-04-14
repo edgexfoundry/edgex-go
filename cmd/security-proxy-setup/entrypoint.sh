@@ -45,14 +45,14 @@ if test -d /etc/ssl/nginx ; then
 fi
 
 #
-# Generate custom forwarders based on ADD_PROXY_ROUTE
+# Generate custom forwarders based on EDGEX_ADD_PROXY_ROUTE
 #
 
 # Truncate the template file before we start appending
 : >/etc/nginx/templates/generated-routes.inc.template
 
 IFS=', '
-for service in ${ADD_PROXY_ROUTE}; do
+for service in ${EDGEX_ADD_PROXY_ROUTE}; do
 	prefix=$(echo -n "${service}" | sed -n -e 's/\([-0-9a-zA-Z]*\)\..*/\1/p')
 	host=$(echo -n "${service}" | sed -n -e 's/.*\/\/\([-0-9a-zA-Z]*\):.*/\1/p')
 	port=$(echo -n "${service}" | sed -n -e 's/.*:\(\d*\)/\1/p')
