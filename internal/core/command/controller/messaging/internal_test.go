@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
-	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	config2 "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -27,6 +25,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 )
 
 var expectedResponseTopicPrefix = "edgex/response"
@@ -75,7 +76,7 @@ func TestSubscribeCommandRequests(t *testing.T) {
 	}).Return(&types.MessageEnvelope{
 		RequestID:     expectedRequestId,
 		CorrelationID: expectedCorrelationId,
-		ContentType:   types.ContentTypeJSON,
+		ContentType:   common.ContentTypeJSON,
 		Payload:       []byte("This is my payload"),
 	}, nil)
 
@@ -83,7 +84,7 @@ func TestSubscribeCommandRequests(t *testing.T) {
 		response := args.Get(0).(types.MessageEnvelope)
 		assert.Equal(t, expectedRequestId, response.RequestID)
 		assert.Equal(t, expectedCorrelationId, response.CorrelationID)
-		assert.Equal(t, types.ContentTypeJSON, response.ContentType)
+		assert.Equal(t, common.ContentTypeJSON, response.ContentType)
 		assert.NotZero(t, len(response.Payload))
 	}).Return(nil)
 
@@ -212,7 +213,7 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 				response := args.Get(0).(types.MessageEnvelope)
 				assert.Equal(t, expectedRequestId, response.RequestID)
 				assert.Equal(t, expectedCorrelationId, response.CorrelationID)
-				assert.Equal(t, types.ContentTypeJSON, response.ContentType)
+				assert.Equal(t, common.ContentTypeJSON, response.ContentType)
 				assert.NotZero(t, len(response.Payload))
 			}).Return(nil)
 
