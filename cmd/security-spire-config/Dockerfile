@@ -28,7 +28,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
 
-ARG SPIRE_RELEASE=1.2.1
+ARG SPIRE_RELEASE=1.6.3
 
 # build spire from the source in order to be compatible with arch arm64 as well
 # in CI the BUILDER_BASE will already contain a compiled spire-server/agent
