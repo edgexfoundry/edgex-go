@@ -57,7 +57,7 @@ func UrlDecodeMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handle
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
 			for k, v := range vars {
-				unescape, err := url.QueryUnescape(v)
+				unescape, err := url.PathUnescape(v)
 				if err != nil {
 					lc.Debugf("failed to decode the %s from the value %s", k, v)
 					return
