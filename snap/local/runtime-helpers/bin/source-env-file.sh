@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # convert cmdline to string array
 ARGV=($@)
@@ -16,6 +16,8 @@ if [ -f "$ENV_FILE" ]; then
     set -o allexport
     source "$ENV_FILE" set
     set +o allexport
+else
+    logger --tag=$TAG --stderr "sourcing $ENV_FILE: not found!"
 fi
 
 exec "$@"
