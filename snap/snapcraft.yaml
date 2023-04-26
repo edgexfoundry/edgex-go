@@ -352,6 +352,7 @@ parts:
       - --http-log-path=logs/access.log
     build-packages:
       - build-essential
+      - libpcre3-dev
       - libssl-dev
       - zlib1g-dev
     override-build: |
