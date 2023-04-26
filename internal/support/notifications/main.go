@@ -24,8 +24,9 @@ package notifications
 
 import (
 	"context"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"os"
+
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
@@ -79,7 +80,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportNotificationsServiceKey).BootstrapHandler, // Must be after Messaging
-			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, common.SupportNotificationsServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SupportNotificationsServiceKey, edgex.Version).BootstrapHandler,

@@ -75,7 +75,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			handlers.NewClientsBootstrap().BootstrapHandler,
+			handlers.NewClientsBootstrap(f.InDevMode()).BootstrapHandler,
 			MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreCommandServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreCommandServiceKey).BootstrapHandler,

@@ -69,8 +69,8 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	return bootstrapConfig.BootstrapConfiguration{
-		Service:  c.Service,
-		Registry: c.Registry,
+		Service:  &c.Service,
+		Registry: &c.Registry,
 	}
 }
 

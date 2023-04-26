@@ -12,16 +12,10 @@ Service:
 UoM:
   UoMFile: ./res/uom.yaml
 
-# uncomment when running from command-line in hybrid mode with -cp -o flags
-#Registry:
-#  Host: "localhost"
-
 MessageBus:
-#  Host: "localhost" # uncomment when running from command-line in hybrid mode
   Optional:
     ClientId: core-metadata
 
 Database:
-#  Host: "localhost" # uncomment when running from command-line in hybrid mode
   Name: metadata
 
