@@ -283,8 +283,15 @@ func install() {
 
 	var err error
 
-	if err = installConfFiles(); err != nil {
-		log.Fatalf("Error installing config files: %v", err)
+	// Install default config files only if no config provider is connected
+	isConnected, err := snapctl.IsConnected("edgex-config").Run()
+	if err != nil {
+		log.Fatalf("Error checking interface connection: %s", err)
+	}
+	if !isConnected {
+		if err = installConfFiles(); err != nil {
+			log.Fatalf("Error installing config files: %v", err)
+		}
 	}
 
 	if err = installSecretStore(); err != nil {
