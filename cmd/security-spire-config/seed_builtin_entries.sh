@@ -25,7 +25,7 @@ echo "local_agent_svid=${local_agent_svid}"
 echo "SPIFFE_SERVER_SOCKET=${SPIFFE_SERVER_SOCKET}"
 echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
-echo "SPIFFE_CUSTOM_SERVICES=${SPIFFE_CUSTOM_SERVICES}"
+echo "EDGEX_SPIFFE_CUSTOM_SERVICES=${EDGEX_SPIFFE_CUSTOM_SERVICES}"
 
 SPIFFE_SERVICES='security-spiffe-token-provider support-notifications support-scheduler \
                  device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
@@ -33,7 +33,7 @@ SPIFFE_SERVICES='security-spiffe-token-provider support-notifications support-sc
                  app-http-export app-mqtt-export app-sample app-rfid-llrp-inventory \
                  app-external-mqtt-trigger'
 
-SEED_SERVICES="${SPIFFE_SERVICES} ${SPIFFE_CUSTOM_SERVICES}"
+SEED_SERVICES="${SPIFFE_SERVICES} ${EDGEX_SPIFFE_CUSTOM_SERVICES}"
 
 # add pre-authorized services into spire server entry
 for dockerservice in $SEED_SERVICES; do
