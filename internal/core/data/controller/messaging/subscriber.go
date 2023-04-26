@@ -120,7 +120,7 @@ func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
 	len := len(fields)
 	profileName := fields[len-3]
 	deviceName := fields[len-2]
-	sourceName, err := url.QueryUnescape(fields[len-1])
+	sourceName, err := url.PathUnescape(fields[len-1])
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
