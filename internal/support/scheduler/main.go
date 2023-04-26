@@ -73,7 +73,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportSchedulerServiceKey).BootstrapHandler, // Must be after Messaging
-			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, common.SupportSchedulerServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SupportSchedulerServiceKey, edgex.Version).BootstrapHandler,

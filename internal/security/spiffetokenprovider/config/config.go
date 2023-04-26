@@ -31,7 +31,6 @@ type SpiffeInfo struct {
 type ConfigurationStruct struct {
 	Writable    WritableInfo
 	MessageBus  bootstrapConfig.MessageBusInfo
-	Clients     map[string]bootstrapConfig.ClientInfo
 	Database    bootstrapConfig.Database
 	Registry    bootstrapConfig.RegistryInfo
 	Service     bootstrapConfig.ServiceInfo
@@ -83,9 +82,8 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.yaml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:  c.Clients,
-		Service:  c.Service,
-		Registry: c.Registry,
+		Service:  &c.Service,
+		Registry: &c.Registry,
 	}
 }
 

@@ -74,6 +74,11 @@ func (f *commonFlags) UseRegistry() bool {
 	return false
 }
 
+// InDevMode returns false since dev mode is not used
+func (f *commonFlags) InDevMode() bool {
+	return false
+}
+
 // ConfigProviderUrl returns the empty url since Configuration Provider is not used.
 func (f *commonFlags) ConfigProviderUrl() string {
 	return ""
