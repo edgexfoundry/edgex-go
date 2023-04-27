@@ -25,12 +25,18 @@ echo "local_agent_svid=${local_agent_svid}"
 echo "SPIFFE_SERVER_SOCKET=${SPIFFE_SERVER_SOCKET}"
 echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
+echo "EDGEX_SPIFFE_CUSTOM_SERVICES=${EDGEX_SPIFFE_CUSTOM_SERVICES}"
+
+SPIFFE_SERVICES='security-spiffe-token-provider support-notifications support-scheduler \
+                 device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
+                 device-virtual device-rfid-llrp device-coap device-gpio \
+                 app-http-export app-mqtt-export app-sample app-rfid-llrp-inventory \
+                 app-external-mqtt-trigger'
+
+SEED_SERVICES="${SPIFFE_SERVICES} ${EDGEX_SPIFFE_CUSTOM_SERVICES}"
+
 # add pre-authorized services into spire server entry
-for dockerservice in security-spiffe-token-provider support-notifications support-scheduler \
-    device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
-    device-virtual device-rfid-llrp device-coap device-gpio \
-    app-http-export app-mqtt-export app-sample app-rfid-llrp-inventory \
-    app-external-mqtt-trigger; do
+for dockerservice in $SEED_SERVICES; do
     # Temporary workaround because service name in dockerfile is not consistent with service key.
     # TAF scripts depend on legacy docker-compose service name. Fix in EdgeX 3.0.
     service=`echo -n ${dockerservice} | sed -e 's/app-service-/app-/'`
