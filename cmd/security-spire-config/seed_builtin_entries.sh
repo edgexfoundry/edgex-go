@@ -27,11 +27,11 @@ echo "SPIFFE_EDGEX_SVID_BASE=${SPIFFE_EDGEX_SVID_BASE}"
 
 echo "EDGEX_SPIFFE_CUSTOM_SERVICES=${EDGEX_SPIFFE_CUSTOM_SERVICES}"
 
-SPIFFE_SERVICES='security-spiffe-token-provider support-notifications support-scheduler \
+SPIFFE_SERVICES="security-spiffe-token-provider support-notifications support-scheduler \
                  device-bacnet device-camera device-grove device-modbus device-mqtt device-rest device-snmp \
                  device-virtual device-rfid-llrp device-coap device-gpio \
                  app-http-export app-mqtt-export app-sample app-rfid-llrp-inventory \
-                 app-external-mqtt-trigger'
+                 app-external-mqtt-trigger app-metrics-influxdb"
 
 SEED_SERVICES="${SPIFFE_SERVICES} ${EDGEX_SPIFFE_CUSTOM_SERVICES}"
 
