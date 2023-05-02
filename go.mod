@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.73
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.10
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.38
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.39
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.25
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.13
 	github.com/fxamacker/cbor/v2 v2.4.0
@@ -33,7 +33,7 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.12.0 // indirect
+	github.com/go-playground/validator/v10 v10.13.0 // indirect
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/leodido/go-urn v1.2.2 // indirect
+	github.com/leodido/go-urn v1.2.3 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54 // indirect
