@@ -614,7 +614,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		secretItems := strings.Split(secretSpec, serviceListBegin)
 		if len(secretItems) != 2 {
 			return nil, fmt.Errorf(
-				"invalid specification for %s environment vaiable: Format of value '%s' is invalid. Missing or too many '%s'",
+				"invalid specification for %s environment variable: Format of value '%s' is invalid. Missing or too many '%s'",
 				addKnownSecretsEnv,
 				secretSpec,
 				serviceListBegin)
@@ -625,7 +625,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		_, valid := b.validKnownSecrets[secretName]
 		if !valid {
 			return nil, fmt.Errorf(
-				"invalid specification for %s environment vaiable: '%s' is not a known secret",
+				"invalid specification for %s environment variable: '%s' is not a known secret",
 				addKnownSecretsEnv,
 				secretName)
 		}
@@ -633,7 +633,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		serviceNameList := secretItems[1]
 		if !strings.Contains(serviceNameList, serviceListEnd) {
 			return nil, fmt.Errorf(
-				"invalid specification for %s environment vaiable: Service list for '%s' missing closing '%s'",
+				"invalid specification for %s environment variable: Service list for '%s' missing closing '%s'",
 				addKnownSecretsEnv,
 				secretName,
 				serviceListEnd)
@@ -642,7 +642,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		serviceNameList = strings.TrimSpace(strings.Replace(serviceNameList, serviceListEnd, "", 1))
 		if len(serviceNameList) == 0 {
 			return nil, fmt.Errorf(
-				"invalid specification for %s environment vaiable: Service name list for '%s' is empty.",
+				"invalid specification for %s environment variable: Service name list for '%s' is empty.",
 				addKnownSecretsEnv,
 				secretName)
 		}
@@ -653,7 +653,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 
 			if !serviceNameRegx.MatchString(serviceNames[index]) {
 				return nil, fmt.Errorf(
-					"invalid specification for %s environment vaiable: Service name '%s' has invalid characters.",
+					"invalid specification for %s environment variable: Service name '%s' has invalid characters.",
 					addKnownSecretsEnv, serviceNames[index])
 			}
 		}

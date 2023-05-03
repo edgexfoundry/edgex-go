@@ -160,6 +160,11 @@
             "read"
           ]
         },
+        "secret/edgex/security-bootstrapper-messagebus/message-bus": {
+          "capabilities": [
+            "read"
+          ]
+        },
         "secret/edgex/*": {
           "capabilities": [
             "list",
