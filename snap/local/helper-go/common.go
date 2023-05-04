@@ -36,6 +36,7 @@ const (
 var (
 	securityServices = []string{
 		vault,
+		securityNginx,
 	}
 	securitySetupServices = []string{
 		securitySecretStoreSetup,
@@ -43,7 +44,6 @@ var (
 		securityBootstrapperNginx,
 		securityProxyAuth,
 		securityBootstrapperRedis,
-		securityNginx,
 	}
 	coreSetupServices = []string{
 		coreCommonConfigBootstrapper,

@@ -305,7 +305,7 @@ func install() {
 
 	// Enable autostart so that services start by default after seeding configuration
 	// Set the option for each app instead of globally (i.e. autostart=true), so
-	// that the option can be selectively unset for oneshot services after starting
+	// that the option can be selectively changed for oneshot services after starting
 	// them once!
 	var autostartKeyValues []string
 	for _, s := range allServices() {
