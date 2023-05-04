@@ -72,11 +72,13 @@ func addProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) (addedProv
 	} else if !exists {
 		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exists", pw.DiscoveredDevice.ServiceName), edgexErr)
 	}
-	exists, edgexErr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
-	if edgexErr != nil {
-		return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
-	} else if !exists {
-		return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.DiscoveredDevice.ProfileName), edgexErr)
+	if pw.DiscoveredDevice.ProfileName != "" {
+		exists, edgexErr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
+		if edgexErr != nil {
+			return addedProvisionWatcher, errors.NewCommonEdgeXWrapper(edgexErr)
+		} else if !exists {
+			return addedProvisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exists", pw.DiscoveredDevice.ProfileName), edgexErr)
+		}
 	}
 
 	ts := pkgCommon.MakeTimestamp()
@@ -222,11 +224,13 @@ func updateProvisionWatcher(conn redis.Conn, pw models.ProvisionWatcher) errors.
 	} else if !exists {
 		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device service '%s' does not exist", pw.DiscoveredDevice.ServiceName), nil)
 	}
-	exists, edgeXerr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
-	if edgeXerr != nil {
-		return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", pw.DiscoveredDevice.ProfileName), edgeXerr)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", pw.DiscoveredDevice.ProfileName), nil)
+	if pw.DiscoveredDevice.ProfileName != "" {
+		exists, edgeXerr = deviceProfileNameExists(conn, pw.DiscoveredDevice.ProfileName)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("device profile '%s' existence check failed", pw.DiscoveredDevice.ProfileName), edgeXerr)
+		} else if !exists {
+			return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("device profile '%s' does not exist", pw.DiscoveredDevice.ProfileName), nil)
+		}
 	}
 
 	oldProvisionWatcher, edgexErr := provisionWatcherByName(conn, pw.Name)
