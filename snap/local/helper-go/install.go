@@ -303,15 +303,4 @@ func install() {
 		log.Fatalf("Error installing redis: %v", err)
 	}
 
-	// Enable autostart so that services start by default after seeding configuration
-	// Set the option for each app instead of globally (i.e. autostart=true), so
-	// that the option can be selectively changed for oneshot services after starting
-	// them once!
-	var autostartKeyValues []string
-	for _, s := range allServices() {
-		autostartKeyValues = append(autostartKeyValues, "apps."+s+".autostart", "true")
-	}
-	if err = snapctl.Set(autostartKeyValues...).Run(); err != nil {
-		log.Fatalf("Error setting snap option: %v", err)
-	}
 }
