@@ -250,7 +250,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				return
 			}
 		} else if serviceKey != serviceName {
-			lc.Errorf("unequal service key and servie name for all other service case")
+			lc.Errorf("unequal service key and service name for all other service case")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -350,6 +350,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClient,
 	ssConfig *bootstrapConfig.SecretStoreInfo,
 	knownSecretNames []string, serviceKey string, privilegedToken string) error {
+
+	if len(knownSecretNames) == 0 {
+		return nil
+	}
+	if len(knownSecretNames) == 1 && knownSecretNames[0] == "" {
+		return nil
+	}
 
 	// copy from security-bootstrapper-redis: /v1/secret/edgex/security-bootstrapper-redis/redisdb
 	// to /v1/secret/edgex/<service_key>/redisdb using secret client's APIs
