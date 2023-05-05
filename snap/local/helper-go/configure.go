@@ -160,14 +160,5 @@ func configure() {
 		log.Fatalf("Error processing autostart options: %v", err)
 	}
 
-	// Unset autostart for oneshot services so they don't start again
-	var oneshotAutostart []string
-	for _, s := range allOneshotServices() {
-		oneshotAutostart = append(oneshotAutostart, "apps."+s+".autostart")
-	}
-	if err = snapctl.Unset(oneshotAutostart...).Run(); err != nil {
-		log.Fatalf("Error unsetting snap option: %v", err)
-	}
-
 	log.Debug("End")
 }

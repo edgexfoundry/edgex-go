@@ -36,6 +36,7 @@ const (
 var (
 	securityServices = []string{
 		vault,
+		securityNginx,
 	}
 	securitySetupServices = []string{
 		securitySecretStoreSetup,
@@ -43,7 +44,6 @@ var (
 		securityBootstrapperNginx,
 		securityProxyAuth,
 		securityBootstrapperRedis,
-		securityNginx,
 	}
 	coreSetupServices = []string{
 		coreCommonConfigBootstrapper,
@@ -66,10 +66,11 @@ func allOneshotServices() (s []string) {
 }
 
 func allServices() (s []string) {
-	s = make([]string, len(coreServices)+len(supportServices)+len(securityServices)+len(allOneshotServices()))
+	allOneshotServices := allOneshotServices()
+	s = make([]string, 0, len(coreServices)+len(supportServices)+len(securityServices)+len(allOneshotServices))
 	s = append(s, coreServices...)
 	s = append(s, supportServices...)
 	s = append(s, securityServices...)
-	s = append(s, allOneshotServices()...)
+	s = append(s, allOneshotServices...)
 	return s
 }
