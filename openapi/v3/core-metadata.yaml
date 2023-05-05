@@ -745,7 +745,6 @@ components:
           type: object
           description: A map of properties required to address the given provision watcher
       required:
-        - profileName
         - serviceName
         - adminState
     UpdateDiscoveredDevice:
