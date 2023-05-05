@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download and test snap
-        uses: canonical/edgex-snap-testing/test@autostart-refactor
+        uses: canonical/edgex-snap-testing/test@v3
         with:
           name: edgexfoundry
           snap: ${{needs.build.outputs.snap}}
