@@ -37,8 +37,8 @@ confinement: strict
 
 apps:
   consul:
-    command: bin/start-consul.sh
-    daemon: forking
+    command: bin/consul agent -data-dir $SNAP_DATA/consul/data -config-dir $SNAP_DATA/consul/config -server -bind 127.0.0.1 -bootstrap -ui
+    daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
   consul-cli:

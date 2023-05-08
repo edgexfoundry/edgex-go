@@ -188,11 +188,11 @@ func installConsul() error {
 		return err
 	}
 
-	if err = os.MkdirAll(env.SnapData+"/consul/config", 0755); err != nil {
+	if err = os.MkdirAll(env.SnapData+"/consul/data", 0755); err != nil {
 		return err
 	}
 
-	if err = os.MkdirAll(env.SnapData+"/consul/data", 0755); err != nil {
+	if err = hooks.CopyDir(snapConf+"/consul", env.SnapData+"/consul/config"); err != nil {
 		return err
 	}
 
