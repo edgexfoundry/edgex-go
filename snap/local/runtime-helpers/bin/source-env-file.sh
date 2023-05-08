@@ -8,7 +8,9 @@ BINPATH="${ARGV[0]}"
 
 # binary name == service name/key
 SERVICE=$(basename "$BINPATH")
-ENV_FILE="$SNAP_DATA/config/$SERVICE/overrides.env"
+if [ -z $ENV_FILE ]; then
+    ENV_FILE="$SNAP_DATA/config/$SERVICE/overrides.env"
+fi
 TAG="edgex-$SERVICE."$(basename "$0")
 
 if [ -f "$ENV_FILE" ]; then
