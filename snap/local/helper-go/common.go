@@ -27,7 +27,7 @@ const (
 	securityProxyAuth          = "security-proxy-auth"
 	securityBootstrapper       = "security-bootstrapper"
 	securityBootstrapperRedis  = "security-bootstrapper-redis"
-	securityBootstrapperConsul = "security-consul-bootstrapper"
+	securityBootstrapperConsul = "security-bootstrapper-consul"
 	securityBootstrapperNginx  = "security-bootstrapper-nginx"
 	securityFileTokenProvider  = "security-file-token-provider"
 	vault                      = "vault"

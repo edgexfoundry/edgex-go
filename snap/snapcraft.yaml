@@ -141,7 +141,7 @@ apps:
     install-mode: disable
     plugs: [network]
   # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
-  security-consul-bootstrapper:
+  security-bootstrapper-consul:
     after:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
@@ -162,7 +162,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -180,7 +180,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -196,7 +196,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -211,7 +211,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -226,7 +226,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -251,7 +251,7 @@ apps:
   # this service pushes common configuration source into Configuration Provider
   core-common-config-bootstrapper:
     after:
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry 
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json

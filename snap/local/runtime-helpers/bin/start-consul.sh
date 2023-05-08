@@ -42,9 +42,9 @@ fi
 # see https://github.com/hashicorp/consul/issues/4380
 
 # Note: we no longer loop trying to connect to consul here as it is already
-# taken care by security-consul-bootstrapper, in which it actually waits for
+# taken care by security-bootstrapper-consul, in which it actually waits for
 # the consul leader being elected
 # see details in https://github.com/edgexfoundry/edgex-go/blob/master/internal/security/bootstrapper/command/setupacl/command.go#L117-L131
 # this is to avoid the chicken-and-egg problem when it is running in "deny" policy mode
 # as the consul token being required for the service checking API to be able to talk to consul
-# in tandem with non-blocking startup of security-consul-bootstrapper
+# in tandem with non-blocking startup of security-bootstrapper-consul
