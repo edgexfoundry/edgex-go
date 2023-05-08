@@ -335,8 +335,6 @@ parts:
       - --without-stream_upstream_least_conn_module
       - --without-stream_upstream_random_module
       - --without-stream_upstream_zone_module
-      - --error-log-path=stderr
-      - --http-log-path=logs/access.log
     build-packages:
       - build-essential
       - libpcre3-dev
@@ -350,8 +348,6 @@ parts:
       - zlib1g
     stage:
       - -usr/nginx/conf/nginx.conf
-    prime:
-      - -usr/nginx/logs
 
   runtime-helpers:
     plugin: dump

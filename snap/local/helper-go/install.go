@@ -207,52 +207,7 @@ func installProxy() error {
 		return err
 	}
 
-	// tmpdirs := []string{"body", "fastcgi", "proxy", "scgi"}
-
-	// for _, d := range tmpdirs {
-	// 	if err = os.MkdirAll(fmt.Sprintf("%s/nginx_tmp_%s", env.SnapCommon, d), 0750); err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	if err = os.MkdirAll(filepath.Join(env.SnapData, "/nginx", "conf.d"), 0750); err != nil {
-		return err
-	}
-
-	// ensure prefix uses the 'current' symlink in it's path, otherwise refreshes to a
-	// new snap revision will break
-	//snapDataCurr := strings.Replace(env.SnapData, env.SnapRev, "current", 1)
-	rStrings := map[string]string{
-		/*
-			"include /etc/nginx/conf.d/*.conf;":                    "include " + snapDataCurr + "/nginx/*.conf;",
-			"include /etc/nginx/sites-enabled/*;":                  "include " + snapDataCurr + "/nginx/sites-enabled/*;",
-			"include /etc/nginx/modules-enabled/*.conf;":           "include " + snapDataCurr + "/nginx/modules-enabled/*.conf;",
-			"client_body_temp_path /var/lib/nginx/body;":           "client_body_temp_path " + env.SnapCommon + "/nginx_tmp_body;",
-			"fastcgi_temp_path /var/lib/nginx/fastcgi;":            "fastcgi_temp_path " + env.SnapCommon + "/nginx_tmp_fastcgi;",
-			"proxy_temp_path /var/lib/nginx/proxy;":                "proxy_temp_path " + env.SnapCommon + "/nginx_tmp_proxy;",
-			"scgi_temp_path /var/lib/nginx/scgi;":                  "scgi_temp_path " + env.SnapCommon + "/nginx_tmp_scgi;",
-			"uwsgi_temp_path /var/lib/nginx/uwsgi;":                "uwsgi_temp_path " + env.SnapCommon + "/nginx_tmp_uwsgi;",
-			"include /etc/nginx/mime.types;":                       "include " + env.Snap + "/etc/nginx/mime.types;",
-			"access_log /var/log/nginx/access.log;":                "access_log " + env.SnapCommon + "/logs/nginx_access.log;",
-			"error_log /var/log/nginx/error.log;":                  "error_log " + env.SnapCommon + "/logs/nginx_error.log;",
-			"ssl_certificate \"/etc/ssl/nginx/nginx.crt\";":        "ssl_certificate \"" + snapDataCurr + "/nginx/nginx.crt\";",
-			"ssl_certificate_key \"/etc/ssl/nginx/nginx.key\";":    "ssl_certificate_key \"" + snapDataCurr + "/nginx/nginx.key\";",
-			"include /etc/nginx/conf.d/edgex-custom-rewrites.inc;": "include " + snapDataCurr + "/nginx/edgex-custom-rewrites.inc;",
-		*/
-	}
-
-	path := "nginx.conf"
-	if err = hooks.CopyFileReplace(filepath.Join(snapConf, "nginx", path), filepath.Join(env.SnapData, "nginx", path), rStrings); err != nil {
-		return err
-	}
-
-	path = "edgex-default.conf"
-	if err = hooks.CopyFileReplace(filepath.Join(snapConf, "nginx", path), filepath.Join(env.SnapData, "nginx/conf.d", path), rStrings); err != nil {
-		return err
-	}
-
-	path = "edgex-custom-rewrites.inc"
-	if err = hooks.CopyFileReplace(filepath.Join(snapConf, "nginx", path), filepath.Join(env.SnapData, "nginx/conf.d", path), rStrings); err != nil {
+	if err = hooks.CopyDir(snapConf+"/nginx", env.SnapData+"/nginx"); err != nil {
 		return err
 	}
 
