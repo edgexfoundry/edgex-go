@@ -257,6 +257,8 @@ apps:
     after:
       - security-bootstrapper-consul
     command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry
+    command-chain:
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
     daemon: oneshot
