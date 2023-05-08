@@ -132,7 +132,7 @@ apps:
     command-chain:
       - bin/source-env-file.sh
     environment:
-      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/overrides.env
       SECRETSTORE_SERVERNAME: localhost
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-bootstrapper-redis/secrets-token.json
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
@@ -148,7 +148,7 @@ apps:
     command-chain:
       - bin/source-env-file.sh
     environment:
-      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/overrides.env
       STAGEGATE_REGISTRY_HOST: localhost
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_MANAGEMENTTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
