@@ -19,6 +19,8 @@ all-services:
         SecuritySecretsStored: false
         SecurityConsulTokensRequested: false
         SecurityConsulTokenDuration: false
+        SecurityRuntimeSecretTokenDuration: false
+        SecurityGetSecretDuration: false
 #     Tags: # Contains the service level tags to be attached to all the service's metrics
       #  Gateway: "my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
       
