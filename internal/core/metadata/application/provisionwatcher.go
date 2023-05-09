@@ -38,7 +38,7 @@ func AddProvisionWatcher(pw models.ProvisionWatcher, ctx context.Context, dic *d
 		addProvisionWatcher.Id,
 		correlationId,
 	)
-	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionAdd, pw.DiscoveredDevice.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionAdd, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return addProvisionWatcher.Id, nil
 }
 
@@ -131,7 +131,7 @@ func DeleteProvisionWatcherByName(ctx context.Context, name string, dic *di.Cont
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionDelete, pw.DiscoveredDevice.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionDelete, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return nil
 }
 
@@ -147,8 +147,8 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 
 	// Old service name is used for invoking callback
 	var oldServiceName string
-	if dto.DiscoveredDevice.ServiceName != nil && *dto.DiscoveredDevice.ServiceName != pw.DiscoveredDevice.ServiceName {
-		oldServiceName = pw.DiscoveredDevice.ServiceName
+	if dto.ServiceName != nil && *dto.ServiceName != pw.ServiceName {
+		oldServiceName = pw.ServiceName
 	}
 
 	requests.ReplaceProvisionWatcherModelFieldsWithDTO(&pw, dto)
@@ -163,7 +163,7 @@ func PatchProvisionWatcher(ctx context.Context, dto dtos.UpdateProvisionWatcher,
 	if oldServiceName != "" {
 		go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionUpdate, oldServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	}
-	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionUpdate, pw.DiscoveredDevice.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
+	go publishSystemEvent(common.ProvisionWatcherSystemEventType, common.SystemEventActionUpdate, pw.ServiceName, dtos.FromProvisionWatcherModelToDTO(pw), ctx, dic)
 	return nil
 }
 

@@ -598,6 +598,9 @@ components:
         name:
           type: string
           description: Non-database identifier (must be unique)
+        serviceName:
+          type: string
+          description: Name of the device service that will use the provision watcher
         created:
           type: integer
           description: Created is a timestamp indicating when the entity was created.
@@ -638,6 +641,9 @@ components:
         name:
           type: string
           description: Non-database identifier (must be unique)
+        serviceName:
+          type: string
+          description: Name of the device service that will use the provision watcher
         labels:
           type: array
           description: Labels applied to the provision watcher to help with searching
@@ -677,6 +683,9 @@ components:
         name:
           type: string
           description: Non-database identifier (must be unique)
+        serviceName:
+          type: string
+          description: Name of the device service that will use the provision watcher
         labels:
           type: array
           description: Labels applied to the provision watcher to help with searching
@@ -727,9 +736,6 @@ components:
         profileName:
           type: string
           description: Name of the profile that should be applied to the devices available at the identifier addresses
-        serviceName:
-          type: string
-          description: Name of the device service that new devices will be associated to
         adminState:
           type: string
           description: Admin state
@@ -754,9 +760,6 @@ components:
         profileName:
           type: string
           description: Name of the profile that should be applied to the devices available at the identifier addresses
-        serviceName:
-          type: string
-          description: Name of the device service that new devices will be associated to
         adminState:
           type: string
           description: Admin state
