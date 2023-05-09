@@ -51,13 +51,13 @@ func buildTestAddProvisionWatcherRequest() requests.AddProvisionWatcherRequest {
 		ProvisionWatcher: dtos.ProvisionWatcher{
 			Id:                  ExampleUUID,
 			Name:                testProvisionWatcherName,
+			ServiceName:         TestDeviceServiceName,
 			Labels:              testProvisionWatcherLabels,
 			Identifiers:         testProvisionWatcherIdentifiers,
 			BlockingIdentifiers: testProvisionWatcherBlockingIdentifiers,
 			AdminState:          models.Unlocked,
 			DiscoveredDevice: dtos.DiscoveredDevice{
 				ProfileName: TestDeviceProfileName,
-				ServiceName: TestDeviceServiceName,
 				AdminState:  models.Unlocked,
 				AutoEvents:  testProvisionWatcherAutoEvents,
 				Properties:  testProperties,
@@ -81,12 +81,12 @@ func buildTestUpdateProvisionWatcherRequest() requests.UpdateProvisionWatcherReq
 		ProvisionWatcher: dtos.UpdateProvisionWatcher{
 			Id:                  &testUUID,
 			Name:                &testName,
+			ServiceName:         &testServiceName,
 			Labels:              testProvisionWatcherLabels,
 			Identifiers:         testProvisionWatcherIdentifiers,
 			BlockingIdentifiers: testProvisionWatcherBlockingIdentifiers,
 			AdminState:          &testAdminState,
 			DiscoveredDevice: dtos.UpdateDiscoveredDevice{
-				ServiceName: &testServiceName,
 				ProfileName: &testProfileName,
 				AdminState:  &testAdminState,
 				AutoEvents:  testProvisionWatcherAutoEvents,
@@ -106,8 +106,8 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", pwModel).Return(pwModel, nil)
-	dbClientMock.On("DeviceServiceByName", pwModel.DiscoveredDevice.ServiceName).Return(models.DeviceService{}, nil)
-	dbClientMock.On("DeviceServiceNameExists", pwModel.DiscoveredDevice.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceServiceByName", pwModel.ServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceServiceNameExists", pwModel.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", pwModel.DiscoveredDevice.ProfileName).Return(true, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -169,8 +169,8 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 
 	notFountServiceName := "notFoundService"
 	notFoundService := provisionWatcher
-	notFoundService.ProvisionWatcher.DiscoveredDevice.ServiceName = notFountServiceName
-	dbClientMock.On("DeviceServiceNameExists", notFoundService.ProvisionWatcher.DiscoveredDevice.ServiceName).Return(false, nil)
+	notFoundService.ProvisionWatcher.ServiceName = notFountServiceName
+	dbClientMock.On("DeviceServiceNameExists", notFoundService.ProvisionWatcher.ServiceName).Return(false, nil)
 	notFountProfileName := "notFoundProfile"
 	notFoundProfile := provisionWatcher
 	notFoundProfile.ProvisionWatcher.DiscoveredDevice.ProfileName = notFountProfileName
@@ -253,7 +253,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Duplicated(t *testing.T)
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddProvisionWatcher", duplicateNameModel).Return(duplicateNameModel, duplicateNameDBError)
 	dbClientMock.On("AddProvisionWatcher", duplicateIdModel).Return(duplicateIdModel, duplicateIdDBError)
-	dbClientMock.On("DeviceServiceNameExists", duplicateIdRequest.ProvisionWatcher.DiscoveredDevice.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceServiceNameExists", duplicateIdRequest.ProvisionWatcher.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", duplicateIdRequest.ProvisionWatcher.DiscoveredDevice.ProfileName).Return(true, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -369,11 +369,11 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	testServiceA := "testServiceA"
 	testServiceB := "testServiceB"
 	pw1WithServiceA := provisionWatcher
-	pw1WithServiceA.DiscoveredDevice.ServiceName = testServiceA
+	pw1WithServiceA.ServiceName = testServiceA
 	pw2WithServiceA := provisionWatcher
-	pw2WithServiceA.DiscoveredDevice.ServiceName = testServiceA
+	pw2WithServiceA.ServiceName = testServiceA
 	pw3WithServiceB := provisionWatcher
-	pw3WithServiceB.DiscoveredDevice.ServiceName = testServiceB
+	pw3WithServiceB.ServiceName = testServiceB
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithServiceA, pw2WithServiceA, pw3WithServiceB}
 	expectedTotalCountServiceA := uint32(2)
@@ -616,7 +616,7 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 	dbClientMock.On("ProvisionWatcherByName", provisionWatcher.Name).Return(provisionWatcher, nil)
 	dbClientMock.On("ProvisionWatcherByName", notFoundName).Return(provisionWatcher, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "provision watcher doesn't exist in the database", nil))
 	dbClientMock.On("DeleteProvisionWatcherByName", provisionWatcher.Name).Return(nil)
-	dbClientMock.On("DeviceServiceByName", provisionWatcher.DiscoveredDevice.ServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceServiceByName", provisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -671,12 +671,12 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	pwModels := models.ProvisionWatcher{
 		Id:                  *testReq.ProvisionWatcher.Id,
 		Name:                *testReq.ProvisionWatcher.Name,
+		ServiceName:         *testReq.ProvisionWatcher.ServiceName,
 		Labels:              testReq.ProvisionWatcher.Labels,
 		Identifiers:         testReq.ProvisionWatcher.Identifiers,
 		BlockingIdentifiers: testReq.ProvisionWatcher.BlockingIdentifiers,
 		AdminState:          models.AdminState(*testReq.ProvisionWatcher.AdminState),
 		DiscoveredDevice: models.DiscoveredDevice{
-			ServiceName: *testReq.ProvisionWatcher.DiscoveredDevice.ServiceName,
 			ProfileName: *testReq.ProvisionWatcher.DiscoveredDevice.ProfileName,
 			AutoEvents:  dtos.ToAutoEventModels(testReq.ProvisionWatcher.DiscoveredDevice.AutoEvents),
 			Properties:  testProperties,
@@ -685,11 +685,11 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	}
 
 	valid := testReq
-	dbClientMock.On("DeviceServiceNameExists", *valid.ProvisionWatcher.DiscoveredDevice.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceServiceNameExists", *valid.ProvisionWatcher.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceProfileNameExists", *valid.ProvisionWatcher.DiscoveredDevice.ProfileName).Return(true, nil)
 	dbClientMock.On("ProvisionWatcherByName", *valid.ProvisionWatcher.Name).Return(pwModels, nil)
 	dbClientMock.On("UpdateProvisionWatcher", pwModels).Return(nil)
-	dbClientMock.On("DeviceServiceByName", *valid.ProvisionWatcher.DiscoveredDevice.ServiceName).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DeviceServiceByName", *valid.ProvisionWatcher.ServiceName).Return(models.DeviceService{}, nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq

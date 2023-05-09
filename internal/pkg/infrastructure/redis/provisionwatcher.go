@@ -39,7 +39,7 @@ func sendAddProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.Pro
 	_ = conn.Send(SET, storedKey, m)
 	_ = conn.Send(HSET, ProvisionWatcherCollectionName, pw.Name, storedKey)
 	_ = conn.Send(ZADD, ProvisionWatcherCollection, pw.Modified, storedKey)
-	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.DiscoveredDevice.ServiceName), pw.Modified, storedKey)
+	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), pw.Modified, storedKey)
 	_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionProfileName, pw.DiscoveredDevice.ProfileName), pw.Modified, storedKey)
 	for _, label := range pw.Labels {
 		_ = conn.Send(ZADD, CreateKey(ProvisionWatcherCollectionLabel, label), pw.Modified, storedKey)
@@ -191,7 +191,7 @@ func sendDeleteProvisionWatcherCmd(conn redis.Conn, storedKey string, pw models.
 	_ = conn.Send(DEL, storedKey)
 	_ = conn.Send(HDEL, ProvisionWatcherCollectionName, pw.Name)
 	_ = conn.Send(ZREM, ProvisionWatcherCollection, storedKey)
-	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.DiscoveredDevice.ServiceName), storedKey)
+	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionServiceName, pw.ServiceName), storedKey)
 	_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionProfileName, pw.DiscoveredDevice.ProfileName), storedKey)
 	for _, label := range pw.Labels {
 		_ = conn.Send(ZREM, CreateKey(ProvisionWatcherCollectionLabel, label), storedKey)
