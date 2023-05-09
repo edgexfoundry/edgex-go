@@ -23,33 +23,30 @@ const (
 	coreData                     = "core-data"
 	coreMetadata                 = "core-metadata"
 	coreCommand                  = "core-command"
-	consul                       = "consul"
-	redis                        = "redis"
-	registry                     = consul
-	configProvider               = consul
+	consul                       = "consul" // registry and config provider
+	redis                        = "redis"  // message bus and database
 	coreCommonConfigBootstrapper = "core-common-config-bootstrapper"
 	// support services
 	supportNotifications = "support-notifications"
 	supportScheduler     = "support-scheduler"
-	// security services
-	securityNginx              = "nginx"
-	securitySecretsConfig      = "secrets-config"
-	securitySecretStore        = "security-secret-store"
+	// security apps
+	nginx                      = "nginx"          // reverse proxy
+	securitySecretsConfig      = "secrets-config" // CLI app
 	securitySecretStoreSetup   = "security-secretstore-setup"
-	securityProxy              = "security-proxy"
-	securityProxyAuth          = "security-proxy-auth"
+	securityProxyAuth          = "security-proxy-auth" // auth plugin for nginx
 	securityBootstrapper       = "security-bootstrapper"
 	securityBootstrapperRedis  = "security-bootstrapper-redis"
 	securityBootstrapperConsul = "security-bootstrapper-consul"
 	securityBootstrapperNginx  = "security-bootstrapper-nginx"
 	securityFileTokenProvider  = "security-file-token-provider"
-	vault                      = "vault"
+	vault                      = "vault" // secret store
 )
 
 var (
 	securityServices = []string{
 		vault,
-		securityNginx,
+		nginx,
+		securityProxyAuth,
 	}
 	securitySetupServices = []string{
 		securitySecretStoreSetup,
