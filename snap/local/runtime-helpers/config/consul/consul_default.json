@@ -1,0 +1,8 @@
+{
+    "node_name": "edgex-core-consul",
+    "enable_local_script_checks": true,
+    "disable_update_check": true,
+    "ports": {
+        "dns": -1
+    }
+}

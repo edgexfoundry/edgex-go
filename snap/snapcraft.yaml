@@ -36,11 +36,13 @@ grade: stable
 confinement: strict
 
 apps:
-  # edgex microservices
   consul:
-    command: bin/start-consul.sh
-    daemon: forking
+    command: bin/consul agent -data-dir $SNAP_DATA/consul/data -config-dir $SNAP_DATA/consul/config -server -bind 127.0.0.1 -bootstrap -ui
+    daemon: simple
     install-mode: disable
+    plugs: [network, network-bind]
+  consul-cli:
+    command: bin/consul
     plugs: [network, network-bind]
   redis:
     after: [security-bootstrapper-redis]
@@ -53,6 +55,9 @@ apps:
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
+  redis-cli:
+    command: bin/redis-cli
+    plugs: [home, removable-media, network]
   vault:
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
@@ -73,8 +78,7 @@ apps:
       - network-bind
   security-secretstore-setup:
     after: [vault]
-    command: >-
-      bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+    command: bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
       - bin/source-env-file.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
@@ -141,7 +145,7 @@ apps:
     install-mode: disable
     plugs: [network]
   # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
-  security-consul-bootstrapper:
+  security-bootstrapper-consul:
     after:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
@@ -162,7 +166,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -180,7 +184,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -196,7 +200,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -211,7 +215,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -226,7 +230,7 @@ apps:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider --registry
     command-chain:
       - bin/source-env-file.sh
@@ -251,8 +255,10 @@ apps:
   # this service pushes common configuration source into Configuration Provider
   core-common-config-bootstrapper:
     after:
-      - security-consul-bootstrapper
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry 
+      - security-bootstrapper-consul
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry
+    command-chain:
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
     daemon: oneshot
@@ -265,27 +271,8 @@ apps:
       SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res/
       SECRETSTORE_TOKENFILE: resp-init.json
     plugs: [home, removable-media, network]
-  redis-cli:
-    command: bin/redis-cli
-    plugs: [home, removable-media, network]
-  consul-cli:
-    command: bin/consul
-    plugs: [network, network-bind]
-  curl:
-    command: usr/bin/curl
-    plugs: [network]
-  jq:
-    command: usr/bin/jq
-    plugs: [home, removable-media]
 
 parts:
-  static-packages:
-    plugin: nil
-    stage-packages:
-      - apg
-      - curl
-      - jq
-
   # For inspiration see
   # - https://github.com/ogra1/nginx-snap
   # - https://github.com/kbavishi/nginx-snapcraft
@@ -348,8 +335,6 @@ parts:
       - --without-stream_upstream_least_conn_module
       - --without-stream_upstream_random_module
       - --without-stream_upstream_zone_module
-      - --error-log-path=stderr
-      - --http-log-path=logs/access.log
     build-packages:
       - build-essential
       - libpcre3-dev
@@ -363,14 +348,6 @@ parts:
       - zlib1g
     stage:
       - -usr/nginx/conf/nginx.conf
-    prime:
-      - -usr/nginx/logs
-
-  go-builder:
-    plugin: nil
-    build-snaps:
-      - go/1.20/stable
-    prime: [-*]
 
   runtime-helpers:
     plugin: dump
@@ -379,7 +356,8 @@ parts:
   helper-go:
     source: snap/local/helper-go
     plugin: make
-    after: [go-builder]
+    build-snaps:
+      - go/1.20/stable
     override-build: |
       cd $CRAFT_PART_SRC
       make build
@@ -393,26 +371,13 @@ parts:
     override-build: |
       VERSION=1.13.0
 
-      # use dpkg architecture to figure out our target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=consul_${VERSION}_linux_amd64.zip
-          FILE_HASH=db771e40126a88e1cfe2968724adbf2d1cdcc41c503fa326f3a93148ea642d38
-          ;;
-        arm64)
-          FILE_NAME=consul_${VERSION}_linux_arm64.zip
-          FILE_HASH=768119d9464685bd39329c537ee140ba19f45f5a2f68ea8fe49403f3141d39ec
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=consul_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
+
       unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       consul: bin/consul
@@ -423,12 +388,13 @@ parts:
     source-depth: 1
     plugin: make
     make-parameters:
-    - "PREFIX=$CRAFT_PART_INSTALL/"
+      - "PREFIX=$CRAFT_PART_INSTALL/"
 
   edgex-go:
-    after: [go-builder]
     source: .
     plugin: make
+    build-snaps:
+      - go/1.20/stable
     override-build: |
       cd $CRAFT_PART_SRC
 
@@ -500,10 +466,6 @@ parts:
       cp "./cmd/security-file-token-provider/res/token-config.json" \
         "$CRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
-    build-packages:
-      - zip
-      - pkg-config
-
   vault:
     plugin: nil
     build-packages:
@@ -512,26 +474,13 @@ parts:
     override-build: |
       VERSION=1.11.3
 
-      # use dpkg architecture to figure out the target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=vault_${VERSION}_linux_amd64.zip
-          FILE_HASH=b433413ce524f26abe6292f7fc95f267e809daeacdf7ba92b68dead322f92deb
-          ;;
-        arm64)
-          FILE_NAME=vault_${VERSION}_linux_arm64.zip
-          FILE_HASH=5ccf49bd3601e29d6d1a8c321ece1eacf0f7cc12ea604ac392edd4f7a54d69c4
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=vault_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
+
       unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       vault: bin/vault
