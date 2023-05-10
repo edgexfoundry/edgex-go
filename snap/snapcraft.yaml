@@ -378,7 +378,7 @@ parts:
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
 
-      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       consul: bin/consul
 
@@ -388,7 +388,7 @@ parts:
     source-depth: 1
     plugin: make
     make-parameters:
-      - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
+      - "PREFIX=$CRAFT_PART_INSTALL/"
 
   edgex-go:
     source: .
@@ -481,6 +481,6 @@ parts:
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
 
-      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       vault: bin/vault
