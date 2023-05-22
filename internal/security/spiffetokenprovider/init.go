@@ -137,8 +137,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Handle healthcheck endpoint
-	http.HandleFunc("/api/v2/ping", func(w http.ResponseWriter, r *http.Request) {
-		lc.Info("Request received for /api/v2/ping")
+	http.HandleFunc(common.ApiBase+"/ping", func(w http.ResponseWriter, r *http.Request) {
+		lc.Info("Health check request received")
 		_, err = io.WriteString(w, "pong")
 		if err != nil {
 			lc.Errorf("failed to write response: %v", err)
@@ -164,7 +164,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	//
 
 	// Handle gettoken endpoint
-	http.HandleFunc("/api/v2/gettoken", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(common.ApiBase+"/gettoken", func(w http.ResponseWriter, r *http.Request) {
 
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 

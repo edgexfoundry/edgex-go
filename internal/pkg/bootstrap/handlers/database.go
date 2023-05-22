@@ -117,7 +117,7 @@ func (d Database) BootstrapHandler(
 		},
 	})
 
-	lc.Info("Database for V2 API connected")
+	lc.Info("Database connected")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -131,7 +131,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		lc.Info("Database for V2 API disconnected")
+		lc.Info("Database disconnected")
 	}()
 
 	return true

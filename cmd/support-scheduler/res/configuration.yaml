@@ -17,7 +17,7 @@ IntervalActions:
         Port: 59880
         Protocol: http
         Method: DELETE
-        Path: /api/v2/event/age/604800000000000   # Remove events older than 7 days
+        Path: /api/v3/event/age/604800000000000   # Remove events older than 7 days
         Interval: midnight
         AdminState: UNLOCKED
         AuthMethod: JWT     # AuthMethod = JWT degrades to no auth in security-disabled EdgeX

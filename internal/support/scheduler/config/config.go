@@ -21,7 +21,7 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 )
 
-// Configuration V2 for the Support Scheduler Service
+// Configuration for the Support Scheduler Service
 type ConfigurationStruct struct {
 	Writable        WritableInfo
 	Database        bootstrapConfig.Database
