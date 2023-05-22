@@ -281,7 +281,7 @@ parts:
   nginx:
     source: https://github.com/nginx/nginx.git
     # Use branch instead of tag to limit the git cloning depth
-    source-branch: release-1.23.3
+    source-branch: release-1.24.0
     source-depth: 1
     plugin: autotools
     autotools-configure-parameters:
@@ -369,7 +369,7 @@ parts:
       - curl
       - unzip
     override-build: |
-      VERSION=1.13.0
+      VERSION=1.15.2
 
       ARCH=$(dpkg --print-architecture)
       FILE_NAME=consul_${VERSION}_linux_$ARCH.zip
@@ -384,7 +384,7 @@ parts:
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "6.2.7"
+    source-tag: "6.2.12"
     source-depth: 1
     plugin: make
     make-parameters:
