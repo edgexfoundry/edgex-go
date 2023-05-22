@@ -4,11 +4,11 @@ go 1.20
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.90
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.0-dev.92
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0-dev.10
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.41
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.31
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.17
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0-dev.42
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0-dev.32
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.0-dev.18
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
