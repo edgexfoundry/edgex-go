@@ -41,8 +41,6 @@ type WritableInfo struct {
 
 type SmtpInfo struct {
 	Host                 string
-	Username             string // deprecated in V2
-	Password             string // deprecated in V2
 	Port                 int
 	Sender               string
 	EnableSelfSignedCert bool
@@ -52,16 +50,6 @@ type SmtpInfo struct {
 	SecretName string
 	// AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
 	AuthMode string
-}
-
-// The earlier releases do not have Username field and are using Sender field where Usename will
-// be used now, to make it backward compatible fallback to Sender, which is signified by the empty
-// Username field.
-func (s SmtpInfo) CheckUsername() string {
-	if s.Username != "" {
-		return s.Username
-	}
-	return s.Sender
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

@@ -70,7 +70,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add v2 db client bootstrap handler
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportSchedulerServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.SupportSchedulerServiceKey).BootstrapHandler,

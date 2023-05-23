@@ -52,7 +52,6 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
-	// V2 Scheduler
 	schedulerManager := scheduler.NewManager(lc, configuration, secretProvider)
 	dic.Update(di.ServiceConstructorMap{
 		container.SchedulerManagerName: func(get di.Get) interface{} {

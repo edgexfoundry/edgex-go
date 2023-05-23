@@ -89,7 +89,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
 	err := msgClient.Publish(msgEnvelope, publishTopic)
 	if err != nil {
-		lc.Errorf("Unable to send message for V2 API event. Correlation-id: %s, Profile Name: %s, "+
+		lc.Errorf("Unable to send message for API event. Correlation-id: %s, Profile Name: %s, "+
 			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err)
 	} else {
 		lc.Debugf("Event Published to MessageBus. Topic: %s, Correlation-id: %s ", publishTopic, correlationId)

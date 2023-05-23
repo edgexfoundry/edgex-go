@@ -101,7 +101,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
-		// V2 shall asynchronously publish initially encoded payload (not re-encoding) to message bus
+		// it is decided to asynchronously publish initially encoded payload (not re-encoding) to message bus
 		go ec.app.PublishEvent(dataBytes, serviceName, profileName, deviceName, sourceName, ctx, ec.dic)
 		// unmarshal bytes to AddEventRequest
 		reader := ec.getReader(r)

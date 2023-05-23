@@ -20,7 +20,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 )
 
-// CommonController controller for V2 REST APIs
+// CommonController controller for REST APIs
 type CommonController struct {
 	dic         *di.Container
 	serviceName string
@@ -35,27 +35,27 @@ func NewCommonController(dic *di.Container, serviceName string) *CommonControlle
 }
 
 // Ping handles the request to /ping endpoint. Is used to test if the service is working
-// It returns a response as specified by the V2 API swagger in openapi/v2
+// It returns a response as specified by the API swagger in the openapi directory
 func (c *CommonController) Ping(writer http.ResponseWriter, request *http.Request) {
 	response := commonDTO.NewPingResponse(c.serviceName)
 	c.sendResponse(writer, request, common.ApiPingRoute, response, http.StatusOK)
 }
 
 // Version handles the request to /version endpoint. Is used to request the service's versions
-// It returns a response as specified by the V2 API swagger in openapi/v2
+// It returns a response as specified by the API swagger in the openapi directory
 func (c *CommonController) Version(writer http.ResponseWriter, request *http.Request) {
 	response := commonDTO.NewVersionResponse(edgex.Version, c.serviceName)
 	c.sendResponse(writer, request, common.ApiVersionRoute, response, http.StatusOK)
 }
 
 // Config handles the request to /config endpoint. Is used to request the service's configuration
-// It returns a response as specified by the V2 API swagger in openapi/v2
+// It returns a response as specified by the API swagger in the openapi directory
 func (c *CommonController) Config(writer http.ResponseWriter, request *http.Request) {
 	response := commonDTO.NewConfigResponse(container.ConfigurationFrom(c.dic.Get), c.serviceName)
 	c.sendResponse(writer, request, common.ApiVersionRoute, response, http.StatusOK)
 }
 
-// sendResponse puts together the response packet for the V2 API
+// sendResponse puts together the response packet for the REST API
 func (c *CommonController) sendResponse(
 	writer http.ResponseWriter,
 	request *http.Request,
