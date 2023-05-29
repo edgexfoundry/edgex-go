@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/spiffe/go-spiffe/v2 v2.1.4
+	github.com/spiffe/go-spiffe/v2 v2.1.5
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.8.0
 	gopkg.in/eapache/queue.v1 v1.1.0
