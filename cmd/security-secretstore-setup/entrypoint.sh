@@ -19,7 +19,12 @@
 
 set -e
 
-# env settings are populated from env files of docker-compose
+# EDGEX_SECRETS_ROOT should default to /tmp/edgex/secrets
+# unless changed in configuration.yaml or overridden by environment variable
+EDGEX_SECRETS_ROOT=`yq -r .TokenFileProvider.OutputDir /res-file-token-provider/configuration.yaml`
+if [ ! -z "${TOKENFILEPROVIDER_OUTPUTDIR}" ]; then
+  EDGEX_SECRETS_ROOT="${TOKENFILEPROVIDER_OUTPUTDIR}"
+fi
 
 # create token dir, and assign perms
 mkdir -p /vault/config/assets
@@ -36,8 +41,8 @@ fi
 
 # /tmp/edgex/secrets need to be shared with all other services that need secrets and
 # thus change the ownership to EDGEX_USER:EDGEX_GROUP
-echo "$(date) Changing ownership of secrets to ${EDGEX_USER}:${EDGEX_GROUP}"
-chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} /tmp/edgex/secrets
+echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT} to ${EDGEX_USER}:${EDGEX_GROUP}"
+chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} "${EDGEX_SECRETS_ROOT}"
 
 # Signal tokens ready port for other services waiting on
 exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
