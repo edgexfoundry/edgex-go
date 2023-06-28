@@ -29,7 +29,7 @@ func TestInitialize(t *testing.T) {
 		expectedErrorKind errors.ErrKind
 	}{
 		{"run with interval", "midnight", "20000101T000000", "22000101T000000", "24h", ""},
-		{"run without startTime ", "midnight", "", "22000101T000000", "24h", ""},
+		{"run without startTime", "midnight", "", "22000101T000000", "24h", ""},
 		{"wrong startTime string format", "midnight", "20000101T", "", "24h", errors.KindContractInvalid},
 		{"wrong endTime string format", "midnight", "", "20000101T", "24h", errors.KindContractInvalid},
 		{"wrong frequency string format", "midnight", "", "", "24", errors.KindContractInvalid},
@@ -55,9 +55,11 @@ func TestInitialize(t *testing.T) {
 			assert.Equal(t, interval.Name, executor.Interval.Name)
 			if interval.Start != "" {
 				assert.Equal(t, interval.Start, executor.StartTime.Format("20060102T000000"))
+				assert.Equal(t, current.Location(), executor.StartTime.Location())
 			}
 			if interval.End != "" {
 				assert.Equal(t, interval.End, executor.EndTime.Format("20060102T000000"))
+				assert.Equal(t, current.Location(), executor.EndTime.Location())
 			}
 			assert.GreaterOrEqual(t, executor.NextTime.Unix(), current.Unix())
 			assert.Greater(t, executor.Frequency.Seconds(), float64(0))
