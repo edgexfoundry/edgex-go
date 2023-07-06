@@ -7,12 +7,14 @@ package uom
 
 import (
 	"context"
-	"gopkg.in/yaml.v3"
-	"os"
 	"sync"
+	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/file"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
@@ -36,7 +38,7 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 		return true
 	}
 
-	contents, err := os.ReadFile(filepath)
+	contents, err := file.Load(filepath, 10*time.Second, nil)
 	if err != nil {
 		lc.Errorf("could not load unit of measure configuration file (%s): %s", filepath, err.Error())
 		return false
