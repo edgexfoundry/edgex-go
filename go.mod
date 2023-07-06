@@ -3,7 +3,7 @@ module github.com/edgexfoundry/edgex-go
 go 1.20
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.4.2
+	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.0.1
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0
@@ -36,7 +36,7 @@ require (
 	github.com/go-playground/validator/v10 v10.13.0 // indirect
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/consul/api v1.20.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
