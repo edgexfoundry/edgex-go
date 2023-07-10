@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -30,7 +30,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -217,6 +217,7 @@ func TestAllCommands(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllDeviceRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -230,8 +231,10 @@ func TestAllCommands(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(cc.AllCommands)
-			handler.ServeHTTP(recorder, req)
+			handler := echo.HandlerFunc(cc.AllCommands)
+			c := e.NewContext(req, recorder)
+			err = handler(c)
+			assert.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -296,14 +299,19 @@ func TestCommandsByDeviceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByNameRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
-			require.NoError(t, err)
+			e := echo.New()
+			req := httptest.NewRequest("GET", "/api/v3/device/name/:name", nil)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(cc.CommandsByDeviceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+
+			// Set url path params
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+			handler := echo.HandlerFunc(cc.CommandsByDeviceName)
+			err := handler(c)
+			assert.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -381,15 +389,20 @@ func TestIssueGetCommand(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceNameCommandNameRoute, http.NoBody)
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/v3/device/name/:name/:command", http.NoBody)
 			req.URL.RawQuery = testCase.queryStrings
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.Command: testCase.commandName})
-			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(cc.IssueGetCommandByName)
-			handler.ServeHTTP(recorder, req)
+			handler := echo.HandlerFunc(cc.IssueGetCommandByName)
+			c := e.NewContext(req, recorder)
+
+			// Set url path params
+			c.SetParamNames(common.Name, common.Command)
+			c.SetParamValues(testCase.deviceName, testCase.commandName)
+			err := handler(c)
+			assert.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -469,15 +482,21 @@ func TestIssueSetCommand(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPut, common.ApiDeviceNameCommandNameRoute, bytes.NewBuffer(testCase.settings))
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodPut, "/api/v3/device/name/:name/:command", bytes.NewBuffer(testCase.settings))
 			req.URL.RawQuery = testCase.queryStrings
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.Command: testCase.commandName})
-			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(cc.IssueSetCommandByName)
-			handler.ServeHTTP(recorder, req)
+			handler := echo.HandlerFunc(cc.IssueSetCommandByName)
+			c := e.NewContext(req, recorder)
+
+			// Set url path params
+			c.SetParamNames(common.Name, common.Command)
+			c.SetParamValues(testCase.deviceName, testCase.commandName)
+
+			err := handler(c)
+			assert.NoError(t, err)
 
 			// Assert
 			var res commonDTO.BaseResponse

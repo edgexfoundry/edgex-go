@@ -2,19 +2,20 @@ package correlation
 
 import (
 	"context"
-	"github.com/gorilla/mux"
-	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
-func ManageHeader(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func ManageHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		r := c.Request()
 		correlationID := r.Header.Get(common.CorrelationHeader)
 		if correlationID == "" {
 			correlationID = uuid.New().String()
@@ -28,25 +29,25 @@ func ManageHeader(next http.Handler) http.Handler {
 		// nolint:staticcheck // See golangci-lint #741
 		ctx = context.WithValue(ctx, common.ContentType, contentType)
 
-		r = r.WithContext(ctx)
+		c.SetRequest(r.WithContext(ctx))
 
-		next.ServeHTTP(w, r)
-	})
+		return next(c)
+	}
 }
 
-func LoggingMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func LoggingMiddleware(lc logger.LoggingClient) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
 			if lc.LogLevel() == models.TraceLog {
+				r := c.Request()
 				begin := time.Now()
 				correlationId := FromContext(r.Context())
 				lc.Trace("Begin request", common.CorrelationHeader, correlationId, "path", r.URL.Path)
-				next.ServeHTTP(w, r)
+				next(c)
 				lc.Trace("Response complete", common.CorrelationHeader, correlationId, "duration", time.Since(begin).String())
-			} else {
-				next.ServeHTTP(w, r)
 			}
-		})
+			return nil
+		}
 	}
 }
 

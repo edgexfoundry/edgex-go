@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -41,7 +41,7 @@ func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int)
 }
 
 // WriteErrorResponse writes Http header, encode error response with JSON format and writes to the HTTP response.
-func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.LoggingClient, err errors.EdgeX, requestId string) {
+func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.LoggingClient, err errors.EdgeX, requestId string) error {
 	correlationId := correlation.FromContext(ctx)
 	if errors.Kind(err) != errors.KindEntityDoesNotExist {
 		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -49,7 +49,7 @@ func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.Lo
 	lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 	errResponses := commonDTO.NewBaseResponse(requestId, err.Message(), err.Code())
 	WriteHttpHeader(w, ctx, err.Code())
-	pkg.EncodeAndWriteResponse(errResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(errResponses, w, lc)
 }
 
 // ParseGetAllObjectsRequestQueryString parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid.

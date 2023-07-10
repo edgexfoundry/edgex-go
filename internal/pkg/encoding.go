@@ -23,7 +23,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 )
 
-func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
+func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) error {
 	w.Header().Set(common.ContentType, common.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)
@@ -32,8 +32,9 @@ func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient 
 	if err != nil {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
+	return nil
 }
 
 func EncodeAndWriteYamlResponse(i interface{}, w http.ResponseWriter, lc logger.LoggingClient) {
