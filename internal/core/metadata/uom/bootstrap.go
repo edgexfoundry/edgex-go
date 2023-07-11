@@ -38,7 +38,14 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 		return true
 	}
 
-	contents, err := file.Load(filepath, 10*time.Second, nil)
+	requestTimeout, err := time.ParseDuration(config.Service.RequestTimeout)
+	if err != nil {
+		lc.Errorf("Failed to parse Service.RequestTimeout configuration value: %v", err)
+		return false
+	}
+
+	secretProvider := container.SecretProviderFrom(dic.Get)
+	contents, err := file.Load(filepath, requestTimeout, secretProvider)
 	if err != nil {
 		lc.Errorf("could not load unit of measure configuration file (%s): %s", filepath, err.Error())
 		return false
