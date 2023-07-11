@@ -1,26 +1,47 @@
-//
-// Copyright (c) 2020 Intel Corporation
-// Copyright (c) 2023 IOTech Ltd
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+pipeline {
+    agent { label 'ubuntu18.04-docker-8c-8g' }
+    stages {
+        stage('EdgeX Build') {
+            stages {
+                stage('Build amd64') {
+                    environment {
+                        ARCH = 'x86_64'
+                    }
+                    stages {
+                        stage('Prep') {
+                            steps {
+                                script {
+                                    sh "docker pull nexus3.edgexfoundry.org:10003/edgex-devops/edgex-golang-base:1.20-alpine"
+                                    sh "docker tag nexus3.edgexfoundry.org:10003/edgex-devops/edgex-golang-base:1.20-alpine ci-base-image-${env.ARCH}"
+                                    docker.image("ci-base-image-${env.ARCH}").inside('-u 0:0') { sh 'go version' }
+                                }
+                            }
+                        }
 
-edgeXBuildGoParallel(
-    project: 'edgex-go',
-    dockerFileGlobPath: 'cmd/**/Dockerfile',
-    testScript: 'make test',
-    buildScript: 'make build',
-    publishSwaggerDocs: true,
-    swaggerApiFolders: ['openapi/v3'],
-    buildSnap: false
-)
+                        stage('Test') {
+                            steps {
+                                script {
+                                    docker.image("ci-base-image-${env.ARCH}").inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock') {
+                                        // fixes permissions issues due new Go 1.18 buildvcs checks
+                                        // sh 'git config --global --add safe.directory $WORKSPACE'
+
+                                        sh 'make test'
+                                    }
+                                }
+                            }
+                        }
+
+                        stage('Build') {
+                            environment {
+                                BUILDER_BASE = "ci-base-image-${env.ARCH}"
+                            }
+                            steps {
+                                sh 'make -j4 docker'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

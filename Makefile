@@ -186,12 +186,12 @@ docker_base:
 dcore: dmetadata ddata dcommand
 
 dmetadata: docker_core_metadata
-docker_core_metadata: docker_base
+docker_core_metadata:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/core-metadata/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-metadata:$(GIT_SHA) \
@@ -199,12 +199,12 @@ docker_core_metadata: docker_base
 		.
 
 ddata: docker_core_data
-docker_core_data: docker_base
+docker_core_data:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/core-data/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-data:$(GIT_SHA) \
@@ -212,12 +212,12 @@ docker_core_data: docker_base
 		.
 
 dcommand: docker_core_command
-docker_core_command: docker_base
+docker_core_command:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/core-command/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-command:$(GIT_SHA) \
@@ -225,12 +225,12 @@ docker_core_command: docker_base
 		.
 
 dcommon-config: docker_core_common_config
-docker_core_common_config: docker_base
+docker_core_common_config:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/core-common-config-bootstrapper/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-common-config-bootstrapper:$(GIT_SHA) \
@@ -240,12 +240,12 @@ docker_core_common_config: docker_base
 dsupport: dnotifications dscheduler
 
 dnotifications: docker_support_notifications
-docker_support_notifications: docker_base
+docker_support_notifications:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/support-notifications/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/support-notifications:$(GIT_SHA) \
@@ -253,12 +253,12 @@ docker_support_notifications: docker_base
 		.
 
 dscheduler: docker_support_scheduler
-docker_support_scheduler: docker_base
+docker_support_scheduler:
 	docker build \
 		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/support-scheduler/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/support-scheduler:$(GIT_SHA) \
@@ -266,11 +266,11 @@ docker_support_scheduler: docker_base
 		.
 
 dproxya: docker_security_proxy_auth
-docker_security_proxy_auth: docker_base
+docker_security_proxy_auth:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-proxy-auth/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-proxy-auth:$(GIT_SHA) \
@@ -278,22 +278,22 @@ docker_security_proxy_auth: docker_base
 		.
 
 dproxys: docker_security_proxy_setup
-docker_security_proxy_setup: docker_base
+docker_security_proxy_setup:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-proxy-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-proxy-setup:$(GIT_SHA) \
 		-t edgexfoundry/security-proxy-setup:$(DOCKER_TAG) \
 		.
 dsecretstore: docker_security_secretstore_setup
-docker_security_secretstore_setup: docker_base
+docker_security_secretstore_setup:
 		docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-secretstore-setup/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-secretstore-setup:$(GIT_SHA) \
@@ -301,11 +301,11 @@ docker_security_secretstore_setup: docker_base
 		.
 
 dbootstrapper: docker_security_bootstrapper
-docker_security_bootstrapper: docker_base
+docker_security_bootstrapper:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-bootstrapper/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-bootstrapper:$(GIT_SHA) \
@@ -313,11 +313,11 @@ docker_security_bootstrapper: docker_base
 		.
 
 dspires: docker_security_spire_server
-docker_security_spire_server: docker_base
+docker_security_spire_server:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-spire-server/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-server:$(GIT_SHA) \
@@ -325,11 +325,11 @@ docker_security_spire_server: docker_base
 		.
 
 dspirea: docker_security_spire_agent
-docker_security_spire_agent: docker_base
+docker_security_spire_agent:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-spire-agent/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-agent:$(GIT_SHA) \
@@ -337,11 +337,11 @@ docker_security_spire_agent: docker_base
 		.
 
 dspirec: docker_security_spire_config
-docker_security_spire_config: docker_base
+docker_security_spire_config:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-spire-config/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spire-config:$(GIT_SHA) \
@@ -349,11 +349,11 @@ docker_security_spire_config: docker_base
 		.
 
 dspiffetp: docker_security_spiffe_token_provider
-docker_security_spiffe_token_provider: docker_base
+docker_security_spiffe_token_provider:
 	docker build \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		--build-arg BUILDER_BASE \
 		-f cmd/security-spiffe-token-provider/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/security-spiffe-token-provider:$(GIT_SHA) \
