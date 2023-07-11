@@ -40,8 +40,8 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 
 	requestTimeout, err := time.ParseDuration(config.Service.RequestTimeout)
 	if err != nil {
-		lc.Errorf("Failed to parse Service.RequestTimeout configuration value: %v", err)
-		return false
+		lc.Debug("Failed to parse Service.RequestTimeout configuration value: %v, using default value", err)
+		requestTimeout = 15 * time.Second
 	}
 
 	secretProvider := container.SecretProviderFrom(dic.Get)

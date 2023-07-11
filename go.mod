@@ -3,12 +3,13 @@ module github.com/edgexfoundry/edgex-go
 go 1.20
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.4
-	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.3
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.2
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.9
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.3
+	github.com/eclipse/paho.mqtt.golang v1.4.2
+	github.com/edgexfoundry/go-mod-bootstrap v0.0.72
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.3
+	github.com/edgexfoundry/go-mod-configuration/v3 v3.0.0
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.0.0
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.0.0
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.0.1
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
@@ -25,11 +26,14 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v3 v3.1.0-dev.3 // indirect
-	github.com/fatih/color v1.14.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/edgexfoundry/go-mod-configuration v0.0.8 // indirect
+	github.com/edgexfoundry/go-mod-core-contracts v0.1.147 // indirect
+	github.com/edgexfoundry/go-mod-registry/v3 v3.0.0 // indirect
+	github.com/edgexfoundry/go-mod-secrets v0.0.32 // indirect
+	github.com/fatih/color v1.9.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
+	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -59,7 +63,8 @@ require (
 	github.com/nats-io/nats.go v1.27.1 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/errs v1.3.0 // indirect
