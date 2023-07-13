@@ -40,19 +40,19 @@ func BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic
 
 	requestTimeout, err := time.ParseDuration(config.Service.RequestTimeout)
 	if err != nil {
-		lc.Debug("Failed to parse Service.RequestTimeout configuration value: %v, using default value", err)
+		lc.Warnf("Failed to parse Service.RequestTimeout configuration value: %v, using default value", err)
 		requestTimeout = 15 * time.Second
 	}
 
-	secretProvider := container.SecretProviderFrom(dic.Get)
+	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 	contents, err := file.Load(filepath, requestTimeout, secretProvider)
 	if err != nil {
-		lc.Errorf("could not load unit of measure configuration file (%s): %s", filepath, err.Error())
+		lc.Errorf("could not load unit of measure configuration file: %s", err.Error())
 		return false
 	}
 
 	if err = yaml.Unmarshal(contents, uomImpl); err != nil {
-		lc.Errorf("could not load unit of measure configuration file (%s): %s", filepath, err.Error())
+		lc.Errorf("could not load unit of measure configuration file: %s", err.Error())
 		return false
 	}
 
