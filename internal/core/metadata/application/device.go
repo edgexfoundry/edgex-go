@@ -19,6 +19,7 @@ import (
 	"context"
 	goErrors "errors"
 	"fmt"
+	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -34,8 +35,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 )
 
-// the suggested minimum duration string for auto event interval
-const minAutoEventInterval = "1ms"
+// the suggested minimum duration for auto event interval
+const minAutoEventInterval = 1 * time.Millisecond
 
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device

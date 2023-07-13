@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -23,8 +24,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
-// the suggested minimum duration string for scheduler interval
-const minSchedulerInterval = "10ms"
+// the suggested minimum duration for scheduler interval
+const minSchedulerInterval = 10 * time.Millisecond
 
 // The AddInterval function accepts the new Interval model from the controller function
 // and then invokes AddInterval function of infrastructure layer to add new Interval

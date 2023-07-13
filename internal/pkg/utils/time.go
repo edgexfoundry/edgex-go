@@ -12,16 +12,11 @@ import (
 )
 
 // CheckMinInterval parses the ISO 8601 time duration string to Duration type
-// and evaluates if the duration value is smaller than the suggested minimum duration string
-func CheckMinInterval(value string, min string, lc logger.LoggingClient) bool {
+// and evaluates if the duration value is smaller than the suggested minimum duration
+func CheckMinInterval(value string, minDuration time.Duration, lc logger.LoggingClient) bool {
 	valueDuration, err := time.ParseDuration(value)
 	if err != nil {
 		lc.Errorf("failed to parse the interval duration string %s to a duration time value: %v", value, err)
-		return false
-	}
-	minDuration, err := time.ParseDuration(min)
-	if err != nil {
-		lc.Errorf("failed to parse the  minimum duration string %s to a duration time value: %v", value, err)
 		return false
 	}
 

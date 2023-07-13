@@ -7,6 +7,7 @@ package utils
 
 import (
 	"testing"
+	"time"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 
@@ -19,12 +20,12 @@ func TestCheckMinInterval(t *testing.T) {
 	tests := []struct {
 		name     string
 		interval string
-		min      string
+		min      time.Duration
 		result   bool
 	}{
-		{"valid - interval is bigger than the minimum value", "1s", "10ms", true},
-		{"invalid - interval is smaller than the minimum value", "100us", "1ms", false},
-		{"invalid - parsing duration string failed", "INVALID", "1ms", false},
+		{"valid - interval is bigger than the minimum value", "1s", 10 * time.Millisecond, true},
+		{"invalid - interval is smaller than the minimum value", "100us", 1 * time.Millisecond, false},
+		{"invalid - parsing duration string failed", "INVALID", 1 * time.Millisecond, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
