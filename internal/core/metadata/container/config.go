@@ -17,7 +17,6 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
@@ -27,18 +26,4 @@ var ConfigurationName = di.TypeInstanceToName((*config.ConfigurationStruct)(nil)
 // ConfigurationFrom helper function queries the DIC and returns metadata's config.ConfigurationStruct implementation.
 func ConfigurationFrom(get di.Get) *config.ConfigurationStruct {
 	return get(ConfigurationName).(*config.ConfigurationStruct)
-}
-
-// SecretProviderName contains the name of the interfaces.SecretProvider implementation in the DIC.
-var SecretProviderName = di.TypeInstanceToName((*interfaces.SecretProvider)(nil))
-
-// SecretProviderFrom helper function queries the DIC and returns the interfaces.SecretProvider
-// implementation.
-func SecretProviderFrom(get di.Get) interfaces.SecretProvider {
-	provider, ok := get(SecretProviderName).(interfaces.SecretProvider)
-	if !ok {
-		return nil
-	}
-
-	return provider
 }
