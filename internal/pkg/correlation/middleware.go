@@ -45,27 +45,33 @@ func LoggingMiddleware(lc logger.LoggingClient) echo.MiddlewareFunc {
 				lc.Trace("Begin request", common.CorrelationHeader, correlationId, "path", r.URL.Path)
 				next(c)
 				lc.Trace("Response complete", common.CorrelationHeader, correlationId, "duration", time.Since(begin).String())
+				return nil
 			}
-			return nil
+			return next(c)
 		}
 	}
 }
 
 // UrlDecodeMiddleware decode the path variables
 // After invoking the router.UseEncodedPath() func, the path variables needs to decode before passing to the controller
-func UrlDecodeMiddleware(lc logger.LoggingClient) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			vars := mux.Vars(r)
-			for k, v := range vars {
+func UrlDecodeMiddleware(lc logger.LoggingClient) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			var unescapedParams []string
+			// Retrieve all the url path param names
+			paramNames := c.ParamNames()
+
+			// Retrieve all the url path param values and decode
+			for k, v := range c.ParamValues() {
 				unescape, err := url.PathUnescape(v)
 				if err != nil {
-					lc.Debugf("failed to decode the %s from the value %s", k, v)
-					return
+					lc.Debugf("failed to decode the %s from the value %s", paramNames[k], v)
+					return err
 				}
-				vars[k] = unescape
+				unescapedParams = append(unescapedParams, unescape)
 			}
-			next.ServeHTTP(w, r)
-		})
+			c.SetParamValues(unescapedParams...)
+			return next(c)
+		}
 	}
 }

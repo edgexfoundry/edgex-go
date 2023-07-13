@@ -28,18 +28,17 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	// Common
 	_ = controller.NewCommonController(dic, r, serviceName, edgex.Version)
 
+	g := r.Group(common.ApiBase)
+	g.Use(authenticationHook)
+	g.Use(correlation.ManageHeader)
+	g.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
+	g.Use(correlation.UrlDecodeMiddleware(container.LoggingClientFrom(dic.Get)))
+
 	// Command
 	cmd := commandController.NewCommandController(dic)
 
-	// create a route group with /api/v3/device as prefix, which applies the same authenticationHook middleware
-	deviceRoutes := r.Group(common.ApiDeviceRoute)
-	deviceRoutes.Use(authenticationHook)
-
-	deviceRoutes.GET("/"+common.All, cmd.AllCommands)
-	deviceRoutes.GET("/"+common.Name+"/:"+common.Name, cmd.CommandsByDeviceName)
-	deviceRoutes.GET("/"+common.Name+"/:"+common.Name+"/:"+common.Command, cmd.IssueGetCommandByName)
-	deviceRoutes.PUT("/"+common.Name+"/:"+common.Name+"/:"+common.Command, cmd.IssueSetCommandByName)
-
-	r.Use(correlation.ManageHeader)
-	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
+	g.GET("/"+common.Device+"/"+common.All, cmd.AllCommands)
+	g.GET("/"+common.Device+"/"+common.Name+"/:"+common.Name, cmd.CommandsByDeviceName)
+	g.GET("/"+common.Device+"/"+common.Name+"/:"+common.Name+"/:"+common.Command, cmd.IssueGetCommandByName)
+	g.PUT("/"+common.Device+"/"+common.Name+"/:"+common.Name+"/:"+common.Command, cmd.IssueSetCommandByName)
 }
