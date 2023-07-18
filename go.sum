@@ -26,8 +26,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.4.3 h1:2kwcUGn8seMUfWndX0hGbvH8r7crgcJguQNCyp70xik=
 github.com/eclipse/paho.mqtt.golang v1.4.3/go.mod h1:CSYvoAlsMkhYOXh/oKyxa8EcBci6dVkLCbo5tTC1RIE=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.5 h1:KdAEhHb1ETPLfhnrz/pKra7usnv6PVwXJBmHE+yUa4U=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.5/go.mod h1:EHev55Vr5Xyhz1IbVbVngo+i0E1Cbb/Qia7ocHqE4qE=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.6 h1:FzX0WfQU3frA4agk5/4OGJknHocUclSEmWsGkMFCVwY=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.6/go.mod h1:EHev55Vr5Xyhz1IbVbVngo+i0E1Cbb/Qia7ocHqE4qE=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.3 h1:xWyraOW+RtFwIO+DnCWBKoaa5w1ZX8vRf91zBa2Ll8c=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.3/go.mod h1:yaxBuJh45+VxXX+nSt/Q+1gGEk4/BDe9edYWm8aEtfg=
 github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.2 h1:H3ls1vyxCv6pigZ/RZlRhj9lUTQq7CiT5/dnZRsgVmQ=
