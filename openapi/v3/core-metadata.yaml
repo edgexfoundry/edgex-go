@@ -412,8 +412,9 @@ components:
         isHidden:
           type: boolean
           description: "Indicate the visibility of the DeviceResource via a CoreCommand."
-        tag:
+        tags:
           type: string
+          description: "Tags for adding additional information on reading level"
         properties:
           $ref: '#/components/schemas/ResourceProperties'
         attributes:
@@ -815,6 +816,9 @@ components:
       properties:
         name:
           type: string
+        tags:
+          type: string
+          description: "Tags for adding additional information on event level"
         isHidden:
           type: boolean
           description: "Indicate the visibility of the DeviceCommand via a CoreCommand."
