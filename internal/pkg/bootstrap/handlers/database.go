@@ -74,8 +74,14 @@ func (d Database) BootstrapHandler(
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 
-	// get database credentials.
+	dbInfo := d.database.GetDatabaseInfo()
+	if len(dbInfo.Host) == 0 || dbInfo.Port == 0 || len(dbInfo.Type) == 0 || len(dbInfo.Timeout) == 0 {
+		lc.Error("Database configuration is empty or incomplete, missing common config? Use -cp or -cc flags for common config")
+		return false
+	}
+
 	var credentials bootstrapConfig.Credentials
+	dbCredsRetrieved := false
 	for startupTimer.HasNotElapsed() {
 		var err error
 
@@ -86,11 +92,20 @@ func (d Database) BootstrapHandler(
 				Password: secrets[secret.PasswordKey],
 			}
 
+			dbCredsRetrieved = true
 			break
 		}
 
-		lc.Warnf("couldn't retrieve database credentials: %v", err.Error())
+		lc.Warnf("couldn't retrieve database credentials: %v and will retry it again, %s", err.Error(),
+			"missing common config? Use -cp or -cc flags for common config")
 		startupTimer.SleepForInterval()
+	}
+
+	// using this check to avoid the confusion with the case of both Username and Password being set to empty from credentials
+	if !dbCredsRetrieved {
+		// shouldn't go further if database credentials failed to retrieve
+		lc.Error("bootstrap failed: couldn't retrieve database credentials after some retries, missing common config? Use -cp or -cc flags for common config")
+		return false
 	}
 
 	// initialize database.

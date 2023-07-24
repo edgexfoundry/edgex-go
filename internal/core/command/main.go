@@ -91,6 +91,11 @@ func MessagingBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupT
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
+	if len(configuration.Service.RequestTimeout) == 0 {
+		lc.Error("Service.RequestTimeout found empty in service's configuration, missing common config? Use -cp or -cc flags for common config")
+		return false
+	}
+
 	requestTimeout, err := time.ParseDuration(configuration.Service.RequestTimeout)
 	if err != nil {
 		lc.Errorf("Failed to parse Service.RequestTimeout configuration value: %v", err)
