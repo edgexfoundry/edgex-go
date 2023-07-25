@@ -73,7 +73,6 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			handlers.NewClientsBootstrap().BootstrapHandler,
 			NewBootstrap(router, SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,

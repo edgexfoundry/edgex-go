@@ -88,9 +88,10 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.yaml change
 	return bootstrapConfig.BootstrapConfiguration{
-		Service:    c.Service,
-		Registry:   c.Registry,
-		MessageBus: c.MessageBus,
+		Service:    &c.Service,
+		Registry:   &c.Registry,
+		MessageBus: &c.MessageBus,
+		Database:   &c.Database,
 	}
 }
 

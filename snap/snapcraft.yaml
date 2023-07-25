@@ -1,5 +1,5 @@
 name: edgexfoundry
-base: core20
+base: core22
 summary: EdgeX core, security, and supporting components
 description: Refer to https://snapcraft.io/edgexfoundry
 adopt-info: edgex-go
@@ -36,15 +36,15 @@ grade: stable
 confinement: strict
 
 apps:
-  # edgex microservices
   consul:
-    adapter: full
-    command: bin/start-consul.sh
-    daemon: forking
+    command: bin/consul agent -data-dir $SNAP_DATA/consul/data -config-dir $SNAP_DATA/consul/config -server -bind 127.0.0.1 -bootstrap -ui
+    daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
+  consul-cli:
+    command: bin/consul
+    plugs: [network, network-bind]
   redis:
-    adapter: full
     after: [security-bootstrapper-redis]
     command: bin/redis-server $CONFIG_FILE $DIR_ARG $SAVE_ARG $BIND_ARG
     environment:
@@ -55,8 +55,10 @@ apps:
     daemon: simple
     install-mode: disable
     plugs: [network, network-bind]
+  redis-cli:
+    command: bin/redis-cli
+    plugs: [home, removable-media, network]
   vault:
-    adapter: none
     command: bin/vault server --config $VAULT_CONFIG
     daemon: simple
     install-mode: disable
@@ -67,7 +69,6 @@ apps:
       - network
       - network-bind
   vault-cli:
-    adapter: none
     command: bin/vault
     environment:
       VAULT_CONFIG: "$SNAP_DATA/config/security-secret-store/vault-config.hcl"
@@ -76,12 +77,10 @@ apps:
       - network
       - network-bind
   security-secretstore-setup:
-    adapter: full
     after: [vault]
-    command: >-
-      bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
+    command: bin/security-secretstore-setup --configDir $SNAP_DATA/config/security-secretstore-setup/res $VAULT_INTERVAL
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     post-stop-command: bin/security-secretstore-post-setup.sh
     daemon: oneshot
     install-mode: disable
@@ -104,13 +103,12 @@ apps:
     start-timeout: 15m
     plugs: [network]
   security-proxy-auth:
-    adapter: none
     after:
       - security-secretstore-setup
       - consul
     command: bin/security-proxy-auth --configDir $SNAP_DATA/config/security-proxy-auth/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-proxy-auth/secrets-token.json
     daemon: simple
@@ -119,12 +117,11 @@ apps:
     stop-timeout: 10s
   # This is a simple one-shot service that creates a default TLS key and certificate for NGINX
   security-bootstrapper-nginx:
-    adapter: none
     after:
       - security-secretstore-setup
     command: bin/setup-nginx.sh
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     daemon: oneshot
     install-mode: disable
   # This is a simple service which calls into vault to retrieve the Redis password and then
@@ -133,14 +130,13 @@ apps:
   # this service exits. In the Docker version, the customized redis' entrypoint.sh performs
   # the similar actions as described above.
   security-bootstrapper-redis:
-    adapter: none
     after:
       - security-secretstore-setup
     command: bin/setup-redis-acl.sh
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
-      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/overrides.env
       SECRETSTORE_SERVERNAME: localhost
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/security-bootstrapper-redis/secrets-token.json
       DATABASECONFIG_PATH: $SNAP_DATA/redis/conf
@@ -149,15 +145,14 @@ apps:
     install-mode: disable
     plugs: [network]
   # This is a one-shot service which sets up consul's ACL and prepare for creating consul's agent tokens later on
-  security-consul-bootstrapper:
-    adapter: none
+  security-bootstrapper-consul:
     after:
       - security-secretstore-setup
     command: bin/setup-consul-acl.sh
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
-      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/res/security-bootstrapper.env
+      ENV_FILE: $SNAP_DATA/config/security-bootstrapper/overrides.env
       STAGEGATE_REGISTRY_HOST: localhost
       STAGEGATE_REGISTRY_ACL_BOOTSTRAPTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/bootstrap_token.json
       STAGEGATE_REGISTRY_ACL_MANAGEMENTTOKENPATH: $SNAP_DATA/secrets/consul-acl-token/mgmt_token.json
@@ -167,15 +162,14 @@ apps:
     install-mode: disable
     plugs: [network]
   core-data:
-    adapter: full
     after:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-data --configDir $SNAP_DATA/config/core-data/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-data/secrets-token.json
     daemon: simple
@@ -186,15 +180,14 @@ apps:
     # https://github.com/edgexfoundry/edgex-go/issues/1306
     stop-timeout: 10s
   core-metadata:
-    adapter: none
     after:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-metadata --configDir $SNAP_DATA/config/core-metadata/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-metadata/secrets-token.json
       UOM_UOMFILE: $SNAP_DATA/config/core-metadata/res/uom.yaml
@@ -203,15 +196,14 @@ apps:
     plugs: [network, network-bind]
     stop-timeout: 10s
   core-command:
-    adapter: none
     after:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/core-command --configDir $SNAP_DATA/config/core-command/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-command/secrets-token.json
     daemon: simple
@@ -219,15 +211,14 @@ apps:
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-notifications:
-    adapter: none
     after:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-notifications --configDir $SNAP_DATA/config/support-notifications/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-notifications/secrets-token.json
     daemon: simple
@@ -235,15 +226,14 @@ apps:
     plugs: [network, network-bind]
     stop-timeout: 10s
   support-scheduler:
-    adapter: none
     after:
       - security-bootstrapper-redis
       - core-common-config-bootstrapper
       # This generates the consul role for this service before the service starts
-      - security-consul-bootstrapper
+      - security-bootstrapper-consul
     command: bin/support-scheduler --configDir $SNAP_DATA/config/support-scheduler/res --configProvider --registry
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/support-scheduler/secrets-token.json
     daemon: simple
@@ -251,7 +241,6 @@ apps:
     plugs: [network, network-bind]
     stop-timeout: 10s
   nginx:
-    adapter: none
     after:
       - security-bootstrapper-nginx
     command: usr/nginx/sbin/nginx -e stderr -p $SNAP_COMMON/nginx -c $SNAP_DATA/nginx/nginx.conf
@@ -259,15 +248,17 @@ apps:
     stop-command: usr/nginx/sbin/nginx -e stderr -p $SNAP_COMMON/nginx -c $SNAP_DATA/nginx/nginx.conf -s quit
     daemon: simple
     command-chain:
-      - bin/service-config-overrides.sh
+      - bin/source-env-file.sh
     install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
   # this service pushes common configuration source into Configuration Provider
   core-common-config-bootstrapper:
     after:
-      - security-consul-bootstrapper
-    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry 
+      - security-bootstrapper-consul
+    command: bin/core-common-config-bootstrapper --configDir $SNAP_DATA/config/core-common-config-bootstrapper/res --configFile configuration.yaml --configProvider --registry
+    command-chain:
+      - bin/source-env-file.sh
     environment:
       SECRETSTORE_TOKENFILE: $SNAP_DATA/secrets/core-common-config-bootstrapper/secrets-token.json
     daemon: oneshot
@@ -275,37 +266,13 @@ apps:
     plugs: [network]
   # helper commands the snap exposes
   secrets-config:
-    adapter: none
     command: bin/secrets-config --configDir $SNAP_DATA/config/secrets-config/res
     environment:
       SECRETSTORE_TOKENFOLDERPATH: $SNAP_DATA/config/security-secretstore-setup/res/
       SECRETSTORE_TOKENFILE: resp-init.json
     plugs: [home, removable-media, network]
-  redis-cli:
-    adapter: full
-    command: bin/redis-cli
-    plugs: [home, removable-media, network]
-  consul-cli:
-    adapter: none
-    command: bin/consul
-    plugs: [network, network-bind]
-  curl:
-    adapter: full
-    command: usr/bin/curl
-    plugs: [network]
-  jq:
-    adapter: full
-    command: usr/bin/jq
-    plugs: [home, removable-media]
 
 parts:
-  static-packages:
-    plugin: nil
-    stage-packages:
-      - apg
-      - curl
-      - jq
-
   # For inspiration see
   # - https://github.com/ogra1/nginx-snap
   # - https://github.com/kbavishi/nginx-snapcraft
@@ -314,7 +281,7 @@ parts:
   nginx:
     source: https://github.com/nginx/nginx.git
     # Use branch instead of tag to limit the git cloning depth
-    source-branch: release-1.23.3
+    source-branch: release-1.24.0
     source-depth: 1
     plugin: autotools
     autotools-configure-parameters:
@@ -368,8 +335,6 @@ parts:
       - --without-stream_upstream_least_conn_module
       - --without-stream_upstream_random_module
       - --without-stream_upstream_zone_module
-      - --error-log-path=stderr
-      - --http-log-path=logs/access.log
     build-packages:
       - build-essential
       - libpcre3-dev
@@ -377,21 +342,12 @@ parts:
       - zlib1g-dev
     override-build: |
       cp auto/configure .
-      snapcraftctl build
+      craftctl default
     stage-packages:
-      - libpcre3
-      - libssl1.1
+      - libssl-dev
       - zlib1g
     stage:
       - -usr/nginx/conf/nginx.conf
-    prime:
-      - -usr/nginx/logs
-
-  go-builder:
-    plugin: nil
-    build-snaps:
-      - go/1.20/stable
-    prime: [-*]
 
   runtime-helpers:
     plugin: dump
@@ -400,11 +356,12 @@ parts:
   helper-go:
     source: snap/local/helper-go
     plugin: make
-    after: [go-builder]
+    build-snaps:
+      - go/1.20/stable
     override-build: |
-      cd $SNAPCRAFT_PART_SRC
+      cd $CRAFT_PART_SRC
       make build
-      install -DT ./helper-go $SNAPCRAFT_PART_INSTALL/bin/helper-go
+      install -DT ./helper-go $CRAFT_PART_INSTALL/bin/helper-go
 
   consul:
     plugin: nil
@@ -412,46 +369,34 @@ parts:
       - curl
       - unzip
     override-build: |
-      VERSION=1.13.0
+      VERSION=1.15.2
 
-      # use dpkg architecture to figure out our target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=consul_${VERSION}_linux_amd64.zip
-          FILE_HASH=db771e40126a88e1cfe2968724adbf2d1cdcc41c503fa326f3a93148ea642d38
-          ;;
-        arm64)
-          FILE_NAME=consul_${VERSION}_linux_arm64.zip
-          FILE_HASH=768119d9464685bd39329c537ee140ba19f45f5a2f68ea8fe49403f3141d39ec
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=consul_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/consul/${VERSION}/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
-      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+
+      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       consul: bin/consul
 
   redis:
     source: https://github.com/redis/redis.git
-    source-tag: "6.2.7"
+    source-tag: "6.2.12"
     source-depth: 1
     plugin: make
     make-parameters:
-    - "PREFIX=$SNAPCRAFT_PART_INSTALL/"
+      - "PREFIX=$CRAFT_PART_INSTALL/"
 
   edgex-go:
-    after: [go-builder]
     source: .
     plugin: make
+    build-snaps:
+      - go/1.20/stable
     override-build: |
-      cd $SNAPCRAFT_PART_SRC
+      cd $CRAFT_PART_SRC
 
       if git describe ; then
         VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
@@ -460,7 +405,7 @@ parts:
       fi
 
       # set the version of the snap
-      snapcraftctl set-version $VERSION
+      craftctl set version=$VERSION
 
       # write version to file for the build
       echo $VERSION > VERSION
@@ -474,20 +419,20 @@ parts:
           security-proxy-auth security-secretstore-setup security-file-token-provider \
           security-bootstrapper secrets-config core-common-config-bootstrapper; do
 
-          install -DT "./cmd/$service/$service" "$SNAPCRAFT_PART_INSTALL/bin/$service"
+          install -DT "./cmd/$service/$service" "$CRAFT_PART_INSTALL/bin/$service"
 
           case "$service" in
           "core-metadata")
-              install -DT "./cmd/core-metadata/res/configuration.yaml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/configuration.yaml"
-              install -DT "./cmd/core-metadata/res/uom.yaml" "$SNAPCRAFT_PART_INSTALL/config/core-metadata/res/uom.yaml"
+              install -DT "./cmd/core-metadata/res/configuration.yaml" "$CRAFT_PART_INSTALL/config/core-metadata/res/configuration.yaml"
+              install -DT "./cmd/core-metadata/res/uom.yaml" "$CRAFT_PART_INSTALL/config/core-metadata/res/uom.yaml"
           ;;
           "core-common-config-bootstrapper")
               install -DT "./cmd/core-common-config-bootstrapper/res/configuration.yaml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/core-common-config-bootstrapper/res/configuration.yaml"
+                  "$CRAFT_PART_INSTALL/config/core-common-config-bootstrapper/res/configuration.yaml"
           ;;
           "security-file-token-provider")
               install -DT "./cmd/security-secretstore-setup/res-file-token-provider/configuration.yaml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.yaml"
+                  "$CRAFT_PART_INSTALL/config/security-file-token-provider/res/configuration.yaml"
           ;;
           # For security bootstrapping Redis, we only need the configuration file used for "configureRedis"
           # as part of the whole "security-bootstrapper".
@@ -495,35 +440,31 @@ parts:
           # yaml file and thus here we install both files.
           "security-bootstrapper")
               install -DT "./cmd/security-bootstrapper/res-bootstrap-redis/configuration.yaml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.yaml"
+                  "$CRAFT_PART_INSTALL/config/security-bootstrapper/res-bootstrap-redis/configuration.yaml"
               install -DT "./cmd/security-bootstrapper/res/configuration.yaml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/security-bootstrapper/res/configuration.yaml"
+                  "$CRAFT_PART_INSTALL/config/security-bootstrapper/res/configuration.yaml"
           ;;
           # The security-secrets-config doesn't have a default configuration.yaml, but since it shares
           # the same config as proxy-setup, just use that one.
           "secrets-config")
               install -DT "./cmd/secrets-config/res/configuration.yaml" \
-                  "$SNAPCRAFT_PART_INSTALL/config/secrets-config/res/configuration.yaml"
+                  "$CRAFT_PART_INSTALL/config/secrets-config/res/configuration.yaml"
           ;;
           *)
-              install -DT "./cmd/$service/res/configuration.yaml" "$SNAPCRAFT_PART_INSTALL/config/$service/res/configuration.yaml"
+              install -DT "./cmd/$service/res/configuration.yaml" "$CRAFT_PART_INSTALL/config/$service/res/configuration.yaml"
           esac
 
       done
 
-      install -DT "./Attribution.txt" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/Attribution.txt"
-      install -DT "./LICENSE" "$SNAPCRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/LICENSE"
+      install -DT "./Attribution.txt" "$CRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/Attribution.txt"
+      install -DT "./LICENSE" "$CRAFT_PART_INSTALL/usr/share/doc/github.com/edgexfoundry/LICENSE"
 
       # install the json config files for security-file-token-provider
       #
       # note that the file contents are processed using the real
       # value of $SNAP_DATA using jq in the install hook
       cp "./cmd/security-file-token-provider/res/token-config.json" \
-        "$SNAPCRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
-
-    build-packages:
-      - zip
-      - pkg-config
+        "$CRAFT_PART_INSTALL/config/security-file-token-provider/res/token-config.json"
 
   vault:
     plugin: nil
@@ -533,26 +474,13 @@ parts:
     override-build: |
       VERSION=1.11.3
 
-      # use dpkg architecture to figure out the target arch
-      case "$(dpkg --print-architecture)" in
-        amd64)
-          FILE_NAME=vault_${VERSION}_linux_amd64.zip
-          FILE_HASH=b433413ce524f26abe6292f7fc95f267e809daeacdf7ba92b68dead322f92deb
-          ;;
-        arm64)
-          FILE_NAME=vault_${VERSION}_linux_arm64.zip
-          FILE_HASH=5ccf49bd3601e29d6d1a8c321ece1eacf0f7cc12ea604ac392edd4f7a54d69c4
-          ;;
-      esac
+      ARCH=$(dpkg --print-architecture)
+      FILE_NAME=vault_${VERSION}_linux_$ARCH.zip
 
-      # download the archive and verify the checksum
-      # NOTE: the archive only includes the binary distribution, 
-      # with no config or license files
+      # NOTE: the archive only includes the binary distribution, with no config or license files
       curl --silent --show-error --location --output $FILE_NAME \
         https://releases.hashicorp.com/vault/$VERSION/$FILE_NAME
-      echo "$FILE_HASH $FILE_NAME" > sha256
-      sha256sum -c sha256 | grep OK
-      
-      unzip $FILE_NAME -d $SNAPCRAFT_PART_INSTALL
+
+      unzip $FILE_NAME -d $CRAFT_PART_INSTALL
     organize:
       vault: bin/vault

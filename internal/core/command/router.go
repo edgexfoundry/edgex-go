@@ -9,14 +9,15 @@ package command
 import (
 	"net/http"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/controller"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/gorilla/mux"
 
 	commandController "github.com/edgexfoundry/edgex-go/internal/core/command/controller/http"
-	commonController "github.com/edgexfoundry/edgex-go/internal/pkg/controller/http"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 )
 
@@ -29,10 +30,7 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
 
 	// Common
-	cc := commonController.NewCommonController(dic, serviceName)
-	r.HandleFunc(common.ApiPingRoute, cc.Ping).Methods(http.MethodGet) // Health check is always unauthenticated
-	r.HandleFunc(common.ApiVersionRoute, authenticationHook(cc.Version)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiConfigRoute, authenticationHook(cc.Config)).Methods(http.MethodGet)
+	_ = controller.NewCommonController(dic, r, serviceName, edgex.Version)
 
 	// Command
 	cmd := commandController.NewCommandController(dic)

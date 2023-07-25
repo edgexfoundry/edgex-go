@@ -49,7 +49,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 
 	// DeviceServiceCommandClient is not part of the common clients handled by the NewClientsBootstrap handler
 	dic.Update(di.ServiceConstructorMap{
-		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add v2 API DeviceServiceCommandClient
+		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add API DeviceServiceCommandClient
 			jwtSecretProvider := secret.NewJWTSecretProvider(container.SecretProviderExtFrom(get))
 			return clients.NewDeviceServiceCommandClient(jwtSecretProvider)
 		},

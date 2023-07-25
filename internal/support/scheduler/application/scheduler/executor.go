@@ -32,12 +32,13 @@ type Executor struct {
 func (executor *Executor) Initialize(interval models.Interval, lc logger.LoggingClient) errors.EdgeX {
 	executor.Interval = interval
 	currentTime := time.Now()
+	loc := currentTime.Location()
 
 	// start and end time
 	if executor.Interval.Start == "" {
 		executor.StartTime = currentTime
 	} else {
-		t, err := time.Parse(SchedulerTimeFormat, executor.Interval.Start)
+		t, err := time.ParseInLocation(SchedulerTimeFormat, executor.Interval.Start, loc)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the StartTime string %s", executor.Interval.End), err)
 		}
@@ -48,7 +49,7 @@ func (executor *Executor) Initialize(interval models.Interval, lc logger.Logging
 		// use max time
 		executor.EndTime = time.Unix(1<<63-62135596801, 999999999)
 	} else {
-		t, err := time.Parse(SchedulerTimeFormat, executor.Interval.End)
+		t, err := time.ParseInLocation(SchedulerTimeFormat, executor.Interval.End, loc)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("fail to parse the EndTime string %s", executor.Interval.End), err)
 		}

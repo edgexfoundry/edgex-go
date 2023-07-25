@@ -23,7 +23,7 @@ import (
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
 	Writable     WritableInfo
-	Clients      map[string]bootstrapConfig.ClientInfo
+	Clients      bootstrapConfig.ClientsCollection
 	Databases    map[string]bootstrapConfig.Database
 	Registry     bootstrapConfig.RegistryInfo
 	Service      bootstrapConfig.ServiceInfo
@@ -75,11 +75,11 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	return bootstrapConfig.BootstrapConfiguration{
-		Clients:      c.Clients,
-		Service:      c.Service,
-		Registry:     c.Registry,
-		MessageBus:   c.MessageBus,
-		ExternalMQTT: c.ExternalMQTT,
+		Clients:      &c.Clients,
+		Service:      &c.Service,
+		Registry:     &c.Registry,
+		MessageBus:   &c.MessageBus,
+		ExternalMQTT: &c.ExternalMQTT,
 	}
 }
 
@@ -94,8 +94,8 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 }
 
 // GetDatabaseInfo returns a database information map.
-func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
-	return c.Databases
+func (c *ConfigurationStruct) GetDatabaseInfo() bootstrapConfig.Database {
+	return bootstrapConfig.Database{}
 }
 
 // GetInsecureSecrets returns the service's InsecureSecrets.

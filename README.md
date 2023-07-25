@@ -1,6 +1,11 @@
 # EdgeX Foundry Services
 [![Build Status](https://jenkins.edgexfoundry.org/view/EdgeX%20Foundry%20Project/job/edgexfoundry/job/edgex-go/job/main/badge/icon)](https://jenkins.edgexfoundry.org/view/EdgeX%20Foundry%20Project/job/edgexfoundry/job/edgex-go/job/main/) [![Code Coverage](https://codecov.io/gh/edgexfoundry/edgex-go/branch/main/graph/badge.svg?token=Y3mpessZqk)](https://codecov.io/gh/edgexfoundry/edgex-go) [![Go Report Card](https://goreportcard.com/badge/github.com/edgexfoundry/edgex-go)](https://goreportcard.com/report/github.com/edgexfoundry/edgex-go) [![GitHub Latest Dev Tag)](https://img.shields.io/github/v/tag/edgexfoundry/edgex-go?include_prereleases&sort=semver&label=latest-dev)](https://github.com/edgexfoundry/edgex-go/tags) ![GitHub Latest Stable Tag)](https://img.shields.io/github/v/tag/edgexfoundry/edgex-go?sort=semver&label=latest-stable) [![GitHub License](https://img.shields.io/github/license/edgexfoundry/edgex-go)](https://choosealicense.com/licenses/apache-2.0/) ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/edgexfoundry/edgex-go) [![GitHub Pull Requests](https://img.shields.io/github/issues-pr-raw/edgexfoundry/edgex-go)](https://github.com/edgexfoundry/edgex-go/pulls) [![GitHub Contributors](https://img.shields.io/github/contributors/edgexfoundry/edgex-go)](https://github.com/edgexfoundry/edgex-go/contributors) [![GitHub Committers](https://img.shields.io/badge/team-committers-green)](https://github.com/orgs/edgexfoundry/teams/edgex-go-committers/members) [![GitHub Commit Activity](https://img.shields.io/github/commit-activity/m/edgexfoundry/edgex-go)](https://github.com/edgexfoundry/edgex-go/commits)
 
+> **Warning**  
+> The **main** branch of this repository contains work-in-progress development code for the upcoming release, and is **not guaranteed to be stable or working**.
+> It is only compatible with the [main branch of edgex-compose](https://github.com/edgexfoundry/edgex-compose) which uses the Docker images built from the **main** branch of this repo and other repos.
+>
+> **The source for the latest release can be found at [Releases](https://github.com/edgexfoundry/edgex-go/releases).**
 
 EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Foundation building a common open framework for IoT edge computing.  At the heart of the project is an interoperability framework hosted within a full hardware- and OS-agnostic reference software platform to enable an ecosystem of plug-and-play components that unifies the marketplace and accelerates the deployment of IoT solutions.  This repository contains the Go implementation of EdgeX Foundry microservices.  It also includes files for building the services, containerizing the services, and initializing (bootstrapping) the services.
 
@@ -141,7 +146,7 @@ make run no-secty dev
 
 #### Community
 
-- Chat: <https://edgexfoundry.slack.com/>
+- Discussion: https://github.com/orgs/edgexfoundry/discussions
 - Mailing lists: https://lists.edgexfoundry.org/mailman/listinfo
 
 ## License

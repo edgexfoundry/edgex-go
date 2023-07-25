@@ -56,19 +56,17 @@ import (
 
 const (
 	redisSecretName                  = "redisdb"
+	messageBusSecretName             = "message-bus"
 	secretBasePath                   = "/v1/secret/edgex" // nolint:gosec
 	edgexRedisBootstrapperServiceKey = "security-bootstrapper-redis"
 )
 
 type Bootstrap struct {
-	validKnownSecrets map[string]bool
 	secretStoreConfig *bootstrapConfig.SecretStoreInfo
 }
 
 func NewBootstrap() *Bootstrap {
-	return &Bootstrap{
-		validKnownSecrets: map[string]bool{redisSecretName: true},
-	}
+	return &Bootstrap{}
 }
 
 func (b *Bootstrap) getSecretStoreClient(dic *di.Container) (secrets.SecretStoreClient, error) {
@@ -139,8 +137,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Handle healthcheck endpoint
-	http.HandleFunc("/api/v2/ping", func(w http.ResponseWriter, r *http.Request) {
-		lc.Info("Request received for /api/v2/ping")
+	http.HandleFunc(common.ApiBase+"/ping", func(w http.ResponseWriter, r *http.Request) {
+		lc.Info("Health check request received")
 		_, err = io.WriteString(w, "pong")
 		if err != nil {
 			lc.Errorf("failed to write response: %v", err)
@@ -166,7 +164,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	//
 
 	// Handle gettoken endpoint
-	http.HandleFunc("/api/v2/gettoken", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(common.ApiBase+"/gettoken", func(w http.ResponseWriter, r *http.Request) {
 
 		lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -353,19 +351,6 @@ func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClien
 	ssConfig *bootstrapConfig.SecretStoreInfo,
 	knownSecretNames []string, serviceKey string, privilegedToken string) error {
 
-	// to see if we can find redisdb as part of known secret name since that is the known secret we can support now
-	found := false
-	for _, secretName := range knownSecretNames {
-		_, valid := b.validKnownSecrets[secretName]
-		if valid {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return fmt.Errorf("cannot find secret name from validKnownSecrets")
-	}
-
 	// copy from security-bootstrapper-redis: /v1/secret/edgex/security-bootstrapper-redis/redisdb
 	// to /v1/secret/edgex/<service_key>/redisdb using secret client's APIs
 
@@ -391,15 +376,35 @@ func (b *Bootstrap) seedKnownSecrets(ctx context.Context, lc logger.LoggingClien
 		return fmt.Errorf("found error on getting secretClient: %v", err)
 	}
 
-	// copy known secrets redisdb from redis-bootstrapper to the requested service with serviceKey
-	secrets, err := secretClient.GetSecret(fmt.Sprintf("%s/%s", edgexRedisBootstrapperServiceKey, redisSecretName))
-	if err != nil {
-		return fmt.Errorf("found error on getting secrets: %v", err)
-	}
+	// Copy requested known secrets
+	for _, secretName := range knownSecretNames {
+		switch secretName {
+		case redisSecretName:
+			// copy known secrets redisdb from redis-bootstrapper to the requested service with serviceKey
+			secrets, err := secretClient.GetSecret(fmt.Sprintf("%s/%s", edgexRedisBootstrapperServiceKey, redisSecretName))
+			if err != nil {
+				return fmt.Errorf("found error on getting secret %s/%s: %v", edgexRedisBootstrapperServiceKey, secretName, err)
+			}
 
-	err = secretClient.StoreSecret(fmt.Sprintf("%s/%s", serviceKey, redisSecretName), secrets)
-	if err != nil {
-		return fmt.Errorf("found error on storing secrets: %v", err)
+			err = secretClient.StoreSecret(fmt.Sprintf("%s/%s", serviceKey, redisSecretName), secrets)
+			if err != nil {
+				return fmt.Errorf("found error on storing secret %s/%s: %v", serviceKey, secretName, err)
+			}
+
+		case messageBusSecretName:
+			// copy known secrets redisdb from redis-bootstrapper to the requested service with serviceKey
+			secrets, err := secretClient.GetSecret(fmt.Sprintf("%s/%s", internal.BootstrapMessageBusServiceKey, messageBusSecretName))
+			if err != nil {
+				return fmt.Errorf("found error on getting secret %s/%s: %v", internal.BootstrapMessageBusServiceKey, secretName, err)
+			}
+
+			err = secretClient.StoreSecret(fmt.Sprintf("%s/%s", serviceKey, messageBusSecretName), secrets)
+			if err != nil {
+				return fmt.Errorf("found error on storing secret %s/%s: %v", serviceKey, secretName, err)
+			}
+		default:
+			lc.Warnf("unrecognized known secret requested: %s", secretName)
+		}
 	}
 
 	return nil

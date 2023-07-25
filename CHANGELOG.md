@@ -12,6 +12,205 @@
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
 
+## [3.0.0] Minnesota - 2023-05-31 (Only compatible with the 3.x releases)
+### Features ✨
+- Update base API version to v3 ([#4519](https://github.com/edgexfoundry/edgex-go/pull/4519))
+    ```text
+    BREAKING CHANGE: All base API version is updated to v3
+    ```
+- Change configuration file format to YAML ([#4456](https://github.com/edgexfoundry/edgex-go/pull/4456))
+    ```text
+    BREAKING CHANGE: Configuration files are now in YAML format, Default file name is now configuration.yaml.
+    ```
+- Accept URL escape for device command name and resource name ([#4376](https://github.com/edgexfoundry/edgex-go/issues/4376)) ([#1bf67f4f](https://github.com/edgexfoundry/edgex-go/commits/1bf67f4f))
+- Common config bootstrapper and config implementation ([#4292](https://github.com/edgexfoundry/edgex-go/issues/4292)) ([#9f6c2d12](https://github.com/edgexfoundry/edgex-go/commits/9f6c2d12))
+- Add ability to customize spiffe services ([#4533](https://github.com/edgexfoundry/edgex-go/issues/4533)) ([#824c097d](https://github.com/edgexfoundry/edgex-go/commits/824c097d))
+- Implement common config flag for security ([#4464](https://github.com/edgexfoundry/edgex-go/issues/4464)) ([#0e3a5bd4](https://github.com/edgexfoundry/edgex-go/commits/0e3a5bd4))
+- Add env override capability for common configuration ([#4449](https://github.com/edgexfoundry/edgex-go/issues/4449)) ([#98f26a0c](https://github.com/edgexfoundry/edgex-go/commits/98f26a0c))
+- Remove ZeroMQ MessageBus capability ([#4234](https://github.com/edgexfoundry/edgex-go/issues/4234)) ([#a2765a98](https://github.com/edgexfoundry/edgex-go/commits/a2765a98))
+    ```text
+    BREAKING CHANGE: ZeroMQ MessageBus capability no longer available
+    ```
+- Consume watch for common Writable config changes ([#4432](https://github.com/edgexfoundry/edgex-go/issues/4432)) ([#043fa686](https://github.com/edgexfoundry/edgex-go/commits/043fa686))
+- Add GetSecret and RunTimeSecret metrics ([#4556](https://github.com/edgexfoundry/edgex-go/issues/4556)) ([#079d219b](https://github.com/edgexfoundry/edgex-go/commits/079d219b))
+- Consume common config ([#4335](https://github.com/edgexfoundry/edgex-go/issues/4335))
+    ```text
+    BREAKING CHANGE: Remove the common config information from all services.
+    ```
+- Remove UseMessageBus from config ([#4330](https://github.com/edgexfoundry/edgex-go/issues/4330)) ([#6d8f4899](https://github.com/edgexfoundry/edgex-go/commits/6d8f4899))
+- Remove old metrics collection and REST endpoint for all services ([#4311](https://github.com/edgexfoundry/edgex-go/issues/4311))
+    ```text
+    BREAKING CHANGE: Remove old metrics collection and REST endpoint from all services.
+    ```
+- Change Database configuration to be single instance ([#4308](https://github.com/edgexfoundry/edgex-go/issues/4308))
+    ```text
+    BREAKING CHANGE: Database configuration for services has changed from a Map to a single instance.
+    ```
+- Push common config to config provider ([#4306](https://github.com/edgexfoundry/edgex-go/issues/4306)) ([#228e514b](https://github.com/edgexfoundry/edgex-go/commits/228e514b))
+- **command:** Enable regex for Commands via Messaging ([#f55e44b8](https://github.com/edgexfoundry/edgex-go/commits/f55e44b8))
+- **data** Update Add Event REST endpoint to include service name ([#4368](https://github.com/edgexfoundry/edgex-go/pull/4368))
+    ```text
+    BREAKING CHANGE: Event RSET endpoint will become `/event/{serviceName}/{profileName}/{deviceName}/{sourceName}`.
+    ```
+- **metadata** Remove device callback calls ([#36411bb3](https://github.com/edgexfoundry/edgex-go/commits/36411bb3))
+    ```text
+    BREAKING CHANGE: Device callback calls are replaced by Device System Events
+    ```
+- **metadata** Apply provision watcher model changes ([#4471](https://github.com/edgexfoundry/edgex-go/pull/4471))
+    ```text
+    BREAKING CHANGE: Apply provision watcher model changes. Add 'discoveredDevice' field which includes profileName,adminState,autoEvents, and properties for discovered device.
+    ```
+- **metadata** Switch UoM API to YAML format ([#4462](https://github.com/edgexfoundry/edgex-go/pull/4462))
+    ```text
+    BREAKING CHANGE: It was decided in Minnesota planning that all TOML files would be change to be YAML format, so switching YAML in UoM API.
+    ```
+- **metadata** Remove Notify field out of Device dto and add Properties field into ProvisionWatcher DTO ([#4375](https://github.com/edgexfoundry/edgex-go/pull/4375))
+    ```text
+    BREAKING CHANGE: Per edgexfoundry/go-mod-core-contracts#807, the boolean field notify of Device DTO is removed as device creation notification is handled by system event message now. Per edgexfoundry/go-mod-core-contracts#803, the ProvisionWatcher DTO is updated with a new Properties field.
+    ```
+- **metadata** Remove LastConnected, LastReported fields from Device and UpdateLastConnected configs ([#4369](https://github.com/edgexfoundry/edgex-go/pull/4369))
+    ```text
+    BREAKING CHANGE: Remove LastConnected, LastReported fields from Device and UpdateLastConnected configs
+    ```
+- **metadata** Replace REST device validation callback with MessageBus ([#4366](https://github.com/edgexfoundry/edgex-go/pull/4366))
+    ```text
+    BREAKING CHANGE: Adding new Device requires Device Service running for validation.
+    ```
+- **metadata** Implement Device Service System Events ([#4351](https://github.com/edgexfoundry/edgex-go/pull/4351))
+    ```text
+    BREAKING CHANGE: Publish System Events for Device Service add/update/delete, and remove the Device Service REST callback.
+    ```
+- **metadata** Allow Device Profile to be empty string in ProvisionWatcher ([#8898ba7a](https://github.com/edgexfoundry/edgex-go/commits/8898ba7a))
+- **metadata** Implement Provision Watcher System Events ([#7d9adc03](https://github.com/edgexfoundry/edgex-go/commits/7d9adc03))
+- **metadata** Implement Device Profile System Events ([#4336](https://github.com/edgexfoundry/edgex-go/issues/4336)) ([#966ddbcd](https://github.com/edgexfoundry/edgex-go/commits/966ddbcd))
+- **metadata** Remove DeviceChanged Notifications mechanism ([#4320](https://github.com/edgexfoundry/edgex-go/pull/4320))
+    ```text
+    BREAKING CHANGE: Remove the 'Notifications' config and 'Clients.support-notifications' dependency. In EdgeX 3.0, metadata will leverage device system events to replace the original device change notifications
+    ```
+- **scheduler** Add authentication to support-scheduler actions ([#4419](https://github.com/edgexfoundry/edgex-go/issues/4419)) ([#923421b8](https://github.com/edgexfoundry/edgex-go/commits/923421b8))
+- **security** Create security-proxy-auth microservice (for proxy swapout) ([#4387](https://github.com/edgexfoundry/edgex-go/issues/4387)) ([#68f229a3](https://github.com/edgexfoundry/edgex-go/commits/68f229a3))
+- **security** Support for sending outgoing JWTs from core services to device service REST APIs ([#4384](https://github.com/edgexfoundry/edgex-go/issues/4384)) ([#248dcbaf](https://github.com/edgexfoundry/edgex-go/commits/248dcbaf))
+- **security** Vault tokens are now identity-based instead of anonymous ([#4327](https://github.com/edgexfoundry/edgex-go/issues/4327)) ([#fd143bca](https://github.com/edgexfoundry/edgex-go/commits/fd143bca))
+- **security** Implementation of JWT authentication ADR ([#4244](https://github.com/edgexfoundry/edgex-go/pull/4244))
+    ```text
+    BREAKING CHANGE: Requires JWT authentication for all inbound requests except for /api/v2/ping URL. Removes support for Kong reverse proxy. In place of Kong, uses NGINX proxy auth module and introduces new security-prox-auth service. Changes secrets-config proxy adduser/deluser commands to create Vault users instead of Kong user. Changes secrets-config proxy tls command to write TLS certificate to docker volume instead of Kong. Removes security-proxy-setup go binary and replaces with shell script to create default TLS token.
+    ```
+- **snap** Remove secrets-config proxy snap options ([#4511](https://github.com/edgexfoundry/edgex-go/pull/4511))
+    ```text
+    BREAKING CHANGE: The ability to add users by public key has been removed in secrets-config v3. The remaining parts which are to replace default TLS certificate, is possible via other, more secure means. As a result, this feature along with all its complexity is being removed.
+    ```
+- **snap:** Add core-common-config-bootstrapper ([#4347](https://github.com/edgexfoundry/edgex-go/issues/4347)) ([#8ffa5fbc](https://github.com/edgexfoundry/edgex-go/commits/8ffa5fbc))
+
+### Bug Fixes 🐛
+- Set exitcode of secrets-config for command execution errors ([#4418](https://github.com/edgexfoundry/edgex-go/issues/4418)) ([#5942442a](https://github.com/edgexfoundry/edgex-go/commits/5942442a))
+- Enable delayed-start services to get message-bus credential ([#4550](https://github.com/edgexfoundry/edgex-go/issues/4550)) ([#2c041b41](https://github.com/edgexfoundry/edgex-go/commits/2c041b41))
+- Don't register spiffe token provider service ([#4536](https://github.com/edgexfoundry/edgex-go/issues/4536)) ([#805e484e](https://github.com/edgexfoundry/edgex-go/commits/805e484e))
+- Register healthcheck endpoint for security-proxy-auth ([#4426](https://github.com/edgexfoundry/edgex-go/issues/4426)) ([#ad6eec9b](https://github.com/edgexfoundry/edgex-go/commits/ad6eec9b))
+- Use Database Timeout setting defined in the configuration ([#ef48cf16](https://github.com/edgexfoundry/edgex-go/commits/ef48cf16))
+- Adjust redis maxclients to 1000 as default ([#87e0a753](https://github.com/edgexfoundry/edgex-go/commits/87e0a753))
+- Check the device service existence before calling the device validation ([#8058126d](https://github.com/edgexfoundry/edgex-go/commits/8058126d))
+- Add retry when calling HasConfiguration to wait for Consul ([#4334](https://github.com/edgexfoundry/edgex-go/issues/4334)) ([#a5aecf7d](https://github.com/edgexfoundry/edgex-go/commits/a5aecf7d))
+- Remove Devices Service exists Check from Add/update Provision Watcher ([#1258cfbf](https://github.com/edgexfoundry/edgex-go/commits/1258cfbf))
+- **data:** Update validateEvent topic check ([#510db3ea](https://github.com/edgexfoundry/edgex-go/commits/510db3ea))
+- **security:** Prefix security related env vars with EDGEX_ ([#4514](https://github.com/edgexfoundry/edgex-go/pull/4514))
+    ```text
+    BREAKING CHANGE: Add EDGEX_ prefix to ADD_SECRETSTORE_TOKENS, ADD_REGISTRY_ACL_ROLES, ADD_KNOWN_SECRETS, and IKM_HOOK variables
+    ```
+- **security:** Restore ADD_PROXY_ROUTE functionality for docker NGINX ([#4412](https://github.com/edgexfoundry/edgex-go/issues/4412)) ([#3ead8ec5](https://github.com/edgexfoundry/edgex-go/commits/3ead8ec5))
+- **snap:** Source security-bootstrapper config overrides from env file ([#4283](https://github.com/edgexfoundry/edgex-go/issues/4283)) ([#01248c13](https://github.com/edgexfoundry/edgex-go/commits/01248c13))
+- **snap:** Update env file path for security bootstrapper services ([#4555](https://github.com/edgexfoundry/edgex-go/issues/4555)) ([#857beb77](https://github.com/edgexfoundry/edgex-go/commits/857beb77))
+
+### Code Refactoring ♻
+- Adjust app service names in Spire seed script ([#4494](https://github.com/edgexfoundry/edgex-go/issues/4494)) ([#581b0da7](https://github.com/edgexfoundry/edgex-go/commits/581b0da7))
+- Remove use of TOML package ([#4468](https://github.com/edgexfoundry/edgex-go/issues/4468)) ([#56c53f3e](https://github.com/edgexfoundry/edgex-go/commits/56c53f3e))
+- Update secret path to secret name ([#4435](https://github.com/edgexfoundry/edgex-go/pull/4435))
+    ```text
+    BREAKING CHANGE: Update secret path to secret name
+    ```
+- Add app service default subscribe topics ([#4363](https://github.com/edgexfoundry/edgex-go/issues/4363)) ([#4dbbd61a](https://github.com/edgexfoundry/edgex-go/commits/4dbbd61a))
+- Consume Database Timeout changed to duration string ([#01c1eb6e](https://github.com/edgexfoundry/edgex-go/commits/01c1eb6e))
+- Replace references to message queue in log messages ([#4285](https://github.com/edgexfoundry/edgex-go/issues/4285)) ([#75e2dee3](https://github.com/edgexfoundry/edgex-go/commits/75e2dee3))
+- Rework code for refactored MessageBus Configuration ([#4268](https://github.com/edgexfoundry/edgex-go/pull/4268))
+    ```text
+    BREAKING CHANGE: MessageQueue renamed to MessageBus and fields changed. See v3 Migration guide.
+    ```
+- Remove system management agent and executor ([#4265](https://github.com/edgexfoundry/edgex-go/pull/4265))
+    ```text
+    BREAKING CHANGE: SMA is deprecated in EdgeX 3.0.
+    ```
+- Rename config flags to be more consistent ([#4255](https://github.com/edgexfoundry/edgex-go/pull/4255))
+    ```text
+    BREAKING CHANGE:
+    - `-c/--confdir` to `-cd/--configDir`
+    - `-f/--file` to `-cf/--configFile`
+    ```
+- Use common Config Stem constants for Core Contracts ([#4243](https://github.com/edgexfoundry/edgex-go/pull/4243))
+    ```text
+    BREAKING CHANGE: Location of service configuration in Consul changed
+    ```
+- Remove vault wait from consul start ([#4228](https://github.com/edgexfoundry/edgex-go/issues/4228)) ([#cfbe246e](https://github.com/edgexfoundry/edgex-go/commits/cfbe246e))
+- **command** Replace Command message bus internal topics from config with new constants ([#4348](https://github.com/edgexfoundry/edgex-go/pull/4348))
+    ```text
+    BREAKING CHANGE: Internal topics no longer configurable, except the base topic.
+    ```
+- **command** Rework Core Commands via messaging to use new MessageBus Request API ([#4310](https://github.com/edgexfoundry/edgex-go/pull/4310))
+    ```text
+    BREAKING CHANGE: Topics configuration for Core Command has changed. Also the internal response topic is always `edgex/response/<responding-service-name>/<request-id>`.
+    ```
+- **command:** Use bool types for Command query parameters to be more consistent ([#4276](https://github.com/edgexfoundry/edgex-go/issues/4276))
+    ```text
+    BREAKING CHANGE: Query parameters `ds-pushevent` and `ds-returnevent` to use bool true/false instead of yes/no
+    ```
+- **security** Change to camelCase args for secrets-config proxy TLS ([#4433](https://github.com/edgexfoundry/edgex-go/pull/4433))
+    ```text
+    BREAKING CHANGE: To be consistent with other secrets-config sub-commands, the tls command will now accept camelCase command line arguments. Also fixes issue with -h option resulting in an error in addition to printing help.
+    ```
+- **security** Replace SecretStore service config with default values and overrides ([#4291](https://github.com/edgexfoundry/edgex-go/pull/4291))
+    ```text
+    BREAKING CHANGE: SecretStore config no longer in service configuration file. Changes must be done via use of environment variable overrides of default values.
+    ```
+- **snap** Disable and stop services by default ([#4552](https://github.com/edgexfoundry/edgex-go/pull/4552))
+    ```text
+    BREAKING CHANGE: Prior to #4448, it was possible to override configuration coming from the Config Provider via environment variables. This is no longer possible. As a result, the environment variables need to be set before initial startup. This PR changes the services startup to have them disabled and stopped by default, instead of enabled and started. This is to allow changing configurations via environment variables in this Snap (via snap options) when installing the snap manually.
+    ```
+- **snap:** Remove explicit config provider address ([#4396](https://github.com/edgexfoundry/edgex-go/issues/4396)) ([#c62a5d89](https://github.com/edgexfoundry/edgex-go/commits/c62a5d89))
+- **snap:** Several v3 cleanup and minor fixes in snap hooks ([#4559](https://github.com/edgexfoundry/edgex-go/issues/4559)) ([#c33d50c2](https://github.com/edgexfoundry/edgex-go/commits/c33d50c2))
+- **snap:** Remove obsolete parts, upgrade Go, build nginx ([#4439](https://github.com/edgexfoundry/edgex-go/issues/4439)) ([#d51f32be](https://github.com/edgexfoundry/edgex-go/commits/d51f32be))
+- **snap:** Remove external metadata sourcing ([#4453](https://github.com/edgexfoundry/edgex-go/issues/4453)) ([#fb374ba4](https://github.com/edgexfoundry/edgex-go/commits/fb374ba4))
+- **snap** Replace deprecated snap options with app options ([#4277](https://github.com/edgexfoundry/edgex-go/pull/4277))
+    ```text
+    BREAKING CHANGE:
+    - Remove support for config and proxy config with env. prefix in favor of app config options.
+    - Replace option to disable security from security-secret-store=off to security=false.
+    - Replace <app>=on|off option with apps.<app>.autostart=true|false and autostart=true|false (global) options.
+    - Refactor deferred startup to use autostart logic for starting services after configuration.
+    - Refactor security disabling logic to make use of autostart and config.edgex-security-secret-store in instead.
+    - Remove obsolete script for starting services with disabled security.
+    - Add a new service that runs to apply secrets-config options.
+    - Rename helper-go's options subcommand from service to app since it can handle all apps, incl. CLI apps.
+    ```
+
+### Documentation 📖
+- Add AuthMethod to support-scheduler API document ([#9c0101fb](https://github.com/edgexfoundry/edgex-go/commits/9c0101fb))
+- Update Value Properties max and min data type from string to number ([#3bc247e5](https://github.com/edgexfoundry/edgex-go/commits/3bc247e5))
+- Move swagger files to V3 folder ([#6803b664](https://github.com/edgexfoundry/edgex-go/commits/6803b664))
+- Update Add Event Swagger for new `serviceName` parameter ([#4361](https://github.com/edgexfoundry/edgex-go/issues/4361)) ([#8776ce55](https://github.com/edgexfoundry/edgex-go/commits/8776ce55))
+- **security:** Update SECURITY.md, add security.txt for docker images ([#4407](https://github.com/edgexfoundry/edgex-go/issues/4407)) ([#b576a02c](https://github.com/edgexfoundry/edgex-go/commits/b576a02c))
+- **security:** Clarify units of adduser's tokenTTL and jwtTTL ([#4431](https://github.com/edgexfoundry/edgex-go/issues/4431)) ([#962cd113](https://github.com/edgexfoundry/edgex-go/commits/962cd113))
+
+### Build 👷
+- Update golangci-lint to be more verbose and info ([#4476](https://github.com/edgexfoundry/edgex-go/issues/4476)) ([#e99ed673](https://github.com/edgexfoundry/edgex-go/commits/e99ed673))
+- Generate spdx sbom and add Makefile target for sbom generation ([#4339](https://github.com/edgexfoundry/edgex-go/issues/4339)) ([#da675bb4](https://github.com/edgexfoundry/edgex-go/commits/da675bb4))
+- Upgrade to Go 1.20, Alpine 3.17 and linter v1.51.2 ([#4dcf4701](https://github.com/edgexfoundry/edgex-go/commits/4dcf4701))
+- Upgrade spire to v1.6.3 ([#adae0844](https://github.com/edgexfoundry/edgex-go/commits/adae0844))
+- **snap:** Remove deprecated kuiper and ASC from edgexfoundry snap ([#4250](https://github.com/edgexfoundry/edgex-go/issues/4250)) ([#2918878e](https://github.com/edgexfoundry/edgex-go/commits/2918878e))
+    ```text
+    BREAKING CHANGE: Remove deprecated kuiper and app-service-configurable apps from the edgexfoundry snap since they are now available as standalone snaps.
+    ```
+- **snap:** Upgrade releases of Consul, Nginx and Redis ([#4574](https://github.com/edgexfoundry/edgex-go/issues/4574)) ([#1557ff34](https://github.com/edgexfoundry/edgex-go/commits/1557ff34))
+- **snap:** Upgrade snap base to core22, upgrade env file loading logic ([#4530](https://github.com/edgexfoundry/edgex-go/issues/4530)) ([#47e5a6d2](https://github.com/edgexfoundry/edgex-go/commits/47e5a6d2))
+- **snap:** Remove helper scripts from staged snaps ([#4232](https://github.com/edgexfoundry/edgex-go/issues/4232)) ([#af696e21](https://github.com/edgexfoundry/edgex-go/commits/af696e21))
+
 ## [v2.3.0] Levski - 2022-11-09 (Only compatible with the 2.x release)
 
 ### Features ✨

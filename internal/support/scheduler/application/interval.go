@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,8 +8,10 @@ package application
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/infrastructure/interfaces"
 
@@ -21,6 +23,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
+
+// the suggested minimum duration for scheduler interval
+const minSchedulerInterval = 10 * time.Millisecond
 
 // The AddInterval function accepts the new Interval model from the controller function
 // and then invokes AddInterval function of infrastructure layer to add new Interval
@@ -40,6 +45,9 @@ func AddInterval(interval models.Interval, ctx context.Context, dic *di.Containe
 	lc.Debugf("Interval created on DB successfully. Interval ID: %s, Correlation-ID: %s ",
 		addedInterval.Id,
 		correlation.FromContext(ctx))
+
+	// If interval is successfully created, check the interval value and display a warning if it's smaller than the suggested 10ms value
+	utils.CheckMinInterval(interval.Interval, minSchedulerInterval, lc)
 
 	return addedInterval.Id, nil
 }
@@ -115,6 +123,9 @@ func PatchInterval(dto dtos.UpdateInterval, ctx context.Context, dic *di.Contain
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+
+	// If interval is successfully updated, check the interval value and display a warning if it's smaller than the suggested 10ms value
+	utils.CheckMinInterval(interval.Interval, minSchedulerInterval, lc)
 
 	lc.Debugf(
 		"Interval patched on DB successfully. Correlation-ID: %s ",
