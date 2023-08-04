@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,7 +24,7 @@ import (
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type SubscriptionController struct {
@@ -40,7 +40,9 @@ func NewSubscriptionController(dic *di.Container) *SubscriptionController {
 	}
 }
 
-func (sc *SubscriptionController) AddSubscription(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) AddSubscription(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -53,8 +55,7 @@ func (sc *SubscriptionController) AddSubscription(w http.ResponseWriter, r *http
 	var reqDTOs []requestDTO.AddSubscriptionRequest
 	err := sc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	subscriptions := requestDTO.AddSubscriptionReqToSubscriptionModels(reqDTOs)
 
@@ -74,145 +75,144 @@ func (sc *SubscriptionController) AddSubscription(w http.ResponseWriter, r *http
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (sc *SubscriptionController) AllSubscriptions(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) AllSubscriptions(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := notificationContainer.ConfigurationFrom(sc.dic.Get)
 
 	// parse URL query string for offset and limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	subscriptions, totalCount, err := application.AllSubscriptions(offset, limit, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) SubscriptionByName(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) SubscriptionByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	subscription, err := application.SubscriptionByName(name, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewSubscriptionResponse("", "", http.StatusOK, subscription)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) SubscriptionsByCategory(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) SubscriptionsByCategory(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := notificationContainer.ConfigurationFrom(sc.dic.Get)
 
-	vars := mux.Vars(r)
-	category := vars[common.Category]
+	category := c.Param(common.Category)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	subscriptions, totalCount, err := application.SubscriptionsByCategory(offset, limit, category, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) SubscriptionsByLabel(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) SubscriptionsByLabel(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := notificationContainer.ConfigurationFrom(sc.dic.Get)
 
-	vars := mux.Vars(r)
-	label := vars[common.Label]
+	label := c.Param(common.Label)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	subscriptions, totalCount, err := application.SubscriptionsByLabel(offset, limit, label, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) SubscriptionsByReceiver(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) SubscriptionsByReceiver(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := notificationContainer.ConfigurationFrom(sc.dic.Get)
 
-	vars := mux.Vars(r)
-	receiver := vars[common.Receiver]
+	receiver := c.Param(common.Receiver)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	subscriptions, totalCount, err := application.SubscriptionsByReceiver(offset, limit, receiver, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiSubscriptionsResponse("", "", http.StatusOK, totalCount, subscriptions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) DeleteSubscriptionByName(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) DeleteSubscriptionByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(sc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	err := application.DeleteSubscriptionByName(name, ctx, sc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *http.Request) {
+func (sc *SubscriptionController) PatchSubscription(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -225,8 +225,7 @@ func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *ht
 	var reqDTOs []requestDTO.UpdateSubscriptionRequest
 	err := sc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -245,5 +244,5 @@ func (sc *SubscriptionController) PatchSubscription(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }

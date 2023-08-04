@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -25,7 +25,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -143,6 +143,7 @@ func TestAddDeviceService(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 
+			e := echo.New()
 			dic := mockDic()
 			dic.Update(di.ServiceConstructorMap{
 				container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -162,8 +163,10 @@ func TestAddDeviceService(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceService)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceService(c)
+			require.NoError(t, err)
+
 			if testCase.isValidRequest {
 				var res []commonDTO.BaseWithIdResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -223,15 +226,18 @@ func TestDeviceServiceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameEchoRoute, testCase.deviceServiceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceServiceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceServiceByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceServiceName)
+			err = controller.DeviceServiceByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -336,6 +342,7 @@ func TestPatchDeviceService(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -345,8 +352,9 @@ func TestPatchDeviceService(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchDeviceService)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchDeviceService(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
@@ -431,6 +439,7 @@ func TestAllDeviceServices(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllDeviceServiceRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
@@ -443,8 +452,9 @@ func TestAllDeviceServices(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllDeviceServices)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllDeviceServices(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -514,15 +524,19 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameEchoRoute, testCase.deviceServiceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceServiceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceServiceByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceServiceName)
+			err = controller.DeleteDeviceServiceByName(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)

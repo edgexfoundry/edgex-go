@@ -43,7 +43,7 @@ func (cc *CommandController) AllCommands(c echo.Context) error {
 	config := commandContainer.ConfigurationFrom(cc.dic.Get)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 

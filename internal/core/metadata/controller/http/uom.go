@@ -16,6 +16,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
+
+	"github.com/labstack/echo/v4"
 )
 
 type UnitOfMeasureController struct {
@@ -28,7 +30,9 @@ func NewUnitOfMeasureController(dic *di.Container) *UnitOfMeasureController {
 	}
 }
 
-func (uc *UnitOfMeasureController) UnitsOfMeasure(w http.ResponseWriter, r *http.Request) {
+func (uc *UnitOfMeasureController) UnitsOfMeasure(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	u := container.UnitsOfMeasureFrom(uc.dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(uc.dic.Get)
@@ -39,8 +43,8 @@ func (uc *UnitOfMeasureController) UnitsOfMeasure(w http.ResponseWriter, r *http
 
 	switch r.Header.Get(common.Accept) {
 	case common.ContentTypeYAML:
-		pkg.EncodeAndWriteYamlResponse(u, w, lc)
+		return pkg.EncodeAndWriteYamlResponse(u, w, lc)
 	default:
-		pkg.EncodeAndWriteResponse(response, w, lc)
+		return pkg.EncodeAndWriteResponse(response, w, lc)
 	}
 }

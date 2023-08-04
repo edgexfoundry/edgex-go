@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,7 +19,8 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 )
 
 type DeviceCommandController struct {
@@ -35,7 +36,9 @@ func NewDeviceCommandController(dic *di.Container) *DeviceCommandController {
 	}
 }
 
-func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -48,8 +51,7 @@ func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(w http.Response
 	var reqDTOs []requestDTO.AddDeviceCommandRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var addResponses []interface{}
@@ -77,10 +79,12 @@ func (dc *DeviceCommandController) AddDeviceProfileDeviceCommand(w http.Response
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -92,8 +96,7 @@ func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(w http.Respon
 	var reqDTOs []requestDTO.UpdateDeviceCommandRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -119,25 +122,25 @@ func (dc *DeviceCommandController) PatchDeviceProfileDeviceCommand(w http.Respon
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }
 
-func (dc *DeviceCommandController) DeleteDeviceCommandByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceCommandController) DeleteDeviceCommandByName(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	profileName := vars[common.Name]
-	commandName := vars[common.CommandName]
+	profileName := c.Param(common.Name)
+	commandName := c.Param(common.CommandName)
 
 	err := application.DeleteDeviceCommandByName(profileName, commandName, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

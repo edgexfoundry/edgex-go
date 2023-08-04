@@ -35,7 +35,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -202,6 +202,7 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -211,8 +212,10 @@ func TestAddDeviceProfile_Created(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfile)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfile(c)
+			require.NoError(t, err)
+
 			var res []commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 
@@ -285,6 +288,7 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -294,8 +298,9 @@ func TestAddDeviceProfile_BadRequest(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfile)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfile(c)
+			require.NoError(t, err)
 
 			// Assert
 			assert.Equal(t, http.StatusBadRequest, recorder.Result().StatusCode, "HTTP status code not as expected")
@@ -339,6 +344,7 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -348,8 +354,10 @@ func TestAddDeviceProfile_Duplicated(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfile)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfile(c)
+			require.NoError(t, err)
+
 			var res []commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -415,6 +423,7 @@ func TestAddDeviceProfile_UnitsOfMeasure_Validation(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -424,8 +433,9 @@ func TestAddDeviceProfile_UnitsOfMeasure_Validation(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfile)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfile(c)
+			require.NoError(t, err)
 
 			var res []commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -521,6 +531,7 @@ func TestUpdateDeviceProfile(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -530,8 +541,9 @@ func TestUpdateDeviceProfile(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.UpdateDeviceProfile)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.UpdateDeviceProfile(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusBadRequest {
 				var res commonDTO.BaseResponse
@@ -583,10 +595,12 @@ func TestUpdateDeviceProfile_StrictProfileChanges(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, common.ApiDeviceProfileRoute, reader)
 	require.NoError(t, err)
 
+	e := echo.New()
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.UpdateDeviceProfile)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = controller.UpdateDeviceProfile(c)
+	require.NoError(t, err)
 
 	var res commonDTO.BaseWithIdResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -655,6 +669,7 @@ func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -664,8 +679,9 @@ func TestPatchDeviceProfileBasicInfo(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchDeviceProfileBasicInfo)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchDeviceProfileBasicInfo(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusBadRequest {
 				var res commonDTO.BaseResponse
@@ -716,10 +732,13 @@ func TestAddDeviceProfileByYaml_Created(t *testing.T) {
 	req, err := createDeviceProfileRequestWithFile(valid)
 	require.NoError(t, err)
 
+	e := echo.New()
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.AddDeviceProfileByYaml)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = controller.AddDeviceProfileByYaml(c)
+	require.NoError(t, err)
+
 	var res commonDTO.BaseWithIdResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
 
@@ -783,6 +802,7 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			valid, err := yaml.Marshal(testCase.Request)
 			require.NoError(t, err)
 			req, err := createDeviceProfileRequestWithFile(valid)
@@ -790,8 +810,10 @@ func TestAddDeviceProfileByYaml_BadRequest(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileByYaml)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileByYaml(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			assert.NoError(t, err)
@@ -827,10 +849,13 @@ func TestAddDeviceProfileByYaml_Duplicated(t *testing.T) {
 	req, err := createDeviceProfileRequestWithFile(valid)
 	require.NoError(t, err)
 
+	e := echo.New()
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.AddDeviceProfileByYaml)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = controller.AddDeviceProfileByYaml(c)
+	require.NoError(t, err)
+
 	var res commonDTO.BaseWithIdResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
 	require.NoError(t, err)
@@ -857,10 +882,13 @@ func TestAddDeviceProfileByYaml_MissingFile(t *testing.T) {
 	req.MultipartForm = new(multipart.Form)
 	req.MultipartForm.File = nil
 
+	e := echo.New()
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.AddDeviceProfileByYaml)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = controller.AddDeviceProfileByYaml(c)
+	require.NoError(t, err)
+
 	var res commonDTO.BaseWithIdResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
 	require.NoError(t, err)
@@ -947,6 +975,7 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			valid, err := yaml.Marshal(testCase.request)
 			require.NoError(t, err)
 			req, err := createDeviceProfileRequestWithFile(valid)
@@ -954,8 +983,10 @@ func TestUpdateDeviceProfileByYaml(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.UpdateDeviceProfileByYaml)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.UpdateDeviceProfileByYaml(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			assert.NoError(t, err)
@@ -989,10 +1020,12 @@ func TestUpdateDeviceProfileByYaml_StrictProfileChanges(t *testing.T) {
 	req, err := createDeviceProfileRequestWithFile(validBytes)
 	require.NoError(t, err)
 
+	e := echo.New()
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.UpdateDeviceProfileByYaml)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = controller.UpdateDeviceProfileByYaml(c)
+	require.NoError(t, err)
 
 	var res commonDTO.BaseWithIdResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -1035,15 +1068,18 @@ func TestDeviceProfileByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiDeviceProfileRoute, common.Name, testCase.deviceProfileName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceProfileName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceProfileByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceProfileName)
+			err = controller.DeviceProfileByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -1112,15 +1148,19 @@ func TestDeleteDeviceProfileByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiDeviceProfileRoute, common.Name, testCase.deviceProfileName)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceProfileName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceProfileByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceProfileName)
+			err = controller.DeleteDeviceProfileByName(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -1151,14 +1191,17 @@ func TestDeleteDeviceProfileByName_StrictProfileChanges(t *testing.T) {
 	controller := NewDeviceProfileController(dic)
 	require.NotNil(t, controller)
 
-	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileByNameRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileByNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.DeleteDeviceProfileByName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(TestDeviceProfileName)
+	err = controller.DeleteDeviceProfileByName(c)
+	require.NoError(t, err)
 
 	var res commonDTO.BaseResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -1209,6 +1252,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllDeviceProfileRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
@@ -1221,8 +1265,9 @@ func TestAllDeviceProfiles(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllDeviceProfiles)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllDeviceProfiles(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -1284,8 +1329,8 @@ func TestDeviceProfilesByModel(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByModelRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Model: testCase.model})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByModelEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -1294,8 +1339,11 @@ func TestDeviceProfilesByModel(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceProfilesByModel)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Model)
+			c.SetParamValues(testCase.model)
+			err = controller.DeviceProfilesByModel(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -1357,8 +1405,8 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Manufacturer: testCase.manufacturer})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -1367,8 +1415,11 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceProfilesByManufacturer)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Manufacturer)
+			c.SetParamValues(testCase.manufacturer)
+			err = controller.DeviceProfilesByManufacturer(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -1431,8 +1482,8 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerAndModelRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Manufacturer: testCase.manufacturer, common.Model: testCase.model})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerAndModelEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -1441,8 +1492,11 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceProfilesByManufacturerAndModel)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Manufacturer, common.Model)
+			c.SetParamValues(testCase.manufacturer, testCase.model)
+			err = controller.DeviceProfilesByManufacturerAndModel(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {

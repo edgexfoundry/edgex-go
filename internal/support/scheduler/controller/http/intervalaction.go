@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,7 +23,7 @@ import (
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type IntervalActionController struct {
@@ -39,7 +39,9 @@ func NewIntervalActionController(dic *di.Container) *IntervalActionController {
 	}
 }
 
-func (ic *IntervalActionController) AddIntervalAction(w http.ResponseWriter, r *http.Request) {
+func (ic *IntervalActionController) AddIntervalAction(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -52,8 +54,7 @@ func (ic *IntervalActionController) AddIntervalAction(w http.ResponseWriter, r *
 	var reqDTOs []requestDTO.AddIntervalActionRequest
 	err := ic.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	actions := requestDTO.AddIntervalActionReqToIntervalActionModels(reqDTOs)
 
@@ -73,70 +74,72 @@ func (ic *IntervalActionController) AddIntervalAction(w http.ResponseWriter, r *
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (ic *IntervalActionController) AllIntervalActions(w http.ResponseWriter, r *http.Request) {
+func (ic *IntervalActionController) AllIntervalActions(c echo.Context) error {
 	lc := container.LoggingClientFrom(ic.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := schedulerContainer.ConfigurationFrom(ic.dic.Get)
 
 	// parse URL query string for offset, limit, and labels
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	intervalActions, totalCount, err := application.AllIntervalActions(offset, limit, ic.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiIntervalActionsResponse("", "", http.StatusOK, totalCount, intervalActions)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ic *IntervalActionController) IntervalActionByName(w http.ResponseWriter, r *http.Request) {
+func (ic *IntervalActionController) IntervalActionByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(ic.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	action, err := application.IntervalActionByName(name, ctx, ic.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewIntervalActionResponse("", "", http.StatusOK, action)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ic *IntervalActionController) DeleteIntervalActionByName(w http.ResponseWriter, r *http.Request) {
+func (ic *IntervalActionController) DeleteIntervalActionByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(ic.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	err := application.DeleteIntervalActionByName(name, ctx, ic.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ic *IntervalActionController) PatchIntervalAction(w http.ResponseWriter, r *http.Request) {
+func (ic *IntervalActionController) PatchIntervalAction(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -149,8 +152,7 @@ func (ic *IntervalActionController) PatchIntervalAction(w http.ResponseWriter, r
 	var reqDTOs []requestDTO.UpdateIntervalActionRequest
 	err := ic.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var responses []interface{}
@@ -169,5 +171,5 @@ func (ic *IntervalActionController) PatchIntervalAction(w http.ResponseWriter, r
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(responses, w, lc)
+	return pkg.EncodeAndWriteResponse(responses, w, lc)
 }

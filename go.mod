@@ -4,16 +4,15 @@ go 1.20
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.9
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.16
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.4
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.2
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.11
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.3
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.12
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.3
 	github.com/fxamacker/cbor/v2 v2.4.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/mux v1.8.0
-	github.com/labstack/echo/v4 v4.10.2
+	github.com/labstack/echo/v4 v4.11.1
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spiffe/go-spiffe/v2 v2.1.6
 	github.com/stretchr/testify v1.8.4
@@ -27,7 +26,7 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v3 v3.1.0-dev.3 // indirect
+	github.com/edgexfoundry/go-mod-registry/v3 v3.1.0-dev.4 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
@@ -50,16 +49,16 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/consulstructure v0.0.0-20190329231841-56fdc4d2da54 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/nats-io/nats.go v1.27.1 // indirect
+	github.com/nats-io/nats.go v1.28.0 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect

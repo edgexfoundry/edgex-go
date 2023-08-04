@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -14,6 +14,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,6 +43,7 @@ func TestParseGetAllObjectsRequestQueryString(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllEventRoute, http.NoBody)
 			require.NoError(t, err)
 			query := req.URL.Query()
@@ -56,7 +58,8 @@ func TestParseGetAllObjectsRequestQueryString(t *testing.T) {
 			}
 			req.URL.RawQuery = query.Encode()
 
-			offset, limit, labels, err := ParseGetAllObjectsRequestQueryString(req, 0, math.MaxInt32, -1, testCase.maxLimit)
+			c := e.NewContext(req, nil)
+			offset, limit, labels, err := ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, testCase.maxLimit)
 			if testCase.expectedErrorKind != "" {
 				assert.Equal(t, testCase.expectedErrorKind, errors.Kind(err))
 				return

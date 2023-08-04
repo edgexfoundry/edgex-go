@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -13,10 +13,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -24,6 +20,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -105,6 +105,7 @@ func TestAddDeviceProfileDeviceCommand(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -114,8 +115,9 @@ func TestAddDeviceProfileDeviceCommand(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileDeviceCommand)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileDeviceCommand(c)
+			require.NoError(t, err)
 
 			var res []commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -153,6 +155,7 @@ func TestAddDeviceProfileDeviceCommand_BadRequest(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -162,8 +165,9 @@ func TestAddDeviceProfileDeviceCommand_BadRequest(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileDeviceCommand)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileDeviceCommand(c)
+			require.NoError(t, err)
 
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -225,6 +229,7 @@ func TestPatchDeviceProfileDeviceCommand(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -235,8 +240,9 @@ func TestPatchDeviceProfileDeviceCommand(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchDeviceProfileDeviceCommand)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchDeviceProfileDeviceCommand(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
@@ -311,14 +317,18 @@ func TestDeleteDeviceCommandByName(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName, common.CommandName: testCase.commandName})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceCommandByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.CommandName)
+			c.SetParamValues(testCase.profileName, testCase.commandName)
+
+			err = controller.DeleteDeviceCommandByName(c)
+			require.NoError(t, err)
 
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -349,14 +359,18 @@ func TestDeleteDeviceCommandByName_StrictProfileChanges(t *testing.T) {
 	controller := NewDeviceCommandController(dic)
 	require.NotNil(t, controller)
 
-	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName, common.CommandName: TestDeviceResourceName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileDeviceCommandByNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.DeleteDeviceCommandByName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name, common.CommandName)
+	c.SetParamValues(TestDeviceProfileName, TestDeviceResourceName)
+
+	err = controller.DeleteDeviceCommandByName(c)
+	require.NoError(t, err)
 
 	var res commonDTO.BaseResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)

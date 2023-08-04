@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -20,6 +19,8 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+
+	"github.com/labstack/echo/v4"
 )
 
 func TestReadingTotalCount(t *testing.T) {
@@ -35,12 +36,14 @@ func TestReadingTotalCount(t *testing.T) {
 	})
 	rc := NewReadingController(dic)
 
+	e := echo.New()
 	req, err := http.NewRequest(http.MethodGet, common.ApiReadingCountRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(rc.ReadingTotalCount)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = rc.ReadingTotalCount(c)
+	require.NoError(t, err)
 
 	var actualResponse commonDTO.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -82,6 +85,7 @@ func TestAllReadings(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllReadingRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -95,8 +99,9 @@ func TestAllReadings(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllReadings)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllReadings(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -157,18 +162,21 @@ func TestReadingsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(rc.ReadingsByTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Start, common.End)
+			c.SetParamValues(testCase.start, testCase.end)
+			err = rc.ReadingsByTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -225,7 +233,8 @@ func TestReadingsByResourceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -234,13 +243,15 @@ func TestReadingsByResourceName(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.ResourceName: testCase.resourceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ReadingsByResourceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ResourceName)
+			c.SetParamValues(testCase.resourceName)
+			err = controller.ReadingsByResourceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -296,7 +307,8 @@ func TestReadingsByDeviceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -305,13 +317,15 @@ func TestReadingsByDeviceName(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ReadingsByDeviceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+			err = controller.ReadingsByDeviceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -350,13 +364,16 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	})
 	rc := NewReadingController(dic)
 
-	req, err := http.NewRequest(http.MethodGet, common.ApiReadingCountByDeviceNameRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{common.Name: deviceName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodGet, common.ApiReadingCountByDeviceNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(rc.ReadingCountByDeviceName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(deviceName)
+	err = rc.ReadingCountByDeviceName(c)
+	require.NoError(t, err)
 
 	var actualResponse commonDTO.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -405,18 +422,21 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameAndTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameAndTimeRangeEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.ResourceName: testCase.resourceName, common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(rc.ReadingsByResourceNameAndTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ResourceName, common.Start, common.End)
+			c.SetParamValues(testCase.resourceName, testCase.start, testCase.end)
+			err = rc.ReadingsByResourceNameAndTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -475,7 +495,8 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameEchoRoute, http.NoBody)
 			require.NoError(t, err)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -485,13 +506,15 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.ResourceName: testCase.resourceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ReadingsByDeviceNameAndResourceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.ResourceName)
+			c.SetParamValues(testCase.deviceName, testCase.resourceName)
+			err = controller.ReadingsByDeviceNameAndResourceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -555,19 +578,22 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeEchoRoute, http.NoBody)
 			require.NoError(t, err)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.ResourceName: testCase.resourceName, common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(rc.ReadingsByDeviceNameAndResourceNameAndTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.ResourceName, common.Start, common.End)
+			c.SetParamValues(testCase.deviceName, testCase.resourceName, testCase.start, testCase.end)
+			err = rc.ReadingsByDeviceNameAndResourceNameAndTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -637,6 +663,7 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			var reader io.Reader
 			if testCase.payload != nil {
 				byteData, err := toByteArray(common.ContentTypeJSON, testCase.payload)
@@ -645,20 +672,22 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 			} else {
 				reader = http.NoBody
 			}
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndTimeRangeRoute, reader)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndTimeRangeEchoRoute, reader)
 			req.Header.Set(common.ContentType, common.ContentTypeJSON)
 			require.NoError(t, err)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName, common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(rc.ReadingsByDeviceNameAndResourceNamesAndTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.Start, common.End)
+			c.SetParamValues(testCase.deviceName, testCase.start, testCase.end)
+			err = rc.ReadingsByDeviceNameAndResourceNamesAndTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
