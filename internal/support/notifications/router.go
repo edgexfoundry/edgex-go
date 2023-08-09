@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 // Copyright (C) 2023 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -6,21 +6,19 @@
 package notifications
 
 import (
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/controller"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/gorilla/mux"
 
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	notificationsController "github.com/edgexfoundry/edgex-go/internal/support/notifications/controller/http"
+
+	"github.com/labstack/echo/v4"
 )
 
-func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
+func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderExtFrom(dic.Get)
 	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
@@ -30,39 +28,36 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 
 	// Subscription
 	sc := notificationsController.NewSubscriptionController(dic)
-	r.HandleFunc(common.ApiSubscriptionRoute, authenticationHook(sc.AddSubscription)).Methods(http.MethodPost)
-	r.HandleFunc(common.ApiAllSubscriptionRoute, authenticationHook(sc.AllSubscriptions)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiSubscriptionByNameRoute, authenticationHook(sc.SubscriptionByName)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiSubscriptionByCategoryRoute, authenticationHook(sc.SubscriptionsByCategory)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiSubscriptionByLabelRoute, authenticationHook(sc.SubscriptionsByLabel)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiSubscriptionByReceiverRoute, authenticationHook(sc.SubscriptionsByReceiver)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiSubscriptionByNameRoute, authenticationHook(sc.DeleteSubscriptionByName)).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiSubscriptionRoute, authenticationHook(sc.PatchSubscription)).Methods(http.MethodPatch)
+	r.POST(common.ApiSubscriptionRoute, sc.AddSubscription, authenticationHook)
+	r.GET(common.ApiAllSubscriptionRoute, sc.AllSubscriptions, authenticationHook)
+	r.GET(common.ApiSubscriptionByNameEchoRoute, sc.SubscriptionByName, authenticationHook)
+	r.GET(common.ApiSubscriptionByCategoryEchoRoute, sc.SubscriptionsByCategory, authenticationHook)
+	r.GET(common.ApiSubscriptionByLabelEchoRoute, sc.SubscriptionsByLabel, authenticationHook)
+	r.GET(common.ApiSubscriptionByReceiverEchoRoute, sc.SubscriptionsByReceiver, authenticationHook)
+	r.DELETE(common.ApiSubscriptionByNameEchoRoute, sc.DeleteSubscriptionByName, authenticationHook)
+	r.PATCH(common.ApiSubscriptionRoute, sc.PatchSubscription, authenticationHook)
 
 	// Notification
 	nc := notificationsController.NewNotificationController(dic)
-	r.HandleFunc(common.ApiNotificationRoute, authenticationHook(nc.AddNotification)).Methods(http.MethodPost)
-	r.HandleFunc(common.ApiNotificationByIdRoute, authenticationHook(nc.NotificationById)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationByIdRoute, authenticationHook(nc.DeleteNotificationById)).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiNotificationByCategoryRoute, authenticationHook(nc.NotificationsByCategory)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationByLabelRoute, authenticationHook(nc.NotificationsByLabel)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationByStatusRoute, authenticationHook(nc.NotificationsByStatus)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationByTimeRangeRoute, authenticationHook(nc.NotificationsByTimeRange)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationBySubscriptionNameRoute, authenticationHook(nc.NotificationsBySubscriptionName)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiNotificationCleanupByAgeRoute, authenticationHook(nc.CleanupNotificationsByAge)).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiNotificationCleanupRoute, authenticationHook(nc.CleanupNotifications)).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiNotificationByAgeRoute, authenticationHook(nc.DeleteProcessedNotificationsByAge)).Methods(http.MethodDelete)
+	r.POST(common.ApiNotificationRoute, nc.AddNotification, authenticationHook)
+	r.GET(common.ApiNotificationByIdEchoRoute, nc.NotificationById, authenticationHook)
+	r.DELETE(common.ApiNotificationByIdEchoRoute, nc.DeleteNotificationById, authenticationHook)
+	r.GET(common.ApiNotificationByCategoryEchoRoute, nc.NotificationsByCategory, authenticationHook)
+	r.GET(common.ApiNotificationByLabelEchoRoute, nc.NotificationsByLabel, authenticationHook)
+	r.GET(common.ApiNotificationByStatusEchoRoute, nc.NotificationsByStatus, authenticationHook)
+	r.GET(common.ApiNotificationByTimeRangeEchoRoute, nc.NotificationsByTimeRange, authenticationHook)
+	r.GET(common.ApiNotificationBySubscriptionNameEchoRoute, nc.NotificationsBySubscriptionName, authenticationHook)
+	r.DELETE(common.ApiNotificationCleanupByAgeEchoRoute, nc.CleanupNotificationsByAge, authenticationHook)
+	r.DELETE(common.ApiNotificationCleanupRoute, nc.CleanupNotifications, authenticationHook)
+	r.DELETE(common.ApiNotificationByAgeEchoRoute, nc.DeleteProcessedNotificationsByAge, authenticationHook)
 
 	// Transmission
 	trans := notificationsController.NewTransmissionController(dic)
-	r.HandleFunc(common.ApiTransmissionByIdRoute, authenticationHook(trans.TransmissionById)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiTransmissionByTimeRangeRoute, authenticationHook(trans.TransmissionsByTimeRange)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiAllTransmissionRoute, authenticationHook(trans.AllTransmissions)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiTransmissionByStatusRoute, authenticationHook(trans.TransmissionsByStatus)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiTransmissionByAgeRoute, authenticationHook(trans.DeleteProcessedTransmissionsByAge)).Methods(http.MethodDelete)
-	r.HandleFunc(common.ApiTransmissionBySubscriptionNameRoute, authenticationHook(trans.TransmissionsBySubscriptionName)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiTransmissionByNotificationIdRoute, authenticationHook(trans.TransmissionsByNotificationId)).Methods(http.MethodGet)
-
-	r.Use(correlation.ManageHeader)
-	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
+	r.GET(common.ApiTransmissionByIdEchoRoute, trans.TransmissionById, authenticationHook)
+	r.GET(common.ApiTransmissionByTimeRangeEchoRoute, trans.TransmissionsByTimeRange, authenticationHook)
+	r.GET(common.ApiAllTransmissionRoute, trans.AllTransmissions, authenticationHook)
+	r.GET(common.ApiTransmissionByStatusEchoRoute, trans.TransmissionsByStatus, authenticationHook)
+	r.DELETE(common.ApiTransmissionByAgeEchoRoute, trans.DeleteProcessedTransmissionsByAge, authenticationHook)
+	r.GET(common.ApiTransmissionBySubscriptionNameEchoRoute, trans.TransmissionsBySubscriptionName, authenticationHook)
+	r.GET(common.ApiTransmissionByNotificationIdEchoRoute, trans.TransmissionsByNotificationId, authenticationHook)
 }

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2022 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +26,7 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 const yamlFileName = "file"
@@ -46,7 +46,9 @@ func NewDeviceProfileController(dic *di.Container) *DeviceProfileController {
 	}
 }
 
-func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) AddDeviceProfile(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -59,8 +61,7 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	var reqDTOs []requestDTO.DeviceProfileRequest
 	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(reqDTOs)
 
@@ -87,10 +88,12 @@ func (dc *DeviceProfileController) AddDeviceProfile(w http.ResponseWriter, r *ht
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) UpdateDeviceProfile(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -102,15 +105,13 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 
 	strictProfileChanges := metadataContainer.ConfigurationFrom(dc.dic.Get).Writable.ProfileChange.StrictDeviceProfileChanges
 	if strictProfileChanges {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
 	}
 
 	var reqDTOs []requestDTO.DeviceProfileRequest
 	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles := requestDTO.DeviceProfileReqToDeviceProfileModels(reqDTOs)
 
@@ -136,10 +137,12 @@ func (dc *DeviceProfileController) UpdateDeviceProfile(w http.ResponseWriter, r 
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(responses, w, lc)
+	return pkg.EncodeAndWriteResponse(responses, w, lc)
 }
 
-func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) AddDeviceProfileByYaml(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -149,34 +152,32 @@ func (dc *DeviceProfileController) AddDeviceProfileByYaml(w http.ResponseWriter,
 
 	file, _, fileErr := r.FormFile(yamlFileName)
 	if fileErr == http.ErrMissingFile {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
 	} else if fileErr != nil {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
 	}
 
 	var deviceProfileDTO dtos.DeviceProfile
 	err := dc.yamlDtoReader.Read(file, &deviceProfileDTO)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfile := dtos.ToDeviceProfileModel(deviceProfileDTO)
 
 	newId, err := application.AddDeviceProfile(deviceProfile, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseWithIdResponse("", "", http.StatusCreated, newId)
 	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
 	// EncodeAndWriteResponse and send the resp body as JSON format
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -186,175 +187,169 @@ func (dc *DeviceProfileController) UpdateDeviceProfileByYaml(w http.ResponseWrit
 
 	file, _, fileErr := r.FormFile(yamlFileName)
 	if fileErr == http.ErrMissingFile {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "missing yaml file", nil), "")
 	} else if fileErr != nil {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, fileErr.Error(), nil), "")
 	}
 
 	strictProfileChanges := metadataContainer.ConfigurationFrom(dc.dic.Get).Writable.ProfileChange.StrictDeviceProfileChanges
 	if strictProfileChanges {
-		utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServiceLocked, "profile change is not allowed when StrictDeviceProfileChanges config is enabled", nil), "")
 	}
 
 	var deviceProfileDTO dtos.DeviceProfile
 	err := dc.yamlDtoReader.Read(file, &deviceProfileDTO)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	deviceProfile := dtos.ToDeviceProfileModel(deviceProfileDTO)
 	err = application.UpdateDeviceProfile(deviceProfile, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) DeviceProfileByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeviceProfileByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	deviceProfile, err := application.DeviceProfileByName(name, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewDeviceProfileResponse("", "", http.StatusOK, deviceProfile)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
+	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
-func (dc *DeviceProfileController) DeleteDeviceProfileByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeleteDeviceProfileByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	err := application.DeleteDeviceProfileByName(name, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) AllDeviceProfiles(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) AllDeviceProfiles(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
 	// parse URL query string for offset, limit, and labels
-	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles, totalCount, err := application.AllDeviceProfiles(offset, limit, labels, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) DeviceProfilesByModel(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeviceProfilesByModel(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
-	vars := mux.Vars(r)
-	model := vars[common.Model]
+	model := c.Param(common.Model)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles, totalCount, err := application.DeviceProfilesByModel(offset, limit, model, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) DeviceProfilesByManufacturer(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeviceProfilesByManufacturer(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
-	vars := mux.Vars(r)
-	manufacturer := vars[common.Manufacturer]
+	manufacturer := c.Param(common.Manufacturer)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles, totalCount, err := application.DeviceProfilesByManufacturer(offset, limit, manufacturer, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) DeviceProfilesByManufacturerAndModel(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
-	vars := mux.Vars(r)
-	manufacturer := vars[common.Manufacturer]
-	model := vars[common.Model]
+	manufacturer := c.Param(common.Manufacturer)
+	model := c.Param(common.Model)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceProfiles, totalCount, err := application.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiDeviceProfilesResponse("", "", http.StatusOK, totalCount, deviceProfiles)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -366,8 +361,7 @@ func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(w http.ResponseWr
 	var reqDTOs []requestDTO.DeviceProfileBasicInfoRequest
 	err := dc.jsonDtoReader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -386,6 +380,5 @@ func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(w http.ResponseWr
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
-
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }

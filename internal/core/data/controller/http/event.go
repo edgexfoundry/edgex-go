@@ -23,7 +23,7 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type EventController struct {
@@ -59,7 +59,9 @@ func (ec *EventController) getReader(r *http.Request) edgexIO.DtoReader {
 	return reader
 }
 
-func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) AddEvent(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -71,25 +73,22 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// URL parameters
-	vars := mux.Vars(r)
-	serviceName := vars[common.ServiceName]
-	profileName := vars[common.ProfileName]
-	deviceName := vars[common.DeviceName]
-	sourceName := vars[common.SourceName]
+	serviceName := c.Param(common.ServiceName)
+	profileName := c.Param(common.ProfileName)
+	deviceName := c.Param(common.DeviceName)
+	sourceName := c.Param(common.SourceName)
 
 	var addEventReqDTO requestDTO.AddEventRequest
 	var err errors.EdgeX
 
 	if len(strings.TrimSpace(serviceName)) == 0 {
 		err = errors.NewCommonEdgeX(errors.KindContractInvalid, "service name sending event can not be empty", nil)
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	if config.MaxEventSize > 0 && r.ContentLength > config.MaxEventSize*1024 {
 		err = errors.NewCommonEdgeX(errors.KindLimitExceeded, fmt.Sprintf("request size exceed %d KB", config.MaxEventSize), nil)
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	dataBytes, readErr := io.ReadAll(r.Body)
@@ -108,8 +107,7 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 		err = reader.Read(bytes.NewReader(dataBytes), &addEventReqDTO)
 	}
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	event := requestDTO.AddEventReqToEventModel(addEventReqDTO)
@@ -118,210 +116,207 @@ func (ec *EventController) AddEvent(w http.ResponseWriter, r *http.Request) {
 		err = ec.app.AddEvent(event, ctx, ec.dic)
 	}
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, addEventReqDTO.RequestId)
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, addEventReqDTO.RequestId)
 	}
 
 	response := commonDTO.NewBaseWithIdResponse(addEventReqDTO.RequestId, "", http.StatusCreated, event.Id)
 	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) EventById(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventById(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	id := vars[common.Id]
+	id := c.Param(common.Id)
 
 	// Get the event
 	e, err := ec.app.EventById(id, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewEventResponse("", "", http.StatusOK, e)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) DeleteEventById(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) DeleteEventById(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
 
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	id := vars[common.Id]
+	id := c.Param(common.Id)
 
 	// Delete the event
 	err := ec.app.DeleteEventById(id, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) EventTotalCount(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventTotalCount(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// Count the event
 	count, err := ec.app.EventTotalCount(ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
+	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
-func (ec *EventController) EventCountByDeviceName(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventCountByDeviceName(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
+	deviceName := c.Param(common.Name)
 
 	// Count the event by device
 	count, err := ec.app.EventCountByDeviceName(deviceName, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
+	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
-func (ec *EventController) AllEvents(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) AllEvents(c echo.Context) error {
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	events, totalCount, err := ec.app.AllEvents(offset, limit, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) EventsByDeviceName(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventsByDeviceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	events, totalCount, err := ec.app.EventsByDeviceName(offset, limit, name, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) DeleteEventsByDeviceName(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) DeleteEventsByDeviceName(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
-
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
+	deviceName := c.Param(common.Name)
 
 	// Delete events with associated Device deviceName
 	err := ec.app.DeleteEventsByDeviceName(deviceName, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) EventsByTimeRange(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) EventsByTimeRange(c echo.Context) error {
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	events, totalCount, err := ec.app.EventsByTimeRange(start, end, offset, limit, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiEventsResponse("", "", http.StatusOK, totalCount, events)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (ec *EventController) DeleteEventsByAge(w http.ResponseWriter, r *http.Request) {
+func (ec *EventController) DeleteEventsByAge(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(ec.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	age, parsingErr := strconv.ParseInt(vars[common.Age], 10, 64)
+	age, parsingErr := strconv.ParseInt(c.Param(common.Age), 10, 64)
 
 	if parsingErr != nil {
 		err := errors.NewCommonEdgeX(errors.KindContractInvalid, "age format parsing failed", parsingErr)
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	err := ec.app.DeleteEventsByAge(age, ec.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

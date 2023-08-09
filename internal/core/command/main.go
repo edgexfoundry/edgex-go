@@ -38,10 +38,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,

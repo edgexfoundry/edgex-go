@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,7 +23,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -71,15 +71,18 @@ func TestTransmissionById(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiTransmissionByIdRoute, testCase.transmissionId)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiTransmissionByIdEchoRoute, testCase.transmissionId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.transmissionId})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.TransmissionById)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.transmissionId)
+			err = controller.TransmissionById(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -140,18 +143,21 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByTimeRangeEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(tc.TransmissionsByTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Start, common.End)
+			c.SetParamValues(testCase.start, testCase.end)
+			err = tc.TransmissionsByTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -211,6 +217,7 @@ func TestAllTransmissions(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllTransmissionRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -224,8 +231,9 @@ func TestAllTransmissions(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllTransmissions)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllTransmissions(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -284,7 +292,8 @@ func TestTransmissionsByStatus(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByStatusRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByStatusEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -293,13 +302,15 @@ func TestTransmissionsByStatus(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Status: testCase.status})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.TransmissionsByStatus)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Status)
+			c.SetParamValues(testCase.status)
+			err = controller.TransmissionsByStatus(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -348,14 +359,17 @@ func TestDeleteTransmissionsByAge(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, common.ApiTransmissionByAgeRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Age: testCase.age})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodDelete, common.ApiTransmissionByAgeEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(tc.DeleteProcessedTransmissionsByAge)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Age)
+			c.SetParamValues(testCase.age)
+			err = tc.DeleteProcessedTransmissionsByAge(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -412,7 +426,8 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionBySubscriptionNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionBySubscriptionNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -421,13 +436,15 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.subscriptionName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.TransmissionsBySubscriptionName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.subscriptionName)
+			err = controller.TransmissionsBySubscriptionName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -485,7 +502,8 @@ func TestTransmissionsByNotificationId(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByNotificationIdRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByNotificationIdEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -494,13 +512,15 @@ func TestTransmissionsByNotificationId(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.notificationId})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.TransmissionsByNotificationId)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.notificationId)
+			err = controller.TransmissionsByNotificationId(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {

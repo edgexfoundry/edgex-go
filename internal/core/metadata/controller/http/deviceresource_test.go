@@ -25,7 +25,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -102,14 +102,17 @@ func TestDeviceResourceByProfileNameAndResourceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceResourceByProfileAndResourceRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.ProfileName: testCase.profileName, common.ResourceName: testCase.resourceName})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceResourceByProfileAndResourceEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceResourceByProfileNameAndResourceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ProfileName, common.ResourceName)
+			c.SetParamValues(testCase.profileName, testCase.resourceName)
+			err = controller.DeviceResourceByProfileNameAndResourceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -178,6 +181,7 @@ func TestAddDeviceProfileResource(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -187,8 +191,9 @@ func TestAddDeviceProfileResource(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileResource)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileResource(c)
+			require.NoError(t, err)
 
 			var res []commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -224,6 +229,7 @@ func TestAddDeviceProfileResource_BadRequest(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -233,8 +239,10 @@ func TestAddDeviceProfileResource_BadRequest(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileResource)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileResource(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -292,6 +300,7 @@ func TestAddDeviceProfileResource_UnitsOfMeasure_Validation(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -301,8 +310,9 @@ func TestAddDeviceProfileResource_UnitsOfMeasure_Validation(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDeviceProfileResource)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddDeviceProfileResource(c)
+			require.NoError(t, err)
 
 			var res []commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -377,6 +387,7 @@ func TestPatchDeviceProfileResource(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -387,8 +398,9 @@ func TestPatchDeviceProfileResource(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchDeviceProfileResource)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchDeviceProfileResource(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
@@ -463,14 +475,17 @@ func TestDeleteDeviceResourceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName, common.ResourceName: testCase.resourceName})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceResourceByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.ResourceName)
+			c.SetParamValues(testCase.profileName, testCase.resourceName)
+			err = controller.DeleteDeviceResourceByName(c)
+			require.NoError(t, err)
 
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -501,14 +516,17 @@ func TestDeleteDeviceResourceByName_StrictProfileChanges(t *testing.T) {
 	controller := NewDeviceResourceController(dic)
 	require.NotNil(t, controller)
 
-	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{common.Name: TestDeviceProfileName, common.ResourceName: TestDeviceResourceName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	// Act
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(controller.DeleteDeviceResourceByName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name, common.ResourceName)
+	c.SetParamValues(TestDeviceProfileName, TestDeviceResourceName)
+	err = controller.DeleteDeviceResourceByName(c)
+	require.NoError(t, err)
 
 	var res commonDTO.BaseResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &res)

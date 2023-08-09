@@ -12,6 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  *******************************************************************************/
+
 package pkg
 
 import (
@@ -21,22 +22,27 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+
+	"github.com/labstack/echo/v4"
 )
 
-func EncodeAndWriteResponse(i interface{}, w http.ResponseWriter, LoggingClient logger.LoggingClient) {
+func EncodeAndWriteResponse(i interface{}, w *echo.Response, LoggingClient logger.LoggingClient) error {
 	w.Header().Set(common.ContentType, common.ContentTypeJSON)
 
 	enc := json.NewEncoder(w)
 	err := enc.Encode(i)
+
 	// Problems encoding
 	if err != nil {
 		LoggingClient.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		// set Response.Committed to false in order to rewrite the status code
+		w.Committed = false
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	return nil
 }
 
-func EncodeAndWriteYamlResponse(i interface{}, w http.ResponseWriter, lc logger.LoggingClient) {
+func EncodeAndWriteYamlResponse(i interface{}, w *echo.Response, lc logger.LoggingClient) error {
 	w.Header().Set(common.ContentType, common.ContentTypeYAML)
 
 	enc := yaml.NewEncoder(w)
@@ -44,7 +50,9 @@ func EncodeAndWriteYamlResponse(i interface{}, w http.ResponseWriter, lc logger.
 	// Problems encoding
 	if err != nil {
 		lc.Error("Error encoding the data: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		// set Response.Committed to false in order to rewrite the status code
+		w.Committed = false
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	return nil
 }

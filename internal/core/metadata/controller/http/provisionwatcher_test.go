@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,8 @@ import (
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -130,6 +131,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -139,8 +141,10 @@ func TestProvisionWatcherController_AddProvisionWatcher_Created(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddProvisionWatcher)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddProvisionWatcher(c)
+			require.NoError(t, err)
+
 			var res []commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 
@@ -208,6 +212,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.Request)
 			require.NoError(t, err)
 
@@ -217,8 +222,9 @@ func TestProvisionWatcherController_AddProvisionWatcher_BadRequest(t *testing.T)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddProvisionWatcher)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddProvisionWatcher(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
@@ -274,6 +280,7 @@ func TestProvisionWatcherController_AddProvisionWatcher_Duplicated(t *testing.T)
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -283,8 +290,9 @@ func TestProvisionWatcherController_AddProvisionWatcher_Duplicated(t *testing.T)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddProvisionWatcher)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddProvisionWatcher(c)
+			require.NoError(t, err)
 			var res []commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -331,15 +339,18 @@ func TestProvisionWatcherController_ProvisionWatcherByName(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameRoute, testCase.provisionWatcherName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameEchoRoute, testCase.provisionWatcherName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.provisionWatcherName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ProvisionWatcherByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.provisionWatcherName)
+			err = controller.ProvisionWatcherByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -409,18 +420,21 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByServiceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByServiceNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.serviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ProvisionWatchersByServiceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.serviceName)
+			err = controller.ProvisionWatchersByServiceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -492,18 +506,21 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByProfileNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByProfileNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.ProvisionWatchersByProfileName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.profileName)
+			err = controller.ProvisionWatchersByProfileName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -567,6 +584,7 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllProvisionWatcherRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
@@ -579,8 +597,9 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllProvisionWatchers)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllProvisionWatchers(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -637,15 +656,19 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameRoute, testCase.provisionWatcherName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameEchoRoute, testCase.provisionWatcherName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.provisionWatcherName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteProvisionWatcherByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.provisionWatcherName)
+			err = controller.DeleteProvisionWatcherByName(c)
+			require.NoError(t, err)
+
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -779,6 +802,7 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -788,8 +812,9 @@ func TestProvisionWatcherController_PatchProvisionWatcher(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchProvisionWatcher)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchProvisionWatcher(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +26,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -107,6 +107,7 @@ func TestAddNotification(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -116,8 +117,10 @@ func TestAddNotification(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddNotification)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddNotification(c)
+			require.NoError(t, err)
+
 			if testCase.expectedStatusCode == http.StatusBadRequest {
 				var res commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -178,15 +181,18 @@ func TestNotificationById(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdRoute, testCase.notificationId)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdEchoRoute, testCase.notificationId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.notificationId})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.NotificationById)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.notificationId)
+			err = controller.NotificationById(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -243,7 +249,8 @@ func TestNotificationsByCategory(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByCategoryRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByCategoryEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -252,13 +259,15 @@ func TestNotificationsByCategory(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Category: testCase.category})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.NotificationsByCategory)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Category)
+			c.SetParamValues(testCase.category)
+			err = controller.NotificationsByCategory(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -315,7 +324,8 @@ func TestNotificationsByLabel(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByLabelRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByLabelEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -324,13 +334,15 @@ func TestNotificationsByLabel(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Label: testCase.label})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.NotificationsByLabel)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Label)
+			c.SetParamValues(testCase.label)
+			err = controller.NotificationsByLabel(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -387,7 +399,8 @@ func TestNotificationsByStatus(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByStatusRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByStatusEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -396,13 +409,15 @@ func TestNotificationsByStatus(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Status: testCase.status})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.NotificationsByStatus)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Status)
+			c.SetParamValues(testCase.status)
+			err = controller.NotificationsByStatus(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -463,18 +478,21 @@ func TestNotificationsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByTimeRangeEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(nc.NotificationsByTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Start, common.End)
+			c.SetParamValues(testCase.start, testCase.end)
+			err = nc.NotificationsByTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -529,15 +547,18 @@ func TestDeleteNotificationById(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdRoute, testCase.notificationId)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdEchoRoute, testCase.notificationId)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.notificationId})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteNotificationById)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.notificationId)
+			err = controller.DeleteNotificationById(c)
+			require.NoError(t, err)
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -593,7 +614,8 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationBySubscriptionNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationBySubscriptionNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -602,13 +624,15 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.subscriptionName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.NotificationsBySubscriptionName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.subscriptionName)
+			err = controller.NotificationsBySubscriptionName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -656,14 +680,17 @@ func TestCleanupNotificationByAge(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationCleanupByAgeRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Age: testCase.age})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationCleanupByAgeEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(nc.CleanupNotificationsByAge)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Age)
+			c.SetParamValues(testCase.age)
+			err = nc.CleanupNotificationsByAge(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -709,13 +736,15 @@ func TestCleanupNotification(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationCleanupRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(nc.CleanupNotifications)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = nc.CleanupNotifications(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -763,14 +792,17 @@ func TestDeleteNotificationByAge(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationByAgeRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Age: testCase.age})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationByAgeEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(nc.DeleteProcessedNotificationsByAge)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Age)
+			c.SetParamValues(testCase.age)
+			err = nc.DeleteProcessedNotificationsByAge(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {

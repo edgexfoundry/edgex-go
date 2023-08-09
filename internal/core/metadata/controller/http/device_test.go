@@ -32,7 +32,7 @@ import (
 	edgexErr "github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -199,6 +199,7 @@ func TestAddDevice(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -243,8 +244,9 @@ func TestAddDevice(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddDevice)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			handler := controller.AddDevice
+			err = handler(c)
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -312,15 +314,19 @@ func TestDeleteDeviceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameRoute, testCase.deviceName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameEchoRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteDeviceByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+
+			err = controller.DeleteDeviceByName(c)
+			require.NoError(t, err)
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -383,18 +389,22 @@ func TestAllDeviceByServiceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByServiceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByServiceNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.serviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DevicesByServiceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.serviceName)
+
+			err = controller.DevicesByServiceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -450,15 +460,19 @@ func TestDeviceNameExists(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceNameExistsRoute, testCase.deviceName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceNameExistsEchoRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceNameExists)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+
+			err = controller.DeviceNameExists(c)
+			require.NoError(t, err)
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -588,6 +602,7 @@ func TestPatchDevice(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -632,8 +647,9 @@ func TestPatchDevice(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchDevice)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchDevice(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse
@@ -709,6 +725,7 @@ func TestAllDevices(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllDeviceRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
@@ -721,8 +738,9 @@ func TestAllDevices(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllDevices)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllDevices(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -778,15 +796,19 @@ func TestDeviceByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameRoute, testCase.deviceName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameEchoRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeviceByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+
+			err = controller.DeviceByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -856,18 +878,21 @@ func TestDevicesByProfileName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByProfileNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByProfileNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.profileName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DevicesByProfileName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.profileName)
+			err = controller.DevicesByProfileName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {

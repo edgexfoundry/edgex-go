@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,7 +22,7 @@ import (
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type DeviceResourceController struct {
@@ -39,27 +39,29 @@ func NewDeviceResourceController(dic *di.Container) *DeviceResourceController {
 }
 
 // DeviceResourceByProfileNameAndResourceName query the device resource by profileName and resourceName
-func (dc *DeviceResourceController) DeviceResourceByProfileNameAndResourceName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceResourceController) DeviceResourceByProfileNameAndResourceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	profileName := vars[common.ProfileName]
-	resourceName := vars[common.ResourceName]
+	profileName := c.Param(common.ProfileName)
+	resourceName := c.Param(common.ResourceName)
 
 	resource, err := application.DeviceResourceByProfileNameAndResourceName(profileName, resourceName, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewDeviceResourceResponse("", "", http.StatusOK, resource)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceResourceController) AddDeviceProfileResource(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceResourceController) AddDeviceProfileResource(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -71,8 +73,7 @@ func (dc *DeviceResourceController) AddDeviceProfileResource(w http.ResponseWrit
 	var reqDTOs []requestDTO.AddDeviceResourceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var addResponses []interface{}
@@ -99,10 +100,12 @@ func (dc *DeviceResourceController) AddDeviceProfileResource(w http.ResponseWrit
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (dc *DeviceResourceController) PatchDeviceProfileResource(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceResourceController) PatchDeviceProfileResource(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -114,8 +117,7 @@ func (dc *DeviceResourceController) PatchDeviceProfileResource(w http.ResponseWr
 	var reqDTOs []requestDTO.UpdateDeviceResourceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -141,26 +143,26 @@ func (dc *DeviceResourceController) PatchDeviceProfileResource(w http.ResponseWr
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 
 }
 
-func (dc *DeviceResourceController) DeleteDeviceResourceByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceResourceController) DeleteDeviceResourceByName(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	lc := container.LoggingClientFrom(dc.dic.Get)
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	profileName := vars[common.Name]
-	resourceName := vars[common.ResourceName]
+	profileName := c.Param(common.Name)
+	resourceName := c.Param(common.ResourceName)
 
 	err := application.DeleteDeviceResourceByName(profileName, resourceName, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
