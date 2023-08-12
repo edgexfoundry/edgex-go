@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -29,7 +29,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,6 +132,7 @@ func TestAddInterval(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -141,8 +142,9 @@ func TestAddInterval(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddInterval)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddInterval(c)
+			require.NoError(t, err)
 			if testCase.expectedStatusCode == http.StatusBadRequest {
 				var res commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -200,15 +202,18 @@ func TestIntervalByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiIntervalByNameRoute, testCase.intervalName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiIntervalByNameEchoRoute, testCase.intervalName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.intervalName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.IntervalByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.intervalName)
+			err = controller.IntervalByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -263,6 +268,7 @@ func TestAllIntervals(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllIntervalRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -276,8 +282,9 @@ func TestAllIntervals(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllIntervals)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllIntervals(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -338,15 +345,18 @@ func TestDeleteIntervalByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiIntervalByNameRoute, testCase.intervalName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiIntervalByNameEchoRoute, testCase.intervalName)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.intervalName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteIntervalByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.intervalName)
+			err = controller.DeleteIntervalByName(c)
+			require.NoError(t, err)
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -448,6 +458,7 @@ func TestPatchInterval(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -457,8 +468,9 @@ func TestPatchInterval(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchInterval)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchInterval(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse

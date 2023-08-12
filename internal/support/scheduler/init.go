@@ -27,17 +27,17 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
 type Bootstrap struct {
-	router      *mux.Router
+	router      *echo.Echo
 	serviceName string
 }
 
 // NewBootstrap is a factory method that returns an initialized Bootstrap receiver struct.
-func NewBootstrap(router *mux.Router, serviceName string) *Bootstrap {
+func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 	return &Bootstrap{
 		router:      router,
 		serviceName: serviceName,

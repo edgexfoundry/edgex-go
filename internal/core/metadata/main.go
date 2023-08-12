@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
  * Copyright 2023 Intel Corporation
+ * Copyright 2023 IOTech Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,8 +26,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/uom"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 
-	"github.com/gorilla/mux"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
@@ -36,9 +35,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+
+	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 	startupTimer := startup.NewStartUpTimer(common.CoreMetaDataServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,8 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 )
 
 type ReadingController struct {
@@ -37,240 +38,234 @@ func NewReadingController(dic *di.Container) *ReadingController {
 	}
 }
 
-func (rc *ReadingController) ReadingTotalCount(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingTotalCount(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(rc.dic.Get)
 
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// Count readings
 	count, err := application.ReadingTotalCount(rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the countResponse
+	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the countResponse
 }
 
-func (rc *ReadingController) AllReadings(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) AllReadings(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
 	// parse URL query string for offset, and limit, and labels
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.AllReadings(offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByTimeRange(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByTimeRange(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.ReadingsByTimeRange(start, end, offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByResourceName(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByResourceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	resourceName := vars[common.ResourceName]
+	resourceName := c.Param(common.ResourceName)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.ReadingsByResourceName(offset, limit, resourceName, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByDeviceName(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByDeviceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.ReadingsByDeviceName(offset, limit, name, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingCountByDeviceName(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingCountByDeviceName(c echo.Context) error {
 	// retrieve all the service injections from bootstrap
 	lc := container.LoggingClientFrom(rc.dic.Get)
-
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
+	deviceName := c.Param(common.Name)
 
 	// Count the event by device
 	count, err := application.ReadingCountByDeviceName(deviceName, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewCountResponse("", "", http.StatusOK, count)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
+	return pkg.EncodeAndWriteResponse(response, w, lc) // encode and send out the response
 }
 
 // ReadingsByResourceNameAndTimeRange returns readings by resource name and specified time range. Readings are sorted in descending order of origin time.
-func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	resourceName := vars[common.ResourceName]
+	resourceName := c.Param(common.ResourceName)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
-	resourceName := vars[common.ResourceName]
+	deviceName := c.Param(common.Name)
+	resourceName := c.Param(common.ResourceName)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
-	resourceName := vars[common.ResourceName]
+	deviceName := c.Param(common.Name)
+	resourceName := c.Param(common.ResourceName)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(w http.ResponseWriter, r *http.Request) {
+func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(c echo.Context) error {
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	vars := mux.Vars(r)
-	deviceName := vars[common.Name]
+	deviceName := c.Param(common.Name)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var queryPayload map[string]interface{}
 	if r.Body != http.NoBody { //only parse request body when there are contents provided
 		err = rc.reader.Read(r.Body, &queryPayload)
 		if err != nil {
-			utils.WriteErrorResponse(w, ctx, lc, err, "")
-			return
+			return utils.WriteErrorResponse(w, ctx, lc, err, "")
 		}
 	}
 
@@ -285,18 +280,16 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(w 
 			}
 		default:
 			err = errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("query criteria [%v] not in expected format", common.ResourceNames), nil)
-			utils.WriteErrorResponse(w, ctx, lc, err, "")
-			return
+			return utils.WriteErrorResponse(w, ctx, lc, err, "")
 		}
 	}
 
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit, rc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

@@ -2,12 +2,6 @@ This file contains the open source projects that are referenced by the EdgeX Fou
 As there are many Go services, this list is a union of all open source projects used by all the EdgeX Go services (found in https://github.com/edgexfoundry/edgex-go).
 Not all projects listed are used by each service.
 
-pkg/errors (BSD-2) https://github.com/pkg/errors
-https://github.com/pkg/errors/blob/master/LICENSE
-
-gorilla/mux (BSD-3) https://github.com/gorilla/mux
-https://github.com/gorilla/mux/blob/master/LICENSE
-
 go-kit/kit (MIT) github.com/go-kit/kit
 https://github.com/go-kit/kit/blob/master/LICENSE
 
@@ -256,3 +250,6 @@ https://github.com/klauspost/compress/blob/master/LICENSE
 
 github.com/gabriel-vasile/mimetype (MIT) https://github.com/gabriel-vasile/mimetype
 https://github.com/gabriel-vasile/mimetype/blob/master/LICENSE
+
+github.com/labstack/echo/v4 (MIT) https://github.com/labstack/echo
+https://github.com/labstack/echo/blob/master/LICENSE

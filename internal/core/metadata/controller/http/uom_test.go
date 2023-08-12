@@ -20,6 +20,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/uom"
+
+	"github.com/labstack/echo/v4"
 )
 
 func TestUnitOfMeasureController_UnitsOfMeasure(t *testing.T) {
@@ -53,13 +55,15 @@ func TestUnitOfMeasureController_UnitsOfMeasure(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiUnitsOfMeasureRoute, http.NoBody)
 			req.Header.Set(common.Accept, testCase.accept)
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.UnitsOfMeasure)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.UnitsOfMeasure(c)
+			require.NoError(t, err)
 
 			assert.Equal(t, http.StatusOK, recorder.Result().StatusCode, "HTTP status code not as expected")
 			if testCase.accept == common.ContentTypeJSON {

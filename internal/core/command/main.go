@@ -38,10 +38,10 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
@@ -90,6 +90,11 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
 func MessagingBootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
+
+	if len(configuration.Service.RequestTimeout) == 0 {
+		lc.Error("Service.RequestTimeout found empty in service's configuration, missing common config? Use -cp or -cc flags for common config")
+		return false
+	}
 
 	requestTimeout, err := time.ParseDuration(configuration.Service.RequestTimeout)
 	if err != nil {

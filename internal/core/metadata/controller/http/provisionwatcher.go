@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,8 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 )
 
 type ProvisionWatcherController struct {
@@ -37,7 +38,9 @@ func NewProvisionWatcherController(dic *di.Container) *ProvisionWatcherControlle
 	}
 }
 
-func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) AddProvisionWatcher(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -50,8 +53,7 @@ func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter
 	var reqDTOs []requestDTO.AddProvisionWatcherRequest
 	err := pwc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	provisionWatchers := requestDTO.AddProvisionWatcherReqToProvisionWatcherModels(reqDTOs)
 
@@ -79,120 +81,120 @@ func (pwc *ProvisionWatcherController) AddProvisionWatcher(w http.ResponseWriter
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	// EncodeAndWriteResponse and send the resp body as JSON format
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) ProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) ProvisionWatcherByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	provisionWatcher, err := application.ProvisionWatcherByName(name, pwc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewProvisionWatcherResponse("", "", http.StatusOK, provisionWatcher)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) ProvisionWatchersByServiceName(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) ProvisionWatchersByServiceName(c echo.Context) error {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
 
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	provisionWatchers, totalCount, err := application.ProvisionWatchersByServiceName(offset, limit, name, pwc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) ProvisionWatchersByProfileName(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) ProvisionWatchersByProfileName(c echo.Context) error {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
 
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	provisionWatchers, totalCount, err := application.ProvisionWatchersByProfileName(offset, limit, name, pwc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) AllProvisionWatchers(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) AllProvisionWatchers(c echo.Context) error {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(pwc.dic.Get)
 
 	// parse URL query string for offset, limit
-	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	provisionWatchers, totalCount, err := application.AllProvisionWatchers(offset, limit, labels, pwc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiProvisionWatchersResponse("", "", http.StatusOK, totalCount, provisionWatchers)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) DeleteProvisionWatcherByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(pwc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	err := application.DeleteProvisionWatcherByName(ctx, name, pwc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWriter, r *http.Request) {
+func (pwc *ProvisionWatcherController) PatchProvisionWatcher(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -204,8 +206,7 @@ func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWrit
 	var reqDTOs []requestDTO.UpdateProvisionWatcherRequest
 	err := pwc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -230,5 +231,5 @@ func (pwc *ProvisionWatcherController) PatchProvisionWatcher(w http.ResponseWrit
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }

@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
+ * Copyright (C) 2023 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,10 +19,10 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	metadata.Main(ctx, cancel, mux.NewRouter())
+	metadata.Main(ctx, cancel, echo.New())
 }

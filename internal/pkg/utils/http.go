@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,7 +22,7 @@ import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int) {
@@ -41,7 +41,7 @@ func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int)
 }
 
 // WriteErrorResponse writes Http header, encode error response with JSON format and writes to the HTTP response.
-func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.LoggingClient, err errors.EdgeX, requestId string) {
+func WriteErrorResponse(w *echo.Response, ctx context.Context, lc logger.LoggingClient, err errors.EdgeX, requestId string) error {
 	correlationId := correlation.FromContext(ctx)
 	if errors.Kind(err) != errors.KindEntityDoesNotExist {
 		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
@@ -49,17 +49,17 @@ func WriteErrorResponse(w http.ResponseWriter, ctx context.Context, lc logger.Lo
 	lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 	errResponses := commonDTO.NewBaseResponse(requestId, err.Message(), err.Code())
 	WriteHttpHeader(w, ctx, err.Code())
-	pkg.EncodeAndWriteResponse(errResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(errResponses, w, lc)
 }
 
 // ParseGetAllObjectsRequestQueryString parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid.
-func ParseGetAllObjectsRequestQueryString(r *http.Request, minOffset int, maxOffset int, minLimit int, maxLimit int) (offset int, limit int, labels []string, err errors.EdgeX) {
-	offset, err = ParseQueryStringToInt(r, common.Offset, common.DefaultOffset, minOffset, maxOffset)
+func ParseGetAllObjectsRequestQueryString(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (offset int, limit int, labels []string, err errors.EdgeX) {
+	offset, err = ParseQueryStringToInt(c, common.Offset, common.DefaultOffset, minOffset, maxOffset)
 	if err != nil {
 		return offset, limit, labels, err
 	}
 
-	limit, err = ParseQueryStringToInt(r, common.Limit, common.DefaultLimit, minLimit, maxLimit)
+	limit, err = ParseQueryStringToInt(c, common.Limit, common.DefaultLimit, minLimit, maxLimit)
 	if err != nil {
 		return offset, limit, labels, err
 	}
@@ -69,7 +69,7 @@ func ParseGetAllObjectsRequestQueryString(r *http.Request, minOffset int, maxOff
 		limit = maxLimit
 	}
 
-	labels = ParseQueryStringToStrings(r, common.Labels, common.CommaSeparator)
+	labels = ParseQueryStringToStrings(c, common.Labels, common.CommaSeparator)
 	return offset, limit, labels, err
 }
 
@@ -77,7 +77,7 @@ func ParseGetAllObjectsRequestQueryString(r *http.Request, minOffset int, maxOff
 // http request, only the first specified query string will be parsed and converted to an integer.  If no specified
 // query string key could be found in the http request, specified default value will be returned.  EdgeX error will be
 // returned if any parsing error occurs.
-func ParseQueryStringToInt(r *http.Request, queryStringKey string, defaultValue int, min int, max int) (int, errors.EdgeX) {
+func ParseQueryStringToInt(c echo.Context, queryStringKey string, defaultValue int, min int, max int) (int, errors.EdgeX) {
 	// first check if specified min is bigger than max, throw error for such case
 	if min > max {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("specified min %v is bigger than specified max %v", min, max), nil)
@@ -88,11 +88,11 @@ func ParseQueryStringToInt(r *http.Request, queryStringKey string, defaultValue 
 	}
 	var result = defaultValue
 	var parsingErr error
-	values, ok := r.URL.Query()[queryStringKey]
-	if ok && len(values) > 0 {
-		result, parsingErr = strconv.Atoi(strings.TrimSpace(values[0]))
+	value := c.QueryParam(queryStringKey)
+	if value != "" {
+		result, parsingErr = strconv.Atoi(strings.TrimSpace(value))
 		if parsingErr != nil {
-			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse querystring %s's value %s into integer. Error:%s", queryStringKey, values[0], parsingErr.Error()), nil)
+			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse querystring %s's value %s into integer. Error:%s", queryStringKey, value, parsingErr.Error()), nil)
 		}
 		if result < min || result > max {
 			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("querystring %s's value %v is out of min %v ~ max %v range.", queryStringKey, result, min, max), nil)
@@ -105,13 +105,13 @@ func ParseQueryStringToInt(r *http.Request, queryStringKey string, defaultValue 
 // the http request, only the first specified query string will be parsed and converted to an array of string.  The
 // value of query string will be split into an array of string by the passing separator.  If separator is passed in as
 // an empty string, comma separator will be used.
-func ParseQueryStringToStrings(r *http.Request, queryStringKey string, separator string) (stringArray []string) {
+func ParseQueryStringToStrings(c echo.Context, queryStringKey string, separator string) (stringArray []string) {
 	if len(separator) == 0 {
 		separator = common.CommaSeparator
 	}
-	values, ok := r.URL.Query()[queryStringKey]
-	if ok && len(values) >= 1 {
-		stringArray = strings.Split(strings.TrimSpace(values[0]), separator)
+	value := c.QueryParam(queryStringKey)
+	if value != "" {
+		stringArray = strings.Split(strings.TrimSpace(value), separator)
 	}
 	return stringArray
 }
@@ -127,23 +127,23 @@ func ParseQueryStringToString(r *http.Request, queryStringKey string, defaultVal
 	return value[0]
 }
 
-func ParseTimeRangeOffsetLimit(r *http.Request, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
-	start, edgexErr = ParsePathParamToInt(r, common.Start)
+func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
+	start, edgexErr = ParsePathParamToInt(c, common.Start)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	end, edgexErr = ParsePathParamToInt(r, common.End)
+	end, edgexErr = ParsePathParamToInt(c, common.End)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
 	if end < start {
 		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
 	}
-	offset, edgexErr = ParseQueryStringToInt(r, common.Offset, common.DefaultOffset, minOffset, maxOffset)
+	offset, edgexErr = ParseQueryStringToInt(c, common.Offset, common.DefaultOffset, minOffset, maxOffset)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	limit, edgexErr = ParseQueryStringToInt(r, common.Limit, common.DefaultLimit, minLimit, maxLimit)
+	limit, edgexErr = ParseQueryStringToInt(c, common.Limit, common.DefaultLimit, minLimit, maxLimit)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
@@ -157,10 +157,9 @@ func ParseTimeRangeOffsetLimit(r *http.Request, minOffset int, maxOffset int, mi
 
 // Parse the specified path parameter to an integer.  EdgeX error will be returned if any parsing error occurs or
 // specified path parameter is empty.
-func ParsePathParamToInt(r *http.Request, pathKey string) (int, errors.EdgeX) {
-	vars := mux.Vars(r)
-	val := vars[pathKey]
-	if len(val) == 0 {
+func ParsePathParamToInt(c echo.Context, pathKey string) (int, errors.EdgeX) {
+	val := c.Param(pathKey)
+	if val == "" {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("empty path param %s is not allowed", pathKey), nil)
 	}
 	result, parsingErr := strconv.Atoi(val)

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2020 Dell Inc.
- * Copyright 2022 IOTech Ltd.
+ * Copyright 2022-2023 IOTech Ltd.
  * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -34,12 +34,12 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 const SecurityProxyAuthServiceKey = "security-proxy-auth"
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *mux.Router) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,

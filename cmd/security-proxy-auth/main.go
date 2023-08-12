@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2023 Intel Corporation
+ * Copyright (C) 2023 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,10 +18,11 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	proxyauth.Main(ctx, cancel, mux.NewRouter())
+	proxyauth.Main(ctx, cancel, echo.New())
 }

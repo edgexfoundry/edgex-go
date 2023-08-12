@@ -7,24 +7,18 @@
 package command
 
 import (
-	"net/http"
-
 	"github.com/edgexfoundry/edgex-go"
+	commandController "github.com/edgexfoundry/edgex-go/internal/core/command/controller/http"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/controller"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/gorilla/mux"
 
-	commandController "github.com/edgexfoundry/edgex-go/internal/core/command/controller/http"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/labstack/echo/v4"
 )
 
-func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
-	// r.UseEncodedPath() tells the router to match the encoded original path to the routes
-	r.UseEncodedPath()
-
+func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderExtFrom(dic.Get)
 	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
@@ -34,12 +28,8 @@ func LoadRestRoutes(r *mux.Router, dic *di.Container, serviceName string) {
 
 	// Command
 	cmd := commandController.NewCommandController(dic)
-	r.HandleFunc(common.ApiAllDeviceRoute, authenticationHook(cmd.AllCommands)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiDeviceByNameRoute, authenticationHook(cmd.CommandsByDeviceName)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiDeviceNameCommandNameRoute, authenticationHook(cmd.IssueGetCommandByName)).Methods(http.MethodGet)
-	r.HandleFunc(common.ApiDeviceNameCommandNameRoute, authenticationHook(cmd.IssueSetCommandByName)).Methods(http.MethodPut)
-
-	r.Use(correlation.ManageHeader)
-	r.Use(correlation.LoggingMiddleware(container.LoggingClientFrom(dic.Get)))
-	r.Use(correlation.UrlDecodeMiddleware(container.LoggingClientFrom(dic.Get)))
+	r.GET(common.ApiAllDeviceRoute, cmd.AllCommands, authenticationHook)
+	r.GET(common.ApiDeviceByNameEchoRoute, cmd.CommandsByDeviceName, authenticationHook)
+	r.GET(common.ApiDeviceNameCommandNameEchoRoute, cmd.IssueGetCommandByName, authenticationHook)
+	r.PUT(common.ApiDeviceNameCommandNameEchoRoute, cmd.IssueSetCommandByName, authenticationHook)
 }

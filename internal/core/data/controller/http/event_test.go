@@ -15,7 +15,6 @@ import (
 
 	"github.com/fxamacker/cbor/v2"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -33,6 +32,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
+
+	"github.com/labstack/echo/v4"
 )
 
 var expectedEventId = uuid.New().String()
@@ -240,18 +241,21 @@ func TestAddEvent(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
+			e := echo.New()
 			byteData, err := toByteArray(testCase.RequestContentType, testCase.Request)
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameEchoRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
-			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: testCase.ProfileName, common.DeviceName: testCase.DeviceName, common.SourceName: testCase.Request.Event.SourceName})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.AddEvent)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ServiceName, common.ProfileName, common.DeviceName, common.SourceName)
+			c.SetParamValues(TestServiceName, testCase.ProfileName, testCase.DeviceName, testCase.Request.Event.SourceName)
+			err = ec.AddEvent(c)
+			require.NoError(t, err)
 
 			var actualResponse commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -308,6 +312,7 @@ func TestAddEventSize(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
+			e := echo.New()
 			dic := mocks.NewMockDIC()
 			app := application.NewCoreDataApp(dic)
 			dic.Update(di.ServiceConstructorMap{
@@ -331,13 +336,16 @@ func TestAddEventSize(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameEchoRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
-			req = mux.SetURLVars(req, map[string]string{common.ServiceName: TestServiceName, common.ProfileName: validRequest.Event.ProfileName, common.DeviceName: validRequest.Event.DeviceName, common.SourceName: validRequest.Event.SourceName})
 			require.NoError(t, err)
+
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.AddEvent)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.ServiceName, common.ProfileName, common.DeviceName, common.SourceName)
+			c.SetParamValues(TestServiceName, validRequest.Event.ProfileName, validRequest.Event.DeviceName, validRequest.Event.SourceName)
+			err = ec.AddEvent(c)
+			require.NoError(t, err)
 
 			var actualResponse commonDTO.BaseWithIdResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -391,14 +399,17 @@ func TestEventById(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
+			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiEventRoute, common.Id, testCase.EventId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.EventId})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.EventById)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.EventId)
+			err = ec.EventById(c)
+			require.NoError(t, err)
 
 			if testCase.ErrorExpected {
 				var actualResponse commonDTO.BaseResponse
@@ -458,14 +469,17 @@ func TestDeleteEventById(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.Name, func(t *testing.T) {
+			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s/%s", common.ApiEventRoute, common.Id, testCase.EventId)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Id: testCase.EventId})
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.DeleteEventById)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Id)
+			c.SetParamValues(testCase.EventId)
+			err = ec.DeleteEventById(c)
+			require.NoError(t, err)
 
 			var actualResponse commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -499,12 +513,14 @@ func TestEventTotalCount(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
+	e := echo.New()
 	req, err := http.NewRequest(http.MethodGet, common.ApiEventCountRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ec.EventTotalCount)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	err = ec.EventTotalCount(c)
+	require.NoError(t, err)
 
 	var actualResponse commonDTO.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -534,13 +550,16 @@ func TestEventCountByDeviceName(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
-	req, err := http.NewRequest(http.MethodGet, common.ApiEventCountByDeviceNameRoute, http.NoBody)
-	req = mux.SetURLVars(req, map[string]string{common.Name: deviceName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodGet, common.ApiEventCountByDeviceNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ec.EventCountByDeviceName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(deviceName)
+	err = ec.EventCountByDeviceName(c)
+	require.NoError(t, err)
 
 	var actualResponse commonDTO.CountResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -569,14 +588,16 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 	})
 	ec := NewEventController(dic)
 
-	req, err := http.NewRequest(http.MethodDelete, common.ApiEventByDeviceNameRoute, http.NoBody)
-	assert.NoError(t, err)
-	req = mux.SetURLVars(req, map[string]string{common.Name: deviceName})
+	e := echo.New()
+	req, err := http.NewRequest(http.MethodDelete, common.ApiEventByDeviceNameEchoRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
-	handler := http.HandlerFunc(ec.DeleteEventsByDeviceName)
-	handler.ServeHTTP(recorder, req)
+	c := e.NewContext(req, recorder)
+	c.SetParamNames(common.Name)
+	c.SetParamValues(deviceName)
+	err = ec.DeleteEventsByDeviceName(c)
+	require.NoError(t, err)
 
 	var actualResponse commonDTO.BaseResponse
 	err = json.Unmarshal(recorder.Body.Bytes(), &actualResponse)
@@ -625,6 +646,7 @@ func TestAllEvents(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllEventRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -638,8 +660,9 @@ func TestAllEvents(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllEvents)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllEvents(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -717,18 +740,21 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByDeviceNameRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByDeviceNameEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.deviceName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.EventsByDeviceName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.deviceName)
+			err = ec.EventsByDeviceName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -794,18 +820,21 @@ func TestAllEventsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Start: testCase.start, common.End: testCase.end})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.EventsByTimeRange)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Start, common.End)
+			c.SetParamValues(testCase.start, testCase.end)
+			err = ec.EventsByTimeRange(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -859,14 +888,17 @@ func TestDeleteEventsByAge(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeRoute, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Age: testCase.age})
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeEchoRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(ec.DeleteEventsByAge)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Age)
+			c.SetParamValues(testCase.age)
+			err = ec.DeleteEventsByAge(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -30,7 +30,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,6 +167,7 @@ func TestAddSubscription(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -176,8 +177,9 @@ func TestAddSubscription(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AddSubscription)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AddSubscription(c)
+			require.NoError(t, err)
 			if testCase.expectedStatusCode == http.StatusBadRequest {
 				var res commonDTO.BaseResponse
 				err = json.Unmarshal(recorder.Body.Bytes(), &res)
@@ -239,6 +241,7 @@ func TestAllSubscriptions(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllSubscriptionRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -252,8 +255,9 @@ func TestAllSubscriptions(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.AllSubscriptions)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.AllSubscriptions(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -309,15 +313,18 @@ func TestSubscriptionByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameRoute, testCase.subscriptionName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameEchoRoute, testCase.subscriptionName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.subscriptionName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.SubscriptionByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.subscriptionName)
+			err = controller.SubscriptionByName(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -374,7 +381,8 @@ func TestSubscriptionsByCategory(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByCategoryRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByCategoryEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -383,13 +391,15 @@ func TestSubscriptionsByCategory(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Category: testCase.category})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.SubscriptionsByCategory)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Category)
+			c.SetParamValues(testCase.category)
+			err = controller.SubscriptionsByCategory(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -446,7 +456,8 @@ func TestSubscriptionsByLabel(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByLabelRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByLabelEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -455,13 +466,15 @@ func TestSubscriptionsByLabel(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Label: testCase.label})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.SubscriptionsByLabel)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Label)
+			c.SetParamValues(testCase.label)
+			err = controller.SubscriptionsByLabel(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -518,7 +531,8 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByReceiverRoute, http.NoBody)
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByReceiverEchoRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -527,13 +541,15 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 				query.Add(common.Limit, testCase.limit)
 			}
 			req.URL.RawQuery = query.Encode()
-			req = mux.SetURLVars(req, map[string]string{common.Receiver: testCase.receiver})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.SubscriptionsByReceiver)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Receiver)
+			c.SetParamValues(testCase.receiver)
+			err = controller.SubscriptionsByReceiver(c)
+			require.NoError(t, err)
 
 			// Assert
 			if testCase.errorExpected {
@@ -589,15 +605,18 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameRoute, testCase.subscriptionName)
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameEchoRoute, testCase.subscriptionName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-			req = mux.SetURLVars(req, map[string]string{common.Name: testCase.subscriptionName})
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.DeleteSubscriptionByName)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.subscriptionName)
+			err = controller.DeleteSubscriptionByName(c)
+			require.NoError(t, err)
 			var res commonDTO.BaseResponse
 			err = json.Unmarshal(recorder.Body.Bytes(), &res)
 			require.NoError(t, err)
@@ -698,6 +717,7 @@ func TestPatchSubscription(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
 			jsonData, err := json.Marshal(testCase.request)
 			require.NoError(t, err)
 
@@ -707,8 +727,9 @@ func TestPatchSubscription(t *testing.T) {
 
 			// Act
 			recorder := httptest.NewRecorder()
-			handler := http.HandlerFunc(controller.PatchSubscription)
-			handler.ServeHTTP(recorder, req)
+			c := e.NewContext(req, recorder)
+			err = controller.PatchSubscription(c)
+			require.NoError(t, err)
 
 			if testCase.expectedStatusCode == http.StatusMultiStatus {
 				var res []commonDTO.BaseResponse

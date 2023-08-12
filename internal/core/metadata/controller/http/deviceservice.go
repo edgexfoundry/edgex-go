@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -23,7 +23,7 @@ import (
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type DeviceServiceController struct {
@@ -39,7 +39,9 @@ func NewDeviceServiceController(dic *di.Container) *DeviceServiceController {
 	}
 }
 
-func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) AddDeviceService(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -52,8 +54,7 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 	var reqDTOs []requestDTO.AddDeviceServiceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceServices := requestDTO.AddDeviceServiceReqToDeviceServiceModels(reqDTOs)
 
@@ -81,29 +82,31 @@ func (dc *DeviceServiceController) AddDeviceService(w http.ResponseWriter, r *ht
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	// EncodeAndWriteResponse and send the resp body as JSON format
-	pkg.EncodeAndWriteResponse(addResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(addResponses, w, lc)
 }
 
-func (dc *DeviceServiceController) DeviceServiceByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) DeviceServiceByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	deviceService, err := application.DeviceServiceByName(name, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewDeviceServiceResponse("", "", http.StatusOK, deviceService)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) PatchDeviceService(c echo.Context) error {
+	r := c.Request()
+	w := c.Response()
 	if r.Body != nil {
 		defer func() { _ = r.Body.Close() }()
 	}
@@ -116,8 +119,7 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	var reqDTOs []requestDTO.UpdateDeviceServiceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	var updateResponses []interface{}
@@ -142,47 +144,47 @@ func (dc *DeviceServiceController) PatchDeviceService(w http.ResponseWriter, r *
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
-	pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
 }
 
-func (dc *DeviceServiceController) DeleteDeviceServiceByName(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) DeleteDeviceServiceByName(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 
 	// URL parameters
-	vars := mux.Vars(r)
-	name := vars[common.Name]
+	name := c.Param(common.Name)
 
 	err := application.DeleteDeviceServiceByName(name, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
-func (dc *DeviceServiceController) AllDeviceServices(w http.ResponseWriter, r *http.Request) {
+func (dc *DeviceServiceController) AllDeviceServices(c echo.Context) error {
 	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
 	ctx := r.Context()
 	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
 
 	// parse URL query string for offset, limit, and labels
-	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(r, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	deviceServices, totalCount, err := application.AllDeviceServices(offset, limit, labels, ctx, dc.dic)
 	if err != nil {
-		utils.WriteErrorResponse(w, ctx, lc, err, "")
-		return
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
 	response := responseDTO.NewMultiDeviceServicesResponse("", "", http.StatusOK, totalCount, deviceServices)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	// encode and send out the response
-	pkg.EncodeAndWriteResponse(response, w, lc)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
