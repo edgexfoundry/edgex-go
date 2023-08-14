@@ -15,7 +15,7 @@
 #
 #  ----------------------------------------------------------------------------------
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine as builder
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine
 
 RUN apk add --no-cache python3 py3-pip bash coreutils
 
