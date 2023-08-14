@@ -461,14 +461,14 @@ paths:
           required: true
           schema:
             type: string
-          example: sensor01
+          example: Random-Boolean-Device
           description: "A name uniquely identifying a device."
         - in: path
           name: command
           required: true
           schema:
             type: string
-          example: command01
+          example: Bool
           description: "A name uniquely identifying a command."
         - in: query
           name: ds-pushevent
@@ -562,6 +562,22 @@ paths:
                   $ref: '#/components/examples/503Example'
     put:
       summary: "Issue the specified write command referenced by the command name to the device/sensor that is also referenced by name."
+      parameters:
+        - $ref: '#/components/parameters/correlatedRequestHeader'
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          example: Random-Boolean-Device
+          description: "A name uniquely identifying a device."
+        - in: path
+          name: command
+          required: true
+          schema:
+            type: string
+          example: Bool
+          description: "A name uniquely identifying a command."
       requestBody:
         content:
           application/json:
@@ -647,6 +663,7 @@ paths:
         required: true
         schema:
           type: string
+        example: Random-Boolean-Device
         description: "A name uniquely identifying a device."
     get:
       summary: "Returns all commands associated with the specified device."
