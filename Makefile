@@ -369,7 +369,7 @@ sbom:
 		spdx/spdx-sbom-generator -p /edgex-go/ -o /sbom/ --include-license-text true
 
 docker-fuzz:
-	docker build -f Dockerfile.fuzz -t fuzz-edgex-go:latest -f fuzz_test/Dockerfile.fuzz .
+	docker build -t fuzz-edgex-go:latest -f fuzz_test/Dockerfile.fuzz .
 
 fuzz-test-command:
 # not joining the edgex-network due to swagger file url pointing to localhost for fuzz testing in the container
