@@ -19,6 +19,10 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine
 
 RUN apk add --no-cache python3 py3-pip bash coreutils
 
+# Set SHELL flags for RUN commands to allow -e and pipefail
+# Rationale: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
 WORKDIR /restler-fuzzer
 RUN wget -q -O - https://github.com/microsoft/restler-fuzzer/archive/refs/tags/v9.2.2.tar.gz | \
     tar xz --strip-components 1 && \
