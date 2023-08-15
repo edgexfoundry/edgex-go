@@ -1,0 +1,45 @@
+#  ----------------------------------------------------------------------------------
+#  Copyright 2023 Intel Corporation
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+#  ----------------------------------------------------------------------------------
+# hadolint ignore=DL3026
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine
+
+RUN apk add --no-cache python3 py3-pip bash coreutils
+
+# Set SHELL flags for RUN commands to allow -e and pipefail
+# Rationale: https://github.com/hadolint/hadolint/wiki/DL4006
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
+WORKDIR /restler-fuzzer
+RUN wget -q -O - https://github.com/microsoft/restler-fuzzer/archive/refs/tags/v9.2.2.tar.gz | \
+    tar xz --strip-components 1 && \
+    mkdir -p restler_bin
+
+RUN python3 ./build-restler.py --dest_dir ./restler_bin/
+
+COPY fuzz_test/fuzzing_docker.sh /restler-fuzzer/fuzzing.sh
+COPY /openapi/v3/* /restler-fuzzer/openapi/
+
+ENTRYPOINT ["/restler-fuzzer/fuzzing.sh"]
+# CMD [ "<service-name>", "<swagger-path>"] must be specified as CMD to `docker run`
+# Example: CMD core-data below only do fuzz-lean for core-data
+# This can take about 2 minutes to finish
+# You may swap out core-data to other server to perform fuzz-lean
+# docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest core-data /restler-fuzzer/openapi/core-data.yaml"
+# Example: CMD of "all" will do fuzz-lean test for core-commmand, core-data, core-metadata, support-notifications, and support-scheduler,
+# basically all services under openapi/v3/ directory
+# This can take more than 20 minutes to finish
+# docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest all

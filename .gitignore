@@ -49,3 +49,5 @@ stage/*
 snap/.snapcraft/*
 squashfs-root/
 
+# result files
+fuzz_test/fuzz_results/*
