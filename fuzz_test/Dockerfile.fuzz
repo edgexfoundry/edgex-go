@@ -26,16 +26,16 @@ RUN wget -q -O - https://github.com/microsoft/restler-fuzzer/archive/refs/tags/v
 
 RUN python3 ./build-restler.py --dest_dir ./restler_bin/
 
-COPY fuzzing_docker.sh /restler-fuzzer/fuzzing.sh
+COPY fuzz_test/fuzzing_docker.sh /restler-fuzzer/fuzzing.sh
 COPY /openapi/v3/* /restler-fuzzer/openapi/
 
 ENTRYPOINT ["/restler-fuzzer/fuzzing.sh"]
-# CMD core-data below only do fuzz-lean for core-data
+# CMD [ "<service-name>", "<swagger-path>"] must be specified as CMD to `docker run`
+# Example: CMD core-data below only do fuzz-lean for core-data
 # This can take about 2 minutes to finish
 # You may swap out core-data to other server to perform fuzz-lean
-CMD ["core-data", "/restler-fuzzer/openapi/core-data.yaml"]
-# CMD of "all" will do fuzz-lean test for core-commmand, core-data, core-metadata, support-notifications, and support-scheduler, 
+# docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest core-data /restler-fuzzer/openapi/core-data.yaml"
+# Example: CMD of "all" will do fuzz-lean test for core-commmand, core-data, core-metadata, support-notifications, and support-scheduler,
 # basically all services under openapi/v3/ directory
 # This can take more than 20 minutes to finish
-# Comment out above CMD and uncomment below CMD of "all" to fuzz all services
-# CMD ["all"]
+# docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest all

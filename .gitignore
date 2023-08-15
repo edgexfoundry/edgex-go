@@ -50,4 +50,4 @@ snap/.snapcraft/*
 squashfs-root/
 
 # result files
-fuzz_results/*
+fuzz_test/fuzz_results/*
