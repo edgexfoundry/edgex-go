@@ -44,7 +44,7 @@ runFuzzLeanPerSwagger() {
 
     echo "--copy result logs into $1"
     mkdir -p /fuzz_results/"$1"
-    cp -r ./Test/ /fuzz_results/"$1"/
+    cp -r ./FuzzLean/ /fuzz_results/"$1"/
 }
 
 if [ "$EDGEX_PROJECT_NAME" == "" ]
