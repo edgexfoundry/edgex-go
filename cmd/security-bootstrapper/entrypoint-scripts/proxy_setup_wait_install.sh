@@ -32,5 +32,20 @@ echo "$(date) Executing waitFor for ${PROXY_SETUP_HOST} with waiting on \
   -uri tcp://"${STAGEGATE_BOOTSTRAPPER_HOST}":"${STAGEGATE_READY_TORUNPORT}" \
   -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
+# The entrypoint script will write the proxy configuration files
 echo "$(date) Starting ${PROXY_SETUP_HOST} ..."
-exec /usr/local/bin/entrypoint.sh "$*"
+/usr/local/bin/entrypoint.sh "$*"
+
+# default User and Group in case never set
+if [ -z "${EDGEX_USER}" ]; then
+  EDGEX_USER="2002"
+  EDGEX_GROUP="2001"
+fi
+
+# Signal the reverse proxy that configuration files are set up
+echo "$(date) Signalling reverse proxy to start (loop forever) ..."
+exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
+  --port="${STAGEGATE_PROXYSETUP_READYPORT}" --host="${PROXY_SETUP_HOST}"
+if [ $? -ne 0 ]; then
+  echo "$(date) failed to signal the proxy setup ready port"
+fi

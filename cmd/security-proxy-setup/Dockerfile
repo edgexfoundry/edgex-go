@@ -31,7 +31,7 @@ RUN make cmd/secrets-config/secrets-config
 
 FROM alpine:3.17
 
-RUN apk add --update --no-cache dumb-init openssl
+RUN apk add --update --no-cache dumb-init su-exec openssl yq
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.; Copyright (C) 2023 Intel Corporation'
@@ -40,6 +40,10 @@ WORKDIR /edgex
 
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
+
+# We need the CORS configuration from common-config-bootstrapper to write nginx.conf
+# (CORS configuration must be done in the proxy when security is enabled, as it must happen prior to security check)
+COPY --from=builder /edgex-go/cmd/core-common-config-bootstrapper/res/configuration.yaml res/common_configuration.yaml
 
 # Note that secrets-config shares the same configuration file as security-proxy-setup
 # as we are splitting security-proxy-setup into two different utilities for ease-of-use.
