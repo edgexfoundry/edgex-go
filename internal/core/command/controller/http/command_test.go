@@ -478,7 +478,7 @@ func TestIssueSetCommand(t *testing.T) {
 		{"Invalid - execute set command with invalid commandName", testDeviceName, nonExistName, testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
 		{"Invalid - empty device name", "", testCommandName, testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
 		{"Invalid - empty command name", testDeviceName, "", testQueryStrings, testSettingsJsonStr, true, http.StatusBadRequest},
-		{"Invalid - empty settings", testDeviceName, testCommandName, testQueryStrings, []byte{}, true, http.StatusInternalServerError},
+		{"Invalid - empty settings", testDeviceName, testCommandName, testQueryStrings, []byte{}, true, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
