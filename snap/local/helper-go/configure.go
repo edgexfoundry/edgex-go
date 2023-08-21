@@ -146,6 +146,7 @@ func configure() {
 		supportScheduler,
 		securitySecretStoreSetup,
 		securityBootstrapper, // local executable
+		securityBootstrapperNginx,
 		securityProxyAuth,
 	)
 	if err != nil {
