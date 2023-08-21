@@ -57,7 +57,7 @@ fi
 : ${EDGEX_SERVICE_CORSCONFIGURATION_CORSMAXAGE:=`yq -r .all-services.Service.CORSConfiguration.CORSMaxAge /edgex/res/common_configuration.yaml`}
 
 echo "$(date) CORS settings dump ..."
-env | grep EDGEX_SERVICE_CORSCONFIGURATION
+( env | grep EDGEX_SERVICE_CORSCONFIGURATION ) || true
 
 corssnippet=/etc/nginx/templates/cors.block.$$
 touch "${corssnippet}"
