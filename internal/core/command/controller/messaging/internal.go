@@ -99,7 +99,14 @@ func processDeviceCommandRequest(
 
 	// expected internal command request/response topic scheme: #/<device>/<command-name>/<method>
 	deviceName := topicLevels[length-3]
-	commandName, err := url.QueryUnescape(topicLevels[length-2])
+	unescapedDeviceName, err := url.PathUnescape(deviceName)
+	if err != nil {
+		lc.Errorf("Failed to unescape device name '%s': %s", deviceName, err.Error())
+		lc.Warn("Not publishing error message back due to insufficient information on response topic")
+		return
+	}
+	commandName := topicLevels[length-2]
+	unescapedCommandName, err := url.PathUnescape(commandName)
 	if err != nil {
 		err = fmt.Errorf("failed to unescape command name '%s': %s", commandName, err.Error())
 		lc.Error(err.Error())
@@ -124,7 +131,7 @@ func processDeviceCommandRequest(
 
 	topicPrefix := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic)
 	// internal command request topic scheme: <DeviceRequestTopicPrefix>/<device-service>/<device>/<command-name>/<method>
-	deviceServiceName, deviceRequestTopic, err := validateRequestTopic(topicPrefix, deviceName, commandName, method, dic)
+	deviceServiceName, err := retrieveServiceNameByDevice(unescapedDeviceName, dic)
 	if err != nil {
 		err = fmt.Errorf("invalid request topic: %s", err.Error())
 		lc.Error(err.Error())
@@ -147,7 +154,8 @@ func processDeviceCommandRequest(
 		return
 	}
 
-	deviceResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, deviceServiceName)
+	deviceRequestTopic := common.BuildTopic(topicPrefix, common.URLEncode(deviceServiceName), common.URLEncode(unescapedDeviceName), common.URLEncode(unescapedCommandName), method)
+	deviceResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, common.URLEncode(deviceServiceName))
 
 	lc.Debugf("Sending Command Device Request to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
 	lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)
@@ -228,7 +236,12 @@ func processCommandQueryRequest(
 	// example topic scheme: /commandquery/request/<device>
 	// deviceName is expected to be at last topic level.
 	topicLevels := strings.Split(requestEnvelope.ReceivedTopic, "/")
-	deviceName := topicLevels[len(topicLevels)-1]
+	deviceName, err := url.PathUnescape(topicLevels[len(topicLevels)-1])
+	if err != nil {
+		lc.Errorf("Failed to unescape device name '%s': %s", deviceName, err.Error())
+		lc.Warn("Not publishing error message back due to insufficient information on response topic")
+		return
+	}
 	if strings.EqualFold(deviceName, common.All) {
 		deviceName = common.All
 	}

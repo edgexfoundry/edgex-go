@@ -42,8 +42,8 @@ func validateDeviceCallback(device dtos.Device, dic *di.Container) errors.EdgeX 
 	}
 
 	baseTopic := configuration.MessageBus.GetBaseTopicPrefix()
-	requestTopic := common.BuildTopic(baseTopic, device.ServiceName, common.ValidateDeviceSubscribeTopic)
-	responseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, device.ServiceName)
+	requestTopic := common.BuildTopic(baseTopic, common.URLEncode(device.ServiceName), common.ValidateDeviceSubscribeTopic)
+	responseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, common.URLEncode(device.ServiceName))
 	requestEnvelope := types.NewMessageEnvelopeForRequest(requestBytes, nil)
 
 	lc.Debugf("Sending Device Validation request for device=%s, CorrelationId=%s to topic: %s", device.Name, requestEnvelope.CorrelationID, requestTopic)
@@ -136,13 +136,13 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		systemEvent.Source,
 		systemEvent.Type,
 		systemEvent.Action,
-		systemEvent.Owner,
+		common.URLEncode(systemEvent.Owner),
 	)
 
 	if profileName != "" {
 		publishTopic = common.BuildTopic(
 			publishTopic,
-			profileName,
+			common.URLEncode(profileName),
 		)
 	}
 

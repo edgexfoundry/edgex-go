@@ -70,7 +70,12 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 		// example topic scheme: edgex/commandquery/request/<device-name>
 		// deviceName is expected to be at last topic level.
 		topicLevels := strings.Split(message.Topic(), "/")
-		deviceName := topicLevels[len(topicLevels)-1]
+		deviceName, err := url.PathUnescape(topicLevels[len(topicLevels)-1])
+		if err != nil {
+			lc.Errorf("Failed to unescape device name '%s': %s", deviceName, err.Error())
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
 		if strings.EqualFold(deviceName, common.All) {
 			deviceName = common.All
 		}
@@ -113,8 +118,14 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 		// expected external command request/response topic scheme: #/<device-name>/<command-name>/<method>
 		deviceName := topicLevels[length-3]
+		unescapedDeviceName, err := url.PathUnescape(deviceName)
+		if err != nil {
+			lc.Errorf("Failed to unescape device name '%s': %s", deviceName, err.Error())
+			lc.Warn("Not publishing error message back due to insufficient information on response topic")
+			return
+		}
 		commandName := topicLevels[length-2]
-		_, err = url.QueryUnescape(topicLevels[length-2])
+		unescapedCommandName, err := url.PathUnescape(commandName)
 		if err != nil {
 			lc.Errorf("Failed to unescape command name '%s': %s", commandName, err.Error())
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
@@ -132,7 +143,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 		internalBaseTopic := container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix()
 		topicPrefix := common.BuildTopic(internalBaseTopic, common.CoreCommandDeviceRequestPublishTopic)
 
-		deviceServiceName, deviceRequestTopic, err := validateRequestTopic(topicPrefix, deviceName, commandName, method, dic)
+		deviceServiceName, err := retrieveServiceNameByDevice(unescapedDeviceName, dic)
 		if err != nil {
 			responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 			publishMessage(client, externalResponseTopic, qos, retain, responseEnvelope, lc)
@@ -146,7 +157,9 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		deviceResponseTopicPrefix := common.BuildTopic(internalBaseTopic, common.ResponseTopic, deviceServiceName)
+		// escape again to ensure that the topic is valid in the internal message bus
+		deviceRequestTopic := common.BuildTopic(topicPrefix, common.URLEncode(deviceServiceName), common.URLEncode(unescapedDeviceName), common.URLEncode(unescapedCommandName), method)
+		deviceResponseTopicPrefix := common.BuildTopic(internalBaseTopic, common.ResponseTopic, common.URLEncode(deviceServiceName))
 
 		lc.Debugf("Sending Command request to internal MessageBus. Topic: %s, Request-id: %s Correlation-id: %s", deviceRequestTopic, requestEnvelope.RequestID, requestEnvelope.CorrelationID)
 		lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)

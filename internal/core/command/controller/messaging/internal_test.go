@@ -42,12 +42,12 @@ func TestSubscribeCommandRequests(t *testing.T) {
 	expectedDevice := "device1"
 	expectedResource := "resource"
 	expectedMethod := "get"
-	expectedDeviceResponseTopicPrefix := strings.Join([]string{expectedResponseTopicPrefix, expectedServiceName}, "/")
+	expectedDeviceResponseTopicPrefix := strings.Join([]string{expectedResponseTopicPrefix, common.URLEncode(expectedServiceName)}, "/")
 	expectedCommandResponseTopic := strings.Join([]string{expectedResponseTopicPrefix, common.CoreCommandServiceKey, expectedRequestId}, "/")
 	expectedCommandRequestSubscribeTopic := common.BuildTopic(baseTopic, common.CoreCommandRequestSubscribeTopic)
 	expectedCommandRequestReceivedTopic := common.BuildTopic(strings.Replace(expectedCommandRequestSubscribeTopic, "/#", "", 1),
 		expectedServiceName, expectedDevice, expectedResource, expectedMethod)
-	expectedDeviceCommandRequestRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, expectedServiceName, expectedDevice, expectedResource, expectedMethod)
+	expectedDeviceCommandRequestRequestTopic := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic, common.URLEncode(expectedServiceName), common.URLEncode(expectedDevice), common.URLEncode(expectedResource), expectedMethod)
 	mockLogger := &lcMocks.LoggingClient{}
 	mockDeviceClient := &mocks2.DeviceClient{}
 	mockDeviceProfileClient := &mocks2.DeviceProfileClient{}
