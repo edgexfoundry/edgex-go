@@ -540,6 +540,7 @@ components:
         secretName:
           description: Specifies the name of the secret
           type: string
+          example: "credentials"
         secretData:
           description: A list of the key/value pairs of secret data to store
           type: array
@@ -547,7 +548,7 @@ components:
             $ref: '#/components/schemas/SecretDataKeyValue'
       required:
         - secretName
-        - secrets
+        - secretData
     SecretDataKeyValue:
       description: Defines a key/value pair of secret data
       type: object
@@ -555,14 +556,14 @@ components:
         key:
           description: The key to identify the secret data
           type: string
-          example: "appsecret"
+          example: "secret-key"
         value:
           description: The value of the secret data
           type: string
-          example: "appsecret-value"
+          example: "secret-value"
       required:
         - key
-        - value
+        - value 
   parameters:
     offsetParam:
       in: query
