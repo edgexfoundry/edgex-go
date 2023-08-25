@@ -119,7 +119,7 @@ apps:
   security-bootstrapper-nginx:
     after:
       - security-secretstore-setup
-    command: bin/setup-nginx.sh
+    command: bin/security-bootstrapper-nginx
     command-chain:
       - bin/source-env-file.sh
     daemon: oneshot
@@ -252,7 +252,7 @@ apps:
     install-mode: disable
     plugs: [network, network-bind]
     stop-timeout: 10s
-  # this service pushes common configuration source into Configuration Provider
+# this service pushes common configuration source into Configuration Provider
   core-common-config-bootstrapper:
     after:
       - security-bootstrapper-consul
@@ -346,6 +346,8 @@ parts:
     stage-packages:
       - libssl-dev
       - zlib1g
+    stage-snaps:
+      - yq
     stage:
       - -usr/nginx/conf/nginx.conf
 
