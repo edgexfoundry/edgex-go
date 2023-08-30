@@ -1,5 +1,5 @@
 #  ----------------------------------------------------------------------------------
-#  Copyright 2022 Intel Corporation
+#  Copyright 2023 Intel Corporation
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,31 +19,8 @@
 ARG BUILDER_BASE=golang:1.20-alpine3.17
 FROM ${BUILDER_BASE} AS builder
 
-WORKDIR /edgex-go
-
-RUN apk add --update --no-cache make git build-base curl
-
-COPY go.mod vendor* ./
-RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
-
-COPY . .
-
-ARG SPIRE_RELEASE=1.6.3
-
-# build spire from the source in order to be compatible with arch arm64 as well
-# in CI the BUILDER_BASE will already contain a compiled spire-server/agent
-# so we check to see if the binary is already in the image before compilation
-WORKDIR /edgex-go/spire-build
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN if ! test -f /usr/local/bin/spire-server; then wget -q "https://github.com/spiffe/spire/archive/refs/tags/v${SPIRE_RELEASE}.tar.gz" && \
-    tar xv --strip-components=1 -f "v${SPIRE_RELEASE}.tar.gz" && \
-    echo "building spire from source..." && \
-    go version | sed -n -e 's/.*go\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' > .go-version && \
-    make bin/spire-server bin/spire-agent && \
-    cp bin/spire* /usr/local/bin/; \
-    fi
-
-WORKDIR /edgex-go
+FROM ghcr.io/spiffe/spire-server:1.6.3 as spire_server
+FROM ghcr.io/spiffe/spire-agent:1.6.3 as spire_agent
 
 # Deployment image
 FROM alpine:3.17
@@ -53,15 +30,15 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
 
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
 
-COPY --from=builder /edgex-go/Attribution.txt /
-COPY --from=builder /edgex-go/security.txt /
+COPY --from=spire_agent /opt/spire/bin/spire-agent /usr/local/bin
+COPY --from=spire_server /opt/spire/bin/spire-server /usr/local/bin
 
-COPY --from=builder /usr/local/bin/spire-agent /usr/local/bin
-COPY --from=builder /usr/local/bin/spire-server /usr/local/bin
+COPY Attribution.txt /
+COPY security.txt /
 
-COPY --from=builder /edgex-go/cmd/security-spire-agent/docker-entrypoint.sh /usr/local/bin/
-COPY --from=builder /edgex-go/cmd/security-spire-agent/agent.conf /usr/local/etc/spire/agent.conf.tpl
-COPY --from=builder /edgex-go/cmd/security-spire-agent/openssl.conf /usr/local/etc/
+COPY cmd/security-spire-agent/docker-entrypoint.sh /usr/local/bin/
+COPY cmd/security-spire-agent/agent.conf /usr/local/etc/spire/agent.conf.tpl
+COPY cmd/security-spire-agent/openssl.conf /usr/local/etc/
 
 ENTRYPOINT [ "/usr/bin/dumb-init" ]
 CMD [ "--verbose", "docker-entrypoint.sh" ]
