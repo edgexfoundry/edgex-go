@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -308,4 +308,22 @@ func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edge
 		}
 	}
 	return readings, nil
+}
+
+func latestReadingByOffset(conn redis.Conn, offset int) (reading models.Reading, edgeXerr errors.EdgeX) {
+	objects, err := getObjectsByRevRange(conn, ReadingsCollectionOrigin, offset, 1)
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err := convertObjectsToReadings(objects)
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(readings) > 1 {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "the query result should not greater than one reading", nil)
+	}
+	if len(readings) == 0 {
+		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("reading not found from the offset %d", offset), nil)
+	}
+	return readings[0], nil
 }

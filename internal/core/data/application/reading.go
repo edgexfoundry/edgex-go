@@ -1,19 +1,26 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package application
 
 import (
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"context"
+	"fmt"
+	"sync"
+	"time"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 )
+
+var asyncPurgeReadingOnce sync.Once
 
 // ReadingTotalCount return the count of all of readings currently stored in the database and error if any
 func ReadingTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
@@ -215,4 +222,53 @@ func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourc
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 	return readings, totalCount, nil
+}
+
+// AsyncPurgeReading purge readings and related events according to the retention capability.
+func AsyncPurgeReading(interval time.Duration, ctx context.Context, dic *di.Container) {
+	asyncPurgeReadingOnce.Do(func() {
+		go func() {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			timer := time.NewTimer(interval)
+			for {
+				timer.Reset(interval) // since event deletion might take lots of time, restart the timer to recount the time
+				select {
+				case <-ctx.Done():
+					lc.Info("Exiting reading retention")
+					return
+				case <-timer.C:
+					err := purgeReading(dic)
+					if err != nil {
+						lc.Errorf("Failed to purge events and readings, %v", err)
+						break
+					}
+				}
+			}
+		}()
+	})
+}
+
+func purgeReading(dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+	total, err := dbClient.ReadingTotalCount()
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query reading total count, %v", err)
+	}
+	if total >= config.Retention.MaxCap {
+		lc.Debugf("Purging the reading amount %d to the minimum capacity %d", total, config.Retention.MinCap)
+		// Using reading origin instead event origin to remove events and readings by age.
+		// If we remove readings to MinCap and remove related events, some readings might lose the related event.
+		reading, err := dbClient.LatestReadingByOffset(config.Retention.MinCap)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query reading with offset '%d'", config.Retention.MinCap), err)
+		}
+		age := time.Now().UnixNano() - reading.GetBaseReading().Origin
+		err = dbClient.DeleteEventsByAge(age)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings by age '%d'", age), err)
+		}
+	}
+	return nil
 }

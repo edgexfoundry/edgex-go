@@ -1,17 +1,25 @@
+//
+// Copyright (C) 2023 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package application
 
 import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAllReadings(t *testing.T) {
@@ -238,6 +246,51 @@ func TestReadingCountByDeviceName(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, expectedReadingCount, count, "Reading total count is not expected")
+			}
+		})
+	}
+}
+
+func TestPurgeReading(t *testing.T) {
+	dic := mocks.NewMockDIC()
+	coreDataConfig := container.ConfigurationFrom(dic.Get)
+	coreDataConfig.Retention = config.ReadingRetention{
+		Enabled:  true,
+		Interval: "1s",
+		MaxCap:   5,
+		MinCap:   3,
+	}
+	dic.Update(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return coreDataConfig
+		},
+	})
+
+	tests := []struct {
+		name         string
+		readingCount uint32
+	}{
+		{"invoke reading purging", coreDataConfig.Retention.MaxCap},
+		{"not invoke reading purging", coreDataConfig.Retention.MinCap},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			dbClientMock := &dbMock.DBClient{}
+			var reading models.Reading = models.SimpleReading{}
+			dbClientMock.On("LatestReadingByOffset", coreDataConfig.Retention.MinCap).Return(reading, nil)
+			dbClientMock.On("ReadingTotalCount").Return(testCase.readingCount, nil)
+			dbClientMock.On("DeleteEventsByAge", mock.Anything).Return(nil)
+			dic.Update(di.ServiceConstructorMap{
+				container.DBClientInterfaceName: func(get di.Get) interface{} {
+					return dbClientMock
+				},
+			})
+			err := purgeReading(dic)
+			require.NoError(t, err)
+			if testCase.readingCount >= coreDataConfig.Retention.MaxCap {
+				dbClientMock.AssertCalled(t, "DeleteEventsByAge", mock.Anything)
+			} else {
+				dbClientMock.AssertNotCalled(t, "DeleteEventsByAge", mock.Anything)
 			}
 		})
 	}

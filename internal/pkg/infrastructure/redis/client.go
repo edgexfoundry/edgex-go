@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -1643,4 +1643,17 @@ func (c *Client) TransmissionCountByNotificationId(id string) (uint32, errors.Ed
 	}
 
 	return count, nil
+}
+
+// LatestReadingByOffset returns a latest reading by offset
+func (c *Client) LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	reading, edgeXerr := latestReadingByOffset(conn, int(offset))
+	if edgeXerr != nil {
+		return nil, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return reading, nil
 }

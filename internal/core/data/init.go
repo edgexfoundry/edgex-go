@@ -19,9 +19,12 @@ package data
 import (
 	"context"
 	"sync"
+	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
@@ -46,11 +49,21 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
-	lc := container.LoggingClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	err := messaging.SubscribeEvents(ctx, dic)
 	if err != nil {
 		lc.Errorf("Failed to subscribe events from message bus, %v", err)
 		return false
+	}
+
+	config := container.ConfigurationFrom(dic.Get)
+	if config.Retention.Enabled {
+		retentionInterval, err := time.ParseDuration(config.Retention.Interval)
+		if err != nil {
+			lc.Errorf("Failed to parse reading retention interval, %v", err)
+			return false
+		}
+		application.AsyncPurgeReading(retentionInterval, ctx, dic)
 	}
 
 	return true
