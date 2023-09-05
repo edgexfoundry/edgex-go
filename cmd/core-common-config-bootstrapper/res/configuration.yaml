@@ -2,10 +2,6 @@ all-services:
   Writable:
     InsecureSecrets:
       DB:
-        path: "redisdb"
-        Secrets:
-          username: ""
-          password: ""
         SecretName: "redisdb"
         SecretData:
           username: ""
