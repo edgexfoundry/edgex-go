@@ -171,8 +171,8 @@ func TestPublishSystemEvent(t *testing.T) {
 				common.CoreMetaDataServiceKey,
 				test.Type,
 				test.Action,
-				test.Owner,
-				expectedDevice.ProfileName)
+				common.URLEncode(test.Owner),
+				common.URLEncode(expectedDevice.ProfileName))
 			mockClient.AssertCalled(t, "Publish", mock.Anything, expectedTopic)
 
 			if test.PubError {
