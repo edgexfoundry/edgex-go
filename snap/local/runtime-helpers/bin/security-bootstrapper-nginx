@@ -31,6 +31,8 @@ fi
 echo "$(date) CORS settings dump ..."
 ( set | grep EDGEX_SERVICE_CORSCONFIGURATION ) || true
 
+# See https://github.com/edgexfoundry/edgex-go/issues/4648 as to why CORS is implemented this way.
+# Warning: no not simplify add_header redundancy. See https://www.peterbe.com/plog/be-very-careful-with-your-add_header-in-nginx
 corssnippet=/tmp/cors.block.$$
 touch "${corssnippet}"
 if test "${EDGEX_SERVICE_CORSCONFIGURATION_ENABLECORS}" = "true"; then
@@ -38,7 +40,6 @@ if test "${EDGEX_SERVICE_CORSCONFIGURATION_ENABLECORS}" = "true"; then
   echo "        add_header 'Access-Control-Allow-Origin' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWEDORIGIN}';" >> "${corssnippet}"
   echo "        add_header 'Access-Control-Allow-Methods' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWEDMETHODS}';" >> "${corssnippet}"
   echo "        add_header 'Access-Control-Allow-Headers' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWEDHEADERS}';" >> "${corssnippet}"
-  # Access-Control-Expose-Headers should not be set on OPTIONS request
   if test "${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWCREDENTIALS}" = "true"; then
     # CORS specificaiton says that if not true, omit the header entirely
     echo "        add_header 'Access-Control-Allow-Credentials' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWCREDENTIALS}';" >> "${corssnippet}"
@@ -53,6 +54,10 @@ if test "${EDGEX_SERVICE_CORSCONFIGURATION_ENABLECORS}" = "true"; then
   # Always add headers regardless of response code.  Omit preflight-related headers (allow-methods, allow-headers, allow-credentials, max-age)
   echo "        add_header 'Access-Control-Allow-Origin' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWEDORIGIN}' always;" >> "${corssnippet}"
   echo "        add_header 'Access-Control-Expose-Headers' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSEXPOSEHEADERS}' always;" >> "${corssnippet}"
+  if test "${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWCREDENTIALS}" = "true"; then
+    # CORS specificaiton says that if not true, omit the header entirely
+    echo "        add_header 'Access-Control-Allow-Credentials' '${EDGEX_SERVICE_CORSCONFIGURATION_CORSALLOWCREDENTIALS}';" >> "${corssnippet}"
+  fi
   echo "        add_header 'Vary' 'origin' always;" >> "${corssnippet}"
   echo "      }" >> "${corssnippet}"
   echo "" >> "${corssnippet}"
