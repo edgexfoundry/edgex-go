@@ -15,6 +15,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
@@ -75,7 +76,7 @@ func TestPublishSystemEvent(t *testing.T) {
 
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
-			return &config.ConfigurationStruct{}
+			return &config.ConfigurationStruct{Service: bootstrapConfig.ServiceInfo{EnableNameFieldEscape: true}}
 		},
 		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return mockLogger

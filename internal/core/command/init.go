@@ -20,7 +20,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/command/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
@@ -47,12 +47,13 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
+	config := container.ConfigurationFrom(dic.Get)
 
 	// DeviceServiceCommandClient is not part of the common clients handled by the NewClientsBootstrap handler
 	dic.Update(di.ServiceConstructorMap{
 		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add API DeviceServiceCommandClient
-			jwtSecretProvider := secret.NewJWTSecretProvider(container.SecretProviderExtFrom(get))
-			return clients.NewDeviceServiceCommandClient(jwtSecretProvider)
+			jwtSecretProvider := secret.NewJWTSecretProvider(bootstrapContainer.SecretProviderExtFrom(get))
+			return clients.NewDeviceServiceCommandClient(jwtSecretProvider, config.Service.EnableNameFieldEscape)
 		},
 	})
 

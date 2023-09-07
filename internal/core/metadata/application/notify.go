@@ -42,8 +42,10 @@ func validateDeviceCallback(device dtos.Device, dic *di.Container) errors.EdgeX 
 	}
 
 	baseTopic := configuration.MessageBus.GetBaseTopicPrefix()
-	requestTopic := common.BuildTopic(baseTopic, common.URLEncode(device.ServiceName), common.ValidateDeviceSubscribeTopic)
-	responseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, common.URLEncode(device.ServiceName))
+	requestTopic := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
+		SetPath(baseTopic).SetNameFieldPath(device.ServiceName).SetPath(common.ValidateDeviceSubscribeTopic).BuildPath()
+	responseTopicPrefix := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
+		SetPath(baseTopic).SetPath(common.ResponseTopic).SetNameFieldPath(device.ServiceName).BuildPath()
 	requestEnvelope := types.NewMessageEnvelopeForRequest(requestBytes, nil)
 
 	lc.Debugf("Sending Device Validation request for device=%s, CorrelationId=%s to topic: %s", device.Name, requestEnvelope.CorrelationID, requestTopic)
@@ -86,6 +88,7 @@ func publishUpdateDeviceProfileSystemEvent(profileDTO dtos.DeviceProfile, ctx co
 
 func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 	systemEvent := dtos.NewSystemEvent(eventType, action, common.CoreMetaDataServiceKey, owner, nil, dto)
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	if messagingClient == nil {
@@ -130,20 +133,12 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		return
 	}
 
-	publishTopic := common.BuildTopic(
-		container.ConfigurationFrom(dic.Get).MessageBus.GetBaseTopicPrefix(),
-		common.SystemEventPublishTopic,
-		systemEvent.Source,
-		systemEvent.Type,
-		systemEvent.Action,
-		common.URLEncode(systemEvent.Owner),
-	)
+	topicPathBuilder := common.NewPathBuilder().EnableNameFieldEscape(config.Service.EnableNameFieldEscape)
+	publishTopic := topicPathBuilder.SetPath(config.MessageBus.GetBaseTopicPrefix()).SetPath(common.SystemEventPublishTopic).
+		SetPath(systemEvent.Source).SetPath(systemEvent.Type).SetPath(systemEvent.Action).SetNameFieldPath(systemEvent.Owner).BuildPath()
 
 	if profileName != "" {
-		publishTopic = common.BuildTopic(
-			publishTopic,
-			common.URLEncode(profileName),
-		)
+		publishTopic = topicPathBuilder.SetNameFieldPath(profileName).BuildPath()
 	}
 
 	payload, _ := json.Marshal(systemEvent)

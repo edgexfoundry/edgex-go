@@ -82,7 +82,8 @@ func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName 
 	correlationId := correlation.FromContext(ctx)
 
 	basePrefix := configuration.MessageBus.GetBaseTopicPrefix()
-	publishTopic := common.BuildTopic(basePrefix, common.EventsPublishTopic, CoreDataEventTopicPrefix, common.URLEncode(serviceName), common.URLEncode(profileName), common.URLEncode(deviceName), common.URLEncode(sourceName))
+	publishTopic := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
+		SetPath(basePrefix).SetPath(common.EventsPublishTopic).SetPath(CoreDataEventTopicPrefix).SetNameFieldPath(serviceName).SetNameFieldPath(profileName).SetNameFieldPath(deviceName).SetNameFieldPath(sourceName).BuildPath()
 	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
