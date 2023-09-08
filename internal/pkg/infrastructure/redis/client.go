@@ -1411,6 +1411,31 @@ func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, lab
 	return uint32(len(notifications)), nil
 }
 
+// NotificationTotalCount returns the total count of Notification from the database
+func (c *Client) NotificationTotalCount() (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	count, edgeXerr := getMemberNumber(conn, ZCARD, NotificationCollection)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return count, nil
+}
+
+// LatestNotificationByOffset returns a latest notification by offset
+func (c *Client) LatestNotificationByOffset(offset uint32) (model.Notification, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	notification, edgeXerr := latestNotificationByOffset(conn, int(offset))
+	if edgeXerr != nil {
+		return model.Notification{}, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return notification, nil
+}
+
 // SubscriptionTotalCount returns the total count of Subscription from the database
 func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()

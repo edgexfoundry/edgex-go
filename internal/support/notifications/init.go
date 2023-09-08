@@ -19,9 +19,13 @@ package notifications
 import (
 	"context"
 	"sync"
+	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
@@ -43,7 +47,7 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization for the notifications service.
-func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	restSender := channel.NewRESTSender(dic)
@@ -57,5 +61,15 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		},
 	})
 
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+	if config.Retention.Enabled {
+		retentionInterval, err := time.ParseDuration(config.Retention.Interval)
+		if err != nil {
+			lc.Errorf("Failed to parse notification retention interval, %v", err)
+			return false
+		}
+		application.AsyncPurgeNotification(retentionInterval, ctx, dic)
+	}
 	return true
 }

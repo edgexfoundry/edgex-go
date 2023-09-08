@@ -44,6 +44,8 @@ type DBClient interface {
 	NotificationCountByStatus(status string) (uint32, errors.EdgeX)
 	NotificationCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
 	NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX)
+	NotificationTotalCount() (uint32, errors.EdgeX)
+	LatestNotificationByOffset(offset uint32) (models.Notification, errors.EdgeX)
 
 	AddTransmission(trans models.Transmission) (models.Transmission, errors.EdgeX)
 	UpdateTransmission(trans models.Transmission) errors.EdgeX
