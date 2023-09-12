@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const expectedKey = "1060e4e72054653bf46623844033f5ccc9cff596a4a680e074ef4fd06aae60df"
+const expectedKey = "1060e4e72054653bf46623844033f5ccc9cff596a4a680e074ef4fd06aae60df" // #nosec G101
 
 // TestNoErrorKdfCreateSalt tests the golden path for a new salt
 func TestNoErrorKdfCreateSalt(t *testing.T) {

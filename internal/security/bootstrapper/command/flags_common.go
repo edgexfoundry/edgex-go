@@ -88,6 +88,11 @@ func (f *commonFlags) Profile() string {
 	return ""
 }
 
+// RemoteServiceHosts returns nil list since is not used in this service
+func (f *commonFlags) RemoteServiceHosts() []string {
+	return nil
+}
+
 // ConfigDirectory returns the directory where the config file(s) are located, if it was specified.
 func (f *commonFlags) ConfigDirectory() string {
 	return f.configDir
