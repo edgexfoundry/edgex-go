@@ -94,6 +94,11 @@ func (f *commonFlags) ConfigDirectory() string {
 	return f.configDir
 }
 
+// RemoteServiceHosts returns nil list since is not used in this service
+func (f *commonFlags) RemoteServiceHosts() []string {
+	return nil
+}
+
 // Help displays the usage help message and exit.
 func (f *commonFlags) Help() {
 	HelpCallback()
