@@ -182,6 +182,9 @@ https://github.com/golang/sys/blob/master/LICENSE
 golang.org/x/text (BSD-3) https://github.com/golang/text
 https://github.com/golang/text/blob/master/LICENSE
 
+golang.org/x/time (Unspecified) https://github.com/golang/time
+https://github.com/golang/text/blob/master/LICENSE
+
 golang.org/x/mod (BSD-3) https://github.com/golang/mod
 https://github.com/golang/mod/blob/master/LICENSE
 
@@ -253,3 +256,12 @@ https://github.com/gabriel-vasile/mimetype/blob/master/LICENSE
 
 github.com/labstack/echo/v4 (MIT) https://github.com/labstack/echo
 https://github.com/labstack/echo/blob/master/LICENSE
+
+github.com/labstack/gommon (MIT) https://github.com/labstack/gommon
+https://github.com/labstack/gommon/blob/master/LICENSE
+
+github.com/valyala/fasttemplate (MIT) https://github.com/valyala/fasttemplate
+https://github.com/valyala/fasttemplate/blob/master/LICENSE
+
+github.com/valyala/bytebufferpool (MIT) https://github.com/valyala/bytebufferpool
+https://github.com/valyala/bytebufferpool/blob/master/LICENSE
