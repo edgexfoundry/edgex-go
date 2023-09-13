@@ -60,7 +60,7 @@ func commandQueryHandler(dic *di.Container) mqtt.MessageHandler {
 		}
 
 		externalMQTTInfo := container.ConfigurationFrom(dic.Get).ExternalMQTT
-		responseTopic := externalMQTTInfo.Topics[common.ExternalCommandQueryResponseTopicKey]
+		responseTopic := externalMQTTInfo.Topics[common.CommandQueryResponseTopicKey]
 		if responseTopic == "" {
 			lc.Error("QueryResponseTopic not provided in External.Topics")
 			lc.Warn("Not publishing error message back due to insufficient information on response topic")
@@ -137,7 +137,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 			return
 		}
 
-		externalResponseTopic := common.BuildTopic(externalMQTTInfo.Topics[common.ExternalCommandResponseTopicPrefixKey], deviceName, commandName, method)
+		externalResponseTopic := common.BuildTopic(externalMQTTInfo.Topics[common.CommandResponseTopicPrefixKey], deviceName, commandName, method)
 
 		internalBaseTopic := config.MessageBus.GetBaseTopicPrefix()
 		topicPrefix := common.BuildTopic(internalBaseTopic, common.CoreCommandDeviceRequestPublishTopic)
