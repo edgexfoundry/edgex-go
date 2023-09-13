@@ -379,3 +379,21 @@ func (c *Client) DeleteProcessedNotificationsByAge(age int64) (err errors.EdgeX)
 	go c.asyncDeleteTransmissionByStoreKeys(transStoreKeys)
 	return nil
 }
+
+func latestNotificationByOffset(conn redis.Conn, offset int) (notification models.Notification, edgeXerr errors.EdgeX) {
+	objects, err := getObjectsByRevRange(conn, NotificationCollectionCreated, offset, 1)
+	if err != nil {
+		return notification, errors.NewCommonEdgeXWrapper(err)
+	}
+	notifications, err := convertObjectsToNotifications(objects)
+	if err != nil {
+		return notification, errors.NewCommonEdgeXWrapper(err)
+	}
+	if len(notifications) > 1 {
+		return notification, errors.NewCommonEdgeX(errors.KindServerError, "the query result should not greater than one notification", nil)
+	}
+	if len(notifications) == 0 {
+		return notification, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("notification not found from the offset %d", offset), nil)
+	}
+	return notifications[0], nil
+}

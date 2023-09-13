@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2023 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +7,9 @@ package application
 
 import (
 	"context"
+	"fmt"
+	"sync"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
@@ -19,6 +22,8 @@ import (
 
 	"github.com/google/uuid"
 )
+
+var asyncPurgeNotificationOnce sync.Once
 
 // The AddNotification function accepts the new Notification model from the controller function
 // and then invokes AddNotification function of infrastructure layer to add new Notification
@@ -192,6 +197,54 @@ func DeleteProcessedNotificationsByAge(age int64, dic *di.Container) errors.Edge
 	err := dbClient.DeleteProcessedNotificationsByAge(age)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
+	}
+	return nil
+}
+
+// AsyncPurgeNotification purge notifications and related transmissions according to the retention capability.
+func AsyncPurgeNotification(interval time.Duration, ctx context.Context, dic *di.Container) {
+	asyncPurgeNotificationOnce.Do(func() {
+		go func() {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			timer := time.NewTimer(interval)
+			for {
+				timer.Reset(interval)
+				select {
+				case <-ctx.Done():
+					lc.Info("Exiting notification retention")
+					return
+				case <-timer.C:
+					err := purgeNotification(dic)
+					if err != nil {
+						lc.Errorf("Failed to purge notifications and transmissions, %v", err)
+						break
+					}
+				}
+			}
+		}()
+	})
+}
+
+func purgeNotification(dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+	total, err := dbClient.NotificationTotalCount()
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query notification total count, %v", err)
+	}
+	if total >= config.Retention.MaxCap {
+		lc.Debugf("Purging the notification amount %d to the minimum capacity %d", total, config.Retention.MinCap)
+		notification, err := dbClient.LatestNotificationByOffset(config.Retention.MinCap)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query notification with offset '%d'", config.Retention.MinCap), err)
+		}
+		now := time.Now().UnixMilli()
+		age := now - notification.Created
+		err = dbClient.CleanupNotificationsByAge(age)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete notifications and transmissions by age '%d'", age), err)
+		}
 	}
 	return nil
 }

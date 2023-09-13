@@ -27,6 +27,7 @@ type ConfigurationStruct struct {
 	Service    bootstrapConfig.ServiceInfo
 	MessageBus bootstrapConfig.MessageBusInfo
 	Smtp       SmtpInfo
+	Retention  NotificationRetention
 }
 
 type WritableInfo struct {
@@ -50,6 +51,13 @@ type SmtpInfo struct {
 	SecretName string
 	// AuthMode is the SMTP authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'.
 	AuthMode string
+}
+
+type NotificationRetention struct {
+	Enabled  bool
+	Interval string
+	MaxCap   uint32
+	MinCap   uint32
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
