@@ -65,10 +65,10 @@ func TestOnConnectHandler(t *testing.T) {
 			return &config.ConfigurationStruct{
 				ExternalMQTT: bootstrapConfig.ExternalMQTTInfo{
 					Topics: map[string]string{
-						common.CommandRequestTopicKey:                testExternalCommandRequestTopic,
-						common.ExternalCommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
-						common.CommandQueryRequestTopicKey:           testQueryRequestTopic,
-						common.ExternalCommandQueryResponseTopicKey:  testQueryResponseTopic,
+						common.CommandRequestTopicKey:        testExternalCommandRequestTopic,
+						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+						common.CommandQueryRequestTopicKey:   testQueryRequestTopic,
+						common.CommandQueryResponseTopicKey:  testQueryResponseTopic,
 					},
 					QoS:    0,
 					Retain: true,
@@ -171,7 +171,7 @@ func Test_commandQueryHandler(t *testing.T) {
 					QoS:    0,
 					Retain: true,
 					Topics: map[string]string{
-						common.ExternalCommandQueryResponseTopicKey: testQueryResponseTopic,
+						common.CommandQueryResponseTopicKey: testQueryResponseTopic,
 					},
 				},
 			}
@@ -298,7 +298,7 @@ func Test_commandRequestHandler(t *testing.T) {
 					QoS:    0,
 					Retain: true,
 					Topics: map[string]string{
-						common.ExternalCommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
+						common.CommandResponseTopicPrefixKey: testExternalCommandResponseTopicPrefix,
 					},
 				},
 			}

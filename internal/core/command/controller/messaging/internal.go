@@ -73,6 +73,7 @@ func processDeviceCommandRequest(
 	lc logger.LoggingClient,
 	dic *di.Container) {
 	var err error
+	config := container.ConfigurationFrom(dic.Get)
 
 	lc.Debugf("Command device request received on internal MessageBus. Topic: %s, Request-id: %s, Correlation-id: %s", requestEnvelope.ReceivedTopic, requestEnvelope.RequestID, requestEnvelope.CorrelationID)
 
@@ -98,17 +99,15 @@ func processDeviceCommandRequest(
 	}
 
 	// expected internal command request/response topic scheme: #/<device>/<command-name>/<method>
-	deviceName := topicLevels[length-3]
-	unescapedDeviceName, err := url.PathUnescape(deviceName)
+	deviceName, err := url.PathUnescape(topicLevels[length-3])
 	if err != nil {
-		lc.Errorf("Failed to unescape device name '%s': %s", deviceName, err.Error())
+		lc.Errorf("Failed to unescape device name from '%s': %s", topicLevels[length-3], err.Error())
 		lc.Warn("Not publishing error message back due to insufficient information on response topic")
 		return
 	}
-	commandName := topicLevels[length-2]
-	unescapedCommandName, err := url.PathUnescape(commandName)
+	commandName, err := url.PathUnescape(topicLevels[length-2])
 	if err != nil {
-		err = fmt.Errorf("failed to unescape command name '%s': %s", commandName, err.Error())
+		err = fmt.Errorf("failed to unescape command name from '%s': %s", topicLevels[length-2], err.Error())
 		lc.Error(err.Error())
 		responseEnvelope := types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, err.Error())
 		err = messageBus.Publish(responseEnvelope, internalResponseTopic)
@@ -131,7 +130,7 @@ func processDeviceCommandRequest(
 
 	topicPrefix := common.BuildTopic(baseTopic, common.CoreCommandDeviceRequestPublishTopic)
 	// internal command request topic scheme: <DeviceRequestTopicPrefix>/<device-service>/<device>/<command-name>/<method>
-	deviceServiceName, err := retrieveServiceNameByDevice(unescapedDeviceName, dic)
+	deviceServiceName, err := retrieveServiceNameByDevice(deviceName, dic)
 	if err != nil {
 		err = fmt.Errorf("invalid request topic: %s", err.Error())
 		lc.Error(err.Error())
@@ -154,8 +153,10 @@ func processDeviceCommandRequest(
 		return
 	}
 
-	deviceRequestTopic := common.BuildTopic(topicPrefix, common.URLEncode(deviceServiceName), common.URLEncode(unescapedDeviceName), common.URLEncode(unescapedCommandName), method)
-	deviceResponseTopicPrefix := common.BuildTopic(baseTopic, common.ResponseTopic, common.URLEncode(deviceServiceName))
+	deviceRequestTopic := common.NewPathBuilder().EnableNameFieldEscape(config.Service.EnableNameFieldEscape).
+		SetPath(topicPrefix).SetNameFieldPath(deviceServiceName).SetNameFieldPath(deviceName).SetNameFieldPath(commandName).SetPath(method).BuildPath()
+	deviceResponseTopicPrefix := common.NewPathBuilder().EnableNameFieldEscape(config.Service.EnableNameFieldEscape).
+		SetPath(baseTopic).SetPath(common.ResponseTopic).SetNameFieldPath(deviceServiceName).BuildPath()
 
 	lc.Debugf("Sending Command Device Request to internal MessageBus. Topic: %s, Correlation-id: %s", deviceRequestTopic, requestEnvelope.CorrelationID)
 	lc.Debugf("Expecting response on topic: %s/%s", deviceResponseTopicPrefix, requestEnvelope.RequestID)
