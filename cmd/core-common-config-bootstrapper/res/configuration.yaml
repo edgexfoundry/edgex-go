@@ -106,6 +106,7 @@ device-services:
       Metrics:
         EventsSent: false
         ReadingsSent: false
+        LastConnected: false
   Clients:
     core-metadata:
       Protocol: "http"
