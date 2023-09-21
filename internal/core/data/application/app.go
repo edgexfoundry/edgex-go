@@ -58,7 +58,6 @@ func NewCoreDataApp(dic *di.Container) *CoreDataApp {
 	}
 	app.lc.Infof("Registered metrics counter %s", eventsPersistedMetricName)
 
-	app.readingsPersistedCounter = gometrics.NewCounter()
 	if err := metricsManager.Register(readingsPersistedMetricName, app.readingsPersistedCounter, nil); err != nil {
 		app.lc.Errorf("%s metrics will not be collected: %s", readingsPersistedMetricName, err.Error())
 	}
