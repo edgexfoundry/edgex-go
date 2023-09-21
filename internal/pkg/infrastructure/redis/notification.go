@@ -381,7 +381,7 @@ func (c *Client) DeleteProcessedNotificationsByAge(age int64) (err errors.EdgeX)
 }
 
 func latestNotificationByOffset(conn redis.Conn, offset int) (notification models.Notification, edgeXerr errors.EdgeX) {
-	objects, err := getObjectsByRevRange(conn, NotificationCollectionCreated, offset, 1)
+	objects, err := getObjectsByRevRange(conn, NotificationCollection, offset, 1)
 	if err != nil {
 		return notification, errors.NewCommonEdgeXWrapper(err)
 	}

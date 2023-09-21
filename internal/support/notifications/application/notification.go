@@ -235,12 +235,13 @@ func purgeNotification(dic *di.Container) errors.EdgeX {
 	}
 	if total >= config.Retention.MaxCap {
 		lc.Debugf("Purging the notification amount %d to the minimum capacity %d", total, config.Retention.MinCap)
+		// Query the latest notification and clean notifications by modified date.
 		notification, err := dbClient.LatestNotificationByOffset(config.Retention.MinCap)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query notification with offset '%d'", config.Retention.MinCap), err)
 		}
 		now := time.Now().UnixMilli()
-		age := now - notification.Created
+		age := now - notification.Modified
 		err = dbClient.CleanupNotificationsByAge(age)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete notifications and transmissions by age '%d'", age), err)
