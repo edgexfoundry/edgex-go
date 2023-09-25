@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.41
-	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.6
+	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.15
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.21
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.9
@@ -39,7 +39,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/hashicorp/consul/api v1.24.0 // indirect
+	github.com/hashicorp/consul/api v1.25.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
