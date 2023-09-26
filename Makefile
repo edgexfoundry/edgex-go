@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-.PHONY: build clean unittest hadolint lint test docker run sbom docker-fuzz fuzz-test-command
+.PHONY: build clean unittest hadolint lint test docker run sbom docker-fuzz fuzz-test-command fuzz-test-data
 
 # change the following boolean flag to include or exclude the delayed start libs for builds for most of core services except support services
 INCLUDE_DELAYED_START_BUILD_CORE:="false"
@@ -374,3 +374,7 @@ docker-fuzz:
 fuzz-test-command:
 # not joining the edgex-network due to swagger file url pointing to localhost for fuzz testing in the container
 	docker run --net host --rm -v "$$PWD/fuzz_test/fuzz_results:/fuzz_results" fuzz-edgex-go:latest core-command /restler-fuzzer/openapi/core-command.yaml
+
+fuzz-test-data:
+# not joining the edgex-network due to swagger file url pointing to localhost for fuzz testing in the container
+	docker run --net host --rm -v "$$PWD/fuzz_test/fuzz_results:/fuzz_results" fuzz-edgex-go:latest core-data /restler-fuzzer/openapi/core-data.yaml

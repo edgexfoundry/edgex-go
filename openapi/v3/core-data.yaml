@@ -201,7 +201,17 @@ components:
             oneOf:
               - $ref: '#/components/schemas/SimpleReading'
               - $ref: '#/components/schemas/BinaryReading'
-              - $ref: '#/components/schemas/ObjectReading'              
+              - $ref: '#/components/schemas/ObjectReading'
+          example: [
+            {
+                "deviceName": "Random-Boolean-Device",
+                "profileName": "Random-Boolean-Device",
+                "resourceName": "Bool",
+                "origin": 1692721935934211905,
+                "valueType": "Bool",
+                "value": "false"
+            }
+        ]
         tags:
           description: "List of zero or more Tags attached to the Event which give more context to the Event"
           title: tags
@@ -525,45 +535,42 @@ components:
         statusCode: 200
         totalCount: 5
         readings:
-          - deviceName: "device-001"
-            resourceName: "resource-001"
-            profileName: "profile-001"
+          - deviceName: "Random-Boolean-Device"
+            resourceName: "Bool"
+            profileName: "Random-Boolean-Device"
             id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
             origin: 1602168089665565300
-            valueType: "Float32"
-            value: "39.5"
-          - deviceName: "device-001"
-            resourceName: "resource-001"
-            profileName: "profile-001"
+            valueType: "Bool"
+            value: "false"
+          - deviceName: "Random-Integer-Device"
+            resourceName: "Int8"
+            profileName: "Random-Integer-Device"
             id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
             origin: 1602168089665565300
             valueType: "Int8"
             value: "75" 
-          - deviceName: "device-002"
+          - deviceName: "Random-Binary-Device"
             resourceName: "resource-002"
-            profileName: "profile-002"
+            profileName: "Random-Binary-Device"
             id: "71c601d9-cb56-453a-8c75-54461e444713"
             origin: 1602168089665565300
             valueType: "Binary"
             binaryValue: [12,34]
             mediaType: "image"
-          - deviceName: "device-002"
-            resourceName: "resource-002"
-            profileName: "profile-002"
+          - deviceName: "Random-Float-Device"
+            resourceName: "Float32"
+            profileName: "Random-Float-Device"
             id: "7003cacc-0e00-4676-977c-4e58b9612abd"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
-          - deviceName: "device-002"
-            resourceName: "resource-003"
-            profileName: "profile-002"
+          - deviceName: "Random-UnsignedInteger-Device"
+            resourceName: "Uint8"
+            profileName: "Random-UnsignedInteger-Device"
             id: "71c601d9-cb56-453a-8c75-54461e444715"
             origin: 1602168089665565300
-            valueType: "Object"
-            objectValue:
-              Attr1: "yyz"
-              Attr2: -45
-              Attr3: [255, 1, 0]
+            valueType: "Uint8"
+            value: "77"
     ReadingsByResourceNameAndTimeRangeExample:
       value:
         apiVersion: "v3"
@@ -629,11 +636,11 @@ paths:
               apiVersion: v3
               event:
                 apiVersion: v3
-                deviceName: device-002
-                profileName: profile-002
-                sourceName: resource-002
-                id: d5471d59-2810-419a-8744-18eb8fa03465
-                origin: 1602168089665565300
+                deviceName: Random-Boolean-Device
+                profileName: Random-Boolean-Device
+                sourceName: Bool
+                id: 563513b3-f020-46fa-ae44-0fdd1d129185
+                origin: 1692721935934211905
                 tags:
                   Gateway: "HoustonStore-000123"
                   Latitude:
@@ -645,13 +652,13 @@ paths:
                     minute: 31.0
                     second: 19.600799999980154
                 readings:
-                  - deviceName: device-002
-                    resourceName: resource-002
-                    profileName: profile-002
-                    id: 7003cacc-0e00-4676-977c-4e58b9612abd
-                    origin: 1602168089665565300
-                    valueType: Float32
-                    value: '12.2'
+                  - deviceName: Random-Boolean-Device
+                    resourceName: Bool
+                    profileName: Random-Boolean-Device
+                    id: 563513b3-f020-46fa-ae44-0fdd1d129185
+                    origin: 1692721935934211905
+                    valueType: Bool
+                    value: 'false'
       responses:
         '201':
           description: "Indicates the event has been successfully added."
