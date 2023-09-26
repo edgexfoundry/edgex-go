@@ -4,10 +4,10 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.41
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.44
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.15
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.21
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.24
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/gomodule/redigo v1.8.9
@@ -26,7 +26,7 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v3 v3.1.0-dev.6 // indirect
+	github.com/edgexfoundry/go-mod-registry/v3 v3.1.0-dev.7 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -58,8 +58,8 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/nats-io/nats.go v1.28.0 // indirect
-	github.com/nats-io/nkeys v0.4.4 // indirect
+	github.com/nats-io/nats.go v1.30.1 // indirect
+	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
