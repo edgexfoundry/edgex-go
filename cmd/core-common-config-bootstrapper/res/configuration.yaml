@@ -83,11 +83,13 @@ app-services:
       Metrics:
         MessagesReceived: false
         InvalidMessagesReceived: false
-        PipelineMessagesProcessed: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        PipelineMessageProcessingTime: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        PipelineProcessingErrors: false # Pipeline IDs are added as the tag for the metric for each pipeline defined
-        HttpExportSize: false # Single metric used for all HTTP Exports
-        MqttExportSize: false # BrokerAddress and Topic are added as the tag for this metric for each MqttExport defined
+        PipelineMessagesProcessed: false # Pipeline IDs are added as the tag for this metric for each pipeline defined
+        PipelineMessageProcessingTime: false # Pipeline IDs are added as the tag for this metric for each pipeline defined
+        PipelineProcessingErrors: false # Pipeline IDs are added as the tag for this metric for each pipeline defined
+        HttpExportSize: false #  Url is added as tag for this metric for each HTTP export defined
+        HttpExportErrors: false # Url is added as tag for this metric for each HTTP export defined
+        MqttExportSize: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
+        MqttExportErrors: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
   Clients:
     core-metadata:
       Protocol: "http"
