@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.46
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.1.0-dev.47
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.1.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.1.0-dev.16
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.1.0-dev.25
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.9
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.1.0-dev.10
 	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/gomodule/redigo v1.8.9
 	github.com/google/uuid v1.3.1
