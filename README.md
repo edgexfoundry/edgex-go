@@ -10,7 +10,7 @@
 EdgeX Foundry is a vendor-neutral open source project hosted by The Linux Foundation building a common open framework for IoT edge computing.  At the heart of the project is an interoperability framework hosted within a full hardware- and OS-agnostic reference software platform to enable an ecosystem of plug-and-play components that unifies the marketplace and accelerates the deployment of IoT solutions.  This repository contains the Go implementation of EdgeX Foundry microservices.  It also includes files for building the services, containerizing the services, and initializing (bootstrapping) the services.
 
 ## Build with NATS Messaging
-Currently, the NATS Messaging capability (NATS MessageBus) is opt-in at build time. This means that the published Docker images and Snaps do not include the NATS messaging capability.
+Currently, the NATS Messaging capability (NATS MessageBus) is opt-in at build time. This means that the published Docker images do not include the NATS messaging capability.
 
 The following make commands will build the local binaries or local Docker images with NATS messaging capability included for the Core and Support services.
 
@@ -58,11 +58,6 @@ Sample steps to create an access token and use the token to access EdgeX resourc
 
 ## Other installation and deployment options
 
-### Snap Package
-
-The components in this repository are available as a snap package.
-For more details on the snap, including how to build and install it, please refer to the [snap](snap) directory.
-
 ### Native binaries
 
 #### Prerequisites
@@ -95,7 +90,7 @@ make build
 
 #### Deploy EdgeX
 
-Recommended deployment of EdgeX services is either Docker or Snap. See [Getting Started with Docker](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedUsers/) or [Getting Started with Snap](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedSnapUsers/) for more details. 
+Recommended deployment of EdgeX services is with Docker. See [Getting Started with Docker](https://docs.edgexfoundry.org/2.0/getting-started/Ch-GettingStartedUsers/) for more details. 
 
 #### Hybrid for debug/testing
 
@@ -128,7 +123,7 @@ If you want to **include** the delayed start feature in the builds for these ser
 INCLUDE_DELAYED_START_BUILD_CORE:="false"
 ```
 
-For support services, the delayed start feature is included by default as the default behavior of them are not started right away in Snap. Similarly, you can change the default and **exclude** it by modifying the boolean flag from `true` to `false` in the Makefile:
+For support services, the delayed start feature is included by default. Similarly, you can change the default and **exclude** it by modifying the boolean flag from `true` to `false` in the Makefile:
 
 ```text
 INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"

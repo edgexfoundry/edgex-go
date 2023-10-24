@@ -1,8 +1,0 @@
-#!/bin/bash -e
-
-# save these for use in the post-refresh hook
-snapctl set pre-refresh.revision=$SNAP_REVISION
-snapctl set pre-refresh.version=$SNAP_VERSION
-
-# unset legacy EdgeX <2.3 options
-snapctl unset lastrev release

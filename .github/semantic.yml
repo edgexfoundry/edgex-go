@@ -21,7 +21,6 @@ scopes:
     - core-command
     - command
     - cmd
-    - snap
     - docker
     - security
     - scheduler

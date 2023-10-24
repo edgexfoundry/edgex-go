@@ -57,7 +57,6 @@ Modules:
 * **core-data**: (or data) A change or addition to the core data micro service 
 * **core-metadata**: (or metadata or meta) A change or addition to the core metatdata micro service
 * **core-command**: (or command or cmd) A change or addition to the core command micro service
-* **snap**: A change or addition to snap packaging 
 * **docker**: A change or addition to docker packaging
 * **security**: A change or addition to security micro services
 * **scheduler**: A change or addition to the supporting scheduler micro service

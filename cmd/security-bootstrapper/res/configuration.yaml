@@ -60,7 +60,6 @@ StageGate:
 # this configuration is just part of the whole go-mod-bootstrap's secret store to have
 # protocol, host, and port of secretstore using in the security-bootstrapper
 # we are not really using the secret store provider from go-mod-bootstrap in the code
-# also this is needed as snap does not have those environments from env-files
 SecretStore:
   Type: vault
   Protocol: http
