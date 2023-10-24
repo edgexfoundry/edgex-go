@@ -176,7 +176,7 @@ func (c *cmd) Execute() (statusCode int, err error) {
 	}
 
 	// write a sentinel file to indicate Consul ACL bootstrap is done so that we don't bootstrap ACL again,
-	// this is to avoid re-bootstrapping error and that error can cause the snap crash if restart this process
+	// this is to avoid re-bootstrapping error
 	if err := c.writeSentinelFile(); err != nil {
 		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to write sentinel file: %v", err)
 	}

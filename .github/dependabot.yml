@@ -17,7 +17,3 @@ updates:
       - dependency-name: "github.com/gomodule/redigo"
         # For github.com/gomodule/redigo, ignore version v2.0.0
         versions: ["v2.0.0"]
-  - package-ecosystem: "gomod"
-    directory: "/snap/local/helper-go"
-    schedule:
-      interval: "daily"

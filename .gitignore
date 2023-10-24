@@ -38,16 +38,5 @@ docs/_build/
 # log dirs
 **/logs
 
-# snap files
-*.snap
-*.assert
-*.bz2
-*.pyc
-parts/*
-prime/*
-stage/*
-snap/.snapcraft/*
-squashfs-root/
-
 # result files
 fuzz_test/fuzz_results/*

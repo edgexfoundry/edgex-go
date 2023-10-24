@@ -1,5 +1,5 @@
 # This file is intended for inclusion in official EdgeX binary releases,
-# such as containers and snaps.
+# such as containers.
 
 # To privately report a security vulnerability in EdgeX Foundry
 # in the upstream open source repository hosted on github.com.
