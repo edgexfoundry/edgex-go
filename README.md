@@ -79,7 +79,7 @@ cd edgex-go
 make build
 ```
 
-If you do want to root everthing under $GOPATH, you're free to use that pattern as well
+If you do want to root everything under $GOPATH, you're free to use that pattern as well
 
 ```sh
 GO111MODULE=on && export GO111MODULE
