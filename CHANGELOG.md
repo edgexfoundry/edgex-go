@@ -12,6 +12,69 @@
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
 
+## [3.1.0] Napa - 2023-11-15 (Only compatible with the 3.x releases)
+
+### ✨  Features
+
+- Remove snap packaging ([#4706](https://github.com/edgexfoundry/edgex-go/issues/4706)) ([b52c6cf…](https://github.com/edgexfoundry/edgex-go/commit/b52c6cf761ac112ece749ea113e372719a05fda4))
+```text
+
+BREAKING CHANGE: Remove snap packaging ([#4706](https://github.com/edgexfoundry/edgex-go/issues/4706))
+
+```
+- Implement notification retention feature ([b213c8a…](https://github.com/edgexfoundry/edgex-go/commit/b213c8a899e6a1be3cbac435de5f3915e08c44c8))
+- Implement data retention feature ([2b2ffc9…](https://github.com/edgexfoundry/edgex-go/commit/2b2ffc9d75241a155e93b73190587ea366d21290))
+  Add new export error metrics to App Service common config ([#4696](https://github.com/edgexfoundry/edgex-go/issues/4696)) ([a045e8e…](https://github.com/edgexfoundry/edgex-go/commit/a045e8e81b8ab7e100c731525ac4bd730155663f))
+- Add LastConnected metric to device service common config ([596b81e…](https://github.com/edgexfoundry/edgex-go/commit/596b81eab604239cccafdf60ec211c08c9f71ea6))
+- Allow name field escape configurable ([#4674](https://github.com/edgexfoundry/edgex-go/issues/4674)) ([8690ef6…](https://github.com/edgexfoundry/edgex-go/commit/8690ef6f077aa4f09e1c290a800e35321f54b9f1))
+- Accept Url escape in API path ([67d489b…](https://github.com/edgexfoundry/edgex-go/commit/67d489b15bf9cd9644306348d95781582a0f079e))
+- Use a better error handling logic and messages when run in hybrid mode with no common config ([#4617](https://github.com/edgexfoundry/edgex-go/issues/4617)) ([e9743d5…](https://github.com/edgexfoundry/edgex-go/commit/e9743d574695eaaacfb4360752d68f7ca76ed8b2))
+- Use file load for UoM to allow reading from local file or URI ([#4600](https://github.com/edgexfoundry/edgex-go/issues/4600)) ([c4e9678…](https://github.com/edgexfoundry/edgex-go/commit/c4e9678bd2dc4350f999e9d876f0d88fec21a98b))
+- Take secrets base directory from existing configuration ([#4592](https://github.com/edgexfoundry/edgex-go/issues/4592)) ([b4f3d37…](https://github.com/edgexfoundry/edgex-go/commit/b4f3d3796f5e4a543acc54ea282569be45c8b663))
+- Add warn log for create/update interval ([#4597](https://github.com/edgexfoundry/edgex-go/issues/4597)) ([db7b7ee…](https://github.com/edgexfoundry/edgex-go/commit/db7b7ee384591f5a64d361305216a2c2c0d3e0f8))
+
+### ♻ Code Refactoring
+
+- Replace mux with Echo for all services ([d8e3ff3…](https://github.com/edgexfoundry/edgex-go/commit/d8e3ff338af1cbbb79c945eca61a8d5c8be3b34d))
+- Replace gorilla/mux router library with Echo ([f0b0b88…](https://github.com/edgexfoundry/edgex-go/commit/f0b0b88f962433060426696ba2302a4362f72fe6))
+- Update UrlDecodeMiddleware to use echo format ([84ead09…](https://github.com/edgexfoundry/edgex-go/commit/84ead090e3b4c5a1ce43961f81303a54e791d730))
+- Move all the common APIs into go-mod-bootstrap ([b3c3aff…](https://github.com/edgexfoundry/edgex-go/commit/b3c3affb931af91ce3824136d58f6713da561887))
+- Remove old InsecureSecrets backward compatibility elements ([#4672](https://github.com/edgexfoundry/edgex-go/issues/4672)) ([5e4c173…](https://github.com/edgexfoundry/edgex-go/commit/5e4c17392479c7248920cab766a26390de70e8b1))
+- Remove github.com/pkg/errors from Attribution.txt ([92b822a…](https://github.com/edgexfoundry/edgex-go/commit/92b822a68c558b3dd9ced080e641f36bf1f29027))
+- Remove duplicate definitions ([#4692](https://github.com/edgexfoundry/edgex-go/issues/4692)) ([34f840c…](https://github.com/edgexfoundry/edgex-go/commit/34f840c68dfd07fd09c4325cf8194608b3ff672b))
+
+### 🐛 Bug Fixes
+
+- *(security)* CORS Allow-Credentials header applies to ALL CORS requests ([#4669](https://github.com/edgexfoundry/edgex-go/issues/4669)) ([2bac5d1…](https://github.com/edgexfoundry/edgex-go/commit/2bac5d16a43a6729031be1bb569bb56c5aedbab0))
+- *(security)* Fix crash in entrypoint.sh due to exit code ([#4642](https://github.com/edgexfoundry/edgex-go/issues/4642)) ([cd3e8a6…](https://github.com/edgexfoundry/edgex-go/commit/cd3e8a6a29d241919ce39f0a43e51689c2eacef5))
+- *(security)* Restore CORS functionality broken in EdgeX 3.0 ([#4638](https://github.com/edgexfoundry/edgex-go/issues/4638)) ([5be6da0…](https://github.com/edgexfoundry/edgex-go/commit/5be6da0dd8fb641f6b43c82f942f16555c379249))
+- Purge notifications properly ([4482fa8…](https://github.com/edgexfoundry/edgex-go/commit/4482fa8b2b4b954fac65288152b89b032cac754c))
+- Core-command fuzzing test http error 500 ([7fce62d…](https://github.com/edgexfoundry/edgex-go/commit/7fce62d23fefd64b9b166af17ad081243a202fc8))
+- Initialize interval in the local time zone ([418c923…](https://github.com/edgexfoundry/edgex-go/commit/418c923acbff50a3bd722cc59a08428ced0fbbff))
+
+### 📖 Documentation
+
+- Fix core-command swagger file ([#4631](https://github.com/edgexfoundry/edgex-go/issues/4631)) ([fe3620c…](https://github.com/edgexfoundry/edgex-go/commit/fe3620ce412f86f9ce6eb635c00e802c499476bf))
+- Update core-metadata swagger for missing tags and description' ([#4612](https://github.com/edgexfoundry/edgex-go/issues/4612)) ([54d035b…](https://github.com/edgexfoundry/edgex-go/commit/54d035bfa974c800c1254128570959cbd1217788))
+- Fix typo in README ([78e29ba…](https://github.com/edgexfoundry/edgex-go/commit/78e29ba0a607a4afeb8ddd2fa398a79c051dbf55))
+- Add common API /secret to all Swagger files ([74fb306…](https://github.com/edgexfoundry/edgex-go/commit/74fb306d33494e5539c20bbd837c55e83e9ec966))
+
+
+### 👷 Build
+
+- Upgrade to go-1.21, Linter1.54.2 and Alpine 3.18 ([#4680](https://github.com/edgexfoundry/edgex-go/issues/4680)) ([4687b85…](https://github.com/edgexfoundry/edgex-go/commit/4687b85feb07d3d50e1bc338781fac63f010329a))
+- Pull spire-server and spire-agent from prebuilt containers ([#4667](https://github.com/edgexfoundry/edgex-go/issues/4667)) ([7bfebe8…](https://github.com/edgexfoundry/edgex-go/commit/7bfebe8d09e2b9340326eaa527b0cdd522250f64))
+
+### 🧪 Testing
+
+- *(core-data)* To improve core-data fuzzing test coverage with swagger… ([#4690](https://github.com/edgexfoundry/edgex-go/issues/4690)) ([8da9149…](https://github.com/edgexfoundry/edgex-go/commit/8da91496fa0bc3de6ddd971c1fa7289dd8a6c8a3))
+- Add dockerfile and script to perform fuzzing test on all swagger files and individual ([#4569](https://github.com/edgexfoundry/edgex-go/issues/4569)) ([6b7b8e6…](https://github.com/edgexfoundry/edgex-go/commit/6b7b8e6d71ad27e7b5aec3404d08ea9d1b89993c))
+- Report FuzzLean result to fuzz_results folder ([#4637](https://github.com/edgexfoundry/edgex-go/issues/4637)) ([74b98e4…](https://github.com/edgexfoundry/edgex-go/commit/74b98e48a794a97f37b554db3d129d7af8896319))
+
+### <!-- 7 -->🤖 Continuous Integration
+
+- Add automated release workflow on tag creation ([f296da7…](https://github.com/edgexfoundry/edgex-go/commit/f296da785f4da0c7e3c2d462f49a3f1f93d4668f))
+
 ## [3.0.0] Minnesota - 2023-05-31 (Only compatible with the 3.x releases)
 ### Features ✨
 - Update base API version to v3 ([#4519](https://github.com/edgexfoundry/edgex-go/pull/4519))
