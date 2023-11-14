@@ -29,6 +29,8 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2022 Intel Corporation'
 
 RUN apk update && apk --no-cache --update add dumb-init openssl gcompat
+# Ensure using latest versions of all installed packages to avoid any recent CVEs
+RUN apk --no-cache upgrade
 
 COPY --from=spire_agent /opt/spire/bin/spire-agent /usr/local/bin
 COPY --from=spire_server /opt/spire/bin/spire-server /usr/local/bin

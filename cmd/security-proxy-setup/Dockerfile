@@ -32,6 +32,8 @@ RUN make cmd/secrets-config/secrets-config
 FROM alpine:3.18
 
 RUN apk add --update --no-cache dumb-init su-exec openssl yq
+# Ensure using latest versions of all installed packages to avoid any recent CVEs
+RUN apk --no-cache upgrade
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2019: Dell Technologies, Inc.; Copyright (C) 2023 Intel Corporation'
