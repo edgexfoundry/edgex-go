@@ -36,6 +36,8 @@ LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2023 Intel Corporation'
 
 RUN apk add --update --no-cache dumb-init su-exec
+# Ensure using latest versions of all installed packages to avoid any recent CVEs
+RUN apk --no-cache upgrade
 
 ENV SECURITY_INIT_DIR /edgex-init
 ENV SECURITY_INIT_STAGING /edgex-init-staging

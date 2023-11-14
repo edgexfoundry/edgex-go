@@ -35,6 +35,8 @@ RUN make cmd/support-scheduler/support-scheduler
 FROM alpine:3.18
 
 RUN apk add --update --no-cache dumb-init
+# Ensure using latest versions of all installed packages to avoid any recent CVEs
+RUN apk --no-cache upgrade
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2018: Dell, Cavium, Copyright (c) 2023: Intel Corporation'
