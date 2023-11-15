@@ -1,5 +1,5 @@
 # EdgeX Foundry V3 API Specification
-OpenAPI docs defining V3 API for the EdgeX Foundry platform (under development)
+OpenAPI docs defining V3 API for the EdgeX Foundry platform 
 
 To view the Swagger definition:
 
