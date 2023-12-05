@@ -51,7 +51,7 @@ MICROSERVICES= \
 VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
-GOFLAGS=-ldflags "-X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
+GOFLAGS=-ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
 GOTESTFLAGS?=-race
 
 GIT_SHA=$(shell git rev-parse HEAD)
