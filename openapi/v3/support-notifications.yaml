@@ -1194,6 +1194,7 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
         description: "The ID that identifies the notification."
     get:
       summary: "Returns a notification by ID."
@@ -1305,6 +1306,10 @@ paths:
         required: true
         schema:
           type: string
+          enum:
+            - NEW
+            - PROCESSED
+            - ESCALATED
         description: "The status of the notifications you wish to load."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
@@ -1869,6 +1874,7 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
         description: "The ID that identifies the transmission."
     get:
       summary: "Returns a transmission by ID."
@@ -2213,6 +2219,7 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
         description: "The notification id associated with transmissions you wish to load."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
