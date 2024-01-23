@@ -11,7 +11,7 @@ require (
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/gomodule/redigo v1.8.9
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spiffe/go-spiffe/v2 v2.1.6
