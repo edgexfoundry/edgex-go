@@ -30,8 +30,6 @@ github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.18 h1:h59Vx7wpVVjkbxvs62+
 github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.18/go.mod h1:M3/344c8Zq4Bna/nR2WD2SWZ5tD5gLU8ukYus4dTb6s=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.2 h1:71C39GPP7nbxa5GTOqoc1eAXbogoie1DCYCLBQo71t0=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.2/go.mod h1:+RykcMAHe6rluqJSKOAy+EwtzaeSc/qbxRYdtY2vA0g=
-github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.8 h1:la7SU8i0TwgJ1tnbgUacHtuCKmUEnb7R3VVgvJ2EiPY=
-github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.8/go.mod h1:mXa4zgfgECdC/8WLULwCWmI5ZZNG7pzXeGGh4SH0FC0=
 github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.12 h1:/Z9Uxttg8ofl4Vv55ZPBz2tHkTyZTPIQiYENNnPeAPU=
 github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.12/go.mod h1:/oGknon5z25PsBFnPHa74i54XM5xxwZ0AXCQLvk0qWw=
 github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.2 h1:Fj2CLjWB8I0KSjysV5oITrFlPI82K5aJXMt0/ZPC+/4=
@@ -140,6 +138,8 @@ github.com/hashicorp/serf v0.10.1 h1:Z1H2J60yRKvfDYAOZLd2MU0ND4AH/WDz7xYHDWQsIPY
 github.com/hashicorp/serf v0.10.1/go.mod h1:yL2t6BqATOLGc5HF7qbFkTfXoPIY0WZdWHfEvMqbG+4=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
+github.com/jrtitus/go-mod-core-contracts/v3 v3.0.0-20240223033208-cf9fc9bc220e h1:JmFHZCkyOhw8kYqyGIXme9yk9tqss/bHRRahfMUQ++I=
+github.com/jrtitus/go-mod-core-contracts/v3 v3.0.0-20240223033208-cf9fc9bc220e/go.mod h1:mXa4zgfgECdC/8WLULwCWmI5ZZNG7pzXeGGh4SH0FC0=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=

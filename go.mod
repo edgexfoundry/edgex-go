@@ -21,6 +21,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+// temp
+replace github.com/edgexfoundry/go-mod-core-contracts/v3 => github.com/jrtitus/go-mod-core-contracts/v3 v3.0.0-20240223033208-cf9fc9bc220e
+
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect

@@ -10,8 +10,11 @@ import (
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	bootstrapInterfaces "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
@@ -23,12 +26,13 @@ type Sender interface {
 
 // RESTSender is the implementation of the interfaces.ChannelSender, which is used to send the notifications via REST
 type RESTSender struct {
-	dic *di.Container
+	dic            *di.Container
+	secretProvider bootstrapInterfaces.SecretProviderExt
 }
 
 // NewRESTSender creates the RESTSender instance
-func NewRESTSender(dic *di.Container) Sender {
-	return &RESTSender{dic: dic}
+func NewRESTSender(dic *di.Container, secretProvider bootstrapInterfaces.SecretProviderExt) Sender {
+	return &RESTSender{dic: dic, secretProvider: secretProvider}
 }
 
 // Send sends the REST request to the specified address
@@ -39,9 +43,13 @@ func (sender *RESTSender) Send(notification models.Notification, address models.
 	if !ok {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 	}
-	// NOTE: Not currently passing an AuthenticationInjector here;
-	// no current notifications are calling EdgeX services
-	return utils.SendRequestWithRESTAddress(lc, notification.Content, notification.ContentType, restAddress, nil)
+	var injector interfaces.AuthenticationInjector
+	if restAddress.InjectEdgeXAuth {
+		injector = secret.NewJWTSecretProvider(sender.secretProvider)
+	} else {
+		injector = nil
+	}
+	return utils.SendRequestWithRESTAddress(lc, notification.Content, notification.ContentType, restAddress, injector)
 }
 
 // EmailSender is the implementation of the interfaces.ChannelSender, which is used to send the notifications via email
