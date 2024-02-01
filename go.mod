@@ -4,10 +4,10 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.14
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.15
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.2
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.4
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.5
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.6
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.8
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.5
 	github.com/fxamacker/cbor/v2 v2.5.0
 	github.com/gomodule/redigo v1.8.9
@@ -34,7 +34,7 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.16.0 // indirect
+	github.com/go-playground/validator/v10 v10.17.0 // indirect
 	github.com/go-redis/redis/v7 v7.3.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -48,7 +48,7 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/klauspost/compress v1.17.1 // indirect
+	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -58,8 +58,8 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/nats-io/nats.go v1.31.0 // indirect
-	github.com/nats-io/nkeys v0.4.6 // indirect
+	github.com/nats-io/nats.go v1.32.0 // indirect
+	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
