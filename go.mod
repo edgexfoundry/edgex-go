@@ -22,7 +22,7 @@ require (
 )
 
 // temp
-replace github.com/edgexfoundry/go-mod-core-contracts/v3 => github.com/jrtitus/go-mod-core-contracts/v3 v3.0.0-20240223033208-cf9fc9bc220e
+replace github.com/edgexfoundry/go-mod-core-contracts/v3 => github.com/jrtitus/go-mod-core-contracts/v3 v3.0.0-20240223173019-66ec24c3da58
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect

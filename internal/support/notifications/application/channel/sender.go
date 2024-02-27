@@ -43,12 +43,12 @@ func (sender *RESTSender) Send(notification models.Notification, address models.
 	if !ok {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast Address to RESTAddress", nil)
 	}
+
 	var injector interfaces.AuthenticationInjector
 	if restAddress.InjectEdgeXAuth {
 		injector = secret.NewJWTSecretProvider(sender.secretProvider)
-	} else {
-		injector = nil
 	}
+
 	return utils.SendRequestWithRESTAddress(lc, notification.Content, notification.ContentType, restAddress, injector)
 }
 
