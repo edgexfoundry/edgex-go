@@ -50,7 +50,7 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
-	restSender := channel.NewRESTSender(dic)
+	restSender := channel.NewRESTSender(dic, bootstrapContainer.SecretProviderExtFrom(dic.Get))
 	emailSender := channel.NewEmailSender(dic)
 	dic.Update(di.ServiceConstructorMap{
 		channel.RESTSenderName: func(get di.Get) interface{} {

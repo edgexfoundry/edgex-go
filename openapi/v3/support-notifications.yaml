@@ -102,6 +102,9 @@ components:
         httpMethod:
           description: "Indicates which Http verb should be used for the REST endpoint."
           type: string
+        injectEdgeXAuth:
+          description: "Specifies whether or not to inject the EdgeX services JWT into the request."
+          type: boolean
       required:
         - type
         - host
