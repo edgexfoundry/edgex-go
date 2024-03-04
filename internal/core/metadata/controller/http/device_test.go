@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -131,6 +131,7 @@ func TestAddDevice(t *testing.T) {
 	valid := testDevice
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
+	dbClientMock.On("DeviceProfileByName", mock.Anything).Return(models.DeviceProfile{Name: "test-profile", DeviceResources: []models.DeviceResource{{Name: "TestResource"}}}, nil)
 
 	notFoundProfile := testDevice
 	notFoundProfile.Device.ProfileName = "notFoundProfile"
@@ -514,6 +515,7 @@ func TestPatchDevice(t *testing.T) {
 	dbClientMock.On("DeviceServiceNameExists", *valid.Device.ServiceName).Return(true, nil)
 	dbClientMock.On("DeviceById", *valid.Device.Id).Return(dsModels, nil)
 	dbClientMock.On("UpdateDevice", dsModels).Return(nil)
+	dbClientMock.On("DeviceProfileByName", mock.Anything).Return(models.DeviceProfile{Name: "test-profile", DeviceResources: []models.DeviceResource{{Name: "TestResource"}}}, nil)
 
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
