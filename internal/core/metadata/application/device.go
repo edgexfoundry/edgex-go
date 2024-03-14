@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright (C) 2020-2023 IOTech Ltd
+ *  Copyright (C) 2020-2024 IOTech Ltd
  *  Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -19,6 +19,7 @@ import (
 	"context"
 	goErrors "errors"
 	"fmt"
+	"slices"
 	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -52,7 +53,12 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		return id, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", d.ServiceName), nil)
 	}
 
-	err := validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
+	err := validateAutoEvent(dic, d)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+
+	err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -161,6 +167,11 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
+	err = validateAutoEvent(dic, device)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
 	deviceDTO := dtos.FromDeviceModelToDTO(device)
 	err = validateDeviceCallback(deviceDTO, dic)
 	if err != nil {
@@ -262,3 +273,27 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 }
 
 var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
+
+func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("device profile '%s' not found during validating device '%s' auto event", d.ProfileName, d.Name), err)
+	}
+	for _, a := range d.AutoEvents {
+		_, err := time.ParseDuration(a.Interval)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event interval '%s' not valid in the device '%s'", a.Interval, d.Name), err)
+		}
+		hasResource := slices.ContainsFunc(dp.DeviceResources, func(r models.DeviceResource) bool {
+			return r.Name == a.SourceName
+		})
+		hasCommand := slices.ContainsFunc(dp.DeviceCommands, func(c models.DeviceCommand) bool {
+			return c.Name == a.SourceName
+		})
+		if !hasResource && !hasCommand {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event source '%s' cannot be found in the device profile '%s'", a.SourceName, dp.Name), nil)
+		}
+	}
+	return nil
+}
