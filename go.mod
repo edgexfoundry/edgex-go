@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.21
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.22
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.3
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.9
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.12
@@ -77,5 +77,5 @@ require (
 	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/grpc v1.60.1 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
