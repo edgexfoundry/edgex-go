@@ -18,7 +18,6 @@ Clients:
     Protocol: http
     Host: localhost
     Port: 59881
-
 ExternalMQTT:
   Enabled: false
   Url: "tcp://localhost:1883"

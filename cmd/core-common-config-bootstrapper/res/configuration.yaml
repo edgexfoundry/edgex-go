@@ -19,15 +19,6 @@ all-services:
         SecurityGetSecretDuration: false
 #     Tags: # Contains the service level tags to be attached to all the service's metrics
       #  Gateway: "my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
-      
-  Clients:
-    core-metadata:
-      Protocol: "http"
-      Host: "localhost"
-      Port: 59881
-      SecurityOptions:
-        Mode: ""
-        OpenZitiController: "openziti:1280"
         
   Service:
     HealthCheckInterval: "10s"
@@ -104,6 +95,14 @@ app-services:
         MqttExportSize: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
         MqttExportErrors: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
         StoreForwardQueueSize: false
+  Clients:
+    core-metadata:
+      Protocol: "http"
+      Host: "localhost"
+      Port: 59881
+      SecurityOptions:
+        Mode: ""
+        OpenZitiController: "openziti:1280"
   Trigger:
     Type: "edgex-messagebus"
     SubscribeTopics: "events/#" # Base topic is prepended to this topic when using edgex-messagebus
@@ -118,6 +117,14 @@ device-services:
         EventsSent: false
         ReadingsSent: false
         LastConnected: false
+  Clients:
+    core-metadata:
+      Protocol: "http"
+      Host: "localhost"
+      Port: 59881
+      SecurityOptions:
+        Mode: ""
+        OpenZitiController: "openziti:1280"
   Device:
     DataTransform: true
     MaxCmdOps: 128
