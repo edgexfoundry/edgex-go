@@ -12,6 +12,10 @@ Service:
   Port: 59880
   Host: "localhost"
   StartupMsg: "This is the Core Data Microservice"
+  SecurityOptions:
+    Mode: "zerotrust"
+    OpenZitiController: "openziti:1280"
+    OpenZitiServiceName: "edgex.core-data"
 
 MessageBus:
   Optional:
