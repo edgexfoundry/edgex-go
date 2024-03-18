@@ -12,10 +12,6 @@ Service:
   Host: localhost
   Port: 59860
   StartupMsg: "This is the Support Notifications Microservice"
-  SecurityOptions:
-    Mode: "zerotrust"
-    OpenZitiController: "openziti:1280"
-    OpenZitiServiceName: "edgex.support-notifications"
 Smtp:
   Host: my.email.server
   Port: 587

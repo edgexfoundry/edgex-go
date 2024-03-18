@@ -9,10 +9,6 @@ Service:
   Host: localhost
   Port: 59881
   StartupMsg: "This is the EdgeX Core Metadata Microservice"
-  SecurityOptions:
-    Mode: "zerotrust"
-    OpenZitiController: "openziti:1280"
-    OpenZitiServiceName: "edgex.core-metadata"
 
 UoM:
   UoMFile: ./res/uom.yaml

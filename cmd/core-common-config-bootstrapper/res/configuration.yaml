@@ -1,6 +1,5 @@
 all-services:
   Writable:
-    LogLevel: "INFO"
     InsecureSecrets:
       DB:
         SecretName: "redisdb"
@@ -89,7 +88,6 @@ all-services:
 
 app-services:
   Writable:
-    LogLevel: "INFO"
     StoreAndForward:
       Enabled: false
       RetryInterval: "5m"

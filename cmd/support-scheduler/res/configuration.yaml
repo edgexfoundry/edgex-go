@@ -5,10 +5,6 @@ Service:
     Host: localhost
     Port: 59861
     StartupMsg: "This is the Support Scheduler Microservice"
-    SecurityOptions:
-        Mode: ""
-        OpenZitiController: "openziti:1280"
-        OpenZitiServiceName: "edgex.support-scheduler"
 
 Intervals:
     Midnight:
