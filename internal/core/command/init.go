@@ -27,6 +27,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	clients "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/http"
 
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/zerotrust"
 	"github.com/labstack/echo/v4"
 )
 
@@ -48,11 +49,20 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 	config := container.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get) //this would fail when inside the func below?
 
 	// DeviceServiceCommandClient is not part of the common clients handled by the NewClientsBootstrap handler
 	dic.Update(di.ServiceConstructorMap{
 		bootstrapContainer.DeviceServiceCommandClientName: func(get di.Get) interface{} { // add API DeviceServiceCommandClient
-			jwtSecretProvider := secret.NewJWTSecretProvider(bootstrapContainer.SecretProviderExtFrom(get))
+			sp := bootstrapContainer.SecretProviderExtFrom(get)
+			jwtSecretProvider := secret.NewJWTSecretProvider(sp)
+			serviceInfo := config.Service
+			roundTripper, err := zerotrust.HttpTransportFromService(sp, serviceInfo, lc)
+			if err != nil {
+				lc.Warnf("unable to set HttpTransport due to unexpected error: %v", err)
+			} else {
+				sp.SetHttpTransport(roundTripper)
+			}
 			return clients.NewDeviceServiceCommandClient(jwtSecretProvider, config.Service.EnableNameFieldEscape)
 		},
 	})

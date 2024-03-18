@@ -1,5 +1,6 @@
 all-services:
   Writable:
+    LogLevel: "INFO"
     InsecureSecrets:
       DB:
         SecretName: "redisdb"
@@ -20,6 +21,15 @@ all-services:
 #     Tags: # Contains the service level tags to be attached to all the service's metrics
       #  Gateway: "my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
       
+  Clients:
+    core-metadata:
+      Protocol: "http"
+      Host: "localhost"
+      Port: 59881
+      SecurityOptions:
+        Mode: ""
+        OpenZitiController: "openziti:1280"
+        
   Service:
     HealthCheckInterval: "10s"
     ServerBindAddr: "" # Leave blank so default to Host value unless different value is needed.
@@ -35,7 +45,11 @@ all-services:
       CORSAllowedHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
       CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
       CORSMaxAge: 3600
-
+    SecurityOptions:
+      Mode: ""
+      OpenZitiController: "openziti:1280"
+      OpenZitiServiceName: "edgex.service-name"
+        
   Registry:
     Host: "localhost"
     Port: 8500
@@ -75,6 +89,7 @@ all-services:
 
 app-services:
   Writable:
+    LogLevel: "INFO"
     StoreAndForward:
       Enabled: false
       RetryInterval: "5m"
@@ -91,11 +106,6 @@ app-services:
         MqttExportSize: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
         MqttExportErrors: false # BrokerAddress and Topic are added as the tag for this metric for each MQTT export defined
         StoreForwardQueueSize: false
-  Clients:
-    core-metadata:
-      Protocol: "http"
-      Host: "localhost"
-      Port: 59881
   Trigger:
     Type: "edgex-messagebus"
     SubscribeTopics: "events/#" # Base topic is prepended to this topic when using edgex-messagebus
@@ -110,11 +120,6 @@ device-services:
         EventsSent: false
         ReadingsSent: false
         LastConnected: false
-  Clients:
-    core-metadata:
-      Protocol: "http"
-      Host: "localhost"
-      Port: 59881
   Device:
     DataTransform: true
     MaxCmdOps: 128
