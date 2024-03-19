@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.22
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.25
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.3
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.13
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.14
@@ -142,5 +142,3 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
-
-replace github.com/edgexfoundry/go-mod-bootstrap/v3 => github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.25
