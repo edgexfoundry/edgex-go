@@ -18,6 +18,9 @@ Clients:
     Protocol: http
     Host: localhost
     Port: 59881
+    SecurityOptions:
+      Mode: ""
+      OpenZitiController: "openziti:1280"
 ExternalMQTT:
   Enabled: false
   Url: "tcp://localhost:1883"
