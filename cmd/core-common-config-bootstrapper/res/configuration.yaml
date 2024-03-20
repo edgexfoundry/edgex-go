@@ -38,7 +38,6 @@ all-services:
     SecurityOptions:
       Mode: ""
       OpenZitiController: "openziti:1280"
-      OpenZitiServiceName: "edgex.service-name"
         
   Registry:
     Host: "localhost"
