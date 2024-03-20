@@ -19,7 +19,6 @@ all-services:
         SecurityGetSecretDuration: false
 #     Tags: # Contains the service level tags to be attached to all the service's metrics
       #  Gateway: "my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
-
   Service:
     HealthCheckInterval: "10s"
     ServerBindAddr: "" # Leave blank so default to Host value unless different value is needed.
@@ -35,6 +34,7 @@ all-services:
       CORSAllowedHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
       CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
       CORSMaxAge: 3600
+
   Registry:
     Host: "localhost"
     Port: 8500
