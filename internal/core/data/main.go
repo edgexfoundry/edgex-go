@@ -58,7 +58,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 		},
 	})
 
-	httpServer := handlers.NewHttpServer(router, true)
+	httpServer := handlers.NewHttpServer(router, true, common.CoreDataServiceKey)
 
 	bootstrap.Run(
 		ctx,
