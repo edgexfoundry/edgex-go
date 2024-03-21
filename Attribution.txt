@@ -265,3 +265,192 @@ https://github.com/valyala/fasttemplate/blob/master/LICENSE
 
 github.com/valyala/bytebufferpool (MIT) https://github.com/valyala/bytebufferpool
 https://github.com/valyala/bytebufferpool/blob/master/LICENSE
+
+github.com/asaskevich/govalidator (MIT) - https://github.com/asaskevich/govalidator
+https://github.com/asaskevich/govalidator/blob/master/LICENSE
+
+github.com/cenkalti/backoff/v4 (MIT) - https://github.com/cenkalti/backoff
+https://github.com/cenkalti/backoff/blob/v4/LICENSE
+
+github.com/fsnotify/fsnotify (BSD-3) - REPOURL
+https://github.com/fsnotify/fsnotify/blob/main/LICENSE
+
+github.com/fullsailor/pkcs7 (MIT) - https://github.com/fullsailor/pkcs7
+https://github.com/fullsailor/pkcs7/blob/master/LICENSE
+
+github.com/go-logr/logr (Apache 2.0) - https://github.com/go-logr/logr
+https://github.com/go-logr/logr/blob/master/LICENSE
+
+github.com/go-logr/stdr (Apache 2.0) - https://github.com/go-logr/stdr
+https://github.com/go-logr/stdr/blob/master/LICENSE
+
+github.com/go-ole/go-ole (MIT) - https://github.com/go-ole/go-ole
+https://github.com/go-ole/go-ole/blob/master/LICENSE
+
+github.com/go-openapi/analysis (Apache 2.0) - https://github.com/go-openapi/analysis
+https://github.com/go-openapi/analysis/blob/master/LICENSE
+
+github.com/go-openapi/errors (Apache 2.0) - https://github.com/go-openapi/errors
+https://github.com/go-openapi/errors/blob/master/LICENSE
+
+github.com/go-openapi/jsonpointer (Apache 2.0) - https://github.com/go-openapi/jsonpointer
+https://github.com/go-openapi/jsonpointer/blob/master/LICENSE
+
+github.com/go-openapi/jsonreference (Apache 2.0) - https://github.com/go-openapi/jsonreference
+https://github.com/go-openapi/jsonreference/blob/master/LICENSE
+
+github.com/go-openapi/loads (Apache 2.0) - https://github.com/go-openapi/loads
+https://github.com/go-openapi/loads/blob/master/LICENSE
+
+github.com/go-openapi/runtime (Apache 2.0) - https://github.com/go-openapi/runtime
+https://github.com/go-openapi/runtime/blob/master/LICENSE
+
+github.com/go-openapi/spec (Apache 2.0) - https://github.com/go-openapi/spec
+https://github.com/go-openapi/spec/blob/master/LICENSE
+
+github.com/go-openapi/strfmt (Apache 2.0) - https://github.com/go-openapi/strfmt
+https://github.com/go-openapi/strfmt/blob/master/LICENSE
+
+github.com/go-openapi/swag (Apache 2.0) - https://github.com/go-openapi/swag
+https://github.com/go-openapi/swag/blob/master/LICENSE
+
+github.com/go-openapi/validate (Apache 2.0) - https://github.com/go-openapi/validate
+https://github.com/go-openapi/validate/blob/master/LICENSE
+
+github.com/go-resty/resty/v2 (MIT) - https://github.com/go-resty/resty
+https://github.com/go-resty/resty/blob/v2/LICENSE
+
+github.com/golang-jwt/jwt/v5 (MIT) - https://github.com/golang-jwt/jwt
+https://github.com/golang-jwt/jwt/blob/main/LICENSE
+
+github.com/gorilla/mux (BSD-3) - https://github.com/gorilla/mux
+https://github.com/gorilla/mux/blob/main/LICENSE
+
+github.com/gorilla/schema (BSD-3) - https://github.com/gorilla/schema
+https://github.com/gorilla/schema/blob/main/LICENSE
+
+github.com/gorilla/securecookie (BSD-3) - https://github.com/gorilla/securecookie
+https://github.com/gorilla/securecookie/blob/main/LICENSE
+
+github.com/josharian/intern (MIT) - https://github.com/josharian/intern
+https://github.com/josharian/intern/blob/master/LICENSE.md
+
+github.com/kataras/go-events (MIT) - https://github.com/kataras/go-events
+https://github.com/kataras/go-events/blob/master/LICENSE
+
+github.com/lufia/plan9stats (BSD-3) - https://github.com/lufia/plan9stats
+https://github.com/lufia/plan9stats/blob/main/LICENSE
+
+github.com/mailru/easyjson (MIT) - https://github.com/mailru/easyjson
+https://github.com/mailru/easyjson/blob/master/LICENSE
+
+github.com/mgutz/ansi (MIT) - https://github.com/mgutz/ansi
+https://github.com/mgutz/ansi/blob/master/LICENSE
+
+github.com/michaelquigley/pfxlog (MIT) - https://github.com/michaelquigley/pfxlog
+https://github.com/michaelquigley/pfxlog/blob/main/LICENSE
+
+github.com/miekg/pkcs11 (BSD-3) - https://github.com/miekg/pkcs11
+https://github.com/miekg/pkcs11/blob/master/LICENSE
+
+github.com/mitchellh/go-ps (MIT) - https://github.com/mitchellh/go-ps
+https://github.com/mitchellh/go-ps/blob/master/LICENSE.md
+
+github.com/muhlemmer/gu (The Unlicense) - https://github.com/muhlemmer/gu
+https://github.com/muhlemmer/gu/blob/main/LICENSE
+
+github.com/oklog/ulid (Apache 2.0) - https://github.com/oklog/ulid
+https://github.com/oklog/ulid/blob/main/LICENSE
+
+github.com/opentracing/opentracing-go (Apache 2.0) - https://github.com/opentracing/opentracing-go
+https://github.com/opentracing/opentracing-go/blob/master/LICENSE
+
+github.com/openziti/channel/v2 (Apache 2.0) - https://github.com/openziti/channel
+https://github.com/openziti/channel/blob/main/LICENSE
+
+github.com/openziti/edge-api (Apache 2.0) - https://github.com/openziti/edge-api
+https://github.com/openziti/edge-api/blob/main/LICENSE
+
+github.com/openziti/foundation/v2 (Apache 2.0) - https://github.com/openziti/foundation
+https://github.com/openziti/foundation/blob/main/LICENSE
+
+github.com/openziti/identity (Apache 2.0) - https://github.com/openziti/identity
+https://github.com/openziti/identity/blob/main/LICENSE
+
+github.com/openziti/metrics (Apache 2.0) - https://github.com/openziti/metrics
+https://github.com/openziti/metrics/blob/main/LICENSE
+
+github.com/openziti/sdk-golang (Apache 2.0) - https://github.com/openziti/sdk-golang
+https://github.com/openziti/sdk-golang/blob/main/LICENSE
+
+github.com/openziti/secretstream (MIT) - https://github.com/openziti/secretstream
+https://github.com/openziti/secretstream/blob/main/LICENSE
+
+github.com/openziti/transport/v2 (Apache 2.0) - https://github.com/openziti/transport
+https://github.com/openziti/transport/blob/main/LICENSE
+
+github.com/orcaman/concurrent-map/v2 (MIT) - https://github.com/orcaman/concurrent-map
+https://github.com/orcaman/concurrent-map/blob/master/LICENSE
+
+github.com/parallaxsecond/parsec-client-go (Apache 2.0) - https://github.com/parallaxsecond/parsec-client-go
+https://github.com/parallaxsecond/parsec-client-go/blob/main/LICENSE
+
+github.com/pkg/errors (BSD-2) - https://github.com/pkg/errors
+https://github.com/pkg/errors/blob/master/LICENSE
+
+github.com/power-devops/perfstat (MIT) - https://github.com/power-devops/perfstat
+https://github.com/power-devops/perfstat/blob/main/LICENSE
+
+github.com/shirou/gopsutil/v3 (BSD) - https://github.com/shirou/gopsutil
+https://github.com/shirou/gopsutil/blob/master/LICENSE
+
+github.com/shoenig/go-m1cpu (Mozilla Public License 2.0) - https://github.com/shoenig/go-m1cpu
+https://github.com/shoenig/go-m1cpu/blob/main/LICENSE
+
+github.com/sirupsen/logrus (MIT) - https://github.com/sirupsen/logrus
+https://github.com/sirupsen/logrus/blob/master/LICENSE
+
+github.com/speps/go-hashids (MIT) - https://github.com/speps/go-hashids
+https://github.com/speps/go-hashids/blob/master/LICENSE
+
+github.com/tklauser/go-sysconf (BSD-3) - https://github.com/tklauser/go-sysconf
+https://github.com/tklauser/go-sysconf/blob/main/LICENSE
+
+github.com/tklauser/numcpus (Apache 2.0) - https://github.com/tklauser/numcpus
+https://github.com/tklauser/numcpus/blob/main/LICENSE
+
+github.com/yusufpapurcu/wmi (MIT) - https://github.com/yusufpapurcu/wmi
+https://github.com/yusufpapurcu/wmi/blob/master/LICENSE
+
+github.com/zitadel/oidc/v2 (Apache 2.0) - https://github.com/zitadel/oidc
+https://github.com/zitadel/oidc/blob/main/LICENSE
+
+go.mongodb.org/mongo-driver (Apache 2.0) - https://github.com/mongodb/mongo-go-driver
+https://github.com/mongodb/mongo-go-driver/blob/v1/LICENSE
+
+go.mozilla.org/pkcs7 (MIT) - https://github.com/mozilla-services/pkcs7
+https://github.com/mozilla-services/pkcs7/blob/master/LICENSE
+
+go.opentelemetry.io/otel (Apache 2.0) - https://github.com/open-telemetry/opentelemetry-go
+https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
+
+go.opentelemetry.io/otel/metric (Apache 2.0) - https://github.com/open-telemetry/opentelemetry-go
+https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
+
+go.opentelemetry.io/otel/trace (Apache 2.0) - https://github.com/open-telemetry/opentelemetry-go
+https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
+
+golang.org/x/oauth2 (Unspecified) - https://cs.opensource.google/go/x/oauth2
+https://cs.opensource.google/go/x/oauth2/+/master:LICENSE
+
+golang.org/x/term (Unspecified) - https://cs.opensource.google/go/x/term
+https://cs.opensource.google/go/x/term/+/master:LICENSE
+
+google.golang.org/appengine (Apache 2.0) - https://github.com/golang/appengine
+https://github.com/golang/appengine/blob/master/LICENSE
+
+google.golang.org/genproto/googleapis/rpc (Apache 2.0) - https://github.com/googleapis/go-genproto
+https://github.com/googleapis/go-genproto/blob/main/LICENSE
+
+nhooyr.io/websocket (ISC License) - https://github.com/nhooyr/websocket
+https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
