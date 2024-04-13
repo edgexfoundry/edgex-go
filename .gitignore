@@ -17,6 +17,7 @@ sbom/bom-go-mod.spdx
 cmd/core-command/core-command
 cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 cmd/core-data/core-data
+cmd/core-keeper/core-keeper
 cmd/core-metadata/core-metadata
 cmd/security-proxy-auth/security-proxy-auth
 cmd/security-proxy-setup/security-proxy-setup
