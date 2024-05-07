@@ -184,6 +184,7 @@ func TestAddDevice(t *testing.T) {
 		expectedSystemEvent  bool
 	}{
 		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true},
+		{"Valid - bypassValidation", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, false, true},
 		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
 		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
@@ -242,6 +243,12 @@ func TestAddDevice(t *testing.T) {
 			reader := strings.NewReader(string(jsonData))
 			req, err := http.NewRequest(http.MethodPost, common.ApiDeviceRoute, reader)
 			require.NoError(t, err)
+
+			if !testCase.expectedValidation {
+				query := req.URL.Query()
+				query.Add(bypassValidationQueryParam, common.ValueTrue)
+				req.URL.RawQuery = query.Encode()
+			}
 
 			// Act
 			recorder := httptest.NewRecorder()
@@ -591,6 +598,7 @@ func TestPatchDevice(t *testing.T) {
 		{"Valid - no requestId", []requests.UpdateDeviceRequest{validWithNoReqID}, http.StatusMultiStatus, http.StatusOK, true, true},
 		{"Valid - no id", []requests.UpdateDeviceRequest{validWithNoId}, http.StatusMultiStatus, http.StatusOK, true, true},
 		{"Valid - no name", []requests.UpdateDeviceRequest{validWithNoName}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Valid - bypassValidation", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusOK, false, true},
 		{"Invalid - invalid id", []requests.UpdateDeviceRequest{invalidId}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - empty id", []requests.UpdateDeviceRequest{emptyId}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - empty name", []requests.UpdateDeviceRequest{emptyName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
@@ -646,6 +654,12 @@ func TestPatchDevice(t *testing.T) {
 			reader := strings.NewReader(string(jsonData))
 			req, err := http.NewRequest(http.MethodPatch, common.ApiDeviceRoute, reader)
 			require.NoError(t, err)
+
+			if !testCase.expectedValidation {
+				query := req.URL.Query()
+				query.Add(bypassValidationQueryParam, common.ValueTrue)
+				req.URL.RawQuery = query.Encode()
+			}
 
 			// Act
 			recorder := httptest.NewRecorder()

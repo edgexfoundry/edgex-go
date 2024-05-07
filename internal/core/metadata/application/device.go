@@ -41,7 +41,7 @@ const minAutoEventInterval = 1 * time.Millisecond
 
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device
-func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -58,9 +58,13 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
+	// Execute the Device Service Validation when bypassValidation is false by default
+	// Skip the Device Service Validation if bypassValidation is true
+	if !bypassValidation {
+		err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
+		if err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	addedDevice, err := dbClient.AddDevice(d)
@@ -140,7 +144,7 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 }
 
 // PatchDevice executes the PATCH operation with the device DTO to replace the old data
-func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
+func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, bypassValidation bool) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -173,9 +177,14 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	}
 
 	deviceDTO := dtos.FromDeviceModelToDTO(device)
-	err = validateDeviceCallback(deviceDTO, dic)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+
+	// Execute the Device Service Validation when bypassValidation is false by default
+	// Skip the Device Service Validation if bypassValidation is true
+	if !bypassValidation {
+		err = validateDeviceCallback(deviceDTO, dic)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	err = dbClient.UpdateDevice(device)
