@@ -1590,10 +1590,9 @@ paths:
   /device:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/bypassValidationParam'
     post:
       summary: "Allows provisioning of a new device"
-      parameters:
-        - $ref: '#/components/parameters/bypassValidationParam'
       requestBody:
         required: true
         content:

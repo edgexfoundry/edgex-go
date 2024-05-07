@@ -144,7 +144,7 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 }
 
 // PatchDevice executes the PATCH operation with the device DTO to replace the old data
-func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) errors.EdgeX {
+func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, bypassValidation bool) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -177,9 +177,14 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container) 
 	}
 
 	deviceDTO := dtos.FromDeviceModelToDTO(device)
-	err = validateDeviceCallback(deviceDTO, dic)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+
+	// Execute the Device Service Validation when bypassValidation is false by default
+	// Skip the Device Service Validation if bypassValidation is true
+	if !bypassValidation {
+		err = validateDeviceCallback(deviceDTO, dic)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	err = dbClient.UpdateDevice(device)

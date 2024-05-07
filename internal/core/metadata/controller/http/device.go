@@ -177,6 +177,13 @@ func (dc *DeviceController) PatchDevice(c echo.Context) error {
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
+	var bypassValidation bool
+	// parse URL query string for bypassValidation
+	bypassValidationParamStr := utils.ParseQueryStringToString(r, bypassValidationQueryParam, common.ValueFalse)
+	if bypassValidationParamStr == common.ValueTrue {
+		bypassValidation = true
+	}
+
 	var reqDTOs []requests.UpdateDeviceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
@@ -187,7 +194,7 @@ func (dc *DeviceController) PatchDevice(c echo.Context) error {
 	for _, dto := range reqDTOs {
 		var response interface{}
 		reqId := dto.RequestId
-		err := application.PatchDevice(dto.Device, ctx, dc.dic)
+		err := application.PatchDevice(dto.Device, ctx, dc.dic, bypassValidation)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
