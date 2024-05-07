@@ -184,6 +184,7 @@ func TestAddDevice(t *testing.T) {
 		expectedSystemEvent  bool
 	}{
 		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true},
+		{"Valid - bypassValidation", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, false, true},
 		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
 		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
@@ -241,6 +242,12 @@ func TestAddDevice(t *testing.T) {
 
 			reader := strings.NewReader(string(jsonData))
 			req, err := http.NewRequest(http.MethodPost, common.ApiDeviceRoute, reader)
+
+			if !testCase.expectedValidation {
+				query := req.URL.Query()
+				query.Add(bypassValidationQueryParam, common.ValueTrue)
+				req.URL.RawQuery = query.Encode()
+			}
 			require.NoError(t, err)
 
 			// Act

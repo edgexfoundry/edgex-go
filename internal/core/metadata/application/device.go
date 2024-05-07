@@ -41,7 +41,7 @@ const minAutoEventInterval = 1 * time.Millisecond
 
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device
-func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -58,9 +58,13 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container) (id stri
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
+	// Execute the Device Service Validation when bypassValidation is false by default
+	// Skip the Device Service Validation if bypassValidation is true
+	if !bypassValidation {
+		err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
+		if err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	addedDevice, err := dbClient.AddDevice(d)

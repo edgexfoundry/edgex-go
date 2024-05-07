@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -27,6 +27,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const bypassValidationQueryParam = "bypassValidation" // query param to specify whether to skip the Device Service Validation API call
+
 type DeviceController struct {
 	reader io.DtoReader
 	dic    *di.Container
@@ -52,6 +54,13 @@ func (dc *DeviceController) AddDevice(c echo.Context) error {
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
+	var bypassValidation bool
+	// parse URL query string for bypassValidation
+	bypassValidationParamStr := utils.ParseQueryStringToString(r, bypassValidationQueryParam, common.ValueFalse)
+	if bypassValidationParamStr == common.ValueTrue {
+		bypassValidation = true
+	}
+
 	var reqDTOs []requests.AddDeviceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
@@ -63,7 +72,7 @@ func (dc *DeviceController) AddDevice(c echo.Context) error {
 	for i, d := range devices {
 		var response interface{}
 		reqId := reqDTOs[i].RequestId
-		newId, err := application.AddDevice(d, ctx, dc.dic)
+		newId, err := application.AddDevice(d, ctx, dc.dic, bypassValidation)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)

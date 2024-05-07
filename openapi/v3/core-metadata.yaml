@@ -1136,6 +1136,14 @@ components:
       schema:
         type: string
       description: "Allows for querying a given object by associated user-defined label. More than one label may be specified via a comma-delimited list."
+    bypassValidationParam:
+      in: query
+      name: bypassValidation
+      required: false
+      schema:
+        type: boolean
+      description: "Indicates whether to skip the Device Service Validation API call."
+      default: false
   headers:
     correlatedResponseHeader:
       description: "A response header that returns the unique correlation ID used to initiate the request."
@@ -1584,6 +1592,8 @@ paths:
       - $ref: '#/components/parameters/correlatedRequestHeader'
     post:
       summary: "Allows provisioning of a new device"
+      parameters:
+        - $ref: '#/components/parameters/bypassValidationParam'
       requestBody:
         required: true
         content:
