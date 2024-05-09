@@ -19,8 +19,8 @@
 ARG BUILDER_BASE=golang:1.21-alpine3.18
 FROM ${BUILDER_BASE} AS builder
 
-FROM ghcr.io/spiffe/spire-server:1.6.3 as spire_server
-FROM ghcr.io/spiffe/spire-agent:1.6.3 as spire_agent
+FROM ghcr.io/spiffe/spire-server:1.9.5 as spire_server
+FROM ghcr.io/spiffe/spire-agent:1.9.5 as spire_agent
 
 # Deployment image
 FROM alpine:3.18
