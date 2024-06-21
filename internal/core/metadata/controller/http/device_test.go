@@ -165,6 +165,9 @@ func TestAddDevice(t *testing.T) {
 	noProtocols.Device.Protocols = nil
 	emptyProtocols := testDevice
 	emptyProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{}
+	emptyProtocolsModel := dtos.ToDeviceModel(emptyProtocols.Device)
+	dbClientMock.On("AddDevice", emptyProtocolsModel).Return(emptyProtocolsModel, nil)
+
 	invalidProtocols := testDevice
 	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
 
@@ -194,7 +197,7 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Valid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusMultiStatus, http.StatusCreated, true, true},
 		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
 		{"Invalid - not found device service", []requests.AddDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
 		{"Invalid - device service unavailable", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
