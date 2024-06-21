@@ -245,8 +245,8 @@ https://github.com/nats-io/nkeys/blob/master/LICENSE
 github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
 https://github.com/nats-io/nuid/blob/master/LICENSE
 
-github.com/go-jose/go-jose/v3 (Apache-2.0) https://github.com/go-jose/go-jose
-https://github.com/go-jose/go-jose/blob/v3/LICENSE
+github.com/go-jose/go-jose/v4 (Apache-2.0) https://github.com/go-jose/go-jose
+https://github.com/go-jose/go-jose/blob/main/LICENSE
 
 github.com/klauspost/compress (Apache-2.0) https://github.com/klauspost/compress
 https://github.com/klauspost/compress/blob/master/LICENSE
@@ -454,3 +454,6 @@ https://github.com/googleapis/go-genproto/blob/main/LICENSE
 
 nhooyr.io/websocket (ISC License) - https://github.com/nhooyr/websocket
 https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
+
+spf13/cast (MIT) https://github.com/spf13/cast
+https://github.com/spf13/cast/blob/master/LICENSE
