@@ -84,8 +84,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.4.3 h1:2kwcUGn8seMUfWndX0hGbvH8r7crgcJguQNCyp70xik=
 github.com/eclipse/paho.mqtt.golang v1.4.3/go.mod h1:CSYvoAlsMkhYOXh/oKyxa8EcBci6dVkLCbo5tTC1RIE=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.35 h1:g0vego4EpjlevsDeYpjn4DSnnDXMbPNy7R9oh/dLzL4=
-github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.35/go.mod h1:kkcOp/fQ6wTHHMInY/eEcbuXXQbliJBGN/+hkbmyq60=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.36 h1:K3TWGXj7aQRZk/DL3VW4MpEa2+dmtmuIxzBd5IXQ9uE=
+github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.36/go.mod h1:/MGs3vC9N/ckOP8AcCuc4Azsaw0AMzHshOuYqyKeGF8=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.7 h1:FTps28H9Phy/oVKJjAOdNFGVXRKXIqQo2rLQV8y5DVA=
 github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.7/go.mod h1:WX+Cqr/+nXRKxNIcvekHdf5ubbTZX0D76Rj2T0FKmtA=
 github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.24 h1:FUZ+4iPgijhZ5TXNp7YF/44cfDGgn0voIma3suFSFCA=
@@ -94,8 +94,8 @@ github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.26 h1:Fkiki07fSxofusT6vV5
 github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.26/go.mod h1:PXE87Ia/lH5vVQxLMEpzb4e2UTA1e3n8tZXSwRkf0uw=
 github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.8 h1:taE3XDACmN9zwO0hrAdZEz1GGNOyUHSgspadC9Gz6GY=
 github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.8/go.mod h1:lW5yVe+SV/qGdEwDTM/qnt0Magfy4iXgGE6lxEsU0Fo=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.5 h1:RqNk0FOo5xu5Aqe0zq8ZpcELlKsbrsbJmIf/w+/1zsU=
-github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.5/go.mod h1:qlilWavlpjDqngArXuT1tIu77G6Zg/G5aPuqvRIRZfA=
+github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.7 h1:Pzcy/g+pKs7og4QAGJuJXySiDtJLbkTd4bXkKlLHja0=
+github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.7/go.mod h1:RQ5e7QVPnXukQiQDLNLAB4+XpaP+eWdfF3KEEV+RXUk=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
