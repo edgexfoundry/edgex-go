@@ -18,10 +18,11 @@ import (
 )
 
 func TestValidateAutoEvents(t *testing.T) {
+	profile := "test-profile"
 	source1 := "source1"
 	command1 := "command1"
 	deviceProfile := models.DeviceProfile{
-		Name:            "test-profile",
+		Name:            profile,
 		DeviceResources: []models.DeviceResource{{Name: source1}, {Name: "resource2"}},
 		DeviceCommands:  []models.DeviceCommand{{Name: command1}, {Name: "command2"}},
 	}
@@ -40,27 +41,43 @@ func TestValidateAutoEvents(t *testing.T) {
 		device        models.Device
 		errorExpected bool
 	}{
+		{"no auto events",
+			models.Device{
+				ProfileName: profile,
+			},
+			false,
+		},
 		{"resource exist",
 			models.Device{
-				AutoEvents: []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
 			},
 			false,
 		},
 		{"command exist",
 			models.Device{
-				AutoEvents: []models.AutoEvent{{SourceName: source1, Interval: "1s"}, {SourceName: command1, Interval: "1s"}},
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: source1, Interval: "1s"}, {SourceName: command1, Interval: "1s"}},
 			},
 			false,
 		},
 		{"resource not exist",
 			models.Device{
-				AutoEvents: []models.AutoEvent{{SourceName: "notFoundSource", Interval: "1s"}},
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: "notFoundSource", Interval: "1s"}},
 			},
 			true,
 		},
 		{"interval format not valid",
 			models.Device{
-				AutoEvents: []models.AutoEvent{{SourceName: source1, Interval: "1"}},
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: source1, Interval: "1"}},
+			},
+			true,
+		},
+		{"no profile",
+			models.Device{
+				AutoEvents: []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
 			},
 			true,
 		},

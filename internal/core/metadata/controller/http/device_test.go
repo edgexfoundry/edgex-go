@@ -161,6 +161,10 @@ func TestAddDevice(t *testing.T) {
 	noServiceName.Device.ServiceName = ""
 	noProfileName := testDevice
 	noProfileName.Device.ProfileName = ""
+	noProfileAndAutoEvents := noProfileName
+	noProfileAndAutoEvents.Device.AutoEvents = []dtos.AutoEvent{}
+	dm := dtos.ToDeviceModel(noProfileAndAutoEvents.Device)
+	dbClientMock.On("AddDevice", dm).Return(dm, nil)
 	noProtocols := testDevice
 	noProtocols.Device.Protocols = nil
 	emptyProtocols := testDevice
@@ -188,6 +192,7 @@ func TestAddDevice(t *testing.T) {
 	}{
 		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true},
 		{"Valid - bypassValidation", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, false, true},
+		{"Valid - no profile name and no auto events", []requests.AddDeviceRequest{noProfileAndAutoEvents}, http.StatusMultiStatus, http.StatusCreated, true, true},
 		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
 		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
@@ -195,7 +200,7 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - invalid adminState", []requests.AddDeviceRequest{invalidAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - invalid operatingState", []requests.AddDeviceRequest{invalidOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
+		{"Invalid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
 		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
 		{"Valid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusMultiStatus, http.StatusCreated, true, true},
 		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
@@ -547,6 +552,12 @@ func TestPatchDevice(t *testing.T) {
 	emptyName.Device.Id = nil
 	emptyName.Device.Name = &emptyString
 
+	emptyProfile := testReq
+	emptyProfile.Device.ProfileName = &emptyString
+	//dm := dsModels
+	//dm.ProfileName = *emptyProfile.Device.ProfileName
+	//dbClientMock.On("UpdateDevice", dm).Return(nil)
+
 	invalidProtocols := testReq
 	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
 
@@ -612,7 +623,7 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
 		{"Invalid - not found device service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
 		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
-	}
+		{"Invalid - empty profile", []requests.UpdateDeviceRequest{emptyProfile}, http.StatusMultiStatus, http.StatusBadRequest, false, false}}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
