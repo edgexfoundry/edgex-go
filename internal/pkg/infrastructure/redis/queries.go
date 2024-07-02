@@ -1,11 +1,12 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package redis
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
@@ -324,4 +326,109 @@ func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start, end, o
 func idFromStoredKey(storeKey string) string {
 	substrings := strings.Split(storeKey, DBKeySeparator)
 	return substrings[len(substrings)-1]
+}
+
+// getKeyType returns the redis data type of the value stored in the specified key
+func getKeyType(conn redis.Conn, key string) (string, errors.EdgeX) {
+	keyType, err := redis.String(conn.Do(TYPE, key))
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindDatabaseError, "key type check failed", err)
+	} else if keyType == None {
+		return "", errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("query key %s not found", key), err)
+	}
+	return keyType, nil
+}
+
+// getMapByKey convert the key with Redis Hash data type to a map[string]string value
+func getMapByKey(conn redis.Conn, key string) (map[string]string, errors.EdgeX) {
+	keyMap, err := redis.StringMap(conn.Do(HGETALL, key))
+	if err == redis.ErrNil {
+		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("fail to query key %s in the database", key), err)
+	} else if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query key %s from the database failed", key), err)
+	}
+
+	return keyMap, nil
+}
+
+// getObjectsByKeyPrefix get the value(s) stored in the specified key or keys with the same prefix
+func getObjectsByKeyPrefix(conn redis.Conn, key string, keyOnly bool, isRaw bool) ([]models.KVResponse, errors.EdgeX) {
+	var configResp []models.KVResponse
+
+	// check if the query key exists
+	exists, err := objectIdExists(conn, key)
+	if err != nil {
+		return configResp, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	// key not exists in Redis, returns not found error
+	if !exists {
+		return configResp, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("query key %s not exists", key), err)
+	}
+
+	// key exists in Redis, call getObjectsByKey to get the value stored in the key(s)
+	return getObjectsByKey(conn, key, keyOnly, isRaw)
+}
+
+// getObjectsByKey is a recursive function that returns the value stored in the specified key
+// if the key is a Hash, it will traverse all the keys stored in the Hash fields and invoke the recursive function until the key is a String
+func getObjectsByKey(conn redis.Conn, key string, keyOnly bool, isRaw bool) ([]models.KVResponse, errors.EdgeX) {
+	var configResp []models.KVResponse
+
+	keyType, err := getKeyType(conn, key)
+	if err != nil {
+		return configResp, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	switch keyType {
+	case String:
+		var resp models.KVResponse
+		// get the query key after KVCollection prefix (kp:)
+		idx := strings.Index(key, DBKeySeparator)
+		if idx == -1 {
+			return configResp, errors.NewCommonEdgeX(errors.KindDatabaseError, "retrieve query key failed", nil)
+		}
+		queryKey := key[idx+1:]
+
+		if keyOnly {
+			// only return key in the response payload if keyOnly is true
+			resp = (*models.KeyOnly)(&queryKey)
+		} else {
+			var data models.StoredData
+			err = getObjectById(conn, key, &data)
+			if err != nil {
+				return configResp, errors.NewCommonEdgeXWrapper(err)
+			}
+			if isRaw {
+				// if isRaw is true, decode the stored value if string type
+				if value, ok := data.Value.(string); ok {
+					decodeValue, err := base64.StdEncoding.DecodeString(value)
+					if err != nil {
+						return configResp, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("decode the value of key %s failed", key), err)
+					}
+					data.Value = string(decodeValue)
+				}
+			}
+			// return key and stored data in the response payload
+			resp = &models.KVS{
+				Key:        queryKey,
+				StoredData: data,
+			}
+		}
+
+		return []models.KVResponse{resp}, nil
+	case Hash:
+		keyMap, err := getMapByKey(conn, key)
+		if err != nil {
+			return configResp, errors.NewCommonEdgeXWrapper(err)
+		}
+		for _, v := range keyMap {
+			resp, err := getObjectsByKey(conn, v, keyOnly, isRaw)
+			if err != nil {
+				return configResp, errors.NewCommonEdgeXWrapper(err)
+			}
+			configResp = append(configResp, resp...)
+		}
+	}
+	return configResp, nil
 }

@@ -196,6 +196,17 @@ server {
       auth_request_set   \$auth_status \$upstream_status;
     }
 
+    set \$upstream_core_keeper edgex-core-keeper;
+    location /core-keeper {
+`cat "${corssnippet}"`
+      rewrite            /core-keeper/(.*) /\$1 break;
+      resolver           127.0.0.11 valid=30s;
+      proxy_pass         http://\$upstream_core_keeper:59890;
+      proxy_redirect     off;
+      proxy_set_header   Host \$host;
+      auth_request       /auth;
+      auth_request_set   \$auth_status \$upstream_status;
+    }
 
     set \$upstream_core_metadata edgex-core-metadata;
     location /core-metadata {

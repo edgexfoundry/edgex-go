@@ -1,6 +1,7 @@
 #
 # Copyright 2022-2023 Intel Corporation
 # Copyright (c) 2018 Cavium
+# Copyright (C) 2024 IOTech Ltd
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -19,6 +20,7 @@ DOCKERS= \
 	docker_core_metadata \
 	docker_core_command  \
 	docker_core_common_config \
+	docker_core_keeper \
 	docker_support_notifications \
 	docker_support_scheduler \
 	docker_security_proxy_auth \
@@ -37,6 +39,7 @@ MICROSERVICES= \
 	cmd/core-metadata/core-metadata \
 	cmd/core-command/core-command \
 	cmd/core-common-config-bootstrapper/core-common-config-bootstrapper \
+	cmd/core-keeper/core-keeper \
 	cmd/support-notifications/support-notifications \
 	cmd/support-scheduler/support-scheduler \
 	cmd/security-proxy-auth/security-proxy-auth \
@@ -102,6 +105,10 @@ cmd/core-command/core-command:
 common-config: cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 cmd/core-common-config-bootstrapper/core-common-config-bootstrapper:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-common-config-bootstrapper
+
+keeper: cmd/core-keeper/core-keeper
+cmd/core-keeper/core-keeper:
+	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_CORE)" $(GOFLAGS) -o $@ ./cmd/core-keeper
 
 support: notifications scheduler
 
@@ -235,6 +242,19 @@ docker_core_common_config: docker_base
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/core-common-config-bootstrapper:$(GIT_SHA) \
 		-t edgexfoundry/core-common-config-bootstrapper:$(DOCKER_TAG) \
+		.
+
+dkeeper: docker_core_keeper
+docker_core_keeper: docker_base
+	docker build \
+		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg http_proxy \
+		--build-arg https_proxy \
+		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
+		-f cmd/core-keeper/Dockerfile \
+		--label "git_sha=$(GIT_SHA)" \
+		-t edgexfoundry/core-keeper:$(GIT_SHA) \
+		-t edgexfoundry/core-keeper:$(DOCKER_TAG) \
 		.
 
 dsupport: dnotifications dscheduler

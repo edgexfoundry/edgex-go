@@ -56,6 +56,9 @@ Databases:
   coredata:
     Service: core-data
     Username: core-data
+  corekeeper:
+    Service: core-keeper
+    Username: core-keeper
   rulesengine:
     Service: app-rules-engine
     Username: app-rules-engine

@@ -1682,3 +1682,134 @@ func (c *Client) LatestReadingByOffset(offset uint32) (model.Reading, errors.Edg
 
 	return reading, nil
 }
+
+// KeeperKeys returns the values stored for the specified key or with the same key prefix
+func (c *Client) KeeperKeys(key string, keyOnly bool, isRaw bool) (kvs []model.KVResponse, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	key = replaceKeyDelimiterForDB(key)
+	kvs, edgeXerr = keeperKeys(conn, key, keyOnly, isRaw)
+	if edgeXerr != nil {
+		// replace the key delimiter from colon(:) to slash(/)
+		errRespKey := replaceKeyDelimiterForKeeper(key)
+		return kvs, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to get key %s", errRespKey), edgeXerr)
+	}
+
+	for _, kv := range kvs {
+		// check if the KVResponse interface is KV struct
+		if convertedKV, ok := kv.(*model.KVS); ok {
+			// convert KVResponse interface to KV struct and replace the key delimiter
+			convertedKV.SetKey(replaceKeyDelimiterForKeeper(convertedKV.Key))
+		} else {
+			// dereference the KeyOnly pointer and convert to string
+			originKey := string(*kv.(*model.KeyOnly))
+			// convert KVResponse interface to KeyOnly struct and replace the key delimiter
+			kv.(*model.KeyOnly).SetKey(replaceKeyDelimiterForKeeper(originKey))
+		}
+	}
+	return kvs, nil
+}
+
+// AddKeeperKeys returns the values stored for the specified key or with the same key prefix
+func (c *Client) AddKeeperKeys(kv model.KVS, isFlatten bool) (keys []model.KeyOnly, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	kv.Key = replaceKeyDelimiterForDB(kv.Key)
+	keys, edgeXerr = addKeeperKeys(conn, kv, isFlatten)
+	if edgeXerr != nil {
+		return nil, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	// replace the key delimiter in the response for Keeper
+	for i, key := range keys {
+		// convert the KeyOnly type to string
+		originKey := string(key)
+
+		// replace the key delimiter from colon(:) to slash(/)
+		keys[i].SetKey(replaceKeyDelimiterForKeeper(originKey))
+	}
+	return keys, nil
+}
+
+// DeleteKeeperKeys delete the specified key or keys with the same prefix
+func (c *Client) DeleteKeeperKeys(key string, prefixMatch bool) (kvs []model.KeyOnly, edgeXerr errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	key = replaceKeyDelimiterForDB(key)
+	kvs, edgeXerr = deleteKeeperKeys(conn, key, prefixMatch)
+	if edgeXerr != nil {
+		return kvs, errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to delete key %s", replaceKeyDelimiterForKeeper(key)), edgeXerr)
+	}
+
+	for i, kv := range kvs {
+		// convert the KeyOnly type to string
+		originKey := string(kv)
+
+		// replace the key delimiter from colon(:) to slash(/)
+		kvs[i].SetKey(replaceKeyDelimiterForKeeper(originKey))
+	}
+	return kvs, nil
+}
+
+func (c *Client) AddRegistration(r model.Registration) (model.Registration, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	r, err := addRegistration(conn, r)
+	if err != nil {
+		return model.Registration{}, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return r, nil
+}
+
+func (c *Client) DeleteRegistrationByServiceId(id string) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	err := deleteRegistrationByServiceId(conn, id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}
+
+func (c *Client) Registrations() ([]model.Registration, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	registries, err := registrations(conn, 0, -1)
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return registries, nil
+}
+
+func (c *Client) RegistrationByServiceId(id string) (model.Registration, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	r, err := registrationById(conn, id)
+	if err != nil {
+		return model.Registration{}, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return r, nil
+}
+
+func (c *Client) UpdateRegistration(r model.Registration) errors.EdgeX {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	err := updateRegistration(conn, r)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
+}
