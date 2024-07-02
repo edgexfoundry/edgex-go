@@ -14,6 +14,7 @@ Writable:
       SecretData:
         username: ""
         password: ""
+
 Service:
   Host: localhost
   Port: 59890
@@ -32,11 +33,14 @@ Service:
     CORSAllowedHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
     CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
     CORSMaxAge: 3600
+
 Database:
   Host: "localhost"
   Port: 6379
   Timeout: "5s"
   Type: "redisdb"
+  Name: "corekeeper"
+
 MessageBus:
   Protocol: "redis"
   Host: "localhost"
@@ -62,4 +66,4 @@ MessageBus:
     Deliver: "new"
     DefaultPubRetryAttempts: "2"
     Subject: "edgex/#" # Required for NATS JetStream only for stream auto-provisioning
-    ClientId: core-keeper
+    ClientId: "core-keeper"

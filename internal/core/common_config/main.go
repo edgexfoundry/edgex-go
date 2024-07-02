@@ -17,6 +17,7 @@ package common_config
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sort"
@@ -74,17 +75,6 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	lc.Info("Secret Provider created")
 
-	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
-	// access to the config provider in secure mode
-	getAccessToken := func() (string, error) {
-		accessToken, err := secretProvider.GetAccessToken("consul", common.CoreCommonConfigServiceKey)
-		if err != nil {
-			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
-		}
-		lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
-		return accessToken, err
-	}
-
 	// create config client
 	envVars := environment.NewVariables(lc)
 	configProviderInfo, err := config.NewProviderInfo(envVars, f.ConfigProviderUrl())
@@ -92,6 +82,26 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		lc.Errorf("failed to get Provider Info for the common configuration: %s", err.Error())
 		os.Exit(1)
 	}
+
+	// Bypass the zero trust zitidfied transport for Core Keeper Configuration client
+	// Should leverage the HttpTransportFromService function from zerotrust pkg in go-mod-bootstrap, set the default transport for now
+	secretProvider.SetHttpTransport(http.DefaultTransport)
+	jwtSecretProvider := secret.NewJWTSecretProvider(secretProvider)
+
+	configProviderInfo.SetAuthInjector(jwtSecretProvider)
+
+	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
+	// access to the config provider in secure mode
+	getAccessToken := func() (string, error) {
+		tokenType := configProviderInfo.ServiceConfig().Type
+		accessToken, err := secretProvider.GetAccessToken(tokenType, common.CoreCommonConfigServiceKey)
+		if err != nil {
+			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
+		}
+		lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
+		return accessToken, err
+	}
+
 	configClient, err := config.CreateProviderClient(lc, common.CoreCommonConfigServiceKey, common.ConfigStemCore, getAccessToken, configProviderInfo.ServiceConfig())
 	if err != nil {
 		lc.Errorf("failed to create provider client for the common configuration: %s", err.Error())
