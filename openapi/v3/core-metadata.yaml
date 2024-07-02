@@ -229,7 +229,6 @@ components:
         - adminState
         - operatingState
         - serviceName
-        - profileName
         - protocols
     UpdateDevice:
       type: object
@@ -1223,12 +1222,51 @@ components:
         - apiVersion: "v3"
           requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
           statusCode: 500
-          message: "Internal Server Error" 
+          message: "Internal Server Error"
+    MultiPOSTDeviceStatusExample:
+      value:
+        - apiVersion: "v3"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 201
+          id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
+        - apiVersion: "v3"
+          requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
+          statusCode: 400
+          message: "Validating auto events error"
+        - apiVersion: "v3"
+          requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
+          statusCode: 404
+          message: "Not Found"
+        - apiVersion: "v3"
+          requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
+          statusCode: 409
+          message: "Duplicated"
+        - apiVersion: "v3"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error"
     MultiUpdateStatusExample:
       value:
         - apiVersion: "v3"
           requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
           statusCode: 200
+        - apiVersion: "v3"
+          requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
+          statusCode: 404
+          message: "Not Found"
+        - apiVersion: "v3"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error"
+    MultiUpdateDeviceStatusExample:
+      value:
+        - apiVersion: "v3"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 200
+        - apiVersion: "v3"
+          requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
+          statusCode: 400
+          message: "Validating auto events error"
         - apiVersion: "v3"
           requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
           statusCode: 404
@@ -1619,8 +1657,8 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
               examples:
-                MultiPOSTStatusExample:
-                  $ref: '#/components/examples/MultiPOSTStatusExample'
+                MultiPOSTDeviceStatusExample:
+                  $ref: '#/components/examples/MultiPOSTDeviceStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -1673,8 +1711,8 @@ paths:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/BaseWithIdResponse'
               examples:
-                MultiUpdateStatusExample:
-                  $ref: '#/components/examples/MultiUpdateStatusExample'
+                MultiUpdateDeviceStatusExample:
+                  $ref: '#/components/examples/MultiUpdateDeviceStatusExample'
         '400':
           description: "Request is in an invalid state"
           headers:

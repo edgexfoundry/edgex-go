@@ -284,6 +284,12 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
 
 func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
+	if len(d.AutoEvents) == 0 {
+		return nil
+	}
+	if d.ProfileName == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("no associated device profile during validating device '%s' auto event", d.Name), nil)
+	}
 	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
 	if err != nil {
