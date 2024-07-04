@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -224,6 +224,23 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
+}
+
+// AllDeviceProfileBasicInfos query the device profile basic infos with offset, and limit
+func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.Container) (deviceProfileBasicInfos []dtos.DeviceProfileBasicInfo, totalCount uint32, err errors.EdgeX) {
+	dbClient := container.DBClientFrom(dic.Get)
+	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
+	if err == nil {
+		totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
+	}
+	if err != nil {
+		return deviceProfileBasicInfos, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	deviceProfileBasicInfos = make([]dtos.DeviceProfileBasicInfo, len(dps))
+	for i, dp := range dps {
+		deviceProfileBasicInfos[i] = dtos.FromDeviceProfileModelToBasicInfoDTO(dp)
+	}
+	return deviceProfileBasicInfos, totalCount, nil
 }
 
 func deviceProfileByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDeviceProfileBasicInfo) (deviceProfile models.DeviceProfile, err errors.EdgeX) {

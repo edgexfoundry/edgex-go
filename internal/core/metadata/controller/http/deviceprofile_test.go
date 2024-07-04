@@ -1521,3 +1521,82 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 		})
 	}
 }
+
+func TestAllDeviceProfileBasicInfos(t *testing.T) {
+	deviceProfile := dtos.ToDeviceProfileModel(buildTestDeviceProfileRequest().Profile)
+	deviceProfiles := []models.DeviceProfile{deviceProfile, deviceProfile, deviceProfile}
+	expectedTotalProfileCount := uint32(3)
+
+	dic := mockDic()
+	dbClientMock := &mocks.DBClient{}
+	dbClientMock.On("DeviceProfileCountByLabels", []string(nil)).Return(expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfileCountByLabels", testDeviceProfileLabels).Return(expectedTotalProfileCount, nil)
+	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
+	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
+	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
+	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+	controller := NewDeviceProfileController(dic)
+	assert.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		offset             string
+		limit              string
+		labels             string
+		errorExpected      bool
+		expectedCount      int
+		expectedTotalCount uint32
+		expectedStatusCode int
+	}{
+		{"Valid - get device profile basic infos without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profile basic infos with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Valid - get device profile basic infos with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
+			req, err := http.NewRequest(http.MethodGet, common.ApiAllDeviceProfileRoute, http.NoBody)
+			query := req.URL.Query()
+			query.Add(common.Offset, testCase.offset)
+			query.Add(common.Limit, testCase.limit)
+			if len(testCase.labels) > 0 {
+				query.Add(common.Labels, testCase.labels)
+			}
+			req.URL.RawQuery = query.Encode()
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			err = controller.AllDeviceProfiles(c)
+			require.NoError(t, err)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiDeviceProfileBasicInfoResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, int(res.StatusCode), "Response status code not as expected")
+				assert.Equal(t, testCase.expectedCount, len(res.Profiles), "Profile count not as expected")
+				assert.Equal(t, testCase.expectedTotalCount, res.TotalCount, "Total count not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}

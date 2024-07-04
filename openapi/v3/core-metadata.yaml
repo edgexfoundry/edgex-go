@@ -311,6 +311,15 @@ components:
           $ref: '#/components/schemas/DeviceProfileBasicInfo'
       required:
         - profileName
+    MultiDeviceProfileBasicInfosResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseWithTotalCountResponse'
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceProfileBasicInfo'
     DeviceProfile:
       description: "A profile defining a class of device to be onboarded, including its capabilities and data format."
       type: object
@@ -1551,6 +1560,27 @@ components:
               resourceOperations:
                 - deviceResource: "1"
                   defaultValue: "false"
+    GetAllDeviceProfileBasicInfosResponse:
+      value:
+        apiVersion: "v3"
+        requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
+        statusCode: 200
+        totalCount: 3
+        profiles:
+          - id: "9d33b6fd-f38b-4f0e-aef4-0332578ff2c0"
+            name: "Device-Virtual-Profile"
+            description: "Example of Device-Virtual"
+            manufacturer: "IOTech"
+            model: "Device-Virtual-01"
+            labels:
+              - device-virtual-example
+          - id: "3edf4fe9-b3b8-4f78-bb94-ff55f7d9f316"
+            name: "Device-Modbus-Profile"
+            description: "Example of Device-Modbus"
+            manufacturer: "IOTech"
+            model: "Device-Modbus-01"
+            labels:
+              - device-modbus-example
     GetAllProvisionWatchersResponse:
       value:
         apiVersion: "v3"
@@ -2569,6 +2599,51 @@ paths:
                   $ref: '#/components/examples/400Example'
         '500':
           description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /deviceprofile/basicinfo/all:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/labelsParam'
+    get:
+      summary: "Given the entire range of device profile basic infos sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Device profiles may also be filtered by label."
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiDeviceProfileBasicInfosResponse'
+              examples:
+                GetAllDeviceProfilesResponse:
+                  $ref: '#/components/examples/GetAllDeviceProfileBasicInfosResponse'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: "Internal Server Error"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'

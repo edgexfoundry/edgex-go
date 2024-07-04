@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -381,4 +381,26 @@ func (dc *DeviceProfileController) PatchDeviceProfileBasicInfo(c echo.Context) e
 
 	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
 	return pkg.EncodeAndWriteResponse(updateResponses, w, lc)
+}
+
+func (dc *DeviceProfileController) AllDeviceProfileBasicInfos(c echo.Context) error {
+	lc := container.LoggingClientFrom(dc.dic.Get)
+	r := c.Request()
+	w := c.Response()
+	ctx := r.Context()
+	config := metadataContainer.ConfigurationFrom(dc.dic.Get)
+
+	// parse URL query string for offset, limit, and labels
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	deviceProfileBasicInfos, totalCount, err := application.AllDeviceProfileBasicInfos(offset, limit, labels, dc.dic)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	response := responseDTO.NewMultiDeviceProfileBasicInfosResponse("", "", http.StatusOK, totalCount, deviceProfileBasicInfos)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

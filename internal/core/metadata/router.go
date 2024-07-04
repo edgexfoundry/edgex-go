@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 // Copyright (C) 2023 Intel Corporation
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -45,6 +45,7 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.GET(common.ApiDeviceProfileByManufacturerEchoRoute, dc.DeviceProfilesByManufacturer, authenticationHook)
 	r.GET(common.ApiDeviceProfileByManufacturerAndModelEchoRoute, dc.DeviceProfilesByManufacturerAndModel, authenticationHook)
 	r.PATCH(common.ApiDeviceProfileBasicInfoRoute, dc.PatchDeviceProfileBasicInfo, authenticationHook)
+	r.GET(common.ApiAllDeviceProfileBasicInfoRoute, dc.AllDeviceProfileBasicInfos, authenticationHook)
 
 	// Device Resource
 	dr := metadataController.NewDeviceResourceController(dic)
