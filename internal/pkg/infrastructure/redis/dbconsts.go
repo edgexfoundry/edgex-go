@@ -13,7 +13,10 @@ const (
 	GET              = "GET"
 	EXISTS           = "EXISTS"
 	DEL              = "DEL"
+	HGETALL          = "HGETALL"
+	HLEN             = "HLEN"
 	HSET             = "HSET"
+	HSETNX           = "HSETNX"
 	HGET             = "HGET"
 	HEXISTS          = "HEXISTS"
 	HDEL             = "HDEL"
@@ -33,6 +36,7 @@ const (
 	LIMIT            = "LIMIT"
 	ZUNIONSTORE      = "ZUNIONSTORE"
 	ZINTERSTORE      = "ZINTERSTORE"
+	TYPE             = "TYPE"
 )
 
 const (
@@ -40,4 +44,11 @@ const (
 	InfiniteMax     = "+inf"
 	GreaterThanZero = "(0"
 	DBKeySeparator  = ":"
+)
+
+// Redis data types
+const (
+	Hash   = "hash"
+	String = "string"
+	None   = "none"
 )
