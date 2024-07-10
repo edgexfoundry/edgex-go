@@ -44,6 +44,9 @@ fi
 echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT} to ${EDGEX_USER}:${EDGEX_GROUP}"
 chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} "${EDGEX_SECRETS_ROOT}"
 
+echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT}/rules-engine to 1001:1001 to accommodate ekuiper"
+chown -Rh 1001:1001 "${EDGEX_SECRETS_ROOT}/rules-engine"
+
 # Signal tokens ready port for other services waiting on
 exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
   --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}"
