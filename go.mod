@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.41
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.42
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.9
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.28
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.28
