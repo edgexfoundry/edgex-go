@@ -44,11 +44,11 @@ fi
 echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT} to ${EDGEX_USER}:${EDGEX_GROUP}"
 chown -Rh ${EDGEX_USER}:${EDGEX_GROUP} "${EDGEX_SECRETS_ROOT}"
 
-ekuiper_uid="${EDGEX_EKUIPER_USER_ID:-1001}"
-ekuiper_gid="${EDGEX_EKUIPER_GROUP_ID:-1001}"
+EKUIPER_UID="${EDGEX_EKUIPER_USER_ID:-1001}"
+EKUIPER_GID="${EDGEX_EKUIPER_GROUP_ID:-1001}"
 
-echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT}/rules-engine to ${ekuiper_uid}:${ekuiper_gid} to accommodate ekuiper."
-chown -Rh ${ekuiper_uid}:${ekuiper_gid} "${EDGEX_SECRETS_ROOT}/rules-engine"
+echo "$(date) Changing ownership of ${EDGEX_SECRETS_ROOT}/rules-engine to ${EKUIPER_UID}:${EKUIPER_GID} to accommodate ekuiper."
+chown -Rh ${EKUIPER_UID}:${EKUIPER_GID} "${EDGEX_SECRETS_ROOT}/rules-engine"
 
 # Signal tokens ready port for other services waiting on
 exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
