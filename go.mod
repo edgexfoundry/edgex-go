@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.42
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.44
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.9
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.28
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.28
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.7
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
@@ -29,7 +29,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.11 // indirect
+	github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.12 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
@@ -127,7 +127,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/oauth2 v0.20.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
