@@ -12,6 +12,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx/v5 v5.6.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/spf13/cast v1.6.0
@@ -71,6 +72,9 @@ require (
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kataras/go-events v0.0.3 // indirect
 	github.com/klauspost/compress v1.17.2 // indirect
@@ -140,3 +144,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	nhooyr.io/websocket v1.8.11 // indirect
 )
+
+replace github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30 => github.com/jackchenjc/go-mod-core-contracts/v3 v3.2.0-dev.4.0.20240725043034-7ae21a40ef04

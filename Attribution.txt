@@ -457,3 +457,15 @@ https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
 
 spf13/cast (MIT) https://github.com/spf13/cast
 https://github.com/spf13/cast/blob/master/LICENSE
+
+jackc/pgx (MIT) https://github.com/jackc/pgx/v5
+https://github.com/jackc/pgx/blob/master/LICENSE
+
+jackc/pgpassfile (MIT) https://github.com/jackc/pgpassfile
+https://github.com/jackc/pgpassfile/blob/master/LICENSE
+
+jackc/pgservicefile (MIT) https://github.com/jackc/pgservicefile
+https://github.com/jackc/pgservicefile/blob/master/LICENSE
+
+jackc/puddle (MIT) https://github.com/jackc/puddle/v2
+https://github.com/jackc/puddle/blob/master/LICENSE
