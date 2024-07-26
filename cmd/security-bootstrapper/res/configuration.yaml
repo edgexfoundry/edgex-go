@@ -1,4 +1,6 @@
 LogLevel: INFO
+Database:
+  Type: postgres
 StageGate:
   BootStrapper:
     Host: edgex-security-bootstrapper

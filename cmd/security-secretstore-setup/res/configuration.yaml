@@ -38,6 +38,8 @@ SecretStore:
   PasswordProviderArgs: []
   RevokeRootTokens: true
   ConsulSecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
+Database:
+  Type: "postgres"
 Databases:
   admin:
     Username: admin

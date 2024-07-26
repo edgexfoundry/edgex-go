@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -39,10 +40,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenfilewriter"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
@@ -53,6 +56,7 @@ import (
 const (
 	addKnownSecretsEnv   = "EDGEX_ADD_KNOWN_SECRETS" // nolint:gosec
 	redisSecretName      = "redisdb"
+	postgresSecretName   = "postgres"
 	messagebusSecretName = "message-bus"
 	knownSecretSeparator = ","
 	serviceListBegin     = "["
@@ -74,7 +78,7 @@ func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
 	return &Bootstrap{
 		insecureSkipVerify: insecureSkipVerify,
 		vaultInterval:      vaultInterval,
-		validKnownSecrets:  map[string]bool{redisSecretName: true, messagebusSecretName: true},
+		validKnownSecrets:  map[string]bool{redisSecretName: true, postgresSecretName: true, messagebusSecretName: true},
 	}
 }
 
@@ -390,35 +394,45 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// Redis 5.x only supports a single shared password. When Redis 6 is released, this can be updated
 	// to a per service password.
+	var dbSecretName, credBootstrapStem, dbUserName string
+	if configuration.Database.Type == postgresSecretName {
+		dbSecretName = postgresSecretName
+		credBootstrapStem = common.SecurityBootstrapperPostgresKey
+		dbUserName = "postgres"
+	} else {
+		dbSecretName = redisSecretName
+		credBootstrapStem = common.SecurityBootstrapperRedisKey
+		dbUserName = "default"
+	}
 
-	redisCredentials, err := getCredential("security-bootstrapper-redis", secretStore, redisSecretName)
+	dbCredentials, err := getCredential(credBootstrapStem, secretStore, dbSecretName)
 	if err != nil {
 		if err != errNotFound {
-			lc.Errorf("failed to determine if Redis credentials already exist or not: %s", err.Error())
+			lc.Errorf("failed to determine if %s credentials already exist or not: %s", dbSecretName, err.Error())
 			return false
 		}
 
-		lc.Info("Generating new password for Redis DB")
+		lc.Infof("Generating new password for %s", dbSecretName)
 		defaultPassword, err := secretStore.GeneratePassword(ctx)
 		if err != nil {
-			lc.Error("failed to generate default password for redisdb")
+			lc.Errorf("failed to generate default password for %s", dbSecretName)
 			return false
 		}
 
-		redisCredentials = UserPasswordPair{
-			User:     "default",
+		dbCredentials = UserPasswordPair{
+			User:     dbUserName,
 			Password: defaultPassword,
 		}
 	} else {
-		lc.Info("Redis DB credentials exist, skipping generating new password")
+		lc.Infof("%s credentials exist, skipping generating new password", dbSecretName)
 	}
 
 	// Add any additional services that need the known DB secret
-	lc.Infof("adding any additional services using redisdb for knownSecrets...")
-	services, ok := knownSecretsToAdd[redisSecretName]
+	lc.Infof("adding any additional services using %s for knownSecrets...", dbSecretName)
+	services, ok := knownSecretsToAdd[dbSecretName]
 	if ok {
 		for _, service := range services {
-			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+			err = addServiceCredential(lc, dbSecretName, secretStore, service, dbCredentials)
 			if err != nil {
 				lc.Error(err.Error())
 				return false
@@ -426,13 +440,13 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 
-	lc.Infof("adding redisdb secret name for internal services...")
+	lc.Infof("adding %s secret name for internal services...", dbSecretName)
 	for _, info := range configuration.Databases {
 		service := info.Service
 
 		// add credentials to service path if specified and they're not already there
 		if len(service) != 0 {
-			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+			err = addServiceCredential(lc, dbSecretName, secretStore, service, dbCredentials)
 			if err != nil {
 				lc.Error(err.Error())
 				return false
@@ -440,8 +454,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 	}
 	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
-	// with append the DB type (redisdb)
-	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
+	// with append the DB type (redisdb or postgresdb)
+	err = storeCredential(lc, credBootstrapStem, secretStore, dbSecretName, dbCredentials)
 	if err != nil {
 		lc.Error(err.Error())
 		return false
@@ -499,7 +513,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	var secretName string
 	switch messageBusType {
 	case redisSecureMessageBusType:
-		creds = redisCredentials
+		creds = dbCredentials
 		secretName = redisSecretName
 	case mqttSecureMessageBusType:
 		creds = msgBusCredentials
@@ -589,6 +603,15 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
 		lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
 		return false
+	}
+
+	if secret.IsSecurityEnabled() {
+		tsc := newThirdPartyServiceSecretCreator(lc, configuration, httpCaller, rootToken, secretStoreConfig.GetBaseURL())
+		err = tsc.generateTLSCerts()
+		if err != nil {
+			lc.Errorf("failed to create required secrets for third party services: %s", err.Error())
+			return false
+		}
 	}
 
 	lc.Info("Vault init done successfully")

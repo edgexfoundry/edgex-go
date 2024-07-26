@@ -42,6 +42,7 @@ RUN apk --no-cache upgrade
 ENV SECURITY_INIT_DIR /edgex-init
 ENV SECURITY_INIT_STAGING /edgex-init-staging
 ARG BOOTSTRAP_REDIS_DIR=${SECURITY_INIT_STAGING}/bootstrap-redis
+ARG BOOTSTRAP_POSTGRES_DIR=${SECURITY_INIT_STAGING}/bootstrap-postgres
 ARG BOOTSTRAP_MOSQUITTO_DIR=${SECURITY_INIT_STAGING}/bootstrap-mosquitto
 
 RUN mkdir -p ${BOOTSTRAP_REDIS_DIR} ${BOOTSTRAP_MOSQUITTO_DIR}
@@ -59,6 +60,9 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/res/configuration.yaml .
 
 # needed for bootstrapping Redis db
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-redis/configuration.yaml ${BOOTSTRAP_REDIS_DIR}/res/
+
+# needed for bootstrapping Postgres db
+COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-postgres/configuration.yaml ${BOOTSTRAP_POSTGRES_DIR}/res/
 
 # needed for bootstrapping mosquitto
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-mosquitto/configuration.yaml ${BOOTSTRAP_MOSQUITTO_DIR}/res/
