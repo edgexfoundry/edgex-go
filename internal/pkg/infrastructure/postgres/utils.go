@@ -24,7 +24,7 @@ func getValidLimitAndOffset(offset, limit int) (int, int) {
 }
 
 // getValidStartAndEnd returns the valid start and end from the given parameters
-func getValidStartAndEnd(start, end int) (int, int, errors.EdgeX) {
+func getValidStartAndEnd(start, end int64) (int64, int64, errors.EdgeX) {
 	if end < start {
 		return 0, 0, errors.NewCommonEdgeX(errors.KindContractInvalid, "end must be greater than start", nil)
 	}
@@ -32,7 +32,7 @@ func getValidStartAndEnd(start, end int) (int, int, errors.EdgeX) {
 }
 
 // getValidRangeParameters returns the valid start, end, offset and limit from the given parameters
-func getValidRangeParameters(start, end, offset, limit int) (int, int, int, int, errors.EdgeX) {
+func getValidRangeParameters(start, end int64, offset, limit int) (int64, int64, int, int, errors.EdgeX) {
 	var err errors.EdgeX
 	end, start, err = getValidStartAndEnd(start, end)
 	if err != nil {

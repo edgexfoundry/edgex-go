@@ -3,5 +3,5 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- schema for cron_scheduler related tables
-CREATE SCHEMA IF NOT EXISTS cron_scheduler;
+-- schema for scheduler related tables
+CREATE SCHEMA IF NOT EXISTS scheduler;

@@ -2,28 +2,23 @@ Writable:
   LogLevel: INFO
   InsecureSecrets:
     DB:
-      SecretName: "redisdb"
+      SecretName: postgres
       SecretData:
-        username: ""
-        password: ""
-    POSTGRES:
-      SecretName: "postgres"
-      SecretData:
-        username: "postgres"
-        password: "postgres"
+        username: postgres
+        password: postgres
+
 Service:
   Host: localhost
   Port: 59863
-  StartupMsg: "This is the Support Cron Scheduler Microservice"
+  StartupMsg: This is the Support Cron Scheduler Microservice
 
 MessageBus:
   Optional:
     ClientId: support-cron-scheduler
 
 Database:
-  Host: "localhost"
+  Host: localhost
   Port: 5432
-  Timeout: "5s"
-  Type: "postgres"
-  Name: cron-scheduler
+  Timeout: 5s
+  Type: postgres
 

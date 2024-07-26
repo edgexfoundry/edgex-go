@@ -20,6 +20,8 @@ import (
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 )
 
+const scheduleJobTable = "scheduler.schedule_job"
+
 // AddScheduleJob adds a new schedule job to the database
 func (c *Client) AddScheduleJob(scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX) {
 	ctx := context.Background()
@@ -28,7 +30,7 @@ func (c *Client) AddScheduleJob(scheduleJob model.ScheduleJob) (model.ScheduleJo
 }
 
 // AllScheduleJobs queries the schedule jobs with the given range, offset, and limit
-func (c *Client) AllScheduleJobs(start, end, offset, limit int) ([]model.ScheduleJob, errors.EdgeX) {
+func (c *Client) AllScheduleJobs(start, end int64, offset, limit int) ([]model.ScheduleJob, errors.EdgeX) {
 	ctx := context.Background()
 
 	var err errors.EdgeX
@@ -37,14 +39,12 @@ func (c *Client) AllScheduleJobs(start, end, offset, limit int) ([]model.Schedul
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	sqlQueryAllScheduleJobs := "SELECT * FROM cron_scheduler.schedule_job WHERE created >= $1 AND created <= $2 ORDER BY created OFFSET $3 LIMIT $4"
-
-	records, err := queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllScheduleJobs, start, end, offset, limit)
+	jobs, err := queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRange(scheduleJobTable), start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule jobs", err)
 	}
 
-	return records, nil
+	return jobs, nil
 }
 
 // UpdateScheduleJob updates the schedule job
@@ -81,7 +81,7 @@ func (c *Client) DeleteScheduleJobByName(name string) errors.EdgeX {
 func (c *Client) ScheduleJobById(id string) (model.ScheduleJob, errors.EdgeX) {
 	ctx := context.Background()
 
-	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, "SELECT * FROM cron_scheduler.schedule_job WHERE id = $1", id)
+	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllById(scheduleJobTable), id)
 	if err != nil {
 		return scheduleJob, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule job by id %s", id), err)
 	}
@@ -93,7 +93,7 @@ func (c *Client) ScheduleJobById(id string) (model.ScheduleJob, errors.EdgeX) {
 func (c *Client) ScheduleJobByName(name string) (model.ScheduleJob, errors.EdgeX) {
 	ctx := context.Background()
 
-	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, "SELECT * FROM cron_scheduler.schedule_job WHERE name = $1", name)
+	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllByName(scheduleJobTable), name)
 	if err != nil {
 		return scheduleJob, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule job by name %s", name), err)
 	}
@@ -103,17 +103,7 @@ func (c *Client) ScheduleJobByName(name string) (model.ScheduleJob, errors.EdgeX
 
 // ScheduleJobTotalCount returns the total count of schedule jobs
 func (c *Client) ScheduleJobTotalCount() (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, "SELECT COUNT(*) FROM cron_scheduler.schedule_job")
-}
-
-// ScheduleJobCountById returns the count of schedule jobs by id
-func (c *Client) ScheduleJobCountById(id string) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, "SELECT COUNT(*) FROM cron_scheduler.schedule_job WHERE id = $1", id)
-}
-
-// ScheduleJobCountByName returns the count of schedule jobs with the specified name
-func (c *Client) ScheduleJobCountByName(name string) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, "SELECT COUNT(*) FROM cron_scheduler.schedule_job WHERE name = $1", name)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(scheduleJobTable))
 }
 
 func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX) {
@@ -128,8 +118,7 @@ func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, scheduleJob mod
 		return scheduleJob, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal schedule job for Postgres persistence", err)
 	}
 
-	sqlInsertScheduleJob := "INSERT INTO cron_scheduler.schedule_job(id, name, job) values ($1, $2, $3)"
-	_, err = connPool.Exec(ctx, sqlInsertScheduleJob, scheduleJob.Id, scheduleJob.Name, scheduleJobJSONBytes)
+	_, err = connPool.Exec(ctx, sqlInsertContent(scheduleJobTable), scheduleJob.Id, scheduleJob.Name, scheduleJobJSONBytes)
 	if err != nil {
 		return scheduleJob, pgClient.WrapDBError("failed to insert schedule job", err)
 	}
@@ -146,8 +135,7 @@ func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedSched
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal schedule job for Postgres persistence", err)
 	}
 
-	sqlUpdateScheduleJob := "UPDATE cron_scheduler.schedule_job SET job = $1, modified = $2 WHERE name = $3"
-	_, err = connPool.Exec(ctx, sqlUpdateScheduleJob, updatedScheduleJobJSONBytes, updatedScheduleJob.Modified, updatedScheduleJob.Name)
+	_, err = connPool.Exec(ctx, sqlUpdateContentByName(scheduleJobTable), updatedScheduleJobJSONBytes, updatedScheduleJob.Modified, updatedScheduleJob.Name)
 	if err != nil {
 		return pgClient.WrapDBError("failed to update schedule job", err)
 	}
@@ -156,17 +144,16 @@ func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedSched
 }
 
 func deleteScheduleJobByName(ctx context.Context, connPool *pgxpool.Pool, name string) errors.EdgeX {
-	_, err := connPool.Exec(ctx, "DELETE FROM cron_scheduler.schedule_job WHERE name = $1", name)
+	_, err := connPool.Exec(ctx, sqlDeleteByName(scheduleJobTable), name)
 	if err != nil {
 		return pgClient.WrapDBError(fmt.Sprintf("failed to delete schedule job by name %s", name), err)
 	}
-
 	return nil
 }
 
 func scheduleJobNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {
 	var exists bool
-	err := connPool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM cron_scheduler.schedule_job WHERE name = $1)", name).Scan(&exists)
+	err := connPool.QueryRow(ctx, sqlCheckExistsByName(scheduleJobTable), name).Scan(&exists)
 	if err != nil {
 		return false, pgClient.WrapDBError("failed to query schedule job by name", err)
 	}
@@ -178,7 +165,7 @@ func queryScheduleJob(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 	var scheduleJobJSONBytes []byte
 	err := connPool.QueryRow(ctx, sql, args...).Scan(&job.Id, &job.Name, &scheduleJobJSONBytes, &job.Created, &job.Modified)
 	if err != nil {
-		return job, pgClient.WrapDBError("failed to query cron_scheduler.schedule_job table", err)
+		return job, pgClient.WrapDBError("failed to query scheduler.schedule_job table", err)
 	}
 
 	job, err = toScheduleJobsModel(job, scheduleJobJSONBytes)
@@ -213,13 +200,13 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 	}
 
 	if readErr := rows.Err(); readErr != nil {
-		return nil, pgClient.WrapDBError("error occurred while query cron_scheduler.schedule_job table", readErr)
+		return nil, pgClient.WrapDBError("error occurred while query scheduler.schedule_job table", readErr)
 	}
 	return scheduleJobs, nil
 }
 
 func queryScheduleJobNames(ctx context.Context, connPool *pgxpool.Pool, offset, limit int) ([]string, errors.EdgeX) {
-	sqlQueryAllScheduleJobNames := "SELECT name FROM cron_scheduler.schedule_job ORDER BY created OFFSET $1 LIMIT $2"
+	sqlQueryAllScheduleJobNames := fmt.Sprintf("SELECT name FROM %s ORDER BY created OFFSET $1 LIMIT $2", scheduleJobTable)
 	rows, err := connPool.Query(ctx, sqlQueryAllScheduleJobNames, offset, limit)
 	if err != nil {
 		return nil, pgClient.WrapDBError("failed to query all schedule jobs' names", err)
@@ -237,7 +224,7 @@ func queryScheduleJobNames(ctx context.Context, connPool *pgxpool.Pool, offset, 
 	}
 
 	if readErr := rows.Err(); readErr != nil {
-		return nil, pgClient.WrapDBError("error occurred while query cron_scheduler.schedule_job table", readErr)
+		return nil, pgClient.WrapDBError("error occurred while query scheduler.schedule_job table", readErr)
 	}
 	return names, nil
 }

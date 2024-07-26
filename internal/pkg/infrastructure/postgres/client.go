@@ -20,10 +20,10 @@ type Client struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingClient) (*Client, errors.EdgeX) {
+func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, extScriptPath string, lc logger.LoggingClient) (*Client, errors.EdgeX) {
 	var err error
 	dc := &Client{}
-	dc.Client, err = postgresClient.NewClient(ctx, config, "", "", lc)
+	dc.Client, err = postgresClient.NewClient(ctx, config, baseScriptPath, extScriptPath, lc)
 	dc.loggingClient = lc
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "postgres client creation failed", err)

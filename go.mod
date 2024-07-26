@@ -145,4 +145,4 @@ require (
 	nhooyr.io/websocket v1.8.11 // indirect
 )
 
-replace github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30 => github.com/jackchenjc/go-mod-core-contracts/v3 v3.2.0-dev.4.0.20240725043034-7ae21a40ef04
+replace github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30 => github.com/jackchenjc/go-mod-core-contracts/v3 v3.2.0-dev.4.0.20240725113711-7ffbf863d5eb

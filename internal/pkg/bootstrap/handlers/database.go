@@ -12,7 +12,7 @@ import (
 
 	bootstrapInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/interfaces"
 

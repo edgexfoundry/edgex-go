@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,7 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 )
 
-const defaultDBName = "postgres"
+const defaultDBName = "edgex_db"
 
 var once sync.Once
 var dc *Client
@@ -32,8 +33,8 @@ type Client struct {
 
 // NewClient returns a pointer to the Postgres client
 func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, extScriptPath string, lc logger.LoggingClient) (*Client, errors.EdgeX) {
-	// TODO: Should set the database's name in the configuration file as well
-	databaseName := config.DatabaseName
+	// Get the database name from the environment variable
+	databaseName := os.Getenv("EDGEX_DBNAME")
 	if databaseName == "" {
 		databaseName = defaultDBName
 	}
