@@ -54,6 +54,11 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
+	// Log the topics to which core-data is subscribing
+	for _, t := range topics {
+		lc.Infof("Subscribed to topics: %s", t.Topic)
+	}
+
 	go func() {
 		for {
 			select {
