@@ -51,24 +51,24 @@ func sqlInsertContent(table string) string {
 // ----------------------------------------------------------------------------------
 
 // sqlQueryAll returns the SQL statement for selecting all rows from the table.
-func sqlQueryAll(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s", table)
-}
+//func sqlQueryAll(table string) string {
+//	return fmt.Sprintf("SELECT * FROM %s", table)
+//}
 
 // sqlQueryAllWithTimeRange returns the SQL statement for selecting all rows from the table with a time range.
-func sqlQueryAllWithTimeRange(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
-}
+//func sqlQueryAllWithTimeRange(table string) string {
+//	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
+//}
 
 // sqlQueryAllWithPagination returns the SQL statement for selecting all rows from the table with pagination.
-func sqlQueryAllWithPagination(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s OFFSET $1 LIMIT $2", table)
-}
+//func sqlQueryAllWithPagination(table string) string {
+//	return fmt.Sprintf("SELECT * FROM %s OFFSET $1 LIMIT $2", table)
+//}
 
 // sqlQueryAllWithPaginationDesc returns the SQL statement for selecting all rows from the table with pagination by created timestamp in descending order.
-func sqlQueryAllWithPaginationDesc(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
-}
+//func sqlQueryAllWithPaginationDesc(table string) string {
+//	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
+//}
 
 // sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
 func sqlQueryAllWithPaginationAndTimeRange(table string) string {
@@ -90,9 +90,9 @@ func sqlQueryAllByColWithPaginationAndTimeRange(table string, columns ...string)
 }
 
 // sqlQueryAllWithPaginationAndTimeRangeDesc returns the SQL statement for selecting all rows from the table with pagination and a time range.
-func sqlQueryAllWithPaginationAndTimeRangeDesc(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s DESC OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
-}
+//func sqlQueryAllWithPaginationAndTimeRangeDesc(table string) string {
+//	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s DESC OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
+//}
 
 // sqlQueryAllByName returns the SQL statement for selecting all rows from the table by name.
 func sqlQueryAllByName(table string) string {
@@ -110,9 +110,9 @@ func sqlCheckExistsByName(table string) string {
 }
 
 // sqlCheckExistsById returns the SQL statement for checking if a row exists in the table by id.
-func sqlCheckExistsById(table string) string {
-	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, idCol)
-}
+//func sqlCheckExistsById(table string) string {
+//	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, idCol)
+//}
 
 // sqlQueryCount returns the SQL statement for counting the number of rows in the table.
 func sqlQueryCount(table string) string {
@@ -135,9 +135,9 @@ func sqlUpdateContentByName(table string) string {
 }
 
 // sqlUpdateContentById returns the SQL statement for updating the content and modified timestamp of a row in the table by id.
-func sqlUpdateContentById(table string) string {
-	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, idCol)
-}
+//func sqlUpdateContentById(table string) string {
+//	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, idCol)
+//}
 
 // ----------------------------------------------------------------------------------
 // SQL statements for DELETE operations
@@ -149,9 +149,9 @@ func sqlDeleteByName(table string) string {
 }
 
 // sqlDeleteById returns the SQL statement for deleting a row from the table by id.
-func sqlDeleteById(table string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, idCol)
-}
+//func sqlDeleteById(table string) string {
+//	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, idCol)
+//}
 
 // sqlDeleteByAge returns the SQL statement for deleting rows from the table by created timestamp.
 func sqlDeleteByAge(table string) string {

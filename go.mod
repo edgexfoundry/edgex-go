@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.49
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.11
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.32
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.29
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.7.0
@@ -144,5 +144,3 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	nhooyr.io/websocket v1.8.11 // indirect
 )
-
-replace github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.30 => github.com/jackchenjc/go-mod-core-contracts/v3 v3.2.0-dev.4.0.20240725113711-7ffbf863d5eb
