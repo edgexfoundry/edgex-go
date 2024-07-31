@@ -14,11 +14,11 @@ import (
 type ConfigurationStruct struct {
 	LogLevel       string
 	Database       bootstrapConfig.Database
-	DatabaseConfig DatabaseBootstrapConfigInfo
+	DatabaseConfig DatabaseBootstrapInitInfo
 }
 
-// DatabaseBootstrapConfigInfo contains the configuration properties for bootstrapping the database
-type DatabaseBootstrapConfigInfo struct {
+// DatabaseBootstrapInitInfo contains the initialization db scripts properties for bootstrapping the database
+type DatabaseBootstrapInitInfo struct {
 	Path       string
 	Name       string
 	MaxClients int

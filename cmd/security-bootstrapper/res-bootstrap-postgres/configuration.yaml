@@ -7,3 +7,6 @@ Database:
   Port: 5432
   Timeout: "5s"
   Type: postgres
+DatabaseConfig:
+  Path: ./postgres-init-scripts
+  Name: create-users.sh

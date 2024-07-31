@@ -40,6 +40,12 @@ if [ $postgres_bootstrapping_status -ne 0 ]; then
   exit 1
 fi
 
+
+if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
+  ehco "$(date) Error: initialization script file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
+  exit 1
+fi
+
 # starting postgres
 echo "$(date) Starting edgex-postgres ..."
 exec /usr/local/bin/docker-entrypoint.sh postgres "$@"

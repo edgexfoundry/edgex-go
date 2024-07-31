@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2021 Intel Corporation
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -16,12 +17,18 @@
 package helper
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
+
+// file read/write permission only for owner
+const readWriteOnlyForOwner os.FileMode = 0600
 
 // MarkComplete creates a doneFile file
 func MarkComplete(dirPath, doneFile string) error {
@@ -75,4 +82,17 @@ func GeneratePseudoRandomString(n int) string {
 		return string(s)
 	}
 	return string("")
+}
+
+// CreateConfigFile creates the file with proper owner permission
+func CreateConfigFile(configDir, configFileName string, lc logger.LoggingClient) (*os.File, error) {
+	configFilePath := filepath.Join(configDir, configFileName)
+	lc.Infof("Creating the file: %s", configFilePath)
+
+	// open config file with read-write and overwritten attribute (TRUNC)
+	configFile, err := os.OpenFile(configFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open config file %s: %v", configFilePath, err)
+	}
+	return configFile, nil
 }

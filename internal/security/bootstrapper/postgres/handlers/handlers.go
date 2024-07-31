@@ -7,57 +7,101 @@ package handlers
 
 import (
 	"context"
+	"os"
+	"strings"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/postgres/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 )
 
-// Handler is the redis bootstrapping handler
-type Handler struct {
-	credentials bootstrapConfig.Credentials
-}
+const postgresSecretName = "postgres"
 
-// NewHandler instantiates a new Handler
-func NewHandler() *Handler {
-	return &Handler{}
-}
-
-// GetCredentials retrieves the postgres database credentials from secretstore
-func (handler *Handler) GetCredentials(ctx context.Context, _ *sync.WaitGroup, startupTimer startup.Timer,
+// SetupDBScriptFiles dynamically creates Postgres init-db script file with the retrieved credentials for multiple EdgeX services
+func SetupDBScriptFiles(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
 	dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
-	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 
-	var credentials = bootstrapConfig.Credentials{
-		Username: "unset",
-		Password: "unset",
-	}
+	dbInitScriptDir := strings.TrimSpace(config.DatabaseConfig.Path)
+	dbScriptFile := strings.TrimSpace(config.DatabaseConfig.Name)
 
-	for startupTimer.HasNotElapsed() {
-		// retrieve database credentials from secretstore
-		secrets, err := secretProvider.GetSecret(config.Database.Type)
-		if err == nil {
-			credentials.Username = secrets[secret.UsernameKey]
-			credentials.Password = secrets[secret.PasswordKey]
-			break
-		}
-
-		lc.Warnf("Could not retrieve database credentials (startup timer has not expired): %s", err.Error())
-		startupTimer.SleepForInterval()
-	}
-
-	if credentials.Password == "unset" {
-		lc.Error("Failed to retrieve database credentials before startup timer expired")
+	// required
+	if dbInitScriptDir == "" {
+		lc.Error("required configuration for DatabaseConfig.Path is empty")
 		return false
 	}
 
-	handler.credentials = credentials
+	if dbScriptFile == "" {
+		lc.Error("required configuration for DatabaseConfig.Name is empty")
+		return false
+	}
+
+	if err := helper.CreateDirectoryIfNotExists(dbInitScriptDir); err != nil {
+		lc.Errorf("failed to create database initialized script directory %s: %v", dbInitScriptDir, err)
+		return false
+	}
+
+	// create Postgres init-db script file
+	confFile, err := helper.CreateConfigFile(dbInitScriptDir, dbScriptFile, lc)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
+	defer func() {
+		_ = confFile.Close()
+	}()
+
+	err = getServiceCredentials(dic, confFile)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
 	return true
+}
+
+// getServiceCredentials retrieves the Postgres database credentials of multiple services from secretstore
+func getServiceCredentials(dic *di.Container, scriptFile *os.File) error {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
+
+	secretList, err := secretProvider.ListSecretNames()
+	var credMap []map[string]any
+	if err == nil {
+		for _, serviceKey := range secretList {
+			exists, err := secretProvider.HasSecret(serviceKey + "/" + postgresSecretName)
+			if err != nil {
+				return err
+			}
+			if exists {
+				serviceSecrets, err := secretProvider.GetSecret(serviceKey + "/" + postgresSecretName)
+				if err != nil {
+					return err
+				}
+				username, userFound := serviceSecrets[secret.UsernameKey]
+				password, pwFound := serviceSecrets[secret.PasswordKey]
+				if userFound && pwFound {
+					dbCred := map[string]any{
+						helper.UsernameTempVarName: username,
+						helper.PasswordTempVarName: &password,
+					}
+					credMap = append(credMap, dbCred)
+				}
+			}
+		}
+
+		// writing the Postgres init-db script with the Postgres credentials got from secret store
+		if err := helper.GeneratePostgresScript(scriptFile, credMap); err != nil {
+			lc.Errorf("cannot write to init-db script file %s: %v", scriptFile.Name(), err)
+			return err
+		}
+
+		lc.Info("Postgres init-db script has been set")
+	}
+	return nil
 }

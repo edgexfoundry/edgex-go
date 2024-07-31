@@ -35,8 +35,6 @@ func Configure(ctx context.Context,
 		},
 	})
 
-	postgresHandlers := handlers.NewHandler()
-
 	// bootstrap.RunAndReturnWaitGroup is needed for the underlying configuration system.
 	// Conveniently, it also creates a pipeline of functions as the list of BootstrapHandler's is
 	// executed in order.
@@ -53,7 +51,7 @@ func Configure(ctx context.Context,
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			postgresHandlers.GetCredentials,
+			handlers.SetupDBScriptFiles,
 		},
 	)
 
