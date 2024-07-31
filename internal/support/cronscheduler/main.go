@@ -31,8 +31,9 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
+	// TODO: Import the config package from the support/cronscheduler directory if available
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
