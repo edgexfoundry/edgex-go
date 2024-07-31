@@ -12,6 +12,7 @@ import (
 
 	bootstrapInterfaces "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/redis"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/interfaces"
 
@@ -46,19 +47,25 @@ func NewDatabase(httpServer httpServer, database bootstrapInterfaces.Database, d
 
 // Return the dbClient interface
 func (d Database) newDBClient(
+	ctx context.Context,
 	lc logger.LoggingClient,
 	credentials bootstrapConfig.Credentials) (interfaces.DBClient, error) {
 	databaseInfo := d.database.GetDatabaseInfo()
+
+	databaseConfig := db.Configuration{
+		Host:     databaseInfo.Host,
+		Port:     databaseInfo.Port,
+		Password: credentials.Password,
+		Timeout:  databaseInfo.Timeout,
+	}
+
 	switch databaseInfo.Type {
 	case "redisdb":
-		return redis.NewClient(
-			db.Configuration{
-				Host:     databaseInfo.Host,
-				Port:     databaseInfo.Port,
-				Password: credentials.Password,
-				Timeout:  databaseInfo.Timeout,
-			},
-			lc)
+		return redis.NewClient(databaseConfig, lc)
+	case "postgres":
+		databaseConfig.Username = credentials.Username
+		// TODO: The baseScriptPath and extScriptPath should be passed in from the configuration file
+		return postgres.NewClient(ctx, databaseConfig, "/res/db/sql", "", lc)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -113,7 +120,7 @@ func (d Database) BootstrapHandler(
 
 	for startupTimer.HasNotElapsed() {
 		var err error
-		dbClient, err = d.newDBClient(lc, credentials)
+		dbClient, err = d.newDBClient(ctx, lc, credentials)
 		if err == nil {
 			break
 		}
