@@ -28,10 +28,12 @@ const (
 
 // AddScheduleActionRecord adds a new schedule action record to the database
 // Note: the created field should be set manually before calling this function, and all the records belong to the same job should have the same created time.
-// So the created time can be used to query the latest schedule action records of a job.
+// So that the created time can be used to query the latest schedule action records of a job.
 func (c *Client) AddScheduleActionRecord(scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX) {
 	ctx := context.Background()
-	scheduleActionRecord.Id = uuid.New().String()
+	if len(scheduleActionRecord.Id) == 0 {
+		scheduleActionRecord.Id = uuid.New().String()
+	}
 	return addScheduleActionRecord(ctx, c.ConnPool, scheduleActionRecord)
 }
 

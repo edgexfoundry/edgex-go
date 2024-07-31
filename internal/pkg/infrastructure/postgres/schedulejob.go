@@ -25,7 +25,9 @@ const scheduleJobTable = "scheduler.schedule_job"
 // AddScheduleJob adds a new schedule job to the database
 func (c *Client) AddScheduleJob(scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX) {
 	ctx := context.Background()
-	scheduleJob.Id = uuid.New().String()
+	if len(scheduleJob.Id) == 0 {
+		scheduleJob.Id = uuid.New().String()
+	}
 	return addScheduleJob(ctx, c.ConnPool, scheduleJob)
 }
 
