@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -139,17 +140,30 @@ func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, min
 	if end < start {
 		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
 	}
-	offset, edgexErr = ParseQueryStringToInt(c, common.Offset, common.DefaultOffset, minOffset, maxOffset)
+	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	limit, edgexErr = ParseQueryStringToInt(c, common.Limit, common.DefaultLimit, minLimit, maxLimit)
+
+	return start, end, offset, limit, nil
+}
+
+func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
+	// TODO: Create min and max constants for start and end in go-mod-core-contracts?
+	start, edgexErr = ParseQueryStringToInt(c, common.Start, 0, 0, math.MaxInt64)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	// Use maxLimit to specify the supported maximum size.
-	if limit == -1 {
-		limit = maxLimit
+	end, edgexErr = ParseQueryStringToInt(c, common.End, 0, 0, math.MaxInt64)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	if end < start {
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+	}
+	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
 	}
 
 	return start, end, offset, limit, nil

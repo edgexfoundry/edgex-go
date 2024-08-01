@@ -40,8 +40,7 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the cronscheduler service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	// TODO: Add initialization code here
-	// LoadRestRoutes(b.router, dic, b.serviceName)
+	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	return true
 }
