@@ -8,6 +8,7 @@ package handlers
 import (
 	"context"
 	"os"
+	"path"
 	"strings"
 	"sync"
 
@@ -23,8 +24,7 @@ import (
 const postgresSecretName = "postgres"
 
 // SetupDBScriptFiles dynamically creates Postgres init-db script file with the retrieved credentials for multiple EdgeX services
-func SetupDBScriptFiles(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer,
-	dic *di.Container) bool {
+func SetupDBScriptFiles(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
 
@@ -74,12 +74,12 @@ func getServiceCredentials(dic *di.Container, scriptFile *os.File) error {
 	var credMap []map[string]any
 	if err == nil {
 		for _, serviceKey := range secretList {
-			exists, err := secretProvider.HasSecret(serviceKey + "/" + postgresSecretName)
+			exists, err := secretProvider.HasSecret(path.Join(serviceKey, postgresSecretName))
 			if err != nil {
 				return err
 			}
 			if exists {
-				serviceSecrets, err := secretProvider.GetSecret(serviceKey + "/" + postgresSecretName)
+				serviceSecrets, err := secretProvider.GetSecret(path.Join(serviceKey, postgresSecretName))
 				if err != nil {
 					return err
 				}

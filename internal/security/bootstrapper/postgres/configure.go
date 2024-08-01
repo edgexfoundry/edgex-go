@@ -22,7 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 )
 
-// Configure is the main entry point for configuring the database redis before startup
+// Configure is the main entry point for configuring the Postgres database before startup
 func Configure(ctx context.Context,
 	cancel context.CancelFunc,
 	flags flags.Common) {
@@ -56,7 +56,7 @@ func Configure(ctx context.Context,
 	)
 
 	if !ok {
-		// had some issue(s) during bootstrapping redis
+		// had some issue(s) during bootstrapping Postgres
 		os.Exit(1)
 	}
 }
