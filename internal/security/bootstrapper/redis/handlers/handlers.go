@@ -1,6 +1,7 @@
 /*******************************************************************************
 * Copyright 2023 Intel Corporation
 * Copyright 2020 Redis Labs
+* Copyright (C) 2024 IOTech Ltd
 *
 * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 * in compliance with the License. You may obtain a copy of the License at
@@ -18,8 +19,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -32,15 +31,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
 )
 
 const (
 	// redis aclfile name
 	redisACLFileName = "edgex_redis_acl.conf"
-
-	// file read/write permission only for owner
-	readWriteOnlyForOwner os.FileMode = 0600
 )
 
 // Handler is the redis bootstrapping handler
@@ -113,7 +108,7 @@ func (handler *Handler) SetupConfFiles(ctx context.Context, _ *sync.WaitGroup, _
 	}
 
 	// create redis config file
-	confFile, err := createConfigFile(dbConfigDir, dbConfigFile, lc)
+	confFile, err := helper.CreateConfigFile(dbConfigDir, dbConfigFile, lc)
 	if err != nil {
 		lc.Error(err.Error())
 		return false
@@ -130,7 +125,7 @@ func (handler *Handler) SetupConfFiles(ctx context.Context, _ *sync.WaitGroup, _
 	}
 
 	// create ACL config file
-	aclFile, err := createConfigFile(dbConfigDir, redisACLFileName, lc)
+	aclFile, err := helper.CreateConfigFile(dbConfigDir, redisACLFileName, lc)
 	if err != nil {
 		lc.Error(err.Error())
 		return false
@@ -148,16 +143,4 @@ func (handler *Handler) SetupConfFiles(ctx context.Context, _ *sync.WaitGroup, _
 	lc.Info("database config and ACL have been set in the config files")
 
 	return true
-}
-
-func createConfigFile(configDir, configFileName string, lc logger.LoggingClient) (*os.File, error) {
-	configFilePath := filepath.Join(configDir, configFileName)
-	lc.Infof("Creating the database config file: %s", configFilePath)
-
-	// open config file with read-write and overwritten attribute (TRUNC)
-	configFile, err := os.OpenFile(configFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open config file %s: %v", configFilePath, err)
-	}
-	return configFile, nil
 }

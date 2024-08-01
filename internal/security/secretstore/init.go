@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -43,6 +45,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
@@ -53,6 +56,7 @@ import (
 const (
 	addKnownSecretsEnv   = "EDGEX_ADD_KNOWN_SECRETS" // nolint:gosec
 	redisSecretName      = "redisdb"
+	postgresSecretName   = "postgres"
 	messagebusSecretName = "message-bus"
 	knownSecretSeparator = ","
 	serviceListBegin     = "["
@@ -368,6 +372,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		return false
 	}
 
+	// set the validKnownSecrets to true based on the database type
+	if configuration.Database.Type == postgresSecretName {
+		b.validKnownSecrets[postgresSecretName] = true
+	}
 	knownSecretsToAdd, err := b.getKnownSecretsToAdd()
 	if err != nil {
 		lc.Error(err.Error())
@@ -413,38 +421,45 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("Redis DB credentials exist, skipping generating new password")
 	}
 
-	// Add any additional services that need the known DB secret
-	lc.Infof("adding any additional services using redisdb for knownSecrets...")
-	services, ok := knownSecretsToAdd[redisSecretName]
-	if ok {
-		for _, service := range services {
-			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
-			if err != nil {
-				lc.Error(err.Error())
-				return false
+	if configuration.Database.Type == postgresSecretName {
+		err = genPostgresCredentials(dic, secretStore, knownSecretsToAdd, ctx)
+		if err != nil {
+			return false
+		}
+	} else {
+		// Add any additional services that need the known DB secret
+		lc.Infof("adding any additional services using redisdb for knownSecrets...")
+		services, ok := knownSecretsToAdd[redisSecretName]
+		if ok {
+			for _, service := range services {
+				err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+				if err != nil {
+					lc.Error(err.Error())
+					return false
+				}
 			}
 		}
-	}
 
-	lc.Infof("adding redisdb secret name for internal services...")
-	for _, info := range configuration.Databases {
-		service := info.Service
+		lc.Infof("adding redisdb secret name for internal services...")
+		for _, info := range configuration.Databases {
+			service := info.Service
 
-		// add credentials to service path if specified and they're not already there
-		if len(service) != 0 {
-			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
-			if err != nil {
-				lc.Error(err.Error())
-				return false
+			// add credentials to service path if specified and they're not already there
+			if len(service) != 0 {
+				err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+				if err != nil {
+					lc.Error(err.Error())
+					return false
+				}
 			}
 		}
-	}
-	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
-	// with append the DB type (redisdb)
-	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
-	if err != nil {
-		lc.Error(err.Error())
-		return false
+		// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
+		// with append the DB type (redisdb)
+		err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
+		if err != nil {
+			lc.Error(err.Error())
+			return false
+		}
 	}
 
 	// for secure message bus creds
@@ -784,5 +799,78 @@ func saveInitResponse(
 		return err
 	}
 
+	return nil
+}
+
+// genPostgresCredentials generates the Postgres passwords for security-bootstrapper-postgres and other services
+// and stores the passwords to secret store
+func genPostgresCredentials(dic *di.Container, secretStore Cred, knownSecretsToAdd map[string][]string, ctx context.Context) error {
+	configuration := container.ConfigurationFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	// Add any additional services that need the known DB secret
+	lc.Infof("adding any additional services using Postgres for knownSecrets...")
+	services, ok := knownSecretsToAdd[postgresSecretName]
+	if ok {
+		for _, service := range services {
+			password, err := secretStore.GeneratePassword(ctx)
+			if err != nil {
+				lc.Errorf("failed to generate Postgres password for service '%s'", service)
+				return err
+			}
+
+			postgresCred := UserPasswordPair{
+				User:     service,
+				Password: password,
+			}
+			// store the Postgres credential to additional service (path /v1/secret/edgex/<additional-service-name>)
+			err = addServiceCredential(lc, postgresSecretName, secretStore, service, postgresCred)
+			if err != nil {
+				lc.Error(err.Error())
+				return err
+			}
+
+			// store the postgres credential to security-bootstrapper-postgres
+			// (path /v1/secret/edgex/security-bootstrapper-postgres/<service-name>) as well
+			err = storeCredential(lc, path.Join(common.SecurityBootstrapperPostgresKey, service), secretStore, postgresSecretName, postgresCred)
+			if err != nil {
+				lc.Error(err.Error())
+				return err
+			}
+		}
+	}
+
+	lc.Infof("adding postgres secret name for internal services...")
+	for key, info := range configuration.Databases {
+		service := info.Service
+
+		// add credentials to service path if specified and they're not already there
+		if len(service) != 0 {
+			password, err := secretStore.GeneratePassword(ctx)
+			if err != nil {
+				lc.Errorf("failed to generate Postgres password for service '%s'", key)
+				return err
+			}
+
+			postgresCred := UserPasswordPair{
+				User:     info.Username,
+				Password: password,
+			}
+			// store the Postgres credential to EdgeX service (path /v1/secret/edgex/<service-name>)
+			err = addServiceCredential(lc, postgresSecretName, secretStore, service, postgresCred)
+			if err != nil {
+				lc.Error(err.Error())
+				return err
+			}
+
+			// store the postgres credential to security-bootstrapper-postgres
+			// (path /v1/secret/edgex/security-bootstrapper-postgres/<service-name>) as well
+			err = storeCredential(lc, path.Join(common.SecurityBootstrapperPostgresKey, service), secretStore, postgresSecretName, postgresCred)
+			if err != nil {
+				lc.Error(err.Error())
+				return err
+			}
+		}
+	}
 	return nil
 }

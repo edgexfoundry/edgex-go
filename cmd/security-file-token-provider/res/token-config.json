@@ -17,6 +17,9 @@
   "security-bootstrapper-redis": {
     "edgex_use_defaults": true
   },
+  "security-bootstrapper-postgres": {
+    "edgex_use_defaults": true
+  },
   "security-bootstrapper-messagebus": {
     "edgex_use_defaults": true
   },
@@ -159,6 +162,11 @@
           ]
         },
         "secret/edgex/security-bootstrapper-redis/redisdb": {
+          "capabilities": [
+            "read"
+          ]
+        },
+        "secret/edgex/security-bootstrapper-postgres/postgres": {
           "capabilities": [
             "read"
           ]

@@ -1,0 +1,12 @@
+LogLevel: INFO
+Database:
+  Host: localhost
+  Name: "edgex_db"
+  Password: ""      # Will be set from value in Vault
+  Username: ""      # Will be set from value in Vault
+  Port: 5432
+  Timeout: "5s"
+  Type: postgres
+DatabaseConfig:
+  Path: ./postgres-init-scripts
+  Name: create-users.sh

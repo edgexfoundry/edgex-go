@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright (C) 2023 Intel Corporation
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -25,6 +26,7 @@ import (
 type ConfigurationStruct struct {
 	LogLevel         string
 	SecretStore      SecretStoreInfo
+	Database         bootstrapConfig.Database
 	Databases        map[string]Database
 	SecureMessageBus SecureMessageBusInfo
 }
