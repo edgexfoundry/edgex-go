@@ -66,9 +66,9 @@ func (jc *ScheduleJobController) AddScheduleJob(c echo.Context) error {
 		jobs = append(jobs, job)
 	}
 
-	var addResponses []interface{}
+	var addResponses []any
 	for i, d := range jobs {
-		var response interface{}
+		var response any
 		reqId := reqDTOs[i].RequestId
 		newId, err := application.AddScheduleJob(ctx, d, jc.dic)
 		if err != nil {
@@ -169,9 +169,9 @@ func (jc *ScheduleJobController) PatchScheduleJob(c echo.Context) error {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	var responses []interface{}
+	var responses []any
 	for _, dto := range reqDTOs {
-		var response interface{}
+		var response any
 		reqId := dto.RequestId
 		err := application.PatchScheduleJob(ctx, dto.ScheduleJob, jc.dic)
 		if err != nil {
