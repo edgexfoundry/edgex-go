@@ -15,7 +15,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/spf13/cast v1.6.0
+	github.com/spf13/cast v1.7.0
 	github.com/spiffe/go-spiffe/v2 v2.3.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.25.0
