@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -43,7 +43,7 @@ func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, content
 	}
 
 	client := &http.Client{}
-	res, err = sendRequestAndGetResponse(client, req)
+	res, err = SendRequestAndGetResponse(client, req)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -51,20 +51,40 @@ func SendRequestWithRESTAddress(lc logger.LoggingClient, content string, content
 	return res, nil
 }
 
-func getUrlStr(address models.RESTAddress) string {
-	return fmt.Sprintf("http://%s:%d%s", address.Host, address.Port, address.Path)
+func SendRequestAndGetResponse(client *http.Client, req *http.Request) (res string, edgeXerr errors.EdgeX) {
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)
+	}
+
+	defer resp.Body.Close()
+	resp.Close = true
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindIOError, "fail to read the response body", err)
+	}
+	if resp.StatusCode >= http.StatusBadRequest {
+		return "", errors.NewCommonEdgeX(errors.KindMapping(resp.StatusCode), fmt.Sprintf("request failed, status code: %d, err: %s", resp.StatusCode, string(bodyBytes)), nil)
+	}
+	return string(bodyBytes), nil
 }
 
-func validMethod(method string) bool {
+func ValidMethod(method string) bool {
 	_, contains := methods[strings.ToUpper(method)]
 	return contains
+}
+
+func getUrlStr(address models.RESTAddress) string {
+	return fmt.Sprintf("http://%s:%d%s", address.Host, address.Port, address.Path)
 }
 
 func getHttpRequest(
 	httpMethod string,
 	executingUrl string,
 	content string, contentType string) (*http.Request, errors.EdgeX) {
-	if !validMethod(httpMethod) {
+	if !ValidMethod(httpMethod) {
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("net/http: invalid method %q", httpMethod), nil)
 	}
 
@@ -92,24 +112,4 @@ func getHttpRequest(
 	}
 
 	return req, nil
-}
-
-func sendRequestAndGetResponse(client *http.Client, req *http.Request) (res string, edgeXerr errors.EdgeX) {
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)
-	}
-
-	defer resp.Body.Close()
-	resp.Close = true
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindIOError, "fail to read the response body", err)
-	}
-	if resp.StatusCode >= http.StatusBadRequest {
-		return "", errors.NewCommonEdgeX(errors.KindMapping(resp.StatusCode), fmt.Sprintf("request failed, status code: %d, err: %s", resp.StatusCode, string(bodyBytes)), nil)
-	}
-	return string(bodyBytes), nil
 }

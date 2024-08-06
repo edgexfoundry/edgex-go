@@ -1,5 +1,5 @@
 Writable:
-  LogLevel: INFO
+  LogLevel: DEBUG
   InsecureSecrets:
     DB:
       SecretName: postgres

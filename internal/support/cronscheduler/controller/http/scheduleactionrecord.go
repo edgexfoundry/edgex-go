@@ -20,8 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application"
-	// TODO: Import the schedulerContainer package from internal/support/cronscheduler/container if available
-	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 )
 
 type ScheduleActionRecordController struct {

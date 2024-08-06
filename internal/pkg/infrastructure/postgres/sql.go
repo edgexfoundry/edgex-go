@@ -61,9 +61,9 @@ func sqlInsertContent(table string) string {
 //}
 
 // sqlQueryAllWithPagination returns the SQL statement for selecting all rows from the table with pagination.
-//func sqlQueryAllWithPagination(table string) string {
-//	return fmt.Sprintf("SELECT * FROM %s OFFSET $1 LIMIT $2", table)
-//}
+func sqlQueryAllWithPagination(table string) string {
+	return fmt.Sprintf("SELECT * FROM %s OFFSET $1 LIMIT $2", table)
+}
 
 // sqlQueryAllWithPaginationDesc returns the SQL statement for selecting all rows from the table with pagination by created timestamp in descending order.
 //func sqlQueryAllWithPaginationDesc(table string) string {

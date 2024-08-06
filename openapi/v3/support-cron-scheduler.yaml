@@ -418,6 +418,7 @@ components:
       schema:
         type: integer
       description: "The creation timestamp of the last item in the result set."
+      example: 1722479650
     limitParam:
       in: query
       name: limit
@@ -711,8 +712,6 @@ paths:
   /job/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/startParam'
-      - $ref: '#/components/parameters/endParam'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:

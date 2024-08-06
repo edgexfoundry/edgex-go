@@ -6,6 +6,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
@@ -13,13 +15,13 @@ import (
 type DBClient interface {
 	CloseSession()
 
-	AddScheduleJob(scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX)
-	AllScheduleJobs(start, end int64, offset, limit int) ([]model.ScheduleJob, errors.EdgeX)
-	UpdateScheduleJob(scheduleJob model.ScheduleJob) errors.EdgeX
-	DeleteScheduleJobByName(name string) errors.EdgeX
-	ScheduleJobById(id string) (model.ScheduleJob, errors.EdgeX)
-	ScheduleJobByName(name string) (model.ScheduleJob, errors.EdgeX)
-	ScheduleJobTotalCount() (uint32, errors.EdgeX)
+	AddScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX)
+	AllScheduleJobs(ctx context.Context, offset, limit int) ([]model.ScheduleJob, errors.EdgeX)
+	UpdateScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) errors.EdgeX
+	DeleteScheduleJobByName(ctx context.Context, name string) errors.EdgeX
+	ScheduleJobById(ctx context.Context, id string) (model.ScheduleJob, errors.EdgeX)
+	ScheduleJobByName(ctx context.Context, name string) (model.ScheduleJob, errors.EdgeX)
+	ScheduleJobTotalCount(ctx context.Context) (uint32, errors.EdgeX)
 
 	AddScheduleActionRecord(scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX)
 	AllScheduleActionRecords(start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
