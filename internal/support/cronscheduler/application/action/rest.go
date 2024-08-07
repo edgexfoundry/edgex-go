@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package action
 
 import (
 	"bytes"
@@ -20,8 +20,7 @@ import (
 	pkgUtils "github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 )
 
-// sendRequestWithRESTAction sends request with RESTAction
-func sendRequestWithRESTAction(lc logger.LoggingClient, action models.RESTAction, jwtSecretProvider interfaces.AuthenticationInjector) (res string, err errors.EdgeX) {
+func sendRESTRequest(lc logger.LoggingClient, action models.RESTAction, jwtSecretProvider interfaces.AuthenticationInjector) (res string, err errors.EdgeX) {
 	req, err := getHttpRequestFromRESTAction(action)
 	if err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to create http request", err)

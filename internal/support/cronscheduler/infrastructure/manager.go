@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package scheduler
+package infrastructure
 
 import (
 	"fmt"
@@ -17,9 +17,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application/scheduler/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
 	// TODO: import from internal/support/cronscheduler/config if available
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application/action"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 )
 
@@ -169,13 +169,13 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			fmt.Sprintf("failed to initialize a new scheduler for job: %s", job.Name), err)
 	}
 
-	definition, edgeXerr := utils.ToGocronJobDef(job.Definition)
+	definition, edgeXerr := action.ToGocronJobDef(job.Definition)
 	if edgeXerr != nil {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	for _, action := range job.Actions {
-		task, edgeXerr := utils.ToGocronTask(m.lc, m.dic, m.secretProvider, action)
+	for _, a := range job.Actions {
+		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}

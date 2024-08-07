@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package action
 
 import (
 	"fmt"
@@ -30,10 +30,8 @@ func ToGocronJobDef(def models.ScheduleDef) (gocron.JobDefinition, errors.EdgeX)
 			return definition, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast ScheduleDefinition to CronScheduleDef", nil)
 		}
 
-		// TODO: Decide if we need a new dependency for validating crontab expression
-		// TODO: Decide if we need to support crontab with seconds
 		// An optional 6th field can be used at the beginning if withSeconds is set to true: `* * * * * *`
-		definition = gocron.CronJob(cronDef.Crontab, false)
+		definition = gocron.CronJob(cronDef.Crontab, true)
 	case common.DefInterval:
 		intervalDef, ok := def.(models.IntervalScheduleDef)
 		if !ok {
@@ -83,7 +81,7 @@ func ToGocronTask(lc logger.LoggingClient, dic *di.Container, secretProvider boo
 
 func edgeXMessageBusActionTask(lc logger.LoggingClient, dic *di.Container, action models.EdgeXMessageBusAction) gocron.Task {
 	return gocron.NewTask(func() errors.EdgeX {
-		if err := publishEdgeXMessageBusActionMsg(dic, action); err != nil {
+		if err := publishEdgeXMessageBus(dic, action); err != nil {
 			lc.Debugf("Failed to execute the EdgeX message bus action: %v", err)
 			return err
 		}
@@ -99,7 +97,7 @@ func restActionTask(lc logger.LoggingClient, secretProvider bootstrapInterfaces.
 	}
 
 	return gocron.NewTask(func() errors.EdgeX {
-		resp, err := sendRequestWithRESTAction(lc, action, injector)
+		resp, err := sendRESTRequest(lc, action, injector)
 		if err != nil {
 			lc.Debugf("Failed to execute the rest action: %v", err)
 			return err
@@ -111,7 +109,7 @@ func restActionTask(lc logger.LoggingClient, secretProvider bootstrapInterfaces.
 
 func deviceControlActionTask(lc logger.LoggingClient, dic *di.Container, action models.DeviceControlAction) gocron.Task {
 	return gocron.NewTask(func() errors.EdgeX {
-		resp, err := issueSetCommandWithDeviceControlAction(dic, action)
+		resp, err := issueSetCommand(dic, action)
 		if err != nil {
 			lc.Debugf("Failed to execute the device control action: %v", err)
 			return err

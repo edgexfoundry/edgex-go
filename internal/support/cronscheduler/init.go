@@ -24,8 +24,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application/scheduler"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -50,7 +50,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 
-	schedulerManager := scheduler.NewManager(lc, dic, configuration, secretProvider)
+	schedulerManager := infrastructure.NewManager(lc, dic, configuration, secretProvider)
 	dic.Update(di.ServiceConstructorMap{
 		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManager

@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package action
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
 )
 
-func publishEdgeXMessageBusActionMsg(dic *di.Container, action models.EdgeXMessageBusAction) errors.EdgeX {
+func publishEdgeXMessageBus(dic *di.Container, action models.EdgeXMessageBusAction) errors.EdgeX {
 	messageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
 
 	envelope := types.NewMessageEnvelope(action.Payload, context.Background())
