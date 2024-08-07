@@ -101,13 +101,17 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from db
 func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
-	fieldMap := map[string]any{deviceNameField: deviceName}
-	sqlStatement, err := sqlQueryCountByJSONField(eventTableName, fieldMap)
+	sqlStatement, err := sqlQueryCountByJSONField(eventTableName)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement)
+	queryMap := map[string]any{deviceNameField: deviceName}
+	queryJsonStr, err := pgClient.ConvertMapToJSONString(queryMap)
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, queryJsonStr)
 }
 
 // EventCountByTimeRange returns the count of Event by time range from db
@@ -117,13 +121,18 @@ func (c *Client) EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX
 
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
-	fieldMap := map[string]any{deviceNameField: name}
-	sqlStatement, err := sqlQueryContentByJSONField(eventTableName, fieldMap)
+	sqlStatement, err := sqlQueryContentByJSONField(eventTableName)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, offset, limit)
+	queryMap := map[string]any{deviceNameField: name}
+	queryJsonStr, err := pgClient.ConvertMapToJSONString(queryMap)
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, queryJsonStr, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query events by device '%s'", name), err)
 	}
@@ -160,15 +169,20 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 // This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
 func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 	ctx := context.Background()
-	fieldMap := map[string]any{deviceNameField: deviceName}
 
-	sqlStatement, edgexErr := sqlDeleteByJSONField(eventTableName, fieldMap)
+	sqlStatement, edgexErr := sqlDeleteByJSONField(eventTableName)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+
+	queryFieldMap := map[string]any{deviceNameField: deviceName}
+	queryJsonStr, edgexErr := pgClient.ConvertMapToJSONString(queryFieldMap)
 	if edgexErr != nil {
 		return errors.NewCommonEdgeXWrapper(edgexErr)
 	}
 
 	go func() {
-		err := deleteEvents(ctx, c.ConnPool, sqlStatement)
+		err := deleteEvents(ctx, c.ConnPool, sqlStatement, queryJsonStr)
 		if err != nil {
 			c.loggingClient.Errorf("failed delete event with device '%s': %v", deviceName, err)
 		}

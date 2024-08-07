@@ -9,7 +9,6 @@
 package postgres
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -117,13 +116,9 @@ func sqlQueryContentWithPagination(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s ORDER BY created OFFSET $1 LIMIT $2", table)
 }
 
-// sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON field name.
-func sqlQueryContentByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
-	bytes, err := json.Marshal(fieldMap)
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
-	}
-	return fmt.Sprintf("SELECT content FROM %s WHERE content @> '%s'::jsonb ORDER BY %s OFFSET $1 LIMIT $2", table, string(bytes), createdCol), nil
+// sqlQueryCountByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
+func sqlQueryContentByJSONField(table string) (string, errors.EdgeX) {
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY %s OFFSET $2 LIMIT $3", table, createdCol), nil
 }
 
 // sqlQueryCountByJSONField returns the SQL statement for selecting content column by the given time range of the JSON field name
@@ -152,13 +147,9 @@ func sqlQueryCountByCol(table string, columns ...string) string {
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, whereCondition)
 }
 
-// sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON query field map
-func sqlQueryCountByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
-	bytes, err := json.Marshal(fieldMap)
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
-	}
-	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> '%s'::jsonb", table, string(bytes)), nil
+// sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON query string
+func sqlQueryCountByJSONField(table string) (string, errors.EdgeX) {
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> $1::jsonb", table), nil
 }
 
 // sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
@@ -200,13 +191,9 @@ func sqlDeleteByAge(table string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE %s < NOW() - INTERVAL '1 millisecond' * $1", table, createdCol)
 }
 
-// sqlDeleteByJSONField returns the SQL statement deleting rows from the table by the given JSON query field map
-func sqlDeleteByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
-	bytes, err := json.Marshal(fieldMap)
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
-	}
-	return fmt.Sprintf("DELETE FROM %s WHERE content @> '%s'::jsonb", table, string(bytes)), nil
+// sqlDeleteByJSONField returns the SQL statement deleting rows from the table by the given JSON query string
+func sqlDeleteByJSONField(table string) (string, errors.EdgeX) {
+	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table), nil
 }
 
 // sqlDeleteByAgeInJSONField returns the SQL statement for deleting rows from the table by age with the given JSON query field name
