@@ -25,8 +25,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application"
-	// TODO: Import the schedulerContainer package from internal/support/cronscheduler/container if available
-	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 )
 
 type ScheduleJobController struct {
@@ -96,7 +95,7 @@ func (jc *ScheduleJobController) TriggerScheduleJobByName(c echo.Context) error 
 	// URL parameters
 	name := c.Param(common.Name)
 
-	err := application.TriggerScheduleJobByName(ctx, name, jc.dic)
+	err := application.TriggerScheduleJobByName(name, jc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -141,7 +140,7 @@ func (jc *ScheduleJobController) AllScheduleJobs(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	jobs, totalCount, err := application.AllScheduleJobs(offset, limit, jc.dic)
+	jobs, totalCount, err := application.AllScheduleJobs(ctx, offset, limit, jc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}

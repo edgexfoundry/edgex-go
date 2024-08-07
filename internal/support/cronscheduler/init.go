@@ -20,8 +20,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure"
 )
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
@@ -41,6 +45,19 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the cronscheduler service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
+
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
+
+	schedulerManager := infrastructure.NewManager(lc, dic, configuration, secretProvider)
+	dic.Update(di.ServiceConstructorMap{
+		container.SchedulerManagerName: func(get di.Get) interface{} {
+			return schedulerManager
+		},
+	})
+
+	// TODO: Create scheduler for all existing schedule jobs
 
 	return true
 }

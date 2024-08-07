@@ -12,6 +12,15 @@ Service:
   Port: 59863
   StartupMsg: This is the Support Cron Scheduler Microservice
 
+Clients:
+  core-command:
+    Protocol: http
+    Host: localhost
+    Port: 59882
+    SecurityOptions:
+      Mode: ""
+      OpenZitiController: "openziti:1280"
+
 MessageBus:
   Optional:
     ClientId: support-cron-scheduler

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -149,7 +149,6 @@ func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, min
 }
 
 func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
-	// TODO: Create min and max constants for start and end in go-mod-core-contracts?
 	start, edgexErr = ParseQueryStringToInt(c, common.Start, 0, 0, math.MaxInt64)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr

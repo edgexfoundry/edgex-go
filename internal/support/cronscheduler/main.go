@@ -71,6 +71,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			handlers.NewClientsBootstrap().BootstrapHandler,
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportCronSchedulerServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.SupportCronSchedulerServiceKey).BootstrapHandler,

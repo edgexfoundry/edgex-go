@@ -455,17 +455,26 @@ https://github.com/googleapis/go-genproto/blob/main/LICENSE
 nhooyr.io/websocket (ISC License) - https://github.com/nhooyr/websocket
 https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
 
-spf13/cast (MIT) https://github.com/spf13/cast
+spf13/cast (MIT) - https://github.com/spf13/cast
 https://github.com/spf13/cast/blob/master/LICENSE
 
-jackc/pgx (MIT) https://github.com/jackc/pgx/v5
+jackc/pgx (MIT) - https://github.com/jackc/pgx/v5
 https://github.com/jackc/pgx/blob/master/LICENSE
 
-jackc/pgpassfile (MIT) https://github.com/jackc/pgpassfile
+jackc/pgpassfile (MIT) - https://github.com/jackc/pgpassfile
 https://github.com/jackc/pgpassfile/blob/master/LICENSE
 
-jackc/pgservicefile (MIT) https://github.com/jackc/pgservicefile
+jackc/pgservicefile (MIT) - https://github.com/jackc/pgservicefile
 https://github.com/jackc/pgservicefile/blob/master/LICENSE
 
-jackc/puddle (MIT) https://github.com/jackc/puddle/v2
+jackc/puddle (MIT) - https://github.com/jackc/puddle/v2
 https://github.com/jackc/puddle/blob/master/LICENSE
+
+go-co-op/gocron (MIT) - https://github.com/go-co-op/gocron/v2
+https://github.com/go-co-op/gocron/blob/v2/LICENSE
+
+jonboulle/clockwork (Apache 2.0) - https://github.com/jonboulle/clockwork
+https://github.com/jonboulle/clockwork/blob/master/LICENSE
+
+robfig/cron (MIT) - https://github.com/robfig/cron/v3
+https://github.com/robfig/cron/blob/master/LICENSE
