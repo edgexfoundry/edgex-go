@@ -9,8 +9,11 @@
 package postgres
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 )
 
 // Constants for common column names in the database.
@@ -104,6 +107,30 @@ func sqlQueryAllById(table string) string {
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", table, idCol)
 }
 
+// sqlQueryAllById returns the SQL statement for selecting content column by the specified id.
+func sqlQueryContentById(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE %s = $1", table, idCol)
+}
+
+// sqlQueryContentWithPagination returns the SQL statement for selecting content column from the table with pagination
+func sqlQueryContentWithPagination(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s ORDER BY created OFFSET $1 LIMIT $2", table)
+}
+
+// sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON field name.
+func sqlQueryContentByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
+	bytes, err := json.Marshal(fieldMap)
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
+	}
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> '%s'::jsonb ORDER BY %s OFFSET $1 LIMIT $2", table, string(bytes), createdCol), nil
+}
+
+// sqlQueryCountByJSONField returns the SQL statement for selecting content column by the given time range of the JSON field name
+func sqlQueryContentByJSONFieldTimeRange(table string, field string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, field, field, createdCol)
+}
+
 // sqlCheckExistsByName returns the SQL statement for checking if a row exists in the table by name.
 func sqlCheckExistsByName(table string) string {
 	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, nameCol)
@@ -123,6 +150,21 @@ func sqlQueryCount(table string) string {
 func sqlQueryCountByCol(table string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s = $1", table, whereCondition)
+}
+
+// sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON query field map
+func sqlQueryCountByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
+	bytes, err := json.Marshal(fieldMap)
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
+	}
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> '%s'::jsonb", table, string(bytes)), nil
+}
+
+// sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
+// by the given time range of the JSON field name
+func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2", table, field, field)
 }
 
 // ----------------------------------------------------------------------------------
@@ -149,13 +191,27 @@ func sqlDeleteByName(table string) string {
 }
 
 // sqlDeleteById returns the SQL statement for deleting a row from the table by id.
-//func sqlDeleteById(table string) string {
-//	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, idCol)
-//}
+func sqlDeleteById(table string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, idCol)
+}
 
 // sqlDeleteByAge returns the SQL statement for deleting rows from the table by created timestamp.
 func sqlDeleteByAge(table string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE %s < NOW() - INTERVAL '1 millisecond' * $1", table, createdCol)
+}
+
+// sqlDeleteByJSONField returns the SQL statement deleting rows from the table by the given JSON query field map
+func sqlDeleteByJSONField(table string, fieldMap map[string]any) (string, errors.EdgeX) {
+	bytes, err := json.Marshal(fieldMap)
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
+	}
+	return fmt.Sprintf("DELETE FROM %s WHERE content @> '%s'::jsonb", table, string(bytes)), nil
+}
+
+// sqlDeleteByAgeInJSONField returns the SQL statement for deleting rows from the table by age with the given JSON query field name
+func sqlDeleteByAgeInJSONField(table string, fieldName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE (content->'%s')::bigint <= $1", table, fieldName)
 }
 
 // ----------------------------------------------------------------------------------
