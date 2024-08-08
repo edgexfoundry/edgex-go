@@ -63,13 +63,13 @@ func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, ext
 
 	// execute base DB scripts
 	if edgeXerr = executeDBScripts(ctx, dc.ConnPool, baseScriptPath); edgeXerr != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute base DB scripts", edgeXerr)
+		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute Postgres base DB scripts", edgeXerr)
 	}
-	lc.Info("successfully execute base DB scripts")
+	lc.Info("successfully execute Postgres base DB scripts")
 
 	// execute extension DB scripts
 	if edgeXerr = executeDBScripts(ctx, dc.ConnPool, extScriptPath); edgeXerr != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute extension DB scripts", edgeXerr)
+		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute Postgres extension DB scripts", edgeXerr)
 	}
 
 	return dc, nil

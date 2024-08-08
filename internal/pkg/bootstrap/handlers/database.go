@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -22,6 +22,12 @@ import (
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+)
+
+const (
+	baseScriptPath = "/res/db/sql"
+	redisDBType    = "redisdb"
+	postgresDBType = "postgres"
 )
 
 // httpServer defines the contract used to determine whether or not the http httpServer is running.
@@ -60,12 +66,12 @@ func (d Database) newDBClient(
 	}
 
 	switch databaseInfo.Type {
-	case "redisdb":
+	case redisDBType:
 		return redis.NewClient(databaseConfig, lc)
-	case "postgres":
+	case postgresDBType:
 		databaseConfig.Username = credentials.Username
 		// TODO: The baseScriptPath and extScriptPath should be passed in from the configuration file
-		return postgres.NewClient(ctx, databaseConfig, "/res/db/sql", "", lc)
+		return postgres.NewClient(ctx, databaseConfig, baseScriptPath, "", lc)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}
@@ -139,7 +145,13 @@ func (d Database) BootstrapHandler(
 		},
 	})
 
-	lc.Info("Database connected")
+	var dbName string
+	if dbInfo.Type == postgresDBType {
+		dbName = "Postgres"
+	} else {
+		dbName = "Redis"
+	}
+	lc.Infof("%s Database connected", dbName)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -153,7 +165,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		lc.Info("Database disconnected")
+		lc.Infof("%s Database disconnected", dbName)
 	}()
 
 	return true
