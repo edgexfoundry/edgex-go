@@ -6,6 +6,7 @@
 package http
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"math"
 	"net/http"
 
@@ -43,15 +44,20 @@ func (rc *ScheduleActionRecordController) AllScheduleActionRecords(c echo.Contex
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// Parse time range (start, end), offset, and limit from incoming request
 	start, end, offset, limit, err := utils.ParseQueryStringTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	records, totalCount, err := application.AllScheduleActionRecords(ctx, int64(start), int64(end), offset, limit, rc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -67,6 +73,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByStatus(c echo.C
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// URL parameters
@@ -75,10 +82,14 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByStatus(c echo.C
 	// Parse time range (start, end), offset, and limit from incoming request
 	start, end, offset, limit, err := utils.ParseQueryStringTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	records, totalCount, err := application.ScheduleActionRecordsByStatus(ctx, status, int64(start), int64(end), offset, limit, rc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -94,6 +105,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobName(c echo.
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// URL parameters
@@ -102,10 +114,14 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobName(c echo.
 	// Parse time range (start, end), offset, and limit from incoming request
 	start, end, offset, limit, err := utils.ParseQueryStringTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	records, totalCount, err := application.ScheduleActionRecordsByJobName(ctx, name, int64(start), int64(end), offset, limit, rc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -121,6 +137,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobNameAndStatu
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// URL parameters
@@ -130,10 +147,14 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobNameAndStatu
 	// Parse time range (start, end), offset, and limit from incoming request
 	start, end, offset, limit, err := utils.ParseQueryStringTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	records, totalCount, err := application.ScheduleActionRecordsByJobNameAndStatus(ctx, name, status, int64(start), int64(end), offset, limit, rc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -149,15 +170,20 @@ func (rc *ScheduleActionRecordController) LatestScheduleActionRecords(c echo.Con
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(rc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// parse URL query string for offset and limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	records, totalCount, err := application.LatestScheduleActionRecords(ctx, offset, limit, rc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 

@@ -91,12 +91,15 @@ func (jc *ScheduleJobController) TriggerScheduleJobByName(c echo.Context) error 
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(jc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	name := c.Param(common.Name)
 
-	err := application.TriggerScheduleJobByName(name, jc.dic)
+	err := application.TriggerScheduleJobByName(ctx, name, jc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -112,12 +115,15 @@ func (jc *ScheduleJobController) ScheduleJobByName(c echo.Context) error {
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(jc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	name := c.Param(common.Name)
 
 	job, err := application.ScheduleJobByName(ctx, name, jc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -133,15 +139,20 @@ func (jc *ScheduleJobController) AllScheduleJobs(c echo.Context) error {
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(jc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 	config := schedulerContainer.ConfigurationFrom(jc.dic.Get)
 
 	// parse URL query string for offset and limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 	jobs, totalCount, err := application.AllScheduleJobs(ctx, offset, limit, jc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
@@ -194,12 +205,15 @@ func (jc *ScheduleJobController) DeleteScheduleJobByName(c echo.Context) error {
 	ctx := r.Context()
 
 	lc := container.LoggingClientFrom(jc.dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
 	// URL parameters
 	name := c.Param(common.Name)
 
 	err := application.DeleteScheduleJobByName(ctx, name, jc.dic)
 	if err != nil {
+		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
+		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 

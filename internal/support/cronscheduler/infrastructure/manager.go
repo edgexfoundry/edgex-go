@@ -44,7 +44,7 @@ func NewManager(lc logger.LoggingClient, dic *di.Container, config *config.Confi
 }
 
 // AddScheduleJob adds a new ScheduleJob to the scheduler manager
-func (m *manager) AddScheduleJob(job models.ScheduleJob) errors.EdgeX {
+func (m *manager) AddScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
 	if _, err := m.getSchedulerByJobName(job.Name); err == nil {
 		return errors.NewCommonEdgeX(errors.KindStatusConflict,
 			fmt.Sprintf("the schedule job with name: %s already exists", job.Name), nil)
@@ -54,33 +54,33 @@ func (m *manager) AddScheduleJob(job models.ScheduleJob) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	m.lc.Infof("New schedule job %s was added into the scheduler manager", job.Name)
+	m.lc.Infof("New schedule job %s was added into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
 
 // UpdateScheduleJob updates a ScheduleJob in the scheduler manager
-func (m *manager) UpdateScheduleJob(job models.ScheduleJob) errors.EdgeX {
+func (m *manager) UpdateScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
 	_, err := m.getSchedulerByJobName(job.Name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	// Remove the old job from gocron
-	if err := m.DeleteScheduleJobByName(job.Name); err != nil {
+	if err := m.DeleteScheduleJobByName(job.Name, correlationId); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	m.lc.Debugf("The old schedule job %s was removed from the scheduler manager while updating it", job.Name)
+	m.lc.Debugf("The old schedule job %s was removed from the scheduler manager while updating it. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 
 	if err := m.addNewJob(job); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	m.lc.Debugf("Schedule job %s was updated into the scheduler manager", job.Name)
+	m.lc.Debugf("Schedule job %s was updated into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
 
 // DeleteScheduleJobByName deletes all the actions of a ScheduleJob by name from the scheduler manager
-func (m *manager) DeleteScheduleJobByName(name string) errors.EdgeX {
+func (m *manager) DeleteScheduleJobByName(name, correlationId string) errors.EdgeX {
 	scheduler, err := m.getSchedulerByJobName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -91,24 +91,24 @@ func (m *manager) DeleteScheduleJobByName(name string) errors.EdgeX {
 			fmt.Sprintf("failed to shutdown and delete the scheduler for job: %s", name), err)
 	}
 
-	m.lc.Debugf("The schedule job %s was stopped and removed from the scheduler manager", name)
+	m.lc.Debugf("The schedule job %s was stopped and removed from the scheduler manager. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
 // StartScheduleJobByName starts all the actions of a ScheduleJob by name in the scheduler manager
-func (m *manager) StartScheduleJobByName(name string) errors.EdgeX {
+func (m *manager) StartScheduleJobByName(name, correlationId string) errors.EdgeX {
 	scheduler, err := m.getSchedulerByJobName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
 	scheduler.Start()
-	m.lc.Debugf("The schedule job %s was started", name)
+	m.lc.Debugf("The schedule job %s was started. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
 // StopScheduleJobByName stops all the actions of a ScheduleJob by name in the scheduler manager
-func (m *manager) StopScheduleJobByName(name string) errors.EdgeX {
+func (m *manager) StopScheduleJobByName(name, correlationId string) errors.EdgeX {
 	scheduler, err := m.getSchedulerByJobName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -118,12 +118,12 @@ func (m *manager) StopScheduleJobByName(name string) errors.EdgeX {
 		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to stop all the actions for job: %s", name), err)
 	}
 
-	m.lc.Debugf("The schedule job %s was stopped in the scheduler manager", name)
+	m.lc.Debugf("The schedule job %s was stopped in the scheduler manager. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
 // TriggerScheduleJobByName triggers all the actions of a ScheduleJob by name in the scheduler manager
-func (m *manager) TriggerScheduleJobByName(name string) errors.EdgeX {
+func (m *manager) TriggerScheduleJobByName(name, correlationId string) errors.EdgeX {
 	scheduler, err := m.getSchedulerByJobName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -135,19 +135,19 @@ func (m *manager) TriggerScheduleJobByName(name string) errors.EdgeX {
 		}
 	}
 
-	m.lc.Debugf("The schedule job %s has been triggerred manually", name)
+	m.lc.Debugf("The schedule job %s has been triggerred manually. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
 // Shutdown stops all the schedule jobs and removes them from the scheduler manager
-func (m *manager) Shutdown() errors.EdgeX {
+func (m *manager) Shutdown(correlationId string) errors.EdgeX {
 	for name := range m.schedulers {
-		if err := m.DeleteScheduleJobByName(name); err != nil {
+		if err := m.DeleteScheduleJobByName(name, correlationId); err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 	}
 
-	m.lc.Debugf("All schedule jobs were stopped and removed from the scheduler manager")
+	m.lc.Debugf("All schedule jobs were stopped and removed from the scheduler manager. Correlation-ID: %s", correlationId)
 	return nil
 }
 

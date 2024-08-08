@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
 )
@@ -25,41 +26,43 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 	dbClient := container.DBClientFrom(dic.Get)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
+
+	err := schedulerManager.AddScheduleJob(job, correlationId)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
 
 	addedJob, err := dbClient.AddScheduleJob(ctx, job)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	err = schedulerManager.AddScheduleJob(job)
+	err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	err = schedulerManager.StartScheduleJobByName(job.Name)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
-	}
-
-	lc.Debug("Successfully created the scheduled job")
+	lc.Debugf("Successfully created the scheduled job. ScheduleJob ID: %s, Correlation-ID: %s", addedJob.Id, correlationId)
 	return addedJob.Id, nil
 }
 
 // TriggerScheduleJobByName triggers a schedule job by name
-func TriggerScheduleJobByName(name string, dic *di.Container) errors.EdgeX {
+func TriggerScheduleJobByName(ctx context.Context, name string, dic *di.Container) errors.EdgeX {
 	if name == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 
+	correlationId := correlation.FromContext(ctx)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
-	err := schedulerManager.TriggerScheduleJobByName(name)
+	err := schedulerManager.TriggerScheduleJobByName(name, correlationId)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug("Successfully triggered the scheduled job")
+	lc.Debugf("Successfully triggered the scheduled job. Correlation-ID: %s", correlationId)
 	return nil
 }
 
@@ -104,6 +107,7 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 	dbClient := container.DBClientFrom(dic.Get)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
 	job, err := scheduleJobByDTO(ctx, dbClient, dto)
 	if err != nil {
@@ -112,16 +116,16 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 
 	requests.ReplaceScheduleJobModelFieldsWithDTO(&job, dto)
 
+	err = schedulerManager.UpdateScheduleJob(job, correlationId)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 	err = dbClient.UpdateScheduleJob(ctx, job)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	err = schedulerManager.UpdateScheduleJob(job)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
 
-	lc.Debugf("Successfully patched the scheduled job %s", job.Name)
+	lc.Debugf("Successfully patched the scheduled job: %s. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
 
@@ -149,8 +153,9 @@ func DeleteScheduleJobByName(ctx context.Context, name string, dic *di.Container
 	dbClient := container.DBClientFrom(dic.Get)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
 
-	err := schedulerManager.DeleteScheduleJobByName(name)
+	err := schedulerManager.DeleteScheduleJobByName(name, correlationId)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -160,6 +165,6 @@ func DeleteScheduleJobByName(ctx context.Context, name string, dic *di.Container
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	lc.Debug("Successfully deleted the scheduled job")
+	lc.Debugf("Successfully deleted the scheduled job: %s. Correlation-ID: %s", name, correlationId)
 	return nil
 }
