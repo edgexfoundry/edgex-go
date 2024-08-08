@@ -11,12 +11,12 @@ import (
 )
 
 type SchedulerManager interface {
-	AddScheduleJob(job models.ScheduleJob) errors.EdgeX
-	UpdateScheduleJob(job models.ScheduleJob) errors.EdgeX
-	DeleteScheduleJobByName(name string) errors.EdgeX
-	StartScheduleJobByName(name string) errors.EdgeX
-	StopScheduleJobByName(name string) errors.EdgeX
-	TriggerScheduleJobByName(name string) errors.EdgeX
+	AddScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX
+	UpdateScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX
+	DeleteScheduleJobByName(name, correlationId string) errors.EdgeX
+	StartScheduleJobByName(name, correlationId string) errors.EdgeX
+	StopScheduleJobByName(name, correlationId string) errors.EdgeX
+	TriggerScheduleJobByName(name, correlationId string) errors.EdgeX
 
-	Shutdown() errors.EdgeX
+	Shutdown(correlationId string) errors.EdgeX
 }

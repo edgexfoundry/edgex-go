@@ -15,17 +15,17 @@ type SchedulerManager struct {
 	mock.Mock
 }
 
-// AddScheduleJob provides a mock function with given fields: job
-func (_m *SchedulerManager) AddScheduleJob(job models.ScheduleJob) errors.EdgeX {
-	ret := _m.Called(job)
+// AddScheduleJob provides a mock function with given fields: job, correlationId
+func (_m *SchedulerManager) AddScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
+	ret := _m.Called(job, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScheduleJob")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(models.ScheduleJob) errors.EdgeX); ok {
-		r0 = rf(job)
+	if rf, ok := ret.Get(0).(func(models.ScheduleJob, string) errors.EdgeX); ok {
+		r0 = rf(job, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -35,17 +35,17 @@ func (_m *SchedulerManager) AddScheduleJob(job models.ScheduleJob) errors.EdgeX 
 	return r0
 }
 
-// DeleteScheduleJobByName provides a mock function with given fields: name
-func (_m *SchedulerManager) DeleteScheduleJobByName(name string) errors.EdgeX {
-	ret := _m.Called(name)
+// DeleteScheduleJobByName provides a mock function with given fields: name, correlationId
+func (_m *SchedulerManager) DeleteScheduleJobByName(name string, correlationId string) errors.EdgeX {
+	ret := _m.Called(name, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteScheduleJobByName")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
-		r0 = rf(name)
+	if rf, ok := ret.Get(0).(func(string, string) errors.EdgeX); ok {
+		r0 = rf(name, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -55,17 +55,17 @@ func (_m *SchedulerManager) DeleteScheduleJobByName(name string) errors.EdgeX {
 	return r0
 }
 
-// Shutdown provides a mock function with given fields:
-func (_m *SchedulerManager) Shutdown() errors.EdgeX {
-	ret := _m.Called()
+// Shutdown provides a mock function with given fields: correlationId
+func (_m *SchedulerManager) Shutdown(correlationId string) errors.EdgeX {
+	ret := _m.Called(correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Shutdown")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func() errors.EdgeX); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -75,17 +75,17 @@ func (_m *SchedulerManager) Shutdown() errors.EdgeX {
 	return r0
 }
 
-// StartScheduleJobByName provides a mock function with given fields: name
-func (_m *SchedulerManager) StartScheduleJobByName(name string) errors.EdgeX {
-	ret := _m.Called(name)
+// StartScheduleJobByName provides a mock function with given fields: name, correlationId
+func (_m *SchedulerManager) StartScheduleJobByName(name string, correlationId string) errors.EdgeX {
+	ret := _m.Called(name, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for StartScheduleJobByName")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
-		r0 = rf(name)
+	if rf, ok := ret.Get(0).(func(string, string) errors.EdgeX); ok {
+		r0 = rf(name, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -95,17 +95,17 @@ func (_m *SchedulerManager) StartScheduleJobByName(name string) errors.EdgeX {
 	return r0
 }
 
-// StopScheduleJobByName provides a mock function with given fields: name
-func (_m *SchedulerManager) StopScheduleJobByName(name string) errors.EdgeX {
-	ret := _m.Called(name)
+// StopScheduleJobByName provides a mock function with given fields: name, correlationId
+func (_m *SchedulerManager) StopScheduleJobByName(name string, correlationId string) errors.EdgeX {
+	ret := _m.Called(name, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for StopScheduleJobByName")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
-		r0 = rf(name)
+	if rf, ok := ret.Get(0).(func(string, string) errors.EdgeX); ok {
+		r0 = rf(name, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -115,17 +115,17 @@ func (_m *SchedulerManager) StopScheduleJobByName(name string) errors.EdgeX {
 	return r0
 }
 
-// TriggerScheduleJobByName provides a mock function with given fields: name
-func (_m *SchedulerManager) TriggerScheduleJobByName(name string) errors.EdgeX {
-	ret := _m.Called(name)
+// TriggerScheduleJobByName provides a mock function with given fields: name, correlationId
+func (_m *SchedulerManager) TriggerScheduleJobByName(name string, correlationId string) errors.EdgeX {
+	ret := _m.Called(name, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for TriggerScheduleJobByName")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
-		r0 = rf(name)
+	if rf, ok := ret.Get(0).(func(string, string) errors.EdgeX); ok {
+		r0 = rf(name, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -135,17 +135,17 @@ func (_m *SchedulerManager) TriggerScheduleJobByName(name string) errors.EdgeX {
 	return r0
 }
 
-// UpdateScheduleJob provides a mock function with given fields: job
-func (_m *SchedulerManager) UpdateScheduleJob(job models.ScheduleJob) errors.EdgeX {
-	ret := _m.Called(job)
+// UpdateScheduleJob provides a mock function with given fields: job, correlationId
+func (_m *SchedulerManager) UpdateScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
+	ret := _m.Called(job, correlationId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateScheduleJob")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(models.ScheduleJob) errors.EdgeX); ok {
-		r0 = rf(job)
+	if rf, ok := ret.Get(0).(func(models.ScheduleJob, string) errors.EdgeX); ok {
+		r0 = rf(job, correlationId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
