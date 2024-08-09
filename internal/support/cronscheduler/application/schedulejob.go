@@ -38,9 +38,14 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
-	if err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
+	if job.AdminState == models.Unlocked {
+		err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
+		if err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		lc.Debugf("The scheduled job is created but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", addedJob.Id, correlationId)
+		return addedJob.Id, nil
 	}
 
 	lc.Debugf("Successfully created the scheduled job. ScheduleJob ID: %s, Correlation-ID: %s", addedJob.Id, correlationId)
@@ -125,6 +130,16 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
+	if job.AdminState == models.Unlocked {
+		err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		lc.Debugf("The scheduled job is updated but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", job.Id, correlationId)
+		return nil
+	}
+
 	lc.Debugf("Successfully patched the scheduled job: %s. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
@@ -143,7 +158,7 @@ func scheduleJobByDTO(ctx context.Context, dbClient interfaces.DBClient, dto dto
 		}
 	}
 	if dto.Name != nil && *dto.Name != job.Name {
-		return job, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("schedule job name '%s' not match the exsting '%s' ", *dto.Name, job.Name), nil)
+		return job, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("scheduled job name '%s' not match the exsting '%s' ", *dto.Name, job.Name), nil)
 	}
 	return job, nil
 }

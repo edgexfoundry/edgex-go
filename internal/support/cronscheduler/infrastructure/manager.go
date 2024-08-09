@@ -47,14 +47,14 @@ func NewManager(lc logger.LoggingClient, dic *di.Container, config *config.Confi
 func (m *manager) AddScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
 	if _, err := m.getSchedulerByJobName(job.Name); err == nil {
 		return errors.NewCommonEdgeX(errors.KindStatusConflict,
-			fmt.Sprintf("the schedule job with name: %s already exists", job.Name), nil)
+			fmt.Sprintf("the scheduled job with name: %s already exists", job.Name), nil)
 	}
 
 	if err := m.addNewJob(job); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	m.lc.Infof("New schedule job %s was added into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
+	m.lc.Infof("New scheduled job %s was added into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
 
@@ -69,13 +69,13 @@ func (m *manager) UpdateScheduleJob(job models.ScheduleJob, correlationId string
 	if err := m.DeleteScheduleJobByName(job.Name, correlationId); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-	m.lc.Debugf("The old schedule job %s was removed from the scheduler manager while updating it. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
+	m.lc.Debugf("The old scheduled job %s was removed from the scheduler manager while updating it. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 
 	if err := m.addNewJob(job); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	m.lc.Debugf("Schedule job %s was updated into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
+	m.lc.Debugf("Scheduled job %s was updated into the scheduler manager. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (m *manager) DeleteScheduleJobByName(name, correlationId string) errors.Edg
 			fmt.Sprintf("failed to shutdown and delete the scheduler for job: %s", name), err)
 	}
 
-	m.lc.Debugf("The schedule job %s was stopped and removed from the scheduler manager. Correlation-ID: %s", name, correlationId)
+	m.lc.Debugf("The scheduled job %s was stopped and removed from the scheduler manager. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (m *manager) StartScheduleJobByName(name, correlationId string) errors.Edge
 	}
 
 	scheduler.Start()
-	m.lc.Debugf("The schedule job %s was started. Correlation-ID: %s", name, correlationId)
+	m.lc.Debugf("The scheduled job %s was started. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
@@ -118,7 +118,7 @@ func (m *manager) StopScheduleJobByName(name, correlationId string) errors.EdgeX
 		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to stop all the actions for job: %s", name), err)
 	}
 
-	m.lc.Debugf("The schedule job %s was stopped in the scheduler manager. Correlation-ID: %s", name, correlationId)
+	m.lc.Debugf("The scheduled job %s was stopped in the scheduler manager. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
@@ -135,7 +135,7 @@ func (m *manager) TriggerScheduleJobByName(name, correlationId string) errors.Ed
 		}
 	}
 
-	m.lc.Debugf("The schedule job %s has been triggerred manually. Correlation-ID: %s", name, correlationId)
+	m.lc.Debugf("The scheduled job %s has been triggerred manually. Correlation-ID: %s", name, correlationId)
 	return nil
 }
 
@@ -147,7 +147,7 @@ func (m *manager) Shutdown(correlationId string) errors.EdgeX {
 		}
 	}
 
-	m.lc.Debugf("All schedule jobs were stopped and removed from the scheduler manager. Correlation-ID: %s", correlationId)
+	m.lc.Debugf("All scheduled jobs were stopped and removed from the scheduler manager. Correlation-ID: %s", correlationId)
 	return nil
 }
 
@@ -157,7 +157,7 @@ func (m *manager) getSchedulerByJobName(name string) (gocron.Scheduler, errors.E
 	scheduler, exists := m.schedulers[name]
 	if !exists {
 		return nil, errors.NewCommonEdgeX(errors.KindStatusConflict,
-			fmt.Sprintf("the schedule job: %s does not exist", name), nil)
+			fmt.Sprintf("the scheduled job: %s does not exist", name), nil)
 	}
 	return scheduler, nil
 }
@@ -184,7 +184,7 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		_, err := scheduler.NewJob(definition, task)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindServerError,
-				fmt.Sprintf("failed to create new schedule aciton for job: %s", job.Name), err)
+				fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
 		}
 	}
 
