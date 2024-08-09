@@ -17,7 +17,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 )
 
@@ -114,7 +113,8 @@ func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, scheduleJob mod
 }
 
 func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedScheduleJob model.ScheduleJob) errors.EdgeX {
-	updatedScheduleJob.Modified = pkgCommon.MakeTimestamp()
+	modified := time.Now()
+	updatedScheduleJob.Modified = modified.UnixMilli()
 
 	// Marshal the scheduleJob to store it in the database
 	updatedScheduleJobJSONBytes, err := json.Marshal(updatedScheduleJob)
@@ -122,7 +122,7 @@ func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedSched
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal schedule job for Postgres persistence", err)
 	}
 
-	_, err = connPool.Exec(ctx, sqlUpdateContentByName(scheduleJobTable), updatedScheduleJobJSONBytes, updatedScheduleJob.Modified, updatedScheduleJob.Name)
+	_, err = connPool.Exec(ctx, sqlUpdateContentByName(scheduleJobTable), updatedScheduleJobJSONBytes, modified, updatedScheduleJob.Name)
 	if err != nil {
 		return pgClient.WrapDBError("failed to update schedule job", err)
 	}
@@ -156,8 +156,8 @@ func queryScheduleJob(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 		return job, pgClient.WrapDBError("failed to query scheduler.schedule_job table", err)
 	}
 
-	job.Created = created.Unix()
-	job.Modified = modified.Unix()
+	job.Created = created.UnixMilli()
+	job.Modified = modified.UnixMilli()
 
 	job, err = toScheduleJobsModel(job, scheduleJobJSONBytes)
 	if err != nil {
@@ -184,8 +184,8 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 			return nil, pgClient.WrapDBError("failed to scan schedule job", err)
 		}
 
-		job.Created = created.Unix()
-		job.Modified = modified.Unix()
+		job.Created = created.UnixMilli()
+		job.Modified = modified.UnixMilli()
 
 		job, err = toScheduleJobsModel(job, scheduleJobJSONBytes)
 		if err != nil {
@@ -231,6 +231,7 @@ func toScheduleJobsModel(scheduleJobs model.ScheduleJob, scheduleJobJSONBytes []
 	}
 
 	scheduleJobs.Actions = storedJob.Actions
+	scheduleJobs.AdminState = storedJob.AdminState
 	scheduleJobs.Definition = storedJob.Definition
 	scheduleJobs.Labels = storedJob.Labels
 	scheduleJobs.Properties = storedJob.Properties

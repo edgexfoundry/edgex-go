@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS scheduler.schedule_job (
     id UUID PRIMARY KEY,
     name TEXT NOT NULL,
     content JSONB NOT NULL,
-    created timestamptz NOT NULL DEFAULT now(),
-    modified timestamptz NOT NULL DEFAULT now()
+    created timestamp NOT NULL DEFAULT now(),
+    modified timestamp NOT NULL DEFAULT now()
 );
 
 -- scheduler.schedule_action_record is used to store the schedule action record
@@ -19,6 +19,6 @@ CREATE TABLE IF NOT EXISTS scheduler.schedule_action_record (
     job_name TEXT NOT NULL,
     action JSONB NOT NULL,
     status TEXT NOT NULL,
-    scheduled_at timestamptz NOT NULL,
-    created timestamptz NOT NULL
+    scheduled_at timestamp NOT NULL,
+    created timestamp NOT NULL
 );
