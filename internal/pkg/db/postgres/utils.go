@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"sort"
 
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -128,6 +129,9 @@ func sortedSqlFileNames(sqlFilesDir string) ([]string, errors.EdgeX) {
 func WrapDBError(message string, err error) errors.EdgeX {
 	var pgErr *pgconn.PgError
 	if goErrors.As(err, &pgErr) {
+		if pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			return errors.NewCommonEdgeX(errors.KindDuplicateName, pgErr.Detail, nil)
+		}
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("%s: %s %s", message, pgErr.Error(), pgErr.Detail), nil)
 	}
 	return errors.NewCommonEdgeX(errors.KindDatabaseError, message, err)
