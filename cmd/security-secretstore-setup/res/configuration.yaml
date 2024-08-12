@@ -49,25 +49,25 @@ Databases:
     Username: admin
   command:
     Service: core-command
-    Username: core-command
+    Username: core_command
   metadata:
     Service: core-metadata
-    Username: core-metadata
+    Username: core_metadata
   coredata:
     Service: core-data
-    Username: core-data
+    Username: core_data
   corekeeper:
     Service: core-keeper
-    Username: core-keeper
+    Username: core_keeper
   rulesengine:
     Service: app-rules-engine
-    Username: app-rules-engine
+    Username: app_rules_engine
   notifications:
     Service: support-notifications
-    Username: support-notifications
+    Username: support_notifications
   scheduler:
     Service: support-scheduler
-    Username: support-scheduler
+    Username: support_scheduler
 SecureMessageBus:
   Type: none
   KuiperConfigPath: /tmp/kuiper/edgex.yaml

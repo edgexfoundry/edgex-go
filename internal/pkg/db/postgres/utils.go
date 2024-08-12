@@ -7,7 +7,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	goErrors "errors"
 	"fmt"
 	"os"
@@ -136,13 +135,4 @@ func WrapDBError(message string, err error) errors.EdgeX {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("%s: %s %s", message, pgErr.Error(), pgErr.Detail), nil)
 	}
 	return errors.NewCommonEdgeX(errors.KindDatabaseError, message, err)
-}
-
-// ConvertMapToJSONString parses the query map to a JSON string to be used in the sql statement
-func ConvertMapToJSONString(fieldMap map[string]any) (string, errors.EdgeX) {
-	bytes, err := json.Marshal(fieldMap)
-	if err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal queried field map to json", err)
-	}
-	return string(bytes), nil
 }

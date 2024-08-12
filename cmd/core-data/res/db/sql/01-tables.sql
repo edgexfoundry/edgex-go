@@ -3,9 +3,12 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- core-data.event is used to store the event information
-CREATE TABLE IF NOT EXISTS "core-data".event (
+-- core_data.event is used to store the event information
+CREATE TABLE IF NOT EXISTS core_data.event (
     id UUID PRIMARY KEY,
-    content JSONB NOT NULL,
-    created timestamptz NOT NULL DEFAULT now()
+    devicename TEXT,
+    profilename TEXT,
+    sourcename TEXT,
+    origin BIGINT,
+    tags JSONB
 );

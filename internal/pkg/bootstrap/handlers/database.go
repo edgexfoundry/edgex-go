@@ -145,13 +145,7 @@ func (d Database) BootstrapHandler(
 		},
 	})
 
-	var dbName string
-	if dbInfo.Type == postgresDBType {
-		dbName = "Postgres"
-	} else {
-		dbName = "Redis"
-	}
-	lc.Infof("%s Database connected", dbName)
+	lc.Infof("%s database connected", dbInfo.Type)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -165,7 +159,7 @@ func (d Database) BootstrapHandler(
 			}
 			time.Sleep(time.Second)
 		}
-		lc.Infof("%s Database disconnected", dbName)
+		lc.Infof("%s database disconnected", dbInfo.Type)
 	}()
 
 	return true

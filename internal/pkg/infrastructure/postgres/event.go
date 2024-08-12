@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	stdErrs "errors"
 	"fmt"
 	"time"
 
@@ -16,25 +17,27 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/google/uuid"
 )
 
 const (
-	eventTableName = "\"core-data\".event"
+	eventTableName = "core_data.event"
 
 	// constants relate to the event struct field names
-	deviceNameField = "DeviceName"
-	originField     = "Origin"
+	deviceNameCol  = "devicename"
+	profileNameCol = "profilename"
+	sourceNameCol  = "sourcename"
+	originCol      = "origin"
+	tagsCol        = "tags"
 )
 
 // AllEvents queries the events with the given range, offset, and limit
 func (c *Client) AllEvents(offset, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
 
-	events, err := queryEvents(ctx, c.ConnPool, sqlQueryContentWithPagination(eventTableName), offset, limit)
+	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPagination(eventTableName), offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
 	}
@@ -57,21 +60,22 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 		Origin:      e.Origin,
 		Tags:        e.Tags,
 	}
-	eventBytes, err := json.Marshal(event)
+	tagsBytes, err := json.Marshal(event.Tags)
 	if err != nil {
-		return model.Event{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal event model", err)
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal event tags", err)
 	}
 
 	_, err = c.ConnPool.Exec(
 		ctx,
-		sqlInsert(eventTableName, idCol, contentCol),
-		e.Id,
-		eventBytes,
+		sqlInsert(eventTableName, idCol, deviceNameCol, profileNameCol, sourceNameCol, originCol, tagsCol),
+		event.Id,
+		event.DeviceName,
+		event.ProfileName,
+		event.SourceName,
+		event.Origin,
+		tagsBytes,
 	)
 	if err != nil {
-		//if pgClient.IsDupIdError(err) {
-		//	return model.Event{}, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("event id '%s' already exists", e.Id), err)
-		//}
 		return model.Event{}, pgClient.WrapDBError("failed to insert event", err)
 	}
 
@@ -85,10 +89,23 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 	ctx := context.Background()
 	var event model.Event
 
-	row := c.ConnPool.QueryRow(ctx, sqlQueryContentById(eventTableName), id)
-	err := row.Scan(&event)
+	rows, err := c.ConnPool.Query(ctx, sqlQueryAllById(eventTableName), id)
 	if err != nil {
 		return event, pgClient.WrapDBError(fmt.Sprintf("failed to query event with id '%s'", id), err)
+	}
+
+	event, err = pgx.CollectExactlyOneRow(rows, func(row pgx.CollectableRow) (model.Event, error) {
+		e, err := pgx.RowToStructByNameLax[model.Event](row)
+
+		// TODO: readings data will be added to the event model in the following PRs
+
+		return e, err
+	})
+	if err != nil {
+		if stdErrs.Is(err, pgx.ErrNoRows) {
+			return event, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no event with id '%s' found", id), err)
+		}
+		return event, pgClient.WrapDBError("failed to scan row to event model", err)
 	}
 
 	return event, nil
@@ -101,38 +118,21 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from db
 func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
-	sqlStatement, err := sqlQueryCountByJSONField(eventTableName)
-	if err != nil {
-		return 0, errors.NewCommonEdgeXWrapper(err)
-	}
+	sqlStatement := sqlQueryCountByCol(eventTableName, deviceNameCol)
 
-	queryMap := map[string]any{deviceNameField: deviceName}
-	queryJsonStr, err := pgClient.ConvertMapToJSONString(queryMap)
-	if err != nil {
-		return 0, errors.NewCommonEdgeXWrapper(err)
-	}
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, queryJsonStr)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName)
 }
 
 // EventCountByTimeRange returns the count of Event by time range from db
 func (c *Client) EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONFieldTimeRange(eventTableName, originField), start, end)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol), start, end)
 }
 
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
-	sqlStatement, err := sqlQueryContentByJSONField(eventTableName)
-	if err != nil {
-		return nil, errors.NewCommonEdgeXWrapper(err)
-	}
+	sqlStatement := sqlQueryAllByColWithPagination(eventTableName, deviceNameCol)
 
-	queryMap := map[string]any{deviceNameField: name}
-	queryJsonStr, err := pgClient.ConvertMapToJSONString(queryMap)
-	if err != nil {
-		return nil, errors.NewCommonEdgeXWrapper(err)
-	}
-
-	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, queryJsonStr, offset, limit)
+	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, name, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query events by device '%s'", name), err)
 	}
@@ -142,7 +142,7 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model
 // EventsByTimeRange query events by time range, offset, and limit
 func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
-	sqlStatement := sqlQueryContentByJSONFieldTimeRange(eventTableName, originField)
+	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol)
 
 	events, err := queryEvents(ctx, c.ConnPool, sqlStatement, start, end, offset, limit)
 	if err != nil {
@@ -170,19 +170,10 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 	ctx := context.Background()
 
-	sqlStatement, edgexErr := sqlDeleteByJSONField(eventTableName)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
-	}
-
-	queryFieldMap := map[string]any{deviceNameField: deviceName}
-	queryJsonStr, edgexErr := pgClient.ConvertMapToJSONString(queryFieldMap)
-	if edgexErr != nil {
-		return errors.NewCommonEdgeXWrapper(edgexErr)
-	}
+	sqlStatement := sqlDeleteByColumn(eventTableName, deviceNameCol)
 
 	go func() {
-		err := deleteEvents(ctx, c.ConnPool, sqlStatement, queryJsonStr)
+		err := deleteEvents(ctx, c.ConnPool, sqlStatement, deviceName)
 		if err != nil {
 			c.loggingClient.Errorf("failed delete event with device '%s': %v", deviceName, err)
 		}
@@ -198,7 +189,7 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 func (c *Client) DeleteEventsByAge(age int64) errors.EdgeX {
 	ctx := context.Background()
 	expireTimestamp := time.Now().UnixNano() - age
-	sqlStatement := sqlDeleteByAgeInJSONField(eventTableName, originField)
+	sqlStatement := sqlDeleteTimeRangeByColumn(eventTableName, originCol)
 
 	go func() {
 		err := deleteEvents(ctx, c.ConnPool, sqlStatement, expireTimestamp)
@@ -219,12 +210,9 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 		return nil, pgClient.WrapDBError("query failed", err)
 	}
 
-	defer rows.Close()
-
 	var events []model.Event
 	events, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (model.Event, error) {
-		var event model.Event
-		err := rows.Scan(&event)
+		event, err := pgx.RowToStructByNameLax[model.Event](row)
 
 		// TODO: readings data will be added to the event model in the following PRs
 
