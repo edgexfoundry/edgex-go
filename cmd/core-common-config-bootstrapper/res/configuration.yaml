@@ -136,4 +136,4 @@ device-services:
     Labels: []
     Discovery:
       Enabled: false
-      Interval: "30s"
+      Interval: "0s"
