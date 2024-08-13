@@ -17,10 +17,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
-	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
-	// TODO: import from internal/support/cronscheduler/config if available
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application/action"
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
 )
 
 type manager struct {
@@ -91,6 +90,10 @@ func (m *manager) DeleteScheduleJobByName(name, correlationId string) errors.Edg
 			fmt.Sprintf("failed to shutdown and delete the scheduler for job: %s", name), err)
 	}
 
+	m.mu.Lock()
+	delete(m.schedulers, name)
+	m.mu.Unlock()
+
 	m.lc.Debugf("The scheduled job %s was stopped and removed from the scheduler manager. Correlation-ID: %s", name, correlationId)
 	return nil
 }
@@ -146,6 +149,10 @@ func (m *manager) Shutdown(correlationId string) errors.EdgeX {
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 	}
+
+	m.mu.Lock()
+	m.schedulers = make(map[string]gocron.Scheduler)
+	m.mu.Unlock()
 
 	m.lc.Debugf("All scheduled jobs were stopped and removed from the scheduler manager. Correlation-ID: %s", correlationId)
 	return nil
