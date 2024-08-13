@@ -7,9 +7,9 @@ package action
 
 import (
 	"context"
+	"encoding/json"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	bootstrapUtils "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
@@ -25,7 +25,7 @@ func issueSetCommand(dic *di.Container, action models.DeviceControlAction) (stri
 	}
 
 	var payload map[string]any
-	if err := bootstrapUtils.ConvertToMap(action.Payload, &payload); err != nil {
+	if err := json.Unmarshal(action.Payload, &payload); err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to convert payload to map", err)
 	}
 

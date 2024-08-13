@@ -31,9 +31,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
-	// TODO: Import the config package from the support/cronscheduler directory if available
-	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
@@ -51,7 +50,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
-		container.ConfigurationName: func(get di.Get) interface{} {
+		container.ConfigurationName: func(get di.Get) any {
 			return configuration
 		},
 	})

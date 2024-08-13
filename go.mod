@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.50
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.12
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.35
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.36
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.31
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.7.0
