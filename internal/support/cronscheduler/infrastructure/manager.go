@@ -6,10 +6,13 @@
 package infrastructure
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/go-co-op/gocron/v2"
+	"github.com/google/uuid"
 
 	bootstrapInterfaces "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -17,8 +20,10 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application/action"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
 )
 
@@ -170,6 +175,9 @@ func (m *manager) getSchedulerByJobName(name string) (gocron.Scheduler, errors.E
 }
 
 func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
+	dbClient := container.DBClientFrom(m.dic.Get)
+	ctx, correlationId := correlation.FromContextOrNew(context.Background())
+
 	scheduler, err := gocron.NewScheduler()
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindServerError,
@@ -181,14 +189,63 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
+	var recordCreatedTime, jobScheduledAt int64 = 0, 0
 	for _, a := range job.Actions {
+		copiedAction := a
 		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
 
 		// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
-		_, err := scheduler.NewJob(definition, task)
+		_, err := scheduler.NewJob(
+			definition,
+			task,
+			gocron.WithEventListeners(
+				gocron.BeforeJobRuns(
+					func(jobID uuid.UUID, jobName string) {
+						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+						if nextRun, err := gocronJob.NextRun(); err != nil {
+							m.lc.Errorf("failed to get the next run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
+						} else {
+							jobScheduledAt = nextRun.UnixMilli()
+						}
+						recordCreatedTime = time.Now().UnixMilli()
+					}),
+				gocron.AfterJobRuns(
+					func(jobID uuid.UUID, jobName string) {
+						record := models.ScheduleActionRecord{
+							JobName:     job.Name,
+							Action:      copiedAction,
+							Status:      models.Succeeded,
+							Created:     recordCreatedTime,
+							ScheduledAt: jobScheduledAt,
+						}
+						newRecord, err := dbClient.AddScheduleActionRecord(ctx, record)
+						if err != nil {
+							m.lc.Errorf("failed to add a new schedule action record for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
+						} else {
+							m.lc.Debugf("A new schedule action record with type: %s and status: %s was added for job: %s, record ID: %s, Correlation-ID: %s", copiedAction.GetBaseScheduleAction().Type, models.Succeeded, job.Name, newRecord.Id, correlationId)
+						}
+					}),
+				gocron.AfterJobRunsWithError(
+					func(jobID uuid.UUID, jobName string, err error) {
+						record := models.ScheduleActionRecord{
+							JobName:     job.Name,
+							Action:      copiedAction,
+							Status:      models.Failed,
+							Created:     recordCreatedTime,
+							ScheduledAt: jobScheduledAt,
+						}
+						newRecord, edgeXerr := dbClient.AddScheduleActionRecord(ctx, record)
+						if edgeXerr != nil {
+							m.lc.Errorf("failed to add a new schedule action record for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, edgeXerr)
+						} else {
+							m.lc.Debugf("A new schedule action record  with type: %s and status: %s was added for job: %s, record ID: %s, action error: %v, Correlation-ID: %s", copiedAction.GetBaseScheduleAction().Type, models.Failed, job.Name, newRecord.Id, err, correlationId)
+						}
+					}),
+			),
+		)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindServerError,
 				fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
@@ -199,5 +256,14 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	m.schedulers[job.Name] = scheduler
 	m.mu.Unlock()
 
+	return nil
+}
+
+func getGocronJobByID(jobs []gocron.Job, id uuid.UUID) gocron.Job {
+	for _, j := range jobs {
+		if j.ID() == id {
+			return j
+		}
+	}
 	return nil
 }

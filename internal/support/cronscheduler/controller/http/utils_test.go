@@ -16,6 +16,8 @@ const (
 	exampleUUID         = "82eb2e26-0f24-48aa-ae4c-de9dac3fb9bc"
 	testCorrelationID   = ""
 	testScheduleJobName = "jobName"
+	testStatus          = "SUCCEEDED"
+	testTimestamp       = 1723642440000
 )
 
 var (
@@ -26,15 +28,16 @@ var (
 			Interval: "10m",
 		},
 	}
-	testScheduleActions = []dtos.ScheduleAction{
-		{
-			Type:        common.ActionEdgeXMessageBus,
-			ContentType: common.ContentTypeJSON,
-			Payload:     nil,
-			EdgeXMessageBusAction: dtos.EdgeXMessageBusAction{
-				Topic: "testTopic",
-			},
+	testScheduleAction = dtos.ScheduleAction{
+		Type:        common.ActionEdgeXMessageBus,
+		ContentType: common.ContentTypeJSON,
+		Payload:     nil,
+		EdgeXMessageBusAction: dtos.EdgeXMessageBusAction{
+			Topic: "testTopic",
 		},
+	}
+	testScheduleActions = []dtos.ScheduleAction{
+		testScheduleAction,
 		{
 			Type:        common.ActionREST,
 			ContentType: common.ContentTypeJSON,
