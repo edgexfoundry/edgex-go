@@ -79,7 +79,14 @@ func TestValidateAutoEvents(t *testing.T) {
 			models.Device{
 				AutoEvents: []models.AutoEvent{{SourceName: source1, Interval: "1s"}},
 			},
-			true,
+			false,
+		},
+		{"resource match regex",
+			models.Device{
+				ProfileName: profile,
+				AutoEvents:  []models.AutoEvent{{SourceName: "res.*", Interval: "1s"}},
+			},
+			false,
 		},
 	}
 	for _, testCase := range tests {
