@@ -12,3 +12,23 @@ CREATE TABLE IF NOT EXISTS core_data.event (
     origin BIGINT,
     tags JSONB
 );
+
+-- core_data.reading is used to store the reading information
+CREATE TABLE IF NOT EXISTS core_data.reading (
+    id UUID PRIMARY KEY,
+    event_id UUID,
+    devicename TEXT,
+    profilename TEXT,
+    resourcename TEXT,
+    origin BIGINT,
+    valuetype TEXT DEFAULT '',
+    units TEXT DEFAULT '',
+    tags JSONB,
+    value TEXT,
+    mediatype TEXT,
+    binaryvalue BYTEA,
+    objectvalue JSONB,
+    CONSTRAINT fk_event
+        FOREIGN KEY(event_id)
+          REFERENCES core_data.event(id)
+);

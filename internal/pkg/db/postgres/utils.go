@@ -130,7 +130,13 @@ func WrapDBError(message string, err error) errors.EdgeX {
 	var pgErr *pgconn.PgError
 	if goErrors.As(err, &pgErr) {
 		if pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
-			return errors.NewCommonEdgeX(errors.KindDuplicateName, pgErr.Detail, nil)
+			var errMsg string
+			if message != "" {
+				errMsg = message + ": "
+			}
+			errMsg += pgErr.Detail
+
+			return errors.NewCommonEdgeX(errors.KindDuplicateName, errMsg, nil)
 		}
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("%s: %s %s", message, pgErr.Error(), pgErr.Detail), nil)
 	}

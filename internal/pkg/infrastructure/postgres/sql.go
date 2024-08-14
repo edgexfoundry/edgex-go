@@ -10,6 +10,7 @@ package postgres
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -55,6 +56,14 @@ func sqlInsertContent(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s", table)
 //}
 
+// sqlQueryAllByCol returns the SQL statement for selecting all rows from the table by the given columns
+func sqlQueryFieldsByCol(table string, fields []string, columns ...string) string {
+	whereCondition := constructWhereCondition(columns...)
+	queryFieldStr := strings.Join(fields, ", ")
+
+	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
+}
+
 // sqlQueryAllWithTimeRange returns the SQL statement for selecting all rows from the table with a time range.
 //func sqlQueryAllWithTimeRange(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
@@ -70,6 +79,11 @@ func sqlQueryAllWithPagination(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
 //}
 
+// sqlQueryAllWithPaginationDescByCol returns the SQL statement for selecting all rows from the table with the pagination and desc by descCol
+func sqlQueryAllWithPaginationDescByCol(table string, descCol string) string {
+	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, descCol)
+}
+
 // sqlQueryAllByColWithPagination returns the SQL statement for selecting all rows from the table by the given columns with pagination
 func sqlQueryAllByColWithPagination(table string, columns ...string) string {
 	columnCount := len(columns)
@@ -83,10 +97,14 @@ func sqlQueryAllWithPaginationAndTimeRange(table string) string {
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
 }
 
-// sqlQueryAllWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the table
-// with pagination and a time range by column1, desc by column2
-func sqlQueryAllWithPaginationAndTimeRangeDescByCol(table string, timeRangeCol string, descCol string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s DESC OFFSET $3 LIMIT $4", table, timeRangeCol, timeRangeCol, descCol)
+// sqlQueryAllWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the table with the arrayColNames slice,
+// provided columns with pagination and a time range by timeRangeCol, desc by descCol
+func sqlQueryAllWithPaginationAndTimeRangeDescByCol(table string, timeRangeCol string, descCol string, arrayColNames []string, columns ...string) string {
+	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, arrayColNames, columns...)
+	columnCount := len(columns)
+
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		table, whereCondition, descCol, columnCount+3, columnCount+4)
 }
 
 // sqlQueryAllByStatusWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table by status with pagination and a time range.
@@ -161,8 +179,9 @@ func sqlQueryCountByCol(table string, columns ...string) string {
 
 // sqlQueryCountByTimeRangeCol returns the SQL statement for counting the number of rows in the table
 // by the given time range of the specified column
-func sqlQueryCountByTimeRangeCol(table string, column string) string {
-	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s >= $1 AND %s <= $2", table, column, column)
+func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColNames []string, columns ...string) string {
+	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, arrayColNames, columns...)
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
 }
 
 // sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON query string
@@ -175,6 +194,20 @@ func sqlQueryCountByTimeRangeCol(table string, column string) string {
 //func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {
 //	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2", table, field, field)
 //}
+
+// sqlQueryAllByCol returns the SQL statement for selecting all rows from the table by the given column in WHERE condition
+func sqlQueryAllByCol(table string, columns ...string) string {
+	whereCondition := constructWhereCondition(columns...)
+
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s", table, whereCondition)
+}
+
+// sqlQueryFieldsByTimeRange returns the SQL statement for selecting fields from the table within the time range
+func sqlQueryFieldsByTimeRange(table string, fields []string, timeRangeCol string) string {
+	queryFieldStr := strings.Join(fields, ", ")
+
+	return fmt.Sprintf("SELECT %s FROM %s WHERE %s <= $1", queryFieldStr, table, timeRangeCol)
+}
 
 // ----------------------------------------------------------------------------------
 // SQL statements for UPDATE operations
@@ -236,6 +269,26 @@ func constructWhereCondition(columns ...string) string {
 
 	for i, column := range columns {
 		conditions[i] = fmt.Sprintf("%s = $%d", column, i+1)
+	}
+
+	return strings.Join(conditions, " AND ")
+}
+
+// constructWhereCondition constructs the WHERE condition for the given columns with time range
+// if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
+func constructWhereCondWithTimeRange(timeRangeCol string, arrayColNames []string, columns ...string) string {
+	var hasArrayColumn bool
+	conditions := []string{timeRangeCol + " >= $1", timeRangeCol + " <= $2"}
+
+	if len(arrayColNames) > 0 {
+		hasArrayColumn = true
+	}
+	for i, column := range columns {
+		equalCondition := "%s = $%d"
+		if hasArrayColumn && slices.Contains(arrayColNames, column) {
+			equalCondition = "%s = ANY ($%d)"
+		}
+		conditions = append(conditions, fmt.Sprintf(equalCondition, column, i+3))
 	}
 
 	return strings.Join(conditions, " AND ")

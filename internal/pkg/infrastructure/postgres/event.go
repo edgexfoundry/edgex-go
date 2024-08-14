@@ -22,17 +22,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const (
-	eventTableName = "core_data.event"
-
-	// constants relate to the event struct field names
-	deviceNameCol  = "devicename"
-	profileNameCol = "profilename"
-	sourceNameCol  = "sourcename"
-	originCol      = "origin"
-	tagsCol        = "tags"
-)
-
 // AllEvents queries the events with the given range, offset, and limit
 func (c *Client) AllEvents(offset, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
@@ -65,22 +54,33 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 		return model.Event{}, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal event tags", err)
 	}
 
-	_, err = c.ConnPool.Exec(
-		ctx,
-		sqlInsert(eventTableName, idCol, deviceNameCol, profileNameCol, sourceNameCol, originCol, tagsCol),
-		event.Id,
-		event.DeviceName,
-		event.ProfileName,
-		event.SourceName,
-		event.Origin,
-		tagsBytes,
-	)
+	err = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+		// insert event in a transaction
+		_, err = tx.Exec(
+			ctx,
+			sqlInsert(eventTableName, idCol, deviceNameCol, profileNameCol, sourceNameCol, originCol, tagsCol),
+			event.Id,
+			event.DeviceName,
+			event.ProfileName,
+			event.SourceName,
+			event.Origin,
+			tagsBytes,
+		)
+		if err != nil {
+			return pgClient.WrapDBError("failed to insert event", err)
+		}
+
+		// insert readings in a transaction
+		err = addReadingsInTx(tx, e.Readings, e.Id)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+		return nil
+	})
+
 	if err != nil {
-		return model.Event{}, pgClient.WrapDBError("failed to insert event", err)
+		return model.Event{}, errors.NewCommonEdgeXWrapper(err)
 	}
-
-	// TODO: readings included in this event will be added to database in the following PRs
-
 	return event, nil
 }
 
@@ -96,9 +96,16 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 
 	event, err = pgx.CollectExactlyOneRow(rows, func(row pgx.CollectableRow) (model.Event, error) {
 		e, err := pgx.RowToStructByNameLax[model.Event](row)
+		if err != nil {
+			return model.Event{}, err
+		}
 
-		// TODO: readings data will be added to the event model in the following PRs
+		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllByCol(readingTableName, eventIdFKCol), e.Id)
+		if err != nil {
+			return model.Event{}, err
+		}
 
+		e.Readings = readings
 		return e, err
 	})
 	if err != nil {
@@ -125,7 +132,7 @@ func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX
 
 // EventCountByTimeRange returns the count of Event by time range from db
 func (c *Client) EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol), start, end)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol, nil), start, end)
 }
 
 // EventsByDeviceName query events by offset, limit and device name
@@ -142,7 +149,7 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model
 // EventsByTimeRange query events by time range, offset, and limit
 func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
-	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol)
+	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol, nil)
 
 	events, err := queryEvents(ctx, c.ConnPool, sqlStatement, start, end, offset, limit)
 	if err != nil {
@@ -153,15 +160,23 @@ func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) ([
 
 // DeleteEventById removes an event by id
 func (c *Client) DeleteEventById(id string) errors.EdgeX {
+	ctx := context.Background()
 	sqlStatement := sqlDeleteById(eventTableName)
 
-	err := deleteEvents(context.Background(), c.ConnPool, sqlStatement, id)
+	// delete event and readings in a transaction
+	err := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+		if err := deleteReadings(ctx, tx, id); err != nil {
+			return err
+		}
+
+		if err := deleteEvents(ctx, tx, sqlStatement, id); err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed delete event with id '%s'", id), err)
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed delete event", err)
 	}
-
-	// TODO: delete related readings associated to the deleted events
-
 	return nil
 }
 
@@ -173,13 +188,23 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 	sqlStatement := sqlDeleteByColumn(eventTableName, deviceNameCol)
 
 	go func() {
-		err := deleteEvents(ctx, c.ConnPool, sqlStatement, deviceName)
-		if err != nil {
-			c.loggingClient.Errorf("failed delete event with device '%s': %v", deviceName, err)
-		}
-	}()
+		// delete events and readings in a transaction
+		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+			// select the event-ids of the specified device name from event table as the sub-query of deleting readings
+			subSqlStatement := sqlQueryFieldsByCol(eventTableName, []string{idCol}, deviceNameCol)
+			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, deviceName); err != nil {
+				c.loggingClient.Errorf("failed delete readings with device '%s': %v", deviceName, err)
+				return err
+			}
 
-	// TODO: delete related readings associated to the deleted events
+			err := deleteEvents(ctx, tx, sqlStatement, deviceName)
+			if err != nil {
+				c.loggingClient.Errorf("failed delete event with device '%s': %v", deviceName, err)
+				return err
+			}
+			return nil
+		})
+	}()
 
 	return nil
 }
@@ -192,13 +217,23 @@ func (c *Client) DeleteEventsByAge(age int64) errors.EdgeX {
 	sqlStatement := sqlDeleteTimeRangeByColumn(eventTableName, originCol)
 
 	go func() {
-		err := deleteEvents(ctx, c.ConnPool, sqlStatement, expireTimestamp)
-		if err != nil {
-			c.loggingClient.Errorf("failed delete event by age '%d' nanoseconds: %v", age, err)
-		}
-	}()
+		// delete events and readings in a transaction
+		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+			// select the event ids within the origin time range from event table as the sub-query of deleting readings
+			subSqlStatement := sqlQueryFieldsByTimeRange(eventTableName, []string{idCol}, originCol)
+			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, expireTimestamp); err != nil {
+				c.loggingClient.Errorf("failed delete readings by age '%d' nanoseconds: %v", age, err)
+				return err
+			}
 
-	// TODO: delete related readings associated to the deleted events
+			err := deleteEvents(ctx, tx, sqlStatement, expireTimestamp)
+			if err != nil {
+				c.loggingClient.Errorf("failed delete event by age '%d' nanoseconds: %v", age, err)
+				return err
+			}
+			return nil
+		})
+	}()
 
 	return nil
 }
@@ -213,10 +248,17 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 	var events []model.Event
 	events, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (model.Event, error) {
 		event, err := pgx.RowToStructByNameLax[model.Event](row)
+		if err != nil {
+			return model.Event{}, err
+		}
 
-		// TODO: readings data will be added to the event model in the following PRs
+		readings, err := queryReadings(ctx, connPool, sqlQueryAllByCol(readingTableName, eventIdFKCol), event.Id)
+		if err != nil {
+			return model.Event{}, err
+		}
 
-		return event, err
+		event.Readings = readings
+		return event, nil
 	})
 
 	if err != nil {
@@ -226,18 +268,18 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 	return events, nil
 }
 
-// deleteEvents delete the data rows with given sql statement and passed args
-func deleteEvents(ctx context.Context, connPool *pgxpool.Pool, sqlStatement string, args ...any) errors.EdgeX {
-	commandTag, err := connPool.Exec(
+// deleteEvents delete the data rows with given sql statement and passed args in a db transaction
+func deleteEvents(ctx context.Context, tx pgx.Tx, sqlStatement string, args ...any) errors.EdgeX {
+	commandTag, err := tx.Exec(
 		ctx,
 		sqlStatement,
 		args...,
 	)
-	if commandTag.RowsAffected() == 0 {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no event found", nil)
-	}
 	if err != nil {
 		return pgClient.WrapDBError("event(s) delete failed", err)
+	}
+	if commandTag.RowsAffected() == 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no event found", nil)
 	}
 	return nil
 }
