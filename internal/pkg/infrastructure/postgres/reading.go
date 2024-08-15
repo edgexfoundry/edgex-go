@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -21,7 +22,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var insertBaseReadingCol = []string{idCol, eventIdFKCol, deviceNameCol, profileNameCol, resourceNameCol, originCol, valueTypeCol, unitsCol, tagsCol}
+var (
+	// insertReadingCols defines the reading table columns in slice used in inserting readings
+	insertReadingCols = []string{idCol, eventIdFKCol, deviceNameCol, profileNameCol, resourceNameCol, originCol, valueTypeCol, unitsCol, tagsCol, valueCol, mediaTypeCol, binaryValueCol, objectValueCol}
+	// queryReadingCols defines the reading table columns in slice used in querying reading
+	queryReadingCols = []string{idCol, deviceNameCol, profileNameCol, resourceNameCol, originCol, valueTypeCol, unitsCol, tagsCol, valueCol, objectValueCol, mediaTypeCol, binaryValueCol}
+)
 
 func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(readingTableName))
@@ -222,73 +228,39 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 
 	readings, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (model.Reading, error) {
 		var reading model.Reading
-		var baseReading model.BaseReading
 
-		readingMap, err := pgx.RowToMap(row)
+		readingDBModel, err := pgx.RowToStructByNameLax[dbModels.Reading](row)
 		if err != nil {
 			return nil, pgClient.WrapDBError("failed to convert row to map", err)
 		}
 
-		// retrieve the BaseReading fields from the map
-		if id, ok := readingMap[idCol].([16]uint8); ok {
-			baseReading.Id = fmt.Sprintf("%x-%x-%x-%x-%x", id[0:4], id[4:6], id[6:8], id[8:10], id[10:16])
-		}
-		if origin, ok := readingMap[originCol].(int64); ok {
-			baseReading.Origin = origin
-		}
-		if deviceName, ok := readingMap[deviceNameCol].(string); ok {
-			baseReading.DeviceName = deviceName
-		}
-		if profileName, ok := readingMap[profileNameCol].(string); ok {
-			baseReading.ProfileName = profileName
-		}
-		if resourceName, ok := readingMap[resourceNameCol].(string); ok {
-			baseReading.ResourceName = resourceName
-		}
-		if valueType, ok := readingMap[valueTypeCol].(string); ok {
-			baseReading.ValueType = valueType
-		}
-		if units, ok := readingMap[unitsCol].(string); ok {
-			baseReading.Units = units
-		}
-		if tags, ok := readingMap[tagsCol].(map[string]any); ok {
-			baseReading.Tags = tags
-		}
+		// convert the BaseReading fields to BaseReading struct defined in contract
+		baseReading := readingDBModel.GetBaseReading()
 
-		value, ok := readingMap[valueCol].(string)
-		if ok && value != "" {
+		valueType := baseReading.ValueType
+
+		if valueType == common.ValueTypeBinary {
+			// reading type is BinaryReading
+			binaryReading := model.BinaryReading{
+				BaseReading: baseReading,
+				MediaType:   *readingDBModel.MediaType,
+				BinaryValue: readingDBModel.BinaryValue,
+			}
+			reading = binaryReading
+		} else if baseReading.ValueType == common.ValueTypeObject {
+			// reading type is ObjectReading
+			objReading := model.ObjectReading{
+				BaseReading: baseReading,
+				ObjectValue: readingDBModel.ObjectValue,
+			}
+			reading = objReading
+		} else {
 			// reading type is SimpleReading
 			simpleReading := model.SimpleReading{
 				BaseReading: baseReading,
-				Value:       value,
+				Value:       *readingDBModel.Value,
 			}
 			reading = simpleReading
-		} else {
-			// reading type is not SimpleReading, check if the reading belongs to either BinaryReading or ObjectReading
-			if baseReading.ValueType == common.ValueTypeBinary {
-				// reading type is BinaryReading
-				binaryReading := model.BinaryReading{
-					BaseReading: baseReading,
-				}
-				if mediaType, ok := readingMap[mediaTypeCol].(string); ok {
-					binaryReading.MediaType = mediaType
-				}
-				if binaryValue, ok := readingMap[binaryValueCol].([]byte); ok {
-					binaryReading.BinaryValue = binaryValue
-				}
-				reading = binaryReading
-			} else if baseReading.ValueType == common.ValueTypeObject {
-				// reading type is ObjectReading
-				objReading := model.ObjectReading{
-					BaseReading: baseReading,
-				}
-				if objValue, ok := readingMap[objectValueCol]; ok {
-					objReading.ObjectValue = objValue
-				}
-				reading = objReading
-			} else {
-				return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unknown reading value type '%s'", baseReading.ValueType), nil)
-			}
 		}
 
 		return reading, nil
@@ -341,15 +313,11 @@ func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string
 // addReadingsInTx converts reading interface to BinaryReading/ObjectReading/SimpleReading structs first based on the reading value type
 // and then perform the CopyFromSlice transaction to insert readings in batch
 func addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId string) error {
-	var binaryReadings []model.BinaryReading
-	var objReadings []model.ObjectReading
-	var simpleReadings []model.SimpleReading
-
-	var err error
+	var readingDBModels []dbModels.Reading
 
 	for _, r := range readings {
 		baseReading := r.GetBaseReading()
-
+		var readingDBModel dbModels.Reading
 		valueType := baseReading.ValueType
 		if valueType == common.ValueTypeBinary {
 			// convert reading to BinaryReading struct
@@ -357,113 +325,87 @@ func addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId string) error 
 			if !ok {
 				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to BinaryReading model", nil)
 			}
-			binaryReadings = append(binaryReadings, b)
+
+			// convert BinaryReading struct to Reading DB model
+			readingDBModel = dbModels.Reading{
+				BaseReading: baseReading,
+				BinaryReading: dbModels.BinaryReading{
+					BinaryValue: b.BinaryValue,
+					MediaType:   &b.MediaType,
+				},
+			}
 		} else if valueType == common.ValueTypeObject {
 			// convert reading to ObjectReading struct
 			o, ok := r.(model.ObjectReading)
 			if !ok {
 				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to ObjectReading model", nil)
 			}
-			objReadings = append(objReadings, o)
+
+			// convert ObjectReading struct to Reading DB model
+			readingDBModel = dbModels.Reading{
+				BaseReading: baseReading,
+				ObjectReading: dbModels.ObjectReading{
+					ObjectValue: o.ObjectValue,
+				},
+			}
 		} else {
 			// convert reading to SimpleReading struct
 			s, ok := r.(model.SimpleReading)
 			if !ok {
 				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to SimpleReading model", nil)
 			}
-			simpleReadings = append(simpleReadings, s)
+
+			// convert SimpleReading struct to Reading DB model
+			readingDBModel = dbModels.Reading{
+				BaseReading:   baseReading,
+				SimpleReading: dbModels.SimpleReading{Value: &s.Value},
+			}
 		}
+		readingDBModels = append(readingDBModels, readingDBModel)
 	}
 
-	// insert binary readings in batch
-	if len(binaryReadings) > 0 {
-		binaryReadingCols := append(insertBaseReadingCol, mediaTypeCol, binaryValueCol)
+	// insert readingDBModels slice in batch
+	_, err := tx.CopyFrom(
+		context.Background(),
+		strings.Split(readingTableName, "."),
+		insertReadingCols,
+		pgx.CopyFromSlice(len(readingDBModels), func(i int) ([]any, error) {
+			var tagsBytes []byte
+			var objectValueBytes []byte
+			var err error
 
-		_, err = tx.CopyFrom(
-			context.Background(),
-			strings.Split(readingTableName, "."),
-			binaryReadingCols,
-			pgx.CopyFromSlice(len(binaryReadings), func(i int) ([]any, error) {
-				tagsBytes, err := json.Marshal(binaryReadings[i].Tags)
+			r := readingDBModels[i]
+			if r.Tags != nil {
+				tagsBytes, err = json.Marshal(r.Tags)
 				if err != nil {
 					return nil, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal reading tags", err)
 				}
-				return []any{
-					binaryReadings[i].Id,
-					eventId,
-					binaryReadings[i].DeviceName,
-					binaryReadings[i].ProfileName,
-					binaryReadings[i].ResourceName,
-					binaryReadings[i].Origin,
-					binaryReadings[i].ValueType,
-					binaryReadings[i].Units,
-					tagsBytes,
-					binaryReadings[i].MediaType,
-					binaryReadings[i].BinaryValue,
-				}, nil
-			}),
-		)
-	}
-
-	// insert object readings in batch
-	if len(objReadings) > 0 {
-		objReadingCols := append(insertBaseReadingCol, objectValueCol)
-
-		_, err = tx.CopyFrom(
-			context.Background(),
-			strings.Split(readingTableName, "."),
-			objReadingCols,
-			pgx.CopyFromSlice(len(objReadings), func(i int) ([]any, error) {
-				tagsBytes, err := json.Marshal(objReadings[i].Tags)
+			}
+			if r.ObjectValue != nil {
+				objectValueBytes, err = json.Marshal(r.ObjectValue)
 				if err != nil {
-					return nil, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal reading tags", err)
+					return nil, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal reading ObjectValue", err)
 				}
-				return []any{
-					objReadings[i].Id,
-					eventId,
-					objReadings[i].DeviceName,
-					objReadings[i].ProfileName,
-					objReadings[i].ResourceName,
-					objReadings[i].Origin,
-					objReadings[i].ValueType,
-					objReadings[i].Units,
-					tagsBytes,
-					objReadings[i].ObjectValue,
-				}, nil
-			}),
-		)
-	}
-
-	// insert simple readings in batch
-	if len(simpleReadings) > 0 {
-		simpleReadingCols := append(insertBaseReadingCol, valueCol)
-
-		_, err = tx.CopyFrom(
-			context.Background(),
-			strings.Split(readingTableName, "."),
-			simpleReadingCols,
-			pgx.CopyFromSlice(len(simpleReadings), func(i int) ([]any, error) {
-				tagsBytes, err := json.Marshal(simpleReadings[i].Tags)
-				if err != nil {
-					return nil, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal reading tags", err)
-				}
-				return []any{
-					simpleReadings[i].Id,
-					eventId,
-					simpleReadings[i].DeviceName,
-					simpleReadings[i].ProfileName,
-					simpleReadings[i].ResourceName,
-					simpleReadings[i].Origin,
-					simpleReadings[i].ValueType,
-					simpleReadings[i].Units,
-					tagsBytes,
-					simpleReadings[i].Value,
-				}, nil
-			}),
-		)
-	}
+			}
+			return []any{
+				r.Id,
+				eventId,
+				r.DeviceName,
+				r.ProfileName,
+				r.ResourceName,
+				r.Origin,
+				r.ValueType,
+				r.Units,
+				tagsBytes,
+				r.Value,
+				r.MediaType,
+				r.BinaryValue,
+				objectValueBytes,
+			}, nil
+		}),
+	)
 	if err != nil {
-		return pgClient.WrapDBError("failed to insert readings", err)
+		return pgClient.WrapDBError("failed to insert readings in batch", err)
 	}
 
 	return nil

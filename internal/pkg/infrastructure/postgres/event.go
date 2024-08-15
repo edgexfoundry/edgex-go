@@ -100,7 +100,7 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 			return model.Event{}, err
 		}
 
-		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllByCol(readingTableName, eventIdFKCol), e.Id)
+		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryFieldsByCol(readingTableName, queryReadingCols, eventIdFKCol), e.Id)
 		if err != nil {
 			return model.Event{}, err
 		}
@@ -252,7 +252,7 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 			return model.Event{}, err
 		}
 
-		readings, err := queryReadings(ctx, connPool, sqlQueryAllByCol(readingTableName, eventIdFKCol), event.Id)
+		readings, err := queryReadings(ctx, connPool, sqlQueryFieldsByCol(readingTableName, queryReadingCols, eventIdFKCol), event.Id)
 		if err != nil {
 			return model.Event{}, err
 		}
