@@ -19,6 +19,7 @@ import (
 	"context"
 	goErrors "errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"time"
 
@@ -288,7 +289,8 @@ func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 		return nil
 	}
 	if d.ProfileName == "" {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("no associated device profile during validating device '%s' auto event", d.Name), nil)
+		// if the profile is not set, skip the validation until we have the profile
+		return nil
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
@@ -300,9 +302,16 @@ func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("auto event interval '%s' not valid in the device '%s'", a.Interval, d.Name), err)
 		}
+
+		regex, regErr := regexp.CompilePOSIX(a.SourceName)
+		if regErr != nil {
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to CompilePOSIX the auto event source name: "+a.SourceName, regErr)
+		}
 		hasResource := slices.ContainsFunc(dp.DeviceResources, func(r models.DeviceResource) bool {
-			return r.Name == a.SourceName
+			matchedString := regex.FindString(r.Name)
+			return (r.Name == regex.String()) || (r.Name == matchedString)
 		})
+
 		hasCommand := slices.ContainsFunc(dp.DeviceCommands, func(c models.DeviceCommand) bool {
 			return c.Name == a.SourceName
 		})
