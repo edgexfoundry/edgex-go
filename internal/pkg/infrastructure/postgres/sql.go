@@ -56,7 +56,7 @@ func sqlInsertContent(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s", table)
 //}
 
-// sqlQueryAllByCol returns the SQL statement for selecting all rows from the table by the given columns
+// sqlQueryFieldsByCol returns the SQL statement for selecting the given fields of rows from the table by the conditions composed of given columns
 func sqlQueryFieldsByCol(table string, fields []string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
 	queryFieldStr := strings.Join(fields, ", ")
@@ -194,13 +194,6 @@ func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColName
 //func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {
 //	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2", table, field, field)
 //}
-
-// sqlQueryAllByCol returns the SQL statement for selecting all rows from the table by the given column in WHERE condition
-func sqlQueryAllByCol(table string, columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
-
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s", table, whereCondition)
-}
 
 // sqlQueryFieldsByTimeRange returns the SQL statement for selecting fields from the table within the time range
 func sqlQueryFieldsByTimeRange(table string, fields []string, timeRangeCol string) string {
