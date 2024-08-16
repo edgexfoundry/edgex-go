@@ -14,7 +14,6 @@ import (
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
@@ -237,9 +236,7 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 		// convert the BaseReading fields to BaseReading struct defined in contract
 		baseReading := readingDBModel.GetBaseReading()
 
-		valueType := baseReading.ValueType
-
-		if valueType == common.ValueTypeBinary {
+		if readingDBModel.BinaryValue != nil {
 			// reading type is BinaryReading
 			binaryReading := model.BinaryReading{
 				BaseReading: baseReading,
@@ -247,20 +244,22 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 				BinaryValue: readingDBModel.BinaryValue,
 			}
 			reading = binaryReading
-		} else if baseReading.ValueType == common.ValueTypeObject {
+		} else if readingDBModel.ObjectValue != nil {
 			// reading type is ObjectReading
 			objReading := model.ObjectReading{
 				BaseReading: baseReading,
 				ObjectValue: readingDBModel.ObjectValue,
 			}
 			reading = objReading
-		} else {
+		} else if readingDBModel.Value != nil {
 			// reading type is SimpleReading
 			simpleReading := model.SimpleReading{
 				BaseReading: baseReading,
 				Value:       *readingDBModel.Value,
 			}
 			reading = simpleReading
+		} else {
+			return reading, errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to none of BinaryReading/ObjectReading/SimpleReading structs", nil)
 		}
 
 		return reading, nil
@@ -318,48 +317,33 @@ func addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId string) error 
 	for _, r := range readings {
 		baseReading := r.GetBaseReading()
 		var readingDBModel dbModels.Reading
-		valueType := baseReading.ValueType
-		if valueType == common.ValueTypeBinary {
-			// convert reading to BinaryReading struct
-			b, ok := r.(model.BinaryReading)
-			if !ok {
-				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to BinaryReading model", nil)
-			}
 
+		switch contractReadingModel := r.(type) {
+		case model.BinaryReading:
 			// convert BinaryReading struct to Reading DB model
 			readingDBModel = dbModels.Reading{
 				BaseReading: baseReading,
 				BinaryReading: dbModels.BinaryReading{
-					BinaryValue: b.BinaryValue,
-					MediaType:   &b.MediaType,
+					BinaryValue: contractReadingModel.BinaryValue,
+					MediaType:   &contractReadingModel.MediaType,
 				},
 			}
-		} else if valueType == common.ValueTypeObject {
-			// convert reading to ObjectReading struct
-			o, ok := r.(model.ObjectReading)
-			if !ok {
-				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to ObjectReading model", nil)
-			}
-
+		case model.ObjectReading:
 			// convert ObjectReading struct to Reading DB model
 			readingDBModel = dbModels.Reading{
 				BaseReading: baseReading,
 				ObjectReading: dbModels.ObjectReading{
-					ObjectValue: o.ObjectValue,
+					ObjectValue: contractReadingModel.ObjectValue,
 				},
 			}
-		} else {
-			// convert reading to SimpleReading struct
-			s, ok := r.(model.SimpleReading)
-			if !ok {
-				return errors.NewCommonEdgeX(errors.KindServerError, "failed to convert reading to SimpleReading model", nil)
-			}
-
+		case model.SimpleReading:
 			// convert SimpleReading struct to Reading DB model
 			readingDBModel = dbModels.Reading{
 				BaseReading:   baseReading,
-				SimpleReading: dbModels.SimpleReading{Value: &s.Value},
+				SimpleReading: dbModels.SimpleReading{Value: &contractReadingModel.Value},
 			}
+		default:
+			return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to convert reading to none of BinaryReading/ObjectReading/SimpleReading structs", nil)
 		}
 		readingDBModels = append(readingDBModels, readingDBModel)
 	}
