@@ -113,7 +113,7 @@ func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, scheduleJob mod
 }
 
 func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedScheduleJob model.ScheduleJob) errors.EdgeX {
-	modified := time.Now()
+	modified := time.Now().UTC()
 	updatedScheduleJob.Modified = modified.UnixMilli()
 
 	// Marshal the scheduleJob to store it in the database

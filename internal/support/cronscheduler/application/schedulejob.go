@@ -183,3 +183,50 @@ func DeleteScheduleJobByName(ctx context.Context, name string, dic *di.Container
 	lc.Debugf("Successfully deleted the scheduled job: %s. Correlation-ID: %s", name, correlationId)
 	return nil
 }
+
+// LoadScheduleJobsToSchedulerManager loads all the existing schedule jobs to the scheduler manager
+func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	ctx, correlationId := correlation.FromContextOrNew(ctx)
+
+	// TODO: issue-4834-6th - Decide the limit value should be a hard-coded value or the MaxResultCount value from configuration or support the sql statement that does not limit the number of rows
+	jobs, err := dbClient.AllScheduleJobs(context.Background(), 0, 999)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to load all existing scheduled jobs", err)
+	}
+
+	// TODO: issue-4834-6th - Decide the limit value should be a hard-coded value or support the sql statement that does not limit the number of rows
+	allLatestRecords, err := dbClient.LatestScheduleActionRecords(ctx, 0, 999)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to load latest schedule action records", err)
+	}
+
+	for _, job := range jobs {
+		err := schedulerManager.AddScheduleJob(job, correlationId)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+
+		if job.AdminState == models.Unlocked {
+			err := schedulerManager.StartScheduleJobByName(job.Name, correlationId)
+			if err != nil {
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+
+			// Get the latest schedule action records by job name and generate missed schedule action records
+			latestRecords := getLatestRecordsByJobName(job.Name, allLatestRecords)
+			err = GenerateMissedScheduleActionRecords(ctx, dic, job, latestRecords)
+			if err != nil {
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+		} else {
+			lc.Debugf("The scheduled job is loaded but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", job.Id, correlationId)
+			return nil
+		}
+		lc.Debugf("Successfully loaded and started the existing scheduled job: %s. Correlation-ID: %s", job.Name, correlationId)
+	}
+
+	return nil
+}

@@ -195,8 +195,8 @@ func addScheduleActionRecord(ctx context.Context, connPool *pgxpool.Pool, schedu
 		scheduleActionRecord.JobName,
 		actionJSONBytes,
 		scheduleActionRecord.Status,
-		time.UnixMilli(scheduleActionRecord.ScheduledAt),
-		time.UnixMilli(scheduleActionRecord.Created))
+		time.UnixMilli(scheduleActionRecord.ScheduledAt).UTC(),
+		time.UnixMilli(scheduleActionRecord.Created).UTC())
 	if err != nil {
 		return scheduleActionRecord, pgClient.WrapDBError("failed to insert schedule action record", err)
 	}
