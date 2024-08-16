@@ -32,7 +32,7 @@ func (c *Client) AddScheduleJob(ctx context.Context, scheduleJob model.ScheduleJ
 
 // AllScheduleJobs queries the schedule jobs with the given range, offset, and limit
 func (c *Client) AllScheduleJobs(ctx context.Context, offset, limit int) ([]model.ScheduleJob, errors.EdgeX) {
-	offset, limit = getValidLimitAndOffset(offset, limit)
+	offset, limit = getValidOffsetAndLimit(offset, limit)
 	jobs, err := queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPagination(scheduleJobTable), offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule jobs", err)
@@ -200,9 +200,9 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 	return scheduleJobs, nil
 }
 
-func queryScheduleJobNames(ctx context.Context, connPool *pgxpool.Pool, offset, limit int) ([]string, errors.EdgeX) {
-	sqlQueryAllScheduleJobNames := fmt.Sprintf("SELECT name FROM %s ORDER BY created OFFSET $1 LIMIT $2", scheduleJobTable)
-	rows, err := connPool.Query(ctx, sqlQueryAllScheduleJobNames, offset, limit)
+func queryScheduleJobNames(ctx context.Context, connPool *pgxpool.Pool) ([]string, errors.EdgeX) {
+	sqlQueryAllScheduleJobNames := fmt.Sprintf("SELECT name FROM %s ORDER BY created", scheduleJobTable)
+	rows, err := connPool.Query(ctx, sqlQueryAllScheduleJobNames)
 	if err != nil {
 		return nil, pgClient.WrapDBError("failed to query all schedule jobs' names", err)
 	}

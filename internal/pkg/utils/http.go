@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
@@ -153,7 +154,7 @@ func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffs
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	end, edgexErr = ParseQueryStringToInt(c, common.End, 0, 0, math.MaxInt64)
+	end, edgexErr = ParseQueryStringToInt(c, common.End, int(time.Now().UnixMilli()), 0, math.MaxInt64)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}

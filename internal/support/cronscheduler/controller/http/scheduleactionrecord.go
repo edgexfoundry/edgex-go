@@ -6,7 +6,6 @@
 package http
 
 import (
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"math"
 	"net/http"
 
@@ -19,6 +18,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application"
 	schedulerContainer "github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
@@ -174,7 +174,7 @@ func (rc *ScheduleActionRecordController) LatestScheduleActionRecords(c echo.Con
 	config := schedulerContainer.ConfigurationFrom(rc.dic.Get)
 
 	// parse URL query string for offset and limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	_, _, offset, limit, err := utils.ParseQueryStringTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
 		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)

@@ -17,9 +17,9 @@ type DBClient struct {
 	mock.Mock
 }
 
-// AddScheduleActionRecord provides a mock function with given fields: scheduleActionRecord
-func (_m *DBClient) AddScheduleActionRecord(scheduleActionRecord models.ScheduleActionRecord) (models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(scheduleActionRecord)
+// AddScheduleActionRecord provides a mock function with given fields: ctx, scheduleActionRecord
+func (_m *DBClient) AddScheduleActionRecord(ctx context.Context, scheduleActionRecord models.ScheduleActionRecord) (models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, scheduleActionRecord)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddScheduleActionRecord")
@@ -27,17 +27,17 @@ func (_m *DBClient) AddScheduleActionRecord(scheduleActionRecord models.Schedule
 
 	var r0 models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(models.ScheduleActionRecord) (models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(scheduleActionRecord)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ScheduleActionRecord) (models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, scheduleActionRecord)
 	}
-	if rf, ok := ret.Get(0).(func(models.ScheduleActionRecord) models.ScheduleActionRecord); ok {
-		r0 = rf(scheduleActionRecord)
+	if rf, ok := ret.Get(0).(func(context.Context, models.ScheduleActionRecord) models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, scheduleActionRecord)
 	} else {
 		r0 = ret.Get(0).(models.ScheduleActionRecord)
 	}
 
-	if rf, ok := ret.Get(1).(func(models.ScheduleActionRecord) errors.EdgeX); ok {
-		r1 = rf(scheduleActionRecord)
+	if rf, ok := ret.Get(1).(func(context.Context, models.ScheduleActionRecord) errors.EdgeX); ok {
+		r1 = rf(ctx, scheduleActionRecord)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -77,9 +77,9 @@ func (_m *DBClient) AddScheduleJob(ctx context.Context, scheduleJob models.Sched
 	return r0, r1
 }
 
-// AllScheduleActionRecords provides a mock function with given fields: start, end, offset, limit
-func (_m *DBClient) AllScheduleActionRecords(start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(start, end, offset, limit)
+// AllScheduleActionRecords provides a mock function with given fields: ctx, start, end, offset, limit
+func (_m *DBClient) AllScheduleActionRecords(ctx context.Context, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AllScheduleActionRecords")
@@ -87,19 +87,19 @@ func (_m *DBClient) AllScheduleActionRecords(start int64, end int64, offset int,
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(int64, int64, int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64, int, int) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int64, int64, int, int) errors.EdgeX); ok {
-		r1 = rf(start, end, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -146,17 +146,17 @@ func (_m *DBClient) CloseSession() {
 	_m.Called()
 }
 
-// DeleteScheduleActionRecordByAge provides a mock function with given fields: age
-func (_m *DBClient) DeleteScheduleActionRecordByAge(age int64) errors.EdgeX {
-	ret := _m.Called(age)
+// DeleteScheduleActionRecordByAge provides a mock function with given fields: ctx, age
+func (_m *DBClient) DeleteScheduleActionRecordByAge(ctx context.Context, age int64) errors.EdgeX {
+	ret := _m.Called(ctx, age)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteScheduleActionRecordByAge")
 	}
 
 	var r0 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(int64) errors.EdgeX); ok {
-		r0 = rf(age)
+	if rf, ok := ret.Get(0).(func(context.Context, int64) errors.EdgeX); ok {
+		r0 = rf(ctx, age)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.EdgeX)
@@ -186,9 +186,39 @@ func (_m *DBClient) DeleteScheduleJobByName(ctx context.Context, name string) er
 	return r0
 }
 
-// LatestScheduleActionRecords provides a mock function with given fields: offset, limit
-func (_m *DBClient) LatestScheduleActionRecords(offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(offset, limit)
+// LatestScheduleActionRecordTotalCount provides a mock function with given fields: ctx
+func (_m *DBClient) LatestScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LatestScheduleActionRecordTotalCount")
+	}
+
+	var r0 uint32
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(context.Context) (uint32, errors.EdgeX)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) errors.EdgeX); ok {
+		r1 = rf(ctx)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// LatestScheduleActionRecords provides a mock function with given fields: ctx, offset, limit
+func (_m *DBClient) LatestScheduleActionRecords(ctx context.Context, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for LatestScheduleActionRecords")
@@ -196,19 +226,19 @@ func (_m *DBClient) LatestScheduleActionRecords(offset int, limit int) ([]models
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int, int) errors.EdgeX); ok {
-		r1 = rf(offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -218,9 +248,9 @@ func (_m *DBClient) LatestScheduleActionRecords(offset int, limit int) ([]models
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByJobName provides a mock function with given fields: jobName
-func (_m *DBClient) ScheduleActionRecordCountByJobName(jobName string) (uint32, errors.EdgeX) {
-	ret := _m.Called(jobName)
+// ScheduleActionRecordCountByJobName provides a mock function with given fields: ctx, jobName
+func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByJobName")
@@ -228,17 +258,17 @@ func (_m *DBClient) ScheduleActionRecordCountByJobName(jobName string) (uint32, 
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) (uint32, errors.EdgeX)); ok {
-		return rf(jobName)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, jobName)
 	}
-	if rf, ok := ret.Get(0).(func(string) uint32); ok {
-		r0 = rf(jobName)
+	if rf, ok := ret.Get(0).(func(context.Context, string) uint32); ok {
+		r0 = rf(ctx, jobName)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(jobName)
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -248,9 +278,9 @@ func (_m *DBClient) ScheduleActionRecordCountByJobName(jobName string) (uint32, 
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByJobNameAndStatus provides a mock function with given fields: jobName, status
-func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(jobName string, status string) (uint32, errors.EdgeX) {
-	ret := _m.Called(jobName, status)
+// ScheduleActionRecordCountByJobNameAndStatus provides a mock function with given fields: ctx, jobName, status
+func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName string, status string) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName, status)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByJobNameAndStatus")
@@ -258,17 +288,17 @@ func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(jobName string, 
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string) (uint32, errors.EdgeX)); ok {
-		return rf(jobName, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, jobName, status)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) uint32); ok {
-		r0 = rf(jobName, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) uint32); ok {
+		r0 = rf(ctx, jobName, status)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) errors.EdgeX); ok {
-		r1 = rf(jobName, status)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName, status)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -278,9 +308,9 @@ func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(jobName string, 
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByStatus provides a mock function with given fields: status
-func (_m *DBClient) ScheduleActionRecordCountByStatus(status string) (uint32, errors.EdgeX) {
-	ret := _m.Called(status)
+// ScheduleActionRecordCountByStatus provides a mock function with given fields: ctx, status
+func (_m *DBClient) ScheduleActionRecordCountByStatus(ctx context.Context, status string) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, status)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByStatus")
@@ -288,17 +318,17 @@ func (_m *DBClient) ScheduleActionRecordCountByStatus(status string) (uint32, er
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) (uint32, errors.EdgeX)); ok {
-		return rf(status)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, status)
 	}
-	if rf, ok := ret.Get(0).(func(string) uint32); ok {
-		r0 = rf(status)
+	if rf, ok := ret.Get(0).(func(context.Context, string) uint32); ok {
+		r0 = rf(ctx, status)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(status)
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.EdgeX); ok {
+		r1 = rf(ctx, status)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -308,9 +338,9 @@ func (_m *DBClient) ScheduleActionRecordCountByStatus(status string) (uint32, er
 	return r0, r1
 }
 
-// ScheduleActionRecordTotalCount provides a mock function with given fields:
-func (_m *DBClient) ScheduleActionRecordTotalCount() (uint32, errors.EdgeX) {
-	ret := _m.Called()
+// ScheduleActionRecordTotalCount provides a mock function with given fields: ctx
+func (_m *DBClient) ScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordTotalCount")
@@ -318,17 +348,17 @@ func (_m *DBClient) ScheduleActionRecordTotalCount() (uint32, errors.EdgeX) {
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func() (uint32, errors.EdgeX)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(context.Context) (uint32, errors.EdgeX)); ok {
+		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func() uint32); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func() errors.EdgeX); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context) errors.EdgeX); ok {
+		r1 = rf(ctx)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -338,9 +368,9 @@ func (_m *DBClient) ScheduleActionRecordTotalCount() (uint32, errors.EdgeX) {
 	return r0, r1
 }
 
-// ScheduleActionRecordsByJobName provides a mock function with given fields: jobName, start, end, offset, limit
-func (_m *DBClient) ScheduleActionRecordsByJobName(jobName string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(jobName, start, end, offset, limit)
+// ScheduleActionRecordsByJobName provides a mock function with given fields: ctx, jobName, start, end, offset, limit
+func (_m *DBClient) ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordsByJobName")
@@ -348,19 +378,19 @@ func (_m *DBClient) ScheduleActionRecordsByJobName(jobName string, start int64, 
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(jobName, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, jobName, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(jobName, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, jobName, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, int64, int64, int, int) errors.EdgeX); ok {
-		r1 = rf(jobName, start, end, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -370,9 +400,9 @@ func (_m *DBClient) ScheduleActionRecordsByJobName(jobName string, start int64, 
 	return r0, r1
 }
 
-// ScheduleActionRecordsByJobNameAndStatus provides a mock function with given fields: jobName, status, start, end, offset, limit
-func (_m *DBClient) ScheduleActionRecordsByJobNameAndStatus(jobName string, status string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(jobName, status, start, end, offset, limit)
+// ScheduleActionRecordsByJobNameAndStatus provides a mock function with given fields: ctx, jobName, status, start, end, offset, limit
+func (_m *DBClient) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName string, status string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName, status, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordsByJobNameAndStatus")
@@ -380,19 +410,19 @@ func (_m *DBClient) ScheduleActionRecordsByJobNameAndStatus(jobName string, stat
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(jobName, status, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, jobName, status, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(jobName, status, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, jobName, status, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, int64, int64, int, int) errors.EdgeX); ok {
-		r1 = rf(jobName, status, start, end, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName, status, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -402,9 +432,9 @@ func (_m *DBClient) ScheduleActionRecordsByJobNameAndStatus(jobName string, stat
 	return r0, r1
 }
 
-// ScheduleActionRecordsByStatus provides a mock function with given fields: status, start, end, offset, limit
-func (_m *DBClient) ScheduleActionRecordsByStatus(status string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(status, start, end, offset, limit)
+// ScheduleActionRecordsByStatus provides a mock function with given fields: ctx, status, start, end, offset, limit
+func (_m *DBClient) ScheduleActionRecordsByStatus(ctx context.Context, status string, start int64, end int64, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, status, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordsByStatus")
@@ -412,19 +442,19 @@ func (_m *DBClient) ScheduleActionRecordsByStatus(status string, start int64, en
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(status, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, status, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(status, start, end, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64, int, int) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, status, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, int64, int64, int, int) errors.EdgeX); ok {
-		r1 = rf(status, start, end, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, status, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

@@ -10,8 +10,8 @@ import (
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 )
 
-// getValidOffsetAndLimit returns the valid or default limit and offset from the given parameters
-func getValidLimitAndOffset(offset, limit int) (int, int) {
+// getValidOffsetAndLimit returns the valid or default offset and limit from the given parameters
+func getValidOffsetAndLimit(offset, limit int) (int, int) {
 	defaultOffset := 0
 	defaultLimit := -1 //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 	if offset < 0 {
@@ -34,11 +34,11 @@ func getValidStartAndEnd(start, end int64) (int64, int64, errors.EdgeX) {
 // getValidRangeParameters returns the valid start, end, offset and limit from the given parameters
 func getValidRangeParameters(start, end int64, offset, limit int) (int64, int64, int, int, errors.EdgeX) {
 	var err errors.EdgeX
-	end, start, err = getValidStartAndEnd(start, end)
+	start, end, err = getValidStartAndEnd(start, end)
 	if err != nil {
 		return 0, 0, 0, 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	offset, limit = getValidLimitAndOffset(offset, limit)
+	offset, limit = getValidOffsetAndLimit(offset, limit)
 	return start, end, offset, limit, nil
 }
 
