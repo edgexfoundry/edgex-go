@@ -7,9 +7,15 @@ package application
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/robfig/cron/v3"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
@@ -109,10 +115,136 @@ func DeleteScheduleActionRecordsByAge(ctx context.Context, age int64, dic *di.Co
 	return nil
 }
 
+// GenerateMissedScheduleActionRecords generates missed schedule action records
+func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container, job models.ScheduleJob, latestRecords []models.ScheduleActionRecord) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
+
+	// All latest records should have the same creation time
+	lastRecordTimestamp := latestRecords[0].Created
+
+	// Compare the last record timestamp with the job's modified timestamp to get the latest time
+	latestTime := time.UnixMilli(lastRecordTimestamp)
+	modified := time.UnixMilli(job.Modified)
+	if latestTime.Before(modified) {
+		latestTime = modified
+	}
+
+	// Generate missed runs based on the schedule type
+	missedRuns, err := generateMissedRuns(job.Definition, latestTime)
+	if err != nil {
+		lc.Errorf("Failed to generate missed records of job: %s. Correlation-ID: %s", job.Name, correlationId)
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	if len(missedRuns) != 0 {
+		var missedRecordCreatedTime = time.Now().UnixMilli()
+		for _, run := range missedRuns {
+			for _, action := range job.Actions {
+				actionRecord := models.ScheduleActionRecord{
+					JobName:     job.Name,
+					Action:      action,
+					Status:      models.Missed,
+					ScheduledAt: run.UnixMilli(),
+					Created:     missedRecordCreatedTime,
+				}
+
+				record, err := dbClient.AddScheduleActionRecord(ctx, actionRecord)
+				if err != nil {
+					return errors.NewCommonEdgeXWrapper(err)
+				}
+
+				lc.Tracef("Missed schedule action record of job: %s have been created successfully. Record ID: %s, Correlation-ID: %s", job.Name, record.Id, correlationId)
+			}
+		}
+
+		lc.Debugf("Missed schedule action records of job: %s have been created successfully. Correlation-ID: %s", job.Name, correlationId)
+	}
+
+	return nil
+}
+
+// TODO: This can be moved to go-mod-core-contracts
 func fromScheduleActionRecordModelsToDTOs(records []models.ScheduleActionRecord) []dtos.ScheduleActionRecord {
 	scheduleActionRecordDTOs := make([]dtos.ScheduleActionRecord, len(records))
 	for i, record := range records {
 		scheduleActionRecordDTOs[i] = dtos.FromScheduleActionRecordModelToDTO(record)
 	}
 	return scheduleActionRecordDTOs
+}
+
+func getLatestRecordsByJobName(jobName string, allLatestRecords []models.ScheduleActionRecord) (latestRecords []models.ScheduleActionRecord) {
+	for _, record := range allLatestRecords {
+		if record.JobName == jobName {
+			latestRecords = append(latestRecords, record)
+		}
+	}
+	return latestRecords
+}
+
+func generateMissedRuns(def models.ScheduleDef, latestTime time.Time) (missedRuns []time.Time, err errors.EdgeX) {
+	currentTime := time.Now()
+
+	switch def.GetBaseScheduleDef().Type {
+	case common.DefCron:
+		cronDef, ok := def.(models.CronScheduleDef)
+		if !ok {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast ScheduleDefinition to CronScheduleDef", nil)
+		}
+
+		cronSchedule, err := parseCronExpression(cronDef.Crontab)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to parse cron expression", err)
+		}
+
+		missedRuns = findMissedCronRuns(latestTime, currentTime, cronSchedule)
+	case common.DefInterval:
+		def, ok := def.(models.IntervalScheduleDef)
+		if !ok {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to cast ScheduleDefinition to IntervalScheduleDef", nil)
+		}
+
+		duration, err := time.ParseDuration(def.Interval)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "fail to parse interval string to a duration time value", err)
+		}
+
+		missedRuns = findMissedIntervalRuns(latestTime, currentTime, duration)
+	default:
+		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("unsupported schedule definition type: %s", def.GetBaseScheduleDef().Type), nil)
+	}
+
+	return missedRuns, nil
+}
+
+func findMissedIntervalRuns(lastRun, current time.Time, interval time.Duration) (missedRuns []time.Time) {
+	for t := lastRun.Add(interval); t.Before(current); t = t.Add(interval) {
+		missedRuns = append(missedRuns, t)
+	}
+	return missedRuns
+}
+
+func findMissedCronRuns(lastRun, current time.Time, schedule cron.Schedule) (missedRuns []time.Time) {
+	for t := schedule.Next(lastRun); t.Before(current); t = schedule.Next(t) {
+		missedRuns = append(missedRuns, t)
+	}
+	return missedRuns
+}
+
+func parseCronExpression(cronExpr string) (cron.Schedule, error) {
+	var withLocation string
+	if strings.HasPrefix(cronExpr, "TZ=") || strings.HasPrefix(cronExpr, "CRON_TZ=") {
+		withLocation = cronExpr
+	} else {
+		withLocation = fmt.Sprintf("CRON_TZ=%s %s", time.Local.String(), cronExpr)
+	}
+
+	// An optional 6th field is used at the beginning since withSeconds is set to true: `* * * * * *`
+	p := cron.NewParser(cron.SecondOptional | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+	schedule, err := p.Parse(withLocation)
+	if err != nil {
+		return nil, err
+	}
+	return schedule, nil
 }

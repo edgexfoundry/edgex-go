@@ -24,6 +24,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure"
 )
@@ -57,7 +58,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 		},
 	})
 
-	// TODO: Create scheduler for all existing schedule jobs
+	err := application.LoadScheduleJobsToSchedulerManager(ctx, dic)
+	if err != nil {
+		lc.Errorf("failed to load schedule jobs to scheduler manager: %v", err)
+		return false
+	}
 
 	return true
 }
