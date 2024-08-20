@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -39,10 +40,7 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 	}
 
 	if job.AdminState == models.Unlocked {
-		err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
-		if err != nil {
-			return "", errors.NewCommonEdgeXWrapper(err)
-		}
+		handleScheduleJob(ctx, job, dic)
 	} else {
 		lc.Debugf("The scheduled job is created but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", addedJob.Id, correlationId)
 		return addedJob.Id, nil
@@ -131,10 +129,7 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 	}
 
 	if job.AdminState == models.Unlocked {
-		err = schedulerManager.StartScheduleJobByName(job.Name, correlationId)
-		if err != nil {
-			return errors.NewCommonEdgeXWrapper(err)
-		}
+		handleScheduleJob(ctx, job, dic)
 	} else {
 		lc.Debugf("The scheduled job is updated but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", job.Id, correlationId)
 		return nil
@@ -229,4 +224,46 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 	}
 
 	return nil
+}
+
+// handleScheduleJob handles the schedule job based on the startTimestamp and endTimestamp
+func handleScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Container) {
+	schedulerManager := container.SchedulerManagerFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
+
+	startTimestamp := job.Definition.GetBaseScheduleDef().StartTimestamp
+	endTimestamp := job.Definition.GetBaseScheduleDef().EndTimestamp
+
+	durationUntilStart := time.Until(time.UnixMilli(startTimestamp))
+	if durationUntilStart < 0 {
+		lc.Debugf("The startTimestamp is expired for the scheduled job: %s, which will be started immediately. Correlation-ID: %s", job.Name, correlationId)
+		durationUntilStart = 0
+	} else if durationUntilStart > 0 {
+		lc.Debugf("The scheduled job: %s will be started after %v. Correlation-ID: %s", job.Name, durationUntilStart, correlationId)
+	}
+
+	time.AfterFunc(durationUntilStart, func() {
+		err := schedulerManager.StartScheduleJobByName(job.Name, correlationId)
+		if err != nil {
+			lc.Errorf("Failed to start the scheduled job: %s based on startTimestamp. Error: %v, Correlation-ID: %s", job.Name, err, correlationId)
+		}
+	})
+
+	if endTimestamp != 0 {
+		durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
+		if durationUntilEnd < 0 {
+			lc.Debugf("The endTimestamp is expired for the scheduled job: %s, which will be stopped immediately. Correlation-ID: %s", job.Name, correlationId)
+			durationUntilEnd = 0
+		} else if durationUntilEnd > 0 {
+			lc.Debugf("The scheduled job: %s will be stopped after %v. Correlation-ID: %s", job.Name, durationUntilEnd, correlationId)
+		}
+
+		time.AfterFunc(durationUntilEnd, func() {
+			err := schedulerManager.StopScheduleJobByName(job.Name, correlationId)
+			if err != nil {
+				lc.Errorf("Failed to stop the scheduled job: %s based on endTimestamp. Error: %v, Correlation-ID: %s", job.Name, err, correlationId)
+			}
+		})
+	}
 }
