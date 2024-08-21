@@ -119,8 +119,8 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 
 // GetDatabaseInfo returns a database information map.
 // Not needed for this service, so return nil
-func (c *ConfigurationStruct) GetDatabaseInfo() map[string]bootstrapConfig.Database {
-	return nil
+func (c *ConfigurationStruct) GetDatabaseInfo() bootstrapConfig.Database {
+	return c.Database
 }
 
 // GetInsecureSecrets returns the service's InsecureSecrets

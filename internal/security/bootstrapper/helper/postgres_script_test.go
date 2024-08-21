@@ -49,7 +49,7 @@ func TestGeneratePostgresScript(t *testing.T) {
 		}
 	}
 
-	expectedCreateScript := fmt.Sprintf("\t\tCREATE USER \"%s\" with PASSWORD '%s';", mockUsername, mockPassword)
-	require.Equal(t, 9, len(outputlines))
-	require.Equal(t, expectedCreateScript, outputlines[6])
+	expectedCreateScript := fmt.Sprintf("CREATE USER %s with PASSWORD '%s';", mockUsername, mockPassword)
+	require.Equal(t, 15, len(outputlines))
+	require.Equal(t, expectedCreateScript, strings.TrimSpace(outputlines[10]))
 }

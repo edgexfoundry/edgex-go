@@ -71,8 +71,10 @@ func getServiceCredentials(dic *di.Container, scriptFile *os.File) error {
 	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 
 	secretList, err := secretProvider.ListSecretNames()
-	var credMap []map[string]any
-	if err == nil {
+	if err != nil {
+		return err
+	} else {
+		var credMap []map[string]any
 		for _, serviceKey := range secretList {
 			exists, err := secretProvider.HasSecret(path.Join(serviceKey, postgresSecretName))
 			if err != nil {

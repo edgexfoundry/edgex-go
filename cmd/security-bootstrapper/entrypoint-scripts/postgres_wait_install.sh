@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #  ----------------------------------------------------------------------------------
 #  Copyright (C) 2024 IOTech Ltd
 #
@@ -46,6 +46,38 @@ if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
   exit 1
 fi
 
+# customizing of Postgres startup process by including the docker-entrypoint script
+source /usr/local/bin/docker-entrypoint.sh
+
+docker_setup_env
+docker_create_db_directories
+
+if [ "$(id -u)" = '0' ]; then
+	# restart script as postgres user
+	exec gosu postgres "$BASH_SOURCE" "$@"
+fi
+
+# run additional initialize db scripts not located in /docker-entrypoint-initdb.d dir if database is initialized for the first time
+if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
+	docker_verify_minimum_env
+	docker_init_database_dir
+	pg_setup_hba_conf
+
+	# only required for '--auth[-local]=md5' on POSTGRES_INITDB_ARGS
+	export PGPASSWORD="${PGPASSWORD:-$POSTGRES_PASSWORD}"
+
+	docker_temp_server_start "$@" -c max_locks_per_transaction=256
+	docker_setup_db
+	docker_process_init_files /docker-entrypoint-initdb.d/*
+	docker_process_init_files ${DATABASECONFIG_PATH}/*
+	docker_temp_server_stop
+else
+	docker_temp_server_start "$@"
+	docker_process_init_files ${DATABASECONFIG_PATH}/*
+	docker_temp_server_stop
+fi
+
+
 # starting postgres
 echo "$(date) Starting edgex-postgres ..."
-exec /usr/local/bin/docker-entrypoint.sh postgres "$@"
+exec postgres "$@"

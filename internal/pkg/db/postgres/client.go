@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"sync"
 
@@ -41,7 +42,8 @@ func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, ext
 
 	var edgeXerr errors.EdgeX
 	once.Do(func() {
-		connectionStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", config.Username, config.Password, config.Host, config.Port, databaseName)
+		// use url encode to prevent special characters in the connection string
+		connectionStr := "postgres://" + fmt.Sprintf("%s:%s@%s:%d/%s", url.PathEscape(config.Username), url.PathEscape(config.Password), url.PathEscape(config.Host), config.Port, url.PathEscape(databaseName))
 		dbPool, err := pgxpool.New(ctx, connectionStr)
 		if err != nil {
 			edgeXerr = WrapDBError("fail to create pg connection pool", err)

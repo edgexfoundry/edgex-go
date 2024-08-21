@@ -32,12 +32,18 @@ const (
 set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -q <<-'EOSQL'
-  CREATE DATABASE edgex_db;
+  SELECT 'CREATE DATABASE edgex_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'edgex_db')\gexec
+  CREATE GROUP edgex_user;
+  GRANT CONNECT, CREATE ON DATABASE edgex_db TO edgex_user;
+  \connect edgex_db;
 
   DO $$
   BEGIN
-    {{range .%s}}
-		CREATE USER "{{.%s}}" with PASSWORD '{{.%s}}';
+    {{range .Services}} 
+        CREATE SCHEMA IF NOT EXISTS {{.Username}};
+        CREATE USER {{.Username}} with PASSWORD '{{.Password}}';
+        GRANT ALL ON SCHEMA {{.Username}} TO {{.Username}};
+        ALTER GROUP edgex_user ADD USER {{.Username}};
 	{{end}}
   END $$;
 EOSQL`
@@ -46,10 +52,9 @@ EOSQL`
 // GeneratePostgresScript writes the initialize Postgres db script files based on pre-defined template
 // to create the edgex_db and multiple users/password for different EdgeX services
 func GeneratePostgresScript(confFile *os.File, credMap []map[string]any) error {
-	finalScriptTemplate := fmt.Sprintf(scriptTemplate, ServicesTempVarName, UsernameTempVarName, PasswordTempVarName)
-	scriptFile, err := template.New("postgres-script").Parse(finalScriptTemplate + fmt.Sprintln())
+	scriptFile, err := template.New("postgres-script").Parse(scriptTemplate + fmt.Sprintln())
 	if err != nil {
-		return fmt.Errorf("failed to parse Redis conf template %s: %v", aclFileConfigTemplate, err)
+		return fmt.Errorf("failed to parse postgres script template: %v", err)
 	}
 
 	// writing the config file
