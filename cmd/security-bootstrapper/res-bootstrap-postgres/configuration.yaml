@@ -8,5 +8,5 @@ Database:
   Timeout: "5s"
   Type: postgres
 DatabaseConfig:
-  Path: ./postgres-init-scripts
+  Path: /postgres-init-scripts
   Name: create-users.sh

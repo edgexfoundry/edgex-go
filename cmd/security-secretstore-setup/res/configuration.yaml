@@ -38,6 +38,11 @@ SecretStore:
   PasswordProviderArgs: []
   RevokeRootTokens: true
   ConsulSecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
+Database:
+  Type: "redisdb"
+  Host: "localhost"
+  Port: 6379
+  Timeout: "5s"
 Databases:
   admin:
     Username: admin

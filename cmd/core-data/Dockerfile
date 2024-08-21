@@ -51,6 +51,7 @@ COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/core-data/core-data /
 COPY --from=builder /edgex-go/cmd/core-data/res/configuration.yaml /res/configuration.yaml
+COPY --from=builder /edgex-go/cmd/core-data/res/db/ /res/db/
 
 ENTRYPOINT ["/core-data"]
 CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]

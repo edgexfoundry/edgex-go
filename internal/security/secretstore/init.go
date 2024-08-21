@@ -373,7 +373,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// set the validKnownSecrets to true based on the database type
-	if configuration.Database.Type == postgresSecretName {
+	if configuration.GetDatabaseInfo().Type == postgresSecretName {
 		b.validKnownSecrets[postgresSecretName] = true
 	}
 	knownSecretsToAdd, err := b.getKnownSecretsToAdd()
@@ -421,7 +421,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("Redis DB credentials exist, skipping generating new password")
 	}
 
-	if configuration.Database.Type == postgresSecretName {
+	if configuration.GetDatabaseInfo().Type == postgresSecretName {
 		err = genPostgresCredentials(dic, secretStore, knownSecretsToAdd, ctx)
 		if err != nil {
 			return false
