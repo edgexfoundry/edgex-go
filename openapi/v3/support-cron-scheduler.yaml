@@ -77,7 +77,7 @@ components:
         serviceName:
           description: "Outputs the name of the service the response is from"
           type: string
-          example: "support-scheduler"
+          example: "support-cron-scheduler"
         config:
           description: "A string-ified representation of the service's configuration. For purposes of this specification, a string has been used since configuration structure differs from service to service."
           type: object
@@ -243,6 +243,12 @@ components:
           enum:
             - CRON
             - INTERVAL
+        startTimestamp:
+          type: integer
+          description: "The start timestamp of the schedule job, in milliseconds."
+        endTimestamp:
+          type: integer
+          description: "The end timestamp of the schedule job, in milliseconds."
       required:
         - type
     ScheduleJob:
@@ -384,10 +390,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
       type: object
-      properties:
-        id:
-          type: string
-          format: uuid
     VersionResponse:
       description: "A response returned from the /version endpoint whose purpose is to report out the latest version supported by the service."
       type: object
@@ -417,7 +419,7 @@ components:
       required: false
       schema:
         type: integer
-      description: "The creation timestamp of the last item in the result set."
+      description: "The creation timestamp of the last item in the result set, in milliseconds."
       example: 1722479650
     limitParam:
       in: query
@@ -428,6 +430,14 @@ components:
         minimum: -1
         default: 20
       description: "The numbers of items to return.  Specify -1 will return all remaining items after offset.  The maximum will be the MaxResultCount as defined in the configuration of service."
+    nameParam:
+      in: path
+      name: name
+      required: true
+      schema:
+        type: string
+      description: "A unique name of the schedule job"
+      example: test_job_1
     offsetParam:
       in: query
       name: offset
@@ -445,7 +455,15 @@ components:
         type: integer
         minimum: 0
         default: 0
-      description: "The creation timestamp of the first item in the result set."
+      description: "The creation timestamp of the first item in the result set, in milliseconds."
+    statusParam:
+      in: path
+      name: status
+      required: true
+      schema:
+        type: string
+      description: "The status of a schedule action record"
+      example: SUCCEEDED
   headers:
     correlatedResponseHeader:
       description: "A response header that returns the unique correlation ID used to initiate the request."
@@ -454,53 +472,69 @@ components:
         format: uuid
       example: "14a42ea6-c394-41c3-8bcd-a29b9f5e6835"
   examples:
+    200Example:
+      value:
+        apiVersion: "v3"
+        requestId: "2463bff9-aa53-4bc4-bebf-42fe81146ea8"
+        statusCode: 200
     202Example:
       value:
         apiVersion: "v3"
+        requestId: "2463bff9-aa53-4bc4-bebf-42fe81146ea8"
         statusCode: 202
     400Example:
       value:
         apiVersion: "v3"
+        requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
         statusCode: 400
         message: "Bad Request"
     404Example:
       value:
         apiVersion: "v3"
+        requestId: "84c9489c-0148-11eb-adc1-0242ac120002"
         statusCode: 404
         message: "Not Found"
     500Example:
       value:
         apiVersion: "v3"
+        requestId: "9524082e-96c0-42bb-b5d0-50c869444cc7"
         statusCode: 500
         message: "Internal Server Error"
     AddCronScheduleJobExample:
       value:
-        scheduleJob:
-          name: "test_job_1"
-          definition:
-            type: "CRON"
-            crontab: "CRON_TZ=Asia/Taipei 0 0 1 1 *"
-          actions:
-            - type: "REST"
-              contentType: "application/json"
-              address: "http://localhost:59881/api/v3/ping"
-          adminState: "UNLOCKED"
+        - apiVersion: "v3"
+          scheduleJob:
+            name: "test_job_1"
+            definition:
+              type: "CRON"
+              startTimestamp: 1724331455000
+              endTimestamp: 1724331555000
+              crontab: "CRON_TZ=Asia/Taipei 0 0 1 1 *"
+            actions:
+              - type: "REST"
+                contentType: "application/json"
+                address: "http://localhost:59881/api/v3/ping"
+            adminState: "UNLOCKED"
     AddIntervalScheduleJobExample:
       value:
-        scheduleJob:
-          name: "test_job_1"
-          definition:
-            type: "INTERVAL"
-            crontab: "10m"
-          action:
-            type: "EDGEXMESSAGEBUS"
-            contentType: "application/json"
-            topic: "test_topic"
-            payload: "eyJ0ZXN0I"
-          adminState: "UNLOCKED"
+        - apiVersion: "v3"
+          scheduleJob:
+            name: "test_job_1"
+            definition:
+              type: "INTERVAL"
+              startTimestamp: 1724331455000
+              endTimestamp: 1724331555000
+              crontab: "10m"
+            action:
+              type: "EDGEXMESSAGEBUS"
+              contentType: "application/json"
+              topic: "test_topic"
+              payload: "eyJ0ZXN0I"
+            adminState: "UNLOCKED"
     MultiScheduleActionRecordsExample:
       value:
         apiVersion: "v3"
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
         statusCode: 200
         totalCount: 2
         scheduleActionRecords:
@@ -526,8 +560,9 @@ components:
     MultiLatestScheduleActionRecordsExample:
       value:
         apiVersion: "v3"
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
         statusCode: 200
-        totalCount: 3
+        totalCount: 2
         scheduleActionRecords:
           - created: 1634279367311
             scheduledAt: 1634279367311
@@ -548,19 +583,49 @@ components:
               contentType: "application/json"
               topic: "test_topic"
               payload: "eyJ0ZXN0I"
-          - created: 1634279236873
-            scheduledAt: 1634279236873
-            id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-            jobName: "test_job_2"
-            status: "FAILED"
-            action:
-              type: "EDGEXMESSAGEBUS"
-              contentType: "application/json"
-              topic: "test_topic"
-              payload: "eyJ0ZXN0I"
+    MultiPOSTScheduleJobResponseExample:
+      value:
+        - apiVersion: "v3"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 201
+          id: "6f52dc3c-5548-4142-baa6-052ac4bece93"
+        - apiVersion: "v3"
+          requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
+          statusCode: 400
+          message: "Validating scheduleJob error"
+        - apiVersion: "v3"
+          requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
+          statusCode: 404
+          message: "Not Found"
+        - apiVersion: "v3"
+          requestId: "d3742440-c319-4a9f-a488-b54cf992e143"
+          statusCode: 409
+          message: "Duplicated"
+        - apiVersion: "v3"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error"
+    MultiUpdateScheduleJobResponseExample:
+      value:
+        - apiVersion: "v3"
+          requestId: "592b98aa-1e4e-46f2-992a-9e6ef844270f"
+          statusCode: 200
+        - apiVersion: "v3"
+          requestId: "73f0932c-0148-11eb-adc1-0242ac120002"
+          statusCode: 400
+          message: "Validating scheduleJob error"
+        - apiVersion: "v3"
+          requestId: "8e025b94-1512-4ec4-a9bd-3111cb278379"
+          statusCode: 404
+          message: "Not Found"
+        - apiVersion: "v3"
+          requestId: "791846bd-e702-4c7a-9d22-3ceee2f08427"
+          statusCode: 500
+          message: "Internal Server Error"
     MultiScheduleJobsExample:
       value:
         apiVersion: "v3"
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
         statusCode: 200
         totalCount: 2
         scheduleJobs:
@@ -570,6 +635,8 @@ components:
             name: "test_job_1"
             definition:
               type: "CRON"
+              startTimestamp: 1724331455000
+              endTimestamp: 1724331555000
               crontab: "CRON_TZ=Asia/Taipei 0 0 1 1 *"
             actions:
               - type: "REST"
@@ -582,6 +649,8 @@ components:
             name: "test_job_2"
             definition:
               type: "INTERVAL"
+              startTimestamp: 1724331455000
+              endTimestamp: 1724331555000
               interval: "1000ms"
             actions:
               - type: "EDGEXMESSAGEBUS"
@@ -591,16 +660,17 @@ components:
             adminState: "UNLOCKED"
     UpdateCronScheduleJobExample:
       value:
-        scheduleJob:
-          name: "test_job_1"
-          definition:
-            type: "CRON"
-            crontab: "CRON_TZ=UTC 0 0 2 2 *"
-          actions:
-            - type: "REST"
-              contentType: "application/json"
-              address: "http://localhost:59881/api/v3/ping"
-          adminState: "UNLOCKED"
+        - apiVersion: "v3"
+          scheduleJob:
+            name: "test_job_1"
+            definition:
+              type: "CRON"
+              crontab: "CRON_TZ=UTC 0 0 2 2 *"
+            actions:
+              - type: "REST"
+                contentType: "application/json"
+                address: "http://localhost:59881/api/v3/ping"
+            adminState: "UNLOCKED"
 paths:
   /job:
     parameters:
@@ -634,6 +704,9 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/AddScheduleJobResponse'
+              examples:
+                MultiPOSTScheduleJobResponseExample:
+                  $ref: '#/components/examples/MultiPOSTScheduleJobResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -685,6 +758,9 @@ paths:
                   anyOf:
                     - $ref: '#/components/schemas/ErrorResponse'
                     - $ref: '#/components/schemas/UpdateScheduleJobResponse'
+              examples:
+                MultiUpdateScheduleJobResponseExample:
+                  $ref: '#/components/examples/MultiUpdateScheduleJobResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
@@ -697,6 +773,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '404':
+          description: "The requested schedule job does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: An unexpected error occurred on the server
           headers:
@@ -746,12 +834,7 @@ paths:
   /job/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique name of a schedule job"
+      - $ref: '#/components/parameters/nameParam'
     get:
       summary: "Returns a schedule job according to the specified name"
       responses:
@@ -765,7 +848,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ScheduleJobResponse'
         '404':
-          description: "The requested resource does not exist"
+          description: "The requested schedule job does not exist"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -796,8 +879,15 @@ paths:
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
         '404':
-          description: "The requested resource does not exist"
+          description: "The requested schedule job does not exist"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -823,12 +913,7 @@ paths:
   /job/trigger/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The unique name of a schedule job"
+      - $ref: '#/components/parameters/nameParam'
     post:
       summary: "Manually trigger a schedule job by name"
       responses:
@@ -904,13 +989,12 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-  /scheduleactionrecord/latest:
+  /scheduleactionrecord/latest/job/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/offsetParam'
-      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/nameParam'
     get:
-      summary: "Given the entire range of the latest schedule action records by last created descending, returns a portion of that range according to the offset and limit parameters."
+      summary: "Given the entire range of the latest schedule action records by last created descending of a specific job."
       responses:
         '200':
           description: "OK"
@@ -924,6 +1008,18 @@ paths:
               examples:
                 MultiLatestScheduleActionRecordsExample:
                   $ref: '#/components/examples/MultiLatestScheduleActionRecordsExample'
+        '404':
+          description: "The requested schedule job does not exist"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -941,16 +1037,11 @@ paths:
   /scheduleactionrecord/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/statusParam'
       - $ref: '#/components/parameters/startParam'
       - $ref: '#/components/parameters/endParam'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
-      - name: status
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The status of a schedule action record"
     get:
       summary: "Given the entire range based on the start and end parameters of schedule action records with target status sorted by last created descending, returns a portion of that range according to the offset and limit parameters."
       responses:
@@ -980,16 +1071,11 @@ paths:
   /scheduleactionrecord/job/name/{name}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/nameParam'
       - $ref: '#/components/parameters/startParam'
       - $ref: '#/components/parameters/endParam'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The name of the job to which the action is associated."
     get:
       summary: "Given the entire range based on the start and end parameters of schedule action records with target job name sorted by last created descending, returns a portion of that range according to the offset and limit parameters."
       responses:
@@ -1003,7 +1089,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MultiScheduleActionRecordsResponse'
         '404':
-          description: "The requested resource does not exist"
+          description: "The requested schedule job does not exist"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
@@ -1029,22 +1115,12 @@ paths:
   /scheduleactionrecord/job/name/{name}/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/nameParam'
+      - $ref: '#/components/parameters/statusParam'
       - $ref: '#/components/parameters/startParam'
       - $ref: '#/components/parameters/endParam'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
-      - name: name
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The name of the job to which the action is associated."
-      - name: status
-        in: path
-        required: true
-        schema:
-          type: string
-        description: "The status of a schedule action record"
     get:
       summary: "Given the entire range based on the start and end parameters of schedule action records with target job name and status sorted by last created descending, returns a portion of that range according to the offset and limit parameters."
       responses:
@@ -1058,7 +1134,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MultiScheduleActionRecordsResponse'
         '404':
-          description: "The requested resource does not exist"
+          description: "The requested schedule job does not exist"
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/correlatedResponseHeader'
