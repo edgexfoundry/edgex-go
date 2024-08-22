@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -100,8 +101,8 @@ func TestAddScheduleJob(t *testing.T) {
 
 	valid := addScheduleJobRequestData()
 	model := dtos.ToScheduleJobModel(valid.ScheduleJob)
-	dbClientMock.On("AddScheduleJob", context.Background(), model).Return(model, nil)
-	schedulerManagerMock.On("AddScheduleJob", model, testCorrelationID).Return(nil)
+	dbClientMock.On("AddScheduleJob", context.Background(), mock.Anything).Return(model, nil)
+	schedulerManagerMock.On("AddScheduleJob", mock.MatchedBy(func(job models.ScheduleJob) bool { return job.Name == testScheduleJobName }), testCorrelationID).Return(nil)
 	schedulerManagerMock.On("StartScheduleJobByName", model.Name, testCorrelationID).Return(nil)
 
 	noName := addScheduleJobRequestData()
@@ -112,7 +113,14 @@ func TestAddScheduleJob(t *testing.T) {
 	duplicatedName := addScheduleJobRequestData()
 	duplicatedName.ScheduleJob.Name = "duplicatedName"
 	model = dtos.ToScheduleJobModel(duplicatedName.ScheduleJob)
-	schedulerManagerMock.On("AddScheduleJob", model, testCorrelationID).Return(errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("scheduled job name %s already exists", model.Name), nil))
+	schedulerManagerMock.On(
+		"AddScheduleJob",
+		mock.MatchedBy(
+			func(job models.ScheduleJob) bool {
+				return job.Name == "duplicatedName"
+			}),
+		testCorrelationID,
+	).Return(errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("scheduled job name %s already exists", model.Name), nil))
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {

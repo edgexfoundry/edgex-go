@@ -13,12 +13,12 @@ CREATE TABLE IF NOT EXISTS scheduler.schedule_job (
 );
 
 -- scheduler.schedule_action_record is used to store the schedule action record
--- Note: All the records belong to the same job should have the same created time.
 CREATE TABLE IF NOT EXISTS scheduler.schedule_action_record (
     id UUID PRIMARY KEY,
+    action_id UUID NOT NULL,
     job_name TEXT NOT NULL,
     action JSONB NOT NULL,
     status TEXT NOT NULL,
     scheduled_at timestamp NOT NULL,
-    created timestamp NOT NULL
+    created timestamp NOT NULL DEFAULT now()
 );

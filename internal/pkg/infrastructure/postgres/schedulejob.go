@@ -35,7 +35,7 @@ func (c *Client) AllScheduleJobs(ctx context.Context, offset, limit int) ([]mode
 	offset, limit = getValidOffsetAndLimit(offset, limit)
 	jobs, err := queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPagination(scheduleJobTable), offset, limit)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule jobs", err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
 	}
 
 	return jobs, nil
@@ -71,7 +71,7 @@ func (c *Client) DeleteScheduleJobByName(ctx context.Context, name string) error
 func (c *Client) ScheduleJobById(ctx context.Context, id string) (model.ScheduleJob, errors.EdgeX) {
 	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllById(scheduleJobTable), id)
 	if err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule job by id %s", id), err)
+		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by id %s", id), err)
 	}
 
 	return scheduleJob, nil
@@ -81,7 +81,7 @@ func (c *Client) ScheduleJobById(ctx context.Context, id string) (model.Schedule
 func (c *Client) ScheduleJobByName(ctx context.Context, name string) (model.ScheduleJob, errors.EdgeX) {
 	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllByName(scheduleJobTable), name)
 	if err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule job by name %s", name), err)
+		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by name %s", name), err)
 	}
 
 	return scheduleJob, nil
@@ -198,30 +198,6 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 		return nil, pgClient.WrapDBError("error occurred while query scheduler.schedule_job table", readErr)
 	}
 	return scheduleJobs, nil
-}
-
-func queryScheduleJobNames(ctx context.Context, connPool *pgxpool.Pool) ([]string, errors.EdgeX) {
-	sqlQueryAllScheduleJobNames := fmt.Sprintf("SELECT name FROM %s ORDER BY created", scheduleJobTable)
-	rows, err := connPool.Query(ctx, sqlQueryAllScheduleJobNames)
-	if err != nil {
-		return nil, pgClient.WrapDBError("failed to query all schedule jobs' names", err)
-	}
-	defer rows.Close()
-
-	var names []string
-	for rows.Next() {
-		var name string
-		err := rows.Scan(&name)
-		if err != nil {
-			return nil, pgClient.WrapDBError("failed to scan schedule job name", err)
-		}
-		names = append(names, name)
-	}
-
-	if readErr := rows.Err(); readErr != nil {
-		return nil, pgClient.WrapDBError("error occurred while query scheduler.schedule_job table", readErr)
-	}
-	return names, nil
 }
 
 func toScheduleJobsModel(scheduleJobs model.ScheduleJob, scheduleJobJSONBytes []byte) (model.ScheduleJob, errors.EdgeX) {

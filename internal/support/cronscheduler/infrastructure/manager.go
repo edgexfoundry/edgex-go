@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
@@ -189,9 +188,10 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	var recordCreatedTime, jobScheduledAt int64 = 0, 0
 	for _, a := range job.Actions {
+		var jobScheduledAt int64 = 0
 		copiedAction := a
+
 		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -210,7 +210,6 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 						} else {
 							jobScheduledAt = nextRun.UnixMilli()
 						}
-						recordCreatedTime = time.Now().UnixMilli()
 					}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
@@ -218,7 +217,6 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Succeeded,
-							Created:     recordCreatedTime,
 							ScheduledAt: jobScheduledAt,
 						}
 						newRecord, err := dbClient.AddScheduleActionRecord(ctx, record)
@@ -234,7 +232,6 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Failed,
-							Created:     recordCreatedTime,
 							ScheduledAt: jobScheduledAt,
 						}
 						newRecord, edgeXerr := dbClient.AddScheduleActionRecord(ctx, record)

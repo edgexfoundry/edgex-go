@@ -15,6 +15,7 @@ import (
 	"sort"
 
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -139,6 +140,8 @@ func WrapDBError(message string, err error) errors.EdgeX {
 			return errors.NewCommonEdgeX(errors.KindDuplicateName, errMsg, nil)
 		}
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("%s: %s %s", message, pgErr.Error(), pgErr.Detail), nil)
+	} else if goErrors.Is(err, pgx.ErrNoRows) {
+		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, message, err)
 	}
 	return errors.NewCommonEdgeX(errors.KindDatabaseError, message, err)
 }
