@@ -174,7 +174,6 @@ func (m *manager) getSchedulerByJobName(name string) (gocron.Scheduler, errors.E
 }
 
 func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
-	dbClient := container.DBClientFrom(m.dic.Get)
 	ctx, correlationId := correlation.FromContextOrNew(context.Background())
 
 	scheduler, err := gocron.NewScheduler()
@@ -189,9 +188,7 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	}
 
 	for _, a := range job.Actions {
-		var jobScheduledAt int64 = 0
 		copiedAction := a
-
 		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
 		if edgeXerr != nil {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
@@ -202,44 +199,37 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			definition,
 			task,
 			gocron.WithEventListeners(
-				gocron.BeforeJobRuns(
-					func(jobID uuid.UUID, jobName string) {
-						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-						if nextRun, err := gocronJob.NextRun(); err != nil {
-							m.lc.Errorf("failed to get the next run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
-						} else {
-							jobScheduledAt = nextRun.UnixMilli()
-						}
-					}),
 				gocron.AfterJobRuns(
 					func(jobID uuid.UUID, jobName string) {
+						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+						lastRun, err := gocronJob.LastRun()
+						if err != nil {
+							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
+						}
+
 						record := models.ScheduleActionRecord{
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Succeeded,
-							ScheduledAt: jobScheduledAt,
+							ScheduledAt: lastRun.UnixMilli(),
 						}
-						newRecord, err := dbClient.AddScheduleActionRecord(ctx, record)
-						if err != nil {
-							m.lc.Errorf("failed to add a new schedule action record for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
-						} else {
-							m.lc.Debugf("A new schedule action record with type: %s and status: %s was added for job: %s, record ID: %s, Correlation-ID: %s", copiedAction.GetBaseScheduleAction().Type, models.Succeeded, job.Name, newRecord.Id, correlationId)
-						}
+						m.addScheduleActionRecord(ctx, record, nil)
 					}),
 				gocron.AfterJobRunsWithError(
 					func(jobID uuid.UUID, jobName string, err error) {
+						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+						lastRun, timeErr := gocronJob.LastRun()
+						if timeErr != nil {
+							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
+						}
+
 						record := models.ScheduleActionRecord{
 							JobName:     job.Name,
 							Action:      copiedAction,
 							Status:      models.Failed,
-							ScheduledAt: jobScheduledAt,
+							ScheduledAt: lastRun.UnixMilli(),
 						}
-						newRecord, edgeXerr := dbClient.AddScheduleActionRecord(ctx, record)
-						if edgeXerr != nil {
-							m.lc.Errorf("failed to add a new schedule action record for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, edgeXerr)
-						} else {
-							m.lc.Debugf("A new schedule action record  with type: %s and status: %s was added for job: %s, record ID: %s, action error: %v, Correlation-ID: %s", copiedAction.GetBaseScheduleAction().Type, models.Failed, job.Name, newRecord.Id, err, correlationId)
-						}
+						m.addScheduleActionRecord(ctx, record, err)
 					}),
 			),
 		)
@@ -254,6 +244,24 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	m.mu.Unlock()
 
 	return nil
+}
+
+func (m *manager) addScheduleActionRecord(ctx context.Context, record models.ScheduleActionRecord, err error) {
+	dbClient := container.DBClientFrom(m.dic.Get)
+	correlationId := correlation.FromContext(ctx)
+
+	newRecord, dbErr := dbClient.AddScheduleActionRecord(ctx, record)
+	if dbErr != nil {
+		m.lc.Errorf("failed to add a new schedule action record for job: %s, Correlation-ID: %s, err: %v", record.JobName, correlationId, dbErr)
+	} else {
+		if err != nil {
+			m.lc.Debugf("A new schedule action record with type: %s and status: %s was added for job: %s, record ID: %s, action error: %v, Correlation-ID: %s",
+				record.Action.GetBaseScheduleAction().Type, record.Status, record.JobName, newRecord.Id, err, correlationId)
+		} else {
+			m.lc.Debugf("A new schedule action record with type: %s and status: %s was added for job: %s, record ID: %s, Correlation-ID: %s",
+				record.Action.GetBaseScheduleAction().Type, record.Status, record.JobName, newRecord.Id, correlationId)
+		}
+	}
 }
 
 func getGocronJobByID(jobs []gocron.Job, id uuid.UUID) gocron.Job {
