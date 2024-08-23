@@ -1,6 +1,13 @@
 ScheduleIntervalTime: 500
 Writable:
     LogLevel: INFO
+    InsecureSecrets:
+      DB:
+        SecretName: "redisdb"
+        SecretData:
+          username: ""
+          password: ""
+
 Service:
     Host: localhost
     Port: 59861
@@ -28,4 +35,7 @@ MessageBus:
 
 Database:
   Name: scheduler
-
+  Host: "localhost"
+  Port: 6379
+  Timeout: "5s"
+  Type: "redisdb"
