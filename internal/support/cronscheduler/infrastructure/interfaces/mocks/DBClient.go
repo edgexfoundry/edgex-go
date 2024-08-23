@@ -47,6 +47,38 @@ func (_m *DBClient) AddScheduleActionRecord(ctx context.Context, scheduleActionR
 	return r0, r1
 }
 
+// AddScheduleActionRecords provides a mock function with given fields: ctx, scheduleActionRecord
+func (_m *DBClient) AddScheduleActionRecords(ctx context.Context, scheduleActionRecord []models.ScheduleActionRecord) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, scheduleActionRecord)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddScheduleActionRecords")
+	}
+
+	var r0 []models.ScheduleActionRecord
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(context.Context, []models.ScheduleActionRecord) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, scheduleActionRecord)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []models.ScheduleActionRecord) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, scheduleActionRecord)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ScheduleActionRecord)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []models.ScheduleActionRecord) errors.EdgeX); ok {
+		r1 = rf(ctx, scheduleActionRecord)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // AddScheduleJob provides a mock function with given fields: ctx, scheduleJob
 func (_m *DBClient) AddScheduleJob(ctx context.Context, scheduleJob models.ScheduleJob) (models.ScheduleJob, errors.EdgeX) {
 	ret := _m.Called(ctx, scheduleJob)
@@ -186,59 +218,29 @@ func (_m *DBClient) DeleteScheduleJobByName(ctx context.Context, name string) er
 	return r0
 }
 
-// LatestScheduleActionRecordTotalCount provides a mock function with given fields: ctx
-func (_m *DBClient) LatestScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx)
+// LatestScheduleActionRecordsByJobName provides a mock function with given fields: ctx, jobName
+func (_m *DBClient) LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string) ([]models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName)
 
 	if len(ret) == 0 {
-		panic("no return value specified for LatestScheduleActionRecordTotalCount")
-	}
-
-	var r0 uint32
-	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context) (uint32, errors.EdgeX)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) errors.EdgeX); ok {
-		r1 = rf(ctx)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(errors.EdgeX)
-		}
-	}
-
-	return r0, r1
-}
-
-// LatestScheduleActionRecords provides a mock function with given fields: ctx, offset, limit
-func (_m *DBClient) LatestScheduleActionRecords(ctx context.Context, offset int, limit int) ([]models.ScheduleActionRecord, errors.EdgeX) {
-	ret := _m.Called(ctx, offset, limit)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LatestScheduleActionRecords")
+		panic("no return value specified for LatestScheduleActionRecordsByJobName")
 	}
 
 	var r0 []models.ScheduleActionRecord
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
-		return rf(ctx, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, jobName)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.ScheduleActionRecord); ok {
-		r0 = rf(ctx, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, string) []models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, jobName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleActionRecord)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, int) errors.EdgeX); ok {
-		r1 = rf(ctx, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

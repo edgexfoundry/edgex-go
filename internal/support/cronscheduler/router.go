@@ -41,5 +41,5 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.GET(common.ApiScheduleActionRecordRouteByStatusEchoRoute, rc.ScheduleActionRecordsByStatus, authenticationHook)
 	r.GET(common.ApiScheduleActionRecordRouteByJobNameEchoRoute, rc.ScheduleActionRecordsByJobName, authenticationHook)
 	r.GET(common.ApiScheduleActionRecordRouteByJobNameAndStatusEchoRoute, rc.ScheduleActionRecordsByJobNameAndStatus, authenticationHook)
-	r.GET(common.ApiLatestScheduleActionRecordRoute, rc.LatestScheduleActionRecords, authenticationHook)
+	r.GET(common.ApiLatestScheduleActionRecordByJobNameEchoRoute, rc.LatestScheduleActionRecordsByJobName, authenticationHook)
 }

@@ -135,13 +135,18 @@ func TestAllScheduleActionRecords(t *testing.T) {
 	}
 }
 
-func TestLatestScheduleActionRecords(t *testing.T) {
+func TestLatestScheduleActionRecordsByJobName(t *testing.T) {
 	expectedTotalScheduleActionRecordCount := uint32(0)
+	emptyJobName := ""
+	notFoundJobName := "notFoundJobName"
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("LatestScheduleActionRecordTotalCount", context.Background()).Return(expectedTotalScheduleActionRecordCount, nil)
-	dbClientMock.On("LatestScheduleActionRecords", context.Background(), 0, 20).Return([]models.ScheduleActionRecord{}, nil)
-	dbClientMock.On("LatestScheduleActionRecords", context.Background(), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
+	dbClientMock.On("ScheduleJobByName", context.Background(), testScheduleJobName).Return(models.ScheduleJob{}, nil)
+	dbClientMock.On("LatestScheduleActionRecordsByJobName", context.Background(), testScheduleJobName).Return([]models.ScheduleActionRecord{}, nil)
+	dbClientMock.On("ScheduleJobByName", context.Background(), emptyJobName).Return(models.ScheduleJob{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "scheduled job doesn't exist in the database", nil))
+	dbClientMock.On("LatestScheduleActionRecordsByJobName", context.Background(), emptyJobName).Return([]models.ScheduleActionRecord{}, nil)
+	dbClientMock.On("ScheduleJobByName", context.Background(), notFoundJobName).Return(models.ScheduleJob{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "scheduled job doesn't exist in the database", nil))
+	dbClientMock.On("LatestScheduleActionRecordsByJobName", context.Background(), notFoundJobName).Return([]models.ScheduleActionRecord{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -152,37 +157,28 @@ func TestLatestScheduleActionRecords(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		start              string
-		end                string
-		offset             string
-		limit              string
+		jobName            string
 		errorExpected      bool
 		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get schedule action records without offset and limit", "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
-		{"Valid - get schedule action records with offset and limit", "", "", "0", "1", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
-		{"Invalid - invalid offset format", "", "", "aaa", "1", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "", "", "1", "aaa", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
+		{"Valid - get schedule action records with offset and limit", testScheduleJobName, false, expectedTotalScheduleActionRecordCount, http.StatusOK},
+		{"Invalid - invalid empty jobName", emptyJobName, true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
+		{"Invalid - job not found by name", notFoundJobName, true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiLatestScheduleActionRecordRoute, http.NoBody)
-			query := req.URL.Query()
-			if testCase.offset != "" {
-				query.Add(common.Offset, testCase.offset)
-			}
-			if testCase.limit != "" {
-				query.Add(common.Limit, testCase.limit)
-			}
-			req.URL.RawQuery = query.Encode()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiLatestScheduleActionRecordByJobNameEchoRoute, testCase.jobName)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
 			recorder := httptest.NewRecorder()
 			c := e.NewContext(req, recorder)
-			err = controller.LatestScheduleActionRecords(c)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.jobName)
+			err = controller.LatestScheduleActionRecordsByJobName(c)
 			require.NoError(t, err)
 
 			// Assert
@@ -366,89 +362,86 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 	}
 }
 
-// TODO: Uncomment this unit test after the API route typo is fixed in go-mod-core-contracts
-//func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
-//	expectedTotalScheduleActionRecordCount := uint32(2)
-//
-//	var records []models.ScheduleActionRecord
-//	for _, dto := range scheduleActionRecordsData() {
-//		records = append(records, dtos.ToScheduleActionRecordModel(dto))
-//	}
-//
-//	emptyJobName := ""
-//	emptyStatus := ""
-//	notFoundJobName := "notFoundJobName"
-//	notFoundStatus := "notFoundStatus"
-//
-//	dic := mockDic()
-//	dbClientMock := &csMock.DBClient{}
-//	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus).Return(expectedTotalScheduleActionRecordCount, nil)
-//	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
-//	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), emptyJobName, emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name and status are required", nil))
-//	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), notFoundJobName, notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name and status doesn't exist in the database", nil))
-//	dic.Update(di.ServiceConstructorMap{
-//		container.DBClientInterfaceName: func(get di.Get) any {
-//			return dbClientMock
-//		},
-//	})
-//
-//	controller := NewScheduleActionRecordController(dic)
-//	require.NotNil(t, controller)
-//
-//	tests := []struct {
-//		name               string
-//		jobName            string
-//		status             string
-//		start              string
-//		end                string
-//		offset             string
-//		limit              string
-//		errorExpected      bool
-//		expectedTotalCount uint32
-//		expectedStatusCode int
-//	}{
-//		{"Valid - find schedule action records by job name", testScheduleJobName, testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
-//		{"Invalid - job name and status parameters are empty", emptyJobName, emptyStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
-//		{"Invalid - schedule action records not found by job name and status", notFoundJobName, notFoundStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
-//	}
-//	for _, testCase := range tests {
-//		t.Run(testCase.name, func(t *testing.T) {
-//			e := echo.New()
-//			reqPath := fmt.Sprintf("%s/%s/%s/:%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName, common.Status, common.Status, testCase.status)
-//			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
-//			require.NoError(t, err)
-//
-//			// Act
-//			recorder := httptest.NewRecorder()
-//			c := e.NewContext(req, recorder)
-//			c.SetParamNames(common.Name)
-//			c.SetParamValues(testCase.jobName)
-//			c.SetParamNames(common.Status)
-//			c.SetParamValues(testCase.status)
-//
-//			err = controller.ScheduleActionRecordsByJobNameAndStatus(c)
-//			require.NoError(t, err)
-//
-//			// Assert
-//			if testCase.errorExpected {
-//				var res commonDTO.BaseResponse
-//				err = json.Unmarshal(recorder.Body.Bytes(), &res)
-//				require.NoError(t, err)
-//				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
-//				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-//				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
-//				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
-//			} else {
-//				var res responseDTO.MultiScheduleActionRecordsResponse
-//				err = json.Unmarshal(recorder.Body.Bytes(), &res)
-//				require.NoError(t, err)
-//				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
-//				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
-//				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
-//				assert.Equal(t, testCase.jobName, res.ScheduleActionRecords[0].JobName, "JobName not as expected")
-//				assert.Equal(t, testCase.status, res.ScheduleActionRecords[0].Status, "Status not as expected")
-//				assert.Empty(t, res.Message, "Message should be empty when it is successful")
-//			}
-//		})
-//	}
-//}
+func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
+	expectedTotalScheduleActionRecordCount := uint32(2)
+
+	var records []models.ScheduleActionRecord
+	for _, dto := range scheduleActionRecordsData() {
+		records = append(records, dtos.ToScheduleActionRecordModel(dto))
+	}
+
+	emptyJobName := ""
+	emptyStatus := ""
+	notFoundJobName := "notFoundJobName"
+	notFoundStatus := "notFoundStatus"
+
+	dic := mockDic()
+	dbClientMock := &csMock.DBClient{}
+	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
+	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), emptyJobName, emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name and status are required", nil))
+	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), notFoundJobName, notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name and status doesn't exist in the database", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) any {
+			return dbClientMock
+		},
+	})
+
+	controller := NewScheduleActionRecordController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		jobName            string
+		status             string
+		start              string
+		end                string
+		offset             string
+		limit              string
+		errorExpected      bool
+		expectedTotalCount uint32
+		expectedStatusCode int
+	}{
+		{"Valid - find schedule action records by job name", testScheduleJobName, testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
+		{"Invalid - job name and status parameters are empty", emptyJobName, emptyStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
+		{"Invalid - schedule action records not found by job name and status", notFoundJobName, notFoundStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s/%s/:%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName, common.Status, common.Status, testCase.status)
+			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name, common.Status)
+			c.SetParamValues(testCase.jobName, testCase.status)
+
+			err = controller.ScheduleActionRecordsByJobNameAndStatus(c)
+			require.NoError(t, err)
+
+			// Assert
+			if testCase.errorExpected {
+				var res commonDTO.BaseResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			} else {
+				var res responseDTO.MultiScheduleActionRecordsResponse
+				err = json.Unmarshal(recorder.Body.Bytes(), &res)
+				require.NoError(t, err)
+				assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+				assert.Equal(t, testCase.expectedStatusCode, res.StatusCode, "Response status code not as expected")
+				assert.Equal(t, testCase.jobName, res.ScheduleActionRecords[0].JobName, "JobName not as expected")
+				assert.Equal(t, testCase.status, res.ScheduleActionRecords[0].Status, "Status not as expected")
+				assert.Empty(t, res.Message, "Message should be empty when it is successful")
+			}
+		})
+	}
+}

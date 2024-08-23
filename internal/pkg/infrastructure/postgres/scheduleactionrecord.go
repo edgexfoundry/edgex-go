@@ -22,19 +22,32 @@ import (
 
 const (
 	scheduleActionRecordTable = "scheduler.schedule_action_record"
+	actionIdCol               = "action_id"
 	jobNameCol                = "job_name"
 	actionCol                 = "action"
 	scheduledAtCol            = "scheduled_at"
 )
 
 // AddScheduleActionRecord adds a new schedule action record to the database
-// Note: the created field should be set manually before calling this function, and all the records belong to the same job should have the same created time.
-// So that the created time can be used to query the latest schedule action records of a job.
+// Note: the scheduledAt field should be set manually before calling this function.
 func (c *Client) AddScheduleActionRecord(ctx context.Context, scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX) {
 	if len(scheduleActionRecord.Id) == 0 {
 		scheduleActionRecord.Id = uuid.New().String()
 	}
 	return addScheduleActionRecord(ctx, c.ConnPool, scheduleActionRecord)
+}
+
+// AddScheduleActionRecords adds multiple schedule action records to the database
+func (c *Client) AddScheduleActionRecords(ctx context.Context, scheduleActionRecords []model.ScheduleActionRecord) ([]model.ScheduleActionRecord, errors.EdgeX) {
+	records := make([]model.ScheduleActionRecord, len(scheduleActionRecords))
+	for _, record := range scheduleActionRecords {
+		r, err := c.AddScheduleActionRecord(ctx, record)
+		if err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
+		records = append(records, r)
+	}
+	return records, nil
 }
 
 // AllScheduleActionRecords queries the schedule action records with the given range, offset, and limit
@@ -47,42 +60,32 @@ func (c *Client) AllScheduleActionRecords(ctx context.Context, start, end int64,
 
 	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRange(scheduleActionRecordTable), time.UnixMilli(start), time.UnixMilli(end), offset, limit)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule action records", err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule action records", err)
 	}
 
 	return records, nil
 }
 
-// LatestScheduleActionRecords queries the latest schedule action records of all schedule jobs with the given offset and limit
-func (c *Client) LatestScheduleActionRecords(ctx context.Context, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
-	// Get all the job names
-	jobNames, err := queryScheduleJobNames(ctx, c.ConnPool)
-	if err != nil {
-		return nil, errors.NewCommonEdgeXWrapper(err)
-	}
-
+// LatestScheduleActionRecordsByJobName queries the latest schedule action records by job name
+func (c *Client) LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	sqlQueryLatestScheduleActionRecords := `
-	SELECT id, job_name, action, status, scheduled_at, created
+	SELECT id, action_id, job_name, action, status, scheduled_at, created
 	FROM(
 	    SELECT *
 		FROM (
 			SELECT *,
-				RANK() OVER (PARTITION BY job_name ORDER BY created DESC) AS rnk
+				RANK() OVER (PARTITION BY job_name, action_id ORDER BY created DESC) AS rnk
 			FROM scheduler.schedule_action_record
-			WHERE job_name = ANY($1::text[])
+			WHERE job_name = $1
 		) subquery
 		WHERE rnk = 1
 	)
-    ORDER BY job_name, created DESC
-    OFFSET $2
-    LIMIT $3;
+    ORDER BY job_name, created DESC;
     `
 
-	// Pass the offset and limit here
-	offset, limit = getValidOffsetAndLimit(offset, limit)
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryLatestScheduleActionRecords, jobNames, offset, limit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryLatestScheduleActionRecords, jobName)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query latest schedule action records", err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query latest schedule action records", err)
 	}
 
 	return records, nil
@@ -98,7 +101,7 @@ func (c *Client) ScheduleActionRecordsByStatus(ctx context.Context, status strin
 
 	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByStatusWithPaginationAndTimeRange(scheduleActionRecordTable), status, time.UnixMilli(start), time.UnixMilli(end), offset, limit)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule action records by status %s", status), err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by status %s", status), err)
 	}
 
 	return records, nil
@@ -114,7 +117,7 @@ func (c *Client) ScheduleActionRecordsByJobName(ctx context.Context, jobName str
 
 	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTable, jobNameCol), jobName, time.UnixMilli(start), time.UnixMilli(end), offset, limit)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule action records by job name %s", jobName), err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s", jobName), err)
 	}
 
 	return records, nil
@@ -130,7 +133,7 @@ func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jo
 
 	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTable, jobNameCol, statusCol), jobName, status, time.UnixMilli(start), time.UnixMilli(end), offset, limit)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query schedule action records by job name %s and status %s", jobName, status), err)
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s and status %s", jobName, status), err)
 	}
 
 	return records, nil
@@ -139,23 +142,6 @@ func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jo
 // ScheduleActionRecordTotalCount returns the total count of all the schedule action records
 func (c *Client) ScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCount(scheduleActionRecordTable))
-}
-
-// LatestScheduleActionRecordTotalCount returns the total count of all the latest schedule action records
-func (c *Client) LatestScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
-	sqlQueryLatestScheduleActionRecordCount := `
-	SELECT COUNT(*)
-	FROM (
-	    SELECT *
-	    FROM (
-	        SELECT *,
-            RANK() OVER (PARTITION BY job_name ORDER BY created DESC) AS rnk
-        	FROM scheduler.schedule_action_record
-	    )
-	    WHERE rnk = 1
-	)
-	`
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryLatestScheduleActionRecordCount)
 }
 
 // ScheduleActionRecordCountByStatus returns the total count of the schedule action records by status
@@ -190,13 +176,13 @@ func addScheduleActionRecord(ctx context.Context, connPool *pgxpool.Pool, schedu
 
 	_, err = connPool.Exec(
 		ctx,
-		sqlInsert(scheduleActionRecordTable, idCol, jobNameCol, actionCol, statusCol, scheduledAtCol, createdCol),
+		sqlInsert(scheduleActionRecordTable, idCol, actionIdCol, jobNameCol, actionCol, statusCol, scheduledAtCol),
 		scheduleActionRecord.Id,
+		copiedScheduleAction.GetBaseScheduleAction().Id,
 		scheduleActionRecord.JobName,
 		actionJSONBytes,
 		scheduleActionRecord.Status,
-		time.UnixMilli(scheduleActionRecord.ScheduledAt).UTC(),
-		time.UnixMilli(scheduleActionRecord.Created).UTC())
+		time.UnixMilli(scheduleActionRecord.ScheduledAt).UTC())
 	if err != nil {
 		return scheduleActionRecord, pgClient.WrapDBError("failed to insert schedule action record", err)
 	}
@@ -213,10 +199,11 @@ func queryScheduleActionRecords(ctx context.Context, connPool *pgxpool.Pool, sql
 
 	var scheduleActionRecords []model.ScheduleActionRecord
 	for rows.Next() {
+		var actionId string
 		var record model.ScheduleActionRecord
 		var created, scheduledAt time.Time
 		var actionJSONBytes []byte
-		err := rows.Scan(&record.Id, &record.JobName, &actionJSONBytes, &record.Status, &scheduledAt, &created)
+		err := rows.Scan(&record.Id, &actionId, &record.JobName, &actionJSONBytes, &record.Status, &scheduledAt, &created)
 		if err != nil {
 			return nil, pgClient.WrapDBError("failed to scan schedule action record", err)
 		}

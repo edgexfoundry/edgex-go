@@ -35,7 +35,7 @@ func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, lim
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	scheduleActionRecordDTOs = fromScheduleActionRecordModelsToDTOs(records)
+	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
 	return scheduleActionRecordDTOs, totalCount, nil
 }
 
@@ -50,7 +50,7 @@ func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, en
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	scheduleActionRecordDTOs = fromScheduleActionRecordModelsToDTOs(records)
+	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
 	return scheduleActionRecordDTOs, totalCount, nil
 }
 
@@ -65,7 +65,7 @@ func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, 
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	scheduleActionRecordDTOs = fromScheduleActionRecordModelsToDTOs(records)
+	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
 	return scheduleActionRecordDTOs, totalCount, nil
 }
 
@@ -80,23 +80,24 @@ func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, statu
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	scheduleActionRecordDTOs = fromScheduleActionRecordModelsToDTOs(records)
+	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
 	return scheduleActionRecordDTOs, totalCount, nil
 }
 
-// LatestScheduleActionRecords query the latest schedule action records with the specified offset and limit
-func LatestScheduleActionRecords(ctx context.Context, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, edgeXerr errors.EdgeX) {
+// LatestScheduleActionRecordsByJobName query the latest schedule action records by job name
+func LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	records, err := dbClient.LatestScheduleActionRecords(ctx, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.LatestScheduleActionRecordTotalCount(ctx)
+	if _, err := dbClient.ScheduleJobByName(ctx, jobName); err != nil {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+
+	records, err := dbClient.LatestScheduleActionRecordsByJobName(ctx, jobName)
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	scheduleActionRecordDTOs = fromScheduleActionRecordModelsToDTOs(records)
-	return scheduleActionRecordDTOs, totalCount, nil
+	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
+	return scheduleActionRecordDTOs, uint32(len(records)), nil
 }
 
 // DeleteScheduleActionRecordsByAge deletes the schedule action records by age
@@ -121,66 +122,48 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
-	// All latest records should have the same creation time
-	lastRecordTimestamp := latestRecords[0].Created
+	for _, latestRecord := range latestRecords {
+		actionId := latestRecord.Action.GetBaseScheduleAction().Id
+		lastRecordTimestamp := latestRecord.ScheduledAt
 
-	// Compare the last record timestamp with the job's modified timestamp to get the latest time
-	latestTime := time.UnixMilli(lastRecordTimestamp)
-	modified := time.UnixMilli(job.Modified)
-	if latestTime.Before(modified) {
-		latestTime = modified
-	}
-
-	// Generate missed runs based on the schedule type
-	missedRuns, err := generateMissedRuns(job.Definition, latestTime)
-	if err != nil {
-		lc.Errorf("Failed to generate missed records of job: %s. Correlation-ID: %s", job.Name, correlationId)
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-
-	if len(missedRuns) != 0 {
-		var missedRecordCreatedTime = time.Now().UnixMilli()
-		for _, run := range missedRuns {
-			for _, action := range job.Actions {
-				actionRecord := models.ScheduleActionRecord{
-					JobName:     job.Name,
-					Action:      action,
-					Status:      models.Missed,
-					ScheduledAt: run.UnixMilli(),
-					Created:     missedRecordCreatedTime,
-				}
-
-				record, err := dbClient.AddScheduleActionRecord(ctx, actionRecord)
-				if err != nil {
-					return errors.NewCommonEdgeXWrapper(err)
-				}
-
-				lc.Tracef("Missed schedule action record of job: %s have been created successfully. Record ID: %s, Correlation-ID: %s", job.Name, record.Id, correlationId)
-			}
+		// Compare the last record timestamp with the job's modified timestamp to get the latest time
+		latestTime := time.UnixMilli(lastRecordTimestamp)
+		modified := time.UnixMilli(job.Modified)
+		if latestTime.Before(modified) {
+			latestTime = modified
 		}
 
-		lc.Debugf("Missed schedule action records of job: %s have been created successfully. Correlation-ID: %s", job.Name, correlationId)
+		// Generate missed runs based on the schedule type
+		missedRuns, err := generateMissedRuns(job.Definition, latestTime)
+		if err != nil {
+			lc.Errorf("Failed to generate missed records of job: %s. Correlation-ID: %s", job.Name, correlationId)
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+
+		var missedRecords []models.ScheduleActionRecord
+		if len(missedRuns) != 0 {
+			for _, run := range missedRuns {
+				actionRecord := models.ScheduleActionRecord{
+					JobName:     job.Name,
+					Action:      latestRecord.Action,
+					Status:      models.Missed,
+					ScheduledAt: run.UnixMilli(),
+				}
+
+				missedRecords = append(missedRecords, actionRecord)
+				lc.Tracef("Missed schedule action record with action id: %s of job: %s have been generated successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
+			}
+
+			if _, err := dbClient.AddScheduleActionRecords(ctx, missedRecords); err != nil {
+				lc.Errorf("Failed to add missed schedule action records with action id: %s of job: %s to database. Correlation-ID: %s", actionId, job.Name, correlationId)
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+
+			lc.Debugf("Missed schedule action records with action id: %s of job: %s have been created successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
+		}
 	}
 
 	return nil
-}
-
-// TODO: This can be moved to go-mod-core-contracts
-func fromScheduleActionRecordModelsToDTOs(records []models.ScheduleActionRecord) []dtos.ScheduleActionRecord {
-	scheduleActionRecordDTOs := make([]dtos.ScheduleActionRecord, len(records))
-	for i, record := range records {
-		scheduleActionRecordDTOs[i] = dtos.FromScheduleActionRecordModelToDTO(record)
-	}
-	return scheduleActionRecordDTOs
-}
-
-func getLatestRecordsByJobName(jobName string, allLatestRecords []models.ScheduleActionRecord) (latestRecords []models.ScheduleActionRecord) {
-	for _, record := range allLatestRecords {
-		if record.JobName == jobName {
-			latestRecords = append(latestRecords, record)
-		}
-	}
-	return latestRecords
 }
 
 func generateMissedRuns(def models.ScheduleDef, latestTime time.Time) (missedRuns []time.Time, err errors.EdgeX) {

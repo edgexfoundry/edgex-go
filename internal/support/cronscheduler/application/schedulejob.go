@@ -29,6 +29,11 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
+	// Add the ID for each action
+	for i, action := range job.Actions {
+		job.Actions[i] = action.WithId()
+	}
+
 	err := schedulerManager.AddScheduleJob(job, correlationId)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
@@ -169,23 +174,17 @@ func DeleteScheduleJobByName(ctx context.Context, name string, dic *di.Container
 	return nil
 }
 
-// LoadScheduleJobsToSchedulerManager loads all the existing schedule jobs to the scheduler manager
+// LoadScheduleJobsToSchedulerManager loads all the existing schedule jobs to the scheduler manager, the MaxResultCount config is used to limit the number of jobs that will be loaded
 func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	ctx, correlationId := correlation.FromContextOrNew(ctx)
+	config := container.ConfigurationFrom(dic.Get)
 
-	// TODO: issue-4834-6th - Decide the limit value should be a hard-coded value or the MaxResultCount value from configuration or support the sql statement that does not limit the number of rows
-	jobs, err := dbClient.AllScheduleJobs(context.Background(), 0, 999)
+	jobs, err := dbClient.AllScheduleJobs(context.Background(), 0, config.Service.MaxResultCount)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to load all existing scheduled jobs", err)
-	}
-
-	// TODO: issue-4834-6th - Decide the limit value should be a hard-coded value or support the sql statement that does not limit the number of rows
-	allLatestRecords, err := dbClient.LatestScheduleActionRecords(ctx, 0, 999)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to load latest schedule action records", err)
 	}
 
 	for _, job := range jobs {
@@ -194,15 +193,13 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 
+		// Load the existing scheduled jobs to the scheduler manager
 		arrangeScheduleJob(ctx, job, dic)
 
-		if job.AdminState == models.Unlocked {
-			// Get the latest schedule action records by job name and generate missed schedule action records
-			latestRecords := getLatestRecordsByJobName(job.Name, allLatestRecords)
-			err = GenerateMissedScheduleActionRecords(ctx, dic, job, latestRecords)
-			if err != nil {
-				return errors.NewCommonEdgeXWrapper(err)
-			}
+		// Generate missed schedule action records for the existing scheduled jobs
+		err = generateMissedRecords(ctx, job, dic)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
 		}
 
 		lc.Debugf("Successfully loaded the existing scheduled job: %s. Correlation-ID: %s", job.Name, correlationId)
@@ -211,7 +208,7 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 	return nil
 }
 
-// handleScheduleJob handles the schedule job based on the startTimestamp and endTimestamp
+// arrangeScheduleJob arranges the schedule job based on the startTimestamp and endTimestamp
 func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Container) {
 	schedulerManager := container.SchedulerManagerFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
@@ -256,4 +253,28 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 			}
 		})
 	}
+}
+
+// generateMissedRecords generates missed schedule action records
+func generateMissedRecords(ctx context.Context, job models.ScheduleJob, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	correlationId := correlation.FromContext(ctx)
+
+	if job.AdminState != models.Unlocked {
+		lc.Debugf("The scheduled job: %s is locked, skip generating missed schedule action records. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
+		return nil
+	}
+
+	// Get the latest schedule action records by job name and generate missed schedule action records
+	latestRecords, err := dbClient.LatestScheduleActionRecordsByJobName(ctx, job.Name)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to load the latest schedule action records of job: %s", job.Name), err)
+	}
+	err = GenerateMissedScheduleActionRecords(ctx, dic, job, latestRecords)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return nil
 }
