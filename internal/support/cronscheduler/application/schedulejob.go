@@ -31,7 +31,7 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 
 	// Add the ID for each action
 	for i, action := range job.Actions {
-		job.Actions[i] = action.WithId()
+		job.Actions[i] = action.WithId("")
 	}
 
 	err := schedulerManager.AddScheduleJob(job, correlationId)
@@ -86,11 +86,11 @@ func ScheduleJobByName(ctx context.Context, name string, dic *di.Container) (dto
 }
 
 // AllScheduleJobs queries all the schedule jobs with offset and limit
-func AllScheduleJobs(ctx context.Context, offset, limit int, dic *di.Container) (scheduleJobDTOs []dtos.ScheduleJob, totalCount uint32, err errors.EdgeX) {
+func AllScheduleJobs(ctx context.Context, labels []string, offset, limit int, dic *di.Container) (scheduleJobDTOs []dtos.ScheduleJob, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	jobs, err := dbClient.AllScheduleJobs(ctx, offset, limit)
+	jobs, err := dbClient.AllScheduleJobs(ctx, labels, offset, limit)
 	if err == nil {
-		totalCount, err = dbClient.ScheduleJobTotalCount(ctx)
+		totalCount, err = dbClient.ScheduleJobTotalCount(ctx, labels)
 	}
 	if err != nil {
 		return scheduleJobDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -182,7 +182,7 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 	ctx, correlationId := correlation.FromContextOrNew(ctx)
 	config := container.ConfigurationFrom(dic.Get)
 
-	jobs, err := dbClient.AllScheduleJobs(context.Background(), 0, config.Service.MaxResultCount)
+	jobs, err := dbClient.AllScheduleJobs(context.Background(), nil, 0, config.Service.MaxResultCount)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to load all existing scheduled jobs", err)
 	}

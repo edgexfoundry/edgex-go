@@ -165,8 +165,9 @@ func (c *Client) DeleteScheduleActionRecordByAge(ctx context.Context, age int64)
 }
 
 func addScheduleActionRecord(ctx context.Context, connPool *pgxpool.Pool, scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX) {
+	actionId := scheduleActionRecord.Action.GetBaseScheduleAction().Id
 	// Remove the payload from the action before storing it in the database to reduce the size of the record
-	copiedScheduleAction := scheduleActionRecord.Action.WithEmptyPayload()
+	copiedScheduleAction := scheduleActionRecord.Action.WithEmptyPayloadAndId()
 
 	// Marshal the action to store it in the database
 	actionJSONBytes, err := json.Marshal(copiedScheduleAction)
@@ -178,7 +179,7 @@ func addScheduleActionRecord(ctx context.Context, connPool *pgxpool.Pool, schedu
 		ctx,
 		sqlInsert(scheduleActionRecordTable, idCol, actionIdCol, jobNameCol, actionCol, statusCol, scheduledAtCol),
 		scheduleActionRecord.Id,
-		copiedScheduleAction.GetBaseScheduleAction().Id,
+		actionId,
 		scheduleActionRecord.JobName,
 		actionJSONBytes,
 		scheduleActionRecord.Status,
@@ -213,8 +214,10 @@ func queryScheduleActionRecords(ctx context.Context, connPool *pgxpool.Pool, sql
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON unmarshal schedule action record", err)
 		}
+		// Set the action ID back to models.ScheduleAction
+		actionWithId := action.WithId(actionId)
 
-		record.Action = action
+		record.Action = actionWithId
 		record.Created = created.UnixMilli()
 		record.ScheduledAt = scheduledAt.UnixMilli()
 		scheduleActionRecords = append(scheduleActionRecords, record)

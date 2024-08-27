@@ -421,6 +421,13 @@ components:
         type: integer
       description: "The creation timestamp of the last item in the result set, in milliseconds."
       example: 1722479650
+    labelsParam:
+      in: query
+      name: labels
+      required: false
+      schema:
+        type: string
+      description: "Allows for querying a given object by associated user-defined label. More than one label may be specified via a comma-delimited list."
     limitParam:
       in: query
       name: limit
@@ -800,6 +807,7 @@ paths:
   /job/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+      - $ref: '#/components/parameters/labelsParam'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:

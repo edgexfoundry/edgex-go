@@ -31,11 +31,23 @@ func (c *Client) AddScheduleJob(ctx context.Context, scheduleJob model.ScheduleJ
 }
 
 // AllScheduleJobs queries the schedule jobs with the given range, offset, and limit
-func (c *Client) AllScheduleJobs(ctx context.Context, offset, limit int) ([]model.ScheduleJob, errors.EdgeX) {
+func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, limit int) (jobs []model.ScheduleJob, err errors.EdgeX) {
 	offset, limit = getValidOffsetAndLimit(offset, limit)
-	jobs, err := queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPagination(scheduleJobTable), offset, limit)
-	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
+	if len(labels) > 0 {
+		c.loggingClient.Debugf("Querying schedule jobs by labels: %v", labels)
+		labelsJSON, err := json.Marshal(labels)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal labels", err)
+		}
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllByContentLabelsWithPagination(scheduleJobTable), labelsJSON, offset, limit)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs by labels", err)
+		}
+	} else {
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPagination(scheduleJobTable), offset, limit)
+		if err != nil {
+			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
+		}
 	}
 
 	return jobs, nil
@@ -88,7 +100,14 @@ func (c *Client) ScheduleJobByName(ctx context.Context, name string) (model.Sche
 }
 
 // ScheduleJobTotalCount returns the total count of schedule jobs
-func (c *Client) ScheduleJobTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX) {
+	if len(labels) > 0 {
+		labelsJSON, err := json.Marshal(labels)
+		if err != nil {
+			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal labels", err)
+		}
+		return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountContentLabels(scheduleJobTable), labelsJSON)
+	}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCount(scheduleJobTable))
 }
 
