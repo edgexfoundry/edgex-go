@@ -141,9 +141,9 @@ func (_m *DBClient) AllScheduleActionRecords(ctx context.Context, start int64, e
 	return r0, r1
 }
 
-// AllScheduleJobs provides a mock function with given fields: ctx, offset, limit
-func (_m *DBClient) AllScheduleJobs(ctx context.Context, offset int, limit int) ([]models.ScheduleJob, errors.EdgeX) {
-	ret := _m.Called(ctx, offset, limit)
+// AllScheduleJobs provides a mock function with given fields: ctx, labels, offset, limit
+func (_m *DBClient) AllScheduleJobs(ctx context.Context, labels []string, offset int, limit int) ([]models.ScheduleJob, errors.EdgeX) {
+	ret := _m.Called(ctx, labels, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AllScheduleJobs")
@@ -151,19 +151,19 @@ func (_m *DBClient) AllScheduleJobs(ctx context.Context, offset int, limit int) 
 
 	var r0 []models.ScheduleJob
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) ([]models.ScheduleJob, errors.EdgeX)); ok {
-		return rf(ctx, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, []string, int, int) ([]models.ScheduleJob, errors.EdgeX)); ok {
+		return rf(ctx, labels, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.ScheduleJob); ok {
-		r0 = rf(ctx, offset, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, []string, int, int) []models.ScheduleJob); ok {
+		r0 = rf(ctx, labels, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.ScheduleJob)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, int) errors.EdgeX); ok {
-		r1 = rf(ctx, offset, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, []string, int, int) errors.EdgeX); ok {
+		r1 = rf(ctx, labels, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -526,9 +526,9 @@ func (_m *DBClient) ScheduleJobByName(ctx context.Context, name string) (models.
 	return r0, r1
 }
 
-// ScheduleJobTotalCount provides a mock function with given fields: ctx
-func (_m *DBClient) ScheduleJobTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx)
+// ScheduleJobTotalCount provides a mock function with given fields: ctx, labels
+func (_m *DBClient) ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, labels)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleJobTotalCount")
@@ -536,17 +536,17 @@ func (_m *DBClient) ScheduleJobTotalCount(ctx context.Context) (uint32, errors.E
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context) (uint32, errors.EdgeX)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, []string) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, labels)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, []string) uint32); ok {
+		r0 = rf(ctx, labels)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) errors.EdgeX); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, []string) errors.EdgeX); ok {
+		r1 = rf(ctx, labels)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

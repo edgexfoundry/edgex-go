@@ -136,11 +136,11 @@ func (jc *ScheduleJobController) AllScheduleJobs(c echo.Context) error {
 	config := schedulerContainer.ConfigurationFrom(jc.dic.Get)
 
 	// parse URL query string for offset and limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, labels, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	jobs, totalCount, err := application.AllScheduleJobs(ctx, offset, limit, jc.dic)
+	jobs, totalCount, err := application.AllScheduleJobs(ctx, labels, offset, limit, jc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}

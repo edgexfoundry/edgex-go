@@ -16,12 +16,12 @@ type DBClient interface {
 	CloseSession()
 
 	AddScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX)
-	AllScheduleJobs(ctx context.Context, offset, limit int) ([]model.ScheduleJob, errors.EdgeX)
+	AllScheduleJobs(ctx context.Context, labels []string, offset, limit int) ([]model.ScheduleJob, errors.EdgeX)
 	UpdateScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) errors.EdgeX
 	DeleteScheduleJobByName(ctx context.Context, name string) errors.EdgeX
 	ScheduleJobById(ctx context.Context, id string) (model.ScheduleJob, errors.EdgeX)
 	ScheduleJobByName(ctx context.Context, name string) (model.ScheduleJob, errors.EdgeX)
-	ScheduleJobTotalCount(ctx context.Context) (uint32, errors.EdgeX)
+	ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX)
 
 	AddScheduleActionRecord(ctx context.Context, scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX)
 	AddScheduleActionRecords(ctx context.Context, scheduleActionRecord []model.ScheduleActionRecord) ([]model.ScheduleActionRecord, errors.EdgeX)

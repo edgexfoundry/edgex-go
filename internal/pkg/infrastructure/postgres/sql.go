@@ -14,14 +14,17 @@ import (
 	"strings"
 )
 
-// Constants for common column names in the database.
 const (
+	// Constants for common column names in the database.
 	contentCol  = "content"
 	createdCol  = "created"
 	idCol       = "id"
 	modifiedCol = "modified"
 	nameCol     = "name"
 	statusCol   = "status"
+
+	// Constants for common json field names in the database.
+	labelsField = "Labels"
 )
 
 // ----------------------------------------------------------------------------------
@@ -90,6 +93,11 @@ func sqlQueryAllByColWithPagination(table string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
 
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s OFFSET $%d LIMIT $%d", table, whereCondition, columnCount+1, columnCount+2)
+}
+
+// sqlQueryAllByLabelsWithPagination returns the SQL statement for selecting all rows from the table by the given labels from content with pagination
+func sqlQueryAllByContentLabelsWithPagination(table string) string {
+	return fmt.Sprintf("SELECT * FROM %s WHERE content->'%s' @> $1::jsonb ORDER BY %s OFFSET $2 LIMIT $3", table, labelsField, createdCol)
 }
 
 // sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
@@ -175,6 +183,11 @@ func sqlQueryCount(table string) string {
 func sqlQueryCountByCol(table string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
+}
+
+// sqlQueryCountContentLabels returns the SQL statement for counting the number of rows in the table by the given labels.
+func sqlQueryCountContentLabels(table string) string {
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content->'%s' @> $1::jsonb", table, labelsField)
 }
 
 // sqlQueryCountByTimeRangeCol returns the SQL statement for counting the number of rows in the table

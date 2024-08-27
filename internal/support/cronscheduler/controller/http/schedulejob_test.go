@@ -253,10 +253,13 @@ func TestScheduleJobByName(t *testing.T) {
 func TestAllScheduleJobs(t *testing.T) {
 	expectedTotalScheduleJobsCount := uint32(0)
 	dic := mockDic()
+	var emptyLabels []string
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("ScheduleJobTotalCount", context.Background()).Return(expectedTotalScheduleJobsCount, nil)
-	dbClientMock.On("AllScheduleJobs", context.Background(), 0, 20).Return([]models.ScheduleJob{}, nil)
-	dbClientMock.On("AllScheduleJobs", context.Background(), 0, 1).Return([]models.ScheduleJob{}, nil)
+	dbClientMock.On("ScheduleJobTotalCount", context.Background(), emptyLabels).Return(expectedTotalScheduleJobsCount, nil)
+	dbClientMock.On("ScheduleJobTotalCount", context.Background(), testScheduleJobLabels).Return(expectedTotalScheduleJobsCount, nil)
+	dbClientMock.On("AllScheduleJobs", context.Background(), emptyLabels, 0, 20).Return([]models.ScheduleJob{}, nil)
+	dbClientMock.On("AllScheduleJobs", context.Background(), emptyLabels, 0, 1).Return([]models.ScheduleJob{}, nil)
+	dbClientMock.On("AllScheduleJobs", context.Background(), testScheduleJobLabels, 0, 1).Return([]models.ScheduleJob{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -267,22 +270,27 @@ func TestAllScheduleJobs(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		labels             string
 		offset             string
 		limit              string
 		errorExpected      bool
 		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get scheduled jobs without offset and limit", "", "", false, expectedTotalScheduleJobsCount, http.StatusOK},
-		{"Valid - get scheduled jobs with offset and limit", "0", "1", false, expectedTotalScheduleJobsCount, http.StatusOK},
-		{"Invalid - invalid offset format", "aaa", "1", true, expectedTotalScheduleJobsCount, http.StatusBadRequest},
-		{"Invalid - invalid limit format", "1", "aaa", true, expectedTotalScheduleJobsCount, http.StatusBadRequest},
+		{"Valid - get scheduled jobs without offset and limit", "", "", "", false, expectedTotalScheduleJobsCount, http.StatusOK},
+		{"Valid - get scheduled jobs with offset and limit", "", "0", "1", false, expectedTotalScheduleJobsCount, http.StatusOK},
+		{"Valid - get scheduled jobs by labels", strings.Join(testScheduleJobLabels, ","), "0", "1", false, expectedTotalScheduleJobsCount, http.StatusOK},
+		{"Invalid - invalid offset format", "", "aaa", "1", true, expectedTotalScheduleJobsCount, http.StatusBadRequest},
+		{"Invalid - invalid limit format", "", "1", "aaa", true, expectedTotalScheduleJobsCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
 			req, err := http.NewRequest(http.MethodGet, common.ApiAllScheduleJobRoute, http.NoBody)
 			query := req.URL.Query()
+			if testCase.labels != "" {
+				query.Add(common.Labels, testCase.labels)
+			}
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
 			}
