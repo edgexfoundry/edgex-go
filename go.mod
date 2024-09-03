@@ -4,9 +4,9 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.52
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.54
 	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.12
-	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.42
+	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.43
 	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.31
 	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.9
 	github.com/fxamacker/cbor/v2 v2.7.0
@@ -33,7 +33,7 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.13 // indirect
+	github.com/edgexfoundry/go-mod-registry/v3 v3.2.0-dev.16 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
-	github.com/hashicorp/consul/api v1.29.2 // indirect
+	github.com/hashicorp/consul/api v1.29.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
