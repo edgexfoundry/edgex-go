@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.54
-	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.12
+	github.com/edgexfoundry/go-mod-bootstrap/v3 v3.2.0-dev.57
+	github.com/edgexfoundry/go-mod-configuration/v3 v3.2.0-dev.17
 	github.com/edgexfoundry/go-mod-core-contracts/v3 v3.2.0-dev.43
-	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.31
-	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.9
+	github.com/edgexfoundry/go-mod-messaging/v3 v3.2.0-dev.35
+	github.com/edgexfoundry/go-mod-secrets/v3 v3.2.0-dev.12
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/go-co-op/gocron/v2 v2.11.0
 	github.com/gomodule/redigo v1.9.2
@@ -98,17 +98,17 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
-	github.com/nats-io/nats.go v1.36.0 // indirect
+	github.com/nats-io/nats.go v1.37.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/openziti/channel/v2 v2.0.136 // indirect
-	github.com/openziti/edge-api v0.26.21 // indirect
+	github.com/openziti/edge-api v0.26.23 // indirect
 	github.com/openziti/foundation/v2 v2.0.47 // indirect
 	github.com/openziti/identity v1.0.81 // indirect
 	github.com/openziti/metrics v1.2.56 // indirect
-	github.com/openziti/sdk-golang v0.23.39 // indirect
+	github.com/openziti/sdk-golang v0.23.40 // indirect
 	github.com/openziti/secretstream v0.1.21 // indirect
 	github.com/openziti/transport/v2 v2.0.138 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
