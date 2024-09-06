@@ -100,8 +100,8 @@ func (jc *ScheduleJobController) TriggerScheduleJobByName(c echo.Context) error 
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
-	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	response := commonDTO.NewBaseResponse("", "", http.StatusAccepted)
+	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 

@@ -526,3 +526,66 @@ func TestPatchScheduleJob(t *testing.T) {
 	}
 
 }
+
+func TestTriggerScheduleJobByName(t *testing.T) {
+	job := dtos.ToScheduleJobModel(addScheduleJobRequestData().ScheduleJob)
+	emptyName := ""
+	notFoundName := "notFoundName"
+
+	dic := mockDic()
+	dbClientMock := &csMock.DBClient{}
+	schedulerManagerMock := &csMock.SchedulerManager{}
+	schedulerManagerMock.On("TriggerScheduleJobByName", job.Name, testCorrelationID).Return(nil)
+	schedulerManagerMock.On("TriggerScheduleJobByName", notFoundName, testCorrelationID).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "scheduled job doesn't exist in the scheduler manager", nil))
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) any {
+			return dbClientMock
+		},
+		container.SchedulerManagerName: func(get di.Get) any {
+			return schedulerManagerMock
+		},
+	})
+
+	controller := NewScheduleJobController(dic)
+	require.NotNil(t, controller)
+
+	tests := []struct {
+		name               string
+		jobName            string
+		errorExpected      bool
+		expectedStatusCode int
+	}{
+		{"Valid - trigger scheduled job by name", job.Name, false, http.StatusAccepted},
+		{"Invalid - name parameter is empty", emptyName, true, http.StatusBadRequest},
+		{"Invalid - scheduled job not found by name", notFoundName, true, http.StatusNotFound},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			e := echo.New()
+			reqPath := fmt.Sprintf("%s/%s", common.ApiTriggerScheduleJobByNameEchoRoute, testCase.jobName)
+			req, err := http.NewRequest(http.MethodPost, reqPath, http.NoBody)
+			require.NoError(t, err)
+
+			// Act
+			recorder := httptest.NewRecorder()
+			c := e.NewContext(req, recorder)
+			c.SetParamNames(common.Name)
+			c.SetParamValues(testCase.jobName)
+			err = controller.TriggerScheduleJobByName(c)
+			require.NoError(t, err)
+
+			var res commonDTO.BaseResponse
+			err = json.Unmarshal(recorder.Body.Bytes(), &res)
+			require.NoError(t, err)
+
+			// Assert
+			assert.Equal(t, testCase.expectedStatusCode, recorder.Result().StatusCode, "HTTP status code not as expected")
+			assert.Equal(t, common.ApiVersion, res.ApiVersion, "API Version not as expected")
+			if testCase.expectedStatusCode == http.StatusAccepted {
+				assert.Empty(t, res.Message, "Message should be empty when the request is accepted")
+			} else {
+				assert.NotEmpty(t, res.Message, "Response message doesn't contain the error message")
+			}
+		})
+	}
+}
