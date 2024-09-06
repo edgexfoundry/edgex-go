@@ -167,7 +167,7 @@ func (m *manager) getSchedulerByJobName(name string) (gocron.Scheduler, errors.E
 	defer m.mu.RUnlock()
 	scheduler, exists := m.schedulers[name]
 	if !exists {
-		return nil, errors.NewCommonEdgeX(errors.KindStatusConflict,
+		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist,
 			fmt.Sprintf("the scheduled job: %s does not exist", name), nil)
 	}
 	return scheduler, nil
