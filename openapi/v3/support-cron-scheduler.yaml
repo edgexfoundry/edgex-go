@@ -181,11 +181,15 @@ components:
             address:
               description: "The address of the REST endpoint to be called."
               type: string
+            method:
+              description: "The method uses to send REST API."
+              type: string
             injectEdgeXAuth:
               description: "Indicates whether to inject EdgeX authentication headers into the request."
               type: boolean
           required:
             - address
+            - method
     ScheduleAction:
       description: "Defines the action to be executed."
       type: object
@@ -261,7 +265,7 @@ components:
             $ref: '#/components/schemas/ScheduleAction'
         adminState:
           type: string
-          description: "Admin state"
+          description: "Admin State. Default value UNLOCKED if it is empty."
           enum:
             - LOCKED
             - UNLOCKED
@@ -292,7 +296,6 @@ components:
           description: "Properties used to configure the schedule job with extra information."
       required:
         - actions
-        - adminState
         - definition
         - name
     ScheduleActionRecordResponse:
@@ -420,7 +423,7 @@ components:
       schema:
         type: integer
       description: "The creation timestamp of the last item in the result set, in milliseconds."
-      example: 1722479650
+      example: 1725586875004
     labelsParam:
       in: query
       name: labels
@@ -521,6 +524,7 @@ components:
               - type: "REST"
                 contentType: "application/json"
                 address: "http://localhost:59881/api/v3/ping"
+                method: "GET"
             adminState: "UNLOCKED"
     AddIntervalScheduleJobExample:
       value:
@@ -554,6 +558,7 @@ components:
               type: "REST"
               contentType: "application/json"
               address: "http://localhost:59881/api/v3/ping"
+              method: "GET"
           - created: 1634279236873
             scheduledAt: 1634279236873
             id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
@@ -580,6 +585,7 @@ components:
               type: "REST"
               contentType: "application/json"
               address: "http://localhost:59881/api/v3/ping"
+              method: "GET"
           - created: 1634279367311
             scheduledAt: 1634279367311
             id: "abcd10-7838-44bd-9c09-1283813db6c8"
@@ -649,6 +655,7 @@ components:
               - type: "REST"
                 contentType: "application/json"
                 address: "http://localhost:59881/api/v3/ping"
+                method: "GET"
             adminState: "UNLOCKED"
           - created: 1634280525302
             modified: 1634280525302
@@ -677,6 +684,7 @@ components:
               - type: "REST"
                 contentType: "application/json"
                 address: "http://localhost:59881/api/v3/ping"
+                method: "GET"
             adminState: "UNLOCKED"
 paths:
   /job:
