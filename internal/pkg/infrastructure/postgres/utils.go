@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -52,4 +53,13 @@ func getTotalRowsCount(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 	}
 
 	return uint32(rowCount), nil
+}
+
+// getUTCStartAndEndTime returns the UTC start and end time from the given start and end timestamp
+func getUTCStartAndEndTime(start, end int64) (time.Time, time.Time) {
+	return getUTCTime(start), getUTCTime(end)
+}
+
+func getUTCTime(timestamp int64) time.Time {
+	return time.UnixMilli(timestamp).UTC()
 }

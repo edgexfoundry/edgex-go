@@ -55,11 +55,12 @@ func TestAllScheduleActionRecords(t *testing.T) {
 	expectedTotalScheduleActionRecordCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background()).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background(), int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), mock.AnythingOfType("int64"), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), int64(1723642440000), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(1723642430000), int64(1723642440000), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
+	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background(), int64(1723642430000), int64(1723642440000)).Return(expectedTotalScheduleActionRecordCount, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -217,7 +218,7 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("ScheduleActionRecordCountByStatus", context.Background(), testStatus).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("ScheduleActionRecordCountByStatus", context.Background(), testStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
 	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the status is required", nil))
 	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given status doesn't exist in the database", nil))
@@ -296,7 +297,7 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("ScheduleActionRecordCountByJobName", context.Background(), testScheduleJobName).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("ScheduleActionRecordCountByJobName", context.Background(), testScheduleJobName, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), testScheduleJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), emptyJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name is required", nil))
 	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), notFoundJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name doesn't exist in the database", nil))
@@ -377,7 +378,7 @@ func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
-	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), emptyJobName, emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name and status are required", nil))
 	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), notFoundJobName, notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name and status doesn't exist in the database", nil))
