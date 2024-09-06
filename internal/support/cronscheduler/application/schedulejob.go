@@ -119,6 +119,11 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 
 	requests.ReplaceScheduleJobModelFieldsWithDTO(&job, dto)
 
+	// Add the ID for each action, the old actions will be replaced by the new actions
+	for i, action := range job.Actions {
+		job.Actions[i] = action.WithId("")
+	}
+
 	err = schedulerManager.UpdateScheduleJob(job, correlationId)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
