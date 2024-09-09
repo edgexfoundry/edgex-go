@@ -101,7 +101,7 @@ func TestAddScheduleJob(t *testing.T) {
 
 	valid := addScheduleJobRequestData()
 	model := dtos.ToScheduleJobModel(valid.ScheduleJob)
-	dbClientMock.On("AddScheduleJob", context.Background(), mock.Anything).Return(model, nil)
+	dbClientMock.On("AddScheduleJob", context.Background(), mock.MatchedBy(func(job models.ScheduleJob) bool { return job.Name == testScheduleJobName })).Return(model, nil)
 	schedulerManagerMock.On("AddScheduleJob", mock.MatchedBy(func(job models.ScheduleJob) bool { return job.Name == testScheduleJobName }), testCorrelationID).Return(nil)
 	schedulerManagerMock.On("StartScheduleJobByName", model.Name, testCorrelationID).Return(nil)
 
@@ -410,8 +410,8 @@ func TestPatchScheduleJob(t *testing.T) {
 
 	valid := testReq
 	dbClientMock.On("ScheduleJobById", context.Background(), *valid.ScheduleJob.Id).Return(model, nil)
-	dbClientMock.On("UpdateScheduleJob", context.Background(), model).Return(nil)
-	schedulerManagerMock.On("UpdateScheduleJob", model, testCorrelationID).Return(nil)
+	dbClientMock.On("UpdateScheduleJob", context.Background(), mock.MatchedBy(func(job models.ScheduleJob) bool { return job.Name == testScheduleJobName })).Return(nil)
+	schedulerManagerMock.On("UpdateScheduleJob", mock.MatchedBy(func(job models.ScheduleJob) bool { return job.Name == testScheduleJobName }), testCorrelationID).Return(nil)
 	validWithNoReqID := testReq
 	validWithNoReqID.RequestId = ""
 	validWithNoId := testReq
