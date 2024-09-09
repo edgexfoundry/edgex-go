@@ -117,11 +117,12 @@ func DeleteScheduleActionRecordsByAge(ctx context.Context, age int64, dic *di.Co
 }
 
 // GenerateMissedScheduleActionRecords generates missed schedule action records
-func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container, job models.ScheduleJob, latestRecords []models.ScheduleActionRecord) errors.EdgeX {
+func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container, job models.ScheduleJob, latestRecords []models.ScheduleActionRecord) (errors.EdgeX, bool) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
+	var missedRecords []models.ScheduleActionRecord
 	for _, latestRecord := range latestRecords {
 		actionId := latestRecord.Action.GetBaseScheduleAction().Id
 		lastRecordTimestamp := latestRecord.ScheduledAt
@@ -137,10 +138,9 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 		missedRuns, err := generateMissedRuns(job.Definition, latestTime)
 		if err != nil {
 			lc.Errorf("Failed to generate missed records of job: %s. Correlation-ID: %s", job.Name, correlationId)
-			return errors.NewCommonEdgeXWrapper(err)
+			return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
 		}
 
-		var missedRecords []models.ScheduleActionRecord
 		if len(missedRuns) != 0 {
 			for _, run := range missedRuns {
 				actionRecord := models.ScheduleActionRecord{
@@ -156,14 +156,14 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 
 			if _, err := dbClient.AddScheduleActionRecords(ctx, missedRecords); err != nil {
 				lc.Errorf("Failed to add missed schedule action records with action id: %s of job: %s to database. Correlation-ID: %s", actionId, job.Name, correlationId)
-				return errors.NewCommonEdgeXWrapper(err)
+				return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
 			}
 
 			lc.Debugf("Missed schedule action records with action id: %s of job: %s have been created successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
 		}
 	}
 
-	return nil
+	return nil, len(missedRecords) > 0
 }
 
 func generateMissedRuns(def models.ScheduleDef, latestTime time.Time) (missedRuns []time.Time, err errors.EdgeX) {
