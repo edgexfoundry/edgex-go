@@ -87,12 +87,20 @@ func sqlQueryAllWithPaginationDescByCol(table string, descCol string) string {
 	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, descCol)
 }
 
-// sqlQueryAllByColWithPagination returns the SQL statement for selecting all rows from the table by the given columns with pagination
-func sqlQueryAllByColWithPagination(table string, columns ...string) string {
+// sqlQueryAllAndDescWithConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition with descending by descCol
+func sqlQueryAllAndDescWithConds(table string, descCol string, columns ...string) string {
+	whereCondition := constructWhereCondition(columns...)
+
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC", table, whereCondition, descCol)
+}
+
+// sqlQueryAllAndDescWithCondsAndPag returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
+// with descending by descCol and pagination
+func sqlQueryAllAndDescWithCondsAndPag(table string, descCol string, columns ...string) string {
 	columnCount := len(columns)
 	whereCondition := constructWhereCondition(columns...)
 
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s OFFSET $%d LIMIT $%d", table, whereCondition, columnCount+1, columnCount+2)
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d", table, whereCondition, descCol, columnCount+1, columnCount+2)
 }
 
 // sqlQueryAllByLabelsWithPagination returns the SQL statement for selecting all rows from the table by the given labels from content with pagination

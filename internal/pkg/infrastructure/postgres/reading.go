@@ -24,8 +24,6 @@ import (
 var (
 	// insertReadingCols defines the reading table columns in slice used in inserting readings
 	insertReadingCols = []string{idCol, eventIdFKCol, deviceNameCol, profileNameCol, resourceNameCol, originCol, valueTypeCol, unitsCol, tagsCol, valueCol, mediaTypeCol, binaryValueCol, objectValueCol}
-	// queryReadingCols defines the reading table columns in slice used in querying reading
-	queryReadingCols = []string{idCol, deviceNameCol, profileNameCol, resourceNameCol, originCol, valueTypeCol, unitsCol, tagsCol, valueCol, objectValueCol, mediaTypeCol, binaryValueCol}
 )
 
 func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
@@ -35,7 +33,8 @@ func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
 func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllWithPagination(readingTableName), offset, limit)
+	// query reading by origin descending with offset & limit
+	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(readingTableName, originCol), offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all readings", err)
 	}
@@ -45,7 +44,8 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 
 // ReadingsByResourceName query readings by offset, limit and resource name
 func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName string) ([]model.Reading, errors.EdgeX) {
-	sqlStatement := sqlQueryAllByColWithPagination(readingTableName, resourceNameCol)
+	// query reading by the resourceName and origin descending
+	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, resourceNameCol)
 
 	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, resourceName, offset, limit)
 	if err != nil {
@@ -56,7 +56,8 @@ func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName stri
 
 // ReadingsByDeviceName query readings by offset, limit and device name
 func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) ([]model.Reading, errors.EdgeX) {
-	sqlStatement := sqlQueryAllByColWithPagination(readingTableName, deviceNameCol)
+	// query reading by the deviceName and origin descending
+	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, deviceNameCol)
 
 	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, name, offset, limit)
 	if err != nil {
@@ -67,7 +68,8 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) ([]mod
 
 // ReadingsByDeviceNameAndResourceName query readings by offset, limit, device name and resource name
 func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, offset int, limit int) ([]model.Reading, errors.EdgeX) {
-	sqlStatement := sqlQueryAllByColWithPagination(readingTableName, deviceNameCol, resourceNameCol)
+	// query reading by the deviceName/resourceName and origin descending
+	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, deviceNameCol, resourceNameCol)
 
 	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, deviceName, resourceName, offset, limit)
 	if err != nil {

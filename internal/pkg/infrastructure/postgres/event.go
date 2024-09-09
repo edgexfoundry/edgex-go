@@ -26,7 +26,7 @@ import (
 func (c *Client) AllEvents(offset, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
 
-	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPagination(eventTableName), offset, limit)
+	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(eventTableName, originCol), offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
 	}
@@ -100,7 +100,8 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 			return model.Event{}, err
 		}
 
-		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryFieldsByCol(readingTableName, queryReadingCols, eventIdFKCol), e.Id)
+		// query reading by the specific even_id and origin descending
+		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllAndDescWithConds(readingTableName, originCol, eventIdFKCol), e.Id)
 		if err != nil {
 			return model.Event{}, err
 		}
@@ -137,7 +138,7 @@ func (c *Client) EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX
 
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
-	sqlStatement := sqlQueryAllByColWithPagination(eventTableName, deviceNameCol)
+	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(eventTableName, originCol, deviceNameCol)
 
 	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, name, offset, limit)
 	if err != nil {
@@ -252,7 +253,9 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 			return model.Event{}, err
 		}
 
-		readings, err := queryReadings(ctx, connPool, sqlQueryFieldsByCol(readingTableName, queryReadingCols, eventIdFKCol), event.Id)
+		// query reading by the specific even_id and origin descending
+		readings, err := queryReadings(ctx, connPool, sqlQueryAllAndDescWithConds(readingTableName, originCol, eventIdFKCol), event.Id)
+
 		if err != nil {
 			return model.Event{}, err
 		}
