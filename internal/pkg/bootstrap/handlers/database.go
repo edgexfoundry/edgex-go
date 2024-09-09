@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	baseScriptPath = "/res/db/sql"
+	baseScriptPath = "./res/db/sql"
 	redisDBType    = "redisdb"
 	postgresDBType = "postgres"
 )

@@ -11,6 +11,7 @@ import "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 // which includes all the fields in BaseReading, BinaryReading, SimpleReading and ObjectReading
 type Reading struct {
 	models.BaseReading
+	EventId string `db:"event_id"` // the foreign key refers to the id column in core_data.event table
 	BinaryReading
 	SimpleReading
 	ObjectReading
