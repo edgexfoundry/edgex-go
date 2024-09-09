@@ -201,6 +201,12 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 		// Load the existing scheduled jobs to the scheduler manager
 		arrangeScheduleJob(ctx, job, dic)
 
+		// If endTimestamp is set and expired, the missed schedule action records should not be generated
+		isEndExpired := isEndTimestampExpired(job.Definition.GetBaseScheduleDef().EndTimestamp)
+		if isEndExpired {
+			lc.Debugf("The endTimestamp is expired for the scheduled job: %s, which will not generate missed schedule action records. Correlation-ID: %s", job.Name, correlationId)
+			continue
+		}
 		// Generate missed schedule action records for the existing scheduled jobs
 		err = generateMissedRecords(ctx, job, dic)
 		if err != nil {
@@ -229,10 +235,10 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 
 	durationUntilStart := time.Until(time.UnixMilli(startTimestamp))
 	durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
-	isEndTimestampExpired := endTimestamp != 0 && durationUntilEnd < 0
+	isEndExpired := isEndTimestampExpired(endTimestamp)
 
 	// If endTimestamp is set and expired, the scheduled job should not be triggered
-	if isEndTimestampExpired {
+	if isEndExpired {
 		lc.Warnf("The endTimestamp is expired for the scheduled job: %s, which will not be started. Correlation-ID: %s", job.Name, correlationId)
 		return
 	}
@@ -263,6 +269,11 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 			}
 		})
 	}
+}
+
+func isEndTimestampExpired(endTimestamp int64) bool {
+	durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
+	return endTimestamp != 0 && durationUntilEnd < 0
 }
 
 // generateMissedRecords generates missed schedule action records
