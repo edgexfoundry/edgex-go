@@ -228,6 +228,16 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 	endTimestamp := job.Definition.GetBaseScheduleDef().EndTimestamp
 
 	durationUntilStart := time.Until(time.UnixMilli(startTimestamp))
+	durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
+	isEndTimestampExpired := endTimestamp != 0 && durationUntilEnd < 0
+
+	// If endTimestamp is set and expired, the scheduled job should not be triggered
+	if isEndTimestampExpired {
+		lc.Warnf("The endTimestamp is expired for the scheduled job: %s, which will not be started. Correlation-ID: %s", job.Name, correlationId)
+		return
+	}
+
+	// If startTimestamp is expired, the scheduled job should be started immediately
 	if durationUntilStart < 0 {
 		lc.Debugf("The startTimestamp is expired for the scheduled job: %s, which will be started immediately. Correlation-ID: %s", job.Name, correlationId)
 		durationUntilStart = 0
@@ -235,6 +245,7 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 		lc.Debugf("The scheduled job: %s will be started at %v (timestamp: %v). Correlation-ID: %s", job.Name, time.UnixMilli(startTimestamp), startTimestamp, correlationId)
 	}
 
+	// Regardless of whether startTimestamp has a value or not, the job should always be started by default if endTimestamp is not expired.
 	time.AfterFunc(durationUntilStart, func() {
 		err := schedulerManager.StartScheduleJobByName(job.Name, correlationId)
 		if err != nil {
@@ -242,15 +253,9 @@ func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Con
 		}
 	})
 
-	if endTimestamp != 0 {
-		durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
-		if durationUntilEnd < 0 {
-			lc.Debugf("The endTimestamp is expired for the scheduled job: %s, which will be stopped immediately. Correlation-ID: %s", job.Name, correlationId)
-			durationUntilEnd = 0
-		} else if durationUntilEnd > 0 {
-			lc.Debugf("The scheduled job: %s will be stopped at %v (timestamp: %v). Correlation-ID: %s", job.Name, time.UnixMilli(endTimestamp), endTimestamp, correlationId)
-		}
-
+	// If the endTimestamp is set and the duration until the end is greater than 0, the scheduled job will be stopped at the endTimestamp
+	if endTimestamp != 0 && durationUntilEnd > 0 {
+		lc.Debugf("The scheduled job: %s will be stopped at %v (timestamp: %v). Correlation-ID: %s", job.Name, time.UnixMilli(endTimestamp), endTimestamp, correlationId)
 		time.AfterFunc(durationUntilEnd, func() {
 			err := schedulerManager.StopScheduleJobByName(job.Name, correlationId)
 			if err != nil {
