@@ -30,9 +30,9 @@ type DBClient interface {
 	ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
 	ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
 	ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
-	ScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByStatus(ctx context.Context, status string) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByJobName(ctx context.Context, jobName string) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string) (uint32, errors.EdgeX)
+	ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (uint32, errors.EdgeX)
+	ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (uint32, errors.EdgeX)
+	ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (uint32, errors.EdgeX)
+	ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (uint32, errors.EdgeX)
 	DeleteScheduleActionRecordByAge(ctx context.Context, age int64) errors.EdgeX
 }

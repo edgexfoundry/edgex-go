@@ -29,7 +29,7 @@ func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, lim
 	dbClient := container.DBClientFrom(dic.Get)
 	records, err := dbClient.AllScheduleActionRecords(ctx, start, end, offset, limit)
 	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordTotalCount(ctx)
+		totalCount, err = dbClient.ScheduleActionRecordTotalCount(ctx, start, end)
 	}
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -44,7 +44,7 @@ func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, en
 	dbClient := container.DBClientFrom(dic.Get)
 	records, err := dbClient.ScheduleActionRecordsByStatus(ctx, status, start, end, offset, limit)
 	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByStatus(ctx, status)
+		totalCount, err = dbClient.ScheduleActionRecordCountByStatus(ctx, status, start, end)
 	}
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -59,7 +59,7 @@ func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, 
 	dbClient := container.DBClientFrom(dic.Get)
 	records, err := dbClient.ScheduleActionRecordsByJobName(ctx, jobName, start, end, offset, limit)
 	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByJobName(ctx, jobName)
+		totalCount, err = dbClient.ScheduleActionRecordCountByJobName(ctx, jobName, start, end)
 	}
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -74,7 +74,7 @@ func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, statu
 	dbClient := container.DBClientFrom(dic.Get)
 	records, err := dbClient.ScheduleActionRecordsByJobNameAndStatus(ctx, jobName, status, start, end, offset, limit)
 	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByJobNameAndStatus(ctx, jobName, status)
+		totalCount, err = dbClient.ScheduleActionRecordCountByJobNameAndStatus(ctx, jobName, status, start, end)
 	}
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)

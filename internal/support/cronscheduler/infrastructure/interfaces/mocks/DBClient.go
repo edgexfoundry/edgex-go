@@ -250,9 +250,9 @@ func (_m *DBClient) LatestScheduleActionRecordsByJobName(ctx context.Context, jo
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByJobName provides a mock function with given fields: ctx, jobName
-func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx, jobName)
+// ScheduleActionRecordCountByJobName provides a mock function with given fields: ctx, jobName, start, end
+func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start int64, end int64) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName, start, end)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByJobName")
@@ -260,17 +260,17 @@ func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobN
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context, string) (uint32, errors.EdgeX)); ok {
-		return rf(ctx, jobName)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, jobName, start, end)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) uint32); ok {
-		r0 = rf(ctx, jobName)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) uint32); ok {
+		r0 = rf(ctx, jobName, start, end)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) errors.EdgeX); ok {
-		r1 = rf(ctx, jobName)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName, start, end)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -280,9 +280,9 @@ func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobN
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByJobNameAndStatus provides a mock function with given fields: ctx, jobName, status
-func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName string, status string) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx, jobName, status)
+// ScheduleActionRecordCountByJobNameAndStatus provides a mock function with given fields: ctx, jobName, status, start, end
+func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName string, status string, start int64, end int64) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, jobName, status, start, end)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByJobNameAndStatus")
@@ -290,17 +290,17 @@ func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Cont
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (uint32, errors.EdgeX)); ok {
-		return rf(ctx, jobName, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int64, int64) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, jobName, status, start, end)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) uint32); ok {
-		r0 = rf(ctx, jobName, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int64, int64) uint32); ok {
+		r0 = rf(ctx, jobName, status, start, end)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) errors.EdgeX); ok {
-		r1 = rf(ctx, jobName, status)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, int64, int64) errors.EdgeX); ok {
+		r1 = rf(ctx, jobName, status, start, end)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -310,9 +310,9 @@ func (_m *DBClient) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Cont
 	return r0, r1
 }
 
-// ScheduleActionRecordCountByStatus provides a mock function with given fields: ctx, status
-func (_m *DBClient) ScheduleActionRecordCountByStatus(ctx context.Context, status string) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx, status)
+// ScheduleActionRecordCountByStatus provides a mock function with given fields: ctx, status, start, end
+func (_m *DBClient) ScheduleActionRecordCountByStatus(ctx context.Context, status string, start int64, end int64) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, status, start, end)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordCountByStatus")
@@ -320,17 +320,17 @@ func (_m *DBClient) ScheduleActionRecordCountByStatus(ctx context.Context, statu
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context, string) (uint32, errors.EdgeX)); ok {
-		return rf(ctx, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, status, start, end)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) uint32); ok {
-		r0 = rf(ctx, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64, int64) uint32); ok {
+		r0 = rf(ctx, status, start, end)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) errors.EdgeX); ok {
-		r1 = rf(ctx, status)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64) errors.EdgeX); ok {
+		r1 = rf(ctx, status, start, end)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -340,9 +340,9 @@ func (_m *DBClient) ScheduleActionRecordCountByStatus(ctx context.Context, statu
 	return r0, r1
 }
 
-// ScheduleActionRecordTotalCount provides a mock function with given fields: ctx
-func (_m *DBClient) ScheduleActionRecordTotalCount(ctx context.Context) (uint32, errors.EdgeX) {
-	ret := _m.Called(ctx)
+// ScheduleActionRecordTotalCount provides a mock function with given fields: ctx, start, end
+func (_m *DBClient) ScheduleActionRecordTotalCount(ctx context.Context, start int64, end int64) (uint32, errors.EdgeX) {
+	ret := _m.Called(ctx, start, end)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ScheduleActionRecordTotalCount")
@@ -350,17 +350,17 @@ func (_m *DBClient) ScheduleActionRecordTotalCount(ctx context.Context) (uint32,
 
 	var r0 uint32
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(context.Context) (uint32, errors.EdgeX)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) (uint32, errors.EdgeX)); ok {
+		return rf(ctx, start, end)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int64, int64) uint32); ok {
+		r0 = rf(ctx, start, end)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) errors.EdgeX); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, int64, int64) errors.EdgeX); ok {
+		r1 = rf(ctx, start, end)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
