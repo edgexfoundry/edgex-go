@@ -99,7 +99,7 @@ func validScheduleJob() models.ScheduleJob {
 	}
 }
 
-func TestValidateScheduleJob(t *testing.T) {
+func TestValidateUpdatingScheduleJob(t *testing.T) {
 	dic := mockDic()
 	mockManager := NewManager(dic)
 
@@ -148,7 +148,7 @@ func TestValidateScheduleJob(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := mockManager.ValidateScheduleJob(testCase.job)
+			err := mockManager.ValidateUpdatingScheduleJob(testCase.job)
 			if testCase.expectedError {
 				assert.Error(t, err)
 			} else {

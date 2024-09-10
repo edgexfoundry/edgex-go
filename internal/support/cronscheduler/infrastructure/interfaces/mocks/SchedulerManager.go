@@ -155,12 +155,12 @@ func (_m *SchedulerManager) UpdateScheduleJob(job models.ScheduleJob, correlatio
 	return r0
 }
 
-// ValidateScheduleJob provides a mock function with given fields: job
-func (_m *SchedulerManager) ValidateScheduleJob(job models.ScheduleJob) errors.EdgeX {
+// ValidateUpdatingScheduleJob provides a mock function with given fields: job
+func (_m *SchedulerManager) ValidateUpdatingScheduleJob(job models.ScheduleJob) errors.EdgeX {
 	ret := _m.Called(job)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ValidateScheduleJob")
+		panic("no return value specified for ValidateUpdatingScheduleJob")
 	}
 
 	var r0 errors.EdgeX

@@ -73,13 +73,8 @@ func (m *manager) AddScheduleJob(job models.ScheduleJob, correlationId string) e
 
 // UpdateScheduleJob updates a ScheduleJob in the scheduler manager
 func (m *manager) UpdateScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
-	_, err := m.getSchedulerByJobName(job.Name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-
 	// Validate the ScheduleJob before updating it
-	if err := m.ValidateScheduleJob(job); err != nil {
+	if err := m.ValidateUpdatingScheduleJob(job); err != nil {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to validate the scheduled job", err)
 	}
 
@@ -178,8 +173,8 @@ func (m *manager) Shutdown(correlationId string) errors.EdgeX {
 	return nil
 }
 
-// ValidateScheduleJob validates the ScheduleJob that will be updated, this function mainly checks the definition and actions of the ScheduleJob with gocron
-func (m *manager) ValidateScheduleJob(job models.ScheduleJob) errors.EdgeX {
+// ValidateUpdatingScheduleJob validates the ScheduleJob that will be updated, this function mainly checks the definition and actions of the ScheduleJob with gocron
+func (m *manager) ValidateUpdatingScheduleJob(job models.ScheduleJob) errors.EdgeX {
 	if job.Name == "" && job.Id == "" {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name or ID is required", nil)
 	}
