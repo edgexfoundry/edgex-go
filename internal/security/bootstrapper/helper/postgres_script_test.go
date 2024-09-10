@@ -24,7 +24,7 @@ func TestGeneratePostgresScript(t *testing.T) {
 		_ = os.RemoveAll(fileName)
 	}()
 
-	mockUsername := "core-data"
+	mockUsername := "core_data"
 	mockPassword := "password123"
 	mockCredMap := []map[string]any{{
 		"Username": mockUsername,
@@ -50,6 +50,6 @@ func TestGeneratePostgresScript(t *testing.T) {
 	}
 
 	expectedCreateScript := fmt.Sprintf("CREATE USER %s with PASSWORD '%s';", mockUsername, mockPassword)
-	require.Equal(t, 15, len(outputlines))
-	require.Equal(t, expectedCreateScript, strings.TrimSpace(outputlines[10]))
+	require.Equal(t, 17, len(outputlines))
+	require.Equal(t, expectedCreateScript, strings.TrimSpace(outputlines[11]))
 }
