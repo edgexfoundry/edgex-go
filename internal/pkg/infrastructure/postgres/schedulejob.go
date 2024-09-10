@@ -178,7 +178,7 @@ func queryScheduleJob(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 	job.Created = created.UnixMilli()
 	job.Modified = modified.UnixMilli()
 
-	job, err = toScheduleJobsModel(job, scheduleJobJSONBytes)
+	job, err = toScheduleJobModel(job, scheduleJobJSONBytes)
 	if err != nil {
 		return job, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -206,7 +206,7 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 		job.Created = created.UnixMilli()
 		job.Modified = modified.UnixMilli()
 
-		job, err = toScheduleJobsModel(job, scheduleJobJSONBytes)
+		job, err = toScheduleJobModel(job, scheduleJobJSONBytes)
 		if err != nil {
 			return nil, errors.NewCommonEdgeXWrapper(err)
 		}
@@ -219,16 +219,17 @@ func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 	return scheduleJobs, nil
 }
 
-func toScheduleJobsModel(scheduleJobs model.ScheduleJob, scheduleJobJSONBytes []byte) (model.ScheduleJob, errors.EdgeX) {
+func toScheduleJobModel(scheduleJob model.ScheduleJob, scheduleJobJSONBytes []byte) (model.ScheduleJob, errors.EdgeX) {
 	var storedJob model.ScheduleJob
 	if err := json.Unmarshal(scheduleJobJSONBytes, &storedJob); err != nil {
-		return scheduleJobs, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON unmarshal schedule job", err)
+		return scheduleJob, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON unmarshal schedule job", err)
 	}
 
-	scheduleJobs.Actions = storedJob.Actions
-	scheduleJobs.AdminState = storedJob.AdminState
-	scheduleJobs.Definition = storedJob.Definition
-	scheduleJobs.Labels = storedJob.Labels
-	scheduleJobs.Properties = storedJob.Properties
-	return scheduleJobs, nil
+	scheduleJob.Actions = storedJob.Actions
+	scheduleJob.AdminState = storedJob.AdminState
+	scheduleJob.AutoTriggerMissedRecords = storedJob.AutoTriggerMissedRecords
+	scheduleJob.Definition = storedJob.Definition
+	scheduleJob.Labels = storedJob.Labels
+	scheduleJob.Properties = storedJob.Properties
+	return scheduleJob, nil
 }

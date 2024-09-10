@@ -269,6 +269,9 @@ components:
           enum:
             - LOCKED
             - UNLOCKED
+        autoTriggerMissedRecords:
+          type: boolean
+          description: "Indicates whether to automatically trigger missed action records when the service starts."
         created:
           description: "A timestamp indicating when the schedule job was created."
           type: integer
@@ -359,6 +362,9 @@ components:
           enum:
             - LOCKED
             - UNLOCKED
+        autoTriggerMissedRecords:
+          type: boolean
+          description: "Indicates whether to automatically trigger missed action records when the service starts. Default value is false."
         definition:
           description: "The schedule definition of the schedule job"
           $ref: '#/components/schemas/ScheduleDef'
@@ -526,6 +532,7 @@ components:
                 address: "http://localhost:59881/api/v3/ping"
                 method: "GET"
             adminState: "UNLOCKED"
+            autoTriggerMissedRecords: true
     AddIntervalScheduleJobExample:
       value:
         - apiVersion: "v3"
@@ -542,6 +549,7 @@ components:
               topic: "test_topic"
               payload: "eyJ0ZXN0I"
             adminState: "UNLOCKED"
+            autoTriggerMissedRecords: false
     MultiScheduleActionRecordsExample:
       value:
         apiVersion: "v3"
@@ -657,6 +665,7 @@ components:
                 address: "http://localhost:59881/api/v3/ping"
                 method: "GET"
             adminState: "UNLOCKED"
+            autoTriggerMissedRecords: true
           - created: 1634280525302
             modified: 1634280525302
             id: "7b9c6908-0929-498d-9f81-c25abdedd93f"
@@ -672,6 +681,23 @@ components:
                 topic: "test_topic"
                 payload: "eyJ0ZXN0I"
             adminState: "UNLOCKED"
+    SingleScheduleActionRecordExample:
+      value:
+        apiVersion: "v3"
+        requestId: "e6e8a2f4-eb14-4649-9e2b-175247911369"
+        statusCode: 200
+        totalCount: 1
+        scheduleActionRecords:
+          - created: 1634279367311
+            scheduledAt: 1634279367311
+            id: "debade10-7838-44bd-9c09-1283813db6c8"
+            jobName: "test_job_1"
+            status: "SUCCEEDED"
+            action:
+              type: "REST"
+              contentType: "application/json"
+              address: "http://localhost:59881/api/v3/ping"
+              method: "GET"
     UpdateCronScheduleJobExample:
       value:
         - apiVersion: "v3"
@@ -686,6 +712,7 @@ components:
                 address: "http://localhost:59881/api/v3/ping"
                 method: "GET"
             adminState: "UNLOCKED"
+            autoTriggerMissedRecords: true
 paths:
   /job:
     parameters:
@@ -1070,6 +1097,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiScheduleActionRecordsResponse'
+              examples:
+                SingleScheduleActionRecordExample:
+                  $ref: '#/components/examples/SingleScheduleActionRecordExample'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1104,6 +1134,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiScheduleActionRecordsResponse'
+              examples:
+                SingleScheduleActionRecordExample:
+                  $ref: '#/components/examples/SingleScheduleActionRecordExample'
         '404':
           description: "The requested schedule job does not exist"
           headers:
@@ -1149,6 +1182,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MultiScheduleActionRecordsResponse'
+              examples:
+                SingleScheduleActionRecordExample:
+                  $ref: '#/components/examples/SingleScheduleActionRecordExample'
         '404':
           description: "The requested schedule job does not exist"
           headers:

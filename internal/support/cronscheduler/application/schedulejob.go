@@ -208,9 +208,20 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 			continue
 		}
 		// Generate missed schedule action records for the existing scheduled jobs
-		err = generateMissedRecords(ctx, job, dic)
+		err, hasMissedAction := generateMissedRecords(ctx, job, dic)
 		if err != nil {
 			return errors.NewCommonEdgeXWrapper(err)
+		}
+		if hasMissedAction && job.AutoTriggerMissedRecords {
+			lc.Debugf("Auto-triggering the missed schedule actions once for the scheduled job: %s. Correlation-ID: %s", job.Name, correlationId)
+			err = schedulerManager.TriggerScheduleJobByName(job.Name, correlationId)
+			if err != nil {
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+		}
+
+		if !job.AutoTriggerMissedRecords {
+			lc.Debugf("AutoTriggerMissedRecords is disabled, the missed schedule actions for the scheduled job: %s will not be auto-triggered. Correlation-ID: %s", job.Name, correlationId)
 		}
 
 		lc.Debugf("Successfully loaded the existing scheduled job: %s. Correlation-ID: %s", job.Name, correlationId)
@@ -277,25 +288,25 @@ func isEndTimestampExpired(endTimestamp int64) bool {
 }
 
 // generateMissedRecords generates missed schedule action records
-func generateMissedRecords(ctx context.Context, job models.ScheduleJob, dic *di.Container) errors.EdgeX {
+func generateMissedRecords(ctx context.Context, job models.ScheduleJob, dic *di.Container) (err errors.EdgeX, hasMissedAction bool) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
 
 	if job.AdminState != models.Unlocked {
 		lc.Debugf("The scheduled job: %s is locked, skip generating missed schedule action records. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
-		return nil
+		return nil, hasMissedAction
 	}
 
 	// Get the latest schedule action records by job name and generate missed schedule action records
 	latestRecords, err := dbClient.LatestScheduleActionRecordsByJobName(ctx, job.Name)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to load the latest schedule action records of job: %s", job.Name), err)
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to load the latest schedule action records of job: %s", job.Name), err), hasMissedAction
 	}
-	err = GenerateMissedScheduleActionRecords(ctx, dic, job, latestRecords)
+	err, hasMissedAction = GenerateMissedScheduleActionRecords(ctx, dic, job, latestRecords)
 	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+		return errors.NewCommonEdgeXWrapper(err), hasMissedAction
 	}
 
-	return nil
+	return nil, hasMissedAction
 }
