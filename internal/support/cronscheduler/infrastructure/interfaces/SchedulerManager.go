@@ -17,6 +17,7 @@ type SchedulerManager interface {
 	StartScheduleJobByName(name, correlationId string) errors.EdgeX
 	StopScheduleJobByName(name, correlationId string) errors.EdgeX
 	TriggerScheduleJobByName(name, correlationId string) errors.EdgeX
+	ValidateScheduleJob(job models.ScheduleJob) errors.EdgeX
 
 	Shutdown(correlationId string) errors.EdgeX
 }

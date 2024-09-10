@@ -48,10 +48,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
-	configuration := container.ConfigurationFrom(dic.Get)
 
-	schedulerManager := infrastructure.NewManager(lc, dic, configuration, secretProvider)
+	schedulerManager := infrastructure.NewManager(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.SchedulerManagerName: func(get di.Get) interface{} {
 			return schedulerManager

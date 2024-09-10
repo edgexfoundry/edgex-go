@@ -155,6 +155,26 @@ func (_m *SchedulerManager) UpdateScheduleJob(job models.ScheduleJob, correlatio
 	return r0
 }
 
+// ValidateScheduleJob provides a mock function with given fields: job
+func (_m *SchedulerManager) ValidateScheduleJob(job models.ScheduleJob) errors.EdgeX {
+	ret := _m.Called(job)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateScheduleJob")
+	}
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(models.ScheduleJob) errors.EdgeX); ok {
+		r0 = rf(job)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // NewSchedulerManager creates a new instance of SchedulerManager. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewSchedulerManager(t interface {
