@@ -33,7 +33,7 @@ set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -q <<-'EOSQL'
   SELECT 'CREATE DATABASE edgex_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'edgex_db')\gexec
-  CREATE GROUP edgex_user;
+  SELECT 'CREATE GROUP edgex_user' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'edgex_user') \gexec
   GRANT CONNECT, CREATE ON DATABASE edgex_db TO edgex_user;
   \connect edgex_db;
 
@@ -41,9 +41,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -q <<-'EOSQL'
   BEGIN
     {{range .Services}} 
         CREATE SCHEMA IF NOT EXISTS {{.Username}};
-        CREATE USER {{.Username}} with PASSWORD '{{.Password}}';
-        GRANT ALL ON SCHEMA {{.Username}} TO {{.Username}};
-        ALTER GROUP edgex_user ADD USER {{.Username}};
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{.Username}}') THEN
+            CREATE USER {{.Username}} with PASSWORD '{{.Password}}';
+            GRANT ALL ON SCHEMA {{.Username}} TO {{.Username}};
+            ALTER GROUP edgex_user ADD USER {{.Username}};
+        END IF;
 	{{end}}
   END $$;
 EOSQL`

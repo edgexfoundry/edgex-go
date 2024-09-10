@@ -426,40 +426,41 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		if err != nil {
 			return false
 		}
-	} else {
-		// Add any additional services that need the known DB secret
-		lc.Infof("adding any additional services using redisdb for knownSecrets...")
-		services, ok := knownSecretsToAdd[redisSecretName]
-		if ok {
-			for _, service := range services {
-				err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
-				if err != nil {
-					lc.Error(err.Error())
-					return false
-				}
+	}
+
+	// NOTE: for now redis secrets will be generated for all database types
+	// Add any additional services that need the known DB secret
+	lc.Infof("adding any additional services using redisdb for knownSecrets...")
+	services, ok := knownSecretsToAdd[redisSecretName]
+	if ok {
+		for _, service := range services {
+			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+			if err != nil {
+				lc.Error(err.Error())
+				return false
 			}
 		}
+	}
 
-		lc.Infof("adding redisdb secret name for internal services...")
-		for _, info := range configuration.Databases {
-			service := info.Service
+	lc.Infof("adding redisdb secret name for internal services...")
+	for _, info := range configuration.Databases {
+		service := info.Service
 
-			// add credentials to service path if specified and they're not already there
-			if len(service) != 0 {
-				err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
-				if err != nil {
-					lc.Error(err.Error())
-					return false
-				}
+		// add credentials to service path if specified and they're not already there
+		if len(service) != 0 {
+			err = addServiceCredential(lc, redisSecretName, secretStore, service, redisCredentials)
+			if err != nil {
+				lc.Error(err.Error())
+				return false
 			}
 		}
-		// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
-		// with append the DB type (redisdb)
-		err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
-		if err != nil {
-			lc.Error(err.Error())
-			return false
-		}
+	}
+	// security-bootstrapper-redis uses the path /v1/secret/edgex/security-bootstrapper-redis/ and go-mod-bootstrap
+	// with append the DB type (redisdb)
+	err = storeCredential(lc, "security-bootstrapper-redis", secretStore, redisSecretName, redisCredentials)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
 	}
 
 	// for secure message bus creds

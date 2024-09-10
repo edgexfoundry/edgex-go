@@ -21,29 +21,34 @@ set -e
 
 # env settings are populated from env files of docker-compose
 
-echo "Script for waiting security bootstrapping on Postgres"
+# execute security-bootstrapper scripts only with root user
+if [ "$(id -u)" = '0' ]; then
+  # gating on the TokensReadyPort
+  echo "$(date) Executing waitFor on Postgres with waiting on TokensReadyPort \
+    tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
+  /edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
+    -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
+    -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
-# gating on the TokensReadyPort
-echo "$(date) Executing waitFor on Postgres with waiting on TokensReadyPort \
-  tcp://${STAGEGATE_SECRETSTORESETUP_HOST}:${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}"
-/edgex-init/security-bootstrapper --configDir=/edgex-init/res waitFor \
-  -uri tcp://"${STAGEGATE_SECRETSTORESETUP_HOST}":"${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" \
-  -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
+  # the configurePostgres retrieves the postgres user's credentials from secretstore (i.e. Vault)
+  echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping postgres..."
 
-# the configurePostgres retrieves the postgres user's credentials from secretstore (i.e. Vault)
-echo "$(date) ${STAGEGATE_SECRETSTORESETUP_HOST} tokens ready, bootstrapping postgres..."
-/edgex-init/security-bootstrapper --configDir=/edgex-init/bootstrap-postgres/res configurePostgres
+  /edgex-init/security-bootstrapper --configDir=/edgex-init/bootstrap-postgres/res configurePostgres
 
-postgres_bootstrapping_status=$?
-if [ $postgres_bootstrapping_status -ne 0 ]; then
-  echo "$(date) failed to bootstrap postgres"
-  exit 1
-fi
+  postgres_bootstrapping_status=$?
+
+  if [ $postgres_bootstrapping_status -ne 0 ]; then
+    echo "$(date) failed to bootstrap postgres"
+    exit 1
+  fi
 
 
-if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
-  ehco "$(date) Error: initialization script file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
-  exit 1
+  if [ ! -f "${DATABASECONFIG_PATH}"/"${DATABASECONFIG_NAME}" ]; then
+    ehco "$(date) Error: initialization script file ${DATABASECONFIG_PATH}/${DATABASECONFIG_NAME} not exists"
+    exit 1
+  fi
+  find "${DATABASECONFIG_PATH}" \! -user postgres -exec chown postgres '{}' +
+  chmod 700 "${DATABASECONFIG_PATH}"
 fi
 
 # customizing of Postgres startup process by including the docker-entrypoint script
