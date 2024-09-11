@@ -13,6 +13,7 @@ import (
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
 
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	bootstrapInterfaces "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
@@ -26,6 +27,11 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces"
 )
 
+const (
+	// validationTag is the tag used to validate the ScheduleJob internally and then remove those jobs from the scheduler by this tag
+	validationTag = "::validation::"
+)
+
 type manager struct {
 	lc             logger.LoggingClient
 	dic            *di.Container
@@ -36,11 +42,15 @@ type manager struct {
 }
 
 // NewManager creates a new scheduler manager for running the ScheduleJob
-func NewManager(lc logger.LoggingClient, dic *di.Container, config *config.ConfigurationStruct, secretProvider bootstrapInterfaces.SecretProviderExt) interfaces.SchedulerManager {
+func NewManager(dic *di.Container) interfaces.SchedulerManager {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
+	configuration := container.ConfigurationFrom(dic.Get)
+
 	return &manager{
 		lc:             lc,
 		dic:            dic,
-		config:         config,
+		config:         configuration,
 		schedulers:     make(map[string]gocron.Scheduler),
 		secretProvider: secretProvider,
 	}
@@ -63,9 +73,9 @@ func (m *manager) AddScheduleJob(job models.ScheduleJob, correlationId string) e
 
 // UpdateScheduleJob updates a ScheduleJob in the scheduler manager
 func (m *manager) UpdateScheduleJob(job models.ScheduleJob, correlationId string) errors.EdgeX {
-	_, err := m.getSchedulerByJobName(job.Name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+	// Validate the ScheduleJob before updating it
+	if err := m.ValidateUpdatingScheduleJob(job); err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to validate the scheduled job", err)
 	}
 
 	// Remove the old job from gocron
@@ -74,6 +84,7 @@ func (m *manager) UpdateScheduleJob(job models.ScheduleJob, correlationId string
 	}
 	m.lc.Debugf("The old scheduled job %s was removed from the scheduler manager while updating it. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 
+	// Create a new job with the updated ScheduleJob
 	if err := m.addNewJob(job); err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -159,6 +170,49 @@ func (m *manager) Shutdown(correlationId string) errors.EdgeX {
 	m.mu.Unlock()
 
 	m.lc.Debugf("All scheduled jobs were stopped and removed from the scheduler manager. Correlation-ID: %s", correlationId)
+	return nil
+}
+
+// ValidateUpdatingScheduleJob validates the ScheduleJob that will be updated, this function mainly checks the definition and actions of the ScheduleJob with gocron
+func (m *manager) ValidateUpdatingScheduleJob(job models.ScheduleJob) errors.EdgeX {
+	if job.Name == "" && job.Id == "" {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name or ID is required", nil)
+	}
+	if job.Definition == nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "definition field is required", nil)
+	}
+	if job.Actions == nil || len(job.Actions) == 0 {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "actions field is required", nil)
+	}
+
+	scheduler, err := m.getSchedulerByJobName(job.Name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	definition, edgeXerr := action.ToGocronJobDef(job.Definition)
+	if edgeXerr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	for _, a := range job.Actions {
+		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
+		if edgeXerr != nil {
+			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		}
+
+		// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
+		// Those "Jobs" will be created with a validation tag, and then removed from the scheduler if there is no error while creating them
+		_, err := scheduler.NewJob(definition, task, gocron.WithTags(validationTag))
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindServerError,
+				fmt.Sprintf("failed to create scheduled job: %s", job.Name), err)
+		}
+	}
+
+	// Remove the jobs for validation from the scheduler
+	scheduler.RemoveByTags(validationTag)
+
 	return nil
 }
 
