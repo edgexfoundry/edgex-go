@@ -176,22 +176,33 @@ func (c *Client) DeleteKeeperKeys(key string, isRecurse bool) ([]models.KeyOnly,
 // updateKVS insert or update a single key-value pair with value is simply a string or a map
 func updateKVS(connPool *pgxpool.Pool, key string, value any) errors.EdgeX {
 	ctx := context.Background()
-	storedValueBytes, err := json.Marshal(value)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to marshal stored value %v with key '%s'", value, key), err)
+	var storedValueBytes []byte
+
+	switch v := value.(type) {
+	case bool, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, string:
+		storedValueStr := cast.ToString(v)
+		storedValueBytes = []byte(storedValueStr)
+	default:
+		encBytes, err := json.Marshal(v)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to marshal stored value %v with key '%s'", value, key), err)
+		}
+		storedValueBytes = encBytes
 	}
-	var encBytes []byte
-	base64.StdEncoding.Encode(encBytes, storedValueBytes)
+
+	// encode the value to a base64 string
+	storedValue := base64.StdEncoding.EncodeToString(storedValueBytes)
 
 	var exists bool
-	err = connPool.QueryRow(ctx, sqlCheckExistsByCol(configTableName, keyCol), key).Scan(&exists)
+	err := connPool.QueryRow(ctx, sqlCheckExistsByCol(configTableName, keyCol), key).Scan(&exists)
 	if err != nil {
 		return pgClient.WrapDBError(fmt.Sprintf("failed to query value by key '%s'", key), err)
 	}
 
 	if exists {
+		// update the key
 		_, err = connPool.Exec(ctx, sqlUpdateColsByCondCol(configTableName, keyCol, valueCol, modifiedCol),
-			encBytes,
+			storedValue,
 			time.Now().UTC(),
 			key,
 		)
@@ -199,9 +210,10 @@ func updateKVS(connPool *pgxpool.Pool, key string, value any) errors.EdgeX {
 			return pgClient.WrapDBError(fmt.Sprintf("failed to modified value by key '%s'", key), err)
 		}
 	} else {
+		// insert the key
 		_, err = connPool.Exec(ctx, sqlInsert(configTableName, keyCol, valueCol),
 			key,
-			encBytes,
+			storedValue,
 		)
 		if err != nil {
 			return pgClient.WrapDBError(fmt.Sprintf("failed to insert value by key '%s'", key), err)
