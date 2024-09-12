@@ -10,8 +10,6 @@ import (
 	"fmt"
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
@@ -66,7 +64,7 @@ func addIntervalAction(conn redis.Conn, action models.IntervalAction) (models.In
 		return action, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("intervalAction name %s already exists", action.Name), edgeXerr)
 	}
 
-	ts := utils.MakeTimestamp()
+	ts := pkgCommon.MakeTimestamp()
 	if action.Created == 0 {
 		action.Created = ts
 	}
