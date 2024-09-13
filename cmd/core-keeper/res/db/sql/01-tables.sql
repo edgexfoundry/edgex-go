@@ -11,3 +11,9 @@ CREATE TABLE IF NOT EXISTS core_keeper.config (
     created timestamp NOT NULL DEFAULT now(),
     modified timestamp NOT NULL DEFAULT now()
 );
+
+-- core_keeper.registry is used to store the registry information
+CREATE TABLE IF NOT EXISTS core_keeper.registry (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    content jsonb NOT NULL
+);
