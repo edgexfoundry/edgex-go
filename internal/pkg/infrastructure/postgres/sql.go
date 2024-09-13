@@ -67,6 +67,14 @@ func sqlQueryFieldsByCol(table string, fields []string, columns ...string) strin
 	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
 }
 
+// sqlQueryFieldsByColAndLikePat returns the SQL statement for selecting the given fields of rows from the table by the conditions composed of given columns with LIKE operator
+func sqlQueryFieldsByColAndLikePat(table string, fields []string, columns ...string) string {
+	whereCondition := constructWhereLikeCond(columns...)
+	queryFieldStr := strings.Join(fields, ", ")
+
+	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
+}
+
 // sqlQueryAllWithTimeRange returns the SQL statement for selecting all rows from the table with a time range.
 //func sqlQueryAllWithTimeRange(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
@@ -182,6 +190,12 @@ func sqlCheckExistsByName(table string) string {
 //	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, idCol)
 //}
 
+// sqlCheckExistsByCol returns the SQL statement for checking if a row exists in the table by where condition.
+func sqlCheckExistsByCol(table string, columns ...string) string {
+	whereCondition := constructWhereCondition(columns...)
+	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s)", table, whereCondition)
+}
+
 // sqlQueryCount returns the SQL statement for counting the number of rows in the table.
 func sqlQueryCount(table string) string {
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s", table)
@@ -202,6 +216,12 @@ func sqlQueryCountContentLabels(table string) string {
 // by the given time range of the specified column
 func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColNames []string, columns ...string) string {
 	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, arrayColNames, columns...)
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
+}
+
+// sqlQueryCountByColAndLikePat returns the SQL statement for counting the number of rows by the given column name with LIKE pattern.
+func sqlQueryCountByColAndLikePat(table string, columns ...string) string {
+	whereCondition := constructWhereLikeCond(columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
 }
 
@@ -230,6 +250,13 @@ func sqlQueryFieldsByTimeRange(table string, fields []string, timeRangeCol strin
 // sqlUpdateContentByName returns the SQL statement for updating the content and modified timestamp of a row in the table by name.
 func sqlUpdateContentByName(table string) string {
 	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, nameCol)
+}
+
+// sqlUpdateColsByCondCol returns the SQL statement for updating the passed columns of a row in the table by condCol.
+func sqlUpdateColsByCondCol(table string, condCol string, cols ...string) string {
+	columnCount := len(cols)
+	updatedValues := constructUpdatedValues(cols...)
+	return fmt.Sprintf("UPDATE %s SET %s WHERE %s = $%d", table, updatedValues, condCol, columnCount+1)
 }
 
 // sqlUpdateContentById returns the SQL statement for updating the content and modified timestamp of a row in the table by id.
@@ -265,6 +292,17 @@ func sqlDeleteTimeRangeByColumn(table string, column string) string {
 // sqlDeleteByColumn returns the SQL statement for deleting rows from the table by the specified column
 func sqlDeleteByColumn(table string, column string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, column)
+}
+
+// sqlDeleteByColAndLikePat returns the SQL statement for deleting rows by the specified column with LIKE pattern
+// and append returnCol as result if not empty
+func sqlDeleteByColAndLikePat(table string, column string, returnCol ...string) string {
+	whereCond := constructWhereLikeCond(column)
+	deleteStmt := fmt.Sprintf("DELETE FROM %s WHERE %s", table, whereCond)
+	if len(returnCol) > 0 {
+		deleteStmt += " RETURNING " + strings.Join(returnCol, ", ")
+	}
+	return deleteStmt
 }
 
 // sqlDeleteByJSONField returns the SQL statement for deleting rows from the table by the given JSON query string
@@ -306,4 +344,28 @@ func constructWhereCondWithTimeRange(timeRangeCol string, arrayColNames []string
 	}
 
 	return strings.Join(conditions, " AND ")
+}
+
+// constructWhereLikeCond constructs the WHERE condition for the given columns with LIKE operator
+func constructWhereLikeCond(columns ...string) string {
+	columnCount := len(columns)
+	conditions := make([]string, columnCount)
+
+	for i, column := range columns {
+		conditions[i] = fmt.Sprintf("%s LIKE $%d", column, i+1)
+	}
+
+	return strings.Join(conditions, " AND ")
+}
+
+// constructWhereLikeCond constructs the updated values for SET keyword composed of the given columns
+func constructUpdatedValues(columns ...string) string {
+	columnCount := len(columns)
+	conditions := make([]string, columnCount)
+
+	for i, column := range columns {
+		conditions[i] = fmt.Sprintf("%s = $%d", column, i+1)
+	}
+
+	return strings.Join(conditions, ", ")
 }

@@ -7,13 +7,15 @@ package postgres
 
 // constants relate to the postgres db schema names
 const (
-	coreDataSchema = "core_data"
+	coreDataSchema   = "core_data"
+	coreKeeperSchema = "core_keeper"
 )
 
 // constants relate to the postgres db table names
 const (
 	eventTableName   = coreDataSchema + ".event"
 	readingTableName = coreDataSchema + ".reading"
+	configTableName  = coreKeeperSchema + ".config"
 )
 
 // constants relate to the event/reading postgres db table column names
@@ -31,4 +33,9 @@ const (
 	binaryValueCol  = "binaryvalue"
 	mediaTypeCol    = "mediatype"
 	objectValueCol  = "objectvalue"
+)
+
+// constants relate to the keeper postgres db table column names
+const (
+	keyCol = "key"
 )
