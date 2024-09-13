@@ -6,6 +6,7 @@
 package http
 
 import (
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
 	"net/http"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -67,7 +68,11 @@ func (rc *RegistryController) Register(c echo.Context) error {
 	}
 
 	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
-	return nil
+	response := commonDTO.BaseWithServiceNameResponse{
+		BaseResponse: commonDTO.NewBaseResponse("", "", http.StatusCreated),
+		ServiceName:  registry.ServiceId,
+	}
+	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
 func (rc *RegistryController) UpdateRegister(c echo.Context) error {

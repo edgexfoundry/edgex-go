@@ -13,9 +13,10 @@ const (
 
 // constants relate to the postgres db table names
 const (
-	eventTableName   = coreDataSchema + ".event"
-	readingTableName = coreDataSchema + ".reading"
-	configTableName  = coreKeeperSchema + ".config"
+	eventTableName    = coreDataSchema + ".event"
+	readingTableName  = coreDataSchema + ".reading"
+	configTableName   = coreKeeperSchema + ".config"
+	registryTableName = coreKeeperSchema + ".registry"
 )
 
 // constants relate to the event/reading postgres db table column names

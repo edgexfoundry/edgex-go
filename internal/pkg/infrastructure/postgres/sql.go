@@ -170,10 +170,15 @@ func sqlQueryAllById(table string) string {
 //	return fmt.Sprintf("SELECT content FROM %s ORDER BY created OFFSET $1 LIMIT $2", table)
 //}
 
+// sqlQueryContent returns the SQL statement for selecting content column in the table for all entries
+func sqlQueryContent(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s", table)
+}
+
 // sqlQueryCountByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
-//func sqlQueryContentByJSONField(table string) (string, errors.EdgeX) {
-//	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY %s OFFSET $2 LIMIT $3", table, createdCol), nil
-//}
+func sqlQueryContentByJSONField(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb", table)
+}
 
 // sqlQueryCountByJSONField returns the SQL statement for selecting content column by the given time range of the JSON field name
 //func sqlQueryContentByJSONFieldTimeRange(table string, field string) string {
@@ -194,6 +199,11 @@ func sqlCheckExistsByName(table string) string {
 func sqlCheckExistsByCol(table string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
 	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s)", table, whereCondition)
+}
+
+// sqlCheckExistsByJSONField returns the SQL statement for checking if a row exists by query the JSON field in content column.
+func sqlCheckExistsByJSONField(table string) string {
+	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE content @> $1::jsonb)", table)
 }
 
 // sqlQueryCount returns the SQL statement for counting the number of rows in the table.
@@ -259,6 +269,13 @@ func sqlUpdateColsByCondCol(table string, condCol string, cols ...string) string
 	return fmt.Sprintf("UPDATE %s SET %s WHERE %s = $%d", table, updatedValues, condCol, columnCount+1)
 }
 
+// sqlUpdateColsByJSONCondCol returns the SQL statement for updating the passed columns of a row in the table by JSON field condition of content column.
+func sqlUpdateColsByJSONCondCol(table string, cols ...string) string {
+	columnCount := len(cols)
+	updatedValues := constructUpdatedValues(cols...)
+	return fmt.Sprintf("UPDATE %s SET %s WHERE content@>$%d::jsonb", table, updatedValues, columnCount+1)
+}
+
 // sqlUpdateContentById returns the SQL statement for updating the content and modified timestamp of a row in the table by id.
 //func sqlUpdateContentById(table string) string {
 //	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, idCol)
@@ -306,9 +323,9 @@ func sqlDeleteByColAndLikePat(table string, column string, returnCol ...string) 
 }
 
 // sqlDeleteByJSONField returns the SQL statement for deleting rows from the table by the given JSON query string
-//func sqlDeleteByJSONField(table string) (string, errors.EdgeX) {
-//	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table), nil
-//}
+func sqlDeleteByJSONField(table string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table)
+}
 
 // ----------------------------------------------------------------------------------
 // Utils
