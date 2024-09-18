@@ -9,42 +9,43 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 )
 
-const scheduleJobTable = "scheduler.schedule_job"
-
 // AddScheduleJob adds a new schedule job to the database
-func (c *Client) AddScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX) {
-	if len(scheduleJob.Id) == 0 {
-		scheduleJob.Id = uuid.New().String()
+func (c *Client) AddScheduleJob(ctx context.Context, j models.ScheduleJob) (models.ScheduleJob, errors.EdgeX) {
+	if len(j.Id) == 0 {
+		j.Id = uuid.New().String()
 	}
-	return addScheduleJob(ctx, c.ConnPool, scheduleJob)
+
+	j, err := addScheduleJob(ctx, c.ConnPool, j)
+	if err != nil {
+		return j, errors.NewCommonEdgeXWrapper(err)
+	}
+	return j, nil
 }
 
 // AllScheduleJobs queries the schedule jobs with the given range, offset, and limit
-func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, limit int) (jobs []model.ScheduleJob, err errors.EdgeX) {
+func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, limit int) (jobs []models.ScheduleJob, err errors.EdgeX) {
 	offset, limit = getValidOffsetAndLimit(offset, limit)
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying schedule jobs by labels: %v", labels)
-		labelsJSON, err := json.Marshal(labels)
-		if err != nil {
-			return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal labels", err)
-		}
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllByContentLabelsWithPagination(scheduleJobTable), labelsJSON, offset, limit)
+		queryObj := map[string]any{labelsField: labels}
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(scheduleJobTableName), queryObj, offset, limit)
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs by labels", err)
 		}
 	} else {
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryAllWithPagination(scheduleJobTable), offset, limit)
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentWithPagination(scheduleJobTableName), offset, limit)
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
 		}
@@ -54,20 +55,11 @@ func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, l
 }
 
 // UpdateScheduleJob updates the schedule job
-func (c *Client) UpdateScheduleJob(ctx context.Context, scheduleJob model.ScheduleJob) errors.EdgeX {
-	// Check if the schedule job exists
-	exists, err := scheduleJobNameExists(ctx, c.ConnPool, scheduleJob.Name)
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	} else if !exists {
-		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("schedule job '%s' does not exist", scheduleJob.Name), nil)
-	}
-
-	err = updateScheduleJob(ctx, c.ConnPool, scheduleJob)
+func (c *Client) UpdateScheduleJob(ctx context.Context, j models.ScheduleJob) errors.EdgeX {
+	err := updateScheduleJob(ctx, c.ConnPool, j)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
-
 	return nil
 }
 
@@ -80,20 +72,21 @@ func (c *Client) DeleteScheduleJobByName(ctx context.Context, name string) error
 }
 
 // ScheduleJobById queries the schedule job by id
-func (c *Client) ScheduleJobById(ctx context.Context, id string) (model.ScheduleJob, errors.EdgeX) {
-	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllById(scheduleJobTable), id)
+func (c *Client) ScheduleJobById(ctx context.Context, id string) (models.ScheduleJob, errors.EdgeX) {
+	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllById(scheduleJobTableName), id)
 	if err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by id %s", id), err)
+		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by id '%s'", id), err)
 	}
 
 	return scheduleJob, nil
 }
 
 // ScheduleJobByName queries the schedule job by name
-func (c *Client) ScheduleJobByName(ctx context.Context, name string) (model.ScheduleJob, errors.EdgeX) {
-	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryAllByName(scheduleJobTable), name)
+func (c *Client) ScheduleJobByName(ctx context.Context, name string) (models.ScheduleJob, errors.EdgeX) {
+	queryObj := map[string]any{nameField: name}
+	scheduleJob, err := queryScheduleJob(ctx, c.ConnPool, sqlQueryContentByJSONField(scheduleJobTableName), queryObj)
 	if err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by name %s", name), err)
+		return scheduleJob, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule job by name '%s'", name), err)
 	}
 
 	return scheduleJob, nil
@@ -102,134 +95,98 @@ func (c *Client) ScheduleJobByName(ctx context.Context, name string) (model.Sche
 // ScheduleJobTotalCount returns the total count of schedule jobs
 func (c *Client) ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX) {
 	if len(labels) > 0 {
-		labelsJSON, err := json.Marshal(labels)
-		if err != nil {
-			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal labels", err)
-		}
-		return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountContentLabels(scheduleJobTable), labelsJSON)
+		queryObj := map[string]any{labelsField: labels}
+		return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(scheduleJobTableName), queryObj)
 	}
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCount(scheduleJobTable))
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCount(scheduleJobTableName))
 }
 
-func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, scheduleJob model.ScheduleJob) (model.ScheduleJob, errors.EdgeX) {
-	// Check if the schedule job name exists
-	if exists, _ := scheduleJobNameExists(ctx, connPool, scheduleJob.Name); exists {
-		return scheduleJob, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("schedule job name %s already exists", scheduleJob.Name), nil)
+func addScheduleJob(ctx context.Context, connPool *pgxpool.Pool, j models.ScheduleJob) (models.ScheduleJob, errors.EdgeX) {
+	exists, edgexErr := checkScheduleJobExists(ctx, connPool, j.Name)
+	if edgexErr != nil {
+		return j, errors.NewCommonEdgeXWrapper(edgexErr)
+	}
+	if exists {
+		return j, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("schedule job name '%s' already exists", j.Name), nil)
 	}
 
-	// Marshal the scheduleJob to store it in the database
-	scheduleJobJSONBytes, err := json.Marshal(scheduleJob)
+	timestamp := time.Now().UTC().UnixMilli()
+	j.Created = timestamp
+	j.Modified = timestamp
+	dataBytes, err := json.Marshal(j)
 	if err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal schedule job for Postgres persistence", err)
+		return j, errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal ScheduleJob model", err)
 	}
 
-	_, err = connPool.Exec(ctx, sqlInsertContent(scheduleJobTable), scheduleJob.Id, scheduleJob.Name, scheduleJobJSONBytes)
+	_, err = connPool.Exec(context.Background(), sqlInsert(scheduleJobTableName, idCol, contentCol), j.Id, dataBytes)
 	if err != nil {
-		return scheduleJob, pgClient.WrapDBError("failed to insert schedule job", err)
+		return j, pgClient.WrapDBError("failed to insert row to scheduler.job table", err)
 	}
 
-	return scheduleJob, nil
+	return j, nil
 }
 
-func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, updatedScheduleJob model.ScheduleJob) errors.EdgeX {
-	modified := time.Now().UTC()
-	updatedScheduleJob.Modified = modified.UnixMilli()
+func updateScheduleJob(ctx context.Context, connPool *pgxpool.Pool, j models.ScheduleJob) errors.EdgeX {
+	modified := time.Now().UTC().UnixMilli()
+	j.Modified = modified
 
-	// Marshal the scheduleJob to store it in the database
-	updatedScheduleJobJSONBytes, err := json.Marshal(updatedScheduleJob)
+	dataBytes, err := json.Marshal(j)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON marshal schedule job for Postgres persistence", err)
+		return errors.NewCommonEdgeX(errors.KindServerError, "failed to marshal ScheduleJob model", err)
 	}
 
-	_, err = connPool.Exec(ctx, sqlUpdateContentByName(scheduleJobTable), updatedScheduleJobJSONBytes, modified, updatedScheduleJob.Name)
+	queryObj := map[string]any{nameField: j.Name}
+	_, err = connPool.Exec(ctx, sqlUpdateColsByJSONCondCol(scheduleJobTableName, contentCol), dataBytes, queryObj)
 	if err != nil {
-		return pgClient.WrapDBError("failed to update schedule job", err)
+		return pgClient.WrapDBError(fmt.Sprintf("failed to update row by schedule job name '%s' from scheduler.job table", j.Name), err)
 	}
 
 	return nil
 }
 
 func deleteScheduleJobByName(ctx context.Context, connPool *pgxpool.Pool, name string) errors.EdgeX {
-	_, err := connPool.Exec(ctx, sqlDeleteByName(scheduleJobTable), name)
+	queryObj := map[string]any{nameField: name}
+	_, err := connPool.Exec(ctx, sqlDeleteByJSONField(scheduleJobTableName), queryObj)
 	if err != nil {
 		return pgClient.WrapDBError(fmt.Sprintf("failed to delete schedule job by name %s", name), err)
 	}
 	return nil
 }
 
-func scheduleJobNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {
+func checkScheduleJobExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {
 	var exists bool
-	err := connPool.QueryRow(ctx, sqlCheckExistsByName(scheduleJobTable), name).Scan(&exists)
+	queryObj := map[string]any{nameField: name}
+	err := connPool.QueryRow(ctx, sqlCheckExistsByJSONField(scheduleJobTableName), queryObj).Scan(&exists)
 	if err != nil {
-		return false, pgClient.WrapDBError("failed to query schedule job by name", err)
+		return false, pgClient.WrapDBError(fmt.Sprintf("failed to query row by name '%s' from scheduler.job table", name), err)
 	}
 	return exists, nil
 }
 
-func queryScheduleJob(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) (model.ScheduleJob, errors.EdgeX) {
-	var job model.ScheduleJob
-	var scheduleJobJSONBytes []byte
-	var created, modified time.Time
-	err := connPool.QueryRow(ctx, sql, args...).Scan(&job.Id, &job.Name, &scheduleJobJSONBytes, &created, &modified)
-	if err != nil {
-		return job, pgClient.WrapDBError("failed to query scheduler.schedule_job table", err)
+func queryScheduleJob(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) (models.ScheduleJob, errors.EdgeX) {
+	var job models.ScheduleJob
+	row := connPool.QueryRow(ctx, sql, args...)
+
+	if err := row.Scan(&job); err != nil {
+		return job, pgClient.WrapDBError("failed to query schedule job", err)
 	}
-
-	job.Created = created.UnixMilli()
-	job.Modified = modified.UnixMilli()
-
-	job, err = toScheduleJobModel(job, scheduleJobJSONBytes)
-	if err != nil {
-		return job, errors.NewCommonEdgeXWrapper(err)
-	}
-
 	return job, nil
 }
 
-func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) ([]model.ScheduleJob, errors.EdgeX) {
+func queryScheduleJobs(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) ([]models.ScheduleJob, errors.EdgeX) {
 	rows, err := connPool.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, pgClient.WrapDBError("query failed", err)
-	}
-	defer rows.Close()
-
-	var scheduleJobs []model.ScheduleJob
-	for rows.Next() {
-		var job model.ScheduleJob
-		var created, modified time.Time
-		var scheduleJobJSONBytes []byte
-		err := rows.Scan(&job.Id, &job.Name, &scheduleJobJSONBytes, &created, &modified)
-		if err != nil {
-			return nil, pgClient.WrapDBError("failed to scan schedule job", err)
-		}
-
-		job.Created = created.UnixMilli()
-		job.Modified = modified.UnixMilli()
-
-		job, err = toScheduleJobModel(job, scheduleJobJSONBytes)
-		if err != nil {
-			return nil, errors.NewCommonEdgeXWrapper(err)
-		}
-		scheduleJobs = append(scheduleJobs, job)
+		return nil, pgClient.WrapDBError("failed to query rows from scheduler.job table", err)
 	}
 
-	if readErr := rows.Err(); readErr != nil {
-		return nil, pgClient.WrapDBError("error occurred while query scheduler.schedule_job table", readErr)
-	}
-	return scheduleJobs, nil
-}
-
-func toScheduleJobModel(scheduleJob model.ScheduleJob, scheduleJobJSONBytes []byte) (model.ScheduleJob, errors.EdgeX) {
-	var storedJob model.ScheduleJob
-	if err := json.Unmarshal(scheduleJobJSONBytes, &storedJob); err != nil {
-		return scheduleJob, errors.NewCommonEdgeX(errors.KindContractInvalid, "unable to JSON unmarshal schedule job", err)
+	jobs, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.ScheduleJob, error) {
+		var j models.ScheduleJob
+		scanErr := row.Scan(&j)
+		return j, scanErr
+	})
+	if err != nil {
+		return nil, pgClient.WrapDBError("failed to collect rows to ScheduleJob model", err)
 	}
 
-	scheduleJob.Actions = storedJob.Actions
-	scheduleJob.AdminState = storedJob.AdminState
-	scheduleJob.AutoTriggerMissedRecords = storedJob.AutoTriggerMissedRecords
-	scheduleJob.Definition = storedJob.Definition
-	scheduleJob.Labels = storedJob.Labels
-	scheduleJob.Properties = storedJob.Properties
-	return scheduleJob, nil
+	return jobs, nil
 }

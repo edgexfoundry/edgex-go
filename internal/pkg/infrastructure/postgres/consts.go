@@ -7,16 +7,28 @@ package postgres
 
 // constants relate to the postgres db schema names
 const (
-	coreDataSchema   = "core_data"
-	coreKeeperSchema = "core_keeper"
+	coreDataSchema         = "core_data"
+	coreKeeperSchema       = "core_keeper"
+	supportSchedulerSchema = "support_scheduler"
 )
 
 // constants relate to the postgres db table names
 const (
-	eventTableName    = coreDataSchema + ".event"
-	readingTableName  = coreDataSchema + ".reading"
-	configTableName   = coreKeeperSchema + ".config"
-	registryTableName = coreKeeperSchema + ".registry"
+	configTableName               = coreKeeperSchema + ".config"
+	eventTableName                = coreDataSchema + ".event"
+	readingTableName              = coreDataSchema + ".reading"
+	registryTableName             = coreKeeperSchema + ".registry"
+	scheduleActionRecordTableName = supportSchedulerSchema + ".record"
+	scheduleJobTableName          = supportSchedulerSchema + ".job"
+)
+
+// constants relate to the common db table column names
+const (
+	contentCol  = "content"
+	createdCol  = "created"
+	idCol       = "id"
+	modifiedCol = "modified"
+	statusCol   = "status"
 )
 
 // constants relate to the event/reading postgres db table column names
@@ -39,4 +51,19 @@ const (
 // constants relate to the keeper postgres db table column names
 const (
 	keyCol = "key"
+)
+
+// constants relate to the schedule action record postgres db table column names
+const (
+	actionCol      = "action"
+	actionIdCol    = "action_id"
+	jobNameCol     = "job_name"
+	scheduledAtCol = "scheduled_at"
+)
+
+// constants relate to the field names in the content column
+const (
+	labelsField    = "Labels"
+	nameField      = "Name"
+	serviceIdField = "ServiceId"
 )

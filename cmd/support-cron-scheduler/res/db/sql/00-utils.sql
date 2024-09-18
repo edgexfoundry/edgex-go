@@ -3,5 +3,5 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- schema for scheduler related tables
-CREATE SCHEMA IF NOT EXISTS scheduler;
+-- schema for support_scheduler related tables
+CREATE SCHEMA IF NOT EXISTS support_scheduler;

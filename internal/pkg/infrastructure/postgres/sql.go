@@ -14,19 +14,6 @@ import (
 	"strings"
 )
 
-const (
-	// Constants for common column names in the database.
-	contentCol  = "content"
-	createdCol  = "created"
-	idCol       = "id"
-	modifiedCol = "modified"
-	nameCol     = "name"
-	statusCol   = "status"
-
-	// Constants for common json field names in the database.
-	labelsField = "Labels"
-)
-
 // ----------------------------------------------------------------------------------
 // SQL statements for INSERT operations
 // ----------------------------------------------------------------------------------
@@ -43,11 +30,6 @@ func sqlInsert(table string, columns ...string) string {
 
 	valueNames := strings.Join(valuePlaceholders, ", ")
 	return fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s)", table, columnNames, valueNames)
-}
-
-// sqlInsertContent returns the SQL statement for inserting a new row with id, name, and content into the table.
-func sqlInsertContent(table string) string {
-	return fmt.Sprintf("INSERT INTO %s(%s, %s, %s) VALUES ($1, $2, $3)", table, idCol, nameCol, contentCol)
 }
 
 // ----------------------------------------------------------------------------------
@@ -80,11 +62,6 @@ func sqlQueryFieldsByColAndLikePat(table string, fields []string, columns ...str
 //	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
 //}
 
-// sqlQueryAllWithPagination returns the SQL statement for selecting all rows from the table with pagination.
-func sqlQueryAllWithPagination(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s OFFSET $1 LIMIT $2", table)
-}
-
 // sqlQueryAllWithPaginationDesc returns the SQL statement for selecting all rows from the table with pagination by created timestamp in descending order.
 //func sqlQueryAllWithPaginationDesc(table string) string {
 //	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
@@ -109,11 +86,6 @@ func sqlQueryAllAndDescWithCondsAndPag(table string, descCol string, columns ...
 	whereCondition := constructWhereCondition(columns...)
 
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d", table, whereCondition, descCol, columnCount+1, columnCount+2)
-}
-
-// sqlQueryAllByLabelsWithPagination returns the SQL statement for selecting all rows from the table by the given labels from content with pagination
-func sqlQueryAllByContentLabelsWithPagination(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE content->'%s' @> $1::jsonb ORDER BY %s OFFSET $2 LIMIT $3", table, labelsField, createdCol)
 }
 
 // sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
@@ -150,45 +122,40 @@ func sqlQueryAllByColWithPaginationAndTimeRange(table string, columns ...string)
 //	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s DESC OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
 //}
 
-// sqlQueryAllByName returns the SQL statement for selecting all rows from the table by name.
-func sqlQueryAllByName(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", table, nameCol)
-}
-
 // sqlQueryAllById returns the SQL statement for selecting all rows from the table by id.
 func sqlQueryAllById(table string) string {
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", table, idCol)
 }
 
-// sqlQueryAllById returns the SQL statement for selecting content column by the specified id.
+// sqlQueryContentById returns the SQL statement for selecting content column by the specified id.
 //func sqlQueryContentById(table string) string {
 //	return fmt.Sprintf("SELECT content FROM %s WHERE %s = $1", table, idCol)
 //}
 
 // sqlQueryContentWithPagination returns the SQL statement for selecting content column from the table with pagination
-//func sqlQueryContentWithPagination(table string) string {
-//	return fmt.Sprintf("SELECT content FROM %s ORDER BY created OFFSET $1 LIMIT $2", table)
-//}
+func sqlQueryContentWithPagination(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'created')::timestamp, NOW()) OFFSET $1 LIMIT $2", table)
+}
 
 // sqlQueryContent returns the SQL statement for selecting content column in the table for all entries
 func sqlQueryContent(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s", table)
 }
 
-// sqlQueryCountByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
+// sqlQueryContentByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
 func sqlQueryContentByJSONField(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb", table)
 }
 
-// sqlQueryCountByJSONField returns the SQL statement for selecting content column by the given time range of the JSON field name
+// sqlQueryContentByJSONFieldWithPagination returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
+func sqlQueryContentByJSONFieldWithPagination(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY COALESCE((content->>'created')::timestamp, NOW()) OFFSET $2 LIMIT $3", table)
+}
+
+// sqlQueryContentByJSONFieldTimeRange returns the SQL statement for selecting content column by the given time range of the JSON field name
 //func sqlQueryContentByJSONFieldTimeRange(table string, field string) string {
 //	return fmt.Sprintf("SELECT content FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, field, field, createdCol)
 //}
-
-// sqlCheckExistsByName returns the SQL statement for checking if a row exists in the table by name.
-func sqlCheckExistsByName(table string) string {
-	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, nameCol)
-}
 
 // sqlCheckExistsById returns the SQL statement for checking if a row exists in the table by id.
 //func sqlCheckExistsById(table string) string {
@@ -217,11 +184,6 @@ func sqlQueryCountByCol(table string, columns ...string) string {
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
 }
 
-// sqlQueryCountContentLabels returns the SQL statement for counting the number of rows in the table by the given labels.
-func sqlQueryCountContentLabels(table string) string {
-	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content->'%s' @> $1::jsonb", table, labelsField)
-}
-
 // sqlQueryCountByTimeRangeCol returns the SQL statement for counting the number of rows in the table
 // by the given time range of the specified column
 func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColNames []string, columns ...string) string {
@@ -236,9 +198,9 @@ func sqlQueryCountByColAndLikePat(table string, columns ...string) string {
 }
 
 // sqlQueryCountByJSONField returns the SQL statement for counting the number of rows in the table by the given JSON query string
-//func sqlQueryCountByJSONField(table string) (string, errors.EdgeX) {
-//	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> $1::jsonb", table), nil
-//}
+func sqlQueryCountByJSONField(table string) string {
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> $1::jsonb", table)
+}
 
 // sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
 // by the given time range of the JSON field name
@@ -256,11 +218,6 @@ func sqlQueryFieldsByTimeRange(table string, fields []string, timeRangeCol strin
 // ----------------------------------------------------------------------------------
 // SQL statements for UPDATE operations
 // ----------------------------------------------------------------------------------
-
-// sqlUpdateContentByName returns the SQL statement for updating the content and modified timestamp of a row in the table by name.
-func sqlUpdateContentByName(table string) string {
-	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, nameCol)
-}
 
 // sqlUpdateColsByCondCol returns the SQL statement for updating the passed columns of a row in the table by condCol.
 func sqlUpdateColsByCondCol(table string, condCol string, cols ...string) string {
@@ -284,11 +241,6 @@ func sqlUpdateColsByJSONCondCol(table string, cols ...string) string {
 // ----------------------------------------------------------------------------------
 // SQL statements for DELETE operations
 // ----------------------------------------------------------------------------------
-
-// sqlDeleteByName returns the SQL statement for deleting a row from the table by name.
-func sqlDeleteByName(table string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, nameCol)
-}
 
 // sqlDeleteById returns the SQL statement for deleting a row from the table by id.
 func sqlDeleteById(table string) string {

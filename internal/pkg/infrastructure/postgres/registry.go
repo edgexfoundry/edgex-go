@@ -21,8 +21,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const serviceIdField = "ServiceId"
-
 func (c *Client) AddRegistration(r models.Registration) (models.Registration, errors.EdgeX) {
 	ctx := context.Background()
 	exists, edgexErr := checkRegistrationExists(c.ConnPool, ctx, r.ServiceId)
