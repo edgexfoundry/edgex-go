@@ -52,5 +52,6 @@ RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-keeper/core-keeper /
 COPY --from=builder /edgex-go/cmd/core-keeper/res/configuration.yaml /res/configuration.yaml
+COPY --from=builder /edgex-go/cmd/core-keeper/res/db/ /res/db/
 
 ENTRYPOINT ["/core-keeper"]
