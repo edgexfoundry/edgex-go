@@ -75,6 +75,10 @@ func (c *Client) KeeperKeys(key string, keyOnly bool, isRaw bool) ([]models.KVRe
 		return nil, pgClient.WrapDBError("failed to scan row to models.KVResponse", err)
 	}
 
+	if rows.CommandTag().RowsAffected() == 0 {
+		return nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no key starting with '%s' found", key), nil)
+	}
+
 	return result, nil
 }
 

@@ -5,7 +5,7 @@
 
 -- core_keeper.config is used to store the config information
 CREATE TABLE IF NOT EXISTS core_keeper.config (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     key TEXT NOT NULL,
     value TEXT NOT NULL,
     created timestamp NOT NULL DEFAULT now(),
