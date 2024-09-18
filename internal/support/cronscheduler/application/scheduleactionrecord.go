@@ -153,15 +153,15 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 				missedRecords = append(missedRecords, actionRecord)
 				lc.Tracef("Missed schedule action record with action id: %s of job: %s have been generated successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
 			}
-
-			if _, err := dbClient.AddScheduleActionRecords(ctx, missedRecords); err != nil {
-				lc.Errorf("Failed to add missed schedule action records with action id: %s of job: %s to database. Correlation-ID: %s", actionId, job.Name, correlationId)
-				return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
-			}
-
-			lc.Debugf("Missed schedule action records with action id: %s of job: %s have been created successfully. Correlation-ID: %s", actionId, job.Name, correlationId)
 		}
 	}
+
+	if _, err := dbClient.AddScheduleActionRecords(ctx, missedRecords); err != nil {
+		lc.Errorf("Failed to add missed schedule action records for job: %s to database. Correlation-ID: %s", job.Name, correlationId)
+		return errors.NewCommonEdgeXWrapper(err), len(missedRecords) > 0
+	}
+
+	lc.Debugf("Missed schedule action records for job: %s have been created successfully. Correlation-ID: %s", job.Name, correlationId)
 
 	return nil, len(missedRecords) > 0
 }
