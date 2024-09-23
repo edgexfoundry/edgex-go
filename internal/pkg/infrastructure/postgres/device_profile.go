@@ -21,7 +21,7 @@ import (
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
 
-// Add a new device profile
+// AddDeviceProfile adds a new device profile
 func (c *Client) AddDeviceProfile(dp model.DeviceProfile) (model.DeviceProfile, errors.EdgeX) {
 	ctx := context.Background()
 
@@ -86,7 +86,7 @@ func (c *Client) UpdateDeviceProfile(dp model.DeviceProfile) errors.EdgeX {
 func (c *Client) DeviceProfileById(id string) (model.DeviceProfile, errors.EdgeX) {
 	ctx := context.Background()
 
-	dp, err := queryOneDeviceProfile(ctx, c.ConnPool, sqlQueryAllById(deviceProfileTableName), id)
+	dp, err := queryOneDeviceProfile(ctx, c.ConnPool, sqlQueryContentById(deviceProfileTableName), id)
 	if err != nil {
 		if stdErrs.Is(err, pgx.ErrNoRows) {
 			return dp, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no device profile with id '%s' found", id), err)

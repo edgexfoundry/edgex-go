@@ -57,7 +57,7 @@ func (c *Client) AddDeviceService(ds model.DeviceService) (model.DeviceService, 
 func (c *Client) DeviceServiceById(id string) (deviceService model.DeviceService, edgeXerr errors.EdgeX) {
 	ctx := context.Background()
 
-	deviceService, err := queryOneDeviceService(ctx, c.ConnPool, sqlQueryAllById(deviceServiceTableName), id)
+	deviceService, err := queryOneDeviceService(ctx, c.ConnPool, sqlQueryContentById(deviceServiceTableName), id)
 	if err != nil {
 		if stdErrs.Is(err, pgx.ErrNoRows) {
 			return deviceService, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no device service with id '%s' found", id), err)
