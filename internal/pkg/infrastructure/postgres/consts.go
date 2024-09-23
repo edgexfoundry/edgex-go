@@ -9,6 +9,7 @@ package postgres
 const (
 	coreDataSchema         = "core_data"
 	coreKeeperSchema       = "core_keeper"
+	coreMetaDataSchema     = "core_metadata"
 	supportSchedulerSchema = "support_scheduler"
 )
 
@@ -16,6 +17,10 @@ const (
 const (
 	configTableName               = coreKeeperSchema + ".config"
 	eventTableName                = coreDataSchema + ".event"
+	deviceServiceTableName        = coreMetaDataSchema + ".device_service"
+	deviceProfileTableName        = coreMetaDataSchema + ".device_profile"
+	deviceTableName               = coreMetaDataSchema + ".device"
+	provisionWatcherTableName     = coreMetaDataSchema + ".provision_watcher"
 	readingTableName              = coreDataSchema + ".reading"
 	registryTableName             = coreKeeperSchema + ".registry"
 	scheduleActionRecordTableName = supportSchedulerSchema + ".record"

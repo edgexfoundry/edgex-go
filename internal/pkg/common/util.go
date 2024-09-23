@@ -10,7 +10,7 @@ import (
 )
 
 func MakeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+	return time.Now().UTC().UnixMilli()
 }
 
 // FindCommonStrings finds the common string from multiple string slices

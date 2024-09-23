@@ -19,7 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
+	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -46,7 +46,7 @@ var persistedEvent = models.Event{
 }
 
 func buildReadings() []models.Reading {
-	ticks := utils.MakeTimestamp()
+	ticks := pkgCommon.MakeTimestamp()
 
 	r1 := models.SimpleReading{
 		BaseReading: models.BaseReading{
