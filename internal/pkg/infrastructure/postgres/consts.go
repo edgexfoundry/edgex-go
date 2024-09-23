@@ -68,7 +68,9 @@ const (
 
 // constants relate to the field names in the content column
 const (
-	labelsField    = "Labels"
-	nameField      = "Name"
-	serviceIdField = "ServiceId"
+	labelsField       = "Labels"
+	nameField         = "Name"
+	serviceIdField    = "ServiceId"
+	manufacturerField = "Manufacturer"
+	modelField        = "Model"
 )

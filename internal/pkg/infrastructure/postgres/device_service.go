@@ -115,19 +115,19 @@ func (c *Client) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 // offset: the number of items to skip before starting to collect the result set
 // limit: The numbers of items to return
 // labels: allows for querying a given object by associated user-defined labels
-func (c *Client) AllDeviceServices(offset int, limit int, labels []string) (deviceServices []model.DeviceService, edgeXerr errors.EdgeX) {
+func (c *Client) AllDeviceServices(offset int, limit int, labels []string) (deviceServices []model.DeviceService, err errors.EdgeX) {
 	ctx := context.Background()
 
 	offset, limit = getValidOffsetAndLimit(offset, limit)
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying device services by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		deviceServices, err := queryDeviceServices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceServiceTableName), queryObj, offset, limit)
+		deviceServices, err = queryDeviceServices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceServiceTableName), queryObj, offset, limit)
 		if err != nil {
 			return deviceServices, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all device services by labels", err)
 		}
 	} else {
-		deviceServices, err := queryDeviceServices(ctx, c.ConnPool, sqlQueryContentWithPagination(deviceServiceTableName), offset, limit)
+		deviceServices, err = queryDeviceServices(ctx, c.ConnPool, sqlQueryContentWithPagination(deviceServiceTableName), offset, limit)
 		if err != nil {
 			return deviceServices, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all device services", err)
 		}
