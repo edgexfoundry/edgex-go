@@ -1,3 +1,8 @@
+//
+// Copyright (C) 2024 IOTech Ltd
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package postgres
 
 import (
@@ -12,16 +17,21 @@ import (
 )
 
 // getValidOffsetAndLimit returns the valid or default offset and limit from the given parameters
-func getValidOffsetAndLimit(offset, limit int) (int, int) {
+// Note: the returned limit can be an integer or nil (which means that clients want to retrieve all remaining rows after offset)
+func getValidOffsetAndLimit(offset, limit int) (int, any) {
 	defaultOffset := 0
-	defaultLimit := -1 //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
 	if offset < 0 {
 		offset = defaultOffset
 	}
-	if limit < -1 {
-		limit = defaultLimit
+
+	// Since PostgreSQL does not support negative limit, we need to set the default limit to nil,
+	// nil limit means that clients want to retrieve all remaining rows after offset from the DB
+	var defaultLimit any = nil
+	if limit < 0 {
+		return offset, defaultLimit
+	} else {
+		return offset, limit
 	}
-	return offset, limit
 }
 
 // getValidStartAndEnd returns the valid start and end from the given parameters
@@ -32,15 +42,40 @@ func getValidStartAndEnd(start, end int64) (int64, int64, errors.EdgeX) {
 	return start, end, nil
 }
 
-// getValidRangeParameters returns the valid start, end, offset and limit from the given parameters
-func getValidRangeParameters(start, end int64, offset, limit int) (int64, int64, int, int, errors.EdgeX) {
-	var err errors.EdgeX
-	start, end, err = getValidStartAndEnd(start, end)
+// getValidStartAndEndTime returns the valid start and end from the given parameters in time.Time type
+func getValidStartAndEndTime(start, end int64) (time.Time, time.Time, errors.EdgeX) {
+	start, end, err := getValidStartAndEnd(start, end)
 	if err != nil {
-		return 0, 0, 0, 0, errors.NewCommonEdgeXWrapper(err)
+		return time.Time{}, time.Time{}, errors.NewCommonEdgeXWrapper(err)
 	}
-	offset, limit = getValidOffsetAndLimit(offset, limit)
-	return start, end, offset, limit, nil
+
+	startTime, endTime := getUTCStartAndEndTime(start, end)
+	return startTime, endTime, nil
+}
+
+// getValidRangeParameters returns the valid start, end, offset and limit from the given parameters for querying data from the PostgreSQL database
+// Note: the returned limit can be an integer or nil (which means that clients want to retrieve all remaining rows after offset)
+func getValidRangeParameters(start, end int64, offset, limit int) (int64, int64, int, any, errors.EdgeX) {
+	start, end, err := getValidStartAndEnd(start, end)
+	if err != nil {
+		return 0, 0, 0, nil, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+	return start, end, offset, validLimit, nil
+}
+
+// getValidTimeRangeParameters returns the valid start, end, offset and limit from the given parameters for querying data from the PostgreSQL database
+// Note: the returned start and end are in time.Time type
+// Note: the returned limit can be an integer or nil (which means that clients want to retrieve all remaining rows after offset)
+func getValidTimeRangeParameters(start, end int64, offset, limit int) (time.Time, time.Time, int, any, errors.EdgeX) {
+	startTime, endTime, err := getValidStartAndEndTime(start, end)
+	if err != nil {
+		return time.Time{}, time.Time{}, 0, nil, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+	return startTime, endTime, offset, validLimit, nil
 }
 
 // getTotalRowsCount returns the total rows count from the given sql query

@@ -45,13 +45,12 @@ func (c *Client) AddScheduleActionRecords(ctx context.Context, scheduleActionRec
 // AllScheduleActionRecords queries the schedule action records with the given range, offset, and limit
 func (c *Client) AllScheduleActionRecords(ctx context.Context, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	var err errors.EdgeX
-	start, end, offset, limit, err = getValidRangeParameters(start, end, offset, limit)
+	startTime, endTime, offset, validLimit, err := getValidTimeRangeParameters(start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	startTime, endTime := getUTCStartAndEndTime(start, end)
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRange(scheduleActionRecordTableName), startTime, endTime, offset, limit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRange(scheduleActionRecordTableName), startTime, endTime, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule action records", err)
 	}
@@ -87,13 +86,12 @@ func (c *Client) LatestScheduleActionRecordsByJobName(ctx context.Context, jobNa
 // ScheduleActionRecordsByStatus queries the schedule action records by status with the given range, offset, and limit
 func (c *Client) ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	var err errors.EdgeX
-	start, end, offset, limit, err = getValidRangeParameters(start, end, offset, limit)
+	startTime, endTime, offset, validLimit, err := getValidTimeRangeParameters(start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	startTime, endTime := getUTCStartAndEndTime(start, end)
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByStatusWithPaginationAndTimeRange(scheduleActionRecordTableName), status, startTime, endTime, offset, limit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByStatusWithPaginationAndTimeRange(scheduleActionRecordTableName), status, startTime, endTime, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by status %s", status), err)
 	}
@@ -104,13 +102,12 @@ func (c *Client) ScheduleActionRecordsByStatus(ctx context.Context, status strin
 // ScheduleActionRecordsByJobName queries the schedule action records by job name with the given range, offset, and limit
 func (c *Client) ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	var err errors.EdgeX
-	start, end, offset, limit, err = getValidRangeParameters(start, end, offset, limit)
+	startTime, endTime, offset, validLimit, err := getValidTimeRangeParameters(start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	startTime, endTime := getUTCStartAndEndTime(start, end)
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol), jobName, startTime, endTime, offset, limit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol), jobName, startTime, endTime, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s", jobName), err)
 	}
@@ -121,13 +118,12 @@ func (c *Client) ScheduleActionRecordsByJobName(ctx context.Context, jobName str
 // ScheduleActionRecordsByJobNameAndStatus queries the schedule action records by job name and status with the given range, offset, and limit
 func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	var err errors.EdgeX
-	start, end, offset, limit, err = getValidRangeParameters(start, end, offset, limit)
+	startTime, endTime, offset, validLimit, err := getValidTimeRangeParameters(start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	startTime, endTime := getUTCStartAndEndTime(start, end)
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol, statusCol), jobName, status, startTime, endTime, offset, limit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol, statusCol), jobName, status, startTime, endTime, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s and status %s", jobName, status), err)
 	}
