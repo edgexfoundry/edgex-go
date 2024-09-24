@@ -128,18 +128,23 @@ func sqlQueryAllById(table string) string {
 }
 
 // sqlQueryContentById returns the SQL statement for selecting content column by the specified id.
-//func sqlQueryContentById(table string) string {
-//	return fmt.Sprintf("SELECT content FROM %s WHERE %s = $1", table, idCol)
-//}
-
-// sqlQueryContentWithPagination returns the SQL statement for selecting content column from the table with pagination
-func sqlQueryContentWithPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'created')::timestamp, NOW()) OFFSET $1 LIMIT $2", table)
+func sqlQueryContentById(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE %s = $1", table, idCol)
 }
 
 // sqlQueryContent returns the SQL statement for selecting content column in the table for all entries
 func sqlQueryContent(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s", table)
+}
+
+// sqlQueryContentWithPagination returns the SQL statement for selecting content column from the table with pagination
+func sqlQueryContentWithPagination(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $1 LIMIT $2", table, createdField)
+}
+
+// sqlQueryContentWithTimeRangeAndPagination returns the SQL statement for selecting content column from the table by the given time range with pagination
+func sqlQueryContentWithTimeRangeAndPagination(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $3 LIMIT $4", table, createdField, createdField)
 }
 
 // sqlQueryContentByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
@@ -149,7 +154,7 @@ func sqlQueryContentByJSONField(table string) string {
 
 // sqlQueryContentByJSONFieldWithPagination returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
 func sqlQueryContentByJSONFieldWithPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY COALESCE((content->>'created')::timestamp, NOW()) OFFSET $2 LIMIT $3", table)
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $2 LIMIT $3", table, createdField)
 }
 
 // sqlQueryContentByJSONFieldTimeRange returns the SQL statement for selecting content column by the given time range of the JSON field name
@@ -158,9 +163,9 @@ func sqlQueryContentByJSONFieldWithPagination(table string) string {
 //}
 
 // sqlCheckExistsById returns the SQL statement for checking if a row exists in the table by id.
-//func sqlCheckExistsById(table string) string {
-//	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, idCol)
-//}
+func sqlCheckExistsById(table string) string {
+	return fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE %s = $1)", table, idCol)
+}
 
 // sqlCheckExistsByCol returns the SQL statement for checking if a row exists in the table by where condition.
 func sqlCheckExistsByCol(table string, columns ...string) string {
@@ -202,6 +207,11 @@ func sqlQueryCountByJSONField(table string) string {
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE content @> $1::jsonb", table)
 }
 
+// sqlQueryCountByTimeRange returns the SQL statement for counting the number of rows by the given time range
+func sqlQueryCountByTimeRange(table string) string {
+	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2", table, createdField)
+}
+
 // sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
 // by the given time range of the JSON field name
 //func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {
@@ -233,10 +243,10 @@ func sqlUpdateColsByJSONCondCol(table string, cols ...string) string {
 	return fmt.Sprintf("UPDATE %s SET %s WHERE content@>$%d::jsonb", table, updatedValues, columnCount+1)
 }
 
-// sqlUpdateContentById returns the SQL statement for updating the content and modified timestamp of a row in the table by id.
-//func sqlUpdateContentById(table string) string {
-//	return fmt.Sprintf("UPDATE %s SET %s = $1 , %s = $2 WHERE %s = $3", table, contentCol, modifiedCol, idCol)
-//}
+// sqlUpdateContentById returns the SQL statement for updating the content of a row in the table by id.
+func sqlUpdateContentById(table string) string {
+	return fmt.Sprintf("UPDATE %s SET %s = $1 WHERE %s = $2", table, contentCol, idCol)
+}
 
 // ----------------------------------------------------------------------------------
 // SQL statements for DELETE operations
@@ -250,6 +260,21 @@ func sqlDeleteById(table string) string {
 // sqlDeleteByAge returns the SQL statement for deleting rows from the table by created timestamp.
 func sqlDeleteByAge(table string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE %s < NOW() - INTERVAL '1 millisecond' * $1", table, createdCol)
+}
+
+// sqlDeleteByContentAge returns the SQL statement for deleting rows from the table by created timestamp from content column.
+func sqlDeleteByContentAge(table string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) < (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - $1", table, createdField)
+}
+
+// sqlDeleteByJSONField returns the SQL statement for deleting rows from the table by the given JSON query string
+func sqlDeleteByJSONField(table string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table)
+}
+
+// sqlDeleteByJSONFieldAndAge returns the SQL statement for deleting rows from the table by the given column and created timestamp.
+func sqlDeleteByJSONFieldAndAge(table string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb AND COALESCE((content->>'%s')::bigint, 0) < (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - $2", table, createdField)
 }
 
 // sqlDeleteTimeRangeByColumn returns the SQL statement for deleting rows from the table by time range with the specified column
@@ -272,11 +297,6 @@ func sqlDeleteByColAndLikePat(table string, column string, returnCol ...string) 
 		deleteStmt += " RETURNING " + strings.Join(returnCol, ", ")
 	}
 	return deleteStmt
-}
-
-// sqlDeleteByJSONField returns the SQL statement for deleting rows from the table by the given JSON query string
-func sqlDeleteByJSONField(table string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table)
 }
 
 // ----------------------------------------------------------------------------------

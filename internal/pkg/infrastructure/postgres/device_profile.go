@@ -144,16 +144,16 @@ func (c *Client) DeviceProfileNameExists(name string) (bool, errors.EdgeX) {
 func (c *Client) AllDeviceProfiles(offset int, limit int, labels []string) (profiles []model.DeviceProfile, err errors.EdgeX) {
 	ctx := context.Background()
 
-	offset, limit = getValidOffsetAndLimit(offset, limit)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying device profiles by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		profiles, err = queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, limit)
+		profiles, err = queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
 		if err != nil {
 			return profiles, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all device profiles by labels", err)
 		}
 	} else {
-		profiles, err = queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentWithPagination(deviceProfileTableName), offset, limit)
+		profiles, err = queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentWithPagination(deviceProfileTableName), offset, validLimit)
 		if err != nil {
 			return profiles, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all device profiles", err)
 		}
@@ -165,25 +165,25 @@ func (c *Client) AllDeviceProfiles(offset int, limit int, labels []string) (prof
 // DeviceProfilesByModel query device profiles with offset, limit and model
 func (c *Client) DeviceProfilesByModel(offset int, limit int, model string) ([]model.DeviceProfile, errors.EdgeX) {
 	ctx := context.Background()
-	offset, limit = getValidOffsetAndLimit(offset, limit)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{modelField: model}
-	return queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, limit)
+	return queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
 }
 
 // DeviceProfilesByManufacturer query device profiles with offset, limit and manufacturer
 func (c *Client) DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX) {
 	ctx := context.Background()
-	offset, limit = getValidOffsetAndLimit(offset, limit)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{manufacturerField: manufacturer}
-	return queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, limit)
+	return queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
 }
 
 // DeviceProfilesByManufacturerAndModel query device profiles with offset, limit, manufacturer and model
 func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, uint32, errors.EdgeX) {
 	ctx := context.Background()
-	offset, limit = getValidOffsetAndLimit(offset, limit)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{modelField: model, manufacturerField: manufacturer}
-	profiles, err := queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, limit)
+	profiles, err := queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
 	return profiles, uint32(len(profiles)), err
 }
 

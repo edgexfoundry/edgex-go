@@ -7,10 +7,11 @@ package postgres
 
 // constants relate to the postgres db schema names
 const (
-	coreDataSchema         = "core_data"
-	coreKeeperSchema       = "core_keeper"
-	coreMetaDataSchema     = "core_metadata"
-	supportSchedulerSchema = "support_scheduler"
+	coreDataSchema             = "core_data"
+	coreKeeperSchema           = "core_keeper"
+	coreMetaDataSchema         = "core_metadata"
+	supportNotificationsSchema = "support_notifications"
+	supportSchedulerSchema     = "support_scheduler"
 )
 
 // constants relate to the postgres db table names
@@ -21,10 +22,13 @@ const (
 	deviceProfileTableName        = coreMetaDataSchema + ".device_profile"
 	deviceTableName               = coreMetaDataSchema + ".device"
 	provisionWatcherTableName     = coreMetaDataSchema + ".provision_watcher"
+	notificationTableName         = supportNotificationsSchema + ".notification"
 	readingTableName              = coreDataSchema + ".reading"
 	registryTableName             = coreKeeperSchema + ".registry"
 	scheduleActionRecordTableName = supportSchedulerSchema + ".record"
 	scheduleJobTableName          = supportSchedulerSchema + ".job"
+	subscriptionTableName         = supportNotificationsSchema + ".subscription"
+	transmissionTableName         = supportNotificationsSchema + ".transmission"
 )
 
 // constants relate to the common db table column names
@@ -66,11 +70,23 @@ const (
 	scheduledAtCol = "scheduled_at"
 )
 
+// constants relate to the notification postgres db table column names
+const (
+	notificationIdCol = "notification_id"
+)
+
 // constants relate to the field names in the content column
 const (
-	labelsField       = "Labels"
-	nameField         = "Name"
-	serviceIdField    = "ServiceId"
-	manufacturerField = "Manufacturer"
-	modelField        = "Model"
+	categoryField         = "Category"
+	categoriesField       = "Categories"
+	createdField          = "Created"
+	labelsField           = "Labels"
+	manufacturerField     = "Manufacturer"
+	modelField            = "Model"
+	nameField             = "Name"
+	notificationIdField   = "NotificationId"
+	receiverField         = "Receiver"
+	serviceIdField        = "ServiceId"
+	statusField           = "Status"
+	subscriptionNameField = "SubscriptionName"
 )

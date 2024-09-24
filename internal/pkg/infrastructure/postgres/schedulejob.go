@@ -9,9 +9,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -36,16 +36,16 @@ func (c *Client) AddScheduleJob(ctx context.Context, j models.ScheduleJob) (mode
 
 // AllScheduleJobs queries the schedule jobs with the given range, offset, and limit
 func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, limit int) (jobs []models.ScheduleJob, err errors.EdgeX) {
-	offset, limit = getValidOffsetAndLimit(offset, limit)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying schedule jobs by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(scheduleJobTableName), queryObj, offset, limit)
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(scheduleJobTableName), queryObj, offset, validLimit)
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs by labels", err)
 		}
 	} else {
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentWithPagination(scheduleJobTableName), offset, limit)
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentWithPagination(scheduleJobTableName), offset, validLimit)
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
 		}
