@@ -85,8 +85,10 @@ const (
 	modelField            = "Model"
 	nameField             = "Name"
 	notificationIdField   = "NotificationId"
+	profileNameField      = "ProfileName"
 	receiverField         = "Receiver"
 	serviceIdField        = "ServiceId"
+	serviceNameField      = "ServiceName"
 	statusField           = "Status"
 	subscriptionNameField = "SubscriptionName"
 )
