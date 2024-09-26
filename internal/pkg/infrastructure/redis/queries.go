@@ -90,7 +90,7 @@ func getObjectsBySomeRange(conn redis.Conn, command string, key string, offset i
 }
 
 // getObjectsByScoreRange query objects by specified key's score range, offset, and limit.  Note that the specified key must be a sorted set.
-func getObjectsByScoreRange(conn redis.Conn, key string, start int, end int, offset int, limit int) (objects [][]byte, edgeXerr errors.EdgeX) {
+func getObjectsByScoreRange(conn redis.Conn, key string, start int64, end int64, offset int, limit int) (objects [][]byte, edgeXerr errors.EdgeX) {
 	if limit == 0 {
 		return
 	}
@@ -186,7 +186,7 @@ func objectIdExists(conn redis.Conn, id string) (bool, errors.EdgeX) {
 	return exists, nil
 }
 
-func getMemberCountByScoreRange(conn redis.Conn, key string, start int, end int) (uint32, errors.EdgeX) {
+func getMemberCountByScoreRange(conn redis.Conn, key string, start int64, end int64) (uint32, errors.EdgeX) {
 	count, err := redis.Int(conn.Do(ZCOUNT, key, start, end))
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to get member count from %s between score range %v to %v", key, start, end), err)
@@ -282,12 +282,12 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 }
 
 // unionObjectsByKeysAndScoreRange returns objects resulting from the union of all the given sets with specified score range, offset, and limit
-func unionObjectsByKeysAndScoreRange(conn redis.Conn, start, end, offset, limit int, redisKeys ...string) ([][]byte, uint32, errors.EdgeX) {
+func unionObjectsByKeysAndScoreRange(conn redis.Conn, start int64, end int64, offset, limit int, redisKeys ...string) ([][]byte, uint32, errors.EdgeX) {
 	return objectsByKeysAndScoreRange(conn, ZUNIONSTORE, start, end, offset, limit, redisKeys...)
 }
 
 // objectsByKeysAndScoreRange returns objects resulting from the set method of all the given sets with specified score range, offset, and limit.  The data set method could be either ZINTERSTORE or ZUNIONSTORE
-func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start, end, offset, limit int, redisKeys ...string) (objects [][]byte, totalCount uint32, edgeXerr errors.EdgeX) {
+func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start int64, end int64, offset, limit int, redisKeys ...string) (objects [][]byte, totalCount uint32, edgeXerr errors.EdgeX) {
 	// build up the redis command arguments
 	args := redis.Args{}
 	cacheSet := uuid.New().String()

@@ -33,7 +33,7 @@ type DBClient interface {
 	NotificationsByCategory(offset, limit int, category string) ([]models.Notification, errors.EdgeX)
 	NotificationsByLabel(offset, limit int, label string) ([]models.Notification, errors.EdgeX)
 	NotificationsByStatus(offset, limit int, status string) ([]models.Notification, errors.EdgeX)
-	NotificationsByTimeRange(start int, end int, offset int, limit int) ([]models.Notification, errors.EdgeX)
+	NotificationsByTimeRange(start int64, end int64, offset int, limit int) ([]models.Notification, errors.EdgeX)
 	DeleteNotificationById(id string) errors.EdgeX
 	NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX)
 	UpdateNotification(s models.Notification) errors.EdgeX
@@ -42,7 +42,7 @@ type DBClient interface {
 	NotificationCountByCategory(category string) (uint32, errors.EdgeX)
 	NotificationCountByLabel(label string) (uint32, errors.EdgeX)
 	NotificationCountByStatus(status string) (uint32, errors.EdgeX)
-	NotificationCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
+	NotificationCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX)
 	NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX)
 	NotificationTotalCount() (uint32, errors.EdgeX)
 	LatestNotificationByOffset(offset uint32) (models.Notification, errors.EdgeX)
@@ -50,7 +50,7 @@ type DBClient interface {
 	AddTransmission(trans models.Transmission) (models.Transmission, errors.EdgeX)
 	UpdateTransmission(trans models.Transmission) errors.EdgeX
 	TransmissionById(id string) (models.Transmission, errors.EdgeX)
-	TransmissionsByTimeRange(start int, end int, offset int, limit int) ([]models.Transmission, errors.EdgeX)
+	TransmissionsByTimeRange(start int64, end int64, offset int, limit int) ([]models.Transmission, errors.EdgeX)
 	AllTransmissions(offset int, limit int) ([]models.Transmission, errors.EdgeX)
 	TransmissionsByStatus(offset, limit int, status string) ([]models.Transmission, errors.EdgeX)
 	DeleteProcessedTransmissionsByAge(age int64) errors.EdgeX
@@ -58,7 +58,7 @@ type DBClient interface {
 	TransmissionTotalCount() (uint32, errors.EdgeX)
 	TransmissionCountBySubscriptionName(subscriptionName string) (uint32, errors.EdgeX)
 	TransmissionCountByStatus(status string) (uint32, errors.EdgeX)
-	TransmissionCountByTimeRange(start int, end int) (uint32, errors.EdgeX)
+	TransmissionCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX)
 	TransmissionsByNotificationId(offset, limit int, id string) ([]models.Transmission, errors.EdgeX)
 	TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX)
 }

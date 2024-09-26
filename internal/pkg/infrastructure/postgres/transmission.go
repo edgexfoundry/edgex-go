@@ -77,8 +77,8 @@ func (c *Client) TransmissionById(id string) (models.Transmission, errors.EdgeX)
 }
 
 // TransmissionsByTimeRange queries the transmissions by time range
-func (c *Client) TransmissionsByTimeRange(start, end, offset, limit int) ([]models.Transmission, errors.EdgeX) {
-	validStart, validEnd, offset, validLimit, err := getValidRangeParameters(int64(start), int64(end), offset, limit)
+func (c *Client) TransmissionsByTimeRange(start int64, end int64, offset, limit int) ([]models.Transmission, errors.EdgeX) {
+	validStart, validEnd, offset, validLimit, err := getValidRangeParameters(start, end, offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -158,8 +158,8 @@ func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX)
 }
 
 // TransmissionCountByTimeRange returns the count of transmissions by time range
-func (c *Client) TransmissionCountByTimeRange(start, end int) (uint32, errors.EdgeX) {
-	validStart, validEnd, err := getValidStartAndEnd(int64(start), int64(end))
+func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+	validStart, validEnd, err := getValidStartAndEnd(start, end)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}

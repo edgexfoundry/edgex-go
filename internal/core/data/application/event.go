@@ -220,7 +220,7 @@ func (a *CoreDataApp) EventsByDeviceName(offset int, limit int, name string, dic
 }
 
 // EventsByTimeRange query events with offset, limit and time range
-func (a *CoreDataApp) EventsByTimeRange(startTime int, endTime int, offset int, limit int, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
+func (a *CoreDataApp) EventsByTimeRange(startTime int64, endTime int64, offset int, limit int, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	eventModels, err := dbClient.EventsByTimeRange(startTime, endTime, offset, limit)
 	if err == nil {

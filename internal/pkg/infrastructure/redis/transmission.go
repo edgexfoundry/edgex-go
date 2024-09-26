@@ -131,7 +131,7 @@ func deleteTransmissionById(conn redis.Conn, id string) errors.EdgeX {
 }
 
 // transmissionsByTimeRange query transmissions by time range, offset, and limit
-func transmissionsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
+func transmissionsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int) (transmissions []models.Transmission, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, TransmissionCollectionCreated, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return transmissions, errors.NewCommonEdgeXWrapper(edgeXerr)

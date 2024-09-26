@@ -111,8 +111,8 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 	expectedTransmissionCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("TransmissionCountByTimeRange", 0, 100).Return(expectedTransmissionCount, nil)
-	dbClientMock.On("TransmissionsByTimeRange", 0, 100, 0, 10).Return([]models.Transmission{}, nil)
+	dbClientMock.On("TransmissionCountByTimeRange", int64(0), int64(100)).Return(expectedTransmissionCount, nil)
+	dbClientMock.On("TransmissionsByTimeRange", int64(0), int64(100), 0, 10).Return([]models.Transmission{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

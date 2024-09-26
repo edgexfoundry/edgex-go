@@ -136,7 +136,7 @@ func notificationsByStatus(conn redis.Conn, offset int, limit int, status string
 }
 
 // notificationsByTimeRange query notifications by time range, offset, and limit
-func notificationsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
+func notificationsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int) (notifications []models.Notification, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, NotificationCollectionCreated, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return notifications, edgeXerr

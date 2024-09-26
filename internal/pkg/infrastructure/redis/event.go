@@ -266,7 +266,7 @@ func eventsByDeviceName(conn redis.Conn, offset int, limit int, name string) (ev
 }
 
 // eventsByTimeRange query events by time range, offset, and limit
-func eventsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
+func eventsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int) (events []models.Event, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, EventsCollectionOrigin, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return events, edgeXerr

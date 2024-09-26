@@ -226,7 +226,7 @@ func readingsByDeviceNameAndResourceName(conn redis.Conn, deviceName string, res
 	return convertObjectsToReadings(objects)
 }
 
-func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName string, resourceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, err errors.EdgeX) {
+func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName string, resourceName string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, err errors.EdgeX) {
 	objects, err := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName), startTime, endTime, offset, limit)
 	if err != nil {
 		return readings, err
@@ -235,7 +235,7 @@ func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName
 	return convertObjectsToReadings(objects)
 }
 
-func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceName string, resourceNames []string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, totalCount uint32, err errors.EdgeX) {
+func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceName string, resourceNames []string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, totalCount uint32, err errors.EdgeX) {
 	var redisKeys []string
 	for _, resourceName := range resourceNames {
 		redisKeys = append(redisKeys, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName))
@@ -250,7 +250,7 @@ func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceNam
 }
 
 // readingsByTimeRange query readings by time range, offset, and limit
-func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+func readingsByTimeRange(conn redis.Conn, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, ReadingsCollectionOrigin, startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr
@@ -258,7 +258,7 @@ func readingsByTimeRange(conn redis.Conn, startTime int, endTime int, offset int
 	return convertObjectsToReadings(objects)
 }
 
-func readingsByResourceNameAndTimeRange(conn redis.Conn, resourceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+func readingsByResourceNameAndTimeRange(conn redis.Conn, resourceName string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionResourceName, resourceName), startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr
@@ -266,7 +266,7 @@ func readingsByResourceNameAndTimeRange(conn redis.Conn, resourceName string, st
 	return convertObjectsToReadings(objects)
 }
 
-func readingsByDeviceNameAndTimeRange(conn redis.Conn, deviceName string, startTime int, endTime int, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
+func readingsByDeviceNameAndTimeRange(conn redis.Conn, deviceName string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	objects, edgeXerr := getObjectsByScoreRange(conn, CreateKey(ReadingsCollectionDeviceName, deviceName), startTime, endTime, offset, limit)
 	if edgeXerr != nil {
 		return readings, edgeXerr

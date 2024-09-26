@@ -784,8 +784,8 @@ func TestAllEventsByTimeRange(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("EventCountByTimeRange", 0, 100).Return(totalCount, nil)
-	dbClientMock.On("EventsByTimeRange", 0, 100, 0, 10).Return([]models.Event{}, nil)
+	dbClientMock.On("EventCountByTimeRange", int64(0), int64(100)).Return(totalCount, nil)
+	dbClientMock.On("EventsByTimeRange", int64(0), int64(100), 0, 10).Return([]models.Event{}, nil)
 	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
