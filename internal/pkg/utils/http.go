@@ -120,7 +120,6 @@ func ParseQueryStringToInt64(c echo.Context, queryStringKey string, defaultValue
 	var parsingErr error
 	value := c.QueryParam(queryStringKey)
 	if value != "" {
-		//result, parsingErr = strconv.Atoi(strings.TrimSpace(value))
 		result, parsingErr = strconv.ParseInt(strings.TrimSpace(value), 10, 64)
 		if parsingErr != nil {
 			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse querystring %s's value %s into integer. Error:%s", queryStringKey, value, parsingErr.Error()), nil)
