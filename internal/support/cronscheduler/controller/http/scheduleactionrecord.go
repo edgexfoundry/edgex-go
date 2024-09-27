@@ -50,7 +50,7 @@ func (rc *ScheduleActionRecordController) AllScheduleActionRecords(c echo.Contex
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	records, totalCount, err := application.AllScheduleActionRecords(ctx, int64(start), int64(end), offset, limit, rc.dic)
+	records, totalCount, err := application.AllScheduleActionRecords(ctx, start, end, offset, limit, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -77,7 +77,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByStatus(c echo.C
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	records, totalCount, err := application.ScheduleActionRecordsByStatus(ctx, status, int64(start), int64(end), offset, limit, rc.dic)
+	records, totalCount, err := application.ScheduleActionRecordsByStatus(ctx, status, start, end, offset, limit, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -104,7 +104,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobName(c echo.
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	records, totalCount, err := application.ScheduleActionRecordsByJobName(ctx, name, int64(start), int64(end), offset, limit, rc.dic)
+	records, totalCount, err := application.ScheduleActionRecordsByJobName(ctx, name, start, end, offset, limit, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -132,7 +132,7 @@ func (rc *ScheduleActionRecordController) ScheduleActionRecordsByJobNameAndStatu
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	records, totalCount, err := application.ScheduleActionRecordsByJobNameAndStatus(ctx, name, status, int64(start), int64(end), offset, limit, rc.dic)
+	records, totalCount, err := application.ScheduleActionRecordsByJobNameAndStatus(ctx, name, status, start, end, offset, limit, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}

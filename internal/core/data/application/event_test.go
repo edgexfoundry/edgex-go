@@ -410,12 +410,12 @@ func TestEventsByTimeRange(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("EventCountByTimeRange", int(event1.Origin), int(event5.Origin)).Return(uint32(5), nil)
-	dbClientMock.On("EventsByTimeRange", int(event1.Origin), int(event5.Origin), 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
-	dbClientMock.On("EventCountByTimeRange", int(event2.Origin), int(event4.Origin)).Return(uint32(3), nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 0, 10).Return([]models.Event{event4, event3, event2}, nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 1, 2).Return([]models.Event{event3, event2}, nil)
-	dbClientMock.On("EventsByTimeRange", int(event2.Origin), int(event4.Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
+	dbClientMock.On("EventCountByTimeRange", event1.Origin, event5.Origin).Return(uint32(5), nil)
+	dbClientMock.On("EventsByTimeRange", event1.Origin, event5.Origin, 0, 10).Return([]models.Event{event5, event4, event3, event2, event1}, nil)
+	dbClientMock.On("EventCountByTimeRange", event2.Origin, event4.Origin).Return(uint32(3), nil)
+	dbClientMock.On("EventsByTimeRange", event2.Origin, event4.Origin, 0, 10).Return([]models.Event{event4, event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", event2.Origin, event4.Origin, 1, 2).Return([]models.Event{event3, event2}, nil)
+	dbClientMock.On("EventsByTimeRange", event2.Origin, event4.Origin, 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -424,8 +424,8 @@ func TestEventsByTimeRange(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		start              int
-		end                int
+		start              int64
+		end                int64
 		offset             int
 		limit              int
 		errorExpected      bool
@@ -434,10 +434,10 @@ func TestEventsByTimeRange(t *testing.T) {
 		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - all events", int(event1.Origin), int(event5.Origin), 0, 10, false, "", 5, uint32(5), http.StatusOK},
-		{"Valid - events trimmed by latest and oldest", int(event2.Origin), int(event4.Origin), 0, 10, false, "", 3, uint32(3), http.StatusOK},
-		{"Valid - events trimmed by latest and oldest and skipped first", int(event2.Origin), int(event4.Origin), 1, 2, false, "", 2, uint32(3), http.StatusOK},
-		{"Invalid - bounds out of range", int(event2.Origin), int(event4.Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - all events", event1.Origin, event5.Origin, 0, 10, false, "", 5, uint32(5), http.StatusOK},
+		{"Valid - events trimmed by latest and oldest", event2.Origin, event4.Origin, 0, 10, false, "", 3, uint32(3), http.StatusOK},
+		{"Valid - events trimmed by latest and oldest and skipped first", event2.Origin, event4.Origin, 1, 2, false, "", 2, uint32(3), http.StatusOK},
+		{"Invalid - bounds out of range", event2.Origin, event4.Origin, 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

@@ -102,7 +102,7 @@ func (c *Client) NotificationsByStatus(offset, limit int, status string) ([]mode
 }
 
 // NotificationsByTimeRange queries the notification by time range
-func (c *Client) NotificationsByTimeRange(start, end, offset, limit int) ([]models.Notification, errors.EdgeX) {
+func (c *Client) NotificationsByTimeRange(start int64, end int64, offset, limit int) ([]models.Notification, errors.EdgeX) {
 	validStart, validEnd, offset, validLimit, err := getValidRangeParameters(int64(start), int64(end), offset, limit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
@@ -200,8 +200,8 @@ func (c *Client) NotificationCountByStatus(status string) (uint32, errors.EdgeX)
 }
 
 // NotificationCountByTimeRange returns the count of notifications by time range
-func (c *Client) NotificationCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
-	validStart, validEnd, err := getValidStartAndEnd(int64(start), int64(end))
+func (c *Client) NotificationCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+	validStart, validEnd, err := getValidStartAndEnd(start, end)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}

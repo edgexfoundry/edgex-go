@@ -34,7 +34,7 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 }
 
 // TransmissionsByTimeRange query transmissions with offset, limit and time range
-func TransmissionsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
+func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	models, err := dbClient.TransmissionsByTimeRange(start, end, offset, limit)
 	if err == nil {

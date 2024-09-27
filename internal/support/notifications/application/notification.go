@@ -124,7 +124,7 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 }
 
 // NotificationsByTimeRange query notifications with offset, limit and time range
-func NotificationsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	notificationModels, err := dbClient.NotificationsByTimeRange(start, end, offset, limit)
 	if err == nil {

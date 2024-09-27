@@ -132,7 +132,7 @@ func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX
 }
 
 // EventCountByTimeRange returns the count of Event by time range from db
-func (c *Client) EventCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol, nil), start, end)
 }
 
@@ -148,7 +148,7 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model
 }
 
 // EventsByTimeRange query events by time range, offset, and limit
-func (c *Client) EventsByTimeRange(start int, end int, offset int, limit int) ([]model.Event, errors.EdgeX) {
+func (c *Client) EventsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol, nil)
 

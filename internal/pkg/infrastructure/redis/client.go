@@ -312,7 +312,7 @@ func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX
 }
 
 // EventCountByTimeRange returns the count of Event by time range
-func (c *Client) EventCountByTimeRange(startTime int, endTime int) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByTimeRange(startTime int64, endTime int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -498,7 +498,7 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) (events 
 }
 
 // EventsByTimeRange query events by time range, offset, and limit
-func (c *Client) EventsByTimeRange(startTime int, endTime int, offset int, limit int) (events []model.Event, edgeXerr errors.EdgeX) {
+func (c *Client) EventsByTimeRange(startTime int64, endTime int64, offset int, limit int) (events []model.Event, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -537,7 +537,7 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 }
 
 // ReadingsByTimeRange query readings by time range, offset, and limit
-func (c *Client) ReadingsByTimeRange(start int, end int, offset int, limit int) (readings []model.Reading, edgeXerr errors.EdgeX) {
+func (c *Client) ReadingsByTimeRange(start int64, end int64, offset int, limit int) (readings []model.Reading, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -602,7 +602,7 @@ func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors
 }
 
 // ReadingCountByResourceNameAndTimeRange returns the count of Readings associated a specific Resource from the database within specified time range
-func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, startTime int, endTime int) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, startTime int64, endTime int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -628,7 +628,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, reso
 }
 
 // ReadingCountByDeviceNameAndResourceNameAndTimeRange returns the count of Readings associated with specified Resource and Device from the database within specified time range
-func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -641,7 +641,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 }
 
 // ReadingCountByTimeRange returns the count of Readings from the database within specified time range
-func (c *Client) ReadingCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -654,7 +654,7 @@ func (c *Client) ReadingCountByTimeRange(start int, end int) (uint32, errors.Edg
 }
 
 // ReadingsByResourceNameAndTimeRange query readings by resourceName and specified time range. Readings are sorted in descending order of origin time.
-func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start int64, end int64, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -679,7 +679,7 @@ func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resource
 	return readings, nil
 }
 
-func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -692,7 +692,7 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 	return readings, nil
 }
 
-func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end, offset, limit int) (readings []model.Reading, totalCount uint32, err errors.EdgeX) {
+func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end int64, offset, limit int) (readings []model.Reading, totalCount uint32, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -705,7 +705,7 @@ func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName str
 	return readings, totalCount, nil
 }
 
-func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int, end int, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
+func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64, end int64, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -718,7 +718,7 @@ func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int, 
 	return readings, nil
 }
 
-func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -1322,7 +1322,7 @@ func (c *Client) NotificationsByStatus(offset int, limit int, status string) (no
 }
 
 // NotificationsByTimeRange query notifications by time range, offset, and limit
-func (c *Client) NotificationsByTimeRange(start int, end int, offset int, limit int) (notifications []model.Notification, edgeXerr errors.EdgeX) {
+func (c *Client) NotificationsByTimeRange(start int64, end int64, offset int, limit int) (notifications []model.Notification, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -1387,7 +1387,7 @@ func (c *Client) NotificationCountByStatus(status string) (uint32, errors.EdgeX)
 }
 
 // NotificationCountByTimeRange returns the count of Notification from the database within specified time range
-func (c *Client) NotificationCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -1528,7 +1528,7 @@ func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX)
 }
 
 // TransmissionCountByTimeRange returns the count of Transmission from the database within specified time range
-func (c *Client) TransmissionCountByTimeRange(start int, end int) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
@@ -1592,7 +1592,7 @@ func (c *Client) TransmissionById(id string) (trans model.Transmission, edgexErr
 }
 
 // TransmissionsByTimeRange query transmissions by time range, offset, and limit
-func (c *Client) TransmissionsByTimeRange(start int, end int, offset int, limit int) (transmissions []model.Transmission, err errors.EdgeX) {
+func (c *Client) TransmissionsByTimeRange(start int64, end int64, offset int, limit int) (transmissions []model.Transmission, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 

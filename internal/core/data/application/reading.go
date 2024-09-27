@@ -92,7 +92,7 @@ func ReadingsByDeviceName(offset int, limit int, name string, dic *di.Container)
 }
 
 // ReadingsByTimeRange query readings with offset, limit and time range
-func ReadingsByTimeRange(start int, end int, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
+func ReadingsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	readingModels, err := dbClient.ReadingsByTimeRange(start, end, offset, limit)
 	if err == nil {
@@ -131,7 +131,7 @@ func ReadingCountByDeviceName(deviceName string, dic *di.Container) (uint32, err
 }
 
 // ReadingsByResourceNameAndTimeRange returns readings by resource name and specified time range. Readings are sorted in descending order of origin time.
-func ReadingsByResourceNameAndTimeRange(resourceName string, start int, end int, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
+func ReadingsByResourceNameAndTimeRange(resourceName string, start int64, end int64, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	if resourceName == "" {
 		return readings, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "resourceName is empty", nil)
 	}
@@ -175,7 +175,7 @@ func ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string,
 }
 
 // ReadingsByDeviceNameAndResourceNameAndTimeRange query readings with offset, limit, device name, its associated resource name and specified time range
-func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start, end, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
+func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	if deviceName == "" {
 		return readings, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
 	}
@@ -199,7 +199,7 @@ func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resource
 }
 
 // ReadingsByDeviceNameAndResourceNamesAndTimeRange query readings with offset, limit, device name, its associated resource name and specified time range
-func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
+func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64, offset, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	if deviceName == "" {
 		return readings, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
 	}

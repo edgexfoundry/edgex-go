@@ -103,6 +103,34 @@ func ParseQueryStringToInt(c echo.Context, queryStringKey string, defaultValue i
 	return result, nil
 }
 
+// ParseQueryStringToInt64 parses the specified query string key to a 64-bit integer.  If specified query string key is found more than once in the
+// http request, only the first specified query string will be parsed and converted to an integer.  If no specified
+// query string key could be found in the http request, specified default value will be returned.  EdgeX error will be
+// returned if any parsing error occurs.
+func ParseQueryStringToInt64(c echo.Context, queryStringKey string, defaultValue int64, min int64, max int64) (int64, errors.EdgeX) {
+	// first check if specified min is bigger than max, throw error for such case
+	if min > max {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("specified min %v is bigger than specified max %v", min, max), nil)
+	}
+	// defaultValue should not greater than maximum
+	if defaultValue > max {
+		defaultValue = max
+	}
+	var result = defaultValue
+	var parsingErr error
+	value := c.QueryParam(queryStringKey)
+	if value != "" {
+		result, parsingErr = strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+		if parsingErr != nil {
+			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse querystring %s's value %s into integer. Error:%s", queryStringKey, value, parsingErr.Error()), nil)
+		}
+		if result < min || result > max {
+			return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("querystring %s's value %v is out of min %v ~ max %v range.", queryStringKey, result, min, max), nil)
+		}
+	}
+	return result, nil
+}
+
 // Parse the specified query string key to an array of string.  If specified query string key is found more than once in
 // the http request, only the first specified query string will be parsed and converted to an array of string.  The
 // value of query string will be split into an array of string by the passing separator.  If separator is passed in as
@@ -129,32 +157,12 @@ func ParseQueryStringToString(r *http.Request, queryStringKey string, defaultVal
 	return value[0]
 }
 
-func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
-	start, edgexErr = ParsePathParamToInt(c, common.Start)
+func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int64, end int64, offset int, limit int, edgexErr errors.EdgeX) {
+	start, edgexErr = ParsePathParamToInt64(c, common.Start, 0, math.MaxInt64)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
-	end, edgexErr = ParsePathParamToInt(c, common.End)
-	if edgexErr != nil {
-		return start, end, offset, limit, edgexErr
-	}
-	if end < start {
-		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
-	}
-	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
-	if edgexErr != nil {
-		return start, end, offset, limit, edgexErr
-	}
-
-	return start, end, offset, limit, nil
-}
-
-func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int, end int, offset int, limit int, edgexErr errors.EdgeX) {
-	start, edgexErr = ParseQueryStringToInt(c, common.Start, 0, 0, math.MaxInt64)
-	if edgexErr != nil {
-		return start, end, offset, limit, edgexErr
-	}
-	end, edgexErr = ParseQueryStringToInt(c, common.End, int(time.Now().UnixMilli()), 0, math.MaxInt64)
+	end, edgexErr = ParsePathParamToInt64(c, common.End, 0, math.MaxInt64)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
@@ -169,16 +177,46 @@ func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffs
 	return start, end, offset, limit, nil
 }
 
-// Parse the specified path parameter to an integer.  EdgeX error will be returned if any parsing error occurs or
+func ParseQueryStringTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (start int64, end int64, offset int, limit int, edgexErr errors.EdgeX) {
+	start, edgexErr = ParseQueryStringToInt64(c, common.Start, 0, 0, math.MaxInt64)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	end, edgexErr = ParseQueryStringToInt64(c, common.End, time.Now().UnixMilli(), 0, math.MaxInt64)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	if end < start {
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+	}
+	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+
+	return start, end, offset, limit, nil
+}
+
+// ParsePathParamToInt64 parses the specified path parameter to a 64-bit integer.  EdgeX error will be returned if any parsing error occurs or
 // specified path parameter is empty.
-func ParsePathParamToInt(c echo.Context, pathKey string) (int, errors.EdgeX) {
+func ParsePathParamToInt64(c echo.Context, pathKey string, min, max int64) (int64, errors.EdgeX) {
 	val := c.Param(pathKey)
 	if val == "" {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("empty path param %s is not allowed", pathKey), nil)
 	}
-	result, parsingErr := strconv.Atoi(val)
+
+	// check if specified min is bigger than max, throw error for such case
+	if min > max {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("specified min %v is bigger than specified max %v", min, max), nil)
+	}
+
+	result, parsingErr := strconv.ParseInt(val, 10, 64)
 	if parsingErr != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("failed to parse path param %s's value %s into integer. Error:%s", pathKey, val, parsingErr.Error()), nil)
+	}
+
+	if result < min || result > max {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("path param %s's value %v is out of min %v ~ max %v range.", pathKey, result, min, max), nil)
 	}
 	return result, nil
 }

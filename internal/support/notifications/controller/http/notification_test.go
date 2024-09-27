@@ -446,8 +446,8 @@ func TestNotificationsByTimeRange(t *testing.T) {
 	expectedNotificationCount := uint32(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("NotificationCountByTimeRange", 0, 100).Return(expectedNotificationCount, nil)
-	dbClientMock.On("NotificationsByTimeRange", 0, 100, 0, 10).Return([]models.Notification{}, nil)
+	dbClientMock.On("NotificationCountByTimeRange", int64(0), int64(100)).Return(expectedNotificationCount, nil)
+	dbClientMock.On("NotificationsByTimeRange", int64(0), int64(100), 0, 10).Return([]models.Notification{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

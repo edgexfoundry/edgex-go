@@ -74,12 +74,12 @@ func TestReadingsByTimeRange(t *testing.T) {
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("ReadingCountByTimeRange", int(readings[0].GetBaseReading().Origin), int(readings[4].GetBaseReading().Origin)).Return(totalCount5, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[0].GetBaseReading().Origin), int(readings[4].GetBaseReading().Origin), 0, 10).Return(readings, nil)
-	dbClientMock.On("ReadingCountByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin)).Return(totalCount3, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 0, 10).Return([]models.Reading{readings[3], readings[2], readings[1]}, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 1, 2).Return([]models.Reading{readings[2], readings[1]}, nil)
-	dbClientMock.On("ReadingsByTimeRange", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
+	dbClientMock.On("ReadingCountByTimeRange", readings[0].GetBaseReading().Origin, readings[4].GetBaseReading().Origin).Return(totalCount5, nil)
+	dbClientMock.On("ReadingsByTimeRange", readings[0].GetBaseReading().Origin, readings[4].GetBaseReading().Origin, 0, 10).Return(readings, nil)
+	dbClientMock.On("ReadingCountByTimeRange", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin).Return(totalCount3, nil)
+	dbClientMock.On("ReadingsByTimeRange", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 0, 10).Return([]models.Reading{readings[3], readings[2], readings[1]}, nil)
+	dbClientMock.On("ReadingsByTimeRange", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 1, 2).Return([]models.Reading{readings[2], readings[1]}, nil)
+	dbClientMock.On("ReadingsByTimeRange", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 4, 2).Return(nil, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -88,8 +88,8 @@ func TestReadingsByTimeRange(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		start              int
-		end                int
+		start              int64
+		end                int64
 		offset             int
 		limit              int
 		errorExpected      bool
@@ -98,10 +98,10 @@ func TestReadingsByTimeRange(t *testing.T) {
 		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - all readings", int(readings[0].GetBaseReading().Origin), int(readings[4].GetBaseReading().Origin), 0, 10, false, "", 5, totalCount5, http.StatusOK},
-		{"Valid - readings trimmed by latest and oldest", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 0, 10, false, "", 3, totalCount3, http.StatusOK},
-		{"Valid - readings trimmed by latest and oldest and skipped first", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 1, 2, false, "", 2, totalCount3, http.StatusOK},
-		{"Invalid - bounds out of range", int(readings[1].GetBaseReading().Origin), int(readings[3].GetBaseReading().Origin), 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - all readings", readings[0].GetBaseReading().Origin, readings[4].GetBaseReading().Origin, 0, 10, false, "", 5, totalCount5, http.StatusOK},
+		{"Valid - readings trimmed by latest and oldest", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 0, 10, false, "", 3, totalCount3, http.StatusOK},
+		{"Valid - readings trimmed by latest and oldest and skipped first", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 1, 2, false, "", 2, totalCount3, http.StatusOK},
+		{"Invalid - bounds out of range", readings[1].GetBaseReading().Origin, readings[3].GetBaseReading().Origin, 4, 2, true, errors.KindRangeNotSatisfiable, 0, uint32(0), http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
