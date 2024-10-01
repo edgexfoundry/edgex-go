@@ -38,6 +38,9 @@
   "support-scheduler": {
     "edgex_use_defaults": true
   },
+  "support-cron-scheduler": {
+    "edgex_use_defaults": true
+  },
   "security-proxy-auth": {
     "edgex_use_defaults": true
   },
