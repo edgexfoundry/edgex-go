@@ -42,7 +42,7 @@ const minAutoEventInterval = 1 * time.Millisecond
 
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device
-func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool) (id string, edgeXerr errors.EdgeX) {
+func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool, force bool) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -59,9 +59,23 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	// Execute the Device Service Validation when bypassValidation is false by default
-	// Skip the Device Service Validation if bypassValidation is true
-	if !bypassValidation {
+	// check if device name already exists
+	exists, err = dbClient.DeviceNameExists(d.Name)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+	if exists {
+		if force {
+			// invoke forceAddDevice if force flag is enabled
+			return forceAddDevice(d, ctx, dic)
+		} else {
+			return "", errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), nil)
+		}
+	}
+
+	// Execute the Device Service Validation when both bypassValidation/force values are false by default
+	// Skip the Device Service Validation if either bypassValidation or force is true
+	if !(bypassValidation || force) {
 		err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 		if err != nil {
 			return "", errors.NewCommonEdgeXWrapper(err)
@@ -88,6 +102,49 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionAdd, d.ServiceName, deviceDTO, ctx, dic)
 
 	return addedDevice.Id, nil
+}
+
+// forceAddDevice accepts the updated device model from AddDevice function if force flag is enabled
+// and then invokes UpdateDevice function of infrastructure layer to update the existing device
+// however, "delete device" and "add device" system  events will be published to the msg bus instead of "add device" which indicates a force add device action
+func forceAddDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	oldDevice, err := dbClient.DeviceByName(d.Name)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	// set the id and created fields from the old device
+	if d.Id == "" {
+		d.Id = oldDevice.Id
+	}
+	if d.Created == 0 {
+		d.Created = oldDevice.Created
+	}
+
+	err = dbClient.UpdateDevice(d)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+
+	lc.Debugf(
+		"Force add device executed successfully. Correlation-ID: %s ",
+		correlation.FromContext(ctx),
+	)
+
+	// If device is successfully updated, check each AutoEvent interval value and display a warning if it's smaller than the suggested 10ms value
+	for _, autoEvent := range d.AutoEvents {
+		utils.CheckMinInterval(autoEvent.Interval, minAutoEventInterval, lc)
+	}
+
+	deviceDTO := dtos.FromDeviceModelToDTO(d)
+	// publish the "delete device" and "add device" system events continuously
+	publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionDelete, d.ServiceName, deviceDTO, ctx, dic)
+	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionAdd, d.ServiceName, deviceDTO, ctx, dic)
+
+	return d.Id, nil
 }
 
 // DeleteDeviceByName deletes the device by name

@@ -1152,6 +1152,14 @@ components:
         type: boolean
       description: "Indicates whether to skip the Device Service Validation API call."
       default: false
+    forceParam:
+      in: query
+      name: force
+      required: false
+      schema:
+        type: boolean
+      description: "Indicates whether to force add the device if device name already exists."
+      default: false
   headers:
     correlatedResponseHeader:
       description: "A response header that returns the unique correlation ID used to initiate the request."
@@ -1661,6 +1669,8 @@ paths:
       - $ref: '#/components/parameters/bypassValidationParam'
     post:
       summary: "Allows provisioning of a new device"
+      parameters:
+        - $ref: '#/components/parameters/forceParam'
       requestBody:
         required: true
         content:

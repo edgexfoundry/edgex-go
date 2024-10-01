@@ -27,7 +27,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const bypassValidationQueryParam = "bypassValidation" // query param to specify whether to skip the Device Service Validation API call
+const (
+	bypassValidationQueryParam = "bypassValidation" // query param to specify whether to skip the Device Service Validation API call
+	forceQueryParam            = "force"            // query param to specify whether to force add a device
+)
 
 type DeviceController struct {
 	reader io.DtoReader
@@ -54,11 +57,16 @@ func (dc *DeviceController) AddDevice(c echo.Context) error {
 	ctx := r.Context()
 	correlationId := correlation.FromContext(ctx)
 
-	var bypassValidation bool
+	var bypassValidation, force bool
 	// parse URL query string for bypassValidation
 	bypassValidationParamStr := utils.ParseQueryStringToString(r, bypassValidationQueryParam, common.ValueFalse)
 	if bypassValidationParamStr == common.ValueTrue {
 		bypassValidation = true
+	}
+	// parse URL query string for force add device
+	forceParamStr := utils.ParseQueryStringToString(r, forceQueryParam, common.ValueFalse)
+	if forceParamStr == common.ValueTrue {
+		force = true
 	}
 
 	var reqDTOs []requests.AddDeviceRequest
@@ -72,7 +80,7 @@ func (dc *DeviceController) AddDevice(c echo.Context) error {
 	for i, d := range devices {
 		var response interface{}
 		reqId := reqDTOs[i].RequestId
-		newId, err := application.AddDevice(d, ctx, dc.dic, bypassValidation)
+		newId, err := application.AddDevice(d, ctx, dc.dic, bypassValidation, force)
 		if err != nil {
 			lc.Error(err.Error(), common.CorrelationHeader, correlationId)
 			lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
