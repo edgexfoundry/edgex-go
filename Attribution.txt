@@ -481,3 +481,9 @@ https://github.com/jonboulle/clockwork/blob/master/LICENSE
 
 robfig/cron (MIT) - https://github.com/robfig/cron/v3
 https://github.com/robfig/cron/blob/master/LICENSE
+
+github.com/openziti/channel/v3 (Apache 2.0) - github.com/openziti/channel/v3
+ https://github.com/openziti/channel/blob/main/LICENSE
+
+gopkg.in/go-jose/go-jose.v2 (Apache 2.0) - https://github.com/go-jose/go-jose
+https://github.com/go-jose/go-jose/blob/v2.6.3/LICENSE

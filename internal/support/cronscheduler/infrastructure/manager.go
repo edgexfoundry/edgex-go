@@ -181,7 +181,7 @@ func (m *manager) ValidateUpdatingScheduleJob(job models.ScheduleJob) errors.Edg
 	if job.Definition == nil {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "definition field is required", nil)
 	}
-	if job.Actions == nil || len(job.Actions) == 0 {
+	if len(job.Actions) == 0 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "actions field is required", nil)
 	}
 
