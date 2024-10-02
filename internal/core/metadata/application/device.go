@@ -42,7 +42,7 @@ const minAutoEventInterval = 1 * time.Millisecond
 
 // The AddDevice function accepts the new device model from the controller function
 // and then invokes AddDevice function of infrastructure layer to add new device
-func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool) (id string, edgeXerr errors.EdgeX) {
+func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool, force bool) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
@@ -59,9 +59,23 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	// Execute the Device Service Validation when bypassValidation is false by default
-	// Skip the Device Service Validation if bypassValidation is true
-	if !bypassValidation {
+	// check if device name already exists
+	exists, err = dbClient.DeviceNameExists(d.Name)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+	if exists {
+		if force {
+			// invoke updateDevice if force flag is enabled
+			return updateDevice(d, ctx, dic)
+		} else {
+			return "", errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), nil)
+		}
+	}
+
+	// Execute the Device Service Validation when both bypassValidation/force values are false by default
+	// Skip the Device Service Validation if either bypassValidation or force is true
+	if !(bypassValidation || force) {
 		err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 		if err != nil {
 			return "", errors.NewCommonEdgeXWrapper(err)
@@ -88,6 +102,39 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionAdd, d.ServiceName, deviceDTO, ctx, dic)
 
 	return addedDevice.Id, nil
+}
+
+// updateDevice accepts the updated device model from AddDevice function if force flag is enabled
+// and then invokes UpdateDevice function of infrastructure layer to update the existing device
+// the "update device" system events will be published to the msg bus at last
+func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+	dbClient := container.DBClientFrom(dic.Get)
+
+	oldDevice, err := dbClient.DeviceByName(d.Name)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	// set the id and created fields from the old device
+	if d.Id == "" {
+		d.Id = oldDevice.Id
+	}
+	if d.Created == 0 {
+		d.Created = oldDevice.Created
+	}
+
+	// Old service name is used for invoking callback
+	var oldServiceName string
+	if d.ServiceName != "" && d.ServiceName != oldDevice.ServiceName {
+		oldServiceName = oldDevice.ServiceName
+	}
+
+	err = updateDeviceInDB(d, oldServiceName, ctx, dic)
+	if err != nil {
+		return "", errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return d.Id, nil
 }
 
 // DeleteDeviceByName deletes the device by name
@@ -147,7 +194,6 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 // PatchDevice executes the PATCH operation with the device DTO to replace the old data
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, bypassValidation bool) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// Check the existence of device service before device validation
 	if dto.ServiceName != nil {
@@ -188,7 +234,16 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 		}
 	}
 
-	err = dbClient.UpdateDevice(device)
+	return updateDeviceInDB(device, oldServiceName, ctx, dic)
+}
+
+// updateDeviceInDB calls the UpdateDevice method from the infrastructure layer and validate the device auto events
+// and publish the "update device" system event at last
+func updateDeviceInDB(device models.Device, oldServiceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	err := dbClient.UpdateDevice(device)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -199,10 +254,11 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 	}
 
 	lc.Debugf(
-		"Device patched on DB successfully. Correlation-ID: %s ",
+		"Device updated on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
 
+	deviceDTO := dtos.FromDeviceModelToDTO(device)
 	if oldServiceName != "" {
 		go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionUpdate, oldServiceName, deviceDTO, ctx, dic)
 	}

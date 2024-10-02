@@ -130,8 +130,16 @@ func TestAddDevice(t *testing.T) {
 
 	valid := testDevice
 	dbClientMock.On("DeviceServiceNameExists", deviceModel.ServiceName).Return(true, nil)
+	dbClientMock.On("DeviceNameExists", deviceModel.Name).Return(false, nil)
 	dbClientMock.On("AddDevice", deviceModel).Return(deviceModel, nil)
 	dbClientMock.On("DeviceProfileByName", mock.Anything).Return(models.DeviceProfile{Name: "test-profile", DeviceResources: []models.DeviceResource{{Name: "TestResource"}}}, nil)
+
+	validForceAdd := testDevice
+	validForceAdd.Device.Name = "forceAdd"
+	forceAddDm := dtos.ToDeviceModel(validForceAdd.Device)
+	dbClientMock.On("DeviceNameExists", validForceAdd.Device.Name).Return(true, nil)
+	dbClientMock.On("DeviceByName", validForceAdd.Device.Name).Return(forceAddDm, nil)
+	dbClientMock.On("UpdateDevice", forceAddDm).Return(nil)
 
 	notFoundProfile := testDevice
 	notFoundProfile.Device.ProfileName = "notFoundProfile"
@@ -190,23 +198,25 @@ func TestAddDevice(t *testing.T) {
 		expectedResponseCode int
 		expectedValidation   bool
 		expectedSystemEvent  bool
+		forceAdd             bool
 	}{
-		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true},
-		{"Valid - bypassValidation", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, false, true},
-		{"Valid - no profile name and no auto events", []requests.AddDeviceRequest{noProfileAndAutoEvents}, http.StatusMultiStatus, http.StatusCreated, true, true},
-		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false},
-		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - no operatingState", []requests.AddDeviceRequest{noOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - invalid adminState", []requests.AddDeviceRequest{invalidAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - invalid operatingState", []requests.AddDeviceRequest{invalidOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Valid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusMultiStatus, http.StatusCreated, true, true},
-		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false},
-		{"Valid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusMultiStatus, http.StatusCreated, true, true},
-		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
-		{"Invalid - not found device service", []requests.AddDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
-		{"Invalid - device service unavailable", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
+		{"Valid", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, true, true, false},
+		{"Valid - bypassValidation", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusCreated, false, true, false},
+		{"Valid - no profile name and no auto events", []requests.AddDeviceRequest{noProfileAndAutoEvents}, http.StatusMultiStatus, http.StatusCreated, true, true, false},
+		{"Invalid - not found profile", []requests.AddDeviceRequest{notFoundProfile}, http.StatusMultiStatus, http.StatusNotFound, true, false, false},
+		{"Invalid - no name", []requests.AddDeviceRequest{noName}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Invalid - no adminState", []requests.AddDeviceRequest{noAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Invalid - no operatingState", []requests.AddDeviceRequest{noOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Invalid - invalid adminState", []requests.AddDeviceRequest{invalidAdminState}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Invalid - invalid operatingState", []requests.AddDeviceRequest{invalidOperatingState}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Invalid - no service name", []requests.AddDeviceRequest{noServiceName}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Valid - no profile name", []requests.AddDeviceRequest{noProfileName}, http.StatusMultiStatus, http.StatusCreated, true, true, false},
+		{"Invalid - no protocols", []requests.AddDeviceRequest{noProtocols}, http.StatusBadRequest, http.StatusBadRequest, false, false, false},
+		{"Valid - empty protocols", []requests.AddDeviceRequest{emptyProtocols}, http.StatusMultiStatus, http.StatusCreated, true, true, false},
+		{"Invalid - invalid protocols", []requests.AddDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false, false},
+		{"Invalid - not found device service", []requests.AddDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false, false},
+		{"Invalid - device service unavailable", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false, false},
+		{"Valid - force add device", []requests.AddDeviceRequest{validForceAdd}, http.StatusMultiStatus, http.StatusCreated, false, true, true},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -256,6 +266,12 @@ func TestAddDevice(t *testing.T) {
 			if !testCase.expectedValidation {
 				query := req.URL.Query()
 				query.Add(bypassValidationQueryParam, common.ValueTrue)
+				req.URL.RawQuery = query.Encode()
+			}
+
+			if testCase.forceAdd {
+				query := req.URL.Query()
+				query.Add(forceQueryParam, common.ValueTrue)
 				req.URL.RawQuery = query.Encode()
 			}
 
