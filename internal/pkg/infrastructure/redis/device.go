@@ -87,6 +87,13 @@ func addDevice(conn redis.Conn, d models.Device) (models.Device, errors.EdgeX) {
 		return d, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device id %s already exists", d.Id), edgeXerr)
 	}
 
+	exists, edgeXerr = deviceNameExists(conn, d.Name)
+	if edgeXerr != nil {
+		return d, errors.NewCommonEdgeXWrapper(edgeXerr)
+	} else if exists {
+		return d, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), edgeXerr)
+	}
+
 	ts := pkgCommon.MakeTimestamp()
 	if d.Created == 0 {
 		d.Created = ts

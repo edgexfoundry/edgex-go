@@ -29,6 +29,11 @@ func (c *Client) AddDevice(d model.Device) (model.Device, errors.EdgeX) {
 		d.Id = uuid.New().String()
 	}
 
+	exists, _ := deviceNameExists(ctx, c.ConnPool, d.Name)
+	if exists {
+		return model.Device{}, errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), nil)
+	}
+
 	timestamp := pkgCommon.MakeTimestamp()
 	d.Created = timestamp
 	d.Modified = timestamp

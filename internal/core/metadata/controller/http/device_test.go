@@ -251,14 +251,6 @@ func TestAddDevice(t *testing.T) {
 				mockMessaging.On("Publish", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					wg.Done()
 				}).Return(nil)
-
-				// if forceAdd flag is enabled, add the second publish event
-				if testCase.forceAdd {
-					wg.Add(1)
-					mockMessaging.On("Publish", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-						wg.Done()
-					}).Return(nil)
-				}
 			}
 
 			dic.Update(di.ServiceConstructorMap{

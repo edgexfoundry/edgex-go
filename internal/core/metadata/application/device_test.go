@@ -154,7 +154,7 @@ func TestForceAddDevice(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ctx, _ := correlation.FromContextOrNew(context.Background())
-			result, err := forceAddDevice(testCase.device, ctx, dic)
+			result, err := updateDevice(testCase.device, ctx, dic)
 			if testCase.errorExpected {
 				require.Error(t, err)
 			} else {

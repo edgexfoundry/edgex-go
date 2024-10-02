@@ -66,8 +66,8 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 	}
 	if exists {
 		if force {
-			// invoke forceAddDevice if force flag is enabled
-			return forceAddDevice(d, ctx, dic)
+			// invoke updateDevice if force flag is enabled
+			return updateDevice(d, ctx, dic)
 		} else {
 			return "", errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), nil)
 		}
@@ -104,12 +104,11 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 	return addedDevice.Id, nil
 }
 
-// forceAddDevice accepts the updated device model from AddDevice function if force flag is enabled
+// updateDevice accepts the updated device model from AddDevice function if force flag is enabled
 // and then invokes UpdateDevice function of infrastructure layer to update the existing device
-// however, "delete device" and "add device" system  events will be published to the msg bus instead of "add device" which indicates a force add device action
-func forceAddDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
+// the "update device" system events will be published to the msg bus at last
+func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	oldDevice, err := dbClient.DeviceByName(d.Name)
 	if err != nil {
@@ -124,25 +123,16 @@ func forceAddDevice(d models.Device, ctx context.Context, dic *di.Container) (id
 		d.Created = oldDevice.Created
 	}
 
-	err = dbClient.UpdateDevice(d)
+	// Old service name is used for invoking callback
+	var oldServiceName string
+	if d.ServiceName != "" && d.ServiceName != oldDevice.ServiceName {
+		oldServiceName = oldDevice.ServiceName
+	}
+
+	err = updateDeviceInDB(d, oldServiceName, ctx, dic)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
-
-	lc.Debugf(
-		"Force add device executed successfully. Correlation-ID: %s ",
-		correlation.FromContext(ctx),
-	)
-
-	// If device is successfully updated, check each AutoEvent interval value and display a warning if it's smaller than the suggested 10ms value
-	for _, autoEvent := range d.AutoEvents {
-		utils.CheckMinInterval(autoEvent.Interval, minAutoEventInterval, lc)
-	}
-
-	deviceDTO := dtos.FromDeviceModelToDTO(d)
-	// publish the "delete device" and "add device" system events continuously
-	publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionDelete, d.ServiceName, deviceDTO, ctx, dic)
-	go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionAdd, d.ServiceName, deviceDTO, ctx, dic)
 
 	return d.Id, nil
 }
@@ -204,7 +194,6 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 // PatchDevice executes the PATCH operation with the device DTO to replace the old data
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, bypassValidation bool) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
 	// Check the existence of device service before device validation
 	if dto.ServiceName != nil {
@@ -245,7 +234,16 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 		}
 	}
 
-	err = dbClient.UpdateDevice(device)
+	return updateDeviceInDB(device, oldServiceName, ctx, dic)
+}
+
+// updateDeviceInDB calls the UpdateDevice method from the infrastructure layer and validate the device auto events
+// and publish the "update device" system event at last
+func updateDeviceInDB(device models.Device, oldServiceName string, ctx context.Context, dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	err := dbClient.UpdateDevice(device)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -256,10 +254,11 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 	}
 
 	lc.Debugf(
-		"Device patched on DB successfully. Correlation-ID: %s ",
+		"Device updated on DB successfully. Correlation-ID: %s ",
 		correlation.FromContext(ctx),
 	)
 
+	deviceDTO := dtos.FromDeviceModelToDTO(device)
 	if oldServiceName != "" {
 		go publishSystemEvent(common.DeviceSystemEventType, common.SystemEventActionUpdate, oldServiceName, deviceDTO, ctx, dic)
 	}
