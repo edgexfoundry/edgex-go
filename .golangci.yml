@@ -2,3 +2,9 @@ linters:
   disable:
   enable:
     - gosec
+linters-settings:
+  gosec:
+    excludes:
+      # G115: integer overflow conversion
+      # exclude the rule since it tends to be false positive
+      - G115
