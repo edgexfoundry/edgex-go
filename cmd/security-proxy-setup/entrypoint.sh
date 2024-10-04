@@ -259,6 +259,18 @@ server {
       auth_request_set   \$auth_status \$upstream_status;
     }
 
+    set \$upstream_support_cron_scheduler edgex-support-cron-scheduler;
+    location /support-cron-scheduler {
+`cat "${corssnippet}"`
+      rewrite            /support-cron-scheduler/(.*) /\$1 break;
+      resolver           127.0.0.11 valid=30s;
+      proxy_pass         http://\$upstream_support_cron_scheduler:59863;
+      proxy_redirect     off;
+      proxy_set_header   Host \$host;
+      auth_request       /auth;
+      auth_request_set   \$auth_status \$upstream_status;
+    }
+
     set \$upstream_app_rules_engine edgex-app-rules-engine;
     location /app-rules-engine {
 `cat "${corssnippet}"`
