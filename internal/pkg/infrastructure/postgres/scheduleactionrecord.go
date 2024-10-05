@@ -31,7 +31,7 @@ func (c *Client) AddScheduleActionRecord(ctx context.Context, scheduleActionReco
 
 // AddScheduleActionRecords adds multiple schedule action records to the database
 func (c *Client) AddScheduleActionRecords(ctx context.Context, scheduleActionRecords []model.ScheduleActionRecord) ([]model.ScheduleActionRecord, errors.EdgeX) {
-	records := make([]model.ScheduleActionRecord, len(scheduleActionRecords))
+	records := make([]model.ScheduleActionRecord, 0, len(scheduleActionRecords))
 	for _, record := range scheduleActionRecords {
 		r, err := c.AddScheduleActionRecord(ctx, record)
 		if err != nil {
