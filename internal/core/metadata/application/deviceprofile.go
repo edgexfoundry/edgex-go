@@ -112,6 +112,22 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	// Check the associated Device and ProvisionWatcher existence
+	devices, edgeXErr := dbClient.DevicesByProfileName(0, 1, name)
+	if edgeXErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXErr)
+	}
+	if len(devices) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device profile when associated device exists", nil)
+	}
+	provisionWatchers, edgeXErr := dbClient.ProvisionWatchersByProfileName(0, 1, name)
+	if edgeXErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXErr)
+	}
+	if len(provisionWatchers) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device profile when associated provisionWatcher exists", nil)
+	}
+
 	err = dbClient.DeleteDeviceProfileByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)

@@ -489,18 +489,20 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceServiceByName", deviceService.Name).Return(models.DeviceService{}, nil)
 	dbClientMock.On("DevicesByServiceName", 0, 1, deviceService.Name).Return([]models.Device{}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, deviceService.Name).Return([]models.ProvisionWatcher{}, nil)
 	dbClientMock.On("DeleteDeviceServiceByName", deviceService.Name).Return(nil)
-	dbClientMock.On("DevicesByServiceName", 0, 1, notFoundName).Return([]models.Device{}, nil)
-	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, notFoundName).Return([]models.ProvisionWatcher{}, nil)
-	dbClientMock.On("DeleteDeviceServiceByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
-	dbClientMock.On("DeleteDeviceServiceByName", deviceExists).Return(errors.NewCommonEdgeX(
-		errors.KindStatusConflict, "fail to delete the device service when associated device exists", nil))
-	dbClientMock.On("DeleteDeviceServiceByName", provisionWatcherExists).Return(errors.NewCommonEdgeX(
-		errors.KindStatusConflict, "fail to delete the device service when associated provisionWatcher exists", nil))
+
+	dbClientMock.On("DeviceServiceByName", notFoundName).Return(models.DeviceService{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "device service doesn't exist in the database", nil))
+
+	dbClientMock.On("DeviceServiceByName", deviceExists).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, deviceExists).Return([]models.Device{{ServiceName: testDeviceServiceName}}, nil)
+
+	dbClientMock.On("DeviceServiceByName", provisionWatcherExists).Return(models.DeviceService{}, nil)
+	dbClientMock.On("DevicesByServiceName", 0, 1, provisionWatcherExists).Return([]models.Device{}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 1, provisionWatcherExists).Return([]models.ProvisionWatcher{models.ProvisionWatcher{}}, nil)
-	dbClientMock.On("DeviceServiceByName", mock.Anything).Return(models.DeviceService{}, nil)
+
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

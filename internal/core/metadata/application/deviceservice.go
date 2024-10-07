@@ -112,6 +112,22 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	// Check the associated Device and ProvisionWatcher existence
+	devices, edgeXErr := dbClient.DevicesByServiceName(0, 1, name)
+	if edgeXErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXErr)
+	}
+	if len(devices) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device service when associated device exists", nil)
+	}
+	provisionWatchers, edgeXErr := dbClient.ProvisionWatchersByServiceName(0, 1, name)
+	if edgeXErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgeXErr)
+	}
+	if len(provisionWatchers) > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "fail to delete the device service when associated provisionWatcher exists", nil)
+	}
+
 	err = dbClient.DeleteDeviceServiceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
