@@ -40,11 +40,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -q <<-'EOSQL'
   DO $$
   BEGIN
     {{range .Services}} 
-        CREATE SCHEMA IF NOT EXISTS {{.Username}};
+        CREATE SCHEMA IF NOT EXISTS "{{.Username}}";
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{.Username}}') THEN
-            CREATE USER {{.Username}} with PASSWORD '{{.Password}}';
-            GRANT ALL ON SCHEMA {{.Username}} TO {{.Username}};
-            ALTER GROUP edgex_user ADD USER {{.Username}};
+            CREATE USER "{{.Username}}" with PASSWORD '{{.Password}}';
+            GRANT ALL ON SCHEMA "{{.Username}}" TO "{{.Username}}";
+            ALTER GROUP edgex_user ADD USER "{{.Username}}";
         END IF;
 	{{end}}
   END $$;
