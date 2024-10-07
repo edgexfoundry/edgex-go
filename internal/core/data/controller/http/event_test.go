@@ -75,7 +75,7 @@ var persistedReading = models.SimpleReading{
 		ProfileName:  TestDeviceProfileName,
 		ValueType:    common.ValueTypeUint8,
 	},
-	Value: TestReadingValue,
+	Value: &testReadingValue,
 }
 
 var persistedEvent = models.Event{

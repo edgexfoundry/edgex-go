@@ -23,6 +23,7 @@ const (
 )
 
 func simpleReadingData() models.SimpleReading {
+	testValue := "123"
 	return models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           exampleUUID,
@@ -32,7 +33,7 @@ func simpleReadingData() models.SimpleReading {
 			ResourceName: testResourceName,
 			ValueType:    common.ValueTypeString,
 		},
-		Value: "123",
+		Value: &testValue,
 	}
 }
 
