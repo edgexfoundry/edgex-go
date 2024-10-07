@@ -38,6 +38,7 @@ import (
 
 var expectedEventId = uuid.New().String()
 
+var testReadingValue = "45"
 var testReading = dtos.BaseReading{
 	DeviceName:   TestDeviceName,
 	ResourceName: TestDeviceResourceName,
@@ -45,7 +46,7 @@ var testReading = dtos.BaseReading{
 	Origin:       TestOriginTime,
 	ValueType:    common.ValueTypeUint8,
 	SimpleReading: dtos.SimpleReading{
-		Value: TestReadingValue,
+		Value: &testReadingValue,
 	},
 }
 
@@ -162,7 +163,8 @@ func TestAddEvent(t *testing.T) {
 
 	noSimpleValue := validRequest
 	noSimpleValue.Event.Readings = []dtos.BaseReading{testReading}
-	noSimpleValue.Event.Readings[0].Value = ""
+	emptyStr := ""
+	noSimpleValue.Event.Readings[0].Value = &emptyStr
 	noBinaryValue := validRequest
 	noBinaryValue.Event.Readings = []dtos.BaseReading{{
 		DeviceName:   TestDeviceName,
@@ -215,8 +217,8 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - No Reading ValueType JSON", noReadingValueType, common.ContentTypeJSON, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - Invalid Reading ValueType JSON", invalidReadingInvalidValueType, common.ContentTypeJSON, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No SimpleReading Value JSON", noSimpleValue, common.ContentTypeJSON, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading BinaryValue JSON", noBinaryValue, common.ContentTypeJSON, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading MediaType JSON", noBinaryMediaType, common.ContentTypeJSON, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Valid - No BinaryReading BinaryValue JSON", noBinaryValue, common.ContentTypeJSON, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, false, http.StatusCreated},
+		{"Valid - No BinaryReading MediaType JSON", noBinaryMediaType, common.ContentTypeJSON, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, false, http.StatusCreated},
 		{"Valid - AddEventRequest CBOR", validRequest, common.ContentTypeCBOR, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
 		{"Valid - No RequestId CBOR", noRequestId, common.ContentTypeCBOR, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
 		{"Invalid - Bad RequestId CBOR", badRequestId, common.ContentTypeCBOR, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
@@ -235,8 +237,8 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - No Reading ValueType CBOR", noReadingValueType, common.ContentTypeCBOR, noReadingValueType.Event.ProfileName, noReadingValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - Invalid Reading ValueType CBOR", invalidReadingInvalidValueType, common.ContentTypeCBOR, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No SimpleReading Value CBOR", noSimpleValue, common.ContentTypeCBOR, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading BinaryValue CBOR", noBinaryValue, common.ContentTypeCBOR, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, true, http.StatusBadRequest},
-		{"Invalid - No BinaryReading MediaType CBOR", noBinaryMediaType, common.ContentTypeCBOR, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
+		{"Valid - No BinaryReading BinaryValue CBOR", noBinaryValue, common.ContentTypeCBOR, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, false, http.StatusCreated},
+		{"Valid - No BinaryReading MediaType CBOR", noBinaryMediaType, common.ContentTypeCBOR, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, false, http.StatusCreated},
 	}
 
 	for _, testCase := range tests {
