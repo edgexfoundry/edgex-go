@@ -130,8 +130,11 @@ func (a *CoreDataApp) DeleteEventById(id string, dic *di.Container) errors.EdgeX
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
-
-	err := dbClient.DeleteEventById(id)
+	_, err := dbClient.EventById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = dbClient.DeleteEventById(id)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
