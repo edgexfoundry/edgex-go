@@ -17,6 +17,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -318,8 +319,16 @@ func addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId string) error 
 
 	for _, r := range readings {
 		baseReading := r.GetBaseReading()
-		var readingDBModel dbModels.Reading
+		if baseReading.Id == "" {
+			baseReading.Id = uuid.New().String()
+		} else {
+			_, err := uuid.Parse(baseReading.Id)
+			if err != nil {
+				return errors.NewCommonEdgeX(errors.KindInvalidId, "uuid parsing failed", err)
+			}
+		}
 
+		var readingDBModel dbModels.Reading
 		switch contractReadingModel := r.(type) {
 		case model.BinaryReading:
 			// convert BinaryReading struct to Reading DB model
