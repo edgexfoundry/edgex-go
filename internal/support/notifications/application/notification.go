@@ -146,7 +146,11 @@ func DeleteNotificationById(id string, dic *di.Container) errors.EdgeX {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "id is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	err := dbClient.DeleteNotificationById(id)
+	_, err := dbClient.NotificationById(id)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = dbClient.DeleteNotificationById(id)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

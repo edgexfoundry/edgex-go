@@ -87,7 +87,7 @@ func (c *Client) SubscriptionByName(name string) (models.Subscription, errors.Ed
 // SubscriptionsByCategory queries the subscription by category
 func (c *Client) SubscriptionsByCategory(offset, limit int, category string) ([]models.Subscription, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	queryObj := map[string]any{categoriesField: category}
+	queryObj := map[string]any{categoriesField: []string{category}}
 
 	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
 	if err != nil {
@@ -100,7 +100,7 @@ func (c *Client) SubscriptionsByCategory(offset, limit int, category string) ([]
 // SubscriptionsByLabel queries the subscription by label
 func (c *Client) SubscriptionsByLabel(offset, limit int, label string) ([]models.Subscription, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	queryObj := map[string]any{labelsField: label}
+	queryObj := map[string]any{labelsField: []string{label}}
 
 	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
 	if err != nil {
@@ -174,13 +174,13 @@ func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
 
 // SubscriptionCountByCategory returns the count of subscriptions by category
 func (c *Client) SubscriptionCountByCategory(category string) (uint32, errors.EdgeX) {
-	queryObj := map[string]any{categoriesField: category}
+	queryObj := map[string]any{categoriesField: []string{category}}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(subscriptionTableName), queryObj)
 }
 
 // SubscriptionCountByLabel returns the count of subscriptions by label
 func (c *Client) SubscriptionCountByLabel(label string) (uint32, errors.EdgeX) {
-	queryObj := map[string]any{labelsField: label}
+	queryObj := map[string]any{labelsField: []string{label}}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(subscriptionTableName), queryObj)
 }
 

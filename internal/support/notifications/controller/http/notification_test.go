@@ -525,8 +525,9 @@ func TestDeleteNotificationById(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("NotificationById", notification.Id).Return(notification, nil)
 	dbClientMock.On("DeleteNotificationById", notification.Id).Return(nil)
-	dbClientMock.On("DeleteNotificationById", notFoundId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
+	dbClientMock.On("NotificationById", notFoundId).Return(notification, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

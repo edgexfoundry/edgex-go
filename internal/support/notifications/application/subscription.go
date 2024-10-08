@@ -137,7 +137,11 @@ func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Containe
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	err := dbClient.DeleteSubscriptionByName(name)
+	_, err := dbClient.SubscriptionByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = dbClient.DeleteSubscriptionByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}

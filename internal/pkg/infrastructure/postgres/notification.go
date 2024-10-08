@@ -78,7 +78,7 @@ func (c *Client) NotificationsByCategory(offset, limit int, category string) ([]
 // NotificationsByLabel queries the notification by label
 func (c *Client) NotificationsByLabel(offset, limit int, label string) ([]models.Notification, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	queryObj := map[string]any{labelsField: label}
+	queryObj := map[string]any{labelsField: []string{label}}
 
 	notifications, err := queryNotifications(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(notificationTableName), queryObj, offset, validLimit)
 	if err != nil {
@@ -189,7 +189,7 @@ func (c *Client) NotificationCountByCategory(category string) (uint32, errors.Ed
 
 // NotificationCountByLabel returns the count of notifications by label
 func (c *Client) NotificationCountByLabel(label string) (uint32, errors.EdgeX) {
-	queryObj := map[string]any{labelsField: label}
+	queryObj := map[string]any{labelsField: []string{label}}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(notificationTableName), queryObj)
 }
 
