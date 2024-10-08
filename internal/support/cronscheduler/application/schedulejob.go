@@ -44,8 +44,6 @@ func AddScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Contain
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
 
-	arrangeScheduleJob(ctx, job, dic)
-
 	lc.Debugf("Successfully created the scheduled job. ScheduleJob ID: %s, Correlation-ID: %s", addedJob.Id, correlationId)
 	return addedJob.Id, nil
 }
@@ -133,8 +131,6 @@ func PatchScheduleJob(ctx context.Context, dto dtos.UpdateScheduleJob, dic *di.C
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	arrangeScheduleJob(ctx, job, dic)
-
 	lc.Debugf("Successfully patched the scheduled job: %s. ScheduleJob ID: %s, Correlation-ID: %s", job.Name, job.Id, correlationId)
 	return nil
 }
@@ -198,9 +194,6 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 
-		// Load the existing scheduled jobs to the scheduler manager
-		arrangeScheduleJob(ctx, job, dic)
-
 		// If endTimestamp is set and expired, the missed schedule action records should not be generated
 		isEndExpired := isEndTimestampExpired(job.Definition.GetBaseScheduleDef().EndTimestamp)
 		if isEndExpired {
@@ -228,58 +221,6 @@ func LoadScheduleJobsToSchedulerManager(ctx context.Context, dic *di.Container) 
 	}
 
 	return nil
-}
-
-// arrangeScheduleJob arranges the schedule job based on the startTimestamp and endTimestamp
-func arrangeScheduleJob(ctx context.Context, job models.ScheduleJob, dic *di.Container) {
-	schedulerManager := container.SchedulerManagerFrom(dic.Get)
-	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-	correlationId := correlation.FromContext(ctx)
-
-	if job.AdminState != models.Unlocked {
-		lc.Debugf("The scheduled job is ready but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", job.Id, correlationId)
-		return
-	}
-
-	startTimestamp := job.Definition.GetBaseScheduleDef().StartTimestamp
-	endTimestamp := job.Definition.GetBaseScheduleDef().EndTimestamp
-
-	durationUntilStart := time.Until(time.UnixMilli(startTimestamp))
-	durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
-	isEndExpired := isEndTimestampExpired(endTimestamp)
-
-	// If endTimestamp is set and expired, the scheduled job should not be triggered
-	if isEndExpired {
-		lc.Warnf("The endTimestamp is expired for the scheduled job: %s, which will not be started. Correlation-ID: %s", job.Name, correlationId)
-		return
-	}
-
-	// If startTimestamp is expired, the scheduled job should be started immediately
-	if durationUntilStart < 0 {
-		lc.Debugf("The startTimestamp is expired for the scheduled job: %s, which will be started immediately. Correlation-ID: %s", job.Name, correlationId)
-		durationUntilStart = 0
-	} else if durationUntilStart > 0 {
-		lc.Debugf("The scheduled job: %s will be started at %v (timestamp: %v). Correlation-ID: %s", job.Name, time.UnixMilli(startTimestamp), startTimestamp, correlationId)
-	}
-
-	// Regardless of whether startTimestamp has a value or not, the job should always be started by default if endTimestamp is not expired.
-	time.AfterFunc(durationUntilStart, func() {
-		err := schedulerManager.StartScheduleJobByName(job.Name, correlationId)
-		if err != nil {
-			lc.Errorf("Failed to start the scheduled job: %s based on startTimestamp. Error: %v, Correlation-ID: %s", job.Name, err, correlationId)
-		}
-	})
-
-	// If the endTimestamp is set and the duration until the end is greater than 0, the scheduled job will be stopped at the endTimestamp
-	if endTimestamp != 0 && durationUntilEnd > 0 {
-		lc.Debugf("The scheduled job: %s will be stopped at %v (timestamp: %v). Correlation-ID: %s", job.Name, time.UnixMilli(endTimestamp), endTimestamp, correlationId)
-		time.AfterFunc(durationUntilEnd, func() {
-			err := schedulerManager.StopScheduleJobByName(job.Name, correlationId)
-			if err != nil {
-				lc.Errorf("Failed to stop the scheduled job: %s based on endTimestamp. Error: %v, Correlation-ID: %s", job.Name, err, correlationId)
-			}
-		})
-	}
 }
 
 func isEndTimestampExpired(endTimestamp int64) bool {
