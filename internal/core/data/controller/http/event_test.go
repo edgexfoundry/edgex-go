@@ -442,7 +442,8 @@ func TestDeleteEventById(t *testing.T) {
 	notFoundEventId := NonexistentEventID
 
 	dbClientMock := &dbMock.DBClient{}
-	dbClientMock.On("DeleteEventById", notFoundEventId).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
+	dbClientMock.On("EventById", notFoundEventId).Return(models.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "event doesn't exist in the database", nil))
+	dbClientMock.On("EventById", validEventId).Return(persistedEvent, nil)
 	dbClientMock.On("DeleteEventById", validEventId).Return(nil)
 
 	dic := mocks.NewMockDIC()
