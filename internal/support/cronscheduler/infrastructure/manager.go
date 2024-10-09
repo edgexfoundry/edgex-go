@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/google/uuid"
@@ -241,6 +242,22 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		return errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
+	var jobOptions []gocron.JobOption
+
+	// Add options for the scheduled job based on the startTimestamp and endTimestamp
+	toTrigger, startOption, endOption := m.arrangeScheduleJob(ctx, job)
+	if toTrigger {
+		if startOption != nil {
+			jobOptions = append(jobOptions, startOption)
+		}
+		if endOption != nil {
+			jobOptions = append(jobOptions, endOption)
+		}
+	} else {
+		// If the scheduled job should not be triggered, skip adding the job into the scheduler manager
+		return nil
+	}
+
 	for _, a := range job.Actions {
 		copiedAction := a
 		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
@@ -248,45 +265,44 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 			return errors.NewCommonEdgeXWrapper(edgeXerr)
 		}
 
+		// Add event listeners to the job options for recording the schedule action records
+		jobOptions = append(jobOptions, gocron.WithEventListeners(
+			gocron.AfterJobRuns(
+				func(jobID uuid.UUID, jobName string) {
+					gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+					lastRun, err := gocronJob.LastRun()
+					if err != nil {
+						m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
+					}
+
+					record := models.ScheduleActionRecord{
+						JobName:     job.Name,
+						Action:      copiedAction,
+						Status:      models.Succeeded,
+						ScheduledAt: lastRun.UnixMilli(),
+					}
+					m.addScheduleActionRecord(ctx, record, nil)
+				}),
+			gocron.AfterJobRunsWithError(
+				func(jobID uuid.UUID, jobName string, err error) {
+					gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+					lastRun, timeErr := gocronJob.LastRun()
+					if timeErr != nil {
+						m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
+					}
+
+					record := models.ScheduleActionRecord{
+						JobName:     job.Name,
+						Action:      copiedAction,
+						Status:      models.Failed,
+						ScheduledAt: lastRun.UnixMilli(),
+					}
+					m.addScheduleActionRecord(ctx, record, err)
+				}),
+		))
+
 		// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
-		_, err := scheduler.NewJob(
-			definition,
-			task,
-			gocron.WithEventListeners(
-				gocron.AfterJobRuns(
-					func(jobID uuid.UUID, jobName string) {
-						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-						lastRun, err := gocronJob.LastRun()
-						if err != nil {
-							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
-						}
-
-						record := models.ScheduleActionRecord{
-							JobName:     job.Name,
-							Action:      copiedAction,
-							Status:      models.Succeeded,
-							ScheduledAt: lastRun.UnixMilli(),
-						}
-						m.addScheduleActionRecord(ctx, record, nil)
-					}),
-				gocron.AfterJobRunsWithError(
-					func(jobID uuid.UUID, jobName string, err error) {
-						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-						lastRun, timeErr := gocronJob.LastRun()
-						if timeErr != nil {
-							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
-						}
-
-						record := models.ScheduleActionRecord{
-							JobName:     job.Name,
-							Action:      copiedAction,
-							Status:      models.Failed,
-							ScheduledAt: lastRun.UnixMilli(),
-						}
-						m.addScheduleActionRecord(ctx, record, err)
-					}),
-			),
-		)
+		_, err := scheduler.NewJob(definition, task, jobOptions...)
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.KindServerError,
 				fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
@@ -296,6 +312,10 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 	m.mu.Lock()
 	m.schedulers[job.Name] = scheduler
 	m.mu.Unlock()
+
+	if err := m.StartScheduleJobByName(job.Name, correlationId); err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
 
 	return nil
 }
@@ -325,4 +345,52 @@ func getGocronJobByID(jobs []gocron.Job, id uuid.UUID) gocron.Job {
 		}
 	}
 	return nil
+}
+
+// arrangeScheduleJob arranges the schedule job based on the startTimestamp and endTimestamp and return the corresponding job options for gocron
+func (m *manager) arrangeScheduleJob(ctx context.Context, job models.ScheduleJob) (toTrigger bool, startOption, endOption gocron.JobOption) {
+	correlationId := correlation.FromContext(ctx)
+	toTrigger = false
+
+	if job.AdminState != models.Unlocked {
+		m.lc.Debugf("The scheduled job is ready but not started because the admin state is locked. ScheduleJob ID: %s, Correlation-ID: %s", job.Id, correlationId)
+		return toTrigger, nil, nil
+	}
+
+	startTimestamp := job.Definition.GetBaseScheduleDef().StartTimestamp
+	startTime := time.UnixMilli(startTimestamp)
+	endTimestamp := job.Definition.GetBaseScheduleDef().EndTimestamp
+	endTime := time.UnixMilli(endTimestamp)
+
+	durationUntilStart := time.Until(time.UnixMilli(startTimestamp))
+	durationUntilEnd := time.Until(time.UnixMilli(endTimestamp))
+	isEndExpired := endTimestamp != 0 && durationUntilEnd < 0
+
+	// If endTimestamp is set and expired, the scheduled job should not be triggered
+	if isEndExpired {
+		m.lc.Warnf("The endTimestamp is expired for the scheduled job: %s, which will not be started. Correlation-ID: %s", job.Name, correlationId)
+		return toTrigger, nil, nil
+	}
+
+	// If startTimestamp is expired, the scheduled job should be started immediately
+	if durationUntilStart < 0 {
+		m.lc.Debugf("The startTimestamp is expired for the scheduled job: %s, which will be started immediately. Correlation-ID: %s", job.Name, correlationId)
+		durationUntilStart = 0
+	} else if durationUntilStart > 0 {
+		m.lc.Debugf("The scheduled job: %s will be started at %v (timestamp: %v). Correlation-ID: %s", job.Name, startTime, startTimestamp, correlationId)
+	}
+
+	// Regardless of whether startTimestamp has a value or not, the job should always be started by default if endTimestamp is not expired.
+	if durationUntilStart != 0 {
+		startOption = gocron.WithStartAt(gocron.WithStartDateTime(startTime))
+	}
+
+	// If the endTimestamp is set and the duration until the end is greater than 0, the scheduled job will be stopped at the endTimestamp
+	if endTimestamp != 0 && durationUntilEnd > 0 {
+		m.lc.Debugf("The scheduled job: %s will be stopped at %v (timestamp: %v). Correlation-ID: %s", job.Name, endTime, endTimestamp, correlationId)
+		endOption = gocron.WithStopAt(gocron.WithStopDateTime(endTime))
+	}
+
+	toTrigger = true
+	return toTrigger, startOption, endOption
 }
