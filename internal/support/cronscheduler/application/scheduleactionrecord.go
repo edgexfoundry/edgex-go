@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -23,6 +24,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 )
+
+var asyncPurgeRecordOnce sync.Once
 
 // AllScheduleActionRecords query the schedule action records with the specified offset, limit, and time range
 func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
@@ -166,6 +169,31 @@ func GenerateMissedScheduleActionRecords(ctx context.Context, dic *di.Container,
 	return nil, len(missedRecords) > 0
 }
 
+// AsyncPurgeRecord purge schedule action records according to the retention capability.
+func AsyncPurgeRecord(ctx context.Context, dic *di.Container, interval time.Duration) {
+	asyncPurgeRecordOnce.Do(func() {
+		go func() {
+			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+			timer := time.NewTimer(interval)
+			for {
+				timer.Reset(interval)
+				select {
+				case <-ctx.Done():
+					lc.Info("Exiting schedule action records retention")
+					return
+				case <-timer.C:
+					lc.Warn("Start to purge schedule action records")
+					err := purgeRecord(ctx, dic)
+					if err != nil {
+						lc.Errorf("Failed to purge schedule action records, %v", err)
+						break
+					}
+				}
+			}
+		}()
+	})
+}
+
 func generateMissedRuns(def models.ScheduleDef, latestTime time.Time) (missedRuns []time.Time, err errors.EdgeX) {
 	currentTime := time.Now()
 
@@ -230,4 +258,27 @@ func parseCronExpression(cronExpr string) (cron.Schedule, error) {
 		return nil, err
 	}
 	return schedule, nil
+}
+
+func purgeRecord(ctx context.Context, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+	total, err := dbClient.ScheduleActionRecordTotalCount(ctx, 0, time.Now().UnixMilli())
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query schedule action record total count, %v", err)
+	}
+	if total >= config.Retention.MaxCap {
+		lc.Debugf("Purging the schedule action record amount %d to the minimum capacity %d", total, config.Retention.MinCap)
+		record, err := dbClient.LatestScheduleActionRecordsByOffset(ctx, config.Retention.MinCap)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records with offset '%d'", config.Retention.MinCap), err)
+		}
+		age := time.Now().UnixMilli() - record.Created
+		err = dbClient.DeleteScheduleActionRecordByAge(ctx, age)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete schedule action records by age '%d'", age), err)
+		}
+	}
+	return nil
 }

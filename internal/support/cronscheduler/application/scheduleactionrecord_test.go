@@ -6,11 +6,23 @@
 package application
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/robfig/cron/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/config"
+	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
+	dbMock "github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/infrastructure/interfaces/mocks"
 )
 
 var (
@@ -99,6 +111,55 @@ func TestFindMissedCronRuns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := findMissedCronRuns(tt.lastRun, tt.currentTime, tt.cronSchedule)
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestPurgeRecord(t *testing.T) {
+	ctx := context.Background()
+	configuration := &config.ConfigurationStruct{
+		Retention: config.RecordRetention{
+			Enabled:  true,
+			Interval: "1s",
+			MaxCap:   5,
+			MinCap:   3,
+		},
+	}
+	dic := di.NewContainer(di.ServiceConstructorMap{
+		container.ConfigurationName: func(get di.Get) interface{} {
+			return configuration
+		},
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
+			return logger.NewMockClient()
+		},
+	})
+
+	tests := []struct {
+		name        string
+		recordCount uint32
+	}{
+		{"invoke schedule action record purging", configuration.Retention.MaxCap},
+		{"not invoke schedule action record purging", configuration.Retention.MinCap},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			dbClientMock := &dbMock.DBClient{}
+			record := models.ScheduleActionRecord{}
+			dbClientMock.On("LatestScheduleActionRecordsByOffset", ctx, configuration.Retention.MinCap).Return(record, nil)
+			dbClientMock.On("ScheduleActionRecordTotalCount", ctx, int64(0), mock.AnythingOfType("int64")).Return(testCase.recordCount, nil)
+			dbClientMock.On("DeleteScheduleActionRecordByAge", ctx, mock.AnythingOfType("int64")).Return(nil)
+			dic.Update(di.ServiceConstructorMap{
+				container.DBClientInterfaceName: func(get di.Get) interface{} {
+					return dbClientMock
+				},
+			})
+			err := purgeRecord(ctx, dic)
+			require.NoError(t, err)
+			if testCase.recordCount >= configuration.Retention.MaxCap {
+				dbClientMock.AssertCalled(t, "DeleteScheduleActionRecordByAge", ctx, mock.AnythingOfType("int64"))
+			} else {
+				dbClientMock.AssertNotCalled(t, "DeleteScheduleActionRecordByAge", ctx, mock.AnythingOfType("int64"))
+			}
 		})
 	}
 }

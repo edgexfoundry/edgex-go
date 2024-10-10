@@ -17,6 +17,7 @@ package cronscheduler
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -60,6 +61,16 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ 
 	if err != nil {
 		lc.Errorf("failed to load schedule jobs to scheduler manager: %v", err)
 		return false
+	}
+
+	config := container.ConfigurationFrom(dic.Get)
+	if config.Retention.Enabled {
+		retentionInterval, err := time.ParseDuration(config.Retention.Interval)
+		if err != nil {
+			lc.Errorf("Failed to parse schedule action record retention interval, %v", err)
+			return false
+		}
+		application.AsyncPurgeRecord(ctx, dic, retentionInterval)
 	}
 
 	return true
