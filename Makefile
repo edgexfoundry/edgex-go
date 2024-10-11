@@ -13,6 +13,11 @@ INCLUDE_DELAYED_START_BUILD_CORE:="false"
 # change the following boolean flag to include or exclude the delayed start libs for builds for support services exculsively
 INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"
 
+# change the following boolean flag to enable or disable the ASLR for builds
+ENABLE_ASLR:="true"
+# change the following boolean flag to enable or disable the PIE for builds
+ENABLE_PIE:="true"
+
 GO=go
 
 DOCKERS= \
@@ -58,6 +63,14 @@ DOCKER_TAG=$(VERSION)-dev
 
 GOFLAGS=-ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
 GOTESTFLAGS?=-race
+
+ifeq ($(ENABLE_ASLR), "true")
+	GOFLAGS += -ldflags "-bindnow"
+endif
+
+ifeq ($(ENABLE_PIE), "true")
+	GOFLAGS += -buildmode=pie
+endif
 
 GIT_SHA=$(shell git rev-parse HEAD)
 
