@@ -81,6 +81,9 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	if err != nil {
 		return model.Event{}, errors.NewCommonEdgeXWrapper(err)
 	}
+
+	// return the event with readings to ensure readingsPersistedCounter will be increased
+	event.Readings = e.Readings
 	return event, nil
 }
 
