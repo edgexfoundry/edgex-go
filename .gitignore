@@ -26,6 +26,7 @@ cmd/security-secretstore-setup/security-secretstore-setup
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
 cmd/support-scheduler/support-scheduler
+cmd/support-cron-scheduler/support-cron-scheduler
 cmd/secrets-config/secrets-config
 cmd/security-bootstrapper/security-bootstrapper
 cmd/security-proxy-auth/security-proxy-auth
