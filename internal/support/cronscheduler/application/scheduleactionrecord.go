@@ -182,7 +182,7 @@ func AsyncPurgeRecord(ctx context.Context, dic *di.Container, interval time.Dura
 					lc.Info("Exiting schedule action records retention")
 					return
 				case <-timer.C:
-					lc.Warn("Start to purge schedule action records")
+					lc.Info("Start checking the schedule action records and purge the outdated ones according to the retention settings")
 					err := purgeRecord(ctx, dic)
 					if err != nil {
 						lc.Errorf("Failed to purge schedule action records, %v", err)
