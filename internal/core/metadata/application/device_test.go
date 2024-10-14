@@ -21,12 +21,12 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateAutoEvents(t *testing.T) {
+func TestValidateProfileAndAutoEvents(t *testing.T) {
 	profile := "test-profile"
+	notFountProfileName := "notFoundProfile"
 	source1 := "source1"
 	command1 := "command1"
 	deviceProfile := models.DeviceProfile{
@@ -37,7 +37,8 @@ func TestValidateAutoEvents(t *testing.T) {
 
 	dic := di.NewContainer(di.ServiceConstructorMap{})
 	dbClientMock := &mocks.DBClient{}
-	dbClientMock.On("DeviceProfileByName", mock.Anything).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceProfileByName", profile).Return(deviceProfile, nil)
+	dbClientMock.On("DeviceProfileByName", notFountProfileName).Return(models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "not found", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -49,6 +50,16 @@ func TestValidateAutoEvents(t *testing.T) {
 		device        models.Device
 		errorExpected bool
 	}{
+		{"empty profile",
+			models.Device{},
+			false,
+		},
+		{"not found profile",
+			models.Device{
+				ProfileName: notFountProfileName,
+			},
+			true,
+		},
 		{"no auto events",
 			models.Device{
 				ProfileName: profile,
@@ -99,7 +110,7 @@ func TestValidateAutoEvents(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := validateAutoEvent(dic, testCase.device)
+			err := validateProfileAndAutoEvent(dic, testCase.device)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {
