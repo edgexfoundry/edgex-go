@@ -250,6 +250,36 @@ func (_m *DBClient) LatestScheduleActionRecordsByJobName(ctx context.Context, jo
 	return r0, r1
 }
 
+// LatestScheduleActionRecordsByOffset provides a mock function with given fields: ctx, offset
+func (_m *DBClient) LatestScheduleActionRecordsByOffset(ctx context.Context, offset uint32) (models.ScheduleActionRecord, errors.EdgeX) {
+	ret := _m.Called(ctx, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LatestScheduleActionRecordsByOffset")
+	}
+
+	var r0 models.ScheduleActionRecord
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(context.Context, uint32) (models.ScheduleActionRecord, errors.EdgeX)); ok {
+		return rf(ctx, offset)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint32) models.ScheduleActionRecord); ok {
+		r0 = rf(ctx, offset)
+	} else {
+		r0 = ret.Get(0).(models.ScheduleActionRecord)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint32) errors.EdgeX); ok {
+		r1 = rf(ctx, offset)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
 // ScheduleActionRecordCountByJobName provides a mock function with given fields: ctx, jobName, start, end
 func (_m *DBClient) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start int64, end int64) (uint32, errors.EdgeX) {
 	ret := _m.Called(ctx, jobName, start, end)

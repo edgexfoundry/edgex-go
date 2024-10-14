@@ -83,6 +83,19 @@ func (c *Client) LatestScheduleActionRecordsByJobName(ctx context.Context, jobNa
 	return records, nil
 }
 
+// LatestScheduleActionRecordsByOffset queries the latest schedule action records by offset
+func (c *Client) LatestScheduleActionRecordsByOffset(ctx context.Context, offset uint32) (model.ScheduleActionRecord, errors.EdgeX) {
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(scheduleActionRecordTableName, createdCol), offset, 1)
+	if err != nil {
+		return model.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule action records", err)
+	}
+
+	if len(records) == 0 {
+		return model.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("no schedule action record found with offset '%d'", offset), err)
+	}
+	return records[0], nil
+}
+
 // ScheduleActionRecordsByStatus queries the schedule action records by status with the given range, offset, and limit
 func (c *Client) ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX) {
 	var err errors.EdgeX

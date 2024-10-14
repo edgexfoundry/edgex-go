@@ -17,12 +17,20 @@ type ConfigurationStruct struct {
 	Service    bootstrapConfig.ServiceInfo
 	Clients    bootstrapConfig.ClientsCollection
 	MessageBus bootstrapConfig.MessageBusInfo
+	Retention  RecordRetention
 }
 
 type WritableInfo struct {
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 	Telemetry       bootstrapConfig.TelemetryInfo
+}
+
+type RecordRetention struct {
+	Enabled  bool
+	Interval string
+	MaxCap   uint32
+	MinCap   uint32
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
