@@ -13,9 +13,9 @@ INCLUDE_DELAYED_START_BUILD_CORE:="false"
 # change the following boolean flag to include or exclude the delayed start libs for builds for support services exculsively
 INCLUDE_DELAYED_START_BUILD_SUPPORT:="true"
 
-# change the following boolean flag to enable or disable the ASLR for builds
-ENABLE_ASLR:="true"
-# change the following boolean flag to enable or disable the PIE for builds
+# change the following boolean flag to enable or disable the Full RELRO (RELocation Read Only) for linux ELF (Executable and Linkable Format) binaries
+ENABLE_FULL_RELRO:="true"
+# change the following boolean flag to enable or disable PIE for linux binaries which is needed for ASLR (Address Space Layout Randomization) on Linux, the ASLR support on Windows is enabled by default
 ENABLE_PIE:="true"
 
 GO=go
@@ -64,7 +64,7 @@ DOCKER_TAG=$(VERSION)-dev
 GOFLAGS=-ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
 GOTESTFLAGS?=-race
 
-ifeq ($(ENABLE_ASLR), "true")
+ifeq ($(ENABLE_FULL_RELRO), "true")
 	GOFLAGS += -ldflags "-bindnow"
 endif
 
