@@ -54,7 +54,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		return id, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", d.ServiceName), nil)
 	}
 
-	err := validateAutoEvent(dic, d)
+	err := validateProfileAndAutoEvent(dic, d)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -218,7 +218,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
-	err = validateAutoEvent(dic, device)
+	err = validateProfileAndAutoEvent(dic, device)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -340,10 +340,7 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 
 var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
 
-func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
-	if len(d.AutoEvents) == 0 {
-		return nil
-	}
+func validateProfileAndAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 	if d.ProfileName == "" {
 		// if the profile is not set, skip the validation until we have the profile
 		return nil
@@ -351,7 +348,10 @@ func validateAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("device profile '%s' not found during validating device '%s' auto event", d.ProfileName, d.Name), err)
+		return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("device profile '%s' not found during validating device '%s'", d.ProfileName, d.Name), err)
+	}
+	if len(d.AutoEvents) == 0 {
+		return nil
 	}
 	for _, a := range d.AutoEvents {
 		_, err := time.ParseDuration(a.Interval)
