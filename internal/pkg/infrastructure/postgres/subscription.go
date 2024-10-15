@@ -153,13 +153,7 @@ func (c *Client) UpdateSubscription(s models.Subscription) errors.EdgeX {
 
 // SubscriptionsByCategoriesAndLabels queries the subscription by categories and labels
 func (c *Client) SubscriptionsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Subscription, errors.EdgeX) {
-	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	queryObj := map[string]any{
-		categoriesField: categories,
-		labelsField:     labels,
-	}
-
-	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
+	subscriptions, err := subscriptionsByCategoriesAndLabels(c.ConnPool, offset, limit, categories, labels)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all subscriptions by categories and labels", err)
 	}
@@ -226,4 +220,36 @@ func checkSubscriptionExists(ctx context.Context, connPool *pgxpool.Pool, name s
 		return false, pgClient.WrapDBError(fmt.Sprintf("failed to query row by name '%s' from subscription table", name), err)
 	}
 	return exists, nil
+}
+
+func subscriptionsByCategoriesAndLabels(connPool *pgxpool.Pool, offset, limit int, categories []string, labels []string) (subscriptions []models.Subscription, err errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+	categoriesObj := map[string]any{categoriesField: categories}
+	labelsObj := map[string]any{labelsField: labels}
+
+	switch {
+	case len(labels) == 0:
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), categoriesObj, offset, validLimit)
+	case len(categories) == 0:
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), labelsObj, offset, validLimit)
+	default:
+		sql := fmt.Sprintf(`
+			SELECT content
+				FROM (
+	    			SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key
+						FROM %s 
+						WHERE content @> $1::jsonb
+					INTERSECT
+					SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key 
+						FROM %s 
+						WHERE content @> $2::jsonb
+				)		
+			ORDER BY sort_key OFFSET $3 LIMIT $4;
+	`, createdField, subscriptionTableName, createdField, subscriptionTableName)
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sql, categoriesObj, labelsObj, offset, validLimit)
+	}
+	if err != nil {
+		return subscriptions, errors.NewCommonEdgeXWrapper(err)
+	}
+	return subscriptions, nil
 }
