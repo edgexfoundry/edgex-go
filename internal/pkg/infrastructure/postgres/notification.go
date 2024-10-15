@@ -128,18 +128,7 @@ func (c *Client) DeleteNotificationById(id string) errors.EdgeX {
 
 // NotificationsByCategoriesAndLabels queries the notification by categories and labels
 func (c *Client) NotificationsByCategoriesAndLabels(offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX) {
-	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	queryObj := map[string]any{
-		categoryField: categories,
-		labelsField:   labels,
-	}
-
-	notifications, err := queryNotifications(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(notificationTableName), queryObj, offset, validLimit)
-	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all notifications by categories and labels", err)
-	}
-
-	return notifications, nil
+	return notificationsByCategoriesAndLabels(c.ConnPool, offset, limit, categories, labels)
 }
 
 // UpdateNotification updates the notification
@@ -210,8 +199,11 @@ func (c *Client) NotificationCountByTimeRange(start int64, end int64) (uint32, e
 
 // NotificationCountByCategoriesAndLabels returns the count of notifications by categories and labels
 func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string) (uint32, errors.EdgeX) {
-	queryObj := map[string]any{categoryField: categories, labelsField: labels}
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(notificationTableName), queryObj)
+	notifications, err := notificationsByCategoriesAndLabels(c.ConnPool, 0, -1, categories, labels)
+	if err != nil {
+		return 0, errors.NewCommonEdgeXWrapper(err)
+	}
+	return uint32(len(notifications)), nil
 }
 
 // NotificationTotalCount returns the total count of notifications
@@ -264,4 +256,27 @@ func checkNotificationExists(ctx context.Context, connPool *pgxpool.Pool, id str
 		return false, pgClient.WrapDBError(fmt.Sprintf("failed to query row by id '%s' from notification table", id), err)
 	}
 	return exists, nil
+}
+
+func notificationsByCategoriesAndLabels(connPool *pgxpool.Pool, offset, limit int, categories []string, labels []string) ([]models.Notification, errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+	sql := fmt.Sprintf(`
+	SELECT content
+	FROM (
+	    SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key
+			FROM %s 
+			WHERE (content ->> '%s') = ANY($1)
+		UNION
+		SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key 
+			FROM %s 
+			WHERE (content -> '%s')::jsonb ?| $2::text[]
+	)		
+	ORDER BY sort_key OFFSET $3 LIMIT $4;
+	`, createdField, notificationTableName, categoryField, createdField, notificationTableName, labelsField)
+	notifications, err := queryNotifications(context.Background(), connPool, sql, categories, labels, offset, validLimit)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all notifications by categories and labels", err)
+	}
+
+	return notifications, nil
 }
