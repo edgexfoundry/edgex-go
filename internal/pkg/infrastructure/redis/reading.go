@@ -121,6 +121,13 @@ func addReading(conn redis.Conn, r models.Reading) (reading models.Reading, edge
 		}
 		m, err = json.Marshal(newReading)
 		reading = newReading
+	case models.NullReading:
+		baseReading = &newReading.BaseReading
+		if err = checkReadingValue(baseReading); err != nil {
+			return nil, errors.NewCommonEdgeXWrapper(err)
+		}
+		m, err = json.Marshal(newReading)
+		reading = newReading
 	default:
 		return nil, errors.NewCommonEdgeX(errors.KindContractInvalid, "unsupported reading type", nil)
 	}
@@ -277,6 +284,7 @@ func readingsByDeviceNameAndTimeRange(conn redis.Conn, deviceName string, startT
 func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edgeXerr errors.EdgeX) {
 	readings = make([]models.Reading, len(objects))
 	var alias struct {
+		Value     any
 		ValueType string
 	}
 	for i, in := range objects {
@@ -284,7 +292,15 @@ func convertObjectsToReadings(objects [][]byte) (readings []models.Reading, edge
 		if err != nil {
 			return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "reading format parsing failed from the database", err)
 		}
-		if alias.ValueType == common.ValueTypeBinary {
+		if alias.Value == nil {
+			var nullReading models.NullReading
+			err = json.Unmarshal(in, &nullReading)
+			if err != nil {
+				return []models.Reading{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "simple reading format parsing failed from the database", err)
+			}
+			readings[i] = nullReading
+			continue
+		} else if alias.ValueType == common.ValueTypeBinary {
 			var binaryReading models.BinaryReading
 			err = json.Unmarshal(in, &binaryReading)
 			if err != nil {
