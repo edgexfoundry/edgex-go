@@ -267,6 +267,11 @@ func sqlDeleteByContentAge(table string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) < (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - $1", table, createdField)
 }
 
+// sqlDeleteByContentAgeWithConds returns the SQL statement for deleting rows from the table by created timestamp from content column with the given where condition.
+func sqlDeleteByContentAgeWithConds(table string, condition string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE %s AND COALESCE((content->>'%s')::bigint, 0) < (EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - $1", table, condition, createdField)
+}
+
 // sqlDeleteByJSONField returns the SQL statement for deleting rows from the table by the given JSON query string
 func sqlDeleteByJSONField(table string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE content @> $1::jsonb", table)
@@ -315,7 +320,7 @@ func constructWhereCondition(columns ...string) string {
 	return strings.Join(conditions, " AND ")
 }
 
-// constructWhereCondition constructs the WHERE condition for the given columns with time range
+// constructWhereCondWithTimeRange constructs the WHERE condition for the given columns with time range
 // if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
 func constructWhereCondWithTimeRange(timeRangeCol string, arrayColNames []string, columns ...string) string {
 	var hasArrayColumn bool
