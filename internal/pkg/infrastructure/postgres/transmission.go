@@ -118,8 +118,9 @@ func (c *Client) TransmissionsByStatus(offset, limit int, status string) ([]mode
 
 // DeleteProcessedTransmissionsByAge deletes the processed transmissions that are older than a specific age
 func (c *Client) DeleteProcessedTransmissionsByAge(age int64) errors.EdgeX {
-	queryObj := map[string]any{statusField: models.Processed}
-	_, err := c.ConnPool.Exec(context.Background(), sqlDeleteByJSONFieldAndAge(transmissionTableName), queryObj, age)
+	status := []string{models.Sent, models.Acknowledged, models.Escalated}
+	conditions := fmt.Sprintf("(content -> '%s') ?| $2", statusField)
+	_, err := c.ConnPool.Exec(context.Background(), sqlDeleteByContentAgeWithConds(transmissionTableName, conditions), age, status)
 	if err != nil {
 		return pgClient.WrapDBError("failed to delete processed transmissions by age", err)
 	}

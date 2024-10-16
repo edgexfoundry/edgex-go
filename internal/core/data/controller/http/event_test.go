@@ -218,7 +218,7 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - Invalid Reading ValueType JSON", invalidReadingInvalidValueType, common.ContentTypeJSON, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No SimpleReading Value JSON", noSimpleValue, common.ContentTypeJSON, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
 		{"Valid - No BinaryReading BinaryValue JSON", noBinaryValue, common.ContentTypeJSON, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, false, http.StatusCreated},
-		{"Valid - No BinaryReading MediaType JSON", noBinaryMediaType, common.ContentTypeJSON, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, false, http.StatusCreated},
+		{"Invalid - No BinaryReading MediaType JSON", noBinaryMediaType, common.ContentTypeJSON, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Valid - AddEventRequest CBOR", validRequest, common.ContentTypeCBOR, validRequest.Event.ProfileName, validRequest.Event.DeviceName, false, http.StatusCreated},
 		{"Valid - No RequestId CBOR", noRequestId, common.ContentTypeCBOR, noRequestId.Event.ProfileName, noRequestId.Event.DeviceName, false, http.StatusCreated},
 		{"Invalid - Bad RequestId CBOR", badRequestId, common.ContentTypeCBOR, badRequestId.Event.ProfileName, badRequestId.Event.DeviceName, true, http.StatusBadRequest},
@@ -238,7 +238,7 @@ func TestAddEvent(t *testing.T) {
 		{"Invalid - Invalid Reading ValueType CBOR", invalidReadingInvalidValueType, common.ContentTypeCBOR, invalidReadingInvalidValueType.Event.ProfileName, invalidReadingInvalidValueType.Event.DeviceName, true, http.StatusBadRequest},
 		{"Invalid - No SimpleReading Value CBOR", noSimpleValue, common.ContentTypeCBOR, noSimpleValue.Event.ProfileName, noSimpleValue.Event.DeviceName, true, http.StatusBadRequest},
 		{"Valid - No BinaryReading BinaryValue CBOR", noBinaryValue, common.ContentTypeCBOR, noBinaryValue.Event.ProfileName, noBinaryValue.Event.DeviceName, false, http.StatusCreated},
-		{"Valid - No BinaryReading MediaType CBOR", noBinaryMediaType, common.ContentTypeCBOR, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, false, http.StatusCreated},
+		{"Invalid - No BinaryReading MediaType CBOR", noBinaryMediaType, common.ContentTypeCBOR, noBinaryMediaType.Event.ProfileName, noBinaryMediaType.Event.DeviceName, true, http.StatusBadRequest},
 	}
 
 	for _, testCase := range tests {
