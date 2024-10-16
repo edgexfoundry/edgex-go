@@ -47,7 +47,7 @@ var persistedEvent = models.Event{
 
 func buildReadings() []models.Reading {
 	ticks := pkgCommon.MakeTimestamp()
-	testValue := "45"
+
 	r1 := models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           uuid.New().String(),
@@ -57,7 +57,7 @@ func buildReadings() []models.Reading {
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: &testValue,
+		Value: "45",
 	}
 
 	r2 := models.BinaryReading{
@@ -81,7 +81,7 @@ func buildReadings() []models.Reading {
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: &testValue,
+		Value: "33",
 	}
 
 	r4 := models.SimpleReading{
@@ -93,7 +93,7 @@ func buildReadings() []models.Reading {
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: &testValue,
+		Value: "44",
 	}
 
 	r5 := models.SimpleReading{
@@ -105,7 +105,7 @@ func buildReadings() []models.Reading {
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: &testValue,
+		Value: "55",
 	}
 
 	var readings []models.Reading
