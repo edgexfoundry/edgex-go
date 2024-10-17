@@ -258,7 +258,7 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 			// reading type is SimpleReading
 			simpleReading := model.SimpleReading{
 				BaseReading: baseReading,
-				Value:       readingDBModel.Value,
+				Value:       *readingDBModel.Value,
 			}
 			reading = simpleReading
 		} else {
@@ -351,7 +351,7 @@ func addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId string) error 
 			// convert SimpleReading struct to Reading DB model
 			readingDBModel = dbModels.Reading{
 				BaseReading:   baseReading,
-				SimpleReading: dbModels.SimpleReading{Value: contractReadingModel.Value},
+				SimpleReading: dbModels.SimpleReading{Value: &contractReadingModel.Value},
 			}
 		default:
 			return errors.NewCommonEdgeX(errors.KindContractInvalid, "failed to convert reading to none of BinaryReading/ObjectReading/SimpleReading structs", nil)

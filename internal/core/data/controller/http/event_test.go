@@ -38,7 +38,6 @@ import (
 
 var expectedEventId = uuid.New().String()
 
-var testReadingValue = "45"
 var testReading = dtos.BaseReading{
 	DeviceName:   TestDeviceName,
 	ResourceName: TestDeviceResourceName,
@@ -46,7 +45,7 @@ var testReading = dtos.BaseReading{
 	Origin:       TestOriginTime,
 	ValueType:    common.ValueTypeUint8,
 	SimpleReading: dtos.SimpleReading{
-		Value: &testReadingValue,
+		Value: "45",
 	},
 }
 
@@ -75,7 +74,7 @@ var persistedReading = models.SimpleReading{
 		ProfileName:  TestDeviceProfileName,
 		ValueType:    common.ValueTypeUint8,
 	},
-	Value: &testReadingValue,
+	Value: TestReadingValue,
 }
 
 var persistedEvent = models.Event{
@@ -163,8 +162,7 @@ func TestAddEvent(t *testing.T) {
 
 	noSimpleValue := validRequest
 	noSimpleValue.Event.Readings = []dtos.BaseReading{testReading}
-	emptyStr := ""
-	noSimpleValue.Event.Readings[0].Value = &emptyStr
+	noSimpleValue.Event.Readings[0].Value = ""
 	noBinaryValue := validRequest
 	noBinaryValue.Event.Readings = []dtos.BaseReading{{
 		DeviceName:   TestDeviceName,

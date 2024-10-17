@@ -23,7 +23,6 @@ const (
 )
 
 func simpleReadingData() models.SimpleReading {
-	testValue := "123"
 	return models.SimpleReading{
 		BaseReading: models.BaseReading{
 			Id:           exampleUUID,
@@ -33,7 +32,7 @@ func simpleReadingData() models.SimpleReading {
 			ResourceName: testResourceName,
 			ValueType:    common.ValueTypeString,
 		},
-		Value: &testValue,
+		Value: "123",
 	}
 }
 
@@ -69,10 +68,25 @@ func objectReadingData() models.ObjectReading {
 	}
 }
 
+func nullReadingData() models.NullReading {
+	return models.NullReading{
+		BaseReading: models.BaseReading{
+			Id:           exampleUUID,
+			Origin:       1616728256236000000,
+			DeviceName:   testDeviceName,
+			ProfileName:  testProfileName,
+			ResourceName: testResourceName,
+			ValueType:    common.ValueTypeFloat32,
+		},
+		Value: nil,
+	}
+}
+
 func TestConvertObjectsToReadings(t *testing.T) {
 	simpleReading := simpleReadingData()
 	binaryReading := binaryReadingData()
 	objectReading := objectReadingData()
+	nullReading := nullReadingData()
 
 	simpleReadingBytes, err := json.Marshal(simpleReading)
 	require.NoError(t, err)
@@ -80,10 +94,12 @@ func TestConvertObjectsToReadings(t *testing.T) {
 	require.NoError(t, err)
 	objectReadingBytes, err := json.Marshal(objectReading)
 	require.NoError(t, err)
+	nullReadingBytes, err := json.Marshal(nullReading)
+	require.NoError(t, err)
 
-	readingsData := [][]byte{simpleReadingBytes, binaryReadingBytes, objectReadingBytes}
+	readingsData := [][]byte{simpleReadingBytes, binaryReadingBytes, objectReadingBytes, nullReadingBytes}
 	expectedReadings := []models.Reading{
-		simpleReading, binaryReading, objectReading,
+		simpleReading, binaryReading, objectReading, nullReading,
 	}
 
 	events, err := convertObjectsToReadings(readingsData)
