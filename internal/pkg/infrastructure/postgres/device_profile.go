@@ -17,6 +17,7 @@ import (
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 )
@@ -179,12 +180,21 @@ func (c *Client) DeviceProfilesByManufacturer(offset int, limit int, manufacture
 }
 
 // DeviceProfilesByManufacturerAndModel query device profiles with offset, limit, manufacturer and model
-func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, uint32, errors.EdgeX) {
+func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) (profiles []model.DeviceProfile, totalCount uint32, err errors.EdgeX) {
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{modelField: model, manufacturerField: manufacturer}
-	profiles, err := queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
-	return profiles, uint32(len(profiles)), err
+	totalCount, err = getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceProfileTableName), queryObj)
+	if err != nil {
+		return profiles, totalCount, err
+	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return profiles, totalCount, err
+	}
+	profiles, err = queryDeviceProfiles(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceProfileTableName), queryObj, offset, validLimit)
+
+	return profiles, totalCount, err
 }
 
 // DeviceProfileCountByLabels returns the total count of Device Profiles with labels specified.  If no label is specified, the total count of all device profiles will be returned.

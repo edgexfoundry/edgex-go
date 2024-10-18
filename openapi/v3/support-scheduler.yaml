@@ -463,6 +463,11 @@ components:
         apiVersion: "v3"
         statusCode: 400
         message: "Bad Request"
+    416Example:
+      value:
+        apiVersion: "v3"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v3"
@@ -638,6 +643,18 @@ paths:
               examples:
                 MultiIntervalsExample:
                   $ref: '#/components/examples/MultiIntervalsExample'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -833,6 +850,18 @@ paths:
               examples:
                 MultiIntervalActionsExample:
                   $ref: '#/components/examples/MultiIntervalActionsExample'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

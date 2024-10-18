@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -217,7 +217,7 @@ func TestAllSubscriptions(t *testing.T) {
 	dbClientMock.On("SubscriptionTotalCount").Return(expectedSubscriptionCount, nil)
 	dbClientMock.On("AllSubscriptions", 0, 20).Return(subscriptions, nil)
 	dbClientMock.On("AllSubscriptions", 1, 2).Return([]models.Subscription{subscriptions[1], subscriptions[2]}, nil)
-	dbClientMock.On("AllSubscriptions", 4, 1).Return([]models.Subscription{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllSubscriptions", 4, 1).Return([]models.Subscription{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -237,7 +237,7 @@ func TestAllSubscriptions(t *testing.T) {
 	}{
 		{"Valid - get subscriptions without offset and limit", "", "", false, 3, expectedSubscriptionCount, http.StatusOK},
 		{"Valid - get subscriptions with offset and limit", "1", "2", false, 2, expectedSubscriptionCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", true, 0, expectedSubscriptionCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", true, 0, expectedSubscriptionCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
