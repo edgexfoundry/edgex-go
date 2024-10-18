@@ -1228,7 +1228,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
 	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1250,7 +1250,7 @@ func TestAllDeviceProfiles(t *testing.T) {
 		{"Valid - get device profiles without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profiles with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profiles with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -1305,7 +1305,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 	dbClientMock.On("DeviceProfileCountByModel", TestModel).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByModel", 0, 10, TestModel).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByModel", 1, 2, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("DeviceProfilesByModel", 4, 1, TestModel).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DeviceProfilesByModel", 4, 1, TestModel).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1326,7 +1326,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 	}{
 		{"Valid - get device profiles by model", "0", "10", TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profiles by model with offset and limit", "1", "2", TestModel, false, 2, expectedTotalProfileCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestModel, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", TestModel, true, 0, expectedTotalProfileCount, http.StatusRequestedRangeNotSatisfiable},
 		{"Invalid - model is empty", "0", "10", "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
@@ -1381,7 +1381,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 	dbClientMock.On("DeviceProfileCountByManufacturer", TestManufacturer).Return(expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 0, 10, TestManufacturer).Return(deviceProfiles, nil)
 	dbClientMock.On("DeviceProfilesByManufacturer", 1, 2, TestManufacturer).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("DeviceProfilesByManufacturer", 4, 1, TestManufacturer).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DeviceProfilesB yManufacturer", 4, 1, TestManufacturer).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1402,7 +1402,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 	}{
 		{"Valid - get device profiles by manufacturer", "0", "10", TestManufacturer, false, 3, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, false, 2, expectedTotalProfileCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestManufacturer, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", TestManufacturer, true, 0, expectedTotalProfileCount, http.StatusRequestedRangeNotSatisfiable},
 		{"Invalid - manufacturer is empty", "0", "10", "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
@@ -1456,7 +1456,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, expectedTotalProfileCount, nil)
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, expectedTotalProfileCount, nil)
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, expectedTotalProfileCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, expectedTotalProfileCount, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1478,7 +1478,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	}{
 		{"Valid - get device profiles by manufacturer and model", "0", "10", TestManufacturer, TestModel, false, 3, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profiles by manufacturer with offset and limit", "1", "2", TestManufacturer, TestModel, false, 2, expectedTotalProfileCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", TestManufacturer, TestModel, true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", TestManufacturer, TestModel, true, 0, expectedTotalProfileCount, http.StatusRequestedRangeNotSatisfiable},
 		{"Invalid - manufacturer is empty", "0", "10", "", TestModel, true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 		{"Invalid - model is empty", "0", "10", TestManufacturer, "", true, 0, expectedTotalProfileCount, http.StatusBadRequest},
 	}
@@ -1536,7 +1536,7 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 	dbClientMock.On("AllDeviceProfiles", 0, 10, []string(nil)).Return(deviceProfiles, nil)
 	dbClientMock.On("AllDeviceProfiles", 0, 5, testDeviceProfileLabels).Return([]models.DeviceProfile{deviceProfiles[0], deviceProfiles[1]}, nil)
 	dbClientMock.On("AllDeviceProfiles", 1, 2, []string(nil)).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
-	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllDeviceProfiles", 4, 1, testDeviceProfileLabels).Return([]models.DeviceProfile{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -1558,7 +1558,7 @@ func TestAllDeviceProfileBasicInfos(t *testing.T) {
 		{"Valid - get device profile basic infos without labels", "0", "10", "", false, 3, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profile basic infos with labels", "0", "5", strings.Join(testDeviceProfileLabels, ","), false, 2, expectedTotalProfileCount, http.StatusOK},
 		{"Valid - get device profile basic infos with offset and no labels", "1", "2", "", false, 2, expectedTotalProfileCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceProfileLabels, ","), true, 0, expectedTotalProfileCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

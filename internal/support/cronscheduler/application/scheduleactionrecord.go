@@ -22,6 +22,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"
 )
 
@@ -30,10 +31,17 @@ var asyncPurgeRecordOnce sync.Once
 // AllScheduleActionRecords query the schedule action records with the specified offset, limit, and time range
 func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	records, err := dbClient.AllScheduleActionRecords(ctx, start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordTotalCount(ctx, start, end)
+
+	totalCount, err = dbClient.ScheduleActionRecordTotalCount(ctx, start, end)
+	if err != nil {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ScheduleActionRecord{}, totalCount, err
+	}
+
+	records, err := dbClient.AllScheduleActionRecords(ctx, start, end, offset, limit)
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -43,12 +51,22 @@ func AllScheduleActionRecords(ctx context.Context, start, end int64, offset, lim
 }
 
 // ScheduleActionRecordsByStatus query the schedule action records with the specified status, offset, limit, and time range
-func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, edgeXerr errors.EdgeX) {
-	dbClient := container.DBClientFrom(dic.Get)
-	records, err := dbClient.ScheduleActionRecordsByStatus(ctx, status, start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByStatus(ctx, status, start, end)
+func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+	if status == "" {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	totalCount, err = dbClient.ScheduleActionRecordCountByStatus(ctx, status, start, end)
+	if err != nil {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ScheduleActionRecord{}, totalCount, err
+	}
+
+	records, err := dbClient.ScheduleActionRecordsByStatus(ctx, status, start, end, offset, limit)
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -58,12 +76,22 @@ func ScheduleActionRecordsByStatus(ctx context.Context, status string, start, en
 }
 
 // ScheduleActionRecordsByJobName query the schedule action records with the specified job name, offset, limit, and time range
-func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, edgeXerr errors.EdgeX) {
-	dbClient := container.DBClientFrom(dic.Get)
-	records, err := dbClient.ScheduleActionRecordsByJobName(ctx, jobName, start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByJobName(ctx, jobName, start, end)
+func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+	if jobName == "" {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "jobName is empty", nil)
 	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	totalCount, err = dbClient.ScheduleActionRecordCountByJobName(ctx, jobName, start, end)
+	if err != nil {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ScheduleActionRecord{}, totalCount, err
+	}
+
+	records, err := dbClient.ScheduleActionRecordsByJobName(ctx, jobName, start, end, offset, limit)
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -73,12 +101,25 @@ func ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, 
 }
 
 // ScheduleActionRecordsByJobNameAndStatus query the schedule action records with the specified job name, status, offset, limit, and time range
-func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, edgeXerr errors.EdgeX) {
-	dbClient := container.DBClientFrom(dic.Get)
-	records, err := dbClient.ScheduleActionRecordsByJobNameAndStatus(ctx, jobName, status, start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.ScheduleActionRecordCountByJobNameAndStatus(ctx, jobName, status, start, end)
+func ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int, dic *di.Container) (scheduleActionRecordDTOs []dtos.ScheduleActionRecord, totalCount uint32, err errors.EdgeX) {
+	if jobName == "" {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "jobName is empty", nil)
 	}
+	if status == "" {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
+	}
+
+	dbClient := container.DBClientFrom(dic.Get)
+	totalCount, err = dbClient.ScheduleActionRecordCountByJobNameAndStatus(ctx, jobName, status, start, end)
+	if err != nil {
+		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ScheduleActionRecord{}, totalCount, err
+	}
+
+	records, err := dbClient.ScheduleActionRecordsByJobNameAndStatus(ctx, jobName, status, start, end, offset, limit)
 	if err != nil {
 		return scheduleActionRecordDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

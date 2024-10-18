@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -86,10 +87,17 @@ func ScheduleJobByName(ctx context.Context, name string, dic *di.Container) (dto
 // AllScheduleJobs queries all the schedule jobs with offset and limit
 func AllScheduleJobs(ctx context.Context, labels []string, offset, limit int, dic *di.Container) (scheduleJobDTOs []dtos.ScheduleJob, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	jobs, err := dbClient.AllScheduleJobs(ctx, labels, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.ScheduleJobTotalCount(ctx, labels)
+
+	totalCount, err = dbClient.ScheduleJobTotalCount(ctx, labels)
+	if err != nil {
+		return scheduleJobDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ScheduleJob{}, totalCount, err
+	}
+
+	jobs, err := dbClient.AllScheduleJobs(ctx, labels, offset, limit)
 	if err != nil {
 		return scheduleJobDTOs, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

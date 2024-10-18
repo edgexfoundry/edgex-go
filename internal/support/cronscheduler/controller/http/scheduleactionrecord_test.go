@@ -52,15 +52,15 @@ func scheduleActionRecordsData() []dtos.ScheduleActionRecord {
 }
 
 func TestAllScheduleActionRecords(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(0)
+	expectedTotalScheduleActionRecordCount := uint32(2)
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
 	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background(), int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), mock.AnythingOfType("int64"), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
-	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), int64(1723642440000), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(1723642430000), int64(1723642440000), 0, 1).Return([]models.ScheduleActionRecord{}, nil)
 	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background(), int64(1723642430000), int64(1723642440000)).Return(expectedTotalScheduleActionRecordCount, nil)
+	dbClientMock.On("AllScheduleActionRecords", context.Background(), int64(0), mock.AnythingOfType("int64"), 4, 2).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -86,6 +86,7 @@ func TestAllScheduleActionRecords(t *testing.T) {
 		{"Invalid - invalid start, end must be greater than start", "1723642440000", "0", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
 		{"Invalid - invalid offset format", "", "", "aaa", "1", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
 		{"Invalid - invalid limit format", "", "", "1", "aaa", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
+		{"Invalid - offset out of range", "", "", "4", "2", true, expectedTotalScheduleActionRecordCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -220,8 +221,8 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 	dbClientMock := &csMock.DBClient{}
 	dbClientMock.On("ScheduleActionRecordCountByStatus", context.Background(), testStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
-	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the status is required", nil))
-	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given status doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordCountByStatus", context.Background(), notFoundStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given status doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordsByStatus", context.Background(), testStatus, int64(0), mock.AnythingOfType("int64"), 4, 2).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -245,12 +246,27 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 		{"Valid - find schedule action records by status", testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
 		{"Invalid - status parameter is empty", emptyStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
 		{"Invalid - schedule action records not found by status", notFoundStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
+		{"Invalid - offset out of range", testStatus, "", "", "4", "2", true, expectedTotalScheduleActionRecordCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByStatusEchoRoute, testCase.status)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			query := req.URL.Query()
+			if testCase.start != "" {
+				query.Add(common.Start, testCase.start)
+			}
+			if testCase.end != "" {
+				query.Add(common.End, testCase.end)
+			}
+			if testCase.offset != "" {
+				query.Add(common.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(common.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)
 
 			// Act
@@ -299,8 +315,8 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 	dbClientMock := &csMock.DBClient{}
 	dbClientMock.On("ScheduleActionRecordCountByJobName", context.Background(), testScheduleJobName, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), testScheduleJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
-	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), emptyJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name is required", nil))
-	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), notFoundJobName, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordCountByJobName", context.Background(), notFoundJobName, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordsByJobName", context.Background(), testScheduleJobName, int64(0), mock.AnythingOfType("int64"), 4, 2).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -324,12 +340,27 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 		{"Valid - find schedule action records by job name", testScheduleJobName, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
 		{"Invalid - job name parameter is empty", emptyJobName, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
 		{"Invalid - schedule action records not found by job name", notFoundJobName, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
+		{"Invalid - offset out of range", testScheduleJobName, "", "", "4", "2", true, expectedTotalScheduleActionRecordCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			query := req.URL.Query()
+			if testCase.start != "" {
+				query.Add(common.Start, testCase.start)
+			}
+			if testCase.end != "" {
+				query.Add(common.End, testCase.end)
+			}
+			if testCase.offset != "" {
+				query.Add(common.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(common.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)
 
 			// Act
@@ -380,8 +411,8 @@ func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
 	dbClientMock := &csMock.DBClient{}
 	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
 	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return(records, nil)
-	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), emptyJobName, emptyStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindContractInvalid, "the job name and status are required", nil))
-	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), notFoundJobName, notFoundStatus, int64(0), mock.AnythingOfType("int64"), 0, 20).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name and status doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordCountByJobNameAndStatus", context.Background(), notFoundJobName, notFoundStatus, int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "schedule action records with given job name and status doesn't exist in the database", nil))
+	dbClientMock.On("ScheduleActionRecordsByJobNameAndStatus", context.Background(), testScheduleJobName, testStatus, int64(0), mock.AnythingOfType("int64"), 4, 2).Return([]models.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) any {
 			return dbClientMock
@@ -406,12 +437,27 @@ func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
 		{"Valid - find schedule action records by job name", testScheduleJobName, testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
 		{"Invalid - job name and status parameters are empty", emptyJobName, emptyStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusBadRequest},
 		{"Invalid - schedule action records not found by job name and status", notFoundJobName, notFoundStatus, "", "", "", "", true, expectedTotalScheduleActionRecordCount, http.StatusNotFound},
+		{"Invalid - offset out of range", testScheduleJobName, testStatus, "", "", "4", "2", true, expectedTotalScheduleActionRecordCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
 			reqPath := fmt.Sprintf("%s/%s/%s/:%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName, common.Status, common.Status, testCase.status)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
+			query := req.URL.Query()
+			if testCase.start != "" {
+				query.Add(common.Start, testCase.start)
+			}
+			if testCase.end != "" {
+				query.Add(common.End, testCase.end)
+			}
+			if testCase.offset != "" {
+				query.Add(common.Offset, testCase.offset)
+			}
+			if testCase.limit != "" {
+				query.Add(common.Limit, testCase.limit)
+			}
+			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)
 
 			// Act

@@ -1,11 +1,12 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package application
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -36,10 +37,17 @@ func TransmissionById(id string, dic *di.Container) (trans dtos.Transmission, ed
 // TransmissionsByTimeRange query transmissions with offset, limit and time range
 func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	models, err := dbClient.TransmissionsByTimeRange(start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.TransmissionCountByTimeRange(start, end)
+
+	totalCount, err = dbClient.TransmissionCountByTimeRange(start, end)
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Transmission{}, totalCount, err
+	}
+
+	models, err := dbClient.TransmissionsByTimeRange(start, end, offset, limit)
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -72,11 +80,18 @@ func TransmissionsByStatus(offset, limit int, status string, dic *di.Container) 
 	if status == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	transModels, err := dbClient.TransmissionsByStatus(offset, limit, status)
-	if err == nil {
-		totalCount, err = dbClient.TransmissionCountByStatus(status)
+	totalCount, err = dbClient.TransmissionCountByStatus(status)
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Transmission{}, totalCount, err
+	}
+
+	transModels, err := dbClient.TransmissionsByStatus(offset, limit, status)
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -100,11 +115,18 @@ func TransmissionsBySubscriptionName(offset, limit int, subscriptionName string,
 	if subscriptionName == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscription name is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	transModels, err := dbClient.TransmissionsBySubscriptionName(offset, limit, subscriptionName)
-	if err == nil {
-		totalCount, err = dbClient.TransmissionCountBySubscriptionName(subscriptionName)
+	totalCount, err = dbClient.TransmissionCountBySubscriptionName(subscriptionName)
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Transmission{}, totalCount, err
+	}
+
+	transModels, err := dbClient.TransmissionsBySubscriptionName(offset, limit, subscriptionName)
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -116,11 +138,18 @@ func TransmissionsByNotificationId(offset, limit int, notificationId string, dic
 	if notificationId == "" {
 		return transmissions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "notification id is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	transModels, err := dbClient.TransmissionsByNotificationId(offset, limit, notificationId)
-	if err == nil {
-		totalCount, err = dbClient.TransmissionCountByNotificationId(notificationId)
+	totalCount, err = dbClient.TransmissionCountByNotificationId(notificationId)
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Transmission{}, totalCount, err
+	}
+
+	transModels, err := dbClient.TransmissionsByNotificationId(offset, limit, notificationId)
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	} else {

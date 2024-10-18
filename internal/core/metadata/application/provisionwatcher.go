@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -75,10 +76,16 @@ func ProvisionWatchersByServiceName(offset int, limit int, name string, dic *di.
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
-	pwModels, err := dbClient.ProvisionWatchersByServiceName(offset, limit, name)
-	if err == nil {
-		totalCount, err = dbClient.ProvisionWatcherCountByServiceName(name)
+	totalCount, err = dbClient.ProvisionWatcherCountByServiceName(name)
+	if err != nil {
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ProvisionWatcher{}, totalCount, err
+	}
+
+	pwModels, err := dbClient.ProvisionWatchersByServiceName(offset, limit, name)
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -96,10 +103,16 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
-	pwModels, err := dbClient.ProvisionWatchersByProfileName(offset, limit, name)
-	if err == nil {
-		totalCount, err = dbClient.ProvisionWatcherCountByProfileName(name)
+	totalCount, err = dbClient.ProvisionWatcherCountByProfileName(name)
+	if err != nil {
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ProvisionWatcher{}, totalCount, err
+	}
+
+	pwModels, err := dbClient.ProvisionWatchersByProfileName(offset, limit, name)
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -113,10 +126,17 @@ func ProvisionWatchersByProfileName(offset int, limit int, name string, dic *di.
 // AllProvisionWatchers query the provision watchers with offset, limit and labels
 func AllProvisionWatchers(offset int, limit int, labels []string, dic *di.Container) (provisionWatchers []dtos.ProvisionWatcher, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	pwModels, err := dbClient.AllProvisionWatchers(offset, limit, labels)
-	if err == nil {
-		totalCount, err = dbClient.ProvisionWatcherCountByLabels(labels)
+
+	totalCount, err = dbClient.ProvisionWatcherCountByLabels(labels)
+	if err != nil {
+		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.ProvisionWatcher{}, totalCount, err
+	}
+
+	pwModels, err := dbClient.AllProvisionWatchers(offset, limit, labels)
 	if err != nil {
 		return provisionWatchers, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

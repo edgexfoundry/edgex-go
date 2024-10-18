@@ -12,6 +12,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
@@ -142,10 +143,17 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 // AllDeviceProfiles query the device profiles with offset, and limit
 func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
-	if err == nil {
-		totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
+
+	totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
+	if err != nil {
+		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.DeviceProfile{}, totalCount, err
+	}
+
+	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -161,11 +169,18 @@ func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Containe
 	if model == "" {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "model is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, err := dbClient.DeviceProfilesByModel(offset, limit, model)
-	if err == nil {
-		totalCount, err = dbClient.DeviceProfileCountByModel(model)
+	totalCount, err = dbClient.DeviceProfileCountByModel(model)
+	if err != nil {
+		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.DeviceProfile{}, totalCount, err
+	}
+
+	dps, err := dbClient.DeviceProfilesByModel(offset, limit, model)
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -181,11 +196,18 @@ func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, di
 	if manufacturer == "" {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "manufacturer is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, err := dbClient.DeviceProfilesByManufacturer(offset, limit, manufacturer)
-	if err == nil {
-		totalCount, err = dbClient.DeviceProfileCountByManufacturer(manufacturer)
+	totalCount, err = dbClient.DeviceProfileCountByManufacturer(manufacturer)
+	if err != nil {
+		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.DeviceProfile{}, totalCount, err
+	}
+
+	dps, err := dbClient.DeviceProfilesByManufacturer(offset, limit, manufacturer)
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -245,10 +267,17 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 // AllDeviceProfileBasicInfos query the device profile basic infos with offset, and limit
 func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.Container) (deviceProfileBasicInfos []dtos.DeviceProfileBasicInfo, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
-	if err == nil {
-		totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
+
+	totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
+	if err != nil {
+		return deviceProfileBasicInfos, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return deviceProfileBasicInfos, totalCount, err
+	}
+
+	dps, err := dbClient.AllDeviceProfiles(offset, limit, labels)
 	if err != nil {
 		return deviceProfileBasicInfos, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

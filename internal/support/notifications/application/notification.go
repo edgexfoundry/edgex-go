@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
@@ -50,11 +51,18 @@ func NotificationsByCategory(offset, limit int, category string, dic *di.Contain
 	if category == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	notificationModels, err := dbClient.NotificationsByCategory(offset, limit, category)
-	if err == nil {
-		totalCount, err = dbClient.NotificationCountByCategory(category)
+	totalCount, err = dbClient.NotificationCountByCategory(category)
+	if err != nil {
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Notification{}, totalCount, err
+	}
+
+	notificationModels, err := dbClient.NotificationsByCategory(offset, limit, category)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -70,11 +78,18 @@ func NotificationsByLabel(offset, limit int, label string, dic *di.Container) (n
 	if label == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	notificationModels, err := dbClient.NotificationsByLabel(offset, limit, label)
-	if err == nil {
-		totalCount, err = dbClient.NotificationCountByLabel(label)
+	totalCount, err = dbClient.NotificationCountByLabel(label)
+	if err != nil {
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Notification{}, totalCount, err
+	}
+
+	notificationModels, err := dbClient.NotificationsByLabel(offset, limit, label)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -108,11 +123,18 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 	if status == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	notificationModels, err := dbClient.NotificationsByStatus(offset, limit, status)
-	if err == nil {
-		totalCount, err = dbClient.NotificationCountByStatus(status)
+	totalCount, err = dbClient.NotificationCountByStatus(status)
+	if err != nil {
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Notification{}, totalCount, err
+	}
+
+	notificationModels, err := dbClient.NotificationsByStatus(offset, limit, status)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -126,10 +148,17 @@ func NotificationsByStatus(offset, limit int, status string, dic *di.Container) 
 // NotificationsByTimeRange query notifications with offset, limit and time range
 func NotificationsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	notificationModels, err := dbClient.NotificationsByTimeRange(start, end, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.NotificationCountByTimeRange(start, end)
+
+	totalCount, err = dbClient.NotificationCountByTimeRange(start, end)
+	if err != nil {
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Notification{}, totalCount, err
+	}
+
+	notificationModels, err := dbClient.NotificationsByTimeRange(start, end, offset, limit)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -162,15 +191,22 @@ func NotificationsBySubscriptionName(offset, limit int, subscriptionName string,
 	if subscriptionName == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
 	subscription, err := dbClient.SubscriptionByName(subscriptionName)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
-	notificationModels, err := dbClient.NotificationsByCategoriesAndLabels(offset, limit, subscription.Categories, subscription.Labels)
-	if err == nil {
-		totalCount, err = dbClient.NotificationCountByCategoriesAndLabels(subscription.Categories, subscription.Labels)
+	totalCount, err = dbClient.NotificationCountByCategoriesAndLabels(subscription.Categories, subscription.Labels)
+	if err != nil {
+		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Notification{}, totalCount, err
+	}
+
+	notificationModels, err := dbClient.NotificationsByCategoriesAndLabels(offset, limit, subscription.Categories, subscription.Labels)
 	if err != nil {
 		return notifications, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
