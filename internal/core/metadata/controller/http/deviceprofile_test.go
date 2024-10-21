@@ -1454,8 +1454,9 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, expectedTotalProfileCount, nil)
-	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfileCountByManufacturerAndModel", TestManufacturer, TestModel).Return(expectedTotalProfileCount, nil)
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 0, 10, TestManufacturer, TestModel).Return(deviceProfiles, nil)
+	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 1, 2, TestManufacturer, TestModel).Return([]models.DeviceProfile{deviceProfiles[1], deviceProfiles[2]}, nil)
 	dbClientMock.On("DeviceProfilesByManufacturerAndModel", 4, 1, TestManufacturer, TestModel).Return([]models.DeviceProfile{}, expectedTotalProfileCount, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {

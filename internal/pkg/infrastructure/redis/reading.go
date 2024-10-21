@@ -242,18 +242,18 @@ func readingsByDeviceNameAndResourceNameAndTimeRange(conn redis.Conn, deviceName
 	return convertObjectsToReadings(objects)
 }
 
-func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceName string, resourceNames []string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, totalCount uint32, err errors.EdgeX) {
+func readingsByDeviceNameAndResourceNamesAndTimeRange(conn redis.Conn, deviceName string, resourceNames []string, startTime int64, endTime int64, offset int, limit int) (readings []models.Reading, err errors.EdgeX) {
 	var redisKeys []string
 	for _, resourceName := range resourceNames {
 		redisKeys = append(redisKeys, CreateKey(ReadingsCollectionDeviceNameResourceName, deviceName, resourceName))
 	}
 
-	objects, totalCount, err := unionObjectsByKeysAndScoreRange(conn, startTime, endTime, offset, limit, redisKeys...)
+	objects, err := unionObjectsByKeysAndScoreRange(conn, startTime, endTime, offset, limit, redisKeys...)
 	if err != nil {
-		return readings, totalCount, err
+		return readings, err
 	}
 	readings, err = convertObjectsToReadings(objects)
-	return readings, totalCount, err
+	return readings, err
 }
 
 // readingsByTimeRange query readings by time range, offset, and limit

@@ -13,8 +13,6 @@ import (
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
 
@@ -130,39 +128,21 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 }
 
 // ReadingsByDeviceNameAndResourceNamesAndTimeRange query readings by the specified device and resourceName slice, origin within the time range, offset and limit
-func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64, offset, limit int) ([]model.Reading, uint32, errors.EdgeX) {
+func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64, offset, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
 
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol,
 		[]string{resourceNameCol}, deviceNameCol, resourceNameCol)
 
-	// build the query args for the where condition using in querying readings and reading count
-	queryArgs := []any{start, end, deviceName, resourceNames}
-	// make a copy for query count args as we don't need offset and limit while querying total count
-	queryCountArgs := append([]any{}, queryArgs...)
-	// add offset and limit for query args
-	queryArgs = append(queryArgs, offset, limit)
-
+	// build the query args for the where condition using in querying readings
+	queryArgs := []any{start, end, deviceName, resourceNames, offset, limit}
 	// query readings
 	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, queryArgs...)
 	if err != nil {
-		return nil, 0, errors.NewCommonEdgeXWrapper(err)
+		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	// get the total count of readings based on the condition column names and query count args
-	totalCount, err := getTotalRowsCount(context.Background(),
-		c.ConnPool,
-		sqlQueryCountByTimeRangeCol(readingTableName, originCol, []string{resourceNameCol}, deviceNameCol, resourceNameCol),
-		queryCountArgs...)
-	if err != nil {
-		return nil, 0, errors.NewCommonEdgeXWrapper(err)
-	}
-	cont, err := utils.CheckCountRange(totalCount, offset, limit)
-	if !cont {
-		return readings, totalCount, err
-	}
-
-	return readings, totalCount, nil
+	return readings, nil
 }
 
 // ReadingCountByDeviceName returns the count of Readings associated a specific Device from db
@@ -211,6 +191,15 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 		end,
 		deviceName,
 		resourceName)
+}
+
+// ReadingCountByDeviceNameAndResourceNamesAndTimeRange returns the count of readings by origin within the time range
+// associated with the specified device and resourceName slice from db
+func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (uint32, errors.EdgeX) {
+	return getTotalRowsCount(context.Background(),
+		c.ConnPool,
+		sqlQueryCountByTimeRangeCol(readingTableName, originCol, []string{resourceNameCol}, deviceNameCol, resourceNameCol),
+		start, end, deviceName, resourceNames)
 }
 
 func (c *Client) LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX) {

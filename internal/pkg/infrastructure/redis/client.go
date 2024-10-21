@@ -274,15 +274,15 @@ func (c *Client) DeviceProfilesByManufacturer(offset int, limit int, manufacture
 }
 
 // DeviceProfilesByManufacturerAndModel query device profiles with offset, limit, manufacturer and model
-func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, uint32, errors.EdgeX) {
+func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	deviceProfiles, totalCount, edgeXerr := deviceProfilesByManufacturerAndModel(conn, offset, limit, manufacturer, model)
+	deviceProfiles, edgeXerr := deviceProfilesByManufacturerAndModel(conn, offset, limit, manufacturer, model)
 	if edgeXerr != nil {
-		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	return deviceProfiles, totalCount, nil
+	return deviceProfiles, nil
 }
 
 // EventTotalCount returns the total count of Event from the database
@@ -640,6 +640,21 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 	return count, nil
 }
 
+// ReadingCountByDeviceNameAndResourceNamesAndTimeRange returns the count of readings by origin within the time range
+// associated with the specified device and resourceName slice from db
+func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	readings, err := readingsByDeviceNameAndResourceNamesAndTimeRange(conn, deviceName, resourceNames, start, end, 0, -1)
+	if err != nil {
+		return 0, errors.NewCommonEdgeX(errors.Kind(err),
+			fmt.Sprintf("fail to query readings by deviceName %s, resourceNames %v and time range %v ~ %v", deviceName, resourceNames, start, end), err)
+	}
+
+	return uint32(len(readings)), nil
+}
+
 // ReadingCountByTimeRange returns the count of Readings from the database within specified time range
 func (c *Client) ReadingCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()
@@ -692,17 +707,17 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 	return readings, nil
 }
 
-func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end int64, offset, limit int) (readings []model.Reading, totalCount uint32, err errors.EdgeX) {
+func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start, end int64, offset, limit int) (readings []model.Reading, err errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer conn.Close()
 
-	readings, totalCount, err = readingsByDeviceNameAndResourceNamesAndTimeRange(conn, deviceName, resourceNames, start, end, offset, limit)
+	readings, err = readingsByDeviceNameAndResourceNamesAndTimeRange(conn, deviceName, resourceNames, start, end, offset, limit)
 	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeX(errors.Kind(err),
+		return readings, errors.NewCommonEdgeX(errors.Kind(err),
 			fmt.Sprintf("fail to query readings by deviceName %s, resourceNames %v and time range %v ~ %v", deviceName, resourceNames, start, end), err)
 	}
 
-	return readings, totalCount, nil
+	return readings, nil
 }
 
 func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64, end int64, offset int, limit int) (readings []model.Reading, err errors.EdgeX) {
@@ -867,6 +882,19 @@ func (c *Client) DeviceProfileCountByModel(model string) (uint32, errors.EdgeX) 
 	}
 
 	return count, nil
+}
+
+// DeviceProfileCountByManufacturerAndModel returns the count of Device Profiles associated with specified manufacturer and model
+func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model string) (uint32, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	profiles, edgeXerr := deviceProfilesByManufacturerAndModel(conn, 0, -1, manufacturer, model)
+	if edgeXerr != nil {
+		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+
+	return uint32(len(profiles)), nil
 }
 
 // DeviceServiceCountByLabels returns the total count of Device Services with labels specified.  If no label is specified, the total count of all device services will be returned.

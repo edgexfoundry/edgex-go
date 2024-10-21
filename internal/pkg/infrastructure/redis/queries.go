@@ -282,12 +282,12 @@ func objectsByKeys(conn redis.Conn, setMethod string, offset int, limit int, red
 }
 
 // unionObjectsByKeysAndScoreRange returns objects resulting from the union of all the given sets with specified score range, offset, and limit
-func unionObjectsByKeysAndScoreRange(conn redis.Conn, start int64, end int64, offset, limit int, redisKeys ...string) ([][]byte, uint32, errors.EdgeX) {
+func unionObjectsByKeysAndScoreRange(conn redis.Conn, start int64, end int64, offset, limit int, redisKeys ...string) ([][]byte, errors.EdgeX) {
 	return objectsByKeysAndScoreRange(conn, ZUNIONSTORE, start, end, offset, limit, redisKeys...)
 }
 
 // objectsByKeysAndScoreRange returns objects resulting from the set method of all the given sets with specified score range, offset, and limit.  The data set method could be either ZINTERSTORE or ZUNIONSTORE
-func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start int64, end int64, offset, limit int, redisKeys ...string) (objects [][]byte, totalCount uint32, edgeXerr errors.EdgeX) {
+func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start int64, end int64, offset, limit int, redisKeys ...string) (objects [][]byte, edgeXerr errors.EdgeX) {
 	// build up the redis command arguments
 	args := redis.Args{}
 	cacheSet := uuid.New().String()
@@ -300,26 +300,21 @@ func objectsByKeysAndScoreRange(conn redis.Conn, setMethod string, start int64, 
 	// create a temporary sorted set, cacheSet, resulting from the specified setMethod
 	_, err := conn.Do(setMethod, args...)
 	if err != nil {
-		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute %s command with args %v", setMethod, args), err)
-	}
-
-	// get the total count of the temporary sorted set
-	if totalCount, edgeXerr = getMemberCountByScoreRange(conn, cacheSet, start, end); edgeXerr != nil {
-		return nil, totalCount, edgeXerr
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to execute %s command with args %v", setMethod, args), err)
 	}
 
 	// get objects from the temporary sorted set
 	if objects, edgeXerr = getObjectsByScoreRange(conn, cacheSet, start, end, offset, limit); edgeXerr != nil {
-		return nil, totalCount, edgeXerr
+		return nil, edgeXerr
 	}
 
 	// clean up unused temporary sorted set
 	_, err = redis.Int(conn.Do(DEL, cacheSet))
 	if err != nil {
-		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, "cache set deletion failed", err)
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "cache set deletion failed", err)
 	}
 
-	return objects, totalCount, nil
+	return objects, nil
 }
 
 // idFromStoredKey extracts Id from the store key

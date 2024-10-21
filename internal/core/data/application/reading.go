@@ -231,7 +231,14 @@ func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourc
 	dbClient := container.DBClientFrom(dic.Get)
 	var readingModels []models.Reading
 	if len(resourceNames) > 0 {
-		readingModels, totalCount, err = dbClient.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit)
+		totalCount, err = dbClient.ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end)
+		if err != nil {
+			return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
+		if cont, err := utils.CheckCountRange(totalCount, offset, limit); !cont {
+			return []dtos.BaseReading{}, totalCount, err
+		}
+		readingModels, err = dbClient.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit)
 	} else {
 		totalCount, err = dbClient.ReadingCountByDeviceNameAndTimeRange(deviceName, start, end)
 		if err != nil {
