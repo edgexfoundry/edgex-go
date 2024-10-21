@@ -13,6 +13,7 @@ import (
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
@@ -156,6 +157,11 @@ func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName str
 	if err != nil {
 		return nil, 0, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return readings, totalCount, err
+	}
+
 	return readings, totalCount, nil
 }
 

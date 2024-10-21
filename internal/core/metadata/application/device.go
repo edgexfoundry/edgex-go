@@ -164,10 +164,17 @@ func DevicesByServiceName(offset int, limit int, name string, ctx context.Contex
 		return devices, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	deviceModels, err := dbClient.DevicesByServiceName(offset, limit, name)
-	if err == nil {
-		totalCount, err = dbClient.DeviceCountByServiceName(name)
+
+	totalCount, err = dbClient.DeviceCountByServiceName(name)
+	if err != nil {
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Device{}, totalCount, err
+	}
+
+	deviceModels, err := dbClient.DevicesByServiceName(offset, limit, name)
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -290,10 +297,17 @@ func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device mo
 // AllDevices query the devices with offset, limit, and labels
 func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	deviceModels, err := dbClient.AllDevices(offset, limit, labels)
-	if err == nil {
-		totalCount, err = dbClient.DeviceCountByLabels(labels)
+
+	totalCount, err = dbClient.DeviceCountByLabels(labels)
+	if err != nil {
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Device{}, totalCount, err
+	}
+
+	deviceModels, err := dbClient.AllDevices(offset, limit, labels)
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -324,10 +338,17 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 		return devices, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "profileName is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	deviceModels, err := dbClient.DevicesByProfileName(offset, limit, profileName)
-	if err == nil {
-		totalCount, err = dbClient.DeviceCountByProfileName(profileName)
+
+	totalCount, err = dbClient.DeviceCountByProfileName(profileName)
+	if err != nil {
+		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Device{}, totalCount, err
+	}
+
+	deviceModels, err := dbClient.DevicesByProfileName(offset, limit, profileName)
 	if err != nil {
 		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,6 +21,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	"github.com/google/uuid"
 )
@@ -188,10 +189,16 @@ func (a *CoreDataApp) DeleteEventsByDeviceName(deviceName string, dic *di.Contai
 // AllEvents query events by offset and limit
 func (a *CoreDataApp) AllEvents(offset int, limit int, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	eventModels, err := dbClient.AllEvents(offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.EventTotalCount()
+	totalCount, err = dbClient.EventTotalCount()
+	if err != nil {
+		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Event{}, totalCount, err
+	}
+
+	eventModels, err := dbClient.AllEvents(offset, limit)
 	if err != nil {
 		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -208,10 +215,16 @@ func (a *CoreDataApp) EventsByDeviceName(offset int, limit int, name string, dic
 		return events, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	eventModels, err := dbClient.EventsByDeviceName(offset, limit, name)
-	if err == nil {
-		totalCount, err = dbClient.EventCountByDeviceName(name)
+	totalCount, err = dbClient.EventCountByDeviceName(name)
+	if err != nil {
+		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Event{}, totalCount, err
+	}
+
+	eventModels, err := dbClient.EventsByDeviceName(offset, limit, name)
 	if err != nil {
 		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -225,10 +238,16 @@ func (a *CoreDataApp) EventsByDeviceName(offset int, limit int, name string, dic
 // EventsByTimeRange query events with offset, limit and time range
 func (a *CoreDataApp) EventsByTimeRange(startTime int64, endTime int64, offset int, limit int, dic *di.Container) (events []dtos.Event, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	eventModels, err := dbClient.EventsByTimeRange(startTime, endTime, offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.EventCountByTimeRange(startTime, endTime)
+	totalCount, err = dbClient.EventCountByTimeRange(startTime, endTime)
+	if err != nil {
+		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Event{}, totalCount, err
+	}
+
+	eventModels, err := dbClient.EventsByTimeRange(startTime, endTime, offset, limit)
 	if err != nil {
 		return events, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

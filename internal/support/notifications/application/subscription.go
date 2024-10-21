@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces"
 
@@ -43,10 +44,17 @@ func AddSubscription(d models.Subscription, ctx context.Context, dic *di.Contain
 // AllSubscriptions queries subscriptions by offset and limit
 func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dtos.Subscription, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	subs, err := dbClient.AllSubscriptions(offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.SubscriptionTotalCount()
+
+	totalCount, err = dbClient.SubscriptionTotalCount()
+	if err != nil {
+		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Subscription{}, totalCount, err
+	}
+
+	subs, err := dbClient.AllSubscriptions(offset, limit)
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -76,11 +84,18 @@ func SubscriptionsByCategory(offset, limit int, category string, dic *di.Contain
 	if category == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	subscriptionModels, err := dbClient.SubscriptionsByCategory(offset, limit, category)
-	if err == nil {
-		totalCount, err = dbClient.SubscriptionCountByCategory(category)
+	totalCount, err = dbClient.SubscriptionCountByCategory(category)
+	if err != nil {
+		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Subscription{}, totalCount, err
+	}
+
+	subscriptionModels, err := dbClient.SubscriptionsByCategory(offset, limit, category)
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -96,11 +111,18 @@ func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (s
 	if label == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	subscriptionModels, err := dbClient.SubscriptionsByLabel(offset, limit, label)
-	if err == nil {
-		totalCount, err = dbClient.SubscriptionCountByLabel(label)
+	totalCount, err = dbClient.SubscriptionCountByLabel(label)
+	if err != nil {
+		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Subscription{}, totalCount, err
+	}
+
+	subscriptionModels, err := dbClient.SubscriptionsByLabel(offset, limit, label)
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -116,11 +138,18 @@ func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Contain
 	if receiver == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "receiver is empty", nil)
 	}
+
 	dbClient := container.DBClientFrom(dic.Get)
-	subscriptionModels, err := dbClient.SubscriptionsByReceiver(offset, limit, receiver)
-	if err == nil {
-		totalCount, err = dbClient.SubscriptionCountByReceiver(receiver)
+	totalCount, err = dbClient.SubscriptionCountByReceiver(receiver)
+	if err != nil {
+		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Subscription{}, totalCount, err
+	}
+
+	subscriptionModels, err := dbClient.SubscriptionsByReceiver(offset, limit, receiver)
 	if err != nil {
 		return subscriptions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

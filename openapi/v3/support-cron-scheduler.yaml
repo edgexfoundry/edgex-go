@@ -510,6 +510,11 @@ components:
         requestId: "84c9489c-0148-11eb-adc1-0242ac120002"
         statusCode: 404
         message: "Not Found"
+    416Example:
+      value:
+        apiVersion: "v3"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     500Example:
       value:
         apiVersion: "v3"
@@ -860,6 +865,18 @@ paths:
               examples:
                 MultiScheduleJobsExample:
                   $ref: '#/components/examples/MultiScheduleJobsExample'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1018,6 +1035,18 @@ paths:
               examples:
                 MultiScheduleActionRecordsExample:
                   $ref: '#/components/examples/MultiScheduleActionRecordsExample'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1100,6 +1129,18 @@ paths:
               examples:
                 SingleScheduleActionRecordExample:
                   $ref: '#/components/examples/SingleScheduleActionRecordExample'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1149,6 +1190,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:
@@ -1197,6 +1250,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "An unexpected error occurred on the server"
           headers:

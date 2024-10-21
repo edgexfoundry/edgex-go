@@ -369,13 +369,15 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithServiceA, pw2WithServiceA, pw3WithServiceB}
 	expectedTotalCountServiceA := uint32(2)
+	expectedTotalCountServiceB := uint32(1)
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("ProvisionWatcherCountByServiceName", testServiceA).Return(expectedTotalCountServiceA, nil)
+	dbClientMock.On("ProvisionWatcherCountByServiceName", testServiceB).Return(expectedTotalCountServiceB, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 0, 5, testServiceA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByServiceName", 1, 1, testServiceA).Return([]models.ProvisionWatcher{provisionWatchers[1]}, nil)
-	dbClientMock.On("ProvisionWatchersByServiceName", 4, 1, testServiceB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("ProvisionWatchersByServiceName", 4, 1, testServiceB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -396,7 +398,7 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	}{
 		{"Valid - get provision watchers with serviceName", "0", "5", testServiceA, false, 2, expectedTotalCountServiceA, http.StatusOK},
 		{"Valid - get provision watchers with offset and limit", "1", "1", testServiceA, false, 1, expectedTotalCountServiceA, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", testServiceB, true, 0, expectedTotalCountServiceA, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", testServiceB, true, 0, expectedTotalCountServiceA, http.StatusRequestedRangeNotSatisfiable},
 		{"Invalid - get provision watchers without serviceName", "0", "10", "", true, 0, expectedTotalCountServiceA, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
@@ -454,14 +456,15 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 
 	provisionWatchers := []models.ProvisionWatcher{pw1WithProfileA, pw2WithProfileA, pw3WithProfileB}
 	expectedTotalPWCountProfileA := uint32(2)
-
+	expectedTotalPWCountProfileB := uint32(1)
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("ProvisionWatcherCountByProfileName", testProfileA).Return(expectedTotalPWCountProfileA, nil)
+	dbClientMock.On("ProvisionWatcherCountByProfileName", testProfileB).Return(expectedTotalPWCountProfileB, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 5, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 0, 5, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("ProvisionWatchersByProfileName", 1, 1, testProfileA).Return([]models.ProvisionWatcher{provisionWatchers[1]}, nil)
-	dbClientMock.On("ProvisionWatchersByProfileName", 4, 1, testProfileB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("ProvisionWatchersByProfileName", 4, 1, testProfileB).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -482,7 +485,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 	}{
 		{"Valid - get provision watchers with profileName", "0", "5", testProfileA, false, 2, expectedTotalPWCountProfileA, http.StatusOK},
 		{"Valid - get provision watchers with offset and limit", "1", "1", testProfileA, false, 1, expectedTotalPWCountProfileA, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", testProfileB, true, 0, expectedTotalPWCountProfileA, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", testProfileB, true, 0, expectedTotalPWCountProfileA, http.StatusRequestedRangeNotSatisfiable},
 		{"Invalid - get provision watchers without profileName", "0", "10", "", true, 0, expectedTotalPWCountProfileA, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
@@ -539,7 +542,7 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 	dbClientMock.On("AllProvisionWatchers", 0, 10, []string(nil)).Return(provisionWatchers, nil)
 	dbClientMock.On("AllProvisionWatchers", 0, 5, testProvisionWatcherLabels).Return([]models.ProvisionWatcher{provisionWatchers[0], provisionWatchers[1]}, nil)
 	dbClientMock.On("AllProvisionWatchers", 1, 2, []string(nil)).Return([]models.ProvisionWatcher{provisionWatchers[1], provisionWatchers[2]}, nil)
-	dbClientMock.On("AllProvisionWatchers", 4, 1, testProvisionWatcherLabels).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllProvisionWatchers", 4, 1, testProvisionWatcherLabels).Return([]models.ProvisionWatcher{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -561,7 +564,7 @@ func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 		{"Valid - get provision watchers without labels", "0", "10", "", false, 3, expectedTotalPWCount, http.StatusOK},
 		{"Valid - get provision watchers with labels", "0", "5", strings.Join(testProvisionWatcherLabels, ","), false, 2, expectedTotalPWCount, http.StatusOK},
 		{"Valid - get provision watchers with offset and no labels", "1", "2", "", false, 2, expectedTotalPWCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testProvisionWatcherLabels, ","), true, 0, expectedTotalPWCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testProvisionWatcherLabels, ","), true, 0, expectedTotalPWCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {

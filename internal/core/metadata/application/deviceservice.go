@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2022 IOTech Ltd
+// Copyright (C) 2020-2024 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,13 +8,14 @@ package application
 import (
 	"context"
 	"fmt"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/infrastructure/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
@@ -140,10 +141,17 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 // AllDeviceServices query the device services with labels, offset, and limit
 func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	services, err := dbClient.AllDeviceServices(offset, limit, labels)
-	if err == nil {
-		totalCount, err = dbClient.DeviceServiceCountByLabels(labels)
+
+	totalCount, err = dbClient.DeviceServiceCountByLabels(labels)
+	if err != nil {
+		return deviceServices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.DeviceService{}, totalCount, err
+	}
+
+	services, err := dbClient.AllDeviceServices(offset, limit, labels)
 	if err != nil {
 		return deviceServices, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

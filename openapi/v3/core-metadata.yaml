@@ -1191,6 +1191,11 @@ components:
         requestId: "8a41b3f4-0148-11eb-adc1-0242ac120002"
         statusCode: 409
         message: "Data Duplicate"
+    416Example:
+      value:
+        apiVersion: "v3"
+        statusCode: 416
+        message: "Range Not Satisfiable"
     409DeleteExample:
       value:
         apiVersion: "v3"
@@ -1810,6 +1815,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2041,6 +2058,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2091,6 +2120,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2401,6 +2442,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -2652,6 +2705,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3101,6 +3166,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3157,6 +3234,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3207,6 +3296,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3458,6 +3559,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3751,6 +3864,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3929,6 +4054,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
@@ -3979,6 +4116,18 @@ paths:
               examples:
                 400Example:
                   $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
         '500':
           description: "Internal Server Error"
           headers:
