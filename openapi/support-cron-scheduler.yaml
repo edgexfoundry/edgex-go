@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Edgex Foundry - Support Cron Scheduler API
   description: This is the definition of the API for the Support Cron Scheduler service in the EdgeX Foundry IOT microservice platform. Support Cron Scheduler provides functionality for scheduling different actions in the EdgeX Foundry platform.
-  version: 3.2.0
+  version: 4.0.0
 
 servers:
   - url: http://localhost:59863/api/v3
@@ -1343,7 +1343,7 @@ paths:
                 $ref: '#/components/schemas/VersionResponse'
               example:
                 apiVersion: "v3"
-                version: 3.2.0
+                version: 4.0.0
                 serviceName: "support-cron-scheduler"
         '500':
           description: "Internal Server Error"
