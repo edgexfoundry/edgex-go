@@ -628,7 +628,8 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100)).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
-	dbClientMock.On("ReadingsByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100), 0, 10).Return([]models.Reading{}, totalCount, nil)
+	dbClientMock.On("ReadingCountByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100)).Return(totalCount, nil)
+	dbClientMock.On("ReadingsByDeviceNameAndResourceNamesAndTimeRange", TestDeviceName, testResourceNames, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock

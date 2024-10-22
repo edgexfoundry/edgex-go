@@ -227,7 +227,16 @@ func DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer st
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "model is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	dps, totalCount, err := dbClient.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model)
+	totalCount, err = dbClient.DeviceProfileCountByManufacturerAndModel(manufacturer, model)
+	if err != nil {
+		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.DeviceProfile{}, totalCount, err
+	}
+
+	dps, err := dbClient.DeviceProfilesByManufacturerAndModel(offset, limit, manufacturer, model)
 	if err != nil {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

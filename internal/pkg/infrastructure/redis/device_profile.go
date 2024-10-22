@@ -281,44 +281,14 @@ func deviceProfilesByManufacturer(conn redis.Conn, offset int, limit int, manufa
 }
 
 // deviceProfilesByManufacturerAndModel query device profiles by offset, limit, manufacturer and model
-func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int, manufacturer string, model string) (deviceProfiles []models.DeviceProfile, totalCount uint32, edgeXerr errors.EdgeX) {
-	if limit == 0 {
-		return
-	}
-	end := offset + limit - 1
-	if limit == -1 { //-1 limit means that clients want to retrieve all remaining records after offset from DB, so specifying -1 for end
-		end = limit
-	}
+func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int, manufacturer string, model string) (deviceProfiles []models.DeviceProfile, edgeXerr errors.EdgeX) {
+	var redisKeys []string
+	redisKeys = append(redisKeys, CreateKey(DeviceProfileCollectionManufacturer, manufacturer))
+	redisKeys = append(redisKeys, CreateKey(DeviceProfileCollectionModel, model))
 
-	idsSlice := make([][]string, 2)
-	// query ids by manufacturer
-	idsWithManufacturer, err := redis.Strings(conn.Do(ZREVRANGE, CreateKey(DeviceProfileCollectionManufacturer, manufacturer), 0, -1))
+	objects, err := intersectionObjectsByKeys(conn, offset, limit, redisKeys...)
 	if err != nil {
-		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by manufacturer %s from database failed", manufacturer), err)
-	}
-	idsSlice[0] = idsWithManufacturer
-	// query ids by model
-	idsWithModel, err := redis.Strings(conn.Do(ZREVRANGE, CreateKey(DeviceProfileCollectionModel, model), 0, -1))
-	if err != nil {
-		return nil, totalCount, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("query object ids by model %s from database failed", manufacturer), err)
-	}
-	idsSlice[1] = idsWithModel
-
-	//find common Ids among two-dimension Ids slice
-	commonIds := pkgCommon.FindCommonStrings(idsSlice...)
-	totalCount = uint32(len(commonIds))
-	if offset > len(commonIds) {
-		return nil, totalCount, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v", len(commonIds)), nil)
-	}
-	if end >= len(commonIds) || end == -1 {
-		commonIds = commonIds[offset:]
-	} else { // as end index in golang re-slice is exclusive, increment the end index to ensure the end could be inclusive
-		commonIds = commonIds[offset : end+1]
-	}
-
-	objects, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(commonIds))
-	if edgeXerr != nil {
-		return deviceProfiles, totalCount, errors.NewCommonEdgeXWrapper(edgeXerr)
+		return deviceProfiles, errors.NewCommonEdgeXWrapper(err)
 	}
 
 	deviceProfiles = make([]models.DeviceProfile, len(objects))
@@ -326,9 +296,9 @@ func deviceProfilesByManufacturerAndModel(conn redis.Conn, offset int, limit int
 		dp := models.DeviceProfile{}
 		err := json.Unmarshal(in, &dp)
 		if err != nil {
-			return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
+			return deviceProfiles, errors.NewCommonEdgeX(errors.KindContractInvalid, "device profile parsing failed", err)
 		}
 		deviceProfiles[i] = dp
 	}
-	return deviceProfiles, totalCount, nil
+	return deviceProfiles, nil
 }

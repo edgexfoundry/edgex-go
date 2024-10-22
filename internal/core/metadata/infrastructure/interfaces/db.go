@@ -23,10 +23,11 @@ type DBClient interface {
 	AllDeviceProfiles(offset int, limit int, labels []string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByModel(offset int, limit int, model string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfilesByManufacturer(offset int, limit int, manufacturer string) ([]model.DeviceProfile, errors.EdgeX)
-	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, uint32, errors.EdgeX)
+	DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string) ([]model.DeviceProfile, errors.EdgeX)
 	DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX)
 	DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX)
 	DeviceProfileCountByModel(model string) (uint32, errors.EdgeX)
+	DeviceProfileCountByManufacturerAndModel(manufacturer string, model string) (uint32, errors.EdgeX)
 
 	AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)
