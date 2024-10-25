@@ -14,7 +14,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
 
 const (

@@ -20,8 +20,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"net/http"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 
 	"github.com/labstack/echo/v4"
 )

@@ -16,13 +16,13 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application"
 	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
-	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
 
 	"github.com/labstack/echo/v4"
 )

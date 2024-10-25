@@ -17,8 +17,8 @@ import (
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 )
 
 // AddDeviceProfile adds a new device profile

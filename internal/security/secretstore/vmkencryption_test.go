@@ -12,9 +12,9 @@ import (
 
 	. "github.com/edgexfoundry/edgex-go/internal/security/kdf/mocks"
 	. "github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader/mocks"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/types"
 
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/require"
 )

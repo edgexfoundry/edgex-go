@@ -36,9 +36,9 @@ For Fuji.DOT/Geneva, all root tokens will be revoked.
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 type TokenMaintenance struct {

@@ -13,8 +13,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/constants"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/spf13/cast"

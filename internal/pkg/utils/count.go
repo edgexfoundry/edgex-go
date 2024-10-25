@@ -8,7 +8,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 )
 
 // CheckCountRange evaluates if the offset and limit parameters are within the valid range.

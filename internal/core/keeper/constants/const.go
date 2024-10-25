@@ -8,7 +8,7 @@ package constants
 import (
 	"regexp"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 )
 
 // new constants relates to EdgeX Keeper service and will be added to go-mod-core-contracts in the future

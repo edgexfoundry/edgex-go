@@ -17,7 +17,7 @@
 package config
 
 import (
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 )
 
 // ConfigurationStruct contains the configuration properties for the core-command service.

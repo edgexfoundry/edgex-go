@@ -24,12 +24,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 const (
