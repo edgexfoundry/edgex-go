@@ -18,9 +18,6 @@ MessageBus:
   Optional:
     ClientId: "core-data"
 
-Database:
-  Name: "coredata"
-
 Retention:
   Enabled: false
   Interval: 30s    # Purging interval defines when the database should be rid of readings above the high watermark.

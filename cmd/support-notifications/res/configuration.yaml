@@ -29,9 +29,6 @@ MessageBus:
   Optional:
     ClientId: support-notifications
 
-Database:
-  Name: notifications
-
 Retention:
   Enabled: false
   Interval: 30m    # Purging interval defines when the database should be rid of notifications above the high watermark.

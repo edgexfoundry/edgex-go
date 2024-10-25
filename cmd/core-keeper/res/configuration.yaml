@@ -29,9 +29,6 @@ Service:
     CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
     CORSMaxAge: 3600
 
-Database:
-  Name: "corekeeper"
-
 MessageBus:
   BaseTopicPrefix: "edgex/configs" # /<key> will be added to this Base Topic prefix
   Optional:

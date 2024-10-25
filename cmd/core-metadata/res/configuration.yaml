@@ -16,6 +16,3 @@ UoM:
 MessageBus:
   Optional:
     ClientId: core-metadata
-
-Database:
-  Name: metadata

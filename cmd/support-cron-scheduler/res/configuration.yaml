@@ -25,12 +25,6 @@ MessageBus:
   Optional:
     ClientId: support-cron-scheduler
 
-Database:
-  Host: localhost
-  Port: 5432
-  Timeout: 5s
-  Type: postgres
-
 Retention:
   Enabled: true
   Interval: 24h    # Purging interval defines when the database should be rid of records above the high watermark.

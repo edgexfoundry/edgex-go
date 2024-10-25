@@ -10,8 +10,8 @@ StageGate:
     Tokens:
       ReadyPort: 54322
   Database:  # this is intended to be the same as Database.Host/.Port for other services
-    Host: edgex-redis
-    Port: 6379
+    Host: edgex-postgres
+    Port: 5432
     ReadyPort: 54323
   Registry:  # this is intended to be the same as Registry.Host/.Port for other services
     Host: edgex-core-keeper
