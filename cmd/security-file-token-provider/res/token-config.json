@@ -35,9 +35,6 @@
   "device-rest": {
     "edgex_use_defaults": true
   },
-  "support-scheduler": {
-    "edgex_use_defaults": true
-  },
   "support-cron-scheduler": {
     "edgex_use_defaults": true
   },

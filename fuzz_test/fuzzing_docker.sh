@@ -26,7 +26,7 @@ usage()
   echo "Usage:"
   echo "./fuzzing_docker.sh <EDGEX_PROJECT_NAME> <SWAGGER_FILE_NAME_PATH>"
   echo
-  echo "<EDGEX_PROJECT_NAME> is required, options: all|core-data|core-command|core-metadata|support-notifications|support-scheduler"
+  echo "<EDGEX_PROJECT_NAME> is required, options: all|core-data|core-command|core-metadata|support-notifications|support-cron-scheduler"
   echo "<SWAGGER_FILE_NAME_PATH> is required for NOT \"all\" EDGEX_PROJECT_NAME, it is the path and filename of a project swagger file"
   exit 1
 }

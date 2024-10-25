@@ -8,11 +8,6 @@ Writable:
       SecretData:
         username: username@mail.example.com
         password: ''
-    DB:
-      SecretName: "redisdb"
-      SecretData:
-        username: ""
-        password: ""
 
 Service:
   Host: localhost
@@ -33,13 +28,6 @@ Smtp:
 MessageBus:
   Optional:
     ClientId: support-notifications
-
-Database:
-  Name: notifications
-  Host: "localhost"
-  Port: 6379
-  Timeout: "5s"
-  Type: "redisdb"
 
 Retention:
   Enabled: false

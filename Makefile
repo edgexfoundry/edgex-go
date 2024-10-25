@@ -47,7 +47,6 @@ MICROSERVICES= \
 	cmd/core-common-config-bootstrapper/core-common-config-bootstrapper \
 	cmd/core-keeper/core-keeper \
 	cmd/support-notifications/support-notifications \
-	cmd/support-scheduler/support-scheduler \
 	cmd/support-cron-scheduler/support-cron-scheduler \
 	cmd/security-proxy-auth/security-proxy-auth \
 	cmd/security-secretstore-setup/security-secretstore-setup \
@@ -130,10 +129,6 @@ support: notifications scheduler
 notifications: cmd/support-notifications/support-notifications
 cmd/support-notifications/support-notifications:
 	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-notifications
-
-scheduler: cmd/support-scheduler/support-scheduler
-cmd/support-scheduler/support-scheduler:
-	$(GO) build -tags "$(ADD_BUILD_TAGS) $(NON_DELAYED_START_GO_BUILD_TAG_FOR_SUPPORT)" $(GOFLAGS) -o $@ ./cmd/support-scheduler
 
 cron-scheduler: cmd/support-cron-scheduler/support-cron-scheduler
 cmd/support-cron-scheduler/support-cron-scheduler:
@@ -289,19 +284,6 @@ docker_support_notifications: docker_base
 		--label "git_sha=$(GIT_SHA)" \
 		-t edgexfoundry/support-notifications:$(GIT_SHA) \
 		-t edgexfoundry/support-notifications:$(DOCKER_TAG) \
-		.
-
-dscheduler: docker_support_scheduler
-docker_support_scheduler: docker_base
-	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
-		--build-arg http_proxy \
-		--build-arg https_proxy \
-		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
-		-f cmd/support-scheduler/Dockerfile \
-		--label "git_sha=$(GIT_SHA)" \
-		-t edgexfoundry/support-scheduler:$(GIT_SHA) \
-		-t edgexfoundry/support-scheduler:$(DOCKER_TAG) \
 		.
 
 dcronscheduler: docker_support_cron_scheduler

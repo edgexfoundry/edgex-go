@@ -9,11 +9,6 @@ Writable:
         cacert: ""
         clientcert: ""
         clientkey: ""
-    DB:
-      SecretName: "redisdb"
-      SecretData:
-        username: ""
-        password: ""
 
 Service:
   Host: localhost
@@ -34,20 +29,7 @@ Service:
     CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
     CORSMaxAge: 3600
 
-Database:
-  Host: "localhost"
-  Port: 6379
-  Timeout: "5s"
-  Type: "redisdb"
-  Name: "corekeeper"
-
 MessageBus:
-  Protocol: "redis"
-  Host: "localhost"
-  Port: 6379
-  Type: "redis"
-  AuthMode: "usernamepassword"  # required for redis MessageBus (secure or insecure).
-  SecretName: "redisdb"
   BaseTopicPrefix: "edgex/configs" # /<key> will be added to this Base Topic prefix
   Optional:
     # Default MQTT Specific options that need to be here to enable environment variable overrides of them

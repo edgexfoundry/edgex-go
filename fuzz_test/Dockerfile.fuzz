@@ -39,7 +39,7 @@ ENTRYPOINT ["/restler-fuzzer/fuzzing.sh"]
 # This can take about 2 minutes to finish
 # You may swap out core-data to other server to perform fuzz-lean
 # docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest core-data /restler-fuzzer/openapi/core-data.yaml"
-# Example: CMD of "all" will do fuzz-lean test for core-commmand, core-data, core-metadata, support-notifications, and support-scheduler,
+# Example: CMD of "all" will do fuzz-lean test for core-commmand, core-data, core-metadata, support-notifications, and support-cron-scheduler,
 # basically all services under openapi/v3/ directory
 # This can take more than 20 minutes to finish
 # docker run --net host --rm -v "$$PWD/fuzz_results:/fuzz_results" fuzz-edgex-go:latest all

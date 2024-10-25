@@ -8,12 +8,6 @@ Writable:
       ReadingsPersisted: false
 #    Tags: # Contains the service level tags to be attached to all the service's metrics
     ##    Gateway="my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
-  InsecureSecrets:
-    DB:
-      SecretName: "redisdb"
-      SecretData:
-        username: ""
-        password: ""
 
 Service:
   Port: 59880
@@ -23,13 +17,6 @@ Service:
 MessageBus:
   Optional:
     ClientId: "core-data"
-
-Database:
-  Name: "coredata"
-  Host: "localhost"
-  Port: 6379
-  Timeout: "5s"
-  Type: "redisdb"
 
 Retention:
   Enabled: false

@@ -55,4 +55,4 @@ COPY --from=builder /edgex-go/cmd/core-metadata/res/uom.yaml /res/uom.yaml
 COPY --from=builder /edgex-go/cmd/core-metadata/res/db/ /res/db/
 
 ENTRYPOINT ["/core-metadata"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]

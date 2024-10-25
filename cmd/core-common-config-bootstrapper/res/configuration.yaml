@@ -2,10 +2,10 @@ all-services:
   Writable:
     InsecureSecrets:
       DB:
-        SecretName: "redisdb"
+        SecretName: "postgres"
         SecretData:
-          username: ""
-          password: ""
+          username: "postgres"
+          password: "postgres"
     
     Telemetry:
       Interval: "30s"
@@ -40,22 +40,22 @@ all-services:
 
   Registry:
     Host: "localhost"
-    Port: 8500
-    Type: "consul"
+    Port: 59890
+    Type: "keeper"
   
   Database:
     Host: "localhost"
-    Port: 6379
+    Port: 5432
     Timeout: "5s"
-    Type: "redisdb"
+    Type: "postgres"
   
   MessageBus:
-    Protocol: "redis"
+    Protocol: "mqtt"
     Host: "localhost"
-    Port: 6379
-    Type: "redis"
-    AuthMode: "usernamepassword"  # required for redis MessageBus (secure or insecure).
-    SecretName: "redisdb"
+    Port: 1883
+    Type: "mqtt"
+    AuthMode: "none"  # required for MessageBus (secure or insecure).
+    SecretName: "mqtt-bus"
     BaseTopicPrefix: "edgex" # prepended to all topics as "edgex/<additional topic levels>
     Optional:
       # Default MQTT Specific options that need to be here to enable environment variable overrides of them

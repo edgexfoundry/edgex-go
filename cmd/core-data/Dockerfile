@@ -54,4 +54,4 @@ COPY --from=builder /edgex-go/cmd/core-data/res/configuration.yaml /res/configur
 COPY --from=builder /edgex-go/cmd/core-data/res/db/ /res/db/
 
 ENTRYPOINT ["/core-data"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]

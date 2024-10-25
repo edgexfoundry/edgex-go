@@ -38,11 +38,6 @@ SecretStore:
   PasswordProviderArgs: []
   RevokeRootTokens: true
   ConsulSecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
-Database:
-  Type: "redisdb"
-  Host: "localhost"
-  Port: 6379
-  Timeout: "5s"
 Databases:
   admin:
     Username: admin
@@ -70,9 +65,6 @@ Databases:
   notifications:
     Service: support-notifications
     Username: support_notifications
-  scheduler:
-    Service: support-scheduler
-    Username: support_scheduler
   cronscheduler:
     Service: support-cron-scheduler
     Username: support_cron_scheduler
@@ -93,7 +85,5 @@ SecureMessageBus:
       Service: app-rules-engine
     notifications:
       Service: support-notifications
-    scheduler:
-      Service: support-scheduler
     cronscheduler:
       Service: support-cron-scheduler
