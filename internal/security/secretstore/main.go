@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright 2023 Intel Corporation
+ * Copyright 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -56,7 +57,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	}
 
 	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
-	f.FlagSet.IntVar(&vaultInterval, "vaultInterval", 30, "")
+	f.FlagSet.IntVar(&secretStoreInterval, "secretStoreInterval", 30, "")
 	f.Parse(os.Args[1:])
 
 	configuration := &config.ConfigurationStruct{}
@@ -79,7 +80,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 		false,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			NewBootstrap(insecureSkipVerify, vaultInterval).BootstrapHandler,
+			NewBootstrap(insecureSkipVerify, secretStoreInterval).BootstrapHandler,
 		},
 	)
 

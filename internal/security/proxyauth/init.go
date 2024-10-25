@@ -51,7 +51,7 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderExtFrom(dic.Get)
-	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc)
+	authenticationHook := handlers.SecretStoreAuthenticationHandlerFunc(secretProvider, lc)
 
 	// Common
 	_ = controller.NewCommonController(dic, b.router, b.serviceName, edgex.Version)

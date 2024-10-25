@@ -20,6 +20,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 /*
@@ -27,13 +28,13 @@ import (
 THE FOLLOWING DISCLAIMER IS REQUIRED TO BE CARRIED WITH THE BELOW CODE
 DO NOT REMOVE EXCEPT BY PERMISSION OF THE AUTHOR
 
-Vault Master Key Encryption Feature
+OpenBao Master Key Encryption Feature
 
-The purpose of this feature is to provide a secure way to unlock Vault
-without requiring human intervention to supply the Vault Master Key.
+The purpose of this feature is to provide a secure way to unlock OpenBao
+without requiring human intervention to supply the OpenBao Master Key.
 
 This feature requires a sufficiently secure source of randomness in order
-to unlock the Vault. This randomness should have at least 256 bits of entropy
+to unlock the Openbao. This randomness should have at least 256 bits of entropy
 and be backed by hardware secure storage.
 If using a TPM, the secret should be bound to platform
 configuration registers to attest the system state.
@@ -187,16 +188,16 @@ func (v *VMKEncryption) DecryptInitResponse(initResp *types.InitResponse) error 
 
 // gcmEncryptKeyShare encrypts each key share with a unique key
 // from the key derivation function based on passing the info
-// string vault0, vault1, ... et cetera to the KDF.
+// string secretstore, secretstore, ... et cetera to the KDF.
 func (v *VMKEncryption) gcmEncryptKeyShare(keyShare []byte, counter int) ([]byte, []byte, error) {
 
 	defer wipeKey(keyShare) // wipe original keyShare on exit
 
-	info := fmt.Sprintf("vault%d", counter)
+	info := fmt.Sprintf("secretstore%d", counter)
 
 	key, err := v.kdf.DeriveKey(v.ikm, aesKeyLength, info)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to derive encryption key for vault master key share %w", err)
+		return nil, nil, fmt.Errorf("failed to derive encryption key for %s master key share %w", secrets.DefaultSecretStore, err)
 	}
 	defer wipeKey(key) // wipe encryption key on exit
 
@@ -223,16 +224,16 @@ func (v *VMKEncryption) gcmEncryptKeyShare(keyShare []byte, counter int) ([]byte
 
 // gcmDecryptKeyShare decrypts each key share with a unique key
 // from the key derivation function based on passing the info
-// string vault0, vault1, ... et cetera to the KDF.
+// string secretstore0, secretstore1, ... et cetera to the KDF.
 func (v *VMKEncryption) gcmDecryptKeyShare(keyShare []byte, nonce []byte, counter int) ([]byte, error) {
 
 	defer wipeKey(keyShare) // wipe original (encrypted) key share on exit (not technically needed)
 
-	info := fmt.Sprintf("vault%d", counter)
+	info := fmt.Sprintf("secretstore%d", counter)
 
 	key, err := v.kdf.DeriveKey(v.ikm, aesKeyLength, info)
 	if err != nil {
-		return nil, fmt.Errorf("failed to derive encryption key for vault master key share %w", err)
+		return nil, fmt.Errorf("failed to derive encryption key for %s master key share %w", secrets.DefaultSecretStore, err)
 	}
 	defer wipeKey(key) // wipe encryption key on exit
 

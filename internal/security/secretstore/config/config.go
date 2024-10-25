@@ -59,8 +59,8 @@ type SecretStoreInfo struct {
 	KeyFilePath                 string
 	TokenFolderPath             string
 	TokenFile                   string
-	VaultSecretShares           int
-	VaultSecretThreshold        int
+	SecretShares                int
+	SecretThreshold             int
 	TokenProvider               string
 	TokenProviderArgs           []string
 	TokenProviderType           string

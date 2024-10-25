@@ -65,7 +65,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 	}
 
 	clientConfig := types.SecretConfig{
-		Type:     secrets.Vault,
+		Type:     secrets.DefaultSecretStore,
 		Host:     cfg.SecretStore.Host,
 		Port:     cfg.SecretStore.Port,
 		Protocol: cfg.SecretStore.Protocol,

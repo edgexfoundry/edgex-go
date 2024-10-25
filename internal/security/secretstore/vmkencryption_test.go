@@ -46,8 +46,8 @@ func TestVMKEncryption(t *testing.T) {
 	pipedHexReader := &MockPipedHexReader{}
 	pipedHexReader.On("ReadHexBytesFromExe", "/bin/myikm").Return(fakeIkm, nil)
 	kdf := &MockKeyDeriver{}
-	kdf.On("DeriveKey", make([]byte, 512), uint(32), "vault0").Return(make([]byte, 32), nil)
-	kdf.On("DeriveKey", make([]byte, 512), uint(32), "vault1").Return(make([]byte, 32), nil)
+	kdf.On("DeriveKey", make([]byte, 512), uint(32), "secretstore0").Return(make([]byte, 32), nil)
+	kdf.On("DeriveKey", make([]byte, 512), uint(32), "secretstore1").Return(make([]byte, 32), nil)
 	initialInitResp := types.InitResponse{
 		Keys:       []string{"aabbcc", "ddeeff"},
 		KeysBase64: []string{"qrvM", "3e7/"},

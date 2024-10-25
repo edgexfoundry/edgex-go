@@ -305,13 +305,13 @@ server {
       proxy_set_header   Host \$host;
     }
 
-    # Note: Vault login API does not require authentication at the gateway for obvious reasons
-    set \$upstream_vault edgex-vault;
+    # Note: OpenBao login API does not require authentication at the gateway for obvious reasons
+    set \$upstream_secret_store edgex-secret-store;
     location /vault/v1/auth/userpass/login {
 `cat "${corssnippet}"`
       rewrite            /vault/(.*) /\$1 break;
       resolver           127.0.0.11 valid=30s;
-      proxy_pass         http://\$upstream_vault:8200;
+      proxy_pass         http://\$upstream_secret_store:8200;
       proxy_redirect     off;
       proxy_set_header   Host \$host;
     }
@@ -319,7 +319,7 @@ server {
 `cat "${corssnippet}"`
       rewrite            /vault/(.*) /\$1 break;
       resolver           127.0.0.11 valid=30s;
-      proxy_pass         http://\$upstream_vault:8200;
+      proxy_pass         http://\$upstream_secret_store:8200;
       proxy_redirect     off;
       proxy_set_header   Host \$host;
     }

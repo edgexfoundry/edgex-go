@@ -61,7 +61,7 @@ StageGate:
 # protocol, host, and port of secretstore using in the security-bootstrapper
 # we are not really using the secret store provider from go-mod-bootstrap in the code
 SecretStore:
-  Type: vault
+  Type: openbao
   Protocol: http
   Host: localhost
   Port: 8200

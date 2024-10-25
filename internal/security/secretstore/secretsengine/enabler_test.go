@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2021-2023 Intel Corporation
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -33,7 +34,6 @@ func TestNewSecretsEngine(t *testing.T) {
 		engineType string
 	}{
 		{"New kv type of secrets engine", "kv-1-test/", KeyValue},
-		{"New consul type of secrets engine", "consul-test/", Consul},
 	}
 
 	for _, tt := range tests {
@@ -56,40 +56,25 @@ func TestEnableSecretsEngine(t *testing.T) {
 		mountPoint       string
 		engineType       string
 		kvInstalled      bool
-		consulInstalled  bool
 		clientCallFailed bool
 		expectError      bool
 	}{
 		{"Ok:Enable kv secrets engine not installed yet with client call ok", &testToken, "kv-1-test",
-			KeyValue, false, false, false, false},
-		{"Ok:Enable consul secrets engine not installed yet with client call ok", &testToken, "consul-test",
-			Consul, false, false, false, false},
+			KeyValue, false, false, false},
 		{"Ok:Enable kv secrets engine already installed with client call ok (1)", &testToken, "kv-1-test",
-			KeyValue, true, false, false, false},
-		{"Ok:Enable consul secrets engine already installed with client call ok (1)", &testToken, "consul-test",
-			Consul, false, true, false, false},
+			KeyValue, true, false, false},
 		{"Ok:Enable kv secrets engine already installed with client call ok (2)", &testToken, "kv-1-test",
-			KeyValue, true, true, false, false},
-		{"Ok:Enable consul secrets engine already installed with client call ok (2)", &testToken, "consul-test",
-			Consul, true, true, false, false},
+			KeyValue, true, false, false},
 		{"Bad:Enable kv secrets engine not installed yet but client call failed", &testToken, "kv-1-test",
-			KeyValue, false, false, true, true},
-		{"Bad:Enable consul secrets engine not installed yet but client call failed", &testToken, "consul-test",
-			Consul, false, false, true, true},
+			KeyValue, false, true, true},
 		{"Bad:Enable kv secrets engine already installed but client call failed (1)", &testToken, "kv-1-test",
-			KeyValue, true, false, true, true},
-		{"Bad:Enable consul secrets engine already installed but client call failed (1)", &testToken, "consul-test",
-			Consul, false, true, true, true},
+			KeyValue, true, true, true},
 		{"Bad:Enable kv secrets engine already installed but client call failed (2)", &testToken, "kv-1-test",
-			KeyValue, true, true, true, true},
-		{"Bad:Enable consul secrets engine already installed but client call failed (2)", &testToken, "consul-test",
-			Consul, true, true, true, true},
+			KeyValue, true, true, true},
 		{"Bad:Enable kv secrets engine with nil token", nil, "kv-1-test",
-			KeyValue, false, true, false, true},
-		{"Bad:Enable consul secrets engine with nil token", nil, "consul-test",
-			Consul, true, false, false, true},
+			KeyValue, false, false, true},
 		{"Bad:Unsupported secrets engine type", &testToken, "whatever",
-			"unsupported", false, false, false, true},
+			"unsupported", false, false, true},
 	}
 
 	for _, test := range tests {
@@ -111,17 +96,11 @@ func TestEnableSecretsEngine(t *testing.T) {
 			mockClient := &mocks.SecretStoreClient{}
 			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, KeyValue).
 				Return(localTest.kvInstalled, chkErr)
-			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, Consul).
-				Return(localTest.consulInstalled, chkErr)
 			mockClient.On("CheckSecretEngineInstalled", mock.Anything, mock.Anything, mock.Anything).
 				Return(false, chkErr)
 			mockClient.On("EnableKVSecretEngine", mock.Anything, localTest.mountPoint, kvVersion).
 				Return(enableClientErr)
 			mockClient.On("EnableKVSecretEngine", mock.Anything, mock.Anything, mock.Anything).
-				Return(unsupportedEngTypeErr)
-			mockClient.On("EnableConsulSecretEngine", mock.Anything, localTest.mountPoint, defaultConsulTokenLeaseTtl).
-				Return(enableClientErr)
-			mockClient.On("EnableConsulSecretEngine", mock.Anything, mock.Anything, mock.Anything).
 				Return(unsupportedEngTypeErr)
 
 			err := New(localTest.mountPoint, localTest.engineType).

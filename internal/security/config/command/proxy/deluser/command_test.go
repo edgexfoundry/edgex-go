@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,7 +79,7 @@ func delUserWithArgs(t *testing.T, args []string) {
 	p, _ := strconv.ParseInt(tsURL.Port(), 10, 32)
 	config.SecretStore.Port = int(p)
 	config.SecretStore.Protocol = "https"
-	config.SecretStore.Type = "vault"
+	config.SecretStore.Type = secrets.DefaultSecretStore
 	config.SecretStore.TokenFolderPath = "testdata/"
 	config.SecretStore.TokenFile = "token.json"
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
- * Copyright (C) 2024 IOTech Ltd
+ * Copyright 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -69,16 +69,16 @@ const (
 var errNotFound = errors.New("credential NOT found")
 
 type Bootstrap struct {
-	insecureSkipVerify bool
-	vaultInterval      int
-	validKnownSecrets  map[string]bool
+	insecureSkipVerify  bool
+	secretStoreInterval int
+	validKnownSecrets   map[string]bool
 }
 
-func NewBootstrap(insecureSkipVerify bool, vaultInterval int) *Bootstrap {
+func NewBootstrap(insecureSkipVerify bool, secretStoreInterval int) *Bootstrap {
 	return &Bootstrap{
-		insecureSkipVerify: insecureSkipVerify,
-		vaultInterval:      vaultInterval,
-		validKnownSecrets:  map[string]bool{redisSecretName: true, messagebusSecretName: true},
+		insecureSkipVerify:  insecureSkipVerify,
+		secretStoreInterval: secretStoreInterval,
+		validKnownSecrets:   map[string]bool{redisSecretName: true, messagebusSecretName: true},
 	}
 }
 
@@ -107,7 +107,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		httpCaller = pkg.NewRequester(lc).Insecure()
 	}
 
-	intervalDuration := time.Duration(b.vaultInterval) * time.Second
+	intervalDuration := time.Duration(b.secretStoreInterval) * time.Second
 	clientConfig := types.SecretConfig{
 		Type:     secretStoreConfig.Type,
 		Protocol: secretStoreConfig.Protocol,
@@ -131,17 +131,17 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		err := vmkEncryption.LoadIKM(hook)
 		defer vmkEncryption.WipeIKM() // Ensure IKM is wiped from memory
 		if err != nil {
-			lc.Errorf("failed to setup vault master key encryption: %s", err.Error())
+			lc.Errorf("failed to setup %s master key encryption: %s", secrets.DefaultSecretStore, err.Error())
 			return false
 		}
-		lc.Info("Enabled encryption of Vault master key")
+		lc.Infof("Enabled encryption of %s master key", secrets.DefaultSecretStore)
 	} else {
-		lc.Info("vault master key encryption not enabled. EDGEX_IKM_HOOK not set.")
+		lc.Infof("%s master key encryption not enabled. EDGEX_IKM_HOOK not set.", secrets.DefaultSecretStore)
 	}
 
 	var initResponse types.InitResponse // reused many places in below flow
 
-	//step 3: initialize and unseal Vault
+	//step 3: initialize and unseal secret store
 	for shouldContinue := true; shouldContinue; {
 		// Anonymous function used to prevent file handles from accumulating
 		terminalFailure := func() bool {
@@ -154,7 +154,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
-				lc.Infof("vault is initialized and unsealed (status code: %d)", sCode)
+				lc.Infof("%s is initialized and unsealed (status code: %d)", secrets.DefaultSecretStore, sCode)
 				shouldContinue = false
 
 			case http.StatusTooManyRequests:
@@ -162,10 +162,10 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				shouldContinue = false
 
 			case http.StatusNotImplemented:
-				lc.Infof("vault is not initialized (status code: %d). Starting initialization and unseal phases", sCode)
-				initResponse, err = client.Init(secretStoreConfig.VaultSecretThreshold, secretStoreConfig.VaultSecretShares)
+				lc.Infof("%s is not initialized (status code: %d). Starting initialization and unseal phases", secrets.DefaultSecretStore, sCode)
+				initResponse, err = client.Init(secretStoreConfig.SecretThreshold, secretStoreConfig.SecretShares)
 				if err != nil {
-					lc.Errorf("Unable to Initialize Vault: %s. Will try again...", err.Error())
+					lc.Errorf("Unable to Initialize %s: %s. Will try again...", secrets.DefaultSecretStore, err.Error())
 					// Not terminal failure, should continue and try again
 					return false
 				}
@@ -178,14 +178,14 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 				err = client.Unseal(initResponse.KeysBase64)
 				if err != nil {
-					lc.Errorf("Unable to unseal Vault: %s", err.Error())
+					lc.Errorf("Unable to unseal %s: %s", secrets.DefaultSecretStore, err.Error())
 					return true
 				}
 
 				// We need the unencrypted initResponse in order to generate a temporary root token later
 				// Make a copy and save the copy, possibly encrypted
 				encryptedInitResponse := initResponse
-				// Optionally encrypt the vault init response based on whether encryption was enabled
+				// Optionally encrypt the secret store init response based on whether encryption was enabled
 				if vmkEncryption.IsEncrypting() {
 					if err := vmkEncryption.EncryptInitResponse(&encryptedInitResponse); err != nil {
 						lc.Errorf("failed to encrypt init response from secret store: %s", err.Error())
@@ -198,12 +198,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 				}
 
 			case http.StatusServiceUnavailable:
-				lc.Infof("vault is sealed (status code: %d). Starting unseal phase", sCode)
+				lc.Infof("%s is sealed (status code: %d). Starting unseal phase", secrets.DefaultSecretStore, sCode)
 				if err := LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
-				// Optionally decrypt the vault init response based on whether encryption was enabled
+				// Optionally decrypt the secret store init response based on whether encryption was enabled
 				if vmkEncryption.IsEncrypting() {
 					err = vmkEncryption.DecryptInitResponse(&initResponse)
 					if err != nil {
@@ -219,9 +219,9 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 			default:
 				if sCode == 0 {
-					lc.Errorf("vault is in an unknown state. No Status code available")
+					lc.Errorf("%s is in an unknown state. No Status code available", secrets.DefaultSecretStore)
 				} else {
-					lc.Errorf("vault is in an unknown state. Status code: %d", sCode)
+					lc.Errorf("%s is in an unknown state. Status code: %d", secrets.DefaultSecretStore, sCode)
 				}
 			}
 
@@ -233,12 +233,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		}
 
 		if shouldContinue {
-			lc.Infof("trying Vault init/unseal again in %d seconds", b.vaultInterval)
+			lc.Infof("trying %s init/unseal again in %d seconds", secrets.DefaultSecretStore, b.secretStoreInterval)
 			time.Sleep(intervalDuration)
 		}
 	}
 
-	/* After vault is initialized and unsealed, it takes a while to get ready to accept any request. During which period any request will get http 500 error.
+	/* After secret store is initialized and unsealed, it takes a while to get ready to accept any request. During which period any request will get http 500 error.
 	We need to check the status constantly until it return http StatusOK.
 	*/
 	ticker := time.NewTicker(time.Second)
@@ -329,7 +329,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Errorf("failed to check if %s auth method enabled: %s", UserPassAuthEngine, err.Error())
 		return false
 	} else if !upAuthEnabled {
-		// Enable userpass engine at /v1/auth/{eng.path} path (/v1 prefix supplied by Vault)
+		// Enable userpass engine at /v1/auth/{eng.path} path (/v1 prefix supplied by secret store)
 		lc.Infof("Enabling userpass authentication for the first time...")
 		if err := client.EnablePasswordAuth(rootToken, UPAuthMountPoint); err != nil {
 			lc.Errorf("failed to enable userpass secrets engine: %s", err.Error())
@@ -389,7 +389,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// continue credential creation
 
 	// A little note on why there are two secrets names. For each microservice, the redis
-	// username/password is uploaded to the vault on both /v1/secret/edgex/%s/redisdb and
+	// username/password is uploaded to the secret store on both /v1/secret/edgex/%s/redisdb and
 	// /v1/secret/edgex/redisdb/%s). The go-mod-secrets client requires a SecretName property to prefix all
 	// secrets.
 	// So edgex/%s/redisdb is for the microservices (microservices are restricted to their specific
@@ -590,24 +590,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Info("proxy certificate pair upload was skipped because cert secretStore value(s) were blank")
 	}
 
-	// create and save a Vault token to configure
-	// Consul secret engine access, role operations, and managing Consul agent tokens.
-	// Enable Consul secret engine
-	if err := secretsengine.New(secretsengine.ConsulSecretEngineMountPoint, secretsengine.Consul).
-		Enable(&rootToken, lc, client); err != nil {
-		lc.Errorf("failed to enable Consul secrets engine: %s", err.Error())
-		return false
-	}
-
-	// generate a management token for Consul secrets engine operations:
-	tokenFileWriter := tokenfilewriter.NewWriter(lc, client, fileOpener)
-	if _, err := tokenFileWriter.CreateAndWrite(rootToken, configuration.SecretStore.ConsulSecretsAdminTokenPath,
-		tokenFileWriter.CreateMgmtTokenForConsulSecretsEngine); err != nil {
-		lc.Errorf("failed to create and write the token for Consul secret management: %s", err.Error())
-		return false
-	}
-
-	lc.Info("Vault init done successfully")
+	lc.Infof("%s init done successfully", secrets.DefaultSecretStore)
 	return true
 
 }
