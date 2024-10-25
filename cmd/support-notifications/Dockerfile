@@ -51,4 +51,4 @@ COPY --from=builder /edgex-go/cmd/support-notifications/res/configuration.yaml /
 COPY --from=builder /edgex-go/cmd/support-notifications/res/db/ /res/db/
 
 ENTRYPOINT ["/support-notifications"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]

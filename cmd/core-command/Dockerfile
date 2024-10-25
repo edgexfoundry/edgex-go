@@ -52,4 +52,4 @@ COPY --from=builder /edgex-go/cmd/core-command/core-command /
 COPY --from=builder /edgex-go/cmd/core-command/res/configuration.yaml /res/configuration.yaml
 
 ENTRYPOINT ["/core-command"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]

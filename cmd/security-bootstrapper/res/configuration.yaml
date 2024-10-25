@@ -14,8 +14,8 @@ StageGate:
     Port: 6379
     ReadyPort: 54323
   Registry:  # this is intended to be the same as Registry.Host/.Port for other services
-    Host: edgex-core-consul
-    Port: 8500
+    Host: edgex-core-keeper
+    Port: 59890
     ReadyPort: 54324
     ACL:
       Protocol: http
@@ -43,8 +43,8 @@ StageGate:
           Description: role for common config
         support-notifications:
           Description: role for notifications
-        support-scheduler:
-          Description: role for scheduler
+        support-cron-scheduler:
+          Description: role for cron-scheduler
         device-virtual:
           Description: role for device virtual service
         device-rest:

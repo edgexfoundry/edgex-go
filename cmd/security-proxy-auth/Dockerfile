@@ -52,4 +52,4 @@ RUN chmod 755 /usr/local/bin/entrypoint.sh \
     && ln -s /usr/local/bin/entrypoint.sh /
 
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["/security-proxy-auth", "-cp=consul.http://edgex-core-consul:8500"]
+CMD ["/security-proxy-auth", "-cp=keeper.http://edgex-core-keeper:59890"]

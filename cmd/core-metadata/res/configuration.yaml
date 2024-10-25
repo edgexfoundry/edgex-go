@@ -5,12 +5,6 @@ Writable:
     StrictDeviceProfileDeletes: false
   UoM:
     Validation: false
-  InsecureSecrets:
-    DB:
-      SecretName: "redisdb"
-      SecretData:
-        username: ""
-        password: ""
 
 Service:
   Host: localhost
@@ -25,7 +19,3 @@ MessageBus:
 
 Database:
   Name: metadata
-  Host: "localhost"
-  Port: 6379
-  Timeout: "5s"
-  Type: "redisdb"

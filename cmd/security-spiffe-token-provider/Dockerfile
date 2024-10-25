@@ -45,4 +45,4 @@ COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/security-spiffe
 COPY --from=builder /edgex-go/cmd/security-spiffe-token-provider/res/configuration.yaml /res/configuration.yaml
 
 ENTRYPOINT [ "/security-spiffe-token-provider" ]
-CMD ["-cp=consul.http://edgex-core-consul:8500"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890"]

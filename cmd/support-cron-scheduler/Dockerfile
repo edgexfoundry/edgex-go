@@ -49,4 +49,4 @@ COPY --from=builder /edgex-go/cmd/support-cron-scheduler/support-cron-scheduler 
 COPY --from=builder /edgex-go/cmd/support-cron-scheduler/res /res
 
 ENTRYPOINT ["/support-cron-scheduler"]
-CMD ["-cp=consul.http://edgex-core-consul:8500", "--registry"]
+CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]
