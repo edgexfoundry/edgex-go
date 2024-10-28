@@ -9,6 +9,11 @@ Writable:
         cacert: ""
         clientcert: ""
         clientkey: ""
+    DB:
+      SecretName: "postgres"
+      SecretData:
+        username: "postgres"
+        password: "postgres"
 
 Service:
   Host: localhost
@@ -29,7 +34,19 @@ Service:
     CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
     CORSMaxAge: 3600
 
+Database:
+  Host: "localhost"
+  Port: 5432
+  Timeout: "5s"
+  Type: "postgres"
+
 MessageBus:
+  Protocol: "mqtt"
+  Host: "localhost"
+  Port: 1883
+  Type: "mqtt"
+  AuthMode: "none"  # required for MessageBus (secure or insecure).
+  SecretName: "mqtt-bus"
   BaseTopicPrefix: "edgex/configs" # /<key> will be added to this Base Topic prefix
   Optional:
     # Default MQTT Specific options that need to be here to enable environment variable overrides of them
