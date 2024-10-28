@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	models "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	models "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 	mock "github.com/stretchr/testify/mock"
 )
 

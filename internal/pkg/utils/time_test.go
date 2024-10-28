@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger/mocks"
 )
 
 func TestCheckMinInterval(t *testing.T) {

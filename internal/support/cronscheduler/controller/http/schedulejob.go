@@ -11,14 +11,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
-	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/common"
-	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/requests"
-	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v3/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
+	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"

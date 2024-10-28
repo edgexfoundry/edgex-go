@@ -18,12 +18,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/authtokenloader"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/types"
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/types"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 const (
@@ -45,7 +45,7 @@ type ProxyUserCommon struct {
 	secretStoreClient secrets.SecretStoreClient
 }
 
-// NewProxyUserCommon has common logic for adding and deleting users from Vault
+// NewProxyUserCommon has common logic for adding and deleting users from OpenBao
 func NewProxyUserCommon(
 	lc logger.LoggingClient,
 	configuration *secretStoreConfig.ConfigurationStruct) (ProxyUserCommon, error) {
@@ -92,7 +92,7 @@ func NewProxyUserCommon(
 	return vb, err
 }
 
-// LoadServiceToken loads a vault token from SecretStore.TokenFile (secrets-token.json)
+// LoadServiceToken loads a token from SecretStore.TokenFile (secrets-token.json)
 func (vb *ProxyUserCommon) LoadServiceToken() (string, func(), error) {
 
 	// This is not a root token; don't need to revoke when we're done with it
@@ -112,7 +112,7 @@ func (vb *ProxyUserCommon) LoadServiceToken() (string, func(), error) {
 
 }
 
-// LoadRootToken regenerates a temporary root token from Vault keyshares
+// LoadRootToken regenerates a temporary root token from OpenBao keyshares
 func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 	pipedHexReader := pipedhexreader.NewPipedHexReader()
 	keyDeriver := kdf.NewKdf(vb.fileOpener, vb.configuration.SecretStore.TokenFolderPath, sha256.New)
@@ -123,12 +123,12 @@ func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 		err := vmkEncryption.LoadIKM(hook)
 		defer vmkEncryption.WipeIKM() // Ensure IKM is wiped from memory
 		if err != nil {
-			vb.loggingClient.Errorf("failed to setup vault master key encryption: %s", err.Error())
+			vb.loggingClient.Errorf("failed to setup %s master key encryption: %s", secrets.DefaultSecretStore, err.Error())
 			return "", nil, err
 		}
-		vb.loggingClient.Info("Enabled encryption of Vault master key")
+		vb.loggingClient.Infof("Enabled encryption of %s master key", secrets.DefaultSecretStore)
 	} else {
-		vb.loggingClient.Info("vault master key encryption not enabled. EDGEX_IKM_HOOK not set.")
+		vb.loggingClient.Infof("%s master key encryption not enabled. EDGEX_IKM_HOOK not set.", secrets.DefaultSecretStore)
 	}
 
 	var initResponse types.InitResponse

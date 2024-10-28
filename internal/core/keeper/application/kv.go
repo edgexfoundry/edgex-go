@@ -12,12 +12,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/utils"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/models"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
+	msgTypes "github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
 )
 
 func Keys(key string, keysOnly bool, isRaw bool, dic *di.Container) (configs []models.KVResponse, err errors.EdgeX) {

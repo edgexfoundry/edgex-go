@@ -21,9 +21,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/application"
 	"github.com/edgexfoundry/edgex-go/internal/support/cronscheduler/container"

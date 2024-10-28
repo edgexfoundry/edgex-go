@@ -11,7 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 )

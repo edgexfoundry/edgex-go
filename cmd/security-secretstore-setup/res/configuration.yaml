@@ -16,7 +16,7 @@
 
 LogLevel: DEBUG
 SecretStore:
-  Type: vault
+  Type: openbao
   Protocol: http
   Host: localhost
   Port: 8200
@@ -24,10 +24,10 @@ SecretStore:
   CaFilePath: ""
   CertFilePath: ""
   KeyFilePath: ""
-  TokenFolderPath: /vault/config/assets
+  TokenFolderPath: /openbao/config/assets
   TokenFile: resp-init.json
-  VaultSecretShares: 5
-  VaultSecretThreshold: 3
+  SecretShares: 5
+  SecretThreshold: 3
   TokenProvider: /security-file-token-provider
   TokenProviderArgs:
     - "-configDir"

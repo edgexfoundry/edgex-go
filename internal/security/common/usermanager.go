@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 type UserManager struct {
@@ -47,7 +47,7 @@ func NewUserManager(
 	}
 }
 
-// CreatePasswordUserWithPolicy creates a vault identity with an attached policy
+// CreatePasswordUserWithPolicy creates a secretstore identity with an attached policy
 // using userpass authentication engine.
 // username should be the name of the user or service to be created
 // password should be a random password to be assigned
@@ -72,7 +72,7 @@ func (m *UserManager) CreatePasswordUserWithPolicy(username string, password str
 		return err
 	}
 
-	// Create or update underlying vault identity
+	// Create or update underlying secretstore identity
 	identityMetadata := map[string]string{
 		// we will also put a name claim in any generated JWT's
 		"name": username,

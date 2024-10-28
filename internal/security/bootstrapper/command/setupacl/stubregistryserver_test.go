@@ -154,20 +154,6 @@ func (registry *registryTestServer) getRegistryServerConf(t *testing.T) *config.
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("The ACL system is currently in legacy mode."))
 			}
-		case consulConfigAccessVaultAPI:
-			require.Equal(t, http.MethodPost, r.Method)
-			if registry.serverOptions.configAccessOkResponse {
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-			}
-		case fmt.Sprintf("/v1/consul/roles/%s", pathBase):
-			require.Equal(t, http.MethodPost, r.Method)
-			if registry.serverOptions.createRoleOk {
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				w.WriteHeader(http.StatusForbidden)
-			}
 		case consulCheckAgentAPI:
 			require.Equal(t, http.MethodGet, r.Method)
 			if registry.serverOptions.consulCheckAgentOk {

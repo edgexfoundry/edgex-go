@@ -16,7 +16,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 const (
@@ -37,7 +38,7 @@ type cmd struct {
 	jwtTTL          string
 }
 
-// NewCommand add a new user to Vault, which can then authenticate through the gateway
+// NewCommand add a new user to OpenBao, which can then authenticate through the gateway
 func NewCommand(
 	lc logger.LoggingClient,
 	configuration *secretStoreConfig.ConfigurationStruct,
@@ -62,7 +63,7 @@ func NewCommand(
 		return nil, err
 	}
 	if cmd.username == "" {
-		return nil, fmt.Errorf("%s vault adduser: argument --user is required", os.Args[0])
+		return nil, fmt.Errorf("%s %s adduser: argument --user is required", os.Args[0], secrets.DefaultSecretStore)
 	}
 
 	cmd.proxyUserCommon, err = shared.NewProxyUserCommon(lc, configuration)

@@ -1,12 +1,13 @@
 #
 # Copyright (c) 2023 Intel Corporation
+# Copyright (c) 2024 IOTech Ltd
 #
 # SPDX-License-Identifier: Apache-2.0
 #
 
 LogLevel: DEBUG
 SecretStore:
-  Type: vault
+  Type: openbao
   Protocol: http
   Host: localhost
   Port: 8200
@@ -14,9 +15,9 @@ SecretStore:
   CaFilePath: ""
   CertFilePath: ""
   KeyFilePath: ""
-  # for root token use: /vault/config/assets
+  # for root token use: /openbao/config/assets
   # for service token use: /tmp/edgex/secrets/security-proxy-setup 
-  TokenFolderPath: /vault/config/assets
+  TokenFolderPath: /openbao/config/assets
   # for root token use: resp-init.json
   # for service token use: secrets-token.json
   TokenFile: resp-init.json

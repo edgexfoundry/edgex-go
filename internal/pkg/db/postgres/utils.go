@@ -19,7 +19,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 )
 
 var sqlFileNameRegexp = regexp.MustCompile(`([[:digit:]]+)-[[:word:]]+.sql`)

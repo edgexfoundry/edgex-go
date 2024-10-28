@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
 
 // file read/write permission only for owner

@@ -35,7 +35,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/helper"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
 
 func TestNewCommand(t *testing.T) {
@@ -109,10 +109,6 @@ func TestExecute(t *testing.T) {
 						},
 					}}, httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 			}, false, false, true},
-		{"Bad:setupRegistryACL with timed out on waiting for secret token file", "",
-			prepareTestRegistryServer, true, false, true},
-		{"Bad:setupRegistryACL with config access API failed response from server", "test5",
-			prepareTestRegistryServer, true, false, true},
 	}
 
 	for _, tt := range tests {

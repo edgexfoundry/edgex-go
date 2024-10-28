@@ -21,11 +21,11 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/controller"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/controller"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/labstack/echo/v4"
 )
@@ -51,7 +51,7 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	lc := container.LoggingClientFrom(dic.Get)
 	secretProvider := container.SecretProviderExtFrom(dic.Get)
-	authenticationHook := handlers.VaultAuthenticationHandlerFunc(secretProvider, lc)
+	authenticationHook := handlers.SecretStoreAuthenticationHandlerFunc(secretProvider, lc)
 
 	// Common
 	_ = controller.NewCommonController(dic, b.router, b.serviceName, edgex.Version)

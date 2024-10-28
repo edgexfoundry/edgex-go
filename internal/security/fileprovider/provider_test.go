@@ -24,13 +24,13 @@ import (
 	"testing"
 
 	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	loaderMock "github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/authtokenloader/mocks"
-	fileMock "github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer/mocks"
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets/mocks"
+	loaderMock "github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader/mocks"
+	fileMock "github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets/mocks"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

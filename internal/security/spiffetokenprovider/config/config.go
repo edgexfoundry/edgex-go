@@ -17,7 +17,7 @@ package config
 
 import (
 	fileProviderConfig "github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 )
 
 // SpiffeInfo contains information for Spiffe configuration

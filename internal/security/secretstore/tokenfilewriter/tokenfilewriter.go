@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2021 Intel Corporation
+ * Copyright (C) 2024 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,16 +25,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
-	"github.com/edgexfoundry/go-mod-secrets/v3/secrets"
-)
-
-const (
-	consulSecretsEngineOpsPolicyName = "consul_secrets_engine_management_policy"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 )
 
 // TokenFileWriter is a mechanism to generates a token and writes it into a file specified by configuration
@@ -110,56 +106,6 @@ func (w TokenFileWriter) CreateAndWrite(rootToken string, tokenFilePath string,
 	w.logClient.Infof("token is written to %s", tokenFilePath)
 
 	return revokeTokenFunc, nil
-}
-
-// CreateMgmtTokenForConsulSecretsEngine creates a new Vault token that
-// allows the Consul bootstrapper to operate on managing Vault's Consul secrets engine related APIs (see reference:
-// https://www.vaultproject.io/api-docs/secret/consul). The created Vault token is meant for serving
-// the purpose of Consul ACL's bootstrapping as part of securing Consul process.
-//
-// Requires a root token to create, and returns data/information containing the token,
-// keeping the token without revoking it and hence always returning nil RevokeFunc in order to conform to the
-// input type tokencreatable.CreateTokenFunc as its function argument;
-// this function returns non-nil error if anything goes wrong during the creation.
-// this function conforms to the signature of the tokencreatable.CreateTokenFunc type
-// so that it can be passed to CreateAndWrite()
-func (w TokenFileWriter) CreateMgmtTokenForConsulSecretsEngine(rootToken string) (map[string]interface{},
-	tokencreatable.RevokeFunc, error) {
-	consulSecretsEngineOpsPolicyDocument := `
-# allow to configure the access information for Consul
-path "` + secretsengine.ConsulSecretEngineMountPoint + `/config/access" {
-    capabilities = ["create", "update"]
-}
-
-# allow to create, update, read, list, or delete the Consul role definition
-path "` + secretsengine.ConsulSecretEngineMountPoint + `/roles/*" {
-    capabilities = ["create", "read", "update", "delete", "list"]
-}
-`
-
-	if err := w.secretClient.InstallPolicy(rootToken,
-		consulSecretsEngineOpsPolicyName,
-		consulSecretsEngineOpsPolicyDocument); err != nil {
-		return nil, nil, fmt.Errorf("failed to install Consul secrets engine operations policy: %v", err)
-	}
-
-	// setup new token's properties
-	tokenParams := make(map[string]interface{})
-	tokenParams["type"] = "service"
-	// Vault prefixes "token" in front of display_name
-	tokenParams["display_name"] = "for Consul ACL bootstrap"
-	tokenParams["no_parent"] = true
-	tokenParams["period"] = "1h"
-	tokenParams["policies"] = []string{consulSecretsEngineOpsPolicyName}
-	tokenParams["meta"] = map[string]interface{}{
-		"description": "Consul secrets engine management token",
-	}
-	response, err := w.secretClient.CreateToken(rootToken, tokenParams)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create token for Consul secrets engine operations: %v", err)
-	}
-
-	return response, nil, nil
 }
 
 func getFunctionName(f interface{}) string {

@@ -25,9 +25,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/labstack/echo/v4"
 )

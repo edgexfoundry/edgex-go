@@ -14,7 +14,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
 
 type PasswordProvider struct {

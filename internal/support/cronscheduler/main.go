@@ -20,14 +20,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/handlers"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/interfaces"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/startup"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"

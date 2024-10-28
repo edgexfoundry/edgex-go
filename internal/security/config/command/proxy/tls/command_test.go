@@ -13,8 +13,8 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

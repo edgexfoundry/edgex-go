@@ -860,13 +860,13 @@ paths:
                     MaxResultCount: 50000
                     Timeout: 5000
                   SecretStore:
-                    Host: "edgex-vault"
+                    Host: "edgex-secret-store"
                     Port: 8200
                     Path: "v1/secret/edgex/core-metadata/"
                     Protocol: "http"
                     Namespace: ""
                     RootCaCertPath: ""
-                    ServerName: "edgex-vault"
+                    ServerName: "edgex-secret-store"
                     Authentication:
                       AuthType: "X-Vault-Token"
                       AuthToken: ""

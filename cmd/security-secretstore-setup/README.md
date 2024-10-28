@@ -18,13 +18,13 @@ This will create an executable located at `cmd/security-secretstore-setup/` if s
 
 The binary supports multiple command line parameters
 
-| Parameter                         | Description                                                                                                    |
-|-----------------------------------|----------------------------------------------------------------------------------------------------------------|
-| -p, --profile `name`              | Indicate configuration profile other than default                                                              |
-| -r, --registry                    | Indicates service should use Registry                                                                          |
-| --insecureSkipVerify=`true/false` | Indicates if skipping the server side SSL cert verifcation, similar to -k of curl                              |
-| --configfile=`file.yaml`          | Use a different config file (default: res/configuration.yaml)                                                  |
-| --vaultInterval=`seconds`         | **Required** Indicates how long the program will pause between vault initialization attempts until it succeeds |
+| Parameter                         | Description                                                                                                           |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| -p, --profile `name`              | Indicate configuration profile other than default                                                                     |
+| -r, --registry                    | Indicates service should use Registry                                                                                 |
+| --insecureSkipVerify=`true/false` | Indicates if skipping the server side SSL cert verifcation, similar to -k of curl                                     |
+| --configfile=`file.yaml`          | Use a different config file (default: res/configuration.yaml)                                                         |
+| --secretStoreInterval=`seconds`   | **Required** Indicates how long the program will pause between secret store initialization attempts until it succeeds |
 
 An example of using the parameters can be found in the following docker compose
 file:
@@ -50,19 +50,19 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
       RevokeRootTokens = false
     ```
 
-* The edgex-vault-worker uses _compose-files_vault-config_ volume to store its token. To copy the root token from edgex-vault-worker, use
+* The edgex-vault-worker uses _compose-files_secret-store-config_ volume to store its token. To copy the root token from edgex-vault-worker, use
 
     ```sh
-    docker run --rm -v compose-files_vault-config:/vault/config alpine:latest cat /vault/config/assets/resp-init.json > resp-init.json
+    docker run --rm -v compose-secret-store-config:/openbao/config alpine:latest cat /openbao/config/assets/resp-init.json > resp-init.json
     ```
 
 * To verify the root token
 
     ```sh
-    docker exec -ti edgex-vault sh -l
+    docker exec -ti edgex-secret-store sh -l
     export VAULT_SKIP_VERIFY=true
     export VAULT_TOKEN=s.xxxxxxxxxxxxxxxx
-    vault token lookup
+    bao token lookup
     ```
 
     where `s.xxxxxxxxxxxxxxxx` is the _root_token_ member of `resp-init.json`
@@ -72,19 +72,19 @@ It should create a docker image with the name `edgexfoundry/docker_security_secr
 * To explore the vault
 
     ```sh
-    docker exec -ti edgex-vault sh -l
+    docker exec -ti edgex-secret-store sh -l
     export VAULT_SKIP_VERIFY=true
     export VAULT_TOKEN=s.xxxxxxxxxxxxxxxx
-    vault kv list secret/
+    bao kv list secret/
     ```
 
-    and drill down from there. To read a key use `vault kv get` or `vault read`.
+    and drill down from there. To read a key use `bao kv get` or `bao read`.
 
     ```sh
-    docker exec -ti edgex-vault sh -l
+    docker exec -ti edgex-secret-store sh -l
     export VAULT_SKIP_VERIFY=true
     export VAULT_TOKEN=s.xxxxxxxxxxxxxxxx
-    vault kv get /secret/edgex/redis/redis5
+    bao kv get /secret/edgex/redis/redis5
     ```
 
     Note you can set the environment variables on the docker command line with `-e` and avoid the additional shell commands.

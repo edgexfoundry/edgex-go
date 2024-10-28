@@ -8,7 +8,7 @@ package container
 import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 )
 
 // DBClientInterfaceName contains the name of the interfaces.DBClient implementation in the DIC.

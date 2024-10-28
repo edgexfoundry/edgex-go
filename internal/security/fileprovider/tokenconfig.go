@@ -51,7 +51,7 @@ import (
 	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 )
 
 const (

@@ -15,20 +15,20 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
-	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v3/clients/logger/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/dtos"
-	"github.com/edgexfoundry/go-mod-core-contracts/v3/errors"
-	"github.com/edgexfoundry/go-mod-messaging/v3/messaging/mocks"
-	"github.com/edgexfoundry/go-mod-messaging/v3/pkg/types"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
+	mocks2 "github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+	"github.com/edgexfoundry/go-mod-messaging/v4/messaging/mocks"
+	"github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v3/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v3/di"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 )
 
 func TestPublishSystemEvent(t *testing.T) {

@@ -6,7 +6,7 @@
 package config
 
 import (
-	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v3/config"
+	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 )
 
 // ConfigurationStruct has a 1:1 relationship to the configuration.yaml for the service. Writable is

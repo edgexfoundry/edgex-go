@@ -5,7 +5,7 @@
 
 package models
 
-import "github.com/edgexfoundry/go-mod-core-contracts/v3/models"
+import "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 // Reading struct contains the columns of the core_data.reading table in Postgres db relates to a reading
 // which includes all the fields in BaseReading, BinaryReading, SimpleReading and ObjectReading

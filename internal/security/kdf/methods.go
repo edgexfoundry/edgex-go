@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/crypto/hkdf"
 
-	"github.com/edgexfoundry/go-mod-secrets/v3/pkg/token/fileioperformer"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 )
 
 // The KDF salt adds additional randomness to the KDF input key
