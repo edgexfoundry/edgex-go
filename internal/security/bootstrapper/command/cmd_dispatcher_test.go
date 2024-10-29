@@ -52,7 +52,6 @@ func TestNewCommand(t *testing.T) {
 		{"Good: genPassword command", []string{"genPassword"}, "genPassword", false},
 		{"Good: getHttpStatus command", []string{"getHttpStatus", "--url=http://localhost:55555"}, "getHttpStatus", false},
 		{"Good: waitFor command", []string{"waitFor", "--uri=http://localhost:55555"}, "waitFor", false},
-		{"Good: setupRegistryACL command", []string{"setupRegistryACL"}, "setupRegistryACL", false},
 		{"Bad: unknown command", []string{"unknown"}, "", true},
 		{"Bad: empty command", []string{}, "", true},
 		{"Bad: listenTcp command missing required --port", []string{"listenTcp"}, "", true},

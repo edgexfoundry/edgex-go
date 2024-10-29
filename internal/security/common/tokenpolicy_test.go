@@ -34,9 +34,6 @@ func TestDefaultTokenPolicy(t *testing.T) {
 			"secret/edgex/service-name/*": map[string]interface{}{
 				"capabilities": []string{"create", "update", "delete", "list", "read"},
 			},
-			"consul/creds/service-name": map[string]interface{}{
-				"capabilities": []string{"read"},
-			},
 			"identity/oidc/token/service-name": map[string]interface{}{
 				"capabilities": []string{"read"},
 			},

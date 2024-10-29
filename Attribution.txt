@@ -2,101 +2,8 @@ This file contains the open source projects that are referenced by the EdgeX Fou
 As there are many Go services, this list is a union of all open source projects used by all the EdgeX Go services (found in https://github.com/edgexfoundry/edgex-go).
 Not all projects listed are used by each service.
 
-go-kit/kit (MIT) github.com/go-kit/kit
-https://github.com/go-kit/kit/blob/master/LICENSE
-
-go-logfmt/logfmt (MIT) https://github.com/go-logfmt/logfmt
-https://github.com/go-logfmt/logfmt/blob/master/LICENSE
-
-robfig/cron (MIT) https://github.com/robfig/cron
-https://github.com/robfig/cron/blob/master/LICENSE
-
-dgrijalva/jwt-go (MIT) https://github.com/dgrijalva/jwt-go
-https://github.com/dgrijalva/jwt-go/blob/master/LICENSE
-
-google/uuid (BSD-3) https://github.com/google/uuid
-https://github.com/google/uuid/blob/master/LICENSE
-
-influxdata/influxdb/client/v2 (MIT) https://github.com/influxdata/influxdb
-https://github.com/influxdata/influxdb/blob/master/LICENSE
-
-influxdata/platform (MIT) https://github.com/influxdata/platform
-https://github.com/influxdata/platform/blob/master/LICENSE
-
 eclipse/paho.mqtt.golang (Eclipse Public License 2.0) https://github.com/eclipse/paho.mqtt.golang
 https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
-
-mattn/go-xmpp (BSD-3) https://github.com/mattn/go-xmpp
-https://github.com/mattn/go-xmpp/blob/master/LICENSE
-
-mitchellh/consulstructure (MIT) https://github.com/mitchellh/consulstructure
-https://github.com/mitchellh/consulstructure/blob/master/LICENSE
-
-mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
-https://github.com/mitchellh/mapstructure/blob/master/LICENSE
-
-mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
-https://github.com/mitchellh/copystructure/blob/master/LICENSE
-
-mitchellh/reflectwalk (MIT) https://github.com/mitchellh/reflectwalk
-https://github.com/mitchellh/reflectwalk/blob/master/LICENSE
-
-cenkalti/backoff (MIT) https://github.com/cenkalti/backoff
-https://github.com/cenkalti/backoff/blob/master/LICENSE
-
-hashicorp/consul/api 1.1.0 (Mozilla Public License 2.0) - https://github.com/hashicorp/consul/api
-https://github.com/hashicorp/consul/blob/master/LICENSE
-
-hashicorp/go-cleanhttp (Mozilla Public License 2.0) - https://github.com/hashicorp/go-cleanhttp
-https://github.com/hashicorp/go-cleanhttp/blob/master/LICENSE
-
-hashicorp/go-rootcerts (Mozilla Public License 2.0) https://github.com/hashicorp/go-rootcerts
-https://github.com/hashicorp/go-rootcerts/blob/master/LICENSE
-
-mitchellh/go-homedir (MIT) https://github.com/mitchellh/go-homedir
-https://github.com/mitchellh/go-homedir/blob/master/LICENSE
-
-mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
-https://github.com/mitchellh/mapstructure/blob/master/LICENSE
-
-hashicorp/serf (Mozilla Public License 2.0) https://github.com/hashicorp/serf
-https://github.com/hashicorp/serf/blob/master/LICENSE
-
-armon/go-metrics (MIT) https://github.com/armon/go-metrics
-https://github.com/armon/go-metrics/blob/master/LICENSE
-
-rcrowley/go-metrics (Unspecified) https://github.com/rcrowley/go-metrics
-https://github.com/rcrowley/go-metrics/blob/master/LICENSE
-
-hashicorp/go-immutable-radix (Mozilla Public License 2.0) https://github.com/hashicorp/go-immutable-radix
-https://github.com/hashicorp/go-immutable-radix/blob/master/LICENSE
-
-hashicorp/golang-lru (Mozilla Public License 2.0) https://github.com/hashicorp/golang-lru
-https://github.com/hashicorp/golang-lru/blob/master/LICENSE
-
-github.com/go-redis/redis/v7 (BSD-2) https://github.com/go-redis/redis
-https://github.com/go-redis/redis/blob/master/LICENSE
-
-gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo
-https://github.com/gomodule/redigo/blob/master/LICENSE
-
-OneOfOne/xxhash (Apache 2.0) https://github.com/OneOfOne/xxhash
-https://github.com/OneOfOne/xxhash/blob/master/LICENSE
-
-imdario/mergo (BSD-3) github.com/imdario/mergo
-https://github.com/imdario/mergo/blob/master/LICENSE
-
-magiconair/properties (BSD-2) https://github.com/magiconair/properties
-https://github.com/magiconair/properties/blob/master/LICENSE
-
-gopkg.in/eapache/queue.v1 (MIT) gopkg.in/eapache/queue.v1
-https://github.com/eapache/queue/blob/v1.1.0/LICENSE
-
-bertimus9/systemstat (MIT) https://bitbucket.org/bertimus9/systemstat
-https://bitbucket.org/bertimus9/systemstat/src/master/LICENSE
-
-davecgh/go-spew (ISC) https://github.com/davecgh/go-spew
-https://github.com/davecgh/go-spew/blob/master/LICENSE
 
 edgexfoundry/go-mod-bootstrap (Apache 2.0) https://github.com/edgexfoundry/go-mod-bootstrap/v4
 https://github.com/edgexfoundry/go-mod-bootstrap/blob/master/LICENSE
@@ -110,161 +17,50 @@ https://github.com/edgexfoundry/go-mod-core-contracts/blob/master/LICENSE
 edgexfoundry/go-mod-messaging (Apache 2.0) https://github.com/edgexfoundry/go-mod-messaging/v4
 https://github.com/edgexfoundry/go-mod-messaging/blob/master/LICENSE
 
-edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry/v4
-https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
-
-edgexfoundry/go-mod-secrets (Apache 2.0) https://github.com/edgexfoundry/go-mod-secrets/v4
-https://github.com/edgexfoundry/go-mod-secrets/blob/master/LICENSE
-
-gorilla/context (BSD-3) https://github.com/gorilla/context
-https://github.com/gorilla/context/blob/master/LICENSE
-
-kr/logfmt (Unspecified) https://github.com/kr/logfmt
-https://github.com/kr/logfmt/blob/master/Readme
-
-pmezard/go-difflib (Unspecified) https://github.com/pmezard/go-difflib
-https://github.com/pmezard/go-difflib/blob/master/LICENSE
-
-stretchr/objx (MIT) https://github.com/stretchr/objx
-https://github.com/stretchr/objx/blob/master/LICENSE
-
-stretchr/testify (MIT) https://github.com/stretchr/testify
-https://github.com/stretchr/testify/blob/master/LICENSE
-
 fxamacker/cbor (MIT) https://github.com/fxamacker/cbor/v2
 https://github.com/fxamacker/cbor/blob/master/README.md#license
 
-x448/float16 (MIT) https://github.com/x448/float16
-https://github.com/x448/float16/blob/master/LICENSE
+go-co-op/gocron (MIT) - https://github.com/go-co-op/gocron/v2
+https://github.com/go-co-op/gocron/blob/v2/LICENSE
 
-golang.org/x/net (Unspecified) https://github.com/golang/net
-https://github.com/golang/net/blob/master/LICENSE
+gomodule/redigo (Apache 2.0) https://github.com/gomodule/redigo
+https://github.com/gomodule/redigo/blob/master/LICENSE
 
-gopkg.in/yaml.v3 (MIT) https://github.com/go-yaml/yaml/
-https://github.com/go-yaml/yaml/blob/v3/LICENSE
+google/uuid (BSD-3) https://github.com/google/uuid
+https://github.com/google/uuid/blob/master/LICENSE
 
-cloudflare/gokey (BSD-3) https://github.com/cloudflare/gokey
-https://github.com/cloudflare/gokey/blob/master/LICENSE
+jackc/pgerrcode (MIT) - https://github.com/jackc/pgerrcode
+https://github.com/jackc/pgerrcode/blob/master/LICENSE
 
-golang.org/x/crypto (Unspecified) https://github.com/golang/crypto
-https://github.com/golang/crypto/blob/master/LICENSE
-
-go-playground/locales (MIT) https://github.com/go-playground/locales
-https://github.com/go-playground/locales/blob/master/LICENSE
-
-go-playground/universal-translator (MIT) https://github.com/go-playground/universal-translator
-https://github.com/go-playground/universal-translator/blob/master/LICENSE
-
-github.com/go-playground/validator/v10 (MIT) https://github.com/go-playground/validator
-https://github.com/go-playground/validator/blob/master/LICENSE
-
-leodido/go-urn (MIT) https://github.com/leodido/go-urn
-https://github.com/leodido/go-urn
-
-github.com/lib/pq (MIT) https://github.com/lib/pq
-https://github.com/lib/pq/blob/master/LICENSE.md
-
-github.com/fatih/color (MIT) https://github.com/fatih/color
-https://github.com/fatih/color/blob/master/LICENSE.md
-
-github.com/hashicorp/go-hclog (MIT) https://github.com/hashicorp/go-hclog
-https://github.com/hashicorp/go-hclog/blob/master/LICENSE
-
-github.com/mattn/go-colorable (MIT) https://github.com/mattn/go-colorable
-https://github.com/mattn/go-colorable/blob/master/LICENSE
-
-github.com/mattn/go-isatty (MIT) https://github.com/mattn/go-isatty
-https://github.com/mattn/go-isatty/blob/master/LICENSE
-
-golang.org/x/sys (BSD-3) https://github.com/golang/sys
-https://github.com/golang/sys/blob/master/LICENSE
-
-golang.org/x/text (BSD-3) https://github.com/golang/text
-https://github.com/golang/text/blob/master/LICENSE
-
-golang.org/x/time (Unspecified) https://github.com/golang/time
-https://github.com/golang/text/blob/master/LICENSE
-
-golang.org/x/mod (BSD-3) https://github.com/golang/mod
-https://github.com/golang/mod/blob/master/LICENSE
-
-golang.org/x/tools (BSD-3) https://github.com/golang/tools
-https://github.com/golang/tools/blob/master/LICENSE
-
-github.com/gorilla/websocket (BSD-2) https://github.com/gorilla/websocket
-https://github.com/gorilla/websocket/blob/master/LICENSE
-
-github.com/golang-jwt/jwt/v4 (MIT) github.com/golang-jwt/jwt
-https://github.com/golang-jwt/jwt/blob/main/LICENSE
-
-hashicorp/errwrap (Mozilla Public License 2.0) https://github.com/hashicorp/errwrap
-https://github.com/hashicorp/errwrap/blob/master/LICENSE
-
-hashicorp/go-multierror (Mozilla Public License 2.0) https://github.com/hashicorp/go-multierror
-https://github.com/hashicorp/go-multierror/blob/master/LICENSE
-
-github.com/go-kit/log (MIT) https://github.com/go-kit/log
-https://github.com/go-kit/log/blob/master/LICENSE
-
-github.com/golang/protobuf (BSD-3) https://github.com/golang/protobuf
-https://github.com/golang/protobuf/blob/master/LICENSE
-
-github.com/spiffe/go-spiffe/v2 (Apache-2.0 License) github.com/spiffe/go-spiffe/v2
-https://github.com/spiffe/go-spiffe/blob/main/LICENSE
-
-github.com/zeebo/errs (MIT) https://github.com/zeebo/errs
-https://github.com/zeebo/errs/blob/master/LICENSE
-
-google.golang.org/genproto (Apache-2.0) https://github.com/googleapis/go-genproto
-https://github.com/googleapis/go-genproto/blob/main/LICENSE
-
-google.golang.org/grpc (Apache-2.0) https://github.com/grpc/grpc-go
-https://github.com/grpc/grpc-go/blob/master/LICENSE
-
-google.golang.org/protobuf (Unspecified) https://github.com/protocolbuffers/protobuf-go
-https://github.com/protocolbuffers/protobuf-go/blob/master/LICENSE
-
-gopkg.in/square/go-jose.v2 (Apache-2.0) https://github.com/square/go-jose/tree/v2.6.0
-https://github.com/square/go-jose/blob/v2.6.0/LICENSE
-
-github.com/Microsoft/go-winio (MIT) https://github.com/Microsoft/go-winio
-https://github.com/microsoft/go-winio/blob/master/LICENSE
-
-golang.org/x/sync (Unspecified) https://cs.opensource.google/go/x/sync
-https://cs.opensource.google/go/x/sync/+/master:LICENSE
-
-golang.org/x/exp (BSD-3) https://github.com/golang/tools
-https://github.com/golang/tools/blob/master/LICENSE
-
-github.com/nats-io/nats.go (Apache-2.0) https://github.com/nats-io/nats.go
-https://github.com/nats-io/nats.go/blob/main/LICENSE
-
-github.com/nats-io/nkeys (Apache-2.0) https://github.com/nats-io/nkeys
-https://github.com/nats-io/nkeys/blob/master/LICENSE
-
-github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
-https://github.com/nats-io/nuid/blob/master/LICENSE
-
-github.com/go-jose/go-jose/v4 (Apache-2.0) https://github.com/go-jose/go-jose
-https://github.com/go-jose/go-jose/blob/main/LICENSE
-
-github.com/klauspost/compress (Apache-2.0) https://github.com/klauspost/compress
-https://github.com/klauspost/compress/blob/master/LICENSE
-
-github.com/gabriel-vasile/mimetype (MIT) https://github.com/gabriel-vasile/mimetype
-https://github.com/gabriel-vasile/mimetype/blob/master/LICENSE
+jackc/pgx (MIT) - https://github.com/jackc/pgx/v5
+https://github.com/jackc/pgx/blob/master/LICENSE
 
 github.com/labstack/echo/v4 (MIT) https://github.com/labstack/echo
 https://github.com/labstack/echo/blob/master/LICENSE
 
-github.com/labstack/gommon (MIT) https://github.com/labstack/gommon
-https://github.com/labstack/gommon/blob/master/LICENSE
+rcrowley/go-metrics (Unspecified) https://github.com/rcrowley/go-metrics
+https://github.com/rcrowley/go-metrics/blob/master/LICENSE
 
-github.com/valyala/fasttemplate (MIT) https://github.com/valyala/fasttemplate
-https://github.com/valyala/fasttemplate/blob/master/LICENSE
+robfig/cron (MIT) - https://github.com/robfig/cron/v3
+https://github.com/robfig/cron/blob/master/LICENSE
 
-github.com/valyala/bytebufferpool (MIT) https://github.com/valyala/bytebufferpool
-https://github.com/valyala/bytebufferpool/blob/master/LICENSE
+spf13/cast (MIT) - https://github.com/spf13/cast
+https://github.com/spf13/cast/blob/master/LICENSE
+
+github.com/spiffe/go-spiffe/v2 (Apache-2.0 License) github.com/spiffe/go-spiffe/v2
+https://github.com/spiffe/go-spiffe/blob/main/LICENSE
+
+stretchr/testify (MIT) https://github.com/stretchr/testify
+https://github.com/stretchr/testify/blob/master/LICENSE
+
+golang.org/x/crypto (Unspecified) https://github.com/golang/crypto
+https://github.com/golang/crypto/blob/master/LICENSE
+
+gopkg.in/yaml.v3 (MIT) https://github.com/go-yaml/yaml/
+https://github.com/go-yaml/yaml/blob/v3/LICENSE
+
+github.com/Microsoft/go-winio (MIT) https://github.com/Microsoft/go-winio
+https://github.com/microsoft/go-winio/blob/master/LICENSE
 
 github.com/asaskevich/govalidator (MIT) - https://github.com/asaskevich/govalidator
 https://github.com/asaskevich/govalidator/blob/master/LICENSE
@@ -272,11 +68,29 @@ https://github.com/asaskevich/govalidator/blob/master/LICENSE
 github.com/cenkalti/backoff/v4 (MIT) - https://github.com/cenkalti/backoff
 https://github.com/cenkalti/backoff/blob/v4/LICENSE
 
+davecgh/go-spew (ISC) https://github.com/davecgh/go-spew
+https://github.com/davecgh/go-spew/blob/master/LICENSE
+
+edgexfoundry/go-mod-registry (Apache 2.0) https://github.com/edgexfoundry/go-mod-registry/v4
+https://github.com/edgexfoundry/go-mod-registry/blob/master/LICENSE
+
 github.com/fsnotify/fsnotify (BSD-3) - REPOURL
 https://github.com/fsnotify/fsnotify/blob/main/LICENSE
 
 github.com/fullsailor/pkcs7 (MIT) - https://github.com/fullsailor/pkcs7
 https://github.com/fullsailor/pkcs7/blob/master/LICENSE
+
+github.com/gabriel-vasile/mimetype (MIT) https://github.com/gabriel-vasile/mimetype
+https://github.com/gabriel-vasile/mimetype/blob/master/LICENSE
+
+github.com/go-jose/go-jose/v4 (Apache-2.0) https://github.com/go-jose/go-jose
+https://github.com/go-jose/go-jose/blob/main/LICENSE
+
+github.com/go-kit/log (MIT) https://github.com/go-kit/log
+https://github.com/go-kit/log/blob/master/LICENSE
+
+go-logfmt/logfmt (MIT) https://github.com/go-logfmt/logfmt
+https://github.com/go-logfmt/logfmt/blob/master/LICENSE
 
 github.com/go-logr/logr (Apache 2.0) - https://github.com/go-logr/logr
 https://github.com/go-logr/logr/blob/master/LICENSE
@@ -317,11 +131,29 @@ https://github.com/go-openapi/swag/blob/master/LICENSE
 github.com/go-openapi/validate (Apache 2.0) - https://github.com/go-openapi/validate
 https://github.com/go-openapi/validate/blob/master/LICENSE
 
+go-playground/locales (MIT) https://github.com/go-playground/locales
+https://github.com/go-playground/locales/blob/master/LICENSE
+
+go-playground/universal-translator (MIT) https://github.com/go-playground/universal-translator
+https://github.com/go-playground/universal-translator/blob/master/LICENSE
+
+github.com/go-playground/validator/v10 (MIT) https://github.com/go-playground/validator
+https://github.com/go-playground/validator/blob/master/LICENSE
+
+github.com/go-redis/redis/v7 (BSD-2) https://github.com/go-redis/redis
+https://github.com/go-redis/redis/blob/master/LICENSE
+
 github.com/go-resty/resty/v2 (MIT) - https://github.com/go-resty/resty
 https://github.com/go-resty/resty/blob/v2/LICENSE
 
-github.com/golang-jwt/jwt/v5 (MIT) - https://github.com/golang-jwt/jwt
+github.com/golang-jwt/jwt/v5 (MIT) - https://github.com/golang-jwt/jwt/v5
 https://github.com/golang-jwt/jwt/blob/main/LICENSE
+
+edgexfoundry/go-mod-secrets (Apache 2.0) https://github.com/edgexfoundry/go-mod-secrets/v4
+https://github.com/edgexfoundry/go-mod-secrets/blob/master/LICENSE
+
+github.com/golang/protobuf (BSD-3) https://github.com/golang/protobuf
+https://github.com/golang/protobuf/blob/master/LICENSE
 
 github.com/gorilla/mux (BSD-3) - https://github.com/gorilla/mux
 https://github.com/gorilla/mux/blob/main/LICENSE
@@ -332,17 +164,53 @@ https://github.com/gorilla/schema/blob/main/LICENSE
 github.com/gorilla/securecookie (BSD-3) - https://github.com/gorilla/securecookie
 https://github.com/gorilla/securecookie/blob/main/LICENSE
 
+github.com/gorilla/websocket (BSD-2) https://github.com/gorilla/websocket
+https://github.com/gorilla/websocket/blob/master/LICENSE
+
+hashicorp/errwrap (Mozilla Public License 2.0) https://github.com/hashicorp/errwrap
+https://github.com/hashicorp/errwrap/blob/master/LICENSE
+
+hashicorp/go-multierror (Mozilla Public License 2.0) https://github.com/hashicorp/go-multierror
+https://github.com/hashicorp/go-multierror/blob/master/LICENSE
+
+jackc/pgpassfile (MIT) - https://github.com/jackc/pgpassfile
+https://github.com/jackc/pgpassfile/blob/master/LICENSE
+
+jackc/pgservicefile (MIT) - https://github.com/jackc/pgservicefile
+https://github.com/jackc/pgservicefile/blob/master/LICENSE
+
+jackc/puddle (MIT) - https://github.com/jackc/puddle/v2
+https://github.com/jackc/puddle/blob/master/LICENSE
+
+jonboulle/clockwork (Apache 2.0) - https://github.com/jonboulle/clockwork
+https://github.com/jonboulle/clockwork/blob/master/LICENSE
+
 github.com/josharian/intern (MIT) - https://github.com/josharian/intern
 https://github.com/josharian/intern/blob/master/LICENSE.md
 
 github.com/kataras/go-events (MIT) - https://github.com/kataras/go-events
 https://github.com/kataras/go-events/blob/master/LICENSE
 
+github.com/klauspost/compress (Apache-2.0) https://github.com/klauspost/compress
+https://github.com/klauspost/compress/blob/master/LICENSE
+
+github.com/labstack/gommon (MIT) https://github.com/labstack/gommon
+https://github.com/labstack/gommon/blob/master/LICENSE
+
+leodido/go-urn (MIT) https://github.com/leodido/go-urn
+https://github.com/leodido/go-urn
+
 github.com/lufia/plan9stats (BSD-3) - https://github.com/lufia/plan9stats
 https://github.com/lufia/plan9stats/blob/main/LICENSE
 
 github.com/mailru/easyjson (MIT) - https://github.com/mailru/easyjson
 https://github.com/mailru/easyjson/blob/master/LICENSE
+
+github.com/mattn/go-colorable (MIT) https://github.com/mattn/go-colorable
+https://github.com/mattn/go-colorable/blob/master/LICENSE
+
+github.com/mattn/go-isatty (MIT) https://github.com/mattn/go-isatty
+https://github.com/mattn/go-isatty/blob/master/LICENSE
 
 github.com/mgutz/ansi (MIT) - https://github.com/mgutz/ansi
 https://github.com/mgutz/ansi/blob/master/LICENSE
@@ -353,11 +221,29 @@ https://github.com/michaelquigley/pfxlog/blob/main/LICENSE
 github.com/miekg/pkcs11 (BSD-3) - https://github.com/miekg/pkcs11
 https://github.com/miekg/pkcs11/blob/master/LICENSE
 
+mitchellh/copystructure (MIT) https://github.com/mitchellh/copystructure
+https://github.com/mitchellh/copystructure/blob/master/LICENSE
+
 github.com/mitchellh/go-ps (MIT) - https://github.com/mitchellh/go-ps
 https://github.com/mitchellh/go-ps/blob/master/LICENSE.md
 
+mitchellh/mapstructure (MIT) https://github.com/mitchellh/mapstructure
+https://github.com/mitchellh/mapstructure/blob/master/LICENSE
+
+mitchellh/reflectwalk (MIT) https://github.com/mitchellh/reflectwalk
+https://github.com/mitchellh/reflectwalk/blob/master/LICENSE
+
 github.com/muhlemmer/gu (The Unlicense) - https://github.com/muhlemmer/gu
 https://github.com/muhlemmer/gu/blob/main/LICENSE
+
+github.com/nats-io/nats.go (Apache-2.0) https://github.com/nats-io/nats.go
+https://github.com/nats-io/nats.go/blob/main/LICENSE
+
+github.com/nats-io/nkeys (Apache-2.0) https://github.com/nats-io/nkeys
+https://github.com/nats-io/nkeys/blob/master/LICENSE
+
+github.com/nats-io/nuid (Apache-2.0) https://github.com/nats-io/nuid
+https://github.com/nats-io/nuid/blob/master/LICENSE
 
 github.com/oklog/ulid (Apache 2.0) - https://github.com/oklog/ulid
 https://github.com/oklog/ulid/blob/main/LICENSE
@@ -365,7 +251,7 @@ https://github.com/oklog/ulid/blob/main/LICENSE
 github.com/opentracing/opentracing-go (Apache 2.0) - https://github.com/opentracing/opentracing-go
 https://github.com/opentracing/opentracing-go/blob/master/LICENSE
 
-github.com/openziti/channel/v2 (Apache 2.0) - https://github.com/openziti/channel
+github.com/openziti/channel/v3 (Apache 2.0) - github.com/openziti/channel/v3
 https://github.com/openziti/channel/blob/main/LICENSE
 
 github.com/openziti/edge-api (Apache 2.0) - https://github.com/openziti/edge-api
@@ -398,6 +284,9 @@ https://github.com/parallaxsecond/parsec-client-go/blob/main/LICENSE
 github.com/pkg/errors (BSD-2) - https://github.com/pkg/errors
 https://github.com/pkg/errors/blob/master/LICENSE
 
+pmezard/go-difflib (Unspecified) https://github.com/pmezard/go-difflib
+https://github.com/pmezard/go-difflib/blob/master/LICENSE
+
 github.com/power-devops/perfstat (MIT) - https://github.com/power-devops/perfstat
 https://github.com/power-devops/perfstat/blob/main/LICENSE
 
@@ -413,14 +302,29 @@ https://github.com/sirupsen/logrus/blob/master/LICENSE
 github.com/speps/go-hashids (MIT) - https://github.com/speps/go-hashids
 https://github.com/speps/go-hashids/blob/master/LICENSE
 
+stretchr/objx (MIT) https://github.com/stretchr/objx
+https://github.com/stretchr/objx/blob/master/LICENSE
+
 github.com/tklauser/go-sysconf (BSD-3) - https://github.com/tklauser/go-sysconf
 https://github.com/tklauser/go-sysconf/blob/main/LICENSE
 
 github.com/tklauser/numcpus (Apache 2.0) - https://github.com/tklauser/numcpus
 https://github.com/tklauser/numcpus/blob/main/LICENSE
 
+github.com/valyala/bytebufferpool (MIT) https://github.com/valyala/bytebufferpool
+https://github.com/valyala/bytebufferpool/blob/master/LICENSE
+
+github.com/valyala/fasttemplate (MIT) https://github.com/valyala/fasttemplate
+https://github.com/valyala/fasttemplate/blob/master/LICENSE
+
+x448/float16 (MIT) https://github.com/x448/float16
+https://github.com/x448/float16/blob/master/LICENSE
+
 github.com/yusufpapurcu/wmi (MIT) - https://github.com/yusufpapurcu/wmi
 https://github.com/yusufpapurcu/wmi/blob/master/LICENSE
+
+github.com/zeebo/errs (MIT) https://github.com/zeebo/errs
+https://github.com/zeebo/errs/blob/master/LICENSE
 
 github.com/zitadel/oidc/v2 (Apache 2.0) - https://github.com/zitadel/oidc
 https://github.com/zitadel/oidc/blob/main/LICENSE
@@ -440,50 +344,41 @@ https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
 go.opentelemetry.io/otel/trace (Apache 2.0) - https://github.com/open-telemetry/opentelemetry-go
 https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
 
+golang.org/x/exp (BSD-3) https://github.com/golang/tools
+https://github.com/golang/tools/blob/master/LICENSE
+
+golang.org/x/net (Unspecified) https://github.com/golang/net
+https://github.com/golang/net/blob/master/LICENSE
+
 golang.org/x/oauth2 (Unspecified) - https://cs.opensource.google/go/x/oauth2
 https://cs.opensource.google/go/x/oauth2/+/master:LICENSE
+
+golang.org/x/sync (Unspecified) https://cs.opensource.google/go/x/sync
+https://cs.opensource.google/go/x/sync/+/master:LICENSE
+
+golang.org/x/sys (BSD-3) https://github.com/golang/sys
+https://github.com/golang/sys/blob/master/LICENSE
 
 golang.org/x/term (Unspecified) - https://cs.opensource.google/go/x/term
 https://cs.opensource.google/go/x/term/+/master:LICENSE
 
-google.golang.org/appengine (Apache 2.0) - https://github.com/golang/appengine
-https://github.com/golang/appengine/blob/master/LICENSE
+golang.org/x/text (BSD-3) https://github.com/golang/text
+https://github.com/golang/text/blob/master/LICENSE
+
+golang.org/x/time (Unspecified) https://github.com/golang/time
+https://github.com/golang/text/blob/master/LICENSE
 
 google.golang.org/genproto/googleapis/rpc (Apache 2.0) - https://github.com/googleapis/go-genproto
 https://github.com/googleapis/go-genproto/blob/main/LICENSE
 
-nhooyr.io/websocket (ISC License) - https://github.com/nhooyr/websocket
-https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
+google.golang.org/grpc (Apache-2.0) https://github.com/grpc/grpc-go
+https://github.com/grpc/grpc-go/blob/master/LICENSE
 
-spf13/cast (MIT) - https://github.com/spf13/cast
-https://github.com/spf13/cast/blob/master/LICENSE
-
-jackc/pgx (MIT) - https://github.com/jackc/pgx/v5
-https://github.com/jackc/pgx/blob/master/LICENSE
-
-jackc/pgerrcode (MIT) - https://github.com/jackc/pgerrcode
-https://github.com/jackc/pgerrcode/blob/master/LICENSE
-
-jackc/pgpassfile (MIT) - https://github.com/jackc/pgpassfile
-https://github.com/jackc/pgpassfile/blob/master/LICENSE
-
-jackc/pgservicefile (MIT) - https://github.com/jackc/pgservicefile
-https://github.com/jackc/pgservicefile/blob/master/LICENSE
-
-jackc/puddle (MIT) - https://github.com/jackc/puddle/v2
-https://github.com/jackc/puddle/blob/master/LICENSE
-
-go-co-op/gocron (MIT) - https://github.com/go-co-op/gocron/v2
-https://github.com/go-co-op/gocron/blob/v2/LICENSE
-
-jonboulle/clockwork (Apache 2.0) - https://github.com/jonboulle/clockwork
-https://github.com/jonboulle/clockwork/blob/master/LICENSE
-
-robfig/cron (MIT) - https://github.com/robfig/cron/v3
-https://github.com/robfig/cron/blob/master/LICENSE
-
-github.com/openziti/channel/v3 (Apache 2.0) - github.com/openziti/channel/v3
- https://github.com/openziti/channel/blob/main/LICENSE
+google.golang.org/protobuf (Unspecified) https://github.com/protocolbuffers/protobuf-go
+https://github.com/protocolbuffers/protobuf-go/blob/master/LICENSE
 
 gopkg.in/go-jose/go-jose.v2 (Apache 2.0) - https://github.com/go-jose/go-jose
 https://github.com/go-jose/go-jose/blob/v2.6.3/LICENSE
+
+nhooyr.io/websocket (ISC License) - https://github.com/nhooyr/websocket
+https://github.com/nhooyr/websocket/blob/master/LICENSE.txt

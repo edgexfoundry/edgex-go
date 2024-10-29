@@ -20,9 +20,6 @@ func MakeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 	// protected path for secret/
 	secretsPath := "secret/edgex/" + serviceName + "/*"
 	secretsAcl := map[string]interface{}{"capabilities": []string{"create", "update", "delete", "list", "read"}}
-	// path for consul tokens
-	registryCredsPath := "consul/creds/" + serviceName
-	registryCredsACL := map[string]interface{}{"capabilities": []string{"read"}}
 	// allow request identity JWT
 	jwtRequestPath := "identity/oidc/token/" + serviceName
 	jwtRequestACL := map[string]interface{}{"capabilities": []string{"read"}}
@@ -32,7 +29,6 @@ func MakeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 	// access spec
 	pathObject := map[string]interface{}{
 		secretsPath:       secretsAcl,
-		registryCredsPath: registryCredsACL,
 		jwtRequestPath:    jwtRequestACL,
 		jwtIntrospectPath: jwtIntrospectACL,
 	}
@@ -44,9 +40,6 @@ func MakeDefaultTokenPolicy(serviceName string) map[string]interface{} {
 			"path": {
 			  "secret/edgex/service-name/*": {
 				"capabilities": [ "create", "update", "delete", "list", "read" ]
-			  },
-			  "consul/creds/service-name": {
-				"capabilities": [ "read" ]
 			  },
 			  "identity/oidc/token/service-name": {
 				"capabilities": [ "read" ]

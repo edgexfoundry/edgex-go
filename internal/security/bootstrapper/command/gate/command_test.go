@@ -131,11 +131,6 @@ func setupMockServiceConfigs(testConf *testConfig) *config.ConfigurationStruct {
 			Host:      testConf.testHost,
 			StartPort: testConf.bootstrapperStartPort,
 		},
-		Registry: config.RegistryInfo{
-			Host:      testConf.testHost,
-			Port:      12001,
-			ReadyPort: testConf.registryReadyPort,
-		},
 		Database: config.DatabaseInfo{
 			Host:      testConf.testHost,
 			Port:      12002,

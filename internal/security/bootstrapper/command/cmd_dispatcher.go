@@ -24,7 +24,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/genpassword"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/gethttpstatus"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/listen"
-	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/setupacl"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/command/waitfor"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/bootstrapper/interfaces"
@@ -44,8 +43,8 @@ func NewCommand(
 	var err error
 
 	if len(args) < 1 {
-		return nil, fmt.Errorf("subcommand required (%s, %s, %s, %s, %s, %s)", gate.CommandName, listen.CommandName,
-			gethttpstatus.CommandName, genpassword.CommandName, waitfor.CommandName, setupacl.CommandName)
+		return nil, fmt.Errorf("subcommand required (%s, %s, %s, %s, %s)", gate.CommandName, listen.CommandName,
+			gethttpstatus.CommandName, genpassword.CommandName, waitfor.CommandName)
 	}
 
 	commandName := args[0]
@@ -61,8 +60,6 @@ func NewCommand(
 		command, err = genpassword.NewCommand(ctx, wg, lc, configuration, args[1:])
 	case waitfor.CommandName:
 		command, err = waitfor.NewCommand(ctx, wg, lc, configuration, args[1:])
-	case setupacl.CommandName:
-		command, err = setupacl.NewCommand(ctx, wg, lc, configuration, args[1:])
 	default:
 		command = nil
 		err = fmt.Errorf("unsupported command %s", commandName)

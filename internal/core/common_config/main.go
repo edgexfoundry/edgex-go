@@ -90,19 +90,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 
 	configProviderInfo.SetAuthInjector(jwtSecretProvider)
 
-	// need to use in-line function to set the callback type for getAccessToken used in CreateProviderClient to allow
-	// access to the config provider in secure mode
-	getAccessToken := func() (string, error) {
-		tokenType := configProviderInfo.ServiceConfig().Type
-		accessToken, err := secretProvider.GetAccessToken(tokenType, common.CoreCommonConfigServiceKey)
-		if err != nil {
-			return "", fmt.Errorf("failed to get Configuration Provider access token: %s", err.Error())
-		}
-		lc.Infof("Got Config Provider Access Token with length %d", len(accessToken))
-		return accessToken, err
-	}
-
-	configClient, err := config.CreateProviderClient(lc, common.CoreCommonConfigServiceKey, common.ConfigStemCore, getAccessToken, configProviderInfo.ServiceConfig())
+	configClient, err := config.CreateProviderClient(lc, common.CoreCommonConfigServiceKey, common.ConfigStemCore, configProviderInfo.ServiceConfig())
 	if err != nil {
 		lc.Errorf("failed to create provider client for the common configuration: %s", err.Error())
 		os.Exit(1)
@@ -205,7 +193,7 @@ func pushConfiguration(lc logger.LoggingClient, yamlFile string, configClient co
 
 	for _, k := range keys {
 		v := kv[k]
-		// Push key/value into Consul if it is not empty
+		// Push key/value into Configuration Provider if it is not empty
 		if v != nil {
 			err = configClient.PutConfigurationValue(k, []byte(fmt.Sprint(v)))
 		}

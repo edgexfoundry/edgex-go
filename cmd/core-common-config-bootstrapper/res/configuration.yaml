@@ -13,8 +13,6 @@ all-services:
         # Common Security Service Metrics
         SecuritySecretsRequested: false
         SecuritySecretsStored: false
-        SecurityConsulTokensRequested: false
-        SecurityConsulTokenDuration: false
         SecurityRuntimeSecretTokenDuration: false
         SecurityGetSecretDuration: false
 #     Tags: # Contains the service level tags to be attached to all the service's metrics
