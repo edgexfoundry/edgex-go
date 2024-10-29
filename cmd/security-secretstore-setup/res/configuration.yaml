@@ -38,6 +38,11 @@ SecretStore:
   PasswordProviderArgs: []
   RevokeRootTokens: true
   ConsulSecretsAdminTokenPath: /tmp/edgex/secrets/edgex-consul/admin/token.json
+Database:
+  Host: "localhost"
+  Port: 5432
+  Timeout: "5s"
+  Type: "postgres"
 Databases:
   admin:
     Username: admin
