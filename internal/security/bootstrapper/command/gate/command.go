@@ -33,8 +33,6 @@ import (
 const (
 	// the command name for gating the stages of bootstrapping on other services for security
 	CommandName string = "gate"
-
-	consulRegistryHostName = "edgex-core-consul"
 )
 
 type cmd struct {
@@ -86,18 +84,6 @@ func (c *cmd) Execute() (statusCode int, err error) {
 
 	// wait on for others to be done: each of tcp dialers is a blocking call
 	c.loggingClient.Debug("Waiting on dependent semaphores required to raise the ready-to-run semaphore ...")
-	// only wait when stage gate registry host is edgex-core-consul
-	if c.config.StageGate.Registry.Host == consulRegistryHostName {
-		if err := tcp.DialTcp(
-			c.config.StageGate.Registry.Host,
-			c.config.StageGate.Registry.ReadyPort,
-			c.loggingClient); err != nil {
-			retErr := fmt.Errorf("found error while waiting for readiness of Registry at %s:%d, err: %v",
-				c.config.StageGate.Registry.Host, c.config.StageGate.Registry.ReadyPort, err)
-			return interfaces.StatusCodeExitWithError, retErr
-		}
-		c.loggingClient.Info("Registry is ready")
-	}
 
 	if err := tcp.DialTcp(
 		c.config.StageGate.Database.Host,

@@ -4217,9 +4217,9 @@ paths:
                     Sender: "edgex-core-metadata"
                     Slug: "device-change-"
                   Registry:
-                    Host: "edgex-core-consul"
-                    Port: 8500
-                    Type: "consul"
+                    Host: "edgex-core-keeper"
+                    Port: 59890
+                    Type: "keeper"
                   Service:
                     BootTimeout: 30000
                     CheckInterval: "10s"

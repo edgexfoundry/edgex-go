@@ -50,45 +50,6 @@ type DatabaseInfo struct {
 	ReadyPort int
 }
 
-// RegistryInfo defines the fields related to
-// stage gating the registry bootstrapping
-type RegistryInfo struct {
-	Host      string
-	Port      int
-	ReadyPort int
-	ACL       ACLInfo
-}
-
-// ACLInfo defines the fields related to Registry's ACL process
-type ACLInfo struct {
-	// the protocol used for registry's API calls, usually it is different from the protocol of waitFor, i.e. TCP
-	Protocol string
-	// filepath to save the registry's token generated from ACL bootstrapping
-	BootstrapTokenPath string
-	// filepath for the secretstore's token created from secretstore-setup
-	SecretsAdminTokenPath string
-	// filepath for the sentinel file to indicate the registry ACL is set up successfully
-	SentinelFilePath string
-	// filepath to save the registry's token created for management purposes
-	ManagementTokenPath string
-	// the roles for registry role-based access control list
-	Roles map[string]ACLRoleInfo
-}
-
-// ACLRoleInfo defines the fields related to Registry's ACL roles
-type ACLRoleInfo struct {
-	// the details about the role
-	Description string
-}
-
-// KongDBInfo defines the fields related to
-// stage gating the Kong's database bootstrapping
-type KongDBInfo struct {
-	Host      string
-	Port      int
-	ReadyPort int
-}
-
 // StageGateInfo defines the gate info for the security bootstrapper
 // in different stages for services. From the YAML structure perspective,
 // it is segmented in the way that environment variables are easier
@@ -98,7 +59,5 @@ type StageGateInfo struct {
 	Ready            ReadyInfo
 	SecretStoreSetup SecretStoreSetupInfo
 	Database         DatabaseInfo
-	Registry         RegistryInfo
-	KongDB           KongDBInfo
 	WaitFor          WaitForInfo
 }

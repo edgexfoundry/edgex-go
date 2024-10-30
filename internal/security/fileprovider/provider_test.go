@@ -396,9 +396,6 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 			"secret/edgex/" + serviceName + "/*": map[string]interface{}{
 				"capabilities": []string{"create", "update", "delete", "list", "read"},
 			},
-			"consul/creds/" + serviceName: map[string]interface{}{
-				"capabilities": []string{"read"},
-			},
 		},
 	}
 	expectedService1Policy, err := json.Marshal(&policy)
@@ -425,9 +422,6 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 				},
 				"secret/edgex/" + service + "/*": map[string]interface{}{
 					"capabilities": []string{"create", "update", "delete", "list", "read"},
-				},
-				"consul/creds/" + service: map[string]interface{}{
-					"capabilities": []string{"read"},
 				},
 			},
 		}

@@ -68,7 +68,6 @@ type SecretStoreInfo struct {
 	PasswordProvider            string
 	PasswordProviderArgs        []string
 	RevokeRootTokens            bool
-	ConsulSecretsAdminTokenPath string
 }
 
 // GetBaseURL builds and returns the base URL for the SecretStore service

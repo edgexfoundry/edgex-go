@@ -67,9 +67,6 @@ COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-postgres/c
 # needed for bootstrapping mosquitto
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/res-bootstrap-mosquitto/configuration.yaml ${BOOTSTRAP_MOSQUITTO_DIR}/res/
 
-# copy Consul ACL related configs
-COPY --from=builder /edgex-go/cmd/security-bootstrapper/consul-acl/ ${SECURITY_INIT_STAGING}/consul-bootstrapper/
-
 # setup entry point script
 COPY --from=builder /edgex-go/cmd/security-bootstrapper/entrypoint.sh /
 RUN chmod +x /entrypoint.sh

@@ -294,17 +294,6 @@ server {
       auth_request_set   \$auth_status \$upstream_status;
     }
 
-    # Note: Consul implements its own authentication mechanism (only allow API, /v1, through)
-    set \$upstream_core_consul edgex-core-consul;
-    location /consul/v1 {
-`cat "${corssnippet}"`
-      rewrite            /consul/(.*) /\$1 break;
-      resolver           127.0.0.11 valid=30s;
-      proxy_pass         http://\$upstream_core_consul:8500;
-      proxy_redirect     off;
-      proxy_set_header   Host \$host;
-    }
-
     # Note: OpenBao login API does not require authentication at the gateway for obvious reasons
     set \$upstream_secret_store edgex-secret-store;
     location /vault/v1/auth/userpass/login {
