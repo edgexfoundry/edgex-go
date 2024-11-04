@@ -57,6 +57,9 @@ components:
         onChange:
           type: boolean
           description: OnChange indicates whether the device service will generate an event only, if the reading value is different from the previous one. If true, only generate events when readings change
+        onChangeThreshold:
+          type: number
+          description: OnChangeThreshold indicates any changed value that exceeds the threshold shall be generated new event if `onChange` is true, this feature only applies to the numeric reading. Available value types are `Uint8`, `Uint16`, `Uint32`, `Uint64`, `Int8`, `Int16`, `Int32`, `Int64`, `Float32`, `Float64`. The default value is 0.
         sourceName:
           type: string
           description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
@@ -1315,6 +1318,7 @@ components:
             autoEvents:
               - interval: 300ms
                 onChange: true
+                onChangeThreshold: 0.01
                 sourceName: CurrentHumidity
             protocols:
               modbus-tcp:
@@ -1348,6 +1352,7 @@ components:
             autoEvents:
               - interval: "100ms"
                 onChange: true
+                onChangeThreshold: 0.01
                 sourceName: "CurrentHumidity"
         - apiVersion: v3
           device:
