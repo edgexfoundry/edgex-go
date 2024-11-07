@@ -60,12 +60,12 @@ MICROSERVICES= \
 VERSION=$(shell cat ./VERSION 2>/dev/null || echo 0.0.0)
 DOCKER_TAG=$(VERSION)-dev
 
-GOFLAGS=-ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION)" -trimpath -mod=readonly
-GOTESTFLAGS?=-race
-
-ifeq ($(ENABLE_FULL_RELRO), "true")
-	GOFLAGS += -ldflags "-bindnow"
+ifeq ($(ENABLE_FULL_RELRO), true)
+	ENABLE_FULL_RELRO_GOFLAGS = -bindnow
 endif
+
+GOFLAGS=-ldflags "-s -w -X github.com/edgexfoundry/edgex-go.Version=$(VERSION) $(ENABLE_FULL_RELRO_GOFLAGS)" -trimpath -mod=readonly
+GOTESTFLAGS?=-race
 
 ifeq ($(ENABLE_PIE), "true")
 	GOFLAGS += -buildmode=pie
