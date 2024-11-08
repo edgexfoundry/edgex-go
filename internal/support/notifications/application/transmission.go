@@ -61,10 +61,17 @@ func TransmissionsByTimeRange(start int64, end int64, offset int, limit int, dic
 // AllTransmissions queries transmissions by offset and limit
 func AllTransmissions(offset, limit int, dic *di.Container) (transmissions []dtos.Transmission, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
-	models, err := dbClient.AllTransmissions(offset, limit)
-	if err == nil {
-		totalCount, err = dbClient.TransmissionTotalCount()
+
+	totalCount, err = dbClient.TransmissionTotalCount()
+	if err != nil {
+		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}
+	cont, err := utils.CheckCountRange(totalCount, offset, limit)
+	if !cont {
+		return []dtos.Transmission{}, totalCount, err
+	}
+
+	models, err := dbClient.AllTransmissions(offset, limit)
 	if err != nil {
 		return transmissions, totalCount, errors.NewCommonEdgeXWrapper(err)
 	}

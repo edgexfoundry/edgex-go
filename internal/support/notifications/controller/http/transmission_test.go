@@ -193,7 +193,7 @@ func TestAllTransmissions(t *testing.T) {
 	dbClientMock.On("TransmissionTotalCount").Return(expectedTransmissionCount, nil)
 	dbClientMock.On("AllTransmissions", 0, 20).Return(transmissions, nil)
 	dbClientMock.On("AllTransmissions", 1, 2).Return([]models.Transmission{transmissions[1], transmissions[2]}, nil)
-	dbClientMock.On("AllTransmissions", 4, 1).Return([]models.Transmission{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "query objects bounds out of range.", nil))
+	dbClientMock.On("AllTransmissions", 4, 1).Return([]models.Transmission{}, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -213,7 +213,7 @@ func TestAllTransmissions(t *testing.T) {
 	}{
 		{"Valid - get transmissions without offset and limit", "", "", false, 3, expectedTransmissionCount, http.StatusOK},
 		{"Valid - get transmissions with offset and limit", "1", "2", false, 2, expectedTransmissionCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", true, 0, expectedTransmissionCount, http.StatusNotFound},
+		{"Invalid - offset out of range", "4", "1", true, 0, expectedTransmissionCount, http.StatusRequestedRangeNotSatisfiable},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
