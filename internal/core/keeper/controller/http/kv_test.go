@@ -25,10 +25,9 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
-	"github.com/edgexfoundry/go-mod-messaging/v4/messaging"
-	msgTypes "github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
-
+	messageClientMocks "github.com/edgexfoundry/go-mod-messaging/v4/messaging/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/labstack/echo/v4"
@@ -260,14 +259,8 @@ func TestAddKeys(t *testing.T) {
 	childKeysExistsReq.Value = "test123"
 	childKeysExistsModel := requests.UpdateKeysReqToKVModels(childKeysExistsReq, childKeysExistsKey)
 
-	msgClient, _ := messaging.NewMessageClient(msgTypes.MessageBusConfig{
-		Broker: msgTypes.HostInfo{
-			Host:     "localhost",
-			Port:     6379,
-			Protocol: "redis",
-		},
-		Type: "redis",
-	})
+	msgClientMock := &messageClientMocks.MessageClient{}
+	msgClientMock.On("Publish", mock.Anything, mock.Anything).Return(nil)
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("AddKeeperKeys", kvModel, true).Return(flattenResp, nil)
@@ -279,7 +272,7 @@ func TestAddKeys(t *testing.T) {
 			return dbClientMock
 		},
 		bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
-			return msgClient
+			return msgClientMock
 		},
 	})
 
