@@ -35,7 +35,7 @@
   "device-rest": {
     "edgex_use_defaults": true
   },
-  "support-cron-scheduler": {
+  "support-scheduler": {
     "edgex_use_defaults": true
   },
   "security-proxy-auth": {

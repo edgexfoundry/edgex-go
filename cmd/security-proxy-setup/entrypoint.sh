@@ -246,12 +246,12 @@ server {
       auth_request_set   \$auth_status \$upstream_status;
     }
 
-    set \$upstream_support_cron_scheduler edgex-support-cron-scheduler;
-    location /support-cron-scheduler {
+    set \$upstream_support_scheduler edgex-support-scheduler;
+    location /support-scheduler {
 `cat "${corssnippet}"`
-      rewrite            /support-cron-scheduler/(.*) /\$1 break;
+      rewrite            /support-scheduler/(.*) /\$1 break;
       resolver           127.0.0.11 valid=30s;
-      proxy_pass         http://\$upstream_support_cron_scheduler:59863;
+      proxy_pass         http://\$upstream_support_scheduler:59863;
       proxy_redirect     off;
       proxy_set_header   Host \$host;
       auth_request       /auth;

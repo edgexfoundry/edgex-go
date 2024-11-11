@@ -11,7 +11,7 @@ const (
 	coreKeeperSchema           = "core_keeper"
 	coreMetaDataSchema         = "core_metadata"
 	supportNotificationsSchema = "support_notifications"
-	supportSchedulerSchema     = "support_cron_scheduler"
+	supportSchedulerSchema     = "support_scheduler"
 )
 
 // constants relate to the postgres db table names
