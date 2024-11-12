@@ -1,0 +1,32 @@
+Writable:
+  LogLevel: INFO
+  InsecureSecrets:
+    DB:
+      SecretName: postgres
+      SecretData:
+        username: postgres
+        password: postgres
+
+Service:
+  Host: localhost
+  Port: 59863
+  StartupMsg: This is the Support Scheduler Microservice
+
+Clients:
+  core-command:
+    Protocol: http
+    Host: localhost
+    Port: 59882
+    SecurityOptions:
+      Mode: ""
+      OpenZitiController: "openziti:1280"
+
+MessageBus:
+  Optional:
+    ClientId: support-scheduler
+
+Retention:
+  Enabled: true
+  Interval: 24h    # Purging interval defines when the database should be rid of records above the high watermark.
+  MaxCap: 10000    # The maximum capacity defines where the high watermark of records should be detected for purging the amount of the records to the minimum capacity.
+  MinCap: 8000     # The minimum capacity defines where the total count of records should be returned to during purging.

@@ -25,10 +25,9 @@ cmd/security-file-token-provider/security-file-token-provider
 cmd/security-secretstore-setup/security-secretstore-setup
 cmd/support-logging/support-logging
 cmd/support-notifications/support-notifications
-cmd/support-cron-scheduler/support-cron-scheduler
+cmd/support-scheduler/support-scheduler
 cmd/secrets-config/secrets-config
 cmd/security-bootstrapper/security-bootstrapper
-cmd/security-proxy-auth/security-proxy-auth
 cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 docs/_build/

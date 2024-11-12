@@ -69,9 +69,9 @@ Databases:
   notifications:
     Service: support-notifications
     Username: support_notifications
-  cronscheduler:
-    Service: support-cron-scheduler
-    Username: support_cron_scheduler
+  scheduler:
+    Service: support-scheduler
+    Username: support_scheduler
 SecureMessageBus:
   Type: none
   KuiperConfigPath: /tmp/kuiper/edgex.yaml
@@ -89,5 +89,5 @@ SecureMessageBus:
       Service: app-rules-engine
     notifications:
       Service: support-notifications
-    cronscheduler:
-      Service: support-cron-scheduler
+    scheduler:
+      Service: support-scheduler
