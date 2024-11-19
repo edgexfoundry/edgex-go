@@ -98,6 +98,9 @@ build: $(MICROSERVICES)
 build-nats:
 	make -e ADD_BUILD_TAGS=include_nats_messaging build
 
+build-noziti:
+	make -e ADD_BUILD_TAGS=no_openziti build
+
 tidy:
 	$(GO) mod tidy
 
@@ -187,6 +190,9 @@ docker: $(DOCKERS)
 
 docker-nats:
 	make -e ADD_BUILD_TAGS=include_nats_messaging docker
+
+docker-noziti:
+	make -e ADD_BUILD_TAGS=no_openziti docker
 
 clean_docker_base:
 	docker rmi -f $(LOCAL_CACHE_IMAGE) $(LOCAL_CACHE_IMAGE_BASE) 
