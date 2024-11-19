@@ -17,5 +17,5 @@ CREATE TABLE IF NOT EXISTS support_scheduler.record (
     action JSONB NOT NULL,
     status TEXT NOT NULL,
     scheduled_at timestamp NOT NULL,
-    created timestamp NOT NULL DEFAULT now()
+    created timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'utc')
 );
