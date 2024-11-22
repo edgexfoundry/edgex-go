@@ -18,8 +18,6 @@ package metadata
 
 import (
 	"context"
-	"os"
-
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
@@ -39,18 +37,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.CoreMetaDataServiceKey)
 
-	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

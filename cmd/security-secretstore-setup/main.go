@@ -21,11 +21,12 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	secretstore.Main(ctx, cancel)
+	secretstore.Main(ctx, cancel, os.Args[1:])
 }

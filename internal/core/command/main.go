@@ -18,7 +18,6 @@ package command
 
 import (
 	"context"
-	"os"
 	"sync"
 	"time"
 
@@ -41,7 +40,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
@@ -49,10 +48,10 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

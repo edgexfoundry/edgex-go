@@ -28,5 +28,5 @@ func main() {
 	_ = os.Unsetenv("EDGEX_PROFILE")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	bootstrapper.Main(ctx, cancel)
+	bootstrapper.Main(ctx, cancel, os.Args[1:])
 }

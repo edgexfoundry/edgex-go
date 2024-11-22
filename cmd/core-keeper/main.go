@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper"
 
@@ -15,5 +16,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	keeper.Main(ctx, cancel, echo.New())
+	keeper.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

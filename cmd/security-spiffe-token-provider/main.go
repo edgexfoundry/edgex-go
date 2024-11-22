@@ -17,11 +17,12 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/spiffetokenprovider"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	spiffetokenprovider.Main(ctx, cancel)
+	spiffetokenprovider.Main(ctx, cancel, os.Args[1:])
 }

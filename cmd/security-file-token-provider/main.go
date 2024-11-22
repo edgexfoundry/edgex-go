@@ -17,11 +17,12 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	fileprovider.Main(ctx, cancel)
+	fileprovider.Main(ctx, cancel, os.Args[1:])
 }

@@ -15,10 +15,12 @@ package main
 
 import (
 	"context"
+	"os"
+
 	"github.com/edgexfoundry/edgex-go/internal/core/common_config"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	common_config.Main(ctx, cancel)
+	common_config.Main(ctx, cancel, os.Args[1:])
 }

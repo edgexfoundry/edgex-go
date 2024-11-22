@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/command"
 
@@ -25,5 +26,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	command.Main(ctx, cancel, echo.New())
+	command.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata"
 
@@ -24,5 +25,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	metadata.Main(ctx, cancel, echo.New())
+	metadata.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

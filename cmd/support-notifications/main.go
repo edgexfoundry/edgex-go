@@ -23,6 +23,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications"
 
@@ -31,5 +32,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	notifications.Main(ctx, cancel, echo.New())
+	notifications.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

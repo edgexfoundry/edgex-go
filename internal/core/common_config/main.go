@@ -42,7 +42,7 @@ const (
 	commonConfigDone = "IsCommonConfigReady"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommonConfigServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
@@ -50,12 +50,12 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 
 	// TODO: figure out how to eliminate registry and profile flags
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	var wg sync.WaitGroup
 	translateInterruptToCancel(ctx, &wg, cancel)
@@ -130,7 +130,6 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	}
 
 	lc.Info("Core Common Config exiting")
-	os.Exit(0)
 }
 
 // translateInterruptToCancel spawns a go routine to translate the receipt of a SIGTERM signal to a call to cancel

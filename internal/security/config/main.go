@@ -16,8 +16,6 @@ package config
 
 import (
 	"context"
-	"os"
-
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 
@@ -38,14 +36,14 @@ import (
 const securitySecretsConfigServiceKey = "secrets-config"
 
 // Main function called from cmd/secrets-config
-func Main(ctx context.Context, cancel context.CancelFunc) int {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) int {
 
 	startupTimer := startup.NewStartUpTimer(securitySecretsConfigServiceKey)
 
 	// Common Command-line flags have been moved to command.CommonFlags, but this service doesn't use all
 	// the common flags so we are using our own implementation of the CommonFlags interface
 	f := command.NewCommonFlags()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	lc := logger.NewClient(securitySecretsConfigServiceKey, models.ErrorLog)
 	configuration := &config.ConfigurationStruct{}

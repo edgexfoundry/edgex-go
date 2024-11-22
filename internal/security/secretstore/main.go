@@ -38,7 +38,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.SecuritySecretStoreSetupServiceKey)
 
 	var insecureSkipVerify bool
@@ -52,13 +52,13 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 			"    --secretStoreInterval=<seconds>       Indicates how long the program will pause between the secret store initialization attempts until it succeeds",
 	)
 
-	if len(os.Args) < 2 {
+	if len(args) < 1 {
 		f.Help()
 	}
 
 	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
 	f.FlagSet.IntVar(&secretStoreInterval, "secretStoreInterval", 30, "")
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{
