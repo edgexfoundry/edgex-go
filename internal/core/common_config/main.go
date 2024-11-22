@@ -50,7 +50,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 
 	// TODO: figure out how to eliminate registry and profile flags

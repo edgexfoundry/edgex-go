@@ -31,11 +31,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.SecuritySpiffeTokenProviderKey)
 
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

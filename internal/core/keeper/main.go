@@ -29,12 +29,12 @@ import (
 func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
 	startupTimer := startup.NewStartUpTimer(constants.CoreKeeperServiceKey)
 
-	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 	f := flags.New()
 	f.Parse(args)

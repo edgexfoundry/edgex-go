@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler"
 
@@ -24,5 +25,5 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	scheduler.Main(ctx, cancel, echo.New())
+	scheduler.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

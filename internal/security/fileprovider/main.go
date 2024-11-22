@@ -32,19 +32,19 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.SecurityFileTokenProviderServiceKey)
 
-	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

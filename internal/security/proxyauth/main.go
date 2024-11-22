@@ -18,8 +18,6 @@ package proxyauth
 
 import (
 	"context"
-	"os"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
@@ -39,18 +37,18 @@ import (
 
 const SecurityProxyAuthServiceKey = "security-proxy-auth"
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
 
-	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be add here,
+	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 	f := flags.New()
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
 	dic := di.NewContainer(di.ServiceConstructorMap{

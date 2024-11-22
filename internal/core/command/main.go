@@ -48,7 +48,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	// Example:
 	// 		flags.FlagSet.StringVar(&myvar, "m", "", "Specify a ....")
 	//      ....
-	//      flags.Parse(os.Args[1:])
+	//      flags.Parse(args)
 	//
 	f := flags.New()
 	f.Parse(args)

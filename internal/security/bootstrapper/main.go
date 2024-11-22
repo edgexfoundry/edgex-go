@@ -45,7 +45,7 @@ const (
 )
 
 // Main function is the wrapper for the security bootstrapper main
-func Main(ctx context.Context, cancel context.CancelFunc) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	// service key for this bootstrapper service
 	startupTimer := startup.NewStartUpTimer(common.SecurityBootstrapperKey)
 
@@ -53,7 +53,7 @@ func Main(ctx context.Context, cancel context.CancelFunc) {
 	// the common flags so we are using our own implementation of the CommonFlags interface
 	f := bootstrapper.NewCommonFlags()
 
-	f.Parse(os.Args[1:])
+	f.Parse(args)
 
 	// find out the subcommand name before assigning the real concrete configuration
 	// bootstrapRedis has its own configuration settings
