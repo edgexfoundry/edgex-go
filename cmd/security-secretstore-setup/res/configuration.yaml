@@ -43,14 +43,6 @@ Database:
   Timeout: "5s"
   Type: "postgres"
 Databases:
-  admin:
-    Username: admin
-  authorization:
-    Username: admin
-  config:
-    Username: admin
-  local:
-    Username: admin
   command:
     Service: core-command
     Username: core_command
