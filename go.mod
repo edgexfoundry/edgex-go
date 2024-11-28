@@ -5,9 +5,9 @@ go 1.23
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.9
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.4
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.5
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.5
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.5
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.13
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.7
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.0.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/go-co-op/gocron/v2 v2.12.4
@@ -20,7 +20,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.7.0
 	github.com/spiffe/go-spiffe/v2 v2.4.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -52,7 +52,7 @@ require (
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.22.1 // indirect
+	github.com/go-playground/validator/v10 v10.23.0 // indirect
 	github.com/go-resty/resty/v2 v2.15.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
