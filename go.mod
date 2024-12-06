@@ -4,10 +4,10 @@ go 1.23
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.9
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.5
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.13
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.7
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.11
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.7
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.14
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.8
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.0.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/go-co-op/gocron/v2 v2.12.4
@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/labstack/echo/v4 v4.12.0
+	github.com/labstack/echo/v4 v4.13.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.7.0
@@ -54,7 +54,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.23.0 // indirect
 	github.com/go-resty/resty/v2 v2.15.3 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
