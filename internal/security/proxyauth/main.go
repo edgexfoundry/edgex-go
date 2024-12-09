@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2020 Dell Inc.
- * Copyright 2022-2023 IOTech Ltd.
+ * Copyright 2022-2024 IOTech Ltd.
  * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -35,10 +35,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const SecurityProxyAuthServiceKey = "security-proxy-auth"
-
 func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
-	startupTimer := startup.NewStartUpTimer(common.CoreCommandServiceKey)
+	startupTimer := startup.NewStartUpTimer(common.SecurityProxyAuthServiceKey)
 
 	// All common command-line flags have been moved to DefaultCommonFlags. Service specific flags can be added here,
 	// by inserting service specific flag prior to call to commonFlags.Parse().
@@ -63,7 +61,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		ctx,
 		cancel,
 		f,
-		SecurityProxyAuthServiceKey,
+		common.SecurityProxyAuthServiceKey,
 		common.ConfigStemSecurity,
 		configuration,
 		startupTimer,
@@ -71,9 +69,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			NewBootstrap(router, SecurityProxyAuthServiceKey).BootstrapHandler,
+			NewBootstrap(router, common.SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,
+			handlers.NewStartMessage(common.SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,
 		})
 
 	// code here!
