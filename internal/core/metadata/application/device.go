@@ -369,7 +369,7 @@ func validateProfileAndAutoEvent(dic *di.Container, d models.Device) errors.Edge
 	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(d.ProfileName)
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("device profile '%s' not found during validating device '%s'", d.ProfileName, d.Name), err)
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device profile '%s' not found during validating device '%s'", d.ProfileName, d.Name), err)
 	}
 	if len(d.AutoEvents) == 0 {
 		return nil
