@@ -25,8 +25,9 @@ import (
 // AllEvents queries the events with the given range, offset, and limit
 func (c *Client) AllEvents(offset, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(eventTableName, originCol), offset, limit)
+	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(eventTableName, originCol), offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
 	}
@@ -141,9 +142,11 @@ func (c *Client) EventCountByTimeRange(start int64, end int64) (uint32, errors.E
 
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+
 	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(eventTableName, originCol, deviceNameCol)
 
-	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, name, offset, limit)
+	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, name, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query events by device '%s'", name), err)
 	}
@@ -153,9 +156,10 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model
 // EventsByTimeRange query events by time range, offset, and limit
 func (c *Client) EventsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol, nil)
 
-	events, err := queryEvents(ctx, c.ConnPool, sqlStatement, start, end, offset, limit)
+	events, err := queryEvents(ctx, c.ConnPool, sqlStatement, start, end, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}

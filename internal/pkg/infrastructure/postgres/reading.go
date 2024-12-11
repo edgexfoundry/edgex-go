@@ -32,9 +32,10 @@ func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
 
 func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
 	// query reading by origin descending with offset & limit
-	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(readingTableName, originCol), offset, limit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(readingTableName, originCol), offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all readings", err)
 	}
@@ -44,10 +45,12 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 
 // ReadingsByResourceName query readings by offset, limit and resource name
 func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName string) ([]model.Reading, errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+
 	// query reading by the resourceName and origin descending
 	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, resourceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, resourceName, offset, limit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, resourceName, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query readings by resource '%s'", resourceName), err)
 	}
@@ -56,10 +59,12 @@ func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName stri
 
 // ReadingsByDeviceName query readings by offset, limit and device name
 func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) ([]model.Reading, errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+
 	// query reading by the deviceName and origin descending
 	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, deviceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, name, offset, limit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, name, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query readings by device '%s'", name), err)
 	}
@@ -68,10 +73,12 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) ([]mod
 
 // ReadingsByDeviceNameAndResourceName query readings by offset, limit, device name and resource name
 func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+
 	// query reading by the deviceName/resourceName and origin descending
 	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(readingTableName, originCol, deviceNameCol, resourceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, deviceName, resourceName, offset, limit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, deviceName, resourceName, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device '%s' and resource '%s'", deviceName, resourceName), err)
@@ -82,9 +89,10 @@ func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resource
 // ReadingsByTimeRange query readings by origin within the time range with offset and limit
 func (c *Client) ReadingsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol, nil)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, offset, limit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -94,9 +102,10 @@ func (c *Client) ReadingsByTimeRange(start int64, end int64, offset int, limit i
 // ReadingsByDeviceNameAndTimeRange query readings by the specified device, origin within the time range, offset, and limit
 func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol, nil, deviceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, offset, limit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -106,9 +115,10 @@ func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64
 // ReadingsByResourceNameAndTimeRange query readings by the specified resource, origin within the time range, offset, and limit
 func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol, nil, resourceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, resourceName, offset, limit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, resourceName, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -118,9 +128,10 @@ func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start i
 // ReadingsByDeviceNameAndResourceNameAndTimeRange query readings by the specified device and resource, origin within the time range, offset, and limit
 func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol, nil, deviceNameCol, resourceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, resourceName, offset, limit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, resourceName, offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -130,12 +141,13 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 // ReadingsByDeviceNameAndResourceNamesAndTimeRange query readings by the specified device and resourceName slice, origin within the time range, offset and limit
 func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64, offset, limit int) ([]model.Reading, errors.EdgeX) {
 	ctx := context.Background()
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
 	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(readingTableName, originCol, originCol,
 		[]string{resourceNameCol}, deviceNameCol, resourceNameCol)
 
 	// build the query args for the where condition using in querying readings
-	queryArgs := []any{start, end, deviceName, resourceNames, offset, limit}
+	queryArgs := []any{start, end, deviceName, resourceNames, offset, validLimit}
 	// query readings
 	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, queryArgs...)
 	if err != nil {
