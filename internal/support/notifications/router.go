@@ -40,8 +40,10 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	// Notification
 	nc := notificationsController.NewNotificationController(dic)
 	r.POST(common.ApiNotificationRoute, nc.AddNotification, authenticationHook)
+	r.GET(common.ApiNotificationRoute, nc.NotificationsByQueryConditions, authenticationHook)
 	r.GET(common.ApiNotificationByIdEchoRoute, nc.NotificationById, authenticationHook)
 	r.DELETE(common.ApiNotificationByIdEchoRoute, nc.DeleteNotificationById, authenticationHook)
+	r.DELETE(common.ApiNotificationByIdsRoute, nc.DeleteNotificationByIds, authenticationHook)
 	r.GET(common.ApiNotificationByCategoryEchoRoute, nc.NotificationsByCategory, authenticationHook)
 	r.GET(common.ApiNotificationByLabelEchoRoute, nc.NotificationsByLabel, authenticationHook)
 	r.GET(common.ApiNotificationByStatusEchoRoute, nc.NotificationsByStatus, authenticationHook)
@@ -50,6 +52,8 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	r.DELETE(common.ApiNotificationCleanupByAgeEchoRoute, nc.CleanupNotificationsByAge, authenticationHook)
 	r.DELETE(common.ApiNotificationCleanupRoute, nc.CleanupNotifications, authenticationHook)
 	r.DELETE(common.ApiNotificationByAgeEchoRoute, nc.DeleteProcessedNotificationsByAge, authenticationHook)
+	r.PUT(common.ApiNotificationAcknowledgeByIdsRoute, nc.AcknowledgeNotificationByIds, authenticationHook)
+	r.PUT(common.ApiNotificationUnacknowledgeByIdsRoute, nc.UnacknowledgeNotificationByIds, authenticationHook)
 
 	// Transmission
 	trans := notificationsController.NewTransmissionController(dic)

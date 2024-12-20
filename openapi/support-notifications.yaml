@@ -200,6 +200,9 @@ components:
             - NEW
             - PROCESSED
             - ESCALATED
+        acknowledged:
+          description: "The acknowledgement status of the notification. Accepted values are: true, false, and empty. The default value is empty, and it means both of true and false."
+          type: boolean
     CreateNotification:
       description: "Defines the content included in a notification"
       type: object
@@ -566,7 +569,32 @@ components:
           example: "secret-value"
       required:
         - key
-        - value 
+        - value
+    QueryNotificationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseRequest'
+      description: A request for querying notifications by the given conditions.
+      type: object
+      properties:
+        queryCondition:
+          $ref: '#/components/schemas/QueryConditions'
+      required:
+        - queryCondition
+    QueryConditions:
+      description: "QueryConditions for querying the notifications of interest"
+      type: object
+      properties:
+        category:
+          description: Categorizes the notification
+          type: array
+          items:
+            type: string
+        start:
+          description: Unix timestamp (nanoseconds) indicating the start of a date/time range
+          type: integer
+        end:
+          description: Unix timestamp (nanoseconds) indicating the end of a date/time range
+          type: integer
   parameters:
     offsetParam:
       in: query
@@ -586,6 +614,18 @@ components:
         minimum: -1
         default: 20
       description: "The numbers of items to return.  Specify -1 will return all remaining items after offset.  The maximum will be the MaxResultCount as defined in the configuration of service."
+    ackParam:
+      in: query
+      name: ack
+      required: false
+      schema:
+        type: string
+        default: ""
+        enum:
+          - ""
+          - "true"
+          - "false"
+      description: "The acknowledgement status of the notifications you wish to load. Accepted values are: true, false, and empty. The default value is empty, and it means both of true and false."
     correlatedRequestHeader:
       in: header
       name: X-Correlation-ID
@@ -895,6 +935,74 @@ paths:
   /notification:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
+    get:
+      summary: "Get a paginated list of notifications associated with the specified category within a given time range"
+      parameters:
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/ackParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryNotificationRequest'
+            example:
+              apiVersion: "v2"
+              requestId: "bc979763-afde-492c-b0a2-79ff3025b6de"
+              queryCondition:
+                category: ["Disconnection","DEVICE_CHANGED"]
+                start: 1656662808
+                end: 1738632171
+      responses:
+        '200':
+          description: "OK"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiNotificationsResponse'
+              examples:
+                MultiNotificationResponseExample:
+                  $ref: '#/components/examples/MultiNotificationResponseExample'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '416':
+          description: "Request range is not satisfiable"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                416Example:
+                  $ref: '#/components/examples/416Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
     post:
       summary: "Adds one or more notifications to be sent."
       requestBody:
@@ -966,6 +1074,7 @@ paths:
         description: "The ending timestamp of the range of notifications to be returned."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/ackParam'
     get:
       summary: "Allows querying of notifications by their creation timestamp within a given time range, sorted in descending order. Results are paginated."
       responses:
@@ -1076,6 +1185,7 @@ paths:
         description: "The category of the notifications you wish to load."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/ackParam'
     get:
       summary: "Returns a paginated list of notifications associated with the given category."
       responses:
@@ -1138,6 +1248,7 @@ paths:
         description: "The label of the notifications you wish to load."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/ackParam'
     get:
       summary: "Returns a paginated list of notifications associated with the given label."
       responses:
@@ -1301,6 +1412,153 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
+  /notification/acknowledge/ids/{ids}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: ids
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The notification IDs concatenate with comma."
+        example: "4b61880e-aa14-4dd4-8082-76635ce64351,ca510d91-fc0c-40d3-a768-494d44fcd61e"
+    put:
+      summary: "Updates the acknowledgment status of one or more notifications to true"
+      responses:
+        '200':
+          description: "Update successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /notification/unacknowledge/ids/{ids}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: ids
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The notification IDs concatenate with comma."
+        example: "4b61880e-aa14-4dd4-8082-76635ce64351,ca510d91-fc0c-40d3-a768-494d44fcd61e"
+    put:
+      summary: "Updates the acknowledgment status of one or more notifications to false"
+      responses:
+        '200':
+          description: "Update successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: An unexpected error occurred on the server
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+  /notification/ids/{ids}:
+    parameters:
+      - $ref: '#/components/parameters/correlatedRequestHeader'
+      - name: ids
+        in: path
+        required: true
+        schema:
+          type: string
+        description: "The notification IDs concatenate with comma."
+        example: "4b61880e-aa14-4dd4-8082-76635ce64351,ca510d91-fc0c-40d3-a768-494d44fcd61e"
+    delete:
+      summary: "Deletes one or more notifications and their associated transmissions by ID."
+      responses:
+        '200':
+          description: "Delete successful"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                200Example:
+                  $ref: '#/components/examples/200Example'
+        '400':
+          description: "Request is in an invalid state"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                400Example:
+                  $ref: '#/components/examples/400Example'
+        '500':
+          description: "An unexpected error occurred on the server"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
   /notification/status/{status}:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
@@ -1316,6 +1574,7 @@ paths:
         description: "The status of the notifications you wish to load."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/ackParam'
     get:
       summary: "Returns a paginated list of notifications with the specified status."
       responses:
@@ -1378,6 +1637,7 @@ paths:
         description: "The name of the subscription."
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/ackParam'
     get:
       summary: "Returns a paginated list of notifications to which the specified subscription is interested."
       responses:
@@ -2177,7 +2437,7 @@ paths:
                 $ref: '#/components/schemas/TransmissionResponse'
               examples:
                 MultiTransmissionResponseExample:
-                  $ref: '#/components/examples/MultiTransmissionResponseExample' 
+                  $ref: '#/components/examples/MultiTransmissionResponseExample'
         '400':
           description: "Request is in an invalid state"
           headers:
