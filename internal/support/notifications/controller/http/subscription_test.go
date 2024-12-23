@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
@@ -121,7 +122,7 @@ func TestAddSubscription(t *testing.T) {
 
 	unsupportedChannelType := addSubscriptionRequestData()
 	unsupportedChannelType.Subscription.Channels = []dtos.Address{
-		dtos.NewMQTTAddress("mqtt-broker", 1883, "publisher", "topic"),
+		{Type: "unknown"},
 	}
 	invalidEmailAddress := addSubscriptionRequestData()
 	invalidEmailAddress.Subscription.Channels = []dtos.Address{
@@ -585,9 +586,17 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 	dbClientMock.On("DeleteSubscriptionByName", notFoundName).Return(errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dbClientMock.On("SubscriptionByName", notFoundName).Return(subscription, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "subscription doesn't exist in the database", nil))
 	dbClientMock.On("SubscriptionByName", subscription.Name).Return(subscription, nil)
+	mqttSender := &channel.MQTTSender{}
+	zmqSender := &channel.ZeroMQSender{}
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		channel.MQTTSenderName: func(get di.Get) interface{} {
+			return mqttSender
+		},
+		channel.ZeroMQTSenderName: func(get di.Get) interface{} {
+			return zmqSender
 		},
 	})
 
@@ -691,9 +700,17 @@ func TestPatchSubscription(t *testing.T) {
 	notFoundNameError := errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("%s doesn't exist in the database", notFoundName), nil)
 	dbClientMock.On("SubscriptionByName", *invalidNotFoundName.Subscription.Name).Return(subscriptionModel, notFoundNameError)
 
+	mqttSender := &channel.MQTTSender{}
+	zmqSender := &channel.ZeroMQSender{}
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		channel.MQTTSenderName: func(get di.Get) interface{} {
+			return mqttSender
+		},
+		channel.ZeroMQTSenderName: func(get di.Get) interface{} {
+			return zmqSender
 		},
 	})
 	controller := NewSubscriptionController(dic)
