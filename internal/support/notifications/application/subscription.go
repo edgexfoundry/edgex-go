@@ -11,6 +11,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces"
 
@@ -166,7 +167,12 @@ func DeleteSubscriptionByName(name string, ctx context.Context, dic *di.Containe
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "name is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
-	_, err := dbClient.SubscriptionByName(name)
+
+	subscription, err := dbClient.SubscriptionByName(name)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	err = channel.RemoveClientFromCache(dic, subscription.Channels)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -199,6 +205,11 @@ func PatchSubscription(ctx context.Context, dto dtos.UpdateSubscription, dic *di
 	}
 
 	lc.Debugf("Subscription patched on DB successfully. Correlation-ID: %s ", correlation.FromContext(ctx))
+
+	edgexErr := channel.RemoveClientFromCache(dic, subscription.Channels)
+	if edgexErr != nil {
+		return errors.NewCommonEdgeXWrapper(edgexErr)
+	}
 	return nil
 }
 

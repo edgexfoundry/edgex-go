@@ -23,7 +23,7 @@ ARG ADD_BUILD_TAGS=""
 
 WORKDIR /edgex-go
 
-RUN apk add --update --no-cache make bash git ca-certificates
+RUN apk add --update --no-cache make bash git ca-certificates zeromq-dev
 
 COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
@@ -33,7 +33,7 @@ RUN make cmd/support-notifications/support-notifications
 
 FROM alpine:3.20
 
-RUN apk add --update --no-cache ca-certificates dumb-init
+RUN apk add --update --no-cache ca-certificates dumb-init zeromq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
 RUN apk --no-cache upgrade
 
