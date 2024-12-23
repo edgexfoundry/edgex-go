@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
@@ -78,6 +79,8 @@ func updateSubscriptionData() dtos.UpdateSubscription {
 func TestPatchSubscription(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	mqttSender := &channel.MQTTSender{}
+	zmqSender := &channel.ZeroMQSender{}
 
 	subscription := updateSubscriptionData()
 	model := models.Subscription{
@@ -103,6 +106,12 @@ func TestPatchSubscription(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		channel.MQTTSenderName: func(get di.Get) interface{} {
+			return mqttSender
+		},
+		channel.ZeroMQTSenderName: func(get di.Get) interface{} {
+			return zmqSender
 		},
 	})
 

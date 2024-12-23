@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
  * Copyright (c) 2019 Intel Corporation
- * Copyright (C) 2020-2023 IOTech Ltd
+ * Copyright (C) 2020-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -47,17 +47,25 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization for the notifications service.
-func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
+func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	restSender := channel.NewRESTSender(dic, bootstrapContainer.SecretProviderExtFrom(dic.Get))
 	emailSender := channel.NewEmailSender(dic)
+	mqttSender := channel.NewMQTTSender(ctx, wg, dic)
+	zeroMQSender := channel.NewZeroMQSender(ctx, wg, dic)
 	dic.Update(di.ServiceConstructorMap{
 		channel.RESTSenderName: func(get di.Get) interface{} {
 			return restSender
 		},
 		channel.EmailSenderName: func(get di.Get) interface{} {
 			return emailSender
+		},
+		channel.MQTTSenderName: func(get di.Get) interface{} {
+			return mqttSender
+		},
+		channel.ZeroMQTSenderName: func(get di.Get) interface{} {
+			return zeroMQSender
 		},
 	})
 
