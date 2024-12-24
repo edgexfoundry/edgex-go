@@ -111,7 +111,7 @@ func TestKeys_KeyValue(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiKVSByKeyEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiKVSByKeyRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(constants.Plaintext, testCase.plaintext)
 
@@ -183,7 +183,7 @@ func TestKeys_KeyOnly(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiKVSByKeyEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiKVSByKeyRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(constants.KeyOnly, "true")
 
@@ -303,7 +303,7 @@ func TestAddKeys(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(jsonData))
-			req, err := http.NewRequest(http.MethodPut, common.ApiKVSByKeyEchoRoute, reader)
+			req, err := http.NewRequest(http.MethodPut, common.ApiKVSByKeyRoute, reader)
 			query := req.URL.Query()
 			query.Add(constants.Flatten, testCase.flatten)
 

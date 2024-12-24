@@ -163,7 +163,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -234,7 +234,7 @@ func TestReadingsByResourceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -308,7 +308,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -365,7 +365,7 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	rc := NewReadingController(dic)
 
 	e := echo.New()
-	req, err := http.NewRequest(http.MethodGet, common.ApiReadingCountByDeviceNameEchoRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, common.ApiReadingCountByDeviceNameRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -423,7 +423,7 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameAndTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByResourceNameAndTimeRangeRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -496,7 +496,7 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameRoute, http.NoBody)
 			require.NoError(t, err)
 			query := req.URL.Query()
 			if testCase.offset != "" {
@@ -579,7 +579,7 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndResourceNameAndTimeRangeRoute, http.NoBody)
 			require.NoError(t, err)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
@@ -673,7 +673,7 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 			} else {
 				reader = http.NoBody
 			}
-			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndTimeRangeEchoRoute, reader)
+			req, err := http.NewRequest(http.MethodGet, common.ApiReadingByDeviceNameAndTimeRangeRoute, reader)
 			req.Header.Set(common.ContentType, common.ContentTypeJSON)
 			require.NoError(t, err)
 			query := req.URL.Query()

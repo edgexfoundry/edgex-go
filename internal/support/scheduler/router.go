@@ -29,17 +29,17 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 	// ScheduleJob
 	jc := schedulerController.NewScheduleJobController(dic)
 	r.POST(common.ApiScheduleJobRoute, jc.AddScheduleJob, authenticationHook)
-	r.POST(common.ApiTriggerScheduleJobByNameEchoRoute, jc.TriggerScheduleJobByName, authenticationHook)
+	r.POST(common.ApiTriggerScheduleJobByNameRoute, jc.TriggerScheduleJobByName, authenticationHook)
 	r.PATCH(common.ApiScheduleJobRoute, jc.PatchScheduleJob, authenticationHook)
 	r.GET(common.ApiAllScheduleJobRoute, jc.AllScheduleJobs, authenticationHook)
-	r.GET(common.ApiScheduleJobByNameEchoRoute, jc.ScheduleJobByName, authenticationHook)
-	r.DELETE(common.ApiScheduleJobByNameEchoRoute, jc.DeleteScheduleJobByName, authenticationHook)
+	r.GET(common.ApiScheduleJobByNameRoute, jc.ScheduleJobByName, authenticationHook)
+	r.DELETE(common.ApiScheduleJobByNameRoute, jc.DeleteScheduleJobByName, authenticationHook)
 
 	// ScheduleActionRecord
 	rc := schedulerController.NewScheduleActionRecordController(dic)
 	r.GET(common.ApiAllScheduleActionRecordRoute, rc.AllScheduleActionRecords, authenticationHook)
-	r.GET(common.ApiScheduleActionRecordRouteByStatusEchoRoute, rc.ScheduleActionRecordsByStatus, authenticationHook)
-	r.GET(common.ApiScheduleActionRecordRouteByJobNameEchoRoute, rc.ScheduleActionRecordsByJobName, authenticationHook)
-	r.GET(common.ApiScheduleActionRecordRouteByJobNameAndStatusEchoRoute, rc.ScheduleActionRecordsByJobNameAndStatus, authenticationHook)
-	r.GET(common.ApiLatestScheduleActionRecordByJobNameEchoRoute, rc.LatestScheduleActionRecordsByJobName, authenticationHook)
+	r.GET(common.ApiScheduleActionRecordRouteByStatusRoute, rc.ScheduleActionRecordsByStatus, authenticationHook)
+	r.GET(common.ApiScheduleActionRecordRouteByJobNameRoute, rc.ScheduleActionRecordsByJobName, authenticationHook)
+	r.GET(common.ApiScheduleActionRecordRouteByJobNameAndStatusRoute, rc.ScheduleActionRecordsByJobNameAndStatus, authenticationHook)
+	r.GET(common.ApiLatestScheduleActionRecordByJobNameRoute, rc.LatestScheduleActionRecordsByJobName, authenticationHook)
 }

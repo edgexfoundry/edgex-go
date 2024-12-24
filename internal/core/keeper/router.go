@@ -28,15 +28,15 @@ func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
 
 	// KV
 	kv := keeperController.NewKVController(dic)
-	r.GET(common.ApiKVSByKeyEchoRoute, kv.Keys, authenticationHook)
-	r.PUT(common.ApiKVSByKeyEchoRoute, kv.AddKeys, authenticationHook)
-	r.DELETE(common.ApiKVSByKeyEchoRoute, kv.DeleteKeys, authenticationHook)
+	r.GET(common.ApiKVSByKeyRoute, kv.Keys, authenticationHook)
+	r.PUT(common.ApiKVSByKeyRoute, kv.AddKeys, authenticationHook)
+	r.DELETE(common.ApiKVSByKeyRoute, kv.DeleteKeys, authenticationHook)
 
 	// Registry
 	rc := keeperController.NewRegistryController(dic)
 	r.POST(common.ApiRegisterRoute, rc.Register, authenticationHook)
 	r.PUT(common.ApiRegisterRoute, rc.UpdateRegister, authenticationHook)
 	r.GET(common.ApiAllRegistrationsRoute, rc.Registrations, authenticationHook)
-	r.GET(common.ApiRegistrationByServiceIdEchoRoute, rc.RegistrationByServiceId, authenticationHook)
-	r.DELETE(common.ApiRegistrationByServiceIdEchoRoute, rc.Deregister, authenticationHook)
+	r.GET(common.ApiRegistrationByServiceIdRoute, rc.RegistrationByServiceId, authenticationHook)
+	r.DELETE(common.ApiRegistrationByServiceIdRoute, rc.Deregister, authenticationHook)
 }
