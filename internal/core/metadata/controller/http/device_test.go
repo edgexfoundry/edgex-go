@@ -348,7 +348,7 @@ func TestDeleteDeviceByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameEchoRoute, testCase.deviceName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -425,7 +425,7 @@ func TestAllDeviceByServiceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByServiceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByServiceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -496,7 +496,7 @@ func TestDeviceNameExists(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceNameExistsEchoRoute, testCase.deviceName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceNameExistsRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -846,7 +846,7 @@ func TestDeviceByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameEchoRoute, testCase.deviceName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceByNameRoute, testCase.deviceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -930,7 +930,7 @@ func TestDevicesByProfileName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByProfileNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceByProfileNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)

@@ -227,7 +227,7 @@ func TestDeviceServiceByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameEchoRoute, testCase.deviceServiceName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -527,7 +527,7 @@ func TestDeleteDeviceServiceByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameEchoRoute, testCase.deviceServiceName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiDeviceServiceByNameRoute, testCase.deviceServiceName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 

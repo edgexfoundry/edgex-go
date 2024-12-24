@@ -321,7 +321,7 @@ func TestProvisionWatcherController_ProvisionWatcherByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameEchoRoute, testCase.provisionWatcherName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameRoute, testCase.provisionWatcherName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -404,7 +404,7 @@ func TestProvisionWatcherController_ProvisionWatchersByServiceName(t *testing.T)
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByServiceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByServiceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -491,7 +491,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByProfileNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiProvisionWatcherByProfileNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -640,7 +640,7 @@ func TestProvisionWatcherController_DeleteProvisionWatcherByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameEchoRoute, testCase.provisionWatcherName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiProvisionWatcherByNameRoute, testCase.provisionWatcherName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 

@@ -239,7 +239,7 @@ func TestRegistryController_Deregister(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodDelete, common.ApiRegistrationByServiceIdEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, common.ApiRegistrationByServiceIdRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
@@ -288,7 +288,7 @@ func TestRegistryController_RegistrationByServiceId(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiRegistrationByServiceIdEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiRegistrationByServiceIdRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act

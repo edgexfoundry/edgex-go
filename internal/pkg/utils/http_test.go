@@ -142,7 +142,7 @@ func TestParsePathParamToInt64(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Run(testCase.name, func(t *testing.T) {
 				e := echo.New()
-				req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeEchoRoute, http.NoBody)
+				req, err := http.NewRequest(http.MethodGet, common.ApiReadingByTimeRangeRoute, http.NoBody)
 				require.NoError(t, err)
 
 				// Act

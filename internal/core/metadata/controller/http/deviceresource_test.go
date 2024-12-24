@@ -103,7 +103,7 @@ func TestDeviceResourceByProfileNameAndResourceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceResourceByProfileAndResourceEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceResourceByProfileAndResourceRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
@@ -476,7 +476,7 @@ func TestDeleteDeviceResourceByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
@@ -517,7 +517,7 @@ func TestDeleteDeviceResourceByName_StrictProfileChanges(t *testing.T) {
 	require.NotNil(t, controller)
 
 	e := echo.New()
-	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameEchoRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileResourceByNameRoute, http.NoBody)
 	require.NoError(t, err)
 
 	// Act

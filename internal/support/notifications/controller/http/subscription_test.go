@@ -314,7 +314,7 @@ func TestSubscriptionByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameEchoRoute, testCase.subscriptionName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameRoute, testCase.subscriptionName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -382,7 +382,7 @@ func TestSubscriptionsByCategory(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByCategoryEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByCategoryRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -457,7 +457,7 @@ func TestSubscriptionsByLabel(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByLabelEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByLabelRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -532,7 +532,7 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByReceiverEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiSubscriptionByReceiverRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -606,7 +606,7 @@ func TestDeleteSubscriptionByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameEchoRoute, testCase.subscriptionName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiSubscriptionByNameRoute, testCase.subscriptionName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 

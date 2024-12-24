@@ -171,7 +171,7 @@ func TestLatestScheduleActionRecordsByJobName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiLatestScheduleActionRecordByJobNameEchoRoute, testCase.jobName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiLatestScheduleActionRecordByJobNameRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -251,7 +251,7 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByStatusEchoRoute, testCase.status)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByStatusRoute, testCase.status)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			query := req.URL.Query()
 			if testCase.start != "" {
@@ -345,7 +345,7 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleActionRecordRouteByJobNameRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			query := req.URL.Query()
 			if testCase.start != "" {
@@ -442,7 +442,7 @@ func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s/%s/:%s/%s", common.ApiScheduleActionRecordRouteByJobNameEchoRoute, testCase.jobName, common.Status, common.Status, testCase.status)
+			reqPath := fmt.Sprintf("%s/%s/%s/:%s/%s", common.ApiScheduleActionRecordRouteByJobNameRoute, testCase.jobName, common.Status, common.Status, testCase.status)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			query := req.URL.Query()
 			if testCase.start != "" {
