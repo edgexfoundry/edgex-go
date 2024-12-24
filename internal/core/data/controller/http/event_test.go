@@ -246,7 +246,7 @@ func TestAddEvent(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameEchoRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
 			require.NoError(t, err)
 
@@ -336,7 +336,7 @@ func TestAddEventSize(t *testing.T) {
 			require.NoError(t, err)
 
 			reader := strings.NewReader(string(byteData))
-			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameEchoRoute, reader)
+			req, err := http.NewRequest(http.MethodPost, common.ApiEventServiceNameProfileNameDeviceNameSourceNameRoute, reader)
 			req.Header.Set(common.ContentType, testCase.RequestContentType)
 			require.NoError(t, err)
 
@@ -552,7 +552,7 @@ func TestEventCountByDeviceName(t *testing.T) {
 	ec := NewEventController(dic)
 
 	e := echo.New()
-	req, err := http.NewRequest(http.MethodGet, common.ApiEventCountByDeviceNameEchoRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodGet, common.ApiEventCountByDeviceNameRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -590,7 +590,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 	ec := NewEventController(dic)
 
 	e := echo.New()
-	req, err := http.NewRequest(http.MethodDelete, common.ApiEventByDeviceNameEchoRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodDelete, common.ApiEventByDeviceNameRoute, http.NoBody)
 	require.NoError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -742,7 +742,7 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByDeviceNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByDeviceNameRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -822,7 +822,7 @@ func TestAllEventsByTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -890,7 +890,7 @@ func TestDeleteEventsByAge(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiEventByTimeRangeRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act

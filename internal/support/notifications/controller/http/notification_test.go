@@ -182,7 +182,7 @@ func TestNotificationById(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdEchoRoute, testCase.notificationId)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdRoute, testCase.notificationId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -250,7 +250,7 @@ func TestNotificationsByCategory(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByCategoryEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByCategoryRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -325,7 +325,7 @@ func TestNotificationsByLabel(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByLabelEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByLabelRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -400,7 +400,7 @@ func TestNotificationsByStatus(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByStatusEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByStatusRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -479,7 +479,7 @@ func TestNotificationsByTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationByTimeRangeRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -549,7 +549,7 @@ func TestDeleteNotificationById(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdEchoRoute, testCase.notificationId)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiNotificationByIdRoute, testCase.notificationId)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -616,7 +616,7 @@ func TestNotificationsBySubscriptionName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationBySubscriptionNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiNotificationBySubscriptionNameRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -682,7 +682,7 @@ func TestCleanupNotificationByAge(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationCleanupByAgeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationCleanupByAgeRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
@@ -794,7 +794,7 @@ func TestDeleteNotificationByAge(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationByAgeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, common.ApiNotificationByAgeRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
