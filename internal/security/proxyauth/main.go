@@ -18,6 +18,7 @@ package proxyauth
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
@@ -27,6 +28,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/edgexfoundry/edgex-go"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/container"
 
@@ -69,10 +71,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			NewBootstrap(router, common.SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,
 		})
-
-	// code here!
 }
