@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ const (
 	coreMetaDataSchema         = "core_metadata"
 	supportNotificationsSchema = "support_notifications"
 	supportSchedulerSchema     = "support_scheduler"
+	ProxyAuthSchema            = "security_proxy_auth"
 )
 
 // constants relate to the postgres db table names
@@ -29,6 +30,7 @@ const (
 	scheduleJobTableName          = supportSchedulerSchema + ".job"
 	subscriptionTableName         = supportNotificationsSchema + ".subscription"
 	transmissionTableName         = supportNotificationsSchema + ".transmission"
+	keyStoreTableName             = ProxyAuthSchema + ".key_store"
 )
 
 // constants relate to the common db table column names
@@ -38,6 +40,7 @@ const (
 	idCol       = "id"
 	modifiedCol = "modified"
 	statusCol   = "status"
+	nameCol     = "name"
 )
 
 // constants relate to the event/reading postgres db table column names
