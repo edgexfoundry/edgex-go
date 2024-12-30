@@ -68,12 +68,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.5.0 h1:EH+bUVJNgttidWFkLLVKaQPGmkTUfQQqjOsyvMGvD6o=
 github.com/eclipse/paho.mqtt.golang v1.5.0/go.mod h1:du/2qNQVqJf/Sqs4MEL77kR8QTqANF7XU7Fk0aOTAgk=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.14 h1:C2D1RppHFKME7q/nVJVPHlzLYs12UTkJBz/q/4ZxBTA=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.14/go.mod h1:g0H805nWxtzJplM6nFnbTJi1TgXRD730NO9xxhC6xXk=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.10 h1:DMv5LZDxcqUeb1dREMd/vK+reXmZYlpafgtm8XhYdHQ=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.10/go.mod h1:ltUpMcOpJSzmabBtZox5qg1AK2wEikvZJyIBXtJ7mUQ=
-github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.15 h1:4FbSL5rsNXVonrYz4K5v1oCNmi64LvcEx8xCgr6mXOo=
-github.com/edgexfoundry/go-mod-core-contracts/v4 v4.0.0-dev.15/go.mod h1:M5JXcRrmnIVNAmqeDNVXd0PSOGdq96fgrEmzivx02c8=
 github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.10 h1:xvDQDIJtmj/ZCmKzbAzg3h1F2ZdWz1MPoJSNfYZANGc=
 github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.10/go.mod h1:ibaiw7r3RgLYDuuFfWT1kh//bjP+onDOOQsnSsdD4E8=
 github.com/edgexfoundry/go-mod-registry/v4 v4.0.0-dev.2 h1:iHu8JPpmrEOrIZdv0iYW69FlMmkyal/FpbXtC3pHt2c=
@@ -305,6 +301,10 @@ github.com/labstack/gommon v0.4.2 h1:F8qTUNXgG1+6WQmqoUWnz8WiEU60mXVVw0P4ht1WRA0
 github.com/labstack/gommon v0.4.2/go.mod h1:QlUFxVM+SNXhDL/Z7YhocGIBYOiwB0mXm1+1bAPHPyU=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
+github.com/lindseysimple/go-mod-bootstrap/v4 v4.0.0-20241226015317-1da7d091abea h1:wv2pZ9XNYvy+npNoWml3k92A80/aTJoksp2Qq0IsvVA=
+github.com/lindseysimple/go-mod-bootstrap/v4 v4.0.0-20241226015317-1da7d091abea/go.mod h1:a7rlrr4QTgjNZZGgnikVFGTDIYda1nuyEBQYPJAFD2Q=
+github.com/lindseysimple/go-mod-core-contracts/v4 v4.0.0-20241224070246-4567c6a29d20 h1:9AM7b578tXzt7SmvAfNUgyNPZj4PhbbnmsJRGTYmluU=
+github.com/lindseysimple/go-mod-core-contracts/v4 v4.0.0-20241224070246-4567c6a29d20/go.mod h1:M5JXcRrmnIVNAmqeDNVXd0PSOGdq96fgrEmzivx02c8=
 github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 h1:6E+4a0GO5zZEnZ81pIr0yLvtUWk2if982qA3F3QD6H4=
 github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0/go.mod h1:zJYVVT2jmtg6P3p1VtQj7WsuWi/y4VnjVBn7F8KPB3I=
 github.com/magiconair/properties v1.8.5/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=

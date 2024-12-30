@@ -73,6 +73,12 @@ all-services:
       DefaultPubRetryAttempts: "2"
       Subject: "edgex/#" # Required for NATS JetStream only for stream auto-provisioning
 
+  Clients:
+    security-proxy-auth:
+      Protocol: http
+      Host: localhost
+      Port: 59842
+
 app-services:
   Writable:
     StoreAndForward:

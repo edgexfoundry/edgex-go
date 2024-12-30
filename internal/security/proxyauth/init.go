@@ -20,10 +20,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/controller"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
@@ -44,20 +40,9 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 	}
 }
 
-// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the command service.
-// Authentication is always on for this service,
-// as it is called by NGINX to authenticate requests
-// and must always authenticate even if the rest of EdgeX does not
+// BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the security-proxy-auth service.
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	lc := container.LoggingClientFrom(dic.Get)
-	secretProvider := container.SecretProviderExtFrom(dic.Get)
-	authenticationHook := handlers.SecretStoreAuthenticationHandlerFunc(secretProvider, lc)
-
-	// Common
-	_ = controller.NewCommonController(dic, b.router, b.serviceName, edgex.Version)
-
-	// Run authentication hook for a nil route
-	b.router.GET("/auth", emptyHandler, authenticationHook)
+	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	return true
 }
