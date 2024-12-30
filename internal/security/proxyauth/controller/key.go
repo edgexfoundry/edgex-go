@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/application"
 
@@ -32,7 +31,6 @@ func (a *AuthController) AddKey(c echo.Context) error {
 
 	lc := bootstrapContainer.LoggingClientFrom(a.dic.Get)
 	ctx := r.Context()
-	correlationId := correlation.FromContext(ctx)
 
 	var req requests.AddKeyDataRequest
 	err := a.reader.Read(r.Body, &req)
@@ -45,20 +43,14 @@ func (a *AuthController) AddKey(c echo.Context) error {
 
 	err = application.AddKey(a.dic, dtos.ToKeyDataModel(req.KeyData))
 	if err != nil {
-		lc.Error(err.Error(), common.CorrelationHeader, correlationId)
-		lc.Debug(err.DebugMessages(), common.CorrelationHeader, correlationId)
-		response = commonDTO.NewBaseResponse(
-			reqId,
-			err.Message(),
-			err.Code())
-	} else {
-		response = commonDTO.NewBaseResponse(
-			reqId,
-			"",
-			http.StatusCreated)
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	utils.WriteHttpHeader(w, ctx, http.StatusMultiStatus)
+	response = commonDTO.NewBaseResponse(
+		reqId,
+		"",
+		http.StatusCreated)
+	utils.WriteHttpHeader(w, ctx, http.StatusCreated)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 

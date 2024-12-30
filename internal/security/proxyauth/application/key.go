@@ -7,11 +7,8 @@ package application
 
 import (
 	"fmt"
-
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/container"
 	proxyAuthUtils "github.com/edgexfoundry/edgex-go/internal/security/proxyauth/utils"
-
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
@@ -23,6 +20,7 @@ import (
 // and then invokes AddKey function of infrastructure layer to add new user
 func AddKey(dic *di.Container, keyData models.KeyData) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
+	cryptor := container.CryptoFrom(dic.Get)
 
 	keyName := ""
 	if len(keyData.Type) == 0 {
@@ -39,7 +37,7 @@ func AddKey(dic *di.Container, keyData models.KeyData) errors.EdgeX {
 			fmt.Sprintf("key type should be one of the '%s' or '%s'", common.VerificationKeyType, common.SigningKeyType), nil)
 	}
 
-	encryptedKey, err := utils.NewAESCryptor().Encrypt(keyData.Key)
+	encryptedKey, err := cryptor.Encrypt(keyData.Key)
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.Kind(err), "failed to encrypt the key", err)
 	}
@@ -69,12 +67,14 @@ func VerificationKeyByIssuer(dic *di.Container, issuer string) (dtos.KeyData, er
 	}
 	keyName := proxyAuthUtils.VerificationKeyName(issuer)
 	dbClient := container.DBClientFrom(dic.Get)
+	cryptor := container.CryptoFrom(dic.Get)
 
 	keyData, err := dbClient.ReadKeyContent(keyName)
 	if err != nil {
 		return dtos.KeyData{}, errors.NewCommonEdgeXWrapper(err)
 	}
-	decryptedKey, err := utils.NewAESCryptor().Decrypt(keyData)
+
+	decryptedKey, err := cryptor.Decrypt(keyData)
 	if err != nil {
 		return dtos.KeyData{}, errors.NewCommonEdgeX(errors.Kind(err), "failed to decrypt the key", err)
 	}

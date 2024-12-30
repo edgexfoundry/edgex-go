@@ -29,6 +29,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/container"
 
@@ -54,6 +55,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	dic := di.NewContainer(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return configuration
+		},
+		container.CryptoInterfaceName: func(get di.Get) interface{} {
+			return crypto.NewAESCryptor()
 		},
 	})
 

@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package utils
+package crypto
 
 import (
 	"bytes"
@@ -12,6 +12,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
+
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto/interfaces"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 )
@@ -23,14 +25,14 @@ type AESCryptor struct {
 	key []byte
 }
 
-func NewAESCryptor() *AESCryptor {
+func NewAESCryptor() interfaces.Crypto {
 	return &AESCryptor{
 		key: []byte(aesKey),
 	}
 }
 
 // Encrypt encrypts the given plaintext with AES-CBC mode and returns a string in base64 encoding
-func (c AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
+func (c *AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 	bytePlaintext := []byte(plaintext)
 	block, err := aes.NewCipher(c.key)
 	if err != nil {
@@ -54,7 +56,7 @@ func (c AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 }
 
 // Decrypt decrypts the given ciphertext with AES-CBC mode and returns the original value as string
-func (c AESCryptor) Decrypt(ciphertext string) ([]byte, errors.EdgeX) {
+func (c *AESCryptor) Decrypt(ciphertext string) ([]byte, errors.EdgeX) {
 	decodedCipherText, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed", err)
