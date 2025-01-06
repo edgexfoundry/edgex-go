@@ -37,6 +37,9 @@ const (
 	ZUNIONSTORE      = "ZUNIONSTORE"
 	ZINTERSTORE      = "ZINTERSTORE"
 	TYPE             = "TYPE"
+	INFO             = "INFO"
+	MEMORY           = "MEMORY"
+	WEIGHTS          = "WEIGHTS"
 )
 
 const (

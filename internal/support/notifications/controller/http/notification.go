@@ -6,11 +6,14 @@
 package http
 
 import (
+	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/io"
+	edgexIO "github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/correlation"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -29,15 +32,19 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const (
+	defaultEnd = int64(7289539200000) // December 31st 2200, 12:00:00
+)
+
 type NotificationController struct {
-	reader io.DtoReader
+	reader edgexIO.DtoReader
 	dic    *di.Container
 }
 
 // NewNotificationController creates and initializes an NotificationController
 func NewNotificationController(dic *di.Container) *NotificationController {
 	return &NotificationController{
-		reader: io.NewJsonDtoReader(),
+		reader: edgexIO.NewJsonDtoReader(),
 		dic:    dic,
 	}
 }
@@ -120,7 +127,11 @@ func (nc *NotificationController) NotificationsByCategory(c echo.Context) error 
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	notifications, totalCount, err := application.NotificationsByCategory(offset, limit, category, nc.dic)
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	notifications, totalCount, err := application.NotificationsByCategory(offset, limit, ack, category, nc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -144,7 +155,11 @@ func (nc *NotificationController) NotificationsByLabel(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	notifications, totalCount, err := application.NotificationsByLabel(offset, limit, label, nc.dic)
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	notifications, totalCount, err := application.NotificationsByLabel(offset, limit, ack, label, nc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -168,7 +183,11 @@ func (nc *NotificationController) NotificationsByStatus(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	notifications, totalCount, err := application.NotificationsByStatus(offset, limit, status, nc.dic)
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	notifications, totalCount, err := application.NotificationsByStatus(offset, limit, status, ack, nc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -190,7 +209,11 @@ func (nc *NotificationController) NotificationsByTimeRange(c echo.Context) error
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	notifications, totalCount, err := application.NotificationsByTimeRange(start, end, offset, limit, nc.dic)
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	notifications, totalCount, err := application.NotificationsByTimeRange(start, end, offset, limit, ack, nc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -220,6 +243,30 @@ func (nc *NotificationController) DeleteNotificationById(c echo.Context) error {
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }
 
+// DeleteNotificationByIds deletes the notifications by ids and all of their associated transmissions
+func (nc *NotificationController) DeleteNotificationByIds(c echo.Context) error {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	r := c.Request()
+	w := c.Response()
+	ctx := r.Context()
+
+	// URL parameters
+	idsStr := c.Param(common.Ids)
+	if len(idsStr) == 0 {
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "ids is empty", nil), "")
+	}
+
+	ids := strings.Split(idsStr, common.CommaSeparator)
+	err := application.DeleteNotificationByIds(ids, nc.dic)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
 // NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
 func (nc *NotificationController) NotificationsBySubscriptionName(c echo.Context) error {
 	lc := container.LoggingClientFrom(nc.dic.Get)
@@ -235,7 +282,11 @@ func (nc *NotificationController) NotificationsBySubscriptionName(c echo.Context
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	notifications, totalCount, err := application.NotificationsBySubscriptionName(offset, limit, subscriptionName, nc.dic)
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	notifications, totalCount, err := application.NotificationsBySubscriptionName(offset, limit, subscriptionName, ack, nc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -309,4 +360,82 @@ func (nc *NotificationController) DeleteProcessedNotificationsByAge(c echo.Conte
 	utils.WriteHttpHeader(w, ctx, http.StatusAccepted)
 	// encode and send out the response
 	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+func (nc *NotificationController) NotificationsByQueryConditions(c echo.Context) error {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	r := c.Request()
+	w := c.Response()
+	ctx := r.Context()
+
+	var reqDTO requestDTO.GetNotificationRequest
+	edgexErr := nc.reader.Read(r.Body, &reqDTO)
+	if edgexErr != nil {
+		if strings.Contains(edgexErr.Error(), io.EOF.Error()) {
+			edgexErr = errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid request body", edgexErr)
+		}
+		return utils.WriteErrorResponse(w, ctx, lc, edgexErr, "")
+	}
+
+	if reqDTO.QueryCondition.End <= reqDTO.QueryCondition.Start {
+		lc.Warnf(fmt.Sprintf("QueryCondition.End %d is not allowed to be less than QueryCondition.Start %d. "+
+			"Use default value %d for QueryCondition.End.", reqDTO.QueryCondition.End, reqDTO.QueryCondition.Start, defaultEnd))
+		reqDTO.QueryCondition.End = defaultEnd
+	}
+
+	// parse URL query string for offset, limit, and ack
+	config := notificationContainer.ConfigurationFrom(nc.dic.Get)
+	offset, limit, _, edgexErr := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	if edgexErr != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, edgexErr, "")
+	}
+	ack, err := parseAckStatusQueryString(r)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	notifications, totalCount, edgexErr := application.NotificationByQueryConditions(offset, limit, ack, reqDTO.QueryCondition, nc.dic)
+	if edgexErr != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, edgexErr, "")
+	}
+
+	response := responseDTO.NewMultiNotificationsResponse("", "", http.StatusOK, totalCount, notifications)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+func (nc *NotificationController) AcknowledgeNotificationByIds(c echo.Context) error {
+	return nc.updateAckByIds(c, true)
+}
+
+func (nc *NotificationController) UnacknowledgeNotificationByIds(c echo.Context) error {
+	return nc.updateAckByIds(c, false)
+}
+
+func (nc *NotificationController) updateAckByIds(c echo.Context, ack bool) error {
+	lc := container.LoggingClientFrom(nc.dic.Get)
+	r := c.Request()
+	w := c.Response()
+	ctx := r.Context()
+	idsStr := c.Param(common.Ids)
+	if len(idsStr) == 0 {
+		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindContractInvalid, "ids is empty", nil), "")
+	}
+	ids := strings.Split(idsStr, common.CommaSeparator)
+	err := application.UpdateNotificationAckStatus(ack, ids, nc.dic)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	response := commonDTO.NewBaseResponse("", "", http.StatusOK)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+// parseAckStatusQueryString parses ack from the query parameters and check if the value is valid.
+func parseAckStatusQueryString(r *http.Request) (ack string, err errors.EdgeX) {
+	ack = utils.ParseQueryStringToString(r, common.Ack, "")
+	if len(ack) > 0 && ack != common.ValueTrue && ack != common.ValueFalse {
+		err = errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid ack value", nil)
+	}
+	return
 }

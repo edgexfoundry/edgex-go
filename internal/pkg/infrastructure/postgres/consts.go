@@ -91,4 +91,5 @@ const (
 	serviceNameField      = "ServiceName"
 	statusField           = "Status"
 	subscriptionNameField = "SubscriptionName"
+	acknowledgedField     = "Acknowledged"
 )
