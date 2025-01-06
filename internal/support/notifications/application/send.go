@@ -137,6 +137,12 @@ func sendNotificationViaChannel(dic *di.Container, n models.Notification, addres
 	case common.EMAIL:
 		emailSender := channel.EmailSenderFrom(dic.Get)
 		transRecord.Response, err = emailSender.Send(n, address)
+	case common.MQTT:
+		mqttSender := channel.MQTTSenderFrom(dic.Get)
+		transRecord.Response, err = mqttSender.Send(n, address)
+	case common.ZeroMQ:
+		zeroMQSender := channel.ZeroMQSenderFrom(dic.Get)
+		transRecord.Response, err = zeroMQSender.Send(n, address)
 	default:
 		transRecord.Response = fmt.Sprintf("unsupported address type: %s", address.GetBaseAddress().Type)
 		return transRecord

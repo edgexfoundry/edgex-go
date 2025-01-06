@@ -129,6 +129,78 @@ components:
       required:
         - type
         - recipients
+    MQTTPubAddress:
+      description: "The MQTT address shows the information indicating how to contact a specific endpoint by MQTT protocol."
+      type: object
+      properties:
+        type:
+          description: "Indicates the type of transport to be used in delivering the notification."
+          type: string
+          enum:
+            - MQTT
+          example: "MQTT"
+        scheme:
+          description: "The scheme of the URI."
+          type: string
+        host:
+          description: "The host targeted by the action."
+          type: string
+        port:
+          description: "The port to address on the targeted host."
+          type: integer
+        publisher:
+          description: "The client to publish the message. The client ID must be unique across all clients connecting to the same broker."
+          type: string
+        topic:
+          description: "The topic to publish to."
+          type: string
+        qos:
+          description: "Determines the quality of service level used to guarantee message delivery."
+          type: integer
+        secretPath:
+          description: "SecretPath is used to specify the secret path to store the credential(username and password) and TLS certificates for connecting the MQTT broker"
+          type: string
+        authMode:
+          description: "AuthMode is the MQTT authentication mechanism. Currently, 'usernamepassword' is the only AuthMode supported by this service, and the secret keys are 'username' and 'password'."
+          type: string
+          enum:
+            - none
+            - usernamepassword
+        skipCertVerify:
+          description: "SkipCertVerify indicates if the server certificate verification should be skipped"
+          type: boolean
+      required:
+        - type
+        - schema
+        - host
+        - port
+        - topic
+        - secretPath
+        - authMode
+    ZeroMQAddress:
+      description: "The ZeroMQ address shows the information indicating how to contact a specific ZeroMQ endpoint."
+      type: object
+      properties:
+        type:
+          description: "Indicates the type of transport to be used in delivering the notification."
+          type: string
+          enum:
+            - ZeroMQ
+          example: "ZeroMQ"
+        host:
+          description: "The host targeted by the action."
+          type: string
+        port:
+          description: "The port to address on the targeted host."
+          type: integer
+        topic:
+          description: "The topic to publish to."
+          type: string
+      required:
+        - type
+        - host
+        - port
+        - topic
     ErrorResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -302,6 +374,8 @@ components:
             anyOf:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
+              - $ref: '#/components/schemas/MQTTPubAddress'
+              - $ref: '#/components/schemas/ZeroMQAddress'
         categories:
           description: "Links the subscription to one or more categories of notification."
           type: array
@@ -344,6 +418,8 @@ components:
             anyOf:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
+              - $ref: '#/components/schemas/MQTTPubAddress'
+              - $ref: '#/components/schemas/ZeroMQAddress'
         categories:
           description: "Links the subscription to one or more categories of notification."
           type: array
@@ -395,6 +471,8 @@ components:
             anyOf:
               - $ref: '#/components/schemas/RESTAddress'
               - $ref: '#/components/schemas/EmailAddress'
+              - $ref: '#/components/schemas/MQTTPubAddress'
+              - $ref: '#/components/schemas/ZeroMQAddress'
         categories:
           description: "Links the subscription to one or more categories of notification."
           type: array
@@ -446,6 +524,8 @@ components:
           oneOf:
             - $ref: '#/components/schemas/RESTAddress'
             - $ref: '#/components/schemas/EmailAddress'
+            - $ref: '#/components/schemas/MQTTPubAddress'
+            - $ref: '#/components/schemas/ZeroMQAddress'
         created:
           description: "A timestamp indicating when the transmission was created."
           type: integer
