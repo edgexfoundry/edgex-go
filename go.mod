@@ -10,7 +10,7 @@ require (
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.0.0-dev.10
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.0.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.7.0
-	github.com/go-co-op/gocron/v2 v2.14.0
+	github.com/go-co-op/gocron/v2 v2.14.1
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
