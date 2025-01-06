@@ -1194,7 +1194,7 @@ func TestDeleteDeviceProfileByName_StrictProfileChanges(t *testing.T) {
 	require.NotNil(t, controller)
 
 	e := echo.New()
-	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileByNameEchoRoute, http.NoBody)
+	req, err := http.NewRequest(http.MethodDelete, common.ApiDeviceProfileByNameRoute, http.NoBody)
 	require.NoError(t, err)
 
 	// Act
@@ -1332,7 +1332,7 @@ func TestDeviceProfilesByModel(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByModelEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByModelRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -1408,7 +1408,7 @@ func TestDeviceProfilesByManufacturer(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -1486,7 +1486,7 @@ func TestDeviceProfilesByManufacturerAndModel(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerAndModelEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiDeviceProfileByManufacturerAndModelRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)

@@ -72,7 +72,7 @@ func TestTransmissionById(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiTransmissionByIdEchoRoute, testCase.transmissionId)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiTransmissionByIdRoute, testCase.transmissionId)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -144,7 +144,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByTimeRangeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByTimeRangeRoute, http.NoBody)
 			query := req.URL.Query()
 			query.Add(common.Offset, testCase.offset)
 			query.Add(common.Limit, testCase.limit)
@@ -293,7 +293,7 @@ func TestTransmissionsByStatus(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByStatusEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByStatusRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -360,7 +360,7 @@ func TestDeleteTransmissionsByAge(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodDelete, common.ApiTransmissionByAgeEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodDelete, common.ApiTransmissionByAgeRoute, http.NoBody)
 			require.NoError(t, err)
 
 			// Act
@@ -427,7 +427,7 @@ func TestTransmissionsBySubscriptionName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionBySubscriptionNameEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionBySubscriptionNameRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)
@@ -503,7 +503,7 @@ func TestTransmissionsByNotificationId(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByNotificationIdEchoRoute, http.NoBody)
+			req, err := http.NewRequest(http.MethodGet, common.ApiTransmissionByNotificationIdRoute, http.NoBody)
 			query := req.URL.Query()
 			if testCase.offset != "" {
 				query.Add(common.Offset, testCase.offset)

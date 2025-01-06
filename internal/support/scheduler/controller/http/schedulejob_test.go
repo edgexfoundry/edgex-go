@@ -215,7 +215,7 @@ func TestScheduleJobByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleJobByNameEchoRoute, testCase.jobName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiScheduleJobByNameRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodGet, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -365,7 +365,7 @@ func TestDeleteScheduleJobByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiTriggerScheduleJobByNameEchoRoute, testCase.jobName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiTriggerScheduleJobByNameRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodDelete, reqPath, http.NoBody)
 			require.NoError(t, err)
 
@@ -562,7 +562,7 @@ func TestTriggerScheduleJobByName(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
-			reqPath := fmt.Sprintf("%s/%s", common.ApiTriggerScheduleJobByNameEchoRoute, testCase.jobName)
+			reqPath := fmt.Sprintf("%s/%s", common.ApiTriggerScheduleJobByNameRoute, testCase.jobName)
 			req, err := http.NewRequest(http.MethodPost, reqPath, http.NoBody)
 			require.NoError(t, err)
 
