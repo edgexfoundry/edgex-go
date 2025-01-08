@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2020 Dell Inc.
- * Copyright 2022-2024 IOTech Ltd.
+ * Copyright 2022-2025 IOTech Ltd.
  * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -18,6 +18,7 @@ package proxyauth
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
@@ -27,6 +28,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/edgexfoundry/edgex-go"
+	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/container"
 
@@ -53,6 +56,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		container.ConfigurationName: func(get di.Get) interface{} {
 			return configuration
 		},
+		container.CryptoInterfaceName: func(get di.Get) interface{} {
+			return crypto.NewAESCryptor()
+		},
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.SecurityProxyAuthServiceKey)
@@ -69,10 +75,9 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
+			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			NewBootstrap(router, common.SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,
 		})
-
-	// code here!
 }

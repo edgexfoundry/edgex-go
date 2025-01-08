@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,6 @@ package keeper
 
 import (
 	"github.com/edgexfoundry/edgex-go"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/controller"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -19,9 +18,7 @@ import (
 )
 
 func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
-	lc := container.LoggingClientFrom(dic.Get)
-	secretProvider := container.SecretProviderExtFrom(dic.Get)
-	authenticationHook := handlers.AutoConfigAuthenticationFunc(secretProvider, lc)
+	authenticationHook := handlers.AutoConfigAuthenticationFunc(dic)
 
 	// Common
 	_ = controller.NewCommonController(dic, r, serviceName, edgex.Version)

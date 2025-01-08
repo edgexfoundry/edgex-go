@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright 2018 Dell Inc.
- * Copyright 2022 IOTech Ltd.
+ * Copyright 2022-2025 IOTech Ltd.
  * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -25,11 +25,14 @@ type ConfigurationStruct struct {
 	Writable WritableInfo
 	Registry bootstrapConfig.RegistryInfo
 	Service  bootstrapConfig.ServiceInfo
+	Database bootstrapConfig.Database
 }
 
 // WritableInfo contains configuration properties that can be updated and applied without restarting the service.
 type WritableInfo struct {
-	LogLevel string
+	LogLevel        string
+	InsecureSecrets bootstrapConfig.InsecureSecrets
+	Telemetry       bootstrapConfig.TelemetryInfo
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is
@@ -86,10 +89,14 @@ func (c *ConfigurationStruct) GetRegistryInfo() bootstrapConfig.RegistryInfo {
 
 // GetInsecureSecrets returns the service's InsecureSecrets.
 func (c *ConfigurationStruct) GetInsecureSecrets() bootstrapConfig.InsecureSecrets {
-	return nil
+	return c.Writable.InsecureSecrets
 }
 
 // GetTelemetryInfo returns the service's Telemetry settings.
 func (c *ConfigurationStruct) GetTelemetryInfo() *bootstrapConfig.TelemetryInfo {
-	return nil
+	return &c.Writable.Telemetry
+}
+
+func (c *ConfigurationStruct) GetDatabaseInfo() bootstrapConfig.Database {
+	return c.Database
 }
