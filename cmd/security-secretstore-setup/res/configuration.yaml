@@ -43,9 +43,6 @@ Database:
   Timeout: "5s"
   Type: "postgres"
 Databases:
-  command:
-    Service: core-command
-    Username: core_command
   metadata:
     Service: core-metadata
     Username: core_metadata
@@ -55,9 +52,6 @@ Databases:
   corekeeper:
     Service: core-keeper
     Username: core_keeper
-  rulesengine:
-    Service: app-rules-engine
-    Username: app_rules_engine
   notifications:
     Service: support-notifications
     Username: support_notifications
