@@ -181,6 +181,18 @@ server {
       proxy_pass_request_body off;
     }
 
+    location = /key {
+    `cat "${corssnippet}"`
+      resolver           127.0.0.11 valid=30s;
+      proxy_pass         http://\$upstream_proxyauth:59842/api/v3/key;
+      proxy_method       POST;
+      proxy_redirect     off;
+      proxy_set_header   Host \$host;
+      auth_request       /auth;
+      auth_request_set   \$auth_status \$upstream_status;
+      auth_request_set   \$edgex_token \$upstream_http_authorization;
+    }
+
     # Rewriting rules (variable usage required to avoid nginx crash if host not resolveable at time of boot)
     # resolver required to enable name resolution at runtime, points at docker DNS resolver
 
