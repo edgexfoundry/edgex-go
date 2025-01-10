@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS core_data.event (
 
 -- core_data.reading is used to store the reading information
 CREATE TABLE IF NOT EXISTS core_data.reading (
-    id UUID PRIMARY KEY,
+    id UUID,
     event_id UUID,
     devicename TEXT,
     profilename TEXT,
@@ -32,3 +32,6 @@ CREATE TABLE IF NOT EXISTS core_data.reading (
         FOREIGN KEY(event_id)
           REFERENCES core_data.event(id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reading_id_origin
+    ON core_data.reading(id, origin) -- Using id and origin as index for TimescaleDB integration
