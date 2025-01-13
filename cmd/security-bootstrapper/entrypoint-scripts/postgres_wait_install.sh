@@ -49,6 +49,13 @@ if [ "$(id -u)" = '0' ]; then
   fi
   find "${DATABASECONFIG_PATH}" \! -user postgres -exec chown postgres '{}' +
   chmod 700 "${DATABASECONFIG_PATH}"
+
+  if [ ! -f "/run/secrets/postgres_password" ]; then
+    ehco "$(date) Error: password file /run/secrets/postgres_password not exists"
+    exit 1
+  fi
+  find "/run/secrets" \! -user postgres -exec chown postgres '{}' +
+  chmod 700 "/run/secrets"
 fi
 
 # customizing of Postgres startup process by including the docker-entrypoint script
@@ -62,26 +69,35 @@ if [ "$(id -u)" = '0' ]; then
 	exec gosu postgres "$BASH_SOURCE" "$@"
 fi
 
+export POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+PASSWORD=$(<"$POSTGRES_PASSWORD_FILE")
+if [ -z "$PASSWORD" ]; then
+  echo "$(date) Error: no superuser password define in the /run/secrets/postgres_password file"
+  exit 1
+fi
+
+# Export POSTGRES_PASSWORD to satisfy the entrypoint script
+export POSTGRES_PASSWORD="$PASSWORD"
+
+
 # run additional initialize db scripts not located in /docker-entrypoint-initdb.d dir if database is initialized for the first time
 if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
 	docker_verify_minimum_env
 	docker_init_database_dir
 	pg_setup_hba_conf
 
-	# only required for '--auth[-local]=md5' on POSTGRES_INITDB_ARGS
-	export PGPASSWORD="${PGPASSWORD:-$POSTGRES_PASSWORD}"
-
 	docker_temp_server_start "$@" -c max_locks_per_transaction=256
 	docker_setup_db
 	docker_process_init_files /docker-entrypoint-initdb.d/*
-	docker_process_init_files ${DATABASECONFIG_PATH}/*
-	docker_temp_server_stop
 else
 	docker_temp_server_start "$@"
-	docker_process_init_files ${DATABASECONFIG_PATH}/*
-	docker_temp_server_stop
+
+	# Update the superuser password with the value of POSTGRES_PASSWORD
+	docker_process_sql <<<"ALTER USER postgres WITH PASSWORD '${POSTGRES_PASSWORD}';"
 fi
 
+docker_process_init_files ${DATABASECONFIG_PATH}/*
+docker_temp_server_stop
 
 # starting postgres
 echo "$(date) Starting edgex-postgres ..."

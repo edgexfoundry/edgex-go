@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -21,7 +21,11 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 )
 
-const postgresSecretName = "postgres"
+const (
+	postgresSecretName = "postgres"
+	passwordFileDir    = "/run/secrets"
+	passwordFileName   = "postgres_password"
+)
 
 // SetupDBScriptFiles dynamically creates Postgres init-db script file with the retrieved credentials for multiple EdgeX services
 func SetupDBScriptFiles(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
@@ -106,4 +110,56 @@ func getServiceCredentials(dic *di.Container, scriptFile *os.File) error {
 		lc.Info("Postgres init-db script has been set")
 	}
 	return nil
+}
+
+// SetupPasswordFile creates the Postgres superuser password file with the credential retrieved from secret provider
+func SetupPasswordFile(_ context.Context, _ *sync.WaitGroup, startupTimer startup.Timer, dic *di.Container) bool {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+
+	if err := helper.CreateDirectoryIfNotExists(passwordFileDir); err != nil {
+		lc.Errorf("failed to create database superuser password file directory %s: %v", passwordFileDir, err)
+		return false
+	}
+
+	// Create the Postgres superuser password file
+	confFile, err := helper.CreateConfigFile(passwordFileDir, passwordFileName, lc)
+	if err != nil {
+		lc.Error(err.Error())
+		return false
+	}
+	defer func() {
+		_ = confFile.Close()
+	}()
+
+	// GetCredentials retrieves the Postgres database credentials from secretstore
+	secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
+
+	var superuserPass string
+
+	for startupTimer.HasNotElapsed() {
+		// retrieve database credentials from secretstore
+		secrets, err := secretProvider.GetSecret(config.Database.Type)
+		if err == nil {
+			superuserPass = secrets[secret.PasswordKey]
+			break
+		}
+
+		lc.Warnf("Could not retrieve database credentials (startup timer has not expired): %s", err.Error())
+		startupTimer.SleepForInterval()
+	}
+
+	if superuserPass == "" {
+		lc.Error("Failed to retrieve database credentials before startup timer expired")
+		return false
+	}
+
+	// Writing the Postgres password file with the Postgres credentials got from secret store
+	if genErr := helper.GeneratePasswordFile(confFile, superuserPass); genErr != nil {
+		lc.Errorf("cannot write password to file %s: %v", passwordFileName, genErr)
+		return false
+	}
+
+	lc.Info("Postgres password file has been set")
+	return true
 }
