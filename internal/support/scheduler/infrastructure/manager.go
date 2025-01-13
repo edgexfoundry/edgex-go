@@ -253,69 +253,67 @@ func (m *manager) addNewJob(job models.ScheduleJob) errors.EdgeX {
 		if endOption != nil {
 			jobOptions = append(jobOptions, endOption)
 		}
-	} else {
-		// If the scheduled job should not be triggered, skip adding the job into the scheduler manager
-		return nil
-	}
 
-	for _, a := range job.Actions {
-		copiedAction := a
-		task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
-		if edgeXerr != nil {
-			return errors.NewCommonEdgeXWrapper(edgeXerr)
+		// If toTrigger is true, the ScheduleAction will be added to the scheduler and ready to be triggered
+		for _, a := range job.Actions {
+			copiedAction := a
+			task, edgeXerr := action.ToGocronTask(m.lc, m.dic, m.secretProvider, a)
+			if edgeXerr != nil {
+				return errors.NewCommonEdgeXWrapper(edgeXerr)
+			}
+
+			// Add event listeners to the job options for recording the schedule action records
+			jobOptions = append(jobOptions, gocron.WithEventListeners(
+				gocron.AfterJobRuns(
+					func(jobID uuid.UUID, jobName string) {
+						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+						lastRun, err := gocronJob.LastRun()
+						if err != nil {
+							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
+						}
+
+						record := models.ScheduleActionRecord{
+							JobName:     job.Name,
+							Action:      copiedAction,
+							Status:      models.Succeeded,
+							ScheduledAt: lastRun.UnixMilli(),
+						}
+						m.addScheduleActionRecord(ctx, record, nil)
+					}),
+				gocron.AfterJobRunsWithError(
+					func(jobID uuid.UUID, jobName string, err error) {
+						gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
+						lastRun, timeErr := gocronJob.LastRun()
+						if timeErr != nil {
+							m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
+						}
+
+						record := models.ScheduleActionRecord{
+							JobName:     job.Name,
+							Action:      copiedAction,
+							Status:      models.Failed,
+							ScheduledAt: lastRun.UnixMilli(),
+						}
+						m.addScheduleActionRecord(ctx, record, err)
+					}),
+			))
+
+			// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
+			_, err := scheduler.NewJob(definition, task, jobOptions...)
+			if err != nil {
+				return errors.NewCommonEdgeX(errors.KindServerError,
+					fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
+			}
 		}
 
-		// Add event listeners to the job options for recording the schedule action records
-		jobOptions = append(jobOptions, gocron.WithEventListeners(
-			gocron.AfterJobRuns(
-				func(jobID uuid.UUID, jobName string) {
-					gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-					lastRun, err := gocronJob.LastRun()
-					if err != nil {
-						m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, err)
-					}
-
-					record := models.ScheduleActionRecord{
-						JobName:     job.Name,
-						Action:      copiedAction,
-						Status:      models.Succeeded,
-						ScheduledAt: lastRun.UnixMilli(),
-					}
-					m.addScheduleActionRecord(ctx, record, nil)
-				}),
-			gocron.AfterJobRunsWithError(
-				func(jobID uuid.UUID, jobName string, err error) {
-					gocronJob := getGocronJobByID(scheduler.Jobs(), jobID)
-					lastRun, timeErr := gocronJob.LastRun()
-					if timeErr != nil {
-						m.lc.Errorf("failed to get the last run time for job: %s, Correlation-ID: %s, err: %v", job.Name, correlationId, timeErr)
-					}
-
-					record := models.ScheduleActionRecord{
-						JobName:     job.Name,
-						Action:      copiedAction,
-						Status:      models.Failed,
-						ScheduledAt: lastRun.UnixMilli(),
-					}
-					m.addScheduleActionRecord(ctx, record, err)
-				}),
-		))
-
-		// A "ScheduleAction" will be treated as a "Job" in gocron scheduler
-		_, err := scheduler.NewJob(definition, task, jobOptions...)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.KindServerError,
-				fmt.Sprintf("failed to create new scheduled aciton for job: %s", job.Name), err)
-		}
+		scheduler.Start()
+		m.lc.Debugf("The scheduled job %s was started. Correlation-ID: %s", job.Name, correlationId)
 	}
 
+	// Whether the job is going to be triggered or not, the scheduler will be added to the manager to sync with the database
 	m.mu.Lock()
 	m.schedulers[job.Name] = scheduler
 	m.mu.Unlock()
-
-	if err := m.StartScheduleJobByName(job.Name, correlationId); err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
 
 	return nil
 }
