@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -52,4 +52,27 @@ func TestGeneratePostgresScript(t *testing.T) {
 	expectedCreateScript := fmt.Sprintf("CREATE USER \"%s\" with PASSWORD '%s';", mockUsername, mockPassword)
 	require.Equal(t, 17, len(outputlines))
 	require.Equal(t, expectedCreateScript, strings.TrimSpace(outputlines[11]))
+}
+
+func TestGeneratePasswordFile(t *testing.T) {
+	fileName := "testPasswordFile"
+	testfile, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	require.NoError(t, err)
+	defer func() {
+		_ = testfile.Close()
+		_ = os.RemoveAll(fileName)
+	}()
+
+	mockPassword := "password123"
+
+	err = GeneratePasswordFile(testfile, mockPassword)
+	require.NoError(t, err)
+
+	content, readErr := os.ReadFile(testfile.Name())
+	require.NoError(t, readErr)
+	require.Equal(t, mockPassword, string(content))
+
+	// test with empty password
+	err = GeneratePasswordFile(testfile, "")
+	require.Error(t, err)
 }
