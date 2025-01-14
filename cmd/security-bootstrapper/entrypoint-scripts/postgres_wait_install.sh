@@ -1,6 +1,6 @@
 #!/bin/bash
 #  ----------------------------------------------------------------------------------
-#  Copyright (C) 2024 IOTech Ltd
+#  Copyright (C) 2024-2025 IOTech Ltd
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -98,6 +98,14 @@ fi
 
 docker_process_init_files ${DATABASECONFIG_PATH}/*
 docker_temp_server_stop
+
+# Remove the POSTGRES_PASSWORD_FILE
+rm -f "$POSTGRES_PASSWORD_FILE"
+
+# Check if the file has been removed successfully
+if [ -e "$POSTGRES_PASSWORD_FILE" ]; then
+    echo "$(date) Failed to remove the POSTGRES_PASSWORD_FILE in: $POSTGRES_PASSWORD_FILE"
+fi
 
 # starting postgres
 echo "$(date) Starting edgex-postgres ..."
