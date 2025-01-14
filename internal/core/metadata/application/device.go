@@ -147,6 +147,13 @@ func DeleteDeviceByName(name string, ctx context.Context, dic *di.Container) err
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
+	childcount, _, err := dbClient.DeviceTree(name, 1, 0, 1, nil)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	if childcount != 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "cannot delete device with children", nil)
+	}
 	err = dbClient.DeleteDeviceByName(name)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -295,22 +302,27 @@ func deviceByDTO(dbClient interfaces.DBClient, dto dtos.UpdateDevice) (device mo
 }
 
 // AllDevices query the devices with offset, limit, and labels
-func AllDevices(offset int, limit int, labels []string, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
+func AllDevices(offset int, limit int, labels []string, parent string, maxLevels int, dic *di.Container) (devices []dtos.Device, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
+	var deviceModels []models.Device
+	if parent != "" {
+		totalCount, deviceModels, err = dbClient.DeviceTree(parent, maxLevels, offset, limit, labels)
+	} else {
+		totalCount, err = dbClient.DeviceCountByLabels(labels)
+		if err != nil {
+			return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
+		cont, err := utils.CheckCountRange(totalCount, offset, limit)
+		if !cont {
+			return []dtos.Device{}, totalCount, err
+		}
 
-	totalCount, err = dbClient.DeviceCountByLabels(labels)
-	if err != nil {
-		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	cont, err := utils.CheckCountRange(totalCount, offset, limit)
-	if !cont {
-		return []dtos.Device{}, totalCount, err
+		deviceModels, err = dbClient.AllDevices(offset, limit, labels)
+		if err != nil {
+			return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
-	deviceModels, err := dbClient.AllDevices(offset, limit, labels)
-	if err != nil {
-		return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
 	devices = make([]dtos.Device, len(deviceModels))
 	for i, d := range deviceModels {
 		devices[i] = dtos.FromDeviceModelToDTO(d)

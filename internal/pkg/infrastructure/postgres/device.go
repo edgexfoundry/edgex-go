@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	stdErrs "errors"
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -205,6 +206,67 @@ func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.Ed
 	ctx := context.Background()
 	queryObj := map[string]any{serviceNameField: serviceName}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceTableName), queryObj)
+}
+
+
+// Get device objects with matching parent and labels (one level of the tree).
+func deviceTreeLevel(ctx context.Context, connPool *pgxpool.Pool, parent string, labels []string) ([]model.Device, errors.EdgeX) {	
+	queryObj := map[string]any{parentField: parent}
+	if len(labels) != 0 {
+		queryObj[labelsField] = labels
+	}
+	return queryDevices(ctx, connPool, sqlQueryContentByJSONField(deviceTableName), queryObj)
+}
+
+// Get the entire subtree starting with the given parent, descending at most the given number of levels.
+func deviceSubTree(ctx context.Context, connPool *pgxpool.Pool, parent string, levels int, labels []string) ([]model.Device, errors.EdgeX) {
+	var emptyList = []model.Device{}
+	if levels <= 0 {
+		return emptyList, nil
+	}
+	topLevelList, err := deviceTreeLevel(ctx, connPool, parent, labels)
+	if err != nil {
+		return emptyList, err
+	}
+	if levels == 1 {
+		return topLevelList, nil
+	}
+	var subtreesAtThisLevel []model.Device
+	for _, device := range topLevelList {
+		subtree, err := deviceSubTree(ctx, connPool, device.Name, levels-1, labels)
+		if err != nil {
+			return emptyList, err
+		}
+		subtreesAtThisLevel = append(subtreesAtThisLevel, subtree...)
+	}
+	return append(topLevelList, subtreesAtThisLevel...), nil
+}
+
+// Get the full result-set since that's the only way to correctly get totalCount.
+// Then return the subset of the result-set that corresponds to the requested offset and limit.
+func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX) {
+	var maxLevels int
+	var emptyList = []model.Device{}
+	if levels <= 0 {
+		maxLevels = math.MaxInt
+	} else {
+		maxLevels = levels
+	}
+	all_devices, err := deviceSubTree(context.Background(), c.ConnPool, parent, maxLevels, labels)
+	if err != nil {
+		return 0, emptyList, err
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= len(all_devices) {
+		return uint32(len(all_devices)), emptyList, nil
+	}
+	numToReturn := len(all_devices) - offset
+	if limit > 0 && limit < numToReturn {
+		numToReturn = limit
+	}
+	return uint32(len(all_devices)), all_devices[offset : offset+numToReturn], nil
 }
 
 func deviceNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {

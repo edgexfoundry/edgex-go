@@ -8,6 +8,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 
@@ -22,6 +23,7 @@ const (
 	DeviceCollection            = "md|dv"
 	DeviceCollectionName        = DeviceCollection + DBKeySeparator + common.Name
 	DeviceCollectionLabel       = DeviceCollection + DBKeySeparator + common.Label
+	DeviceCollectionParent      = DeviceCollection + DBKeySeparator + "parent"
 	DeviceCollectionServiceName = DeviceCollection + DBKeySeparator + common.Service + DBKeySeparator + common.Name
 	DeviceCollectionProfileName = DeviceCollection + DBKeySeparator + common.Profile + DBKeySeparator + common.Name
 )
@@ -62,6 +64,9 @@ func sendAddDeviceCmd(conn redis.Conn, storedKey string, d models.Device) errors
 	_ = conn.Send(ZADD, CreateKey(DeviceCollectionProfileName, d.ProfileName), d.Modified, storedKey)
 	for _, label := range d.Labels {
 		_ = conn.Send(ZADD, CreateKey(DeviceCollectionLabel, label), d.Modified, storedKey)
+	}
+	if d.Parent != "" {
+		_ = conn.Send(ZADD, CreateKey(DeviceCollectionParent, d.Parent), d.Modified, storedKey)
 	}
 	return nil
 }
@@ -168,10 +173,20 @@ func sendDeleteDeviceCmd(conn redis.Conn, storedKey string, device models.Device
 	for _, label := range device.Labels {
 		_ = conn.Send(ZREM, CreateKey(DeviceCollectionLabel, label), storedKey)
 	}
+	if device.Parent != "" {
+		_ = conn.Send(ZREM, CreateKey(DeviceCollectionParent, device.Parent), storedKey)
+	}
 }
 
 // deleteDevice deletes a device
 func deleteDevice(conn redis.Conn, device models.Device) errors.EdgeX {
+	numChildren, edgexErr := getMemberNumber(conn, ZCARD, CreateKey(DeviceCollectionParent, device.Name))
+	if edgexErr != nil {
+		return errors.NewCommonEdgeX(errors.KindDatabaseError, "Could not determine if device had any children", edgexErr)
+	}
+	if numChildren > 0 {
+		return errors.NewCommonEdgeX(errors.KindStatusConflict, "Cannot delete device, it has child devices", nil)
+	}
 	storedKey := deviceStoredKey(device.Id)
 	_ = conn.Send(MULTI)
 	sendDeleteDeviceCmd(conn, storedKey, device)
@@ -270,4 +285,75 @@ func updateDevice(conn redis.Conn, d models.Device) errors.EdgeX {
 	}
 
 	return nil
+}
+
+// Return all devices with the given parent and labels (one level of the tree).
+func deviceTreeLevel(conn redis.Conn, parent string, labels []string) ([]models.Device, errors.EdgeX) {
+	queryList := []string{CreateKey(DeviceCollectionParent, parent)}
+	for l := range labels {
+		queryList = append(queryList, CreateKey(DeviceCollectionLabel, labels[l]))
+	}
+	objects, err := intersectionObjectsByKeys(conn, 0, -1, queryList...)
+	if err != nil {
+		return []models.Device{}, errors.NewCommonEdgeXWrapper(err)
+	}
+	devices := make([]models.Device, len(objects))
+	for i, in := range objects {
+		s := models.Device{}
+		err := json.Unmarshal(in, &s)
+		if err != nil {
+			return []models.Device{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device format parsing failed from the database", err)
+		}
+		devices[i] = s
+	}
+	return devices, nil
+}
+
+// Get the entire subtree starting with the given parent, descending at most the given number of levels.
+func deviceSubTree(conn redis.Conn, parent string, levels int, labels []string) ([]models.Device, errors.EdgeX) {
+	if levels == 0 {
+		return []models.Device{}, nil
+	}
+	devices, err := deviceTreeLevel(conn, parent, labels)
+	if err != nil {
+		return []models.Device{}, errors.NewCommonEdgeXWrapper(err)
+	}
+	if levels == 1 {
+		return devices, nil
+	}
+	for i := range devices {
+		subDevices, err := deviceSubTree(conn, devices[i].Name, levels-1, labels)
+		if err != nil {
+			return []models.Device{}, errors.NewCommonEdgeXWrapper(err)
+		}
+		devices = append(devices, subDevices...)
+	}
+	return devices, nil
+}
+
+// Get the full result-set since that's the only way to correctly get totalCount.
+// Then return the subset of the result-set that corresponds to the requested offset and limit.
+func deviceTree(conn redis.Conn, parent string, levels int, offset int, limit int, labels []string) (uint32, []models.Device, errors.EdgeX) {
+	var maxLevels int
+	var emptyList = []models.Device{}
+	if levels <= 0 {
+		maxLevels = math.MaxInt
+	} else {
+		maxLevels = levels
+	}
+	all_devices, err := deviceSubTree(conn, parent, maxLevels, labels)
+	if err != nil {
+		return 0, emptyList, err
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= len(all_devices) {
+		return uint32(len(all_devices)), emptyList, nil
+	}
+	numToReturn := len(all_devices) - offset
+	if limit > 0 && limit < numToReturn {
+		numToReturn = limit
+	}
+	return uint32(len(all_devices)), all_devices[offset : offset+numToReturn], nil
 }

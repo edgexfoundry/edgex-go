@@ -170,6 +170,9 @@ components:
           description: A map of supported protocols for the given device
           additionalProperties:
             $ref: '#/components/schemas/ProtocolProperties'
+        parent:
+          type: string
+          description: Parent device name
         tags:
           type: object
           description: A map of tags used to tag the given device
@@ -221,6 +224,9 @@ components:
           description: A map of supported protocols for the given device
           additionalProperties:
             $ref: '#/components/schemas/ProtocolProperties'
+        parent:
+          type: string
+          description: Parent device name
         tags:
           type: object
           description: A map of tags used to tag the given device
@@ -276,6 +282,9 @@ components:
           description: A map of supported protocols for the given device
           additionalProperties:
             $ref: '#/components/schemas/ProtocolProperties'
+        parent:
+          type: string
+          description: Parent device name
         tags:
           type: object
           description: A map of tags used to tag the given device
@@ -1147,6 +1156,22 @@ components:
       schema:
         type: string
       description: "Allows for querying a given object by associated user-defined label. More than one label may be specified via a comma-delimited list."
+    descendantsParam:
+      in: query
+      name: descendantsOf
+      required: false
+      schema:
+        type: string
+      description: "Filter results to only include objects with parent, grandparent etc. with the specified name."      
+    maxLevelsParam:
+      in: query
+      name: maxLevels
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: "The maximum number of levels to descend when querying for descendants. 0 or omitted = unlimited."
     bypassValidationParam:
       in: query
       name: bypassValidation
@@ -1793,8 +1818,10 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
       - $ref: '#/components/parameters/labelsParam'
+      - $ref: '#/components/parameters/descendantsParam'
+      - $ref: '#/components/parameters/maxLevelsParam'
     get:
-      summary: "Given the entire range of devices sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Devices may also be filtered by label."
+      summary: "Given the entire range of devices sorted by last modified descending, returns a portion of that range according to the offset and limit parameters. Devices may also be filtered by label or parent."
       responses:
         '200':
           description: "OK"
@@ -2013,6 +2040,18 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
+        '409':
+          description: "Conflict - cannot delete a device with children"
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/correlatedResponseHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                409DeleteExample:
+                  $ref: '#/components/examples/409DeleteExample'
         '500':
           description: "Internal Server Error"
           headers:

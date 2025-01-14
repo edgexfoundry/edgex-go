@@ -53,7 +53,7 @@ type DBClient interface {
 	DeviceCountByLabels(labels []string) (uint32, errors.EdgeX)
 	DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX)
 	DeviceCountByServiceName(serviceName string) (uint32, errors.EdgeX)
-
+	DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX)
 	AddProvisionWatcher(pw model.ProvisionWatcher) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherById(id string) (model.ProvisionWatcher, errors.EdgeX)
 	ProvisionWatcherByName(name string) (model.ProvisionWatcher, errors.EdgeX)

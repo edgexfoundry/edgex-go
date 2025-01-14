@@ -485,6 +485,17 @@ func (c *Client) AllDevices(offset int, limit int, labels []string) ([]model.Dev
 	return devices, nil
 }
 
+func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX) {
+	conn := c.Pool.Get()
+	defer conn.Close()
+
+	totalCount, devices, edgeXerr := deviceTree(conn, parent, levels, offset, limit, labels)
+	if edgeXerr != nil {
+		return totalCount, devices, errors.NewCommonEdgeXWrapper(edgeXerr)
+	}
+	return totalCount, devices, nil
+}
+
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) (events []model.Event, edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
