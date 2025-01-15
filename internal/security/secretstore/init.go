@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2022-2023 Intel Corporation
  * Copyright 2019 Dell Inc.
- * Copyright 2024 IOTech Ltd
+ * Copyright 2024-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -855,6 +855,34 @@ func genPostgresCredentials(dic *di.Container, secretStore Cred, knownSecretsToA
 				return err
 			}
 		}
+	}
+
+	postgresCred, err := getCredential(common.SecurityBootstrapperPostgresKey, secretStore, postgresSecretName)
+	if err != nil {
+		if !errors.Is(err, errNotFound) {
+			lc.Errorf("failed to determine if Postgres superuser credentials already exist or not: %s", err.Error())
+			return err
+		}
+
+		lc.Info("Generating superuser password for Postgres DB")
+		superuserPassword, genErr := secretStore.GeneratePassword(ctx)
+		if genErr != nil {
+			lc.Error("failed to generate superuser password for postgres")
+			return genErr
+		}
+
+		postgresCred = UserPasswordPair{
+			User:     postgresSecretName,
+			Password: superuserPassword,
+		}
+	} else {
+		lc.Info("Postgres DB credentials exist, skipping generating new password")
+	}
+
+	err = storeCredential(lc, common.SecurityBootstrapperPostgresKey, secretStore, postgresSecretName, postgresCred)
+	if err != nil {
+		lc.Error(err.Error())
+		return err
 	}
 	return nil
 }

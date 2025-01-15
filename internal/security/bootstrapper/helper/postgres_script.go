@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2024 IOTech Ltd
+ * Copyright (C) 2024-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,6 +17,7 @@ package helper
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"text/template"
@@ -72,4 +73,14 @@ func GeneratePostgresScript(confFile *os.File, credMap []map[string]any) error {
 	}
 
 	return nil
+}
+
+// GeneratePasswordFile creates a random password and writes it to the Postgres password file
+func GeneratePasswordFile(confFile *os.File, password string) error {
+	if password == "" {
+		return errors.New("failed to GeneratePasswordFile: password is empty")
+	}
+
+	_, err := confFile.WriteString(password)
+	return err
 }
