@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -60,6 +60,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
+			handlers.NewClientsBootstrap().BootstrapHandler,
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			registry.BootstrapHandler,
 			handlers.MessagingBootstrapHandler,
