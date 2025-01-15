@@ -322,6 +322,7 @@ func TestDeleteDeviceByName(t *testing.T) {
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("DeviceTree", device.Name, 1, 0, 1, []string(nil)).Return(uint32(0), nil, nil)
 	dbClientMock.On("DeleteDeviceByName", device.Name).Return(nil)
 	dbClientMock.On("DeleteDeviceByName", notFoundName).Return(edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
 	dbClientMock.On("DeviceByName", notFoundName).Return(device, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
