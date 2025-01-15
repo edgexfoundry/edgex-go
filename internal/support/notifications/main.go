@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2017 Dell Inc.
  * Copyright 2018 Dell Technologies Inc.
- * Copyright (C) 2020-2023 IOTech Ltd
+ * Copyright (C) 2020-2025 IOTech Ltd
  * Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -76,6 +76,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		config.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
+			handlers.NewClientsBootstrap().BootstrapHandler,
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportNotificationsServiceKey).BootstrapHandler, // Must be after Messaging

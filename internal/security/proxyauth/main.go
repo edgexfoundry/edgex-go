@@ -75,6 +75,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
+			handlers.NewClientsBootstrap().BootstrapHandler,
 			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
 			NewBootstrap(router, common.SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
