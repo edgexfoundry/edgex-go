@@ -38,6 +38,16 @@ func ReadingTotalCount(dic *di.Container) (uint32, errors.EdgeX) {
 // AllReadings query events by offset, and limit
 func AllReadings(offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
+
+	readingModels, err := dbClient.AllReadings(offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingTotalCount()
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -46,12 +56,6 @@ func AllReadings(offset int, limit int, dic *di.Container) (readings []dtos.Base
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.AllReadings(offset, limit)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -62,6 +66,15 @@ func ReadingsByResourceName(offset int, limit int, resourceName string, dic *di.
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 
+	readingModels, err := dbClient.ReadingsByResourceName(offset, limit, resourceName)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByResourceName(resourceName)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -70,12 +83,6 @@ func ReadingsByResourceName(offset int, limit int, resourceName string, dic *di.
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByResourceName(offset, limit, resourceName)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -86,6 +93,15 @@ func ReadingsByDeviceName(offset int, limit int, name string, dic *di.Container)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 
+	readingModels, err := dbClient.ReadingsByDeviceName(offset, limit, name)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByDeviceName(name)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -94,18 +110,22 @@ func ReadingsByDeviceName(offset int, limit int, name string, dic *di.Container)
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByDeviceName(offset, limit, name)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
 // ReadingsByTimeRange query readings with offset, limit and time range
 func ReadingsByTimeRange(start int64, end int64, offset int, limit int, dic *di.Container) (readings []dtos.BaseReading, totalCount uint32, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
+
+	readingModels, err := dbClient.ReadingsByTimeRange(start, end, offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByTimeRange(start, end)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -114,12 +134,6 @@ func ReadingsByTimeRange(start int64, end int64, offset int, limit int, dic *di.
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByTimeRange(start, end, offset, limit)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -151,6 +165,16 @@ func ReadingsByResourceNameAndTimeRange(resourceName string, start int64, end in
 		return readings, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "resourceName is empty", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
+
+	readingModels, err := dbClient.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByResourceNameAndTimeRange(resourceName, start, end)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -159,12 +183,6 @@ func ReadingsByResourceNameAndTimeRange(resourceName string, start int64, end in
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -178,6 +196,16 @@ func ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string,
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
+
+	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByDeviceNameAndResourceName(deviceName, resourceName)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -186,12 +214,6 @@ func ReadingsByDeviceNameAndResourceName(deviceName string, resourceName string,
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, offset, limit)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -205,6 +227,16 @@ func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resource
 	}
 
 	dbClient := container.DBClientFrom(dic.Get)
+
+	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit)
+	if err != nil {
+		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+	}
+	readings, err = convertReadingModelsToDTOs(readingModels)
+
+	if offset < 0 {
+		return readings, 0, err // skip total count
+	}
 	totalCount, err = dbClient.ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end)
 	if err != nil {
 		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -213,12 +245,6 @@ func ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string, resource
 	if !cont {
 		return []dtos.BaseReading{}, totalCount, err
 	}
-
-	readingModels, err := dbClient.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit)
-	if err != nil {
-		return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
 	return readings, totalCount, err
 }
 
@@ -231,21 +257,25 @@ func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourc
 	dbClient := container.DBClientFrom(dic.Get)
 	var readingModels []models.Reading
 	if len(resourceNames) > 0 {
-		totalCount, err = dbClient.ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end)
-		if err != nil {
-			return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-		}
-		if cont, err := utils.CheckCountRange(totalCount, offset, limit); !cont {
-			return []dtos.BaseReading{}, totalCount, err
+		if offset >= 0 {
+			totalCount, err = dbClient.ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end)
+			if err != nil {
+				return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+			}
+			if cont, err := utils.CheckCountRange(totalCount, offset, limit); !cont {
+				return []dtos.BaseReading{}, totalCount, err
+			}
 		}
 		readingModels, err = dbClient.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit)
 	} else {
-		totalCount, err = dbClient.ReadingCountByDeviceNameAndTimeRange(deviceName, start, end)
-		if err != nil {
-			return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
-		}
-		if cont, err := utils.CheckCountRange(totalCount, offset, limit); !cont {
-			return []dtos.BaseReading{}, totalCount, err
+		if offset >= 0 {
+			totalCount, err = dbClient.ReadingCountByDeviceNameAndTimeRange(deviceName, start, end)
+			if err != nil {
+				return readings, totalCount, errors.NewCommonEdgeXWrapper(err)
+			}
+			if cont, err := utils.CheckCountRange(totalCount, offset, limit); !cont {
+				return []dtos.BaseReading{}, totalCount, err
+			}
 		}
 		readingModels, err = dbClient.ReadingsByDeviceNameAndTimeRange(deviceName, start, end, offset, limit)
 	}
