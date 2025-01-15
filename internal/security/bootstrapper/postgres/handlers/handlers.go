@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	postgresSecretName = "postgres" // nolint:gosec
+	postgresSecretName = "postgres"
 	passwordFileDir    = "/run/secrets"
 	passwordFileName   = "postgres_password"
 )
