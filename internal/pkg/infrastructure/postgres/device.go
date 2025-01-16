@@ -208,9 +208,8 @@ func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.Ed
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceTableName), queryObj)
 }
 
-
 // Get device objects with matching parent and labels (one level of the tree).
-func deviceTreeLevel(ctx context.Context, connPool *pgxpool.Pool, parent string, labels []string) ([]model.Device, errors.EdgeX) {	
+func deviceTreeLevel(ctx context.Context, connPool *pgxpool.Pool, parent string, labels []string) ([]model.Device, errors.EdgeX) {
 	queryObj := map[string]any{parentField: parent}
 	if len(labels) != 0 {
 		queryObj[labelsField] = labels

@@ -110,8 +110,8 @@ func TestValidateParentProfileAndAutoEvents(t *testing.T) {
 		{"is own parent",
 			models.Device{
 				ProfileName: profile,
-				Parent: "me",
-				Name: "me",
+				Parent:      "me",
+				Name:        "me",
 			},
 			true,
 		},
