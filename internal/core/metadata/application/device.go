@@ -54,7 +54,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		return id, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("device service '%s' does not exists", d.ServiceName), nil)
 	}
 
-	err := validateProfileAndAutoEvent(dic, d)
+	err := validateParentProfileAndAutoEvent(dic, d)
 	if err != nil {
 		return "", errors.NewCommonEdgeXWrapper(err)
 	}
@@ -232,7 +232,7 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)
 
-	err = validateProfileAndAutoEvent(dic, device)
+	err = validateParentProfileAndAutoEvent(dic, device)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
@@ -307,6 +307,9 @@ func AllDevices(offset int, limit int, labels []string, parent string, maxLevels
 	var deviceModels []models.Device
 	if parent != "" {
 		totalCount, deviceModels, err = dbClient.DeviceTree(parent, maxLevels, offset, limit, labels)
+		if err != nil {
+			return devices, totalCount, errors.NewCommonEdgeXWrapper(err)
+		}
 	} else {
 		totalCount, err = dbClient.DeviceCountByLabels(labels)
 		if err != nil {
@@ -373,10 +376,13 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 
 var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
 
-func validateProfileAndAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
+func validateParentProfileAndAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 	if d.ProfileName == "" {
 		// if the profile is not set, skip the validation until we have the profile
 		return nil
+	}
+	if (d.Name == d.Parent) && (d.Name != "") {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "a device cannot be its own parent", nil)
 	}
 	dbClient := container.DBClientFrom(dic.Get)
 	dp, err := dbClient.DeviceProfileByName(d.ProfileName)

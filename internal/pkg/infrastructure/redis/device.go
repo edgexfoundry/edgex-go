@@ -304,6 +304,10 @@ func deviceTreeLevel(conn redis.Conn, parent string, labels []string) ([]models.
 		if err != nil {
 			return []models.Device{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "device format parsing failed from the database", err)
 		}
+		if s.Name == s.Parent {
+			message := "Device " + s.Name + " is its own parent, stopping this query"
+			return []models.Device{}, errors.NewCommonEdgeX(errors.KindDatabaseError, message, nil)
+		}
 		devices[i] = s
 	}
 	return devices, nil

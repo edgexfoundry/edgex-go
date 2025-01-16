@@ -233,6 +233,10 @@ func deviceSubTree(ctx context.Context, connPool *pgxpool.Pool, parent string, l
 	}
 	var subtreesAtThisLevel []model.Device
 	for _, device := range topLevelList {
+		if device.Name == device.Parent {
+			message := "Device " + device.Name + " is its own parent, stopping tree query"
+			return emptyList, errors.NewCommonEdgeX(errors.KindDatabaseError, message, nil)
+		}
 		subtree, err := deviceSubTree(ctx, connPool, device.Name, levels-1, labels)
 		if err != nil {
 			return emptyList, err
