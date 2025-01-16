@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -183,6 +184,8 @@ func TestAddDevice(t *testing.T) {
 	dbClientMock.On("AddDevice", emptyProtocolsModel).Return(emptyProtocolsModel, nil)
 	invalidProtocols := testDevice
 	invalidProtocols.Device.Protocols = map[string]dtos.ProtocolProperties{"others": {}}
+	ownParent := testDevice
+	ownParent.Device.Parent = ownParent.Device.Name
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -217,6 +220,7 @@ func TestAddDevice(t *testing.T) {
 		{"Invalid - not found device service", []requests.AddDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false, false},
 		{"Invalid - device service unavailable", []requests.AddDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false, false},
 		{"Valid - force add device", []requests.AddDeviceRequest{validForceAdd}, http.StatusMultiStatus, http.StatusCreated, false, true, true},
+		{"Invalid - own parent", []requests.AddDeviceRequest{ownParent}, http.StatusMultiStatus, http.StatusBadRequest, false, false, false},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -319,6 +323,8 @@ func TestDeleteDeviceByName(t *testing.T) {
 	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
 	noName := ""
 	notFoundName := "notFoundName"
+	deviceParent := device
+	deviceParent.Name = "someOtherName"
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -327,7 +333,8 @@ func TestDeleteDeviceByName(t *testing.T) {
 	dbClientMock.On("DeleteDeviceByName", notFoundName).Return(edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
 	dbClientMock.On("DeviceByName", notFoundName).Return(device, edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist, "device doesn't exist in the database", nil))
 	dbClientMock.On("DeviceByName", device.Name).Return(device, nil)
-	dbClientMock.On("DeviceServiceByName", device.ServiceName).Return(models.DeviceService{BaseAddress: testBaseAddress}, nil)
+	dbClientMock.On("DeviceByName", deviceParent.Name).Return(device, nil)
+	dbClientMock.On("DeviceTree", deviceParent.Name, 1, 0, 1, []string(nil)).Return(uint32(1), []models.Device{device}, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -345,6 +352,7 @@ func TestDeleteDeviceByName(t *testing.T) {
 		{"Valid - delete device by name", device.Name, http.StatusOK},
 		{"Invalid - name parameter is empty", noName, http.StatusBadRequest},
 		{"Invalid - device not found by name", notFoundName, http.StatusNotFound},
+		{"Invalid - device has children", deviceParent.Name, http.StatusConflict},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -604,14 +612,17 @@ func TestPatchDevice(t *testing.T) {
 	notFoundService.Device.ServiceName = &notFoundServiceName
 	dbClientMock.On("DeviceServiceNameExists", *notFoundService.Device.ServiceName).Return(false, nil)
 
-	notFountProfileName := "notFoundProfile"
+	notFoundProfileName := "notFoundProfile"
 	notFoundProfile := testReq
-	notFoundProfile.Device.ProfileName = &notFountProfileName
+	notFoundProfile.Device.ProfileName = &notFoundProfileName
 	notFoundProfileDeviceModel := dsModels
-	notFoundProfileDeviceModel.ProfileName = notFountProfileName
+	notFoundProfileDeviceModel.ProfileName = notFoundProfileName
 	dbClientMock.On("UpdateDevice", notFoundProfileDeviceModel).Return(
 		edgexErr.NewCommonEdgeX(edgexErr.KindEntityDoesNotExist,
-			fmt.Sprintf("device profile '%s' does not exists", notFountProfileName), nil))
+			fmt.Sprintf("device profile '%s' does not exists", notFoundProfileName), nil))
+
+	ownParent := testReq
+	ownParent.Device.Parent = ownParent.Device.Name
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -643,7 +654,8 @@ func TestPatchDevice(t *testing.T) {
 		{"Invalid - invalid protocols", []requests.UpdateDeviceRequest{invalidProtocols}, http.StatusMultiStatus, http.StatusInternalServerError, true, false},
 		{"Invalid - not found device service", []requests.UpdateDeviceRequest{notFoundService}, http.StatusMultiStatus, http.StatusBadRequest, false, false},
 		{"Invalid - device service unavailable", []requests.UpdateDeviceRequest{valid}, http.StatusMultiStatus, http.StatusServiceUnavailable, true, false},
-		{"Valid - empty profile", []requests.UpdateDeviceRequest{emptyProfile}, http.StatusMultiStatus, http.StatusOK, true, true}}
+		{"Valid - empty profile", []requests.UpdateDeviceRequest{emptyProfile}, http.StatusMultiStatus, http.StatusOK, true, true},
+		{"Invalid - own parent", []requests.UpdateDeviceRequest{ownParent}, http.StatusMultiStatus, http.StatusBadRequest, false, false}}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			e := echo.New()
@@ -750,6 +762,8 @@ func TestAllDevices(t *testing.T) {
 	dbClientMock.On("AllDevices", 0, 5, testDeviceLabels).Return([]models.Device{devices[0], devices[1]}, nil)
 	dbClientMock.On("AllDevices", 1, 2, []string(nil)).Return([]models.Device{devices[1], devices[2]}, nil)
 	dbClientMock.On("AllDevices", 4, 1, testDeviceLabels).Return([]models.Device{}, edgexErr.NewCommonEdgeX(edgexErr.KindRangeNotSatisfiable, "query objects bounds out of range.", nil))
+	dbClientMock.On("DeviceTree", "foo", 4, 0, 10, []string(nil)).Return(uint32(expectedDeviceTotalCount), devices, nil)
+	dbClientMock.On("DeviceTree", "foo", math.MaxInt32, 0, 10, testDeviceLabels).Return(uint32(expectedDeviceTotalCount), devices, nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -763,15 +777,20 @@ func TestAllDevices(t *testing.T) {
 		offset             string
 		limit              string
 		labels             string
+		descendantsOf      string
+		maxLevels          string
 		errorExpected      bool
 		expectedCount      int
 		expectedTotalCount uint32
 		expectedStatusCode int
 	}{
-		{"Valid - get devices without labels", "0", "10", "", false, 3, expectedDeviceTotalCount, http.StatusOK},
-		{"Valid - get devices with labels", "0", "5", strings.Join(testDeviceLabels, ","), false, 2, expectedDeviceTotalCount, http.StatusOK},
-		{"Valid - get devices with offset and no labels", "1", "2", "", false, 2, expectedDeviceTotalCount, http.StatusOK},
-		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceLabels, ","), true, 0, expectedDeviceTotalCount, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - get devices without labels", "0", "10", "", "", "", false, 3, expectedDeviceTotalCount, http.StatusOK},
+		{"Valid - get devices with labels", "0", "5", strings.Join(testDeviceLabels, ","), "", "", false, 2, expectedDeviceTotalCount, http.StatusOK},
+		{"Valid - get devices with offset and no labels", "1", "2", "", "", "", false, 2, expectedDeviceTotalCount, http.StatusOK},
+		{"Invalid - offset out of range", "4", "1", strings.Join(testDeviceLabels, ","), "", "", true, 0, expectedDeviceTotalCount, http.StatusRequestedRangeNotSatisfiable},
+		{"Valid - get tree without labels", "0", "10", "", "foo", "4", false, 3, expectedDeviceTotalCount, http.StatusOK},
+		{"Valid - get tree with labels", "0", "10", strings.Join(testDeviceLabels, ","), "foo", "-1", false, 3, expectedDeviceTotalCount, http.StatusOK},
+		{"Invalid - maxLevels bad integer", "4", "1", strings.Join(testDeviceLabels, ","), "foo", "bar", true, 0, 0, http.StatusBadRequest},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -782,6 +801,12 @@ func TestAllDevices(t *testing.T) {
 			query.Add(common.Limit, testCase.limit)
 			if len(testCase.labels) > 0 {
 				query.Add(common.Labels, testCase.labels)
+			}
+			if testCase.descendantsOf != "" {
+				query.Add(common.DescendantsOf, testCase.descendantsOf)
+			}
+			if testCase.maxLevels != "" {
+				query.Add(common.MaxLevels, testCase.maxLevels)
 			}
 			req.URL.RawQuery = query.Encode()
 			require.NoError(t, err)
