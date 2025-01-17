@@ -34,6 +34,7 @@ type WritableInfo struct {
 	LogLevel        string
 	InsecureSecrets bootstrapConfig.InsecureSecrets
 	Telemetry       bootstrapConfig.TelemetryInfo
+	EventPurge      bool
 }
 
 type ReadingRetention struct {
