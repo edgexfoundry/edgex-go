@@ -55,6 +55,11 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 		lc.Errorf("Failed to subscribe events from message bus, %v", err)
 		return false
 	}
+	err = messaging.SubscribeSystemEvents(ctx, dic)
+	if err != nil {
+		lc.Errorf("Failed to subscribe system events from message bus, %v", err)
+		return false
+	}
 
 	config := container.ConfigurationFrom(dic.Get)
 	if config.Retention.Enabled {
