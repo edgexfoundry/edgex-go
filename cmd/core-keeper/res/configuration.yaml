@@ -66,3 +66,9 @@ MessageBus:
     DefaultPubRetryAttempts: "2"
     Subject: "edgex/#" # Required for NATS JetStream only for stream auto-provisioning
     ClientId: "core-keeper"
+
+Clients:
+  security-proxy-auth:
+    Protocol: http
+    Host: localhost
+    Port: 59842

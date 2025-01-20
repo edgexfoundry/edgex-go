@@ -23,6 +23,7 @@ import (
 // ConfigurationStruct contains the configuration properties for the core-command service.
 type ConfigurationStruct struct {
 	Writable WritableInfo
+	Clients  bootstrapConfig.ClientsCollection
 	Registry bootstrapConfig.RegistryInfo
 	Service  bootstrapConfig.ServiceInfo
 	Database bootstrapConfig.Database
@@ -72,6 +73,7 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 // into an bootstrapConfig.BootstrapConfiguration struct contained within ConfigurationStruct).
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	return bootstrapConfig.BootstrapConfiguration{
+		Clients:  &c.Clients,
 		Service:  &c.Service,
 		Registry: &c.Registry,
 	}

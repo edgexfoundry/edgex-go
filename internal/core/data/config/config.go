@@ -1,6 +1,7 @@
 /********************************************************************************
  *  Copyright 2019 Dell Inc.
  *  Copyright 2023 Intel Corporation
+ *  Copyright 2025 IOTech Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -21,6 +22,7 @@ import (
 
 type ConfigurationStruct struct {
 	Writable     WritableInfo
+	Clients      bootstrapConfig.ClientsCollection
 	MessageBus   bootstrapConfig.MessageBusInfo
 	Database     bootstrapConfig.Database
 	Registry     bootstrapConfig.RegistryInfo
@@ -82,6 +84,7 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(rawWritable interface{}) boo
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
 	// temporary until we can make backwards-breaking configuration.yaml change
 	return bootstrapConfig.BootstrapConfiguration{
+		Clients:    &c.Clients,
 		Service:    &c.Service,
 		Registry:   &c.Registry,
 		MessageBus: &c.MessageBus,
