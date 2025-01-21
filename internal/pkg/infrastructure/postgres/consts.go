@@ -84,6 +84,7 @@ const (
 	categoriesField       = "Categories"
 	createdField          = "Created"
 	labelsField           = "Labels"
+	parentField           = "Parent"
 	manufacturerField     = "Manufacturer"
 	modelField            = "Model"
 	nameField             = "Name"

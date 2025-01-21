@@ -235,7 +235,15 @@ func (dc *DeviceController) AllDevices(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	devices, totalCount, err := application.AllDevices(offset, limit, labels, dc.dic)
+	parent := utils.ParseQueryStringToString(r, common.DescendantsOf, "")
+	levels, err := utils.ParseQueryStringToInt(c, common.MaxLevels, 0, -1, math.MaxInt32)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+	if levels < 0 {
+		levels = math.MaxInt32
+	}
+	devices, totalCount, err := application.AllDevices(offset, limit, labels, parent, levels, dc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}

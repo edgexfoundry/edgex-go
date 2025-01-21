@@ -1044,6 +1044,45 @@ func (_m *DBClient) DeviceServiceNameExists(name string) (bool, errors.EdgeX) {
 	return r0, r1
 }
 
+// DeviceTree provides a mock function with given fields: parent, levels, offset, limit, labels
+func (_m *DBClient) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []models.Device, errors.EdgeX) {
+	ret := _m.Called(parent, levels, offset, limit, labels)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeviceTree")
+	}
+
+	var r0 uint32
+	var r1 []models.Device
+	var r2 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string, int, int, int, []string) (uint32, []models.Device, errors.EdgeX)); ok {
+		return rf(parent, levels, offset, limit, labels)
+	}
+	if rf, ok := ret.Get(0).(func(string, int, int, int, []string) uint32); ok {
+		r0 = rf(parent, levels, offset, limit, labels)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, int, int, int, []string) []models.Device); ok {
+		r1 = rf(parent, levels, offset, limit, labels)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]models.Device)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(string, int, int, int, []string) errors.EdgeX); ok {
+		r2 = rf(parent, levels, offset, limit, labels)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1, r2
+}
+
 // DevicesByProfileName provides a mock function with given fields: offset, limit, profileName
 func (_m *DBClient) DevicesByProfileName(offset int, limit int, profileName string) ([]models.Device, errors.EdgeX) {
 	ret := _m.Called(offset, limit, profileName)

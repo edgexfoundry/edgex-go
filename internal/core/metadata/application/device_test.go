@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateProfileAndAutoEvents(t *testing.T) {
+func TestValidateParentProfileAndAutoEvents(t *testing.T) {
 	profile := "test-profile"
 	notFountProfileName := "notFoundProfile"
 	source1 := "source1"
@@ -107,10 +107,18 @@ func TestValidateProfileAndAutoEvents(t *testing.T) {
 			},
 			false,
 		},
+		{"is own parent",
+			models.Device{
+				ProfileName: profile,
+				Parent:      "me",
+				Name:        "me",
+			},
+			true,
+		},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := validateProfileAndAutoEvent(dic, testCase.device)
+			err := validateParentProfileAndAutoEvent(dic, testCase.device)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 			} else {
