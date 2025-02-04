@@ -21,14 +21,15 @@ import (
 )
 
 type ConfigurationStruct struct {
-	Writable     WritableInfo
-	Clients      bootstrapConfig.ClientsCollection
-	MessageBus   bootstrapConfig.MessageBusInfo
-	Database     bootstrapConfig.Database
-	Registry     bootstrapConfig.RegistryInfo
-	Service      bootstrapConfig.ServiceInfo
-	MaxEventSize int64
-	Retention    ReadingRetention
+	Writable           WritableInfo
+	Clients            bootstrapConfig.ClientsCollection
+	MessageBus         bootstrapConfig.MessageBusInfo
+	Database           bootstrapConfig.Database
+	Registry           bootstrapConfig.RegistryInfo
+	Service            bootstrapConfig.ServiceInfo
+	MaxEventSize       int64
+	Retention          ReadingRetention
+	AutoEventRetention AutoEventRetention
 }
 
 type WritableInfo struct {
@@ -40,10 +41,14 @@ type WritableInfo struct {
 }
 
 type ReadingRetention struct {
-	Enabled  bool
+	Interval        string
+	DefaultMaxCap   int64
+	DefaultMinCap   int64
+	DefaultDuration string
+}
+
+type AutoEventRetention struct {
 	Interval string
-	MaxCap   uint32
-	MinCap   uint32
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

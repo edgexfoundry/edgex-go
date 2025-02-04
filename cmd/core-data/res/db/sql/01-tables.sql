@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS core_data.event (
     tags JSONB
 );
 
+CREATE INDEX IF NOT EXISTS event_origin_index ON core_data.event (origin);
+
 -- core_data.reading is used to store the reading information
 CREATE TABLE IF NOT EXISTS core_data.reading (
     id UUID,

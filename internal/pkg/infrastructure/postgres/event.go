@@ -140,6 +140,17 @@ func (c *Client) EventCountByTimeRange(start int64, end int64) (uint32, errors.E
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol, nil), start, end)
 }
 
+// EventCountByDeviceNameAndSourceNameAndLimit returns the count of Event by deviceName, resourceName, and limit from db
+// this is used to check whether the event number is reach the event retention maxCap
+func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX) {
+	sqlStatement := fmt.Sprintf(
+		`SELECT count(*) FROM (
+		  SELECT 1 FROM %s WHERE %s = $1 AND %s = $2
+		  LIMIT $3
+        ) limited_count`, eventTableName, deviceNameCol, sourceNameCol)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName, sourceName, limit)
+}
+
 // EventsByDeviceName query events by offset, limit and device name
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
@@ -191,23 +202,33 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 // DeleteEventsByDeviceName deletes specific device's events and corresponding readings
 // This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
 func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
+	return c.deleteEventsByConditions([]string{deviceNameCol}, []any{deviceName})
+}
+
+// DeleteEventsByDeviceNameAndSourceName deletes specific device's events and corresponding readings
+func (c *Client) DeleteEventsByDeviceNameAndSourceName(deviceName, sourceName string) errors.EdgeX {
+	return c.deleteEventsByConditions([]string{deviceNameCol, sourceNameCol}, []any{deviceName, sourceName})
+}
+
+// deleteEventsByConditions deletes specific device's events and corresponding readings
+func (c *Client) deleteEventsByConditions(cols []string, values []any) errors.EdgeX {
 	ctx := context.Background()
 
-	sqlStatement := sqlDeleteByColumn(eventTableName, deviceNameCol)
+	sqlStatement := sqlDeleteByColumns(eventTableName, cols...)
 
 	go func() {
 		// delete events and readings in a transaction
 		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
 			// select the event-ids of the specified device name from event table as the sub-query of deleting readings
-			subSqlStatement := sqlQueryFieldsByCol(eventTableName, []string{idCol}, deviceNameCol)
-			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, deviceName); err != nil {
-				c.loggingClient.Errorf("failed delete readings with device '%s': %v", deviceName, err)
+			subSqlStatement := sqlQueryFieldsByCol(eventTableName, []string{idCol}, cols...)
+			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values...); err != nil {
+				c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
 				return err
 			}
 
-			err := deleteEvents(ctx, tx, sqlStatement, deviceName)
+			err := deleteEvents(ctx, tx, sqlStatement, values...)
 			if err != nil {
-				c.loggingClient.Errorf("failed delete event with device '%s': %v", deviceName, err)
+				c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
 				return err
 			}
 			return nil
@@ -220,21 +241,34 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) errors.EdgeX {
 // DeleteEventsByAge deletes events and their corresponding readings that are older than age
 // This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
 func (c *Client) DeleteEventsByAge(age int64) errors.EdgeX {
+	return c.deleteEventsByAgeAndConditions(age, nil, nil)
+}
+
+// DeleteEventsByAgeAndDeviceNameAndSourceName deletes events and their corresponding readings that are older than age
+// This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
+func (c *Client) DeleteEventsByAgeAndDeviceNameAndSourceName(age int64, deviceName, sourceName string) errors.EdgeX {
+	return c.deleteEventsByAgeAndConditions(age, []string{deviceNameCol, sourceNameCol}, []any{deviceName, sourceName})
+}
+
+// deleteEventsByAgeAndConditions deletes events and their corresponding readings that are older than age
+// This function is implemented to starts up two goroutines to delete readings and events in the background to achieve better performance
+func (c *Client) deleteEventsByAgeAndConditions(age int64, cols []string, values []any) errors.EdgeX {
 	ctx := context.Background()
 	expireTimestamp := time.Now().UnixNano() - age
-	sqlStatement := sqlDeleteTimeRangeByColumn(eventTableName, originCol)
+	sqlStatement := sqlDeleteTimeRangeByColumn(eventTableName, originCol, cols...)
+	args := append([]any{expireTimestamp}, values...)
 
 	go func() {
 		// delete events and readings in a transaction
 		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
 			// select the event ids within the origin time range from event table as the sub-query of deleting readings
-			subSqlStatement := sqlQueryFieldsByTimeRange(eventTableName, []string{idCol}, originCol)
-			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, expireTimestamp); err != nil {
+			subSqlStatement := sqlQueryFieldsByTimeRangeAndConditions(eventTableName, []string{idCol}, originCol, cols...)
+			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, args...); err != nil {
 				c.loggingClient.Errorf("failed delete readings by age '%d' nanoseconds: %v", age, err)
 				return err
 			}
 
-			err := deleteEvents(ctx, tx, sqlStatement, expireTimestamp)
+			err := deleteEvents(ctx, tx, sqlStatement, args...)
 			if err != nil {
 				c.loggingClient.Errorf("failed delete event by age '%d' nanoseconds: %v", age, err)
 				return err
@@ -292,4 +326,42 @@ func deleteEvents(ctx context.Context, tx pgx.Tx, sqlStatement string, args ...a
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no event found", nil)
 	}
 	return nil
+}
+
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourceName string, offset uint32) (model.Event, errors.EdgeX) {
+	ctx := context.Background()
+
+	events, err := queryEvents(
+		ctx, c.ConnPool,
+		sqlQueryAllAndDescWithCondsAndPag(eventTableName, originCol, deviceNameCol, sourceNameCol),
+		deviceName, sourceName, offset, 1,
+	)
+	if err != nil {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
+	}
+
+	if len(events) == 0 {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no event found with offset '%d'", offset), err)
+	}
+	return events[0], nil
+}
+
+// LatestEventByDeviceNameAndSourceNameAndAgeAndOffset query an event with specified conditions and age and offset
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX) {
+	ctx := context.Background()
+	expireTimestamp := time.Now().UnixNano() - age
+
+	sqlStmt := sqlQueryAllAndDescWithCondsAndPagAndUpperLimitTime(eventTableName, originCol, originCol, deviceNameCol, sourceNameCol)
+	events, err := queryEvents(
+		ctx, c.ConnPool, sqlStmt,
+		expireTimestamp, deviceName, sourceName, offset, 1,
+	)
+	if err != nil {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
+	}
+
+	if len(events) == 0 {
+		return model.Event{}, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, fmt.Sprintf("no event found with offset '%d'", offset), err)
+	}
+	return events[0], nil
 }
