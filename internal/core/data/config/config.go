@@ -28,7 +28,7 @@ type ConfigurationStruct struct {
 	Registry     bootstrapConfig.RegistryInfo
 	Service      bootstrapConfig.ServiceInfo
 	MaxEventSize int64
-	Retention    ReadingRetention
+	Retention    EventRetention
 }
 
 type WritableInfo struct {
@@ -39,11 +39,11 @@ type WritableInfo struct {
 	EventPurge      bool
 }
 
-type ReadingRetention struct {
-	Enabled  bool
-	Interval string
-	MaxCap   uint32
-	MinCap   uint32
+type EventRetention struct {
+	Interval        string
+	DefaultMaxCap   int64
+	DefaultMinCap   int64
+	DefaultDuration string
 }
 
 // UpdateFromRaw converts configuration received from the registry to a service-specific configuration struct which is

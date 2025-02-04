@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2024 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -287,20 +287,31 @@ func ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourc
 	return readings, totalCount, err
 }
 
-// AsyncPurgeReading purge readings and related events according to the retention capability.
-func AsyncPurgeReading(interval time.Duration, ctx context.Context, dic *di.Container) {
+// AsyncPurgeEvent purge events and related readings according to the retention capability.
+func AsyncPurgeEvent(ctx context.Context, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
+	interval, err := time.ParseDuration(config.Retention.Interval)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "retention interval parse failed", err)
+	}
+	if interval <= 0 {
+		lc.Infof("Event retention is disabled because the retention interval is `%s`.", interval)
+		return nil
+	}
+
+	// purge events by auto event
 	asyncPurgeReadingOnce.Do(func() {
 		go func() {
-			lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 			timer := time.NewTimer(interval)
 			for {
 				timer.Reset(interval) // since event deletion might take lots of time, restart the timer to recount the time
 				select {
 				case <-ctx.Done():
-					lc.Info("Exiting reading retention")
+					lc.Info("Exiting event retention")
 					return
 				case <-timer.C:
-					err := purgeReading(dic)
+					err = purgeEventByAutoEvents(dic)
 					if err != nil {
 						lc.Errorf("Failed to purge events and readings, %v", err)
 						break
@@ -309,28 +320,146 @@ func AsyncPurgeReading(interval time.Duration, ctx context.Context, dic *di.Cont
 			}
 		}()
 	})
+
+	return nil
 }
 
-func purgeReading(dic *di.Container) errors.EdgeX {
+func purgeEventByAutoEvents(dic *di.Container) errors.EdgeX {
+	devices := container.DeviceStoreFrom(dic.Get).Devices()
+	for _, device := range devices {
+		for _, e := range device.AutoEvents {
+			err := purgeEvent(device.Name, e, dic)
+			if err != nil {
+				return errors.NewCommonEdgeXWrapper(err)
+			}
+		}
+	}
+	return nil
+}
+
+func purgeEvent(deviceName string, autoEvent models.AutoEvent, dic *di.Container) errors.EdgeX {
+	config := container.ConfigurationFrom(dic.Get)
+	// apply the default retention policy
+	if autoEvent.Retention.MaxCap == 0 {
+		autoEvent.Retention.MaxCap = config.Retention.DefaultMaxCap
+	}
+	if autoEvent.Retention.MinCap == 0 {
+		autoEvent.Retention.MinCap = config.Retention.DefaultMinCap
+	}
+	if autoEvent.Retention.Duration == "" {
+		autoEvent.Retention.Duration = config.Retention.DefaultDuration
+	}
+
+	if autoEvent.Retention.MaxCap > 0 {
+		isReach, err := isReachMaxCap(deviceName, autoEvent, dic)
+		if err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+		if !isReach {
+			return nil
+		}
+	}
+
+	duration, err := time.ParseDuration(autoEvent.Retention.Duration)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.KindContractInvalid, "auto event retention duration parse failed", err)
+	}
+	if duration > 0 {
+		// Do time-based event retention when duration is greater than 0
+		if err = timeBasedEventRetention(deviceName, autoEvent, duration, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	} else {
+		// otherwise do count-based retention
+		if err = countBasedEventRetention(deviceName, autoEvent, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
+	}
+	return nil
+}
+
+func isReachMaxCap(deviceName string, autoEvent models.AutoEvent, dic *di.Container) (bool, errors.EdgeX) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	dbClient := container.DBClientFrom(dic.Get)
-	config := container.ConfigurationFrom(dic.Get)
-	total, err := dbClient.ReadingTotalCount()
+	// Check high watermark, count events by limit instead of count all to improve performance
+	count, err := dbClient.EventCountByDeviceNameAndSourceNameAndLimit(deviceName, autoEvent.SourceName, int(autoEvent.Retention.MaxCap))
 	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query reading total count, %v", err)
+		return false, errors.NewCommonEdgeXWrapper(err)
 	}
-	if total >= config.Retention.MaxCap {
-		lc.Debugf("Purging the reading amount %d to the minimum capacity %d", total, config.Retention.MinCap)
-		// Using reading origin instead event origin to remove events and readings by age.
-		// If we remove readings to MinCap and remove related events, some readings might lose the related event.
-		reading, err := dbClient.LatestReadingByOffset(config.Retention.MinCap)
+	if count < uint32(autoEvent.Retention.MaxCap) {
+		lc.Debugf(
+			"Skip the event retention for the auto event source `%s` of device `%s`, the event number `%d` is less than the max capacity `%d`.",
+			autoEvent.SourceName, deviceName, count, autoEvent.Retention.MaxCap,
+		)
+		return false, nil
+	}
+	return true, nil
+}
+
+func timeBasedEventRetention(deviceName string, autoEvent models.AutoEvent, duration time.Duration, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+
+	if autoEvent.Retention.MinCap <= 0 {
+		lc.Debugf("MinCap is disabled, purge events by duration '%d' and deviceName '%s', and sourceName '%s'", duration, deviceName, autoEvent.SourceName)
+		err := dbClient.DeleteEventsByAgeAndDeviceNameAndSourceName(duration.Nanoseconds(), deviceName, autoEvent.SourceName)
 		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query reading with offset '%d'", config.Retention.MinCap), err)
+			return errors.NewCommonEdgeX(errors.Kind(err),
+				fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', and duration '%s'",
+					deviceName, autoEvent.SourceName, autoEvent.Retention.Duration), err)
 		}
-		age := time.Now().UnixNano() - reading.GetBaseReading().Origin
-		err = dbClient.DeleteEventsByAge(age)
+	} else {
+		lc.Debugf("MinCap is '%d', purge events by duration '%d' and deviceName '%s', and sourceName '%s' to meet the minCap",
+			autoEvent.Retention.MinCap, duration, deviceName, autoEvent.SourceName)
+		// Find the event that the age is within the duration and use offset as minCap to keep data
+		// SELECT * FROM core_data.event WHERE event.origin <= $1 and devicename=$2 and sourcename=$3 ORDER BY origin desc offset $4;
+		event, err := dbClient.LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName, autoEvent.SourceName, duration.Nanoseconds(), uint32(autoEvent.Retention.MinCap))
+		if errors.Kind(err) == errors.KindEntityDoesNotExist {
+			lc.Debugf("Skip the event retention for the auto event source '%s' of device '%s', the event number might equal or less than the minCap", deviceName, autoEvent.SourceName)
+			return nil
+		} else if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err),
+				fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', duration '%s', and minCap '%d'",
+					deviceName, autoEvent.SourceName, autoEvent.Retention.Duration, autoEvent.Retention.MinCap), err)
+		}
+
+		age := time.Now().UnixNano() - event.Origin
+		err = dbClient.DeleteEventsByAgeAndDeviceNameAndSourceName(age, deviceName, autoEvent.SourceName)
 		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings by age '%d'", age), err)
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', and minCap '%d'",
+				deviceName, autoEvent.SourceName, autoEvent.Retention.MinCap), err)
+		}
+	}
+	return nil
+}
+
+func countBasedEventRetention(deviceName string, autoEvent models.AutoEvent, dic *di.Container) errors.EdgeX {
+	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	dbClient := container.DBClientFrom(dic.Get)
+
+	if autoEvent.Retention.MinCap <= 0 {
+		lc.Debugf("MinCap is disabled, purge events by deviceName '%s' and sourceName '%s'", deviceName, autoEvent.SourceName)
+		err := dbClient.DeleteEventsByDeviceNameAndSourceName(deviceName, autoEvent.SourceName)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', and minCap '%d'",
+				deviceName, autoEvent.SourceName, autoEvent.Retention.MinCap), err)
+		}
+	} else {
+		lc.Debugf("MinCap is '%d', purge events by deviceName '%s' and sourceName '%s' to meet the minCap",
+			autoEvent.Retention.MinCap, deviceName, autoEvent.SourceName)
+		event, err := dbClient.LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, autoEvent.SourceName, uint32(autoEvent.Retention.MinCap))
+		if errors.Kind(err) == errors.KindEntityDoesNotExist {
+			lc.Debugf("Skip the event retention for the auto event source '%s' of device '%s', the event number might equal or less than the minCap", deviceName, autoEvent.SourceName)
+			return nil
+		} else if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', and minCap '%d'",
+				deviceName, autoEvent.SourceName, autoEvent.Retention.MinCap), err)
+		}
+		age := time.Now().UnixNano() - event.Origin
+		err = dbClient.DeleteEventsByAgeAndDeviceNameAndSourceName(age, deviceName, autoEvent.SourceName)
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to delete events and readings with specific deviceName '%s', sourceName '%s', and minCap '%d'",
+				deviceName, autoEvent.SourceName, autoEvent.Retention.MinCap), err)
 		}
 	}
 	return nil

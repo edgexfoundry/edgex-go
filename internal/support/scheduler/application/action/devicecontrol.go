@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -34,7 +34,7 @@ func issueSetCommand(dic *di.Container, action models.DeviceControlAction) (stri
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "nil CommandClient returned", nil)
 	}
 
-	resp, err := cc.IssueSetCommandByNameWithObject(context.Background(), action.DeviceName, action.SourceName, payload)
+	resp, err := cc.IssueSetCommandByName(context.Background(), action.DeviceName, action.SourceName, payload)
 	if err != nil {
 		return "", err
 	}

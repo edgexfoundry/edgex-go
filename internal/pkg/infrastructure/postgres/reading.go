@@ -289,7 +289,7 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 
 // deleteReadings delete the data rows with given sql statement and passed args
 func deleteReadings(ctx context.Context, tx pgx.Tx, args ...any) errors.EdgeX {
-	sqlStatement := sqlDeleteByColumn(readingTableName, eventIdFKCol)
+	sqlStatement := sqlDeleteByColumns(readingTableName, eventIdFKCol)
 	commandTag, err := tx.Exec(
 		ctx,
 		sqlStatement,
@@ -306,7 +306,7 @@ func deleteReadings(ctx context.Context, tx pgx.Tx, args ...any) errors.EdgeX {
 
 // deleteReadings delete the readings with event_id in the range of the sub query
 func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string, args ...any) errors.EdgeX {
-	sqlStatement := sqlDeleteByColumn(readingTableName, eventIdFKCol)
+	sqlStatement := sqlDeleteByColumns(readingTableName, eventIdFKCol)
 	subQueryCond := "ANY ( " + subQuerySql + " )"
 	sqlStatement = strings.Replace(sqlStatement, "$1", subQueryCond, 1)
 

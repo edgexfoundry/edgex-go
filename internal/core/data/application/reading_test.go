@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2023 IOTech Ltd
+// Copyright (C) 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,6 +9,7 @@ package application
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -251,14 +253,16 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	}
 }
 
-func TestPurgeReading(t *testing.T) {
+func TestPurgeEvent(t *testing.T) {
 	dic := mocks.NewMockDIC()
+	deviceName := "testDevice"
+	sourceName := "testSource"
 	coreDataConfig := container.ConfigurationFrom(dic.Get)
-	coreDataConfig.Retention = config.ReadingRetention{
-		Enabled:  true,
-		Interval: "1s",
-		MaxCap:   5,
-		MinCap:   3,
+	coreDataConfig.Retention = config.EventRetention{
+		Interval:        "10m",
+		DefaultMaxCap:   -1,
+		DefaultMinCap:   1,
+		DefaultDuration: "30m",
 	}
 	dic.Update(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {
@@ -266,32 +270,96 @@ func TestPurgeReading(t *testing.T) {
 		},
 	})
 
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, mock.Anything, mock.Anything).Return(models.Event{}, nil)
+	dbClientMock.On("DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, sourceName).Return(nil)
+	dbClientMock.On("DeleteEventsByDeviceNameAndSourceName", deviceName, sourceName).Return(nil)
+	dbClientMock.On("LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, mock.Anything).Return(models.Event{}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
 	tests := []struct {
-		name         string
-		readingCount uint32
+		name      string
+		autoEvent models.AutoEvent
 	}{
-		{"invoke reading purging", coreDataConfig.Retention.MaxCap},
-		{"not invoke reading purging", coreDataConfig.Retention.MinCap},
+		{"time-based event retention",
+			models.AutoEvent{
+				Interval:          "",
+				OnChange:          false,
+				OnChangeThreshold: 0,
+				SourceName:        sourceName,
+				Retention: models.Retention{
+					MaxCap:   -1,
+					MinCap:   -1,
+					Duration: "10m",
+				},
+			},
+		},
+		{"time-based event retention with miniCap",
+			models.AutoEvent{
+				Interval:          "",
+				OnChange:          false,
+				OnChangeThreshold: 0,
+				SourceName:        sourceName,
+				Retention: models.Retention{
+					MaxCap:   -1,
+					MinCap:   1,
+					Duration: "10m",
+				},
+			},
+		},
+		{"count-based event retention",
+			models.AutoEvent{
+				Interval:          "",
+				OnChange:          false,
+				OnChangeThreshold: 0,
+				SourceName:        sourceName,
+				Retention: models.Retention{
+					MaxCap:   -1,
+					MinCap:   -1,
+					Duration: "0s",
+				},
+			},
+		},
+		{"count-based event retention with miniCap",
+			models.AutoEvent{
+				Interval:          "",
+				OnChange:          false,
+				OnChangeThreshold: 0,
+				SourceName:        sourceName,
+				Retention: models.Retention{
+					MaxCap:   -1,
+					MinCap:   1,
+					Duration: "0s",
+				},
+			},
+		},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			dbClientMock := &dbMock.DBClient{}
-			var reading models.Reading = models.SimpleReading{}
-			dbClientMock.On("LatestReadingByOffset", coreDataConfig.Retention.MinCap).Return(reading, nil)
-			dbClientMock.On("ReadingTotalCount").Return(testCase.readingCount, nil)
-			dbClientMock.On("DeleteEventsByAge", mock.Anything).Return(nil)
-			dic.Update(di.ServiceConstructorMap{
-				container.DBClientInterfaceName: func(get di.Get) interface{} {
-					return dbClientMock
-				},
-			})
-			err := purgeReading(dic)
+			err := purgeEvent(deviceName, testCase.autoEvent, dic)
 			require.NoError(t, err)
-			if testCase.readingCount >= coreDataConfig.Retention.MaxCap {
-				dbClientMock.AssertCalled(t, "DeleteEventsByAge", mock.Anything)
+			duration, parseErr := time.ParseDuration(testCase.autoEvent.Retention.Duration)
+			require.NoError(t, parseErr)
+			if duration > 0 && testCase.autoEvent.Retention.MinCap <= 0 {
+				// time-based retention
+				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
+			} else if duration > 0 && testCase.autoEvent.Retention.MinCap > 0 {
+				// time-based retention with miniCap
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, duration.Nanoseconds(), uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
+			} else if testCase.autoEvent.Retention.MinCap <= 0 {
+				// count-based retention
+				dbClientMock.AssertCalled(t, "DeleteEventsByDeviceNameAndSourceName", deviceName, testCase.autoEvent.SourceName)
 			} else {
-				dbClientMock.AssertNotCalled(t, "DeleteEventsByAge", mock.Anything)
+				// count-based retention with miniCap
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			}
+
 		})
 	}
 }
