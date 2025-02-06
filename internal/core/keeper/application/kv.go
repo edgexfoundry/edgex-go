@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -63,20 +63,19 @@ func DeleteKeys(key string, prefixMatch bool, dic *di.Container) (keys []models.
 	return keys, nil
 }
 
-// PublishKeyChange publishes any key value changes in the format of []byte through MessageClient
-func PublishKeyChange(data []byte, key string, ctx context.Context, dic *di.Container) {
+// PublishKeyChange publishes any key value changes through MessageClient
+func PublishKeyChange(data models.KVS, key string, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	msgClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
 	correlationId := correlation.FromContext(ctx)
+	// ensure the message envelope content-type is application/json
+	ctx = context.WithValue(ctx, common.ContentType, common.ContentTypeJSON) //nolint: staticcheck
 
 	publishTopic := configuration.MessageBus.BaseTopicPrefix + "/" + key
 	lc.Debugf("Publishing keeper key change to message queue. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
-
-	// ensure the message envelope content-type is application/json
-	msgEnvelope.ContentType = common.ContentTypeJSON
 
 	err := msgClient.Publish(msgEnvelope, publishTopic)
 	if err != nil {

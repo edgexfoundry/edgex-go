@@ -7,7 +7,6 @@ package messaging
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
@@ -57,7 +56,7 @@ func SubscribeSystemEvents(ctx context.Context, dic *di.Container) errors.EdgeX 
 			case msgEnvelope := <-messages:
 				lc.Debugf("System event received on message queue. Topic: %s, Correlation-id: %s", msgEnvelope.ReceivedTopic, msgEnvelope.CorrelationID)
 				var systemEvent dtos.SystemEvent
-				err := json.Unmarshal(msgEnvelope.Payload, &systemEvent)
+				systemEvent, err = types.GetMsgPayload[dtos.SystemEvent](msgEnvelope)
 				if err != nil {
 					lc.Errorf("failed to JSON decoding system event: %s", err.Error())
 					continue

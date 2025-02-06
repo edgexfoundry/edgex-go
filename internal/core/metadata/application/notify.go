@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,6 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -36,17 +35,13 @@ func validateDeviceCallback(device dtos.Device, dic *di.Container) errors.EdgeX 
 	// reusing AddDeviceRequest here as it contains the protocols field and opens up
 	// to other validation beyond protocols if ever needed
 	addDeviceRequest := requests.NewAddDeviceRequest(device)
-	requestBytes, err := json.Marshal(addDeviceRequest)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.KindServerError, "failed to JSON encoding AddDeviceRequest", err)
-	}
 
 	baseTopic := configuration.MessageBus.GetBaseTopicPrefix()
 	requestTopic := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
 		SetPath(baseTopic).SetNameFieldPath(device.ServiceName).SetPath(common.ValidateDeviceSubscribeTopic).BuildPath()
 	responseTopicPrefix := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
 		SetPath(baseTopic).SetPath(common.ResponseTopic).SetNameFieldPath(device.ServiceName).BuildPath()
-	requestEnvelope := types.NewMessageEnvelopeForRequest(requestBytes, nil)
+	requestEnvelope := types.NewMessageEnvelopeForRequest(addDeviceRequest, nil)
 
 	lc.Debugf("Sending Device Validation request for device=%s, CorrelationId=%s to topic: %s", device.Name, requestEnvelope.CorrelationID, requestTopic)
 	lc.Debugf("Waiting for Device Validation response on topic: %s/%s", responseTopicPrefix, requestEnvelope.RequestID)
@@ -141,12 +136,9 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 		publishTopic = topicPathBuilder.SetNameFieldPath(profileName).BuildPath()
 	}
 
-	payload, _ := json.Marshal(systemEvent)
-	envelope := types.NewMessageEnvelope(payload, ctx)
-	// Correlation ID and Content type are set by the above factory function from the context of the request that
-	// triggered this System Event. We'll keep that Correlation ID, but need to make sure the Content Type is set appropriate
-	// for how the payload was encoded above.
-	envelope.ContentType = common.ContentTypeJSON
+	// make sure the Content Type is set appropriate if payload is required to be encoded
+	ctx = context.WithValue(ctx, common.ContentType, common.ContentTypeJSON) //nolint: staticcheck
+	envelope := types.NewMessageEnvelope(systemEvent, ctx)
 
 	if err := messagingClient.Publish(envelope, publishTopic); err != nil {
 		lc.Errorf("unable to publish '%s' System Event for %s '%s' to topic '%s': %v", action, eventType, detailName, publishTopic, err)

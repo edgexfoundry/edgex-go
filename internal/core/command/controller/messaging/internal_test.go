@@ -1,4 +1,5 @@
 // Copyright (C) 2023 Intel Inc.
+// Copyright (C) 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -77,7 +78,7 @@ func TestSubscribeCommandRequests(t *testing.T) {
 		RequestID:     expectedRequestId,
 		CorrelationID: expectedCorrelationId,
 		ContentType:   common.ContentTypeJSON,
-		Payload:       []byte("This is my payload"),
+		Payload:       "This is my payload",
 	}, nil)
 
 	mockMessaging.On("Publish", mock.Anything, expectedCommandResponseTopic).Run(func(args mock.Arguments) {
@@ -85,7 +86,7 @@ func TestSubscribeCommandRequests(t *testing.T) {
 		assert.Equal(t, expectedRequestId, response.RequestID)
 		assert.Equal(t, expectedCorrelationId, response.CorrelationID)
 		assert.Equal(t, common.ContentTypeJSON, response.ContentType)
-		assert.NotZero(t, len(response.Payload))
+		assert.NotEmpty(t, response.Payload)
 	}).Return(nil)
 
 	mockDeviceClient.On("DeviceByName", mock.Anything, expectedDevice).Return(
@@ -219,7 +220,7 @@ func TestSubscribeCommandQueryRequests(t *testing.T) {
 				assert.Equal(t, expectedRequestId, response.RequestID)
 				assert.Equal(t, expectedCorrelationId, response.CorrelationID)
 				assert.Equal(t, common.ContentTypeJSON, response.ContentType)
-				assert.NotZero(t, len(response.Payload))
+				assert.NotEmpty(t, response.Payload)
 			}).Return(nil)
 
 			dic := di.NewContainer(di.ServiceConstructorMap{

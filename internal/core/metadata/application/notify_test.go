@@ -1,6 +1,6 @@
 //
 // Copyright (C) 2022 Intel
-// Copyright (C) 2023 IOTech Ltd
+// Copyright (C) 2023-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -8,7 +8,6 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	goErrors "errors"
 	"fmt"
 	"testing"
@@ -89,8 +88,7 @@ func TestPublishSystemEvent(t *testing.T) {
 				assert.Equal(t, common.ContentTypeJSON, envelope.ContentType)
 				assert.Equal(t, expectedCorrelationID, envelope.CorrelationID)
 				require.NotEmpty(t, envelope.Payload)
-				systemEvent := dtos.SystemEvent{}
-				err := json.Unmarshal(envelope.Payload, &systemEvent)
+				systemEvent, err := types.GetMsgPayload[dtos.SystemEvent](envelope)
 				require.NoError(t, err)
 
 				switch test.Type {
