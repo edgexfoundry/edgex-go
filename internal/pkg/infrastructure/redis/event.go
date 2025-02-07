@@ -290,3 +290,28 @@ func convertObjectsToEvents(conn redis.Conn, objects [][]byte) (events []models.
 	}
 	return events, nil
 }
+
+func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX) {
+	c.loggingClient.Warn("EventCountByDeviceNameAndSourceNameAndLimit function didn't implement")
+	return 0, nil
+}
+
+func (c *Client) DeleteEventsByDeviceNameAndSourceName(deviceName, sourceName string) errors.EdgeX {
+	c.loggingClient.Warn("DeleteEventsByDeviceNameAndSourceName function didn't implement")
+	return nil
+}
+
+func (c *Client) DeleteEventsByAgeAndDeviceNameAndSourceName(age int64, deviceName, sourceName string) errors.EdgeX {
+	c.loggingClient.Warn("DeleteEventsByAgeAndDeviceNameAndSourceName function didn't implement")
+	return nil
+}
+
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (models.Event, errors.EdgeX) {
+	c.loggingClient.Warn("LatestEventByDeviceNameAndSourceNameAndOffset function didn't implement")
+	return models.Event{}, nil
+}
+
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (models.Event, errors.EdgeX) {
+	c.loggingClient.Warn("LatestEventByDeviceNameAndSourceNameAndAgeAndOffset function didn't implement")
+	return models.Event{}, nil
+}

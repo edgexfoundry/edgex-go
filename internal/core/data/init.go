@@ -2,6 +2,7 @@
  * Copyright 2017 Dell Inc.
  * Copyright (c) 2019 Intel Corporation
  * Copyright (C) 2023 IOTech Ltd
+ * Copyright (C) 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,14 +20,16 @@ package data
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/cache"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	"github.com/labstack/echo/v4"
 )
@@ -61,15 +64,38 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 		return false
 	}
 
-	config := container.ConfigurationFrom(dic.Get)
-	if config.Retention.Enabled {
-		retentionInterval, err := time.ParseDuration(config.Retention.Interval)
-		if err != nil {
-			lc.Errorf("Failed to parse reading retention interval, %v", err)
-			return false
-		}
-		application.AsyncPurgeReading(retentionInterval, ctx, dic)
+	err = initDeviceCache(ctx, dic)
+	if err != nil {
+		lc.Errorf("Failed to init device cache, %v", err)
+		return false
+	}
+
+	err = application.AsyncPurgeEvent(ctx, dic)
+	if err != nil {
+		lc.Errorf("Failed to run event purging process, %v", err)
 	}
 
 	return true
+}
+
+func initDeviceCache(ctx context.Context, dic *di.Container) errors.EdgeX {
+	dc := bootstrapContainer.DeviceClientFrom(dic.Get)
+	if dc == nil {
+		return errors.NewCommonEdgeX(errors.KindServerError, "nil DeviceClient returned", nil)
+	}
+	deviceStore := cache.DeviceStore(dic)
+	dic.Update(di.ServiceConstructorMap{
+		container.DeviceStoreInterfaceName: func(get di.Get) interface{} {
+			return deviceStore
+		},
+	})
+
+	devices, err := dc.AllDevices(ctx, nil, 0, -1)
+	if err != nil {
+		return errors.NewCommonEdgeXWrapper(err)
+	}
+	for _, d := range devices.Devices {
+		deviceStore.Add(dtos.ToDeviceModel(d))
+	}
+	return nil
 }
