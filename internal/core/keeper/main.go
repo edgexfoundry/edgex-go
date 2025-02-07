@@ -7,6 +7,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
@@ -20,6 +21,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/constants"
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/keeper/embed"
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/registry"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 
@@ -47,6 +49,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.CoreKeeperServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.CoreKeeperServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -61,7 +65,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			registry.BootstrapHandler,
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(constants.CoreKeeperServiceKey).BootstrapHandler, // Must be after Messaging

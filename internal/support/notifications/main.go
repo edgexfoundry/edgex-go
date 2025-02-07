@@ -24,12 +24,14 @@ package notifications
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 
 	"github.com/edgexfoundry/edgex-go"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	notificationsConfig "github.com/edgexfoundry/edgex-go/internal/support/notifications/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/notifications/embed"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
@@ -63,6 +65,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.SupportNotificationsServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.SupportNotificationsServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -77,7 +81,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		config.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportNotificationsServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.SupportNotificationsServiceKey).BootstrapHandler,

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2024 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +7,7 @@ package handlers
 
 import (
 	"context"
+	"embed"
 	"sync"
 	"time"
 
@@ -25,12 +26,11 @@ import (
 )
 
 const (
-	baseScriptPath = "./res/db/sql"
 	redisDBType    = "redisdb"
 	postgresDBType = "postgres"
 )
 
-// httpServer defines the contract used to determine whether or not the http httpServer is running.
+// httpServer defines the contract used to determine whether the http httpServer is running.
 type httpServer interface {
 	IsRunning() bool
 }
@@ -40,14 +40,22 @@ type Database struct {
 	httpServer            httpServer
 	database              bootstrapInterfaces.Database
 	dBClientInterfaceName string
+	schemaName            string
+	serviceKey            string
+	serviceVersion        string
+	sqlFiles              embed.FS
 }
 
 // NewDatabase is a factory method that returns an initialized Database receiver struct.
-func NewDatabase(httpServer httpServer, database bootstrapInterfaces.Database, dBClientInterfaceName string) Database {
+func NewDatabase(httpServer httpServer, database bootstrapInterfaces.Database, dBClientInterfaceName, schemaName, serviceKey, version string, sqlFiles embed.FS) Database {
 	return Database{
 		httpServer:            httpServer,
 		database:              database,
 		dBClientInterfaceName: dBClientInterfaceName,
+		schemaName:            schemaName,
+		serviceKey:            serviceKey,
+		serviceVersion:        version,
+		sqlFiles:              sqlFiles,
 	}
 }
 
@@ -70,8 +78,7 @@ func (d Database) newDBClient(
 		return redis.NewClient(databaseConfig, lc)
 	case postgresDBType:
 		databaseConfig.Username = credentials.Username
-		// TODO: The baseScriptPath and extScriptPath should be passed in from the configuration file
-		return postgres.NewClient(ctx, databaseConfig, baseScriptPath, "", lc)
+		return postgres.NewClient(ctx, databaseConfig, lc, d.schemaName, d.serviceKey, d.serviceVersion, d.sqlFiles)
 	default:
 		return nil, db.ErrUnsupportedDatabase
 	}

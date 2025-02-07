@@ -3,6 +3,7 @@ module github.com/edgexfoundry/edgex-go
 go 1.23
 
 require (
+	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.0.0-dev.26
 	github.com/edgexfoundry/go-mod-configuration/v4 v4.0.0-dev.13

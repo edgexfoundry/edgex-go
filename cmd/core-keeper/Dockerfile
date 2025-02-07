@@ -1,5 +1,5 @@
 #  ----------------------------------------------------------------------------------
-#  Copyright (C) 2024 IOTech Ltd
+#  Copyright (C) 2024-2025 IOTech Ltd
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -52,6 +52,5 @@ RUN apk add --update --no-cache dumb-init
 COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/cmd/core-keeper/core-keeper /
 COPY --from=builder /edgex-go/cmd/core-keeper/res/configuration.yaml /res/configuration.yaml
-COPY --from=builder /edgex-go/cmd/core-keeper/res/db/ /res/db/
 
 ENTRYPOINT ["/core-keeper"]
