@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -18,13 +18,13 @@ import (
 
 func publishEdgeXMessageBus(dic *di.Container, action models.EdgeXMessageBusAction) errors.EdgeX {
 	messageBus := bootstrapContainer.MessagingClientFrom(dic.Get)
-
-	envelope := types.NewMessageEnvelope(action.Payload, context.Background())
 	contentType := action.ContentType
 	if contentType == "" {
 		contentType = common.ContentTypeJSON
 	}
-	envelope.ContentType = contentType
+	ctx := context.WithValue(context.Background(), common.ContentType, contentType) //nolint: staticcheck
+
+	envelope := types.NewMessageEnvelope(action.Payload, ctx)
 
 	if err := messageBus.Publish(envelope, action.Topic); err != nil {
 		return errors.NewCommonEdgeX(errors.KindServerError, "failed to publish to EdgeX message bus", err)

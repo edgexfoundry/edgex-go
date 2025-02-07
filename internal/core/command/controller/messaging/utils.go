@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022 IOTech Ltd
+// Copyright (C) 2022-2025 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -8,7 +8,6 @@ package messaging
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -103,12 +102,7 @@ func getCommandQueryResponseEnvelope(requestEnvelope types.MessageEnvelope, devi
 		commandsResponse = responses.NewDeviceCoreCommandResponse(requestEnvelope.RequestID, "", http.StatusOK, commands)
 	}
 
-	responseBytes, err := json.Marshal(commandsResponse)
-	if err != nil {
-		return types.MessageEnvelope{}, fmt.Errorf("failed to json encoding device commands payload: %s", err.Error())
-	}
-
-	responseEnvelope, err := types.NewMessageEnvelopeForResponse(responseBytes, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
+	responseEnvelope, err := types.NewMessageEnvelopeForResponse(commandsResponse, requestEnvelope.RequestID, requestEnvelope.CorrelationID, common.ContentTypeJSON)
 	if err != nil {
 		return types.MessageEnvelope{}, fmt.Errorf("failed to create response MessageEnvelope: %s", err.Error())
 	}

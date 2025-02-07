@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -20,7 +20,7 @@ import (
 // NewMockDIC function returns a mock bootstrap di Container
 func NewMockDIC() *di.Container {
 	msgClient := &mocks.MessageClient{}
-	msgClient.On("Publish", mock.Anything, mock.Anything).Return(nil)
+	msgClient.On("PublishWithSizeLimit", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	return di.NewContainer(di.ServiceConstructorMap{
 		dataContainer.ConfigurationName: func(get di.Get) interface{} {

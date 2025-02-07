@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022-2023 IOTech Ltd
+// Copyright (C) 2022-2025 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -184,7 +184,7 @@ func commandRequestHandler(requestTimeout time.Duration, dic *di.Container) mqtt
 
 func publishMessage(client mqtt.Client, responseTopic string, qos byte, retain bool, message types.MessageEnvelope, lc logger.LoggingClient) {
 	if message.ErrorCode == 1 {
-		lc.Error(string(message.Payload))
+		lc.Errorf("%v", message.Payload)
 	}
 
 	envelopeBytes, _ := json.Marshal(&message)

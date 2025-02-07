@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2022-2023 IOTech Ltd
+// Copyright (C) 2022-2025 IOTech Ltd
 // Copyright (C) 2023 Intel Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -225,7 +225,7 @@ func Test_commandQueryHandler(t *testing.T) {
 			fn(mqttClient, message)
 			if tt.expectedError {
 				if tt.expectedPublishError {
-					lc.AssertCalled(t, "Error", mock.Anything)
+					lc.AssertCalled(t, "Errorf", mock.Anything, mock.Anything)
 					mqttClient.AssertCalled(t, "Publish", testQueryResponseTopic, byte(0), true, mock.Anything)
 					return
 				}

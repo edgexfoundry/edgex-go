@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2024 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -16,6 +16,7 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
@@ -76,7 +77,7 @@ func (a *CoreDataApp) AddEvent(e models.Event, ctx context.Context, dic *di.Cont
 }
 
 // PublishEvent publishes incoming AddEventRequest in the format of []byte through MessageClient
-func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
+func (a *CoreDataApp) PublishEvent(data requestDTO.AddEventRequest, serviceName string, profileName string, deviceName string, sourceName string, ctx context.Context, dic *di.Container) {
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	msgClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	configuration := container.ConfigurationFrom(dic.Get)
@@ -88,7 +89,7 @@ func (a *CoreDataApp) PublishEvent(data []byte, serviceName string, profileName 
 	lc.Debugf("Publishing AddEventRequest to MessageBus. Topic: %s; %s: %s", publishTopic, common.CorrelationHeader, correlationId)
 
 	msgEnvelope := msgTypes.NewMessageEnvelope(data, ctx)
-	err := msgClient.Publish(msgEnvelope, publishTopic)
+	err := msgClient.PublishWithSizeLimit(msgEnvelope, publishTopic, configuration.MaxEventSize)
 	if err != nil {
 		lc.Errorf("Unable to send message for API event. Correlation-id: %s, Profile Name: %s, "+
 			"Device Name: %s, Source Name: %s, Error: %v", correlationId, profileName, deviceName, sourceName, err)

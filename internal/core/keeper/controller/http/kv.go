@@ -1,12 +1,11 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/application"
@@ -20,8 +19,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
-	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -100,13 +97,9 @@ func (rc *KVController) AddKeys(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	KVModelBytes, encodeErr := json.Marshal(kvModel)
-	if encodeErr != nil {
-		return utils.WriteErrorResponse(w, ctx, lc, errors.NewCommonEdgeX(errors.KindServerError, "KV struct encoding failed", encodeErr), "")
-	}
 
 	// publish the key change event
-	go application.PublishKeyChange(KVModelBytes, key, ctx, rc.dic)
+	go application.PublishKeyChange(kvModel, key, ctx, rc.dic)
 
 	response := responses.NewKeysResponse("", "", http.StatusOK, keys)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)

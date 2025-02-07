@@ -1,3 +1,5 @@
+// Copyright (C) 2025 IOTech Ltd
+
 package http
 
 import (
@@ -94,17 +96,15 @@ func (ec *EventController) AddEvent(c echo.Context) error {
 	dataBytes, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
 		err = errors.NewCommonEdgeX(errors.KindIOError, "AddEventRequest I/O reading failed", nil)
-	} else if r.ContentLength == -1 { // only check the payload byte array size when the Content-Length of Request is unknown
-		err = utils.CheckPayloadSize(dataBytes, config.MaxEventSize*1024)
 	}
 
 	if err == nil {
-		// Per https://github.com/edgexfoundry/edgex-go/pull/3202#discussion_r587618347
-		// it is decided to asynchronously publish initially encoded payload (not re-encoding) to message bus
-		go ec.app.PublishEvent(dataBytes, serviceName, profileName, deviceName, sourceName, ctx, ec.dic)
-		// unmarshal bytes to AddEventRequest
 		reader := ec.getReader(r)
 		err = reader.Read(bytes.NewReader(dataBytes), &addEventReqDTO)
+		if err != nil {
+			return utils.WriteErrorResponse(w, ctx, lc, err, "")
+		}
+		go ec.app.PublishEvent(addEventReqDTO, serviceName, profileName, deviceName, sourceName, ctx, ec.dic)
 	}
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")

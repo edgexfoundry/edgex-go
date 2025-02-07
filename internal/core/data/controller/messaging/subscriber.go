@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,17 +7,12 @@ package messaging
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
 
-	"github.com/fxamacker/cbor/v2"
-
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
-
 	"github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -69,15 +64,8 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 				lc.Error(e.Error())
 			case msgEnvelope := <-messages:
 				lc.Debugf("Event received from MessageBus. Topic: %s, Correlation-id: %s", msgEnvelope.ReceivedTopic, msgEnvelope.CorrelationID)
-				event := &requests.AddEventRequest{}
-				// decoding the large payload may cause memory issues so checking before decoding
-				maxEventSize := dataContainer.ConfigurationFrom(dic.Get).MaxEventSize
-				edgeXerr := utils.CheckPayloadSize(msgEnvelope.Payload, maxEventSize*1024)
-				if edgeXerr != nil {
-					lc.Errorf("event size exceed MaxEventSize(%d KB)", maxEventSize)
-					break
-				}
-				err = unmarshalPayload(msgEnvelope, event)
+				var event requests.AddEventRequest
+				event, err = types.GetMsgPayload[requests.AddEventRequest](msgEnvelope)
 				if err != nil {
 					lc.Errorf("fail to unmarshal event, %v", err)
 					break
@@ -87,7 +75,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Error(err.Error())
 					break
 				}
-				err = app.AddEvent(requests.AddEventReqToEventModel(*event), ctx, dic)
+				err = app.AddEvent(requests.AddEventReqToEventModel(event), ctx, dic)
 				if err != nil {
 					lc.Errorf("fail to persist the event, %v", err)
 				}
@@ -96,21 +84,6 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 	}()
 
 	return nil
-}
-
-func unmarshalPayload(envelope types.MessageEnvelope, target interface{}) error {
-	var err error
-	switch envelope.ContentType {
-	case common.ContentTypeJSON:
-		err = json.Unmarshal(envelope.Payload, target)
-
-	case common.ContentTypeCBOR:
-		err = cbor.Unmarshal(envelope.Payload, target)
-
-	default:
-		err = fmt.Errorf("unsupported content-type '%s' recieved", envelope.ContentType)
-	}
-	return err
 }
 
 func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
