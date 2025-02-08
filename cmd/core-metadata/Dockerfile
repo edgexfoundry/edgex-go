@@ -2,6 +2,7 @@
 #  Copyright 2018 Dell Technologies, Inc.
 #  Copyright 2018 Cavium
 #  Copyright 2023 Intel Corp.
+#  Copyright (C) 2025 IOTech Ltd
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -52,7 +53,6 @@ COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/core-metadata/core-metadata /
 COPY --from=builder /edgex-go/cmd/core-metadata/res/configuration.yaml /res/configuration.yaml
 COPY --from=builder /edgex-go/cmd/core-metadata/res/uom.yaml /res/uom.yaml
-COPY --from=builder /edgex-go/cmd/core-metadata/res/db/ /res/db/
 
 ENTRYPOINT ["/core-metadata"]
 CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]

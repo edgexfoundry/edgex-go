@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +7,7 @@ package postgres
 
 import (
 	"context"
+	"embed"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
@@ -20,10 +21,10 @@ type Client struct {
 	loggingClient logger.LoggingClient
 }
 
-func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, extScriptPath string, lc logger.LoggingClient) (*Client, errors.EdgeX) {
+func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingClient, schemaName, serviceKey, serviceVersion string, sqlFiles embed.FS) (*Client, errors.EdgeX) {
 	var err error
 	dc := &Client{}
-	dc.Client, err = postgresClient.NewClient(ctx, config, baseScriptPath, extScriptPath, lc)
+	dc.Client, err = postgresClient.NewClient(ctx, config, lc, schemaName, serviceKey, serviceVersion, sqlFiles)
 	dc.loggingClient = lc
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "postgres client creation failed", err)

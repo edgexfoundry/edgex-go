@@ -16,6 +16,7 @@ package scheduler
 
 import (
 	"context"
+
 	"github.com/labstack/echo/v4"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
@@ -31,6 +32,7 @@ import (
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/config"
 	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/container"
+	"github.com/edgexfoundry/edgex-go/internal/support/scheduler/embed"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
@@ -54,6 +56,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.SupportSchedulerServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.SupportSchedulerServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -67,7 +71,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		true,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.SupportSchedulerServiceKey).BootstrapHandler, // Must be after Messaging

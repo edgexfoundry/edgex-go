@@ -18,9 +18,11 @@ package metadata
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/embed"
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/uom"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 
@@ -58,6 +60,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.CoreMetaDataServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.CoreMetaDataServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -73,7 +77,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
 			uom.BootstrapHandler,
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreMetaDataServiceKey).BootstrapHandler, // Must be after Messaging
 			NewBootstrap(router, common.CoreMetaDataServiceKey).BootstrapHandler,

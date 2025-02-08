@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,6 +7,7 @@ package postgres
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"net/url"
 	"os"
@@ -33,7 +34,7 @@ type Client struct {
 }
 
 // NewClient returns a pointer to the Postgres client
-func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, extScriptPath string, lc logger.LoggingClient) (*Client, errors.EdgeX) {
+func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingClient, schemaName, serviceKey, serviceVersion string, sqlFiles embed.FS) (*Client, errors.EdgeX) {
 	// Get the database name from the environment variable
 	databaseName := os.Getenv("EDGEX_DBNAME")
 	if databaseName == "" {
@@ -63,15 +64,15 @@ func NewClient(ctx context.Context, config db.Configuration, baseScriptPath, ext
 		return nil, WrapDBError("failed to acquire a connection from database connection pool", err)
 	}
 
-	// execute base DB scripts
-	if edgeXerr = executeDBScripts(ctx, dc.ConnPool, baseScriptPath); edgeXerr != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute Postgres base DB scripts", edgeXerr)
+	// create a new TableManager instance
+	tableManager, err := NewTableManager(dc.ConnPool, lc, schemaName, serviceKey, serviceVersion, sqlFiles)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to create a new TableManager instance", err)
 	}
-	lc.Info("successfully execute Postgres base DB scripts")
 
-	// execute extension DB scripts
-	if edgeXerr = executeDBScripts(ctx, dc.ConnPool, extScriptPath); edgeXerr != nil {
-		return nil, errors.NewCommonEdgeX(errors.Kind(edgeXerr), "failed to execute Postgres extension DB scripts", edgeXerr)
+	err = tableManager.RunScripts(ctx)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "TableManager failed to run SQL scripts", err)
 	}
 
 	return dc, nil

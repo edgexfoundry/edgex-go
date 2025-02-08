@@ -32,6 +32,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/proxyauth/embed"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 
@@ -62,6 +63,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.SecurityProxyAuthServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.SecurityProxyAuthServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -76,7 +79,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			NewBootstrap(router, common.SecurityProxyAuthServiceKey).BootstrapHandler,
 			httpServer.BootstrapHandler,
 			handlers.NewStartMessage(common.SecurityProxyAuthServiceKey, edgex.Version).BootstrapHandler,

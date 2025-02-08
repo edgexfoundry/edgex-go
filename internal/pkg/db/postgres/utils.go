@@ -1,25 +1,24 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
 package postgres
 
 import (
-	"context"
+	"embed"
 	goErrors "errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+
+	"github.com/blang/semver/v4"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 )
 
 var sqlFileNameRegexp = regexp.MustCompile(`([[:digit:]]+)-[[:word:]]+.sql`)
@@ -52,62 +51,33 @@ func (sf sqlFileNames) getSortedNames() []string {
 	return result
 }
 
-func executeDBScripts(ctx context.Context, connPool *pgxpool.Pool, scriptsPath string) errors.EdgeX {
-	if len(scriptsPath) == 0 {
-		// skip script execution when the path is empty
-		return nil
-	}
+type versionDirNames []semver.Version
 
-	// get the sorted sql files
-	sqlFiles, edgeXerr := sortedSqlFileNames(scriptsPath)
-	if edgeXerr != nil {
-		return edgeXerr
-	}
-
-	tx, err := connPool.Begin(ctx)
-	if err != nil {
-		return WrapDBError("failed to begin a transaction to execute sql files", err)
-	}
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
-
-	// execute sql files in the sequence of ordering prefix as a transaction
-	for _, sqlFile := range sqlFiles {
-		// read sql file content
-		sqlContent, err := os.ReadFile(sqlFile)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to read sql file %s", sqlFile), err)
-		}
-		_, err = tx.Exec(ctx, string(sqlContent))
-		if err != nil {
-			return WrapDBError(fmt.Sprintf("failed to execute sql file %s", sqlFile), err)
-		}
-	}
-	if err = tx.Commit(ctx); err != nil {
-		return WrapDBError("failed to commit transaction for executing sql files", err)
-	}
-	return nil
+func (m versionDirNames) Len() int {
+	return len(m)
 }
 
-func sortedSqlFileNames(sqlFilesDir string) ([]string, errors.EdgeX) {
-	sqlDir, err := os.Open(sqlFilesDir)
+func (m versionDirNames) Less(i, j int) bool {
+	return m[i].LT(m[j])
+}
+
+func (m versionDirNames) Swap(i, j int) {
+	m[i], m[j] = m[j], m[i]
+}
+
+func getSortedSqlFileNames(embedFiles embed.FS, sqlFilesDir string) ([]string, error) {
+	entries, err := embedFiles.ReadDir(sqlFilesDir)
 	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to open directory at %s", sqlFilesDir), err)
-	}
-	fileInfos, err := sqlDir.Readdir(0)
-	if err != nil {
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("failed to read sql files from %s", sqlFilesDir), err)
+		return nil, fmt.Errorf("failed to read directory %s: %w", sqlFilesDir, err)
 	}
 
 	sqlFiles := sqlFileNames{}
-	for _, file := range fileInfos {
-		// ignore directories
-		if file.IsDir() {
+	for _, entry := range entries {
+		if entry.IsDir() {
 			continue
 		}
 
-		fileName := file.Name()
+		fileName := entry.Name()
 
 		// ignore files whose name is not in the format of %d-%s.sql
 		if !sqlFileNameRegexp.MatchString(fileName) {
@@ -123,7 +93,36 @@ func sortedSqlFileNames(sqlFilesDir string) ([]string, errors.EdgeX) {
 		}
 		sqlFiles = append(sqlFiles, sqlFileName{order, filepath.Join(sqlFilesDir, fileName)})
 	}
+
 	return sqlFiles.getSortedNames(), nil
+}
+
+func getSortedVersionDirNames(embedFiles embed.FS, sqlFilesDir string) ([]semver.Version, error) {
+	entries, err := embedFiles.ReadDir(sqlFilesDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory %s: %w", sqlFilesDir, err)
+	}
+
+	versionDirs := versionDirNames{}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		dirName := entry.Name()
+
+		// ignore folder whose name is not in the format of semver.Version
+		version, parseErr := semver.Parse(dirName)
+		// ignore mal-format version folder
+		if parseErr != nil {
+			continue
+		}
+		versionDirs = append(versionDirs, version)
+	}
+
+	sort.Sort(versionDirs)
+
+	return versionDirs, nil
 }
 
 // When DB operation fails with error, the pgx DB library put a much detailed information in the pgxError.Detail.

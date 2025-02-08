@@ -385,3 +385,6 @@ https://github.com/nhooyr/websocket/blob/master/LICENSE.txt
 
 github.com/pebbe/zmq4 (BSD-2) https://github.com/pebbe/zmq4
 https://github.com/pebbe/zmq4/blob/master/LICENSE.txt
+
+github.com/blang/semver/v4 (MIT) https://github.com/blang/semver
+https://github.com/blang/semver/blob/master/LICENSE

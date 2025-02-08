@@ -1,6 +1,7 @@
 #  ----------------------------------------------------------------------------------
 #  Copyright 2018 Cavium
 #  Copyright 2023 Intel Corporation
+#  Copyright (C) 2025 IOTech Ltd
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -48,7 +49,6 @@ COPY --from=builder /edgex-go/Attribution.txt /
 COPY --from=builder /edgex-go/security.txt /
 COPY --from=builder /edgex-go/cmd/support-notifications/support-notifications /
 COPY --from=builder /edgex-go/cmd/support-notifications/res/configuration.yaml /res/configuration.yaml
-COPY --from=builder /edgex-go/cmd/support-notifications/res/db/ /res/db/
 
 ENTRYPOINT ["/support-notifications"]
 CMD ["-cp=keeper.http://edgex-core-keeper:59890", "--registry"]
