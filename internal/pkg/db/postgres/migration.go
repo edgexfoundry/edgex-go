@@ -28,8 +28,8 @@ const (
 	statusFailure = "FAILURE"
 
 	// initialVersion specifies the version when the service introduced schema_migrations table to handle migration
-	// as we introduced the schema_migration in the release of 4.0.0, the initial version is set to 4.0.0
-	initialVersion = "4.0.0"
+	// as we introduced the schema_migration in the release of 4.0.0-dev, the initial version is set to 4.0.0-dev
+	initialVersion = "4.0.0-dev"
 )
 
 // TableManager defines the interface for the table manager
