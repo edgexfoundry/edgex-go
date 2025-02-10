@@ -27,9 +27,9 @@ const (
 	statusSuccess = "SUCCESS"
 	statusFailure = "FAILURE"
 
-	// initialVersion specifies the version before the service introduced schema_migrations table to handle migration
-	// as we introduce the schema_migration in the release of 4.0, the initial version is set to 3.1.1 Napa release
-	initialVersion = "3.1.1"
+	// initialVersion specifies the version when the service introduced schema_migrations table to handle migration
+	// as we introduced the schema_migration in the release of 4.0.0, the initial version is set to 4.0.0
+	initialVersion = "4.0.0"
 )
 
 // TableManager defines the interface for the table manager
