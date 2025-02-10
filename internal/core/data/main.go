@@ -18,6 +18,7 @@ package data
 
 import (
 	"context"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
@@ -31,6 +32,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/config"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/embed"
 	pkgHandlers "github.com/edgexfoundry/edgex-go/internal/pkg/bootstrap/handlers"
 
 	"github.com/labstack/echo/v4"
@@ -57,6 +59,8 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 	})
 
 	httpServer := handlers.NewHttpServer(router, true, common.CoreDataServiceKey)
+	dbHandler := pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName, embed.SchemaName,
+		common.CoreDataServiceKey, edgex.Version, embed.SQLFiles)
 
 	bootstrap.Run(
 		ctx,
@@ -71,7 +75,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			handlers.NewClientsBootstrap().BootstrapHandler,
-			pkgHandlers.NewDatabase(httpServer, configuration, container.DBClientInterfaceName).BootstrapHandler, // add db client bootstrap handler
+			dbHandler.BootstrapHandler, // add db client bootstrap handler
 			handlers.MessagingBootstrapHandler,
 			handlers.NewServiceMetrics(common.CoreDataServiceKey).BootstrapHandler, // Must be after Messaging
 			application.BootstrapHandler,                                           // Must be after Service Metrics and before next handler
