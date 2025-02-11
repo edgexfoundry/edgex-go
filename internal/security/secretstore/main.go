@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright 2023 Intel Corporation
- * Copyright 2024 IOTech Ltd
+ * Copyright 2024-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,22 +23,25 @@ package secretstore
 
 import (
 	"context"
-	"os"
 
+	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+
+	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
+func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.SecuritySecretStoreSetupServiceKey)
 
 	var insecureSkipVerify bool
@@ -67,24 +70,24 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 		},
 	})
 
-	_, _, success := bootstrap.RunAndReturnWaitGroup(
+	httpServer := handlers.NewHttpServer(router, true, common.SecuritySecretStoreSetupServiceKey)
+
+	bootstrap.Run(
 		ctx,
 		cancel,
 		f,
 		common.SecuritySecretStoreSetupServiceKey,
 		common.ConfigStemSecurity,
 		configuration,
-		nil,
 		startupTimer,
 		dic,
 		false,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(insecureSkipVerify, secretStoreInterval).BootstrapHandler,
+			NewBootstrapServer(router, common.SecuritySecretStoreSetupServiceKey).BootstrapServerHandler,
+			httpServer.BootstrapHandler,
+			handlers.NewStartMessage(common.SecuritySecretStoreSetupServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)
-
-	if !success {
-		os.Exit(1)
-	}
 }

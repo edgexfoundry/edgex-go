@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
+ * Copyright (c) 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -24,9 +25,11 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
+
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	secretstore.Main(ctx, cancel, os.Args[1:])
+	secretstore.Main(ctx, cancel, echo.New(), os.Args[1:])
 }

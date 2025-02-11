@@ -3,6 +3,7 @@
 
 //
 // Copyright (c) 2021 Intel Corporation
+// Copyright (C) 2025 IOTech Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +18,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package secretstore
+package tokenprovider
 
 import (
 	"context"
@@ -25,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 
@@ -46,7 +48,7 @@ func TestCreatesFile(t *testing.T) {
 	assert.NoError(t, err)
 	defer func() { _ = os.RemoveAll(testfile) }() // cleanup
 
-	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
+	p := NewTokenProvider(ctx, logger.MockLogger{}, utils.NewDefaultExecRunner())
 	err = p.SetConfiguration(configuration)
 	assert.NoError(t, err)
 

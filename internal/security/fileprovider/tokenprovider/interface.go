@@ -14,7 +14,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package fileprovider
+package tokenprovider
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
@@ -28,4 +28,6 @@ type TokenProvider interface {
 	SetConfiguration(secretStore secretstoreConfig.SecretStoreInfo, tokenConfig config.TokenFileProviderInfo)
 	// Generate tokens
 	Run() error
+	// RegenToken regenerates a token for the specified entity in secret store
+	RegenToken(entityId string) error
 }

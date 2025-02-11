@@ -31,7 +31,7 @@ mkdir -p /openbao/config/assets
 chown -Rh 100:1000 /openbao/
 
 echo "Initializing secret store..."
-/security-secretstore-setup --secretStoreInterval=10
+/security-secretstore-setup --secretStoreInterval=10 &
 
 # default User and Group in case never set
 if [ -z "${EDGEX_USER}" ]; then

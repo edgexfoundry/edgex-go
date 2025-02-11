@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright 2021 Intel Inc.
+ * Copyright 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -26,6 +27,7 @@ import (
 	"net/url"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
@@ -42,7 +44,7 @@ func NewPasswordGenerator(lc logger.LoggingClient, passwordProvider string, pass
 		generatorImplementation: NewDefaultCredentialGenerator(),
 	}
 	if passwordProvider != "" {
-		pp := NewPasswordProvider(lc, NewDefaultExecRunner())
+		pp := NewPasswordProvider(lc, utils.NewDefaultExecRunner())
 		err := pp.SetConfiguration(passwordProvider, passwordProviderArgs)
 		if err != nil {
 			lc.Warnf("Could not configure password generator %s: error: %s", passwordProvider, err.Error())

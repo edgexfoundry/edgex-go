@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2020-2023 Intel Corporation
+// Copyright (c) 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -83,6 +84,13 @@ func addUserWithArgs(t *testing.T, args []string) {
 				t.Fatalf("Unexpected call to %s %s", r.Method, r.URL.EscapedPath())
 			}
 		case "/v1/identity/entity-alias":
+			switch r.Method {
+			case "POST":
+				w.WriteHeader(http.StatusNoContent)
+			default:
+				t.Fatalf("Unexpected call to %s %s", r.Method, r.URL.EscapedPath())
+			}
+		case "/v1/auth/token/roles/someuser":
 			switch r.Method {
 			case "POST":
 				w.WriteHeader(http.StatusNoContent)

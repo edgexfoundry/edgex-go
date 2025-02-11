@@ -47,6 +47,10 @@ path "identity/entity/name/*" {
   capabilities = ["create", "update", "read"]
 }
 
+path "identity/entity/id/*" {
+  capabilities = ["read"]
+}
+
 path "identity/entity-alias" {
   capabilities = ["create", "update"]
 }
@@ -58,11 +62,23 @@ path "identity/oidc/role" {
 path "identity/oidc/role/*" {
   capabilities = ["create", "update"]
 }
-  
+
 path "auth/userpass/users/*" {
-	capabilities = ["create", "update"]
-  }
-  
+  capabilities = ["create", "update"]
+}
+
+path "auth/token/create/*" {
+  capabilities = ["create", "update", "sudo"]
+}
+
+path "auth/token/roles" {
+  capabilities = ["list"]
+}
+
+path "auth/token/roles/*" {
+  capabilities = ["create", "update"]
+}
+
 path "sys/auth" {
   capabilities = ["read"]
 }

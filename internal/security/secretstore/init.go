@@ -39,6 +39,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenfilewriter"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenprovider"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
@@ -310,17 +312,19 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 	// If configured to do so, create a token issuing token
 	if secretStoreConfig.TokenProviderAdminTokenPath != "" {
-		revokeIssuingTokenFuc, err := tokenfilewriter.NewWriter(lc, client, fileOpener).
+		//revokeIssuingTokenFuc, err := tokenfilewriter.NewWriter(lc, client, fileOpener).
+		//	CreateAndWrite(rootToken, secretStoreConfig.TokenProviderAdminTokenPath, tokenMaintenance.CreateTokenIssuingToken)
+		_, err := tokenfilewriter.NewWriter(lc, client, fileOpener).
 			CreateAndWrite(rootToken, secretStoreConfig.TokenProviderAdminTokenPath, tokenMaintenance.CreateTokenIssuingToken)
 		if err != nil {
 			lc.Errorf("failed to create token issuing token: %s", err.Error())
 			return false
 		}
-		if secretStoreConfig.TokenProviderType == OneShotProvider {
-			// Revoke the admin token at the end of the current function if running a one-shot provider
-			// otherwise assume the token provider will keep its token fresh after this point
-			defer revokeIssuingTokenFuc()
-		}
+		//if secretStoreConfig.TokenProviderType == OneShotProvider {
+		//	// Revoke the admin token at the end of the current function if running a one-shot provider
+		//	// otherwise assume the token provider will keep its token fresh after this point
+		//	defer revokeIssuingTokenFuc()
+		//}
 	}
 
 	// Enable userpass auth engine
@@ -351,7 +355,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	//Step 4: Launch token handler
-	tokenProvider := NewTokenProvider(ctx, lc, NewDefaultExecRunner())
+	tokenProvider := tokenprovider.NewTokenProvider(ctx, lc, utils.NewDefaultExecRunner())
 	if secretStoreConfig.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(secretStoreConfig); err != nil {
 			lc.Errorf("failed to configure token provider: %s", err.Error())
