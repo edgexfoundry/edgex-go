@@ -112,7 +112,7 @@ func (tm *pgTableManager) RunScripts(ctx context.Context) error {
 	}
 
 	// if the table is empty, the dbVersion will be a dummy semver.Version{}, and insert a record for the initial
-	// version 3.1.1, also assign the dbVersion to 3.1.1
+	// version 4.0.0-dev, also assign the dbVersion to 4.0.0-dev
 	if dbVersion.Equals(semver.Version{}) {
 		dbVersion, err = semver.Parse(initialVersion)
 		if err != nil {
