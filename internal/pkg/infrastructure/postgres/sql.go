@@ -221,6 +221,10 @@ func sqlQueryCountByTimeRange(table string) string {
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2", table, createdField)
 }
 
+func sqlQueryCountInUseResource() string {
+	return fmt.Sprintf("SELECT count(resource) FROM %s device JOIN %s profile ON device.content->>'ProfileName'=profile.content->>'Name', jsonb_array_elements(profile.content->'DeviceResources') resource", deviceTableName, deviceProfileTableName)
+}
+
 // sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
 // by the given time range of the JSON field name
 //func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {

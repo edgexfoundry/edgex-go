@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -216,6 +216,12 @@ func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model st
 	ctx := context.Background()
 	queryObj := map[string]any{manufacturerField: manufacturer, modelField: model}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceProfileTableName), queryObj)
+}
+
+// ResourceCount returns the total count of Resources
+func (c *Client) InUseResourceCount() (uint32, errors.EdgeX) {
+	ctx := context.Background()
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountInUseResource())
 }
 
 func deviceProfileNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {

@@ -55,6 +55,9 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 
+	deviceAddOrUpdateMutex.Lock()
+	defer deviceAddOrUpdateMutex.Unlock()
+
 	profile, err := dbClient.DeviceProfileByName(profileName)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -63,6 +66,25 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	err = deviceResourceUoMValidation(resource, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	config := container.ConfigurationFrom(dic.Get)
+	isInUse, err := isProfileInUse(profileName, dic)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "add device resource failed", err)
+	}
+	if config.Writable.MaxResources > 0 && isInUse {
+		totalInUseResourceCount, err := dbClient.InUseResourceCount()
+		if err != nil {
+			return errors.NewCommonEdgeX(errors.Kind(err), "add device resource failed", err)
+		}
+		if totalInUseResourceCount+1 > config.Writable.MaxResources {
+			return errors.NewCommonEdgeX(
+				errors.KindContractInvalid,
+				fmt.Sprintf(
+					"'%d' resources is in use, add '%s' resource will exceed the maximum limitation '%d'",
+					totalInUseResourceCount, resource.Name, config.Writable.MaxResources), nil)
+		}
 	}
 
 	profile.DeviceResources = append(profile.DeviceResources, resource)

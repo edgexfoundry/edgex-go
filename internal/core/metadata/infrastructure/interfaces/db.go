@@ -28,6 +28,7 @@ type DBClient interface {
 	DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX)
 	DeviceProfileCountByModel(model string) (uint32, errors.EdgeX)
 	DeviceProfileCountByManufacturerAndModel(manufacturer string, model string) (uint32, errors.EdgeX)
+	InUseResourceCount() (uint32, errors.EdgeX)
 
 	AddDeviceService(ds model.DeviceService) (model.DeviceService, errors.EdgeX)
 	DeviceServiceById(id string) (model.DeviceService, errors.EdgeX)
