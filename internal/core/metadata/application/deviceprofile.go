@@ -58,37 +58,16 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
-
-	deviceAddOrUpdateMutex.Lock()
-	defer deviceAddOrUpdateMutex.Unlock()
+	config := container.ConfigurationFrom(dic.Get)
 
 	err = deviceProfileUoMValidation(d, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
-	config := container.ConfigurationFrom(dic.Get)
-	isInUse, err := isProfileInUse(d.Name, dic)
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), "update device profile failed", err)
-	}
-	if config.Writable.MaxResources > 0 && isInUse {
-		totalInUseResourceCount, err := dbClient.InUseResourceCount()
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), "update device profile failed", err)
-		}
-		oldProfileResourceCount, err := resourceCountByProfile(d.Name, dic)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), "update device profile failed", err)
-		}
-		newProfileResourceCount := uint32(len(d.DeviceResources))
-		count := totalInUseResourceCount - oldProfileResourceCount + newProfileResourceCount
-		if count > config.Writable.MaxResources {
-			return errors.NewCommonEdgeX(
-				errors.KindContractInvalid,
-				fmt.Sprintf(
-					"'%d' resources is in use, update the profile from %d resource count to %d resource count will exceed the maximum limitation '%d'",
-					totalInUseResourceCount, oldProfileResourceCount, newProfileResourceCount, config.Writable.MaxResources), nil)
+	if config.Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByUpdateProfile(d, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
 		}
 	}
 

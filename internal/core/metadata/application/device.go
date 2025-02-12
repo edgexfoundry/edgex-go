@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"sync"
 	"time"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -38,11 +37,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 )
 
-var (
-	// deviceAddOrUpdateMutex lock for calculating the MaxDevices and MaxResources
-	deviceAddOrUpdateMutex sync.Mutex
-)
-
 // the suggested minimum duration for auto event interval
 const minAutoEventInterval = 1 * time.Millisecond
 
@@ -52,9 +46,6 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
 	config := container.ConfigurationFrom(dic.Get)
-
-	deviceAddOrUpdateMutex.Lock()
-	defer deviceAddOrUpdateMutex.Unlock()
 
 	// Check the existence of device service before device validation
 	exists, edgeXerr := dbClient.DeviceServiceNameExists(d.ServiceName)
@@ -83,30 +74,9 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 		}
 	}
 
-	if config.Writable.MaxDevices > 0 {
-		deviceCount, err := dbClient.DeviceCountByLabels(nil)
-		if err != nil {
-			return "", errors.NewCommonEdgeX(errors.Kind(err), "add device failed", err)
-		}
-		if deviceCount+1 > config.Writable.MaxDevices {
-			return "", errors.NewCommonEdgeX(
-				errors.KindContractInvalid,
-				fmt.Sprintf("the existing total number of device is '%d', add device '%s' will exceed the maximum limitation '%d'", deviceCount, d.Name, config.Writable.MaxDevices), nil)
-		}
-	}
-	if config.Writable.MaxResources > 0 {
-		totalInUseResourceCount, err := dbClient.InUseResourceCount()
-		if err != nil {
-			return "", errors.NewCommonEdgeX(errors.Kind(err), "add device failed", err)
-		}
-		newResourceCount, err := resourceCountByProfile(d.ProfileName, dic)
-		if err != nil {
-			return "", errors.NewCommonEdgeX(errors.Kind(err), "add device failed", err)
-		}
-		if totalInUseResourceCount+newResourceCount > config.Writable.MaxResources {
-			return "", errors.NewCommonEdgeX(
-				errors.KindContractInvalid,
-				fmt.Sprintf("'%d' resources is in use, increase '%d' resources will exceed the maximum limitation '%d'", totalInUseResourceCount, newResourceCount, config.Writable.MaxResources), nil)
+	if config.Writable.MaxDevices > 0 || config.Writable.MaxResources > 0 {
+		if err = checkCapacityWithNewDevice(d, dic); err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
 		}
 	}
 
@@ -166,8 +136,10 @@ func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id s
 		oldServiceName = oldDevice.ServiceName
 	}
 
-	if err = checkMaxResourcesByOldAndNewProfile(oldDevice.ProfileName, d.ProfileName, dic); err != nil {
-		return "", errors.NewCommonEdgeXWrapper(err)
+	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByExistingAndNewProfile(oldDevice.ProfileName, d.ProfileName, dic); err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	err = updateDeviceInDB(d, oldServiceName, ctx, dic)
@@ -176,48 +148,6 @@ func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id s
 	}
 
 	return d.Id, nil
-}
-
-func checkMaxResourcesByOldAndNewProfile(oldProfileName, newProfileName string, dic *di.Container) errors.EdgeX {
-	config := container.ConfigurationFrom(dic.Get)
-	dbClient := container.DBClientFrom(dic.Get)
-
-	if config.Writable.MaxResources > 0 && oldProfileName != newProfileName {
-		oldProfileResourceCount, err := resourceCountByProfile(oldProfileName, dic)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), "check MaxResources failed", err)
-		}
-		newProfileResourceCount, err := resourceCountByProfile(newProfileName, dic)
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), "check MaxResources failed", err)
-		}
-
-		totalInUseResourceCount, err := dbClient.InUseResourceCount()
-		if err != nil {
-			return errors.NewCommonEdgeX(errors.Kind(err), "check MaxResources failed", err)
-		}
-		count := totalInUseResourceCount - oldProfileResourceCount + newProfileResourceCount
-		if count > config.Writable.MaxResources {
-			return errors.NewCommonEdgeX(
-				errors.KindContractInvalid,
-				fmt.Sprintf(
-					"'%d' resources is in use, change from profile '%s' (%d resource count) to the profile '%s' (%d resource count) will exceed the maximum limitation '%d'",
-					totalInUseResourceCount, oldProfileName, oldProfileResourceCount, newProfileName, newProfileResourceCount, config.Writable.MaxResources), nil)
-		}
-	}
-	return nil
-}
-
-func resourceCountByProfile(profileName string, dic *di.Container) (uint32, errors.EdgeX) {
-	if profileName == "" {
-		return 0, nil
-	}
-	dbClient := container.DBClientFrom(dic.Get)
-	profile, err := dbClient.DeviceProfileByName(profileName)
-	if err != nil {
-		return 0, errors.NewCommonEdgeX(errors.Kind(err), "count resource number failed", err)
-	}
-	return uint32(len(profile.DeviceResources)), nil
 }
 
 // DeleteDeviceByName deletes the device by name
@@ -292,9 +222,6 @@ func DeviceNameExists(name string, dic *di.Container) (exists bool, err errors.E
 func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, bypassValidation bool) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 
-	deviceAddOrUpdateMutex.Lock()
-	defer deviceAddOrUpdateMutex.Unlock()
-
 	// Check the existence of device service before device validation
 	if dto.ServiceName != nil {
 		exists, edgeXerr := dbClient.DeviceServiceNameExists(*dto.ServiceName)
@@ -316,8 +243,10 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 		oldServiceName = device.ServiceName
 	}
 
-	if err = checkMaxResourcesByOldAndNewProfile(device.ProfileName, *dto.ProfileName, dic); err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
+	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByExistingAndNewProfile(device.ProfileName, *dto.ProfileName, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)

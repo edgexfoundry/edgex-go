@@ -20,6 +20,9 @@ import (
 	"context"
 	"sync"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/metadata/utils"
+
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
@@ -44,5 +47,11 @@ func NewBootstrap(router *echo.Echo, serviceName string) *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
+	capacityCheckLock := utils.NewCapacityCheckLock()
+	dic.Update(di.ServiceConstructorMap{
+		container.CapacityCheckLockName: func(get di.Get) interface{} {
+			return capacityCheckLock
+		},
+	})
 	return true
 }
