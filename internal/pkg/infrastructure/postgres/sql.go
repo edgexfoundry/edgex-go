@@ -88,6 +88,15 @@ func sqlQueryAllAndDescWithCondsAndPag(table string, descCol string, columns ...
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d", table, whereCondition, descCol, columnCount+1, columnCount+2)
 }
 
+// sqlQueryAllAndDescWithCondsAndPagAndUpperLimitTime returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
+// with descending by descCol and pagination
+func sqlQueryAllAndDescWithCondsAndPagAndUpperLimitTime(table string, descCol string, upperLimitTimeRangeCol string, columns ...string) string {
+	columnCount := len(columns)
+	whereCondition := constructWhereCondWithTimeRange("", upperLimitTimeRangeCol, nil, columns...)
+
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d", table, whereCondition, descCol, columnCount+2, columnCount+3)
+}
+
 // sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
 func sqlQueryAllWithPaginationAndTimeRange(table string) string {
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
@@ -96,7 +105,7 @@ func sqlQueryAllWithPaginationAndTimeRange(table string) string {
 // sqlQueryAllWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the table with the arrayColNames slice,
 // provided columns with pagination and a time range by timeRangeCol, desc by descCol
 func sqlQueryAllWithPaginationAndTimeRangeDescByCol(table string, timeRangeCol string, descCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, arrayColNames, columns...)
+	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 	columnCount := len(columns)
 
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
@@ -192,7 +201,7 @@ func sqlQueryCountByCol(table string, columns ...string) string {
 // sqlQueryCountByTimeRangeCol returns the SQL statement for counting the number of rows in the table
 // by the given time range of the specified column
 func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, arrayColNames, columns...)
+	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
 }
 
@@ -219,10 +228,11 @@ func sqlQueryCountByTimeRange(table string) string {
 //}
 
 // sqlQueryFieldsByTimeRange returns the SQL statement for selecting fields from the table within the time range
-func sqlQueryFieldsByTimeRange(table string, fields []string, timeRangeCol string) string {
+func sqlQueryFieldsByTimeRangeAndConditions(table string, fields []string, timeRangeCol string, cols ...string) string {
 	queryFieldStr := strings.Join(fields, ", ")
+	whereCondition := constructWhereCondWithTimeRange("", timeRangeCol, nil, cols...)
 
-	return fmt.Sprintf("SELECT %s FROM %s WHERE %s <= $1", queryFieldStr, table, timeRangeCol)
+	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
 }
 
 // ----------------------------------------------------------------------------------
@@ -284,13 +294,14 @@ func sqlDeleteByJSONFieldAndAge(table string) string {
 
 // sqlDeleteTimeRangeByColumn returns the SQL statement for deleting rows from the table by time range with the specified column
 // the time range is calculated from the caller function since the interval unit might be different
-func sqlDeleteTimeRangeByColumn(table string, column string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE %s <= $1", table, column)
+func sqlDeleteTimeRangeByColumn(table string, upperLimitTimeRangeCol string, cols ...string) string {
+	whereCondition := constructWhereCondWithTimeRange("", upperLimitTimeRangeCol, nil, cols...)
+	return fmt.Sprintf("DELETE FROM %s WHERE %s", table, whereCondition)
 }
 
 // sqlDeleteByColumn returns the SQL statement for deleting rows from the table by the specified column
-func sqlDeleteByColumn(table string, column string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, column)
+func sqlDeleteByColumns(table string, cols ...string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE %s", table, constructWhereCondition(cols...))
 }
 
 // sqlDeleteByColAndLikePat returns the SQL statement for deleting rows by the specified column with LIKE pattern
@@ -322,19 +333,25 @@ func constructWhereCondition(columns ...string) string {
 
 // constructWhereCondWithTimeRange constructs the WHERE condition for the given columns with time range
 // if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
-func constructWhereCondWithTimeRange(timeRangeCol string, arrayColNames []string, columns ...string) string {
+func constructWhereCondWithTimeRange(lowerLimitTimeRangeCol, upperLimitTimeRangeCol string, arrayColNames []string, columns ...string) string {
 	var hasArrayColumn bool
-	conditions := []string{timeRangeCol + " >= $1", timeRangeCol + " <= $2"}
+	var conditions []string
+	if lowerLimitTimeRangeCol != "" {
+		conditions = append(conditions, lowerLimitTimeRangeCol+" >= $1")
+	}
+	if upperLimitTimeRangeCol != "" {
+		conditions = append(conditions, fmt.Sprintf("%s <= $%d", upperLimitTimeRangeCol, len(conditions)+1))
+	}
 
 	if len(arrayColNames) > 0 {
 		hasArrayColumn = true
 	}
-	for i, column := range columns {
+	for _, column := range columns {
 		equalCondition := "%s = $%d"
 		if hasArrayColumn && slices.Contains(arrayColNames, column) {
 			equalCondition = "%s = ANY ($%d)"
 		}
-		conditions = append(conditions, fmt.Sprintf(equalCondition, column, i+3))
+		conditions = append(conditions, fmt.Sprintf(equalCondition, column, 1+len(conditions)))
 	}
 
 	return strings.Join(conditions, " AND ")

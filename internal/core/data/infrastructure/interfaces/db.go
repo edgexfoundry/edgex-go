@@ -19,11 +19,14 @@ type DBClient interface {
 	EventTotalCount() (uint32, errors.EdgeX)
 	EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX)
 	EventCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX)
+	EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX)
 	AllEvents(offset int, limit int) ([]model.Event, errors.EdgeX)
 	EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX)
 	DeleteEventsByDeviceName(deviceName string) errors.EdgeX
+	DeleteEventsByDeviceNameAndSourceName(deviceName, sourceName string) errors.EdgeX
 	EventsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Event, errors.EdgeX)
 	DeleteEventsByAge(age int64) errors.EdgeX
+	DeleteEventsByAgeAndDeviceNameAndSourceName(age int64, deviceName, sourceName string) errors.EdgeX
 	ReadingTotalCount() (uint32, errors.EdgeX)
 	AllReadings(offset int, limit int) ([]model.Reading, errors.EdgeX)
 	ReadingsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX)
@@ -43,4 +46,6 @@ type DBClient interface {
 	ReadingsByDeviceNameAndTimeRange(deviceName string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX)
 	ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (uint32, errors.EdgeX)
 	LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX)
+	LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (model.Event, errors.EdgeX)
+	LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX)
 }

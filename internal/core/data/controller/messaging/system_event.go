@@ -27,7 +27,7 @@ func SubscribeSystemEvents(ctx context.Context, dic *di.Container) errors.EdgeX 
 	// device deletion event edgex/system-events/core-metadata/device/delete/<device name>/<device profile name>
 	deviceDeletionSystemEventTopic := common.NewPathBuilder().EnableNameFieldEscape(configuration.Service.EnableNameFieldEscape).
 		SetPath(messageBusInfo.GetBaseTopicPrefix()).SetPath(common.SystemEventPublishTopic).SetPath(common.CoreMetaDataServiceKey).
-		SetPath(common.DeviceSystemEventType).SetPath(common.SystemEventActionDelete).SetPath("#").BuildPath()
+		SetPath(common.DeviceSystemEventType).SetPath("#").BuildPath()
 	lc.Infof("Subscribing to System Events on topic: %s", deviceDeletionSystemEventTopic)
 
 	messages := make(chan types.MessageEnvelope, 1)
@@ -84,8 +84,18 @@ func deviceSystemEventAction(systemEvent dtos.SystemEvent, dic *di.Container) er
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	deviceStore := dataContainer.DeviceStoreFrom(dic.Get)
 	switch systemEvent.Action {
+	case common.SystemEventActionAdd:
+		deviceStore.Add(dtos.ToDeviceModel(device))
+
+	case common.SystemEventActionUpdate:
+		deviceStore.Remove(device.Name)
+		deviceStore.Add(dtos.ToDeviceModel(device))
+
 	case common.SystemEventActionDelete:
+		deviceStore.Remove(device.Name)
+
 		if !dataContainer.ConfigurationFrom(dic.Get).Writable.EventPurge {
 			return nil
 		}

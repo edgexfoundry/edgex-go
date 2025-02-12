@@ -139,7 +139,7 @@ func (c *Client) DeleteKeeperKeys(key string, isRecurse bool) ([]models.KeyOnly,
 
 	if exists {
 		// delete the exact same key
-		_, err = c.ConnPool.Exec(ctx, sqlDeleteByColumn(configTableName, keyCol), key)
+		_, err = c.ConnPool.Exec(ctx, sqlDeleteByColumns(configTableName, keyCol), key)
 		if err != nil {
 			return nil, pgClient.WrapDBError(fmt.Sprintf("failed to query row by key '%s'", key), err)
 		}
