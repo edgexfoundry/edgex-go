@@ -909,6 +909,11 @@ func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model st
 	return uint32(len(profiles)), nil
 }
 
+func (c *Client) InUseResourceCount() (uint32, errors.EdgeX) {
+	c.loggingClient.Warn("InUseResourceCount function didn't implement")
+	return 0, nil
+}
+
 // DeviceServiceCountByLabels returns the total count of Device Services with labels specified.  If no label is specified, the total count of all device services will be returned.
 func (c *Client) DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX) {
 	conn := c.Pool.Get()

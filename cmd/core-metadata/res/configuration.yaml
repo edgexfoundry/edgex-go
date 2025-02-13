@@ -5,6 +5,8 @@ Writable:
     StrictDeviceProfileDeletes: false
   UoM:
     Validation: false
+  MaxDevices: 0
+  MaxResources: 0
 
 Service:
   Host: localhost

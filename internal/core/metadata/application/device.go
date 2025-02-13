@@ -1,5 +1,5 @@
 /********************************************************************************
- *  Copyright (C) 2020-2024 IOTech Ltd
+ *  Copyright (C) 2020-2025 IOTech Ltd
  *  Copyright 2023 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -45,6 +45,7 @@ const minAutoEventInterval = 1 * time.Millisecond
 func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassValidation bool, force bool) (id string, edgeXerr errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 
 	// Check the existence of device service before device validation
 	exists, edgeXerr := dbClient.DeviceServiceNameExists(d.ServiceName)
@@ -70,6 +71,12 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 			return updateDevice(d, ctx, dic)
 		} else {
 			return "", errors.NewCommonEdgeX(errors.KindDuplicateName, fmt.Sprintf("device name %s already exists", d.Name), nil)
+		}
+	}
+
+	if config.Writable.MaxDevices > 0 || config.Writable.MaxResources > 0 {
+		if err = checkCapacityWithNewDevice(d, dic); err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
 		}
 	}
 
@@ -127,6 +134,12 @@ func updateDevice(d models.Device, ctx context.Context, dic *di.Container) (id s
 	var oldServiceName string
 	if d.ServiceName != "" && d.ServiceName != oldDevice.ServiceName {
 		oldServiceName = oldDevice.ServiceName
+	}
+
+	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByExistingAndNewProfile(oldDevice.ProfileName, d.ProfileName, dic); err != nil {
+			return "", errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	err = updateDeviceInDB(d, oldServiceName, ctx, dic)
@@ -228,6 +241,12 @@ func PatchDevice(dto dtos.UpdateDevice, ctx context.Context, dic *di.Container, 
 	var oldServiceName string
 	if dto.ServiceName != nil && *dto.ServiceName != device.ServiceName {
 		oldServiceName = device.ServiceName
+	}
+
+	if container.ConfigurationFrom(dic.Get).Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByExistingAndNewProfile(device.ProfileName, *dto.ProfileName, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	requests.ReplaceDeviceModelFieldsWithDTO(&device, dto)

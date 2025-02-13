@@ -1,5 +1,6 @@
 //
 // Copyright (C) 2021-2022 IOTech Ltd
+// Copyright (C) 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -54,6 +55,7 @@ func resourceByName(resources []models.DeviceResource, resourceName string) (mod
 func AddDeviceProfileResource(profileName string, resource models.DeviceResource, ctx context.Context, dic *di.Container) errors.EdgeX {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 
 	profile, err := dbClient.DeviceProfileByName(profileName)
 	if err != nil {
@@ -63,6 +65,12 @@ func AddDeviceProfileResource(profileName string, resource models.DeviceResource
 	err = deviceResourceUoMValidation(resource, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	if config.Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByNewResource(profileName, resource, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	profile.DeviceResources = append(profile.DeviceResources, resource)

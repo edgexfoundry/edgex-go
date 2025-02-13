@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2024 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -58,10 +58,17 @@ func AddDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Conta
 func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Container) (err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 
 	err = deviceProfileUoMValidation(d, dic)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
+	}
+
+	if config.Writable.MaxResources > 0 {
+		if err = checkResourceCapacityByUpdateProfile(d, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 
 	err = dbClient.UpdateDeviceProfile(d)
@@ -83,6 +90,15 @@ func UpdateDeviceProfile(d models.DeviceProfile, ctx context.Context, dic *di.Co
 	go publishUpdateDeviceProfileSystemEvent(profileDTO, ctx, dic)
 
 	return nil
+}
+
+func isProfileInUse(profileName string, dic *di.Container) (bool, errors.EdgeX) {
+	dbClient := container.DBClientFrom(dic.Get)
+	count, err := dbClient.DeviceCountByProfileName(profileName)
+	if err != nil {
+		return false, errors.NewCommonEdgeXWrapper(err)
+	}
+	return count > 0, nil
 }
 
 // DeviceProfileByName query the device profile by name
