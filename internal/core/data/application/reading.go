@@ -339,7 +339,8 @@ func purgeEventByAutoEvents(dic *di.Container) errors.EdgeX {
 
 func purgeEvent(deviceName string, autoEvent models.AutoEvent, dic *di.Container) errors.EdgeX {
 	config := container.ConfigurationFrom(dic.Get)
-	// apply the default retention policy
+	// apply the default retention policy, when maxCap/minCap/duration are not specified or equal to zero/empty string
+	// which are mentioned in the documentation
 	if autoEvent.Retention.MaxCap == 0 {
 		autoEvent.Retention.MaxCap = config.Retention.DefaultMaxCap
 	}
