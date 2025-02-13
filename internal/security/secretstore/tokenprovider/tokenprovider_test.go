@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2021 Intel Corporation
+// Copyright (C) 2025 IOTech Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -14,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package secretstore
+package tokenprovider
 
 import (
 	"context"
@@ -29,6 +30,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 )
 
 func TestInvalidProvider(t *testing.T) {
@@ -36,7 +38,7 @@ func TestInvalidProvider(t *testing.T) {
 		TokenProvider:     "does-not-exist",
 		TokenProviderType: OneShotProvider,
 	}
-	mockExecRunner := mockExecRunner{}
+	mockExecRunner := utils.MockExecRunner{}
 	mockExecRunner.On("LookPath", serviceConfig.TokenProvider).
 		Return("", errors.New("fake file does not exist"))
 	cancel, err := testCommon(serviceConfig, &mockExecRunner)
@@ -55,7 +57,7 @@ func TestInvalidProviderType(t *testing.T) {
 		TokenProvider:     "success-executable",
 		TokenProviderType: "simple",
 	}
-	mockExecRunner := mockExecRunner{}
+	mockExecRunner := utils.MockExecRunner{}
 	cancel, err := testCommon(serviceConfig, &mockExecRunner)
 	defer func() {
 		if cancel != nil {
@@ -68,7 +70,7 @@ func TestInvalidProviderType(t *testing.T) {
 
 func TestNoConfig(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	p := NewTokenProvider(ctx, logger.MockLogger{}, NewDefaultExecRunner())
+	p := NewTokenProvider(ctx, logger.MockLogger{}, utils.NewDefaultExecRunner())
 	// don't call SetConfiguration()
 	err := p.Launch()
 	defer cancel()
@@ -81,8 +83,8 @@ func TestSuccess(t *testing.T) {
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{"arg1", "arg2"},
 	}
-	mockExecRunner := mockExecRunner{}
-	mockCmd := mockCmd{}
+	mockExecRunner := utils.MockExecRunner{}
+	mockCmd := utils.MockCmd{}
 	mockExecRunner.On("LookPath", serviceConfig.TokenProvider).
 		Return(serviceConfig.TokenProvider, nil)
 	mockExecRunner.On("CommandContext", mock.Anything,
@@ -107,8 +109,8 @@ func TestFailure(t *testing.T) {
 		TokenProviderType: OneShotProvider,
 		TokenProviderArgs: []string{"arg1", "arg2"},
 	}
-	mockExecRunner := mockExecRunner{}
-	mockCmd := mockCmd{}
+	mockExecRunner := utils.MockExecRunner{}
+	mockCmd := utils.MockCmd{}
 	mockExecRunner.On("LookPath", serviceConfig.TokenProvider).
 		Return(serviceConfig.TokenProvider, nil)
 	mockExecRunner.On("CommandContext", mock.Anything,
@@ -127,7 +129,7 @@ func TestFailure(t *testing.T) {
 	mockCmd.AssertExpectations(t)
 }
 
-func testCommon(config config.SecretStoreInfo, mockExecRunner ExecRunner) (context.CancelFunc, error) {
+func testCommon(config config.SecretStoreInfo, mockExecRunner utils.ExecRunner) (context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	p := NewTokenProvider(ctx, logger.MockLogger{}, mockExecRunner)
 	if err := p.SetConfiguration(config); err != nil {

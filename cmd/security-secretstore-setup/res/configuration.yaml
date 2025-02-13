@@ -1,6 +1,7 @@
 #################################################################################
 # Copyright 2019 Dell Inc.
 # Copyright 2020-2023 Intel Corp.
+# Copyright 2025 IOTech Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -80,3 +81,17 @@ SecureMessageBus:
       Service: support-notifications
     scheduler:
       Service: support-scheduler
+Service:
+  Host: localhost
+  Port: 59843
+  StartupMsg: "This is the security-secretstore-setup microservice"
+  RequestTimeout: "5s"
+  EnableNameFieldEscape: false # The name field escape could allow the system to use special or Chinese characters in the different name fields, including device, profile, and so on.  If the EnableNameFieldEscape is false, some special characters might cause system error.  TODO: This is set to false by default to avoid breaking change and will be removed in EdgeX 4.0
+  CORSConfiguration:
+    EnableCORS: false
+    CORSAllowCredentials: false
+    CORSAllowedOrigin: "https://localhost"
+    CORSAllowedMethods: "GET, POST, PUT, PATCH, DELETE"
+    CORSAllowedHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type, X-Correlation-ID"
+    CORSExposeHeaders: "Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma, X-Correlation-ID"
+    CORSMaxAge: 3600

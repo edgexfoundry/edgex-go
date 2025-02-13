@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2019 Intel Corporation
+// Copyright (C) 2025 IOTech Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -19,8 +20,8 @@ package mocks
 import (
 	"testing"
 
-	. "github.com/edgexfoundry/edgex-go/internal/security/fileprovider"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
+	. "github.com/edgexfoundry/edgex-go/internal/security/fileprovider/tokenprovider"
 
 	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
@@ -48,6 +49,17 @@ func TestMockSetConfiguration(t *testing.T) {
 	p.On("SetConfiguration", secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
 
 	p.SetConfiguration(secretStoreConfig.SecretStoreInfo{}, config.TokenFileProviderInfo{})
+
+	p.AssertExpectations(t)
+}
+
+func TestMockRegenToken(t *testing.T) {
+	p := &MockTokenProvider{}
+	mockEntityId := "id123"
+	p.On("RegenToken", mockEntityId)
+
+	err := p.RegenToken(mockEntityId)
+	assert.NoError(t, err)
 
 	p.AssertExpectations(t)
 }

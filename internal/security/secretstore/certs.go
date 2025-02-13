@@ -28,6 +28,7 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
@@ -97,7 +98,7 @@ func (cs *Certs) retrieve() (*CertPair, error) {
 		return nil, e
 	}
 
-	req.Header.Set(VaultToken, cs.rootToken)
+	req.Header.Set(tokenmaintenance.VaultToken, cs.rootToken)
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Errorf("failed to retrieve the proxy cert on path %s with error %s", cs.certPath, err.Error())
@@ -189,7 +190,7 @@ func (cs *Certs) UploadToStore(cp *CertPair) error {
 		return e
 	}
 
-	req.Header.Set(VaultToken, cs.rootToken)
+	req.Header.Set(tokenmaintenance.VaultToken, cs.rootToken)
 	resp, err := cs.client.Do(req)
 	if err != nil {
 		e := fmt.Sprintf("failed to upload the proxy cert pair on path %s with error %s", cs.certPath, err.Error())

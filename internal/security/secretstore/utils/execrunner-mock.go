@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package secretstore
+package utils
 
 import (
 	"context"
@@ -13,35 +13,35 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type mockExecRunner struct {
+type MockExecRunner struct {
 	mock.Mock
 }
 
-func (m *mockExecRunner) SetStdout(stdout io.Writer) {
+func (m *MockExecRunner) SetStdout(stdout io.Writer) {
 	m.Called(stdout)
 }
 
-func (m *mockExecRunner) LookPath(file string) (string, error) {
+func (m *MockExecRunner) LookPath(file string) (string, error) {
 	arguments := m.Called(file)
 	return arguments.String(0), arguments.Error(1)
 }
 
-func (m *mockExecRunner) CommandContext(ctx context.Context,
+func (m *MockExecRunner) CommandContext(ctx context.Context,
 	name string, arg ...string) CmdRunner {
 	arguments := m.Called(ctx, name, arg)
 	return arguments.Get(0).(CmdRunner)
 }
 
-type mockCmd struct {
+type MockCmd struct {
 	mock.Mock
 }
 
-func (m *mockCmd) Start() error {
+func (m *MockCmd) Start() error {
 	arguments := m.Called()
 	return arguments.Error(0)
 }
 
-func (m *mockCmd) Wait() error {
+func (m *MockCmd) Wait() error {
 	arguments := m.Called()
 	return arguments.Error(0)
 }

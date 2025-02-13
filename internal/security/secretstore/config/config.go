@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright (C) 2023 Intel Corporation
- * Copyright (C) 2024 IOTech Ltd
+ * Copyright (C) 2024-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -29,6 +29,7 @@ type ConfigurationStruct struct {
 	Database         bootstrapConfig.Database
 	Databases        map[string]Database
 	SecureMessageBus SecureMessageBusInfo
+	Service          bootstrapConfig.ServiceInfo
 }
 
 type Database struct {
@@ -102,7 +103,9 @@ func (c *ConfigurationStruct) UpdateWritableFromRaw(_ interface{}) bool {
 // GetBootstrap returns the configuration elements required by the bootstrap.
 // Not needed for this service, so return empty struct
 func (c *ConfigurationStruct) GetBootstrap() bootstrapConfig.BootstrapConfiguration {
-	return bootstrapConfig.BootstrapConfiguration{}
+	return bootstrapConfig.BootstrapConfiguration{
+		Service: &c.Service,
+	}
 }
 
 // GetLogLevel returns the current ConfigurationStruct's log level.
