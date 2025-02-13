@@ -23,14 +23,14 @@ package secretstore
 
 import (
 	"context"
+	"os"
 
-	"github.com/edgexfoundry/edgex-go"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
+	serverConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/server"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
@@ -41,18 +41,20 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, args []string) {
+func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	startupTimer := startup.NewStartUpTimer(common.SecuritySecretStoreSetupServiceKey)
 
 	var insecureSkipVerify bool
 	var secretStoreInterval int
+	var longRun bool
 
 	// All common command-line flags have been moved to bootstrap. Service specific flags are add here,
 	// but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
 	// Service specific used is passed below.
 	f := flags.NewWithUsage(
 		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
-			"    --secretStoreInterval=<seconds>       Indicates how long the program will pause between the secret store initialization attempts until it succeeds",
+			"    --secretStoreInterval=<seconds>       Indicates how long the program will pause between the secret store initialization attempts until it succeeds" +
+			"    --longRun=true/false                  Indicates whether secret-store-setup is a long run service listening on the server port",
 	)
 
 	if len(args) < 1 {
@@ -61,6 +63,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 
 	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
 	f.FlagSet.IntVar(&secretStoreInterval, "secretStoreInterval", 30, "")
+	f.FlagSet.BoolVar(&longRun, "longRun", false, "")
 	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
@@ -70,24 +73,29 @@ func Main(ctx context.Context, cancel context.CancelFunc, router *echo.Echo, arg
 		},
 	})
 
-	httpServer := handlers.NewHttpServer(router, true, common.SecuritySecretStoreSetupServiceKey)
+	if longRun {
+		serverConfig.Configure(ctx, cancel, f, echo.New())
+		return
+	}
 
-	bootstrap.Run(
+	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
 		cancel,
 		f,
 		common.SecuritySecretStoreSetupServiceKey,
 		common.ConfigStemSecurity,
 		configuration,
+		nil,
 		startupTimer,
 		dic,
 		false,
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			NewBootstrap(insecureSkipVerify, secretStoreInterval).BootstrapHandler,
-			NewBootstrapServer(router, common.SecuritySecretStoreSetupServiceKey).BootstrapServerHandler,
-			httpServer.BootstrapHandler,
-			handlers.NewStartMessage(common.SecuritySecretStoreSetupServiceKey, edgex.Version).BootstrapHandler,
 		},
 	)
+
+	if !success {
+		os.Exit(1)
+	}
 }

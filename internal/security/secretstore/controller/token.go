@@ -11,6 +11,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokeninit"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenprovider"
 	secretUtils "github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 
@@ -52,20 +53,29 @@ func (a *TokenController) RegenToken(c echo.Context) error {
 	secretStoreConfig := configuration.SecretStore
 	ctx := r.Context()
 
+	revokeIssuingTokenFuc, err := tokeninit.InitAdminTokens(a.dic)
+	if err != nil {
+		lc.Errorf("failed to InitAdminTokens: %s", err.Error())
+		return err
+	}
+
 	tokenProvider := tokenprovider.NewTokenProvider(ctx, lc, secretUtils.NewDefaultExecRunner())
 	if secretStoreConfig.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(secretStoreConfig); err != nil {
-			lc.Errorf("failed to configure token provider: %v", err)
+			lc.Errorf("failed to configure token provider: %s", err.Error())
 			return err
 		}
 
 		err := tokenProvider.LaunchRegenToken(entityId)
 		if err != nil {
-			lc.Errorf("failed to call LaunchRefreshToken from token provider: %v", err)
+			lc.Errorf("failed to call LaunchRefreshToken from token provider: %s", err.Error())
 			return err
 		}
 	} else {
 		lc.Info("no token provider configured")
+	}
+	if secretStoreConfig.TokenProviderType == tokenprovider.OneShotProvider {
+		revokeIssuingTokenFuc()
 	}
 
 	response := commonDTO.NewBaseResponse(

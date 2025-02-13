@@ -12,7 +12,7 @@
 // the License.
 //
 
-package secretstore
+package tokenmaintenance
 
 import (
 	"testing"

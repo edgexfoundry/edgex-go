@@ -3,12 +3,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package secretstore
+package handlers
 
 import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/controller"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/handlers"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/labstack/echo/v4"
@@ -21,9 +20,7 @@ const regenTokenRoute = "/api/v3/token/entityId/:entityId"
 // Authentication is always on for this service,
 // as it is called by NGINX to authenticate requests
 // and must always authenticate even if the rest of EdgeX does not
-func LoadRestRoutes(r *echo.Echo, dic *di.Container, serviceName string) {
-	authenticationHook := handlers.AutoConfigAuthenticationFunc(dic)
-
+func LoadRestRoutes(r *echo.Echo, dic *di.Container) {
 	ac := controller.NewTokenController(dic)
-	r.PUT(regenTokenRoute, ac.RegenToken, authenticationHook)
+	r.PUT(regenTokenRoute, ac.RegenToken)
 }

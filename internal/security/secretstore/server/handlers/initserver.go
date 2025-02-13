@@ -12,7 +12,7 @@
  * the License.
  *******************************************************************************/
 
-package secretstore
+package handlers
 
 import (
 	"context"
@@ -26,21 +26,19 @@ import (
 
 // Bootstrap contains references to dependencies required by the BootstrapHandler.
 type BootstrapServer struct {
-	router      *echo.Echo
-	serviceName string
+	router *echo.Echo
 }
 
 // NewBootstrap is a factory method that returns an initialized Bootstrap receiver struct.
-func NewBootstrapServer(router *echo.Echo, serviceName string) *BootstrapServer {
+func NewBootstrapServer(router *echo.Echo) *BootstrapServer {
 	return &BootstrapServer{
-		router:      router,
-		serviceName: serviceName,
+		router: router,
 	}
 }
 
 // BootstrapHandler fulfills the BootstrapHandler contract and performs initialization needed by the security-secretstore-setup service to declare the rest routes
 func (b *BootstrapServer) BootstrapServerHandler(ctx context.Context, wg *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
-	LoadRestRoutes(b.router, dic, b.serviceName)
+	LoadRestRoutes(b.router, dic)
 
 	return true
 }

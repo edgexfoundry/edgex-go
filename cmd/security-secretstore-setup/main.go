@@ -25,11 +25,9 @@ import (
 	"os"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
-
-	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	secretstore.Main(ctx, cancel, echo.New(), os.Args[1:])
+	secretstore.Main(ctx, cancel, os.Args[1:])
 }

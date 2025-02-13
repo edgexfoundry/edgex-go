@@ -31,7 +31,7 @@ mkdir -p /openbao/config/assets
 chown -Rh 100:1000 /openbao/
 
 echo "Initializing secret store..."
-/security-secretstore-setup --secretStoreInterval=10 &
+/security-secretstore-setup --secretStoreInterval=10
 
 # default User and Group in case never set
 if [ -z "${EDGEX_USER}" ]; then
@@ -52,7 +52,10 @@ chown -Rh ${EKUIPER_UID}:${EKUIPER_GID} "${EDGEX_SECRETS_ROOT}/rules-engine"
 
 # Signal tokens ready port for other services waiting on
 exec su-exec ${EDGEX_USER} /edgex-init/security-bootstrapper --configDir=/edgex-init/res listenTcp \
-  --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}"
+  --port="${STAGEGATE_SECRETSTORESETUP_TOKENS_READYPORT}" --host="${STAGEGATE_SECRETSTORESETUP_HOST}" &
 if [ $? -ne 0 ]; then
   echo "$(date) failed to gating the tokens ready port"
 fi
+
+echo "Starting secret store as a long-run service listening on http service port"
+/security-secretstore-setup --secretStoreInterval=10 --longRun=true

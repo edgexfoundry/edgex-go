@@ -50,7 +50,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
+
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 )
 
@@ -107,7 +108,7 @@ func GetTokenConfigFromEnv() (TokenConfFile, error) {
 	// the list of service names is comma-separated
 	tokenConfigFromEnv := make(TokenConfFile)
 	serviceNameList := strings.Split(addTokenList, ",")
-	serviceNameRegx := regexp.MustCompile(secretstore.ServiceNameValidationRegx)
+	serviceNameRegx := regexp.MustCompile(tokenmaintenance.ServiceNameValidationRegx)
 
 	for _, name := range serviceNameList {
 		serviceName := strings.TrimSpace(name)

@@ -16,7 +16,7 @@
  * @author: Tingyu Zeng, Dell
  *******************************************************************************/
 
-package secretstore
+package tokenmaintenance
 
 const (
 	// ServiceNameValidationRegx is regex string for valid service name as key
