@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2021 Intel Corporation
+// Copyright 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -14,12 +15,14 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
 
 type PasswordProvider struct {
 	loggingClient        logger.LoggingClient
-	execRunner           ExecRunner
+	execRunner           utils.ExecRunner
 	initialized          bool
 	passwordProvider     string
 	passwordProviderArgs []string
@@ -27,7 +30,7 @@ type PasswordProvider struct {
 }
 
 // NewPasswordProvider creates a new PasswordProvider
-func NewPasswordProvider(lc logger.LoggingClient, execRunner ExecRunner) *PasswordProvider {
+func NewPasswordProvider(lc logger.LoggingClient, execRunner utils.ExecRunner) *PasswordProvider {
 	return &PasswordProvider{
 		loggingClient: lc,
 		execRunner:    execRunner,

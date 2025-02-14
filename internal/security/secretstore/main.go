@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright 2023 Intel Corporation
- * Copyright 2024 IOTech Ltd
+ * Copyright 2024-2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
+	serverConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/server"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
@@ -36,6 +37,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+
+	"github.com/labstack/echo/v4"
 )
 
 func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
@@ -43,13 +46,15 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 
 	var insecureSkipVerify bool
 	var secretStoreInterval int
+	var longRun bool
 
 	// All common command-line flags have been moved to bootstrap. Service specific flags are add here,
 	// but DO NOT call flag.Parse() as it is called by bootstrap.Run() below
 	// Service specific used is passed below.
 	f := flags.NewWithUsage(
 		"    --insecureSkipVerify=true/false Indicates if skipping the server side SSL cert verification, similar to -k of curl\n" +
-			"    --secretStoreInterval=<seconds>       Indicates how long the program will pause between the secret store initialization attempts until it succeeds",
+			"    --secretStoreInterval=<seconds>       Indicates how long the program will pause between the secret store initialization attempts until it succeeds" +
+			"    --longRun=true/false                  Indicates whether secret-store-setup is a long run service listening on the server port",
 	)
 
 	if len(args) < 1 {
@@ -58,6 +63,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 
 	f.FlagSet.BoolVar(&insecureSkipVerify, "insecureSkipVerify", false, "")
 	f.FlagSet.IntVar(&secretStoreInterval, "secretStoreInterval", 30, "")
+	f.FlagSet.BoolVar(&longRun, "longRun", false, "")
 	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
@@ -66,6 +72,11 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 			return configuration
 		},
 	})
+
+	if longRun {
+		serverConfig.Configure(ctx, cancel, f, echo.New())
+		return
+	}
 
 	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,

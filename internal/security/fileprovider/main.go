@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2023 Intel Corporation
+ * Copyright (C) 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -19,11 +20,12 @@ import (
 	"context"
 	"os"
 
+	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/command"
+	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/command/handlers"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap"
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
@@ -42,8 +44,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	//      ....
 	//      flags.Parse(args)
 	//
-
-	f := flags.New()
+	f := command.NewCommonFlags()
 	f.Parse(args)
 
 	configuration := &config.ConfigurationStruct{}
@@ -54,6 +55,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	})
 
 	bootStrapper := NewBootstrap()
+	cmdBootStrapper := handlers.NewInitialization()
 
 	_, _, success := bootstrap.RunAndReturnWaitGroup(
 		ctx,
@@ -69,6 +71,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 		bootstrapConfig.ServiceTypeOther,
 		[]interfaces.BootstrapHandler{
 			bootStrapper.BootstrapHandler,
+			cmdBootStrapper.BootstrapHandler,
 		},
 	)
 

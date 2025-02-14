@@ -1,6 +1,7 @@
 /*******************************************************************************
  * Copyright 2019 Dell Inc.
  * Copyright 2019 Intel Corporation
+ * Copyright 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -18,21 +19,23 @@ package fileprovider
 
 import (
 	"context"
+	"flag"
 	"os"
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/container"
+	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/tokenprovider"
+
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/types"
 	"github.com/edgexfoundry/go-mod-secrets/v4/secrets"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
-
-	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader"
-	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 )
 
 type Bootstrap struct {
@@ -46,6 +49,11 @@ func NewBootstrap() *Bootstrap {
 func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ startup.Timer, dic *di.Container) bool {
 	cfg := container.ConfigurationFrom(dic.Get)
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+
+	if flag.NArg() > 0 {
+		lc.Info("Skip creating secret store tokens for all services, execute subcommand......")
+		return true
+	}
 
 	fileOpener := fileioperformer.NewDefaultFileIoPerformer()
 	tokenProvider := authtokenloader.NewAuthTokenLoader(fileOpener)
@@ -76,7 +84,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 		return false
 	}
 
-	fileProvider := NewTokenProvider(lc, fileOpener, tokenProvider, client)
+	fileProvider := tokenprovider.NewTokenProvider(lc, fileOpener, tokenProvider, client)
 
 	fileProvider.SetConfiguration(cfg.SecretStore, cfg.TokenFileProvider)
 	err = fileProvider.Run()

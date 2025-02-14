@@ -39,6 +39,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/container"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/secretsengine"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenfilewriter"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenprovider"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
@@ -150,7 +153,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			switch sCode {
 			case http.StatusOK:
 				// Load the init response from disk since we need it to regenerate root token later
-				if err := LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
+				if err := tokenmaintenance.LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
@@ -199,7 +202,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 
 			case http.StatusServiceUnavailable:
 				lc.Infof("%s is sealed (status code: %d). Starting unseal phase", secrets.DefaultSecretStore, sCode)
-				if err := LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
+				if err := tokenmaintenance.LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
 					lc.Errorf("unable to load init response: %s", err.Error())
 					return true
 				}
@@ -265,7 +268,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// spawn token provider
 	// create db credentials
 	// upload kong certificate
-	tokenMaintenance := NewTokenMaintenance(lc, client)
+	tokenMaintenance := tokenmaintenance.NewTokenMaintenance(lc, client)
 
 	// Create a transient root token from the key shares
 	var rootToken string
@@ -316,7 +319,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 			lc.Errorf("failed to create token issuing token: %s", err.Error())
 			return false
 		}
-		if secretStoreConfig.TokenProviderType == OneShotProvider {
+		if secretStoreConfig.TokenProviderType == tokenprovider.OneShotProvider {
 			// Revoke the admin token at the end of the current function if running a one-shot provider
 			// otherwise assume the token provider will keep its token fresh after this point
 			defer revokeIssuingTokenFuc()
@@ -324,18 +327,18 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	// Enable userpass auth engine
-	upAuthEnabled, err := client.CheckAuthMethodEnabled(rootToken, UPAuthMountPoint, UserPassAuthEngine)
+	upAuthEnabled, err := client.CheckAuthMethodEnabled(rootToken, tokenmaintenance.UPAuthMountPoint, tokenmaintenance.UserPassAuthEngine)
 	if err != nil {
-		lc.Errorf("failed to check if %s auth method enabled: %s", UserPassAuthEngine, err.Error())
+		lc.Errorf("failed to check if %s auth method enabled: %w", tokenmaintenance.UserPassAuthEngine, err)
 		return false
 	} else if !upAuthEnabled {
 		// Enable userpass engine at /v1/auth/{eng.path} path (/v1 prefix supplied by secret store)
 		lc.Infof("Enabling userpass authentication for the first time...")
-		if err := client.EnablePasswordAuth(rootToken, UPAuthMountPoint); err != nil {
+		if err := client.EnablePasswordAuth(rootToken, tokenmaintenance.UPAuthMountPoint); err != nil {
 			lc.Errorf("failed to enable userpass secrets engine: %s", err.Error())
 			return false
 		}
-		lc.Infof("Userpass authentication engine enabled at path %s", UPAuthMountPoint)
+		lc.Infof("Userpass authentication engine enabled at path %s", tokenmaintenance.UPAuthMountPoint)
 	}
 
 	// Create a key for issuing JWTs
@@ -351,7 +354,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	}
 
 	//Step 4: Launch token handler
-	tokenProvider := NewTokenProvider(ctx, lc, NewDefaultExecRunner())
+	tokenProvider := tokenprovider.NewTokenProvider(ctx, lc, utils.NewDefaultExecRunner())
 	if secretStoreConfig.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(secretStoreConfig); err != nil {
 			lc.Errorf("failed to configure token provider: %s", err.Error())
@@ -606,7 +609,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		return knownSecretsToAdd, nil
 	}
 
-	serviceNameRegx := regexp.MustCompile(ServiceNameValidationRegx)
+	serviceNameRegx := regexp.MustCompile(tokenmaintenance.ServiceNameValidationRegx)
 	knownSecrets := strings.Split(addKnownSecretsValue, knownSecretSeparator)
 	for _, secretSpec := range knownSecrets {
 		// each secretSpec has format of "<secretName>[<serviceName>;<serviceName>; ...]"
@@ -718,36 +721,6 @@ func storeCredential(lc logger.LoggingClient, credBootstrapStem string, cred Cre
 	}
 
 	return err
-}
-
-func LoadInitResponse(
-	lc logger.LoggingClient,
-	fileOpener fileioperformer.FileIoPerformer,
-	secretConfig config.SecretStoreInfo,
-	initResponse *types.InitResponse) error {
-
-	absPath := filepath.Join(secretConfig.TokenFolderPath, secretConfig.TokenFile)
-
-	tokenFile, err := fileOpener.OpenFileReader(absPath, os.O_RDONLY, 0400)
-	if err != nil {
-		lc.Errorf("could not read master key shares file %s: %s", absPath, err.Error())
-		return err
-	}
-	tokenFileCloseable := fileioperformer.MakeReadCloser(tokenFile)
-	defer func() { _ = tokenFileCloseable.Close() }()
-
-	decoder := json.NewDecoder(tokenFileCloseable)
-	if decoder == nil {
-		err := errors.New("Failed to create JSON decoder")
-		lc.Error(err.Error())
-		return err
-	}
-	if err := decoder.Decode(initResponse); err != nil {
-		lc.Errorf("unable to read token file at %s with error: %s", absPath, err.Error())
-		return err
-	}
-
-	return nil
 }
 
 func saveInitResponse(

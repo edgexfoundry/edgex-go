@@ -30,6 +30,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
+
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
@@ -44,7 +46,7 @@ func TestRetrieve(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, fmt.Sprintf("/%s", certPath), r.URL.EscapedPath())
-		actual := r.Header.Get(VaultToken)
+		actual := r.Header.Get(tokenmaintenance.VaultToken)
 		assert.Equal(t, expected, actual)
 	}))
 	defer ts.Close()

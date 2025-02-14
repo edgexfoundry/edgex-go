@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2021 Intel Corporation
+// Copyright 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,13 +19,14 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/utils"
 )
 
 func TestInvalidPasswordProvider(t *testing.T) {
 	serviceInfo := config.SecretStoreInfo{
 		PasswordProvider: "does-not-exist",
 	}
-	mockExecRunner := &mockExecRunner{}
+	mockExecRunner := &utils.MockExecRunner{}
 	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
 		Return("", errors.New("fake file does not exist"))
 	_, cancel := context.WithCancel(context.Background())
@@ -36,7 +38,7 @@ func TestInvalidPasswordProvider(t *testing.T) {
 }
 
 func TestPasswordConfigNotInitialized(t *testing.T) {
-	mockExecRunner := &mockExecRunner{}
+	mockExecRunner := &utils.MockExecRunner{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	p := NewPasswordProvider(logger.MockLogger{}, mockExecRunner)
@@ -51,8 +53,8 @@ func TestPasswordProviderFailsToStart(t *testing.T) {
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
-	mockExecRunner := &mockExecRunner{}
-	mockCmd := mockCmd{}
+	mockExecRunner := &utils.MockExecRunner{}
+	mockCmd := utils.MockCmd{}
 	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
 		Return(serviceInfo.PasswordProvider, nil)
 	mockExecRunner.On("SetStdout", mock.Anything).Once()
@@ -76,8 +78,8 @@ func TestPasswordProviderFailsAtRuntime(t *testing.T) {
 		PasswordProvider:     "failing-executable",
 		PasswordProviderArgs: []string{"arg1", "arg2"},
 	}
-	mockExecRunner := &mockExecRunner{}
-	mockCmd := mockCmd{}
+	mockExecRunner := &utils.MockExecRunner{}
+	mockCmd := utils.MockCmd{}
 	mockExecRunner.On("LookPath", serviceInfo.PasswordProvider).
 		Return(serviceInfo.PasswordProvider, nil)
 	mockExecRunner.On("SetStdout", mock.Anything).Once()

@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2019-2023 Intel Corporation
+// Copyright (c) 2025 IOTech Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
@@ -14,11 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package fileprovider
+package tokenprovider
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -208,6 +210,106 @@ func (p *fileTokenProvider) Run() error {
 			p.logger.Errorf("failed to close %s: %s", outputTokenFilename, err.Error())
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (p *fileTokenProvider) RegenToken(entityId string) error {
+	p.logger.Infof("Generating new OpenBao token associated with the entity id '%s'", entityId)
+
+	privilegedToken, err := p.tokenProvider.Load(p.tokenConfig.PrivilegedTokenPath)
+	if err != nil {
+		p.logger.Errorf("failed to read privileged access token: %v", err)
+		return err
+	}
+
+	tokenConfEnv, err := GetTokenConfigFromEnv()
+	if err != nil {
+		p.logger.Errorf("failed to get token config from environment variable %s with error: %v", addSecretstoreTokensEnvKey, err)
+		return err
+	}
+
+	var tokenConf TokenConfFile
+	if err := LoadTokenConfig(p.fileOpener, p.tokenConfig.ConfigFile, &tokenConf); err != nil {
+		p.logger.Errorf("failed to read token configuration file %s: %v", p.tokenConfig.ConfigFile, err)
+		return err
+	}
+
+	// merge the additional token configuration list from environment variable
+	// note that the configuration file takes precedence, as the tokenConf will override
+	// the tokenConfEnv with same duplicate keys
+	// The tokenConfEnv only uses default settings.
+	tokenConf = tokenConfEnv.mergeWith(tokenConf)
+
+	var aliasName, entityName string
+	var policies []string
+
+	// retrieve the entity metadata that will be required while creating a token and associates with the entity
+	getEntityResp, err := p.secretStoreClient.GetIdentityByEntityId(privilegedToken, entityId)
+	if err != nil {
+		p.logger.Errorf("failed to get entity by id '%s' from secretStoreClient: %w", entityId, err)
+		return err
+	}
+
+	if len(getEntityResp.Aliases) == 0 {
+		err = fmt.Errorf("alias name not defined in entity resp of entity id '%s'", entityId)
+		p.logger.Error(err.Error())
+		return err
+	}
+	aliasName = getEntityResp.Aliases[0].Name
+
+	if len(getEntityResp.Name) == 0 {
+		err = fmt.Errorf("entity name not defined in entity resp of entity id '%s'", entityId)
+		p.logger.Error(err.Error())
+		return err
+	}
+	entityName = getEntityResp.Name
+
+	if len(getEntityResp.Policies) == 0 {
+		err = fmt.Errorf("policy not defined in getEntityResp of entity id '%s'", entityId)
+		p.logger.Error(err.Error())
+		return err
+	}
+	policies = getEntityResp.Policies
+
+	outputTokenDir := filepath.Join(p.tokenConfig.OutputDir, entityName)
+	outputTokenFilename := filepath.Join(outputTokenDir, p.tokenConfig.OutputFilename)
+
+	p.logger.Infof("opening token file %s", outputTokenFilename)
+	writeCloser, err := p.fileOpener.OpenFileWriter(outputTokenFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600))
+	if err != nil {
+		p.logger.Errorf("failed open token file for writing %s: %w", outputTokenFilename, err)
+		return err
+	}
+
+	createTokenParameters := make(map[string]any)
+	createTokenParameters["display_name"] = "token-" + entityName
+	createTokenParameters["role_name"] = entityName
+	createTokenParameters["entity_alias"] = aliasName
+	createTokenParameters["no_parent"] = true
+	createTokenParameters["policies"] = policies
+	createTokenParameters["meta"] = map[string]string{"user": entityName}
+	createTokenParameters["ttl"] = p.tokenConfig.DefaultTokenTTL
+	createTokenParameters["renewable"] = true
+
+	p.logger.Infof("creating token for %s ......", entityName)
+	createTokenResponse, err := p.secretStoreClient.CreateTokenByRole(privilegedToken, entityName, createTokenParameters)
+	if err != nil {
+		p.logger.Errorf("failed creation of new token for '%s': %w", entityName, err)
+		return err
+	}
+
+	// Write resulting token
+	if err := json.NewEncoder(writeCloser).Encode(createTokenResponse); err != nil {
+		_ = writeCloser.Close()
+		p.logger.Errorf("failed to write token file: %w", err)
+		return err
+	}
+
+	if err := writeCloser.Close(); err != nil {
+		p.logger.Errorf("failed to close %s: %w", outputTokenFilename, err)
+		return err
 	}
 
 	return nil

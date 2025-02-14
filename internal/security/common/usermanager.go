@@ -1,5 +1,6 @@
 //
 // Copyright (c) 2023 Intel Corporation
+// Copyright (c) 2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -112,6 +113,20 @@ func (m *UserManager) CreatePasswordUserWithPolicy(username string, password str
 	customClaims := fmt.Sprintf(`{"name": "%s"}`, username)
 	err = m.secretStoreClient.CreateOrUpdateIdentityRole(m.privilegedToken, username, m.jwtKeyName, customClaims, m.jwtAudience, m.jwtTTL)
 	if err != nil {
+		return err
+	}
+
+	// Create the token role which will be used to associate a token with the entity alias
+	// See create token role API doc in https://openbao.org/api-docs/auth/token/#createupdate-token-role
+	tokenRoleParams := map[string]any{
+		"allowed_policies":       []string{policyName},
+		"name":                   username,
+		"renewable":              true,
+		"allowed_entity_aliases": []string{username},
+	}
+	err = m.secretStoreClient.CreateOrUpdateTokenRole(m.privilegedToken, username, tokenRoleParams)
+	if err != nil {
+		m.logger.Errorf("failed create/update token role '%s': %w", username, err)
 		return err
 	}
 

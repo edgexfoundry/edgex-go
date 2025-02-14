@@ -9,7 +9,6 @@ package secretstore
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
@@ -22,39 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const sampleJSON = `
-{
-	"keys": [
-		"test-keys"
-	],
-	"keys_base64": [
-		"test-keys-base64"
-	],
-	"root_token": "test-root-token"
-}`
-
 var expectedFolder = "/foo"
 var expectedFile = "bar.baz"
-
-func TestLoadInitResponse(t *testing.T) {
-	// Arrange
-	mockLogger := logger.MockLogger{}
-	fileOpener := &mocks.FileIoPerformer{}
-	stringReader := strings.NewReader(sampleJSON)
-	fileOpener.On("OpenFileReader", filepath.Join(expectedFolder, expectedFile), os.O_RDONLY, os.FileMode(0400)).Return(stringReader, nil)
-	secretConfig := config.SecretStoreInfo{
-		TokenFolderPath: expectedFolder,
-		TokenFile:       expectedFile,
-	}
-	initResponse := types.InitResponse{}
-
-	// Act
-	err := LoadInitResponse(mockLogger, fileOpener, secretConfig, &initResponse)
-
-	// Assert
-	assert.NoError(t, err)
-	fileOpener.AssertExpectations(t)
-}
 
 func TestSaveInitResponse(t *testing.T) {
 

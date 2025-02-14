@@ -18,6 +18,8 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/pipedhexreader"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
+	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg"
 	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader"
@@ -132,7 +134,7 @@ func (vb *ProxyUserCommon) LoadRootToken() (string, func(), error) {
 	}
 
 	var initResponse types.InitResponse
-	if err := secretstore.LoadInitResponse(vb.loggingClient, vb.fileOpener, vb.configuration.SecretStore, &initResponse); err != nil {
+	if err := tokenmaintenance.LoadInitResponse(vb.loggingClient, vb.fileOpener, vb.configuration.SecretStore, &initResponse); err != nil {
 		vb.loggingClient.Errorf("unable to load init response: %s", err.Error())
 		return "", nil, err
 	}
