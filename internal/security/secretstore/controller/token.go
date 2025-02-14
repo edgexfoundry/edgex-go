@@ -49,20 +49,20 @@ func (a *TokenController) RegenToken(c echo.Context) error {
 
 	revokeIssuingTokenFuc, err := tokeninit.InitAdminTokens(a.dic)
 	if err != nil {
-		lc.Errorf("failed to InitAdminTokens: %s", err.Error())
+		lc.Errorf("failed to InitAdminTokens: %w", err)
 		return err
 	}
 
 	tokenProvider := tokenprovider.NewTokenProvider(ctx, lc, secretUtils.NewDefaultExecRunner())
 	if secretStoreConfig.TokenProvider != "" {
 		if err := tokenProvider.SetConfiguration(secretStoreConfig); err != nil {
-			lc.Errorf("failed to configure token provider: %s", err.Error())
+			lc.Errorf("failed to configure token provider: %w", err)
 			return err
 		}
 
 		err := tokenProvider.LaunchRegenToken(entityId)
 		if err != nil {
-			lc.Errorf("failed to call LaunchRefreshToken from token provider: %s", err.Error())
+			lc.Errorf("failed to call LaunchRefreshToken from token provider: %w", err)
 			return err
 		}
 	} else {

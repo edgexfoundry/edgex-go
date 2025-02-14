@@ -329,7 +329,7 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 	// Enable userpass auth engine
 	upAuthEnabled, err := client.CheckAuthMethodEnabled(rootToken, tokenmaintenance.UPAuthMountPoint, tokenmaintenance.UserPassAuthEngine)
 	if err != nil {
-		lc.Errorf("failed to check if %s auth method enabled: %s", tokenmaintenance.UserPassAuthEngine, err.Error())
+		lc.Errorf("failed to check if %s auth method enabled: %w", tokenmaintenance.UserPassAuthEngine, err)
 		return false
 	} else if !upAuthEnabled {
 		// Enable userpass engine at /v1/auth/{eng.path} path (/v1 prefix supplied by secret store)

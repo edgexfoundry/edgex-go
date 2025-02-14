@@ -36,7 +36,7 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 		lc.Info("using certificate verification for secret store connection")
 		caReader, err := fileOpener.OpenFileReader(caFilePath, os.O_RDONLY, 0400)
 		if err != nil {
-			lc.Errorf("failed to load CA certificate: %s", err.Error())
+			lc.Errorf("failed to load CA certificate: %w", err)
 		}
 		httpCaller = pkg.NewRequester(lc).WithTLS(caReader, secretStoreConfig.ServerName)
 	} else {
@@ -52,14 +52,14 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 	}
 	secretStoreClient, err := secrets.NewSecretStoreClient(clientConfig, lc, httpCaller)
 	if err != nil {
-		lc.Errorf("failed to create SecretStoreClient: %s", err.Error())
+		lc.Errorf("failed to create SecretStoreClient: %w", err)
 	}
 
 	var initResponse types.InitResponse // reused many places in below flow
 
 	// Load the init response from disk since we need it to regenerate root token later
 	if err := tokenmaintenance.LoadInitResponse(lc, fileOpener, secretStoreConfig, &initResponse); err != nil {
-		lc.Errorf("unable to load init response: %s", err.Error())
+		lc.Errorf("unable to load init response: %w", err)
 
 	}
 
@@ -68,7 +68,7 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 	var rootToken string
 	rootToken, err = secretStoreClient.RegenRootToken(initResponse.Keys)
 	if err != nil {
-		lc.Errorf("could not regenerate root token %s", err.Error())
+		lc.Errorf("could not regenerate root token %w", err)
 
 	}
 	defer func() {
@@ -76,7 +76,7 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 		lc.Info("revoking temporary root token")
 		err := secretStoreClient.RevokeToken(rootToken)
 		if err != nil {
-			lc.Errorf("could not revoke temporary root token %s", err.Error())
+			lc.Errorf("could not revoke temporary root token %w", err)
 		}
 	}()
 	lc.Info("generated transient root token")
@@ -86,7 +86,7 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 		revokeIssuingTokenFuc, err := tokenfilewriter.NewWriter(lc, secretStoreClient, fileOpener).
 			CreateAndWrite(rootToken, secretStoreConfig.TokenProviderAdminTokenPath, tokenMaintenance.CreateTokenIssuingToken)
 		if err != nil {
-			lc.Errorf("failed to create token issuing token: %s", err.Error())
+			lc.Errorf("failed to create token issuing token: %w", err)
 		}
 
 		return revokeIssuingTokenFuc, nil

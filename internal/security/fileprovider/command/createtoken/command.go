@@ -57,7 +57,7 @@ func NewCommand(
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse command '%s': %v", strings.Join(args, " "), err)
+		return nil, fmt.Errorf("unable to parse command '%s': %w", strings.Join(args, " "), err)
 	}
 
 	if len(entityId) == 0 {
@@ -100,7 +100,7 @@ func regenToken(entityId string, dic *di.Container) errors.EdgeX {
 	}
 	client, err := secrets.NewSecretStoreClient(clientConfig, lc, requester)
 	if err != nil {
-		lc.Errorf("error occurred creating SecretStoreClient: %s", err.Error())
+		lc.Errorf("error occurred creating SecretStoreClient: %w", err)
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
@@ -112,7 +112,7 @@ func regenToken(entityId string, dic *di.Container) errors.EdgeX {
 
 	err = fileProvider.RegenToken(entityId)
 	if err != nil {
-		lc.Errorf("error occurred while re-generating token: %s", err.Error())
+		lc.Errorf("error occurred while re-generating token: %w", err)
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 

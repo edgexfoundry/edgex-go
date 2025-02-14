@@ -59,7 +59,7 @@ func (p *TokenProvider) SetConfiguration(secretStore config.SecretStoreInfo) err
 	}
 	resolvedPath, err := p.execRunner.LookPath(p.secretStore.TokenProvider)
 	if err != nil {
-		err = fmt.Errorf("Failed to locate %s on PATH: %s", p.secretStore.TokenProvider, err.Error())
+		err = fmt.Errorf("failed to locate %s on PATH: %w", p.secretStore.TokenProvider, err)
 		return err
 	}
 	p.initialized = true
@@ -82,7 +82,7 @@ func (p *TokenProvider) Launch() error {
 	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, p.secretStore.TokenProviderArgs...)
 	if err := cmd.Start(); err != nil {
 		// For example, this might occur if a shared library was missing
-		err = fmt.Errorf("%s failed to launch: %s", p.resolvedPath, err.Error())
+		err = fmt.Errorf("%s failed to launch: %w", p.resolvedPath, err)
 		return err
 	}
 
@@ -93,7 +93,7 @@ func (p *TokenProvider) Launch() error {
 		return err
 	}
 	if err != nil {
-		err = fmt.Errorf("%s failed with unexpected error: %s", p.resolvedPath, err.Error())
+		err = fmt.Errorf("%s failed with unexpected error: %w", p.resolvedPath, err)
 		return err
 	}
 
@@ -114,19 +114,20 @@ func (p *TokenProvider) LaunchRegenToken(entityId string) error {
 
 	cmd := p.execRunner.CommandContext(p.ctx, p.resolvedPath, "-configDir", "res-file-token-provider", "createToken", "-entityId", entityId)
 	if err := cmd.Start(); err != nil {
-		err = fmt.Errorf("%s failed to launch: %v", p.resolvedPath, err)
+		err = fmt.Errorf("%s failed to launch: %w", p.resolvedPath, err)
 		return err
 	}
 
 	err := cmd.Wait()
 	var exitError *exec.ExitError
 	if errors.As(err, &exitError) {
-		waitStatus := exitError.Sys().(syscall.WaitStatus)
-		err = fmt.Errorf("%s terminated with non-zero exit code %d", p.resolvedPath, waitStatus.ExitStatus())
+		if waitStatus, ok := exitError.Sys().(syscall.WaitStatus); ok {
+			err = fmt.Errorf("%s terminated with non-zero exit code %d", p.resolvedPath, waitStatus.ExitStatus())
+		}
 		return err
 	}
 	if err != nil {
-		err = fmt.Errorf("%s failed with unexpected error: %v", p.resolvedPath, err)
+		err = fmt.Errorf("%s failed with unexpected error: %w", p.resolvedPath, err)
 		return err
 	}
 

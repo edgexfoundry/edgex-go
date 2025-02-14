@@ -248,7 +248,7 @@ func (p *fileTokenProvider) RegenToken(entityId string) error {
 	// retrieve the entity metadata that will be required while creating a token and associates with the entity
 	getEntityResp, err := p.secretStoreClient.GetIdentityByEntityId(privilegedToken, entityId)
 	if err != nil {
-		p.logger.Errorf("failed to get entity by id '%s' from secretStoreClient: %v", entityId, err)
+		p.logger.Errorf("failed to get entity by id '%s' from secretStoreClient: %w", entityId, err)
 		return err
 	}
 
@@ -279,7 +279,7 @@ func (p *fileTokenProvider) RegenToken(entityId string) error {
 	p.logger.Infof("opening token file %s", outputTokenFilename)
 	writeCloser, err := p.fileOpener.OpenFileWriter(outputTokenFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600))
 	if err != nil {
-		p.logger.Errorf("failed open token file for writing %s: %v", outputTokenFilename, err)
+		p.logger.Errorf("failed open token file for writing %s: %w", outputTokenFilename, err)
 		return err
 	}
 
@@ -296,19 +296,19 @@ func (p *fileTokenProvider) RegenToken(entityId string) error {
 	p.logger.Infof("creating token for %s ......", entityName)
 	createTokenResponse, err := p.secretStoreClient.CreateTokenByRole(privilegedToken, entityName, createTokenParameters)
 	if err != nil {
-		p.logger.Errorf("failed creation of new token for '%s': %v", entityName, err)
+		p.logger.Errorf("failed creation of new token for '%s': %w", entityName, err)
 		return err
 	}
 
 	// Write resulting token
 	if err := json.NewEncoder(writeCloser).Encode(createTokenResponse); err != nil {
 		_ = writeCloser.Close()
-		p.logger.Errorf("failed to write token file: %v", err)
+		p.logger.Errorf("failed to write token file: %w", err)
 		return err
 	}
 
 	if err := writeCloser.Close(); err != nil {
-		p.logger.Errorf("failed to close %s: %v", outputTokenFilename, err)
+		p.logger.Errorf("failed to close %s: %w", outputTokenFilename, err)
 		return err
 	}
 

@@ -39,7 +39,7 @@ func LoadInitResponse(
 
 	tokenFile, err := fileOpener.OpenFileReader(absPath, os.O_RDONLY, 0400)
 	if err != nil {
-		lc.Errorf("could not read master key shares file %s: %s", absPath, err.Error())
+		lc.Errorf("could not read master key shares file %s: %w", absPath, err)
 		return err
 	}
 	tokenFileCloseable := fileioperformer.MakeReadCloser(tokenFile)
@@ -52,7 +52,7 @@ func LoadInitResponse(
 		return err
 	}
 	if err := decoder.Decode(initResponse); err != nil {
-		lc.Errorf("unable to read token file at %s with error: %s", absPath, err.Error())
+		lc.Errorf("unable to read token file at %s with error: %w", absPath, err)
 		return err
 	}
 
