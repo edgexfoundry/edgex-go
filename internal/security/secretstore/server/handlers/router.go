@@ -14,7 +14,7 @@ import (
 )
 
 // TODO: this will be declared in go-mod-core-contracts after the review
-const regenTokenRoute = "/api/v3/token/entityId/:entityId"
+const regenTokenRoute = "/api/v3/token/entityId/:entityId" // nolint:gosec
 
 // LoadRestRoutes generates the routing for API requests
 // Authentication is always on for this service,

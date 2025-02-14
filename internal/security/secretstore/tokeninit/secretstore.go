@@ -14,7 +14,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokencreatable"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenfilewriter"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenmaintenance"
-	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/tokenprovider"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -89,11 +88,7 @@ func InitAdminTokens(dic *di.Container) (tokencreatable.RevokeFunc, error) {
 		if err != nil {
 			lc.Errorf("failed to create token issuing token: %s", err.Error())
 		}
-		if secretStoreConfig.TokenProviderType == tokenprovider.OneShotProvider {
-			// Revoke the admin token at the end of the current function if running a one-shot provider
-			// otherwise assume the token provider will keep its token fresh after this point
-			//defer revokeIssuingTokenFuc()
-		}
+
 		return revokeIssuingTokenFuc, nil
 	}
 	return nil, errors.New("no TokenProviderAdminTokenPath defined in secretStoreConfig")
