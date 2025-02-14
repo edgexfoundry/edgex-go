@@ -18,8 +18,6 @@ import (
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
-	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/authtokenloader"
-	"github.com/edgexfoundry/go-mod-secrets/v4/pkg/token/fileioperformer"
 
 	"github.com/labstack/echo/v4"
 )
@@ -45,10 +43,6 @@ func (a *TokenController) RegenToken(c echo.Context) error {
 	entityId := c.Param("entityId")
 
 	lc := bootstrapContainer.LoggingClientFrom(a.dic.Get)
-	tokenLoader := bootstrapContainer.AuthTokenLoaderFrom(a.dic.Get)
-	if tokenLoader == nil {
-		tokenLoader = authtokenloader.NewAuthTokenLoader(fileioperformer.NewDefaultFileIoPerformer())
-	}
 	configuration := container.ConfigurationFrom(a.dic.Get)
 	secretStoreConfig := configuration.SecretStore
 	ctx := r.Context()
