@@ -100,7 +100,7 @@ func regenToken(entityId string, dic *di.Container) errors.EdgeX {
 	}
 	client, err := secrets.NewSecretStoreClient(clientConfig, lc, requester)
 	if err != nil {
-		lc.Errorf("error occurred creating SecretStoreClient: %w", err)
+		lc.Errorf("error occurred creating SecretStoreClient: %v", err)
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 
@@ -112,7 +112,7 @@ func regenToken(entityId string, dic *di.Container) errors.EdgeX {
 
 	err = fileProvider.RegenToken(entityId)
 	if err != nil {
-		lc.Errorf("error occurred while re-generating token: %w", err)
+		lc.Errorf("error occurred while re-generating token: %v", err)
 		return errors.NewCommonEdgeXWrapper(err)
 	}
 

@@ -74,7 +74,7 @@ func (b *Bootstrap) BootstrapHandler(_ context.Context, _ *sync.WaitGroup, _ sta
 
 	exitStatusCode, err := command.Execute()
 	if err != nil {
-		lc.Errorf("failed to execute command '%s': %w", commandName, err)
+		lc.Errorf("failed to execute command '%s': %v", commandName, err)
 	}
 	b.exitStatusCode = exitStatusCode
 

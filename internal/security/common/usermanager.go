@@ -123,6 +123,7 @@ func (m *UserManager) CreatePasswordUserWithPolicy(username string, password str
 		"name":                   username,
 		"renewable":              true,
 		"allowed_entity_aliases": []string{username},
+		"orphan":                 true,
 	}
 	err = m.secretStoreClient.CreateOrUpdateTokenRole(m.privilegedToken, username, tokenRoleParams)
 	if err != nil {

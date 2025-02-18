@@ -17,6 +17,7 @@ import (
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
 
 	"github.com/labstack/echo/v4"
@@ -40,7 +41,7 @@ func (a *TokenController) RegenToken(c echo.Context) error {
 	}
 
 	// URL parameters
-	entityId := c.Param("entityId")
+	entityId := c.Param(common.EntityId)
 
 	lc := bootstrapContainer.LoggingClientFrom(a.dic.Get)
 	configuration := container.ConfigurationFrom(a.dic.Get)
