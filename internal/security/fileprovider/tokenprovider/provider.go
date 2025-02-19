@@ -242,13 +242,13 @@ func (p *fileTokenProvider) RegenToken(entityId string) error {
 	// The tokenConfEnv only uses default settings.
 	tokenConf = tokenConfEnv.mergeWith(tokenConf)
 
-	var aliasName, entityName string
+	var aliasName string
 	var policies []string
 
 	// retrieve the entity metadata that will be required while creating a token and associates with the entity
 	getEntityResp, err := p.secretStoreClient.GetIdentityByEntityId(privilegedToken, entityId)
 	if err != nil {
-		p.logger.Errorf("failed to get entity by id '%s' from secretStoreClient: %w", entityId, err)
+		p.logger.Errorf("failed to get entity by id '%s' from secretStoreClient: %v", entityId, err)
 		return err
 	}
 
@@ -259,56 +259,52 @@ func (p *fileTokenProvider) RegenToken(entityId string) error {
 	}
 	aliasName = getEntityResp.Aliases[0].Name
 
-	if len(getEntityResp.Name) == 0 {
-		err = fmt.Errorf("entity name not defined in entity resp of entity id '%s'", entityId)
-		p.logger.Error(err.Error())
-		return err
-	}
-	entityName = getEntityResp.Name
-
 	if len(getEntityResp.Policies) == 0 {
-		err = fmt.Errorf("policy not defined in getEntityResp of entity id '%s'", entityId)
-		p.logger.Error(err.Error())
-		return err
+		policies = []string{"edgex-service-" + aliasName}
+	} else {
+		policies = getEntityResp.Policies
 	}
-	policies = getEntityResp.Policies
 
-	outputTokenDir := filepath.Join(p.tokenConfig.OutputDir, entityName)
+	outputTokenDir := filepath.Join(p.tokenConfig.OutputDir, aliasName)
 	outputTokenFilename := filepath.Join(outputTokenDir, p.tokenConfig.OutputFilename)
 
 	p.logger.Infof("opening token file %s", outputTokenFilename)
 	writeCloser, err := p.fileOpener.OpenFileWriter(outputTokenFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0600))
 	if err != nil {
-		p.logger.Errorf("failed open token file for writing %s: %w", outputTokenFilename, err)
+		p.logger.Errorf("failed open token file for writing %s: %v", outputTokenFilename, err)
 		return err
 	}
 
 	createTokenParameters := make(map[string]any)
-	createTokenParameters["display_name"] = "token-" + entityName
-	createTokenParameters["role_name"] = entityName
+	createTokenParameters["display_name"] = "token-" + aliasName
+	createTokenParameters["role_name"] = aliasName
 	createTokenParameters["entity_alias"] = aliasName
 	createTokenParameters["no_parent"] = true
 	createTokenParameters["policies"] = policies
-	createTokenParameters["meta"] = map[string]string{"user": entityName}
+	createTokenParameters["meta"] = map[string]string{"user": aliasName}
 	createTokenParameters["ttl"] = p.tokenConfig.DefaultTokenTTL
+	createTokenParameters["period"] = p.tokenConfig.DefaultTokenTTL
 	createTokenParameters["renewable"] = true
 
-	p.logger.Infof("creating token for %s ......", entityName)
-	createTokenResponse, err := p.secretStoreClient.CreateTokenByRole(privilegedToken, entityName, createTokenParameters)
+	p.logger.Infof("creating token for %s ......", aliasName)
+
+	p.logger.Debugf("invoking CreateTokenByRole method with parameters %v", createTokenParameters)
+
+	createTokenResponse, err := p.secretStoreClient.CreateTokenByRole(privilegedToken, aliasName, createTokenParameters)
 	if err != nil {
-		p.logger.Errorf("failed creation of new token for '%s': %w", entityName, err)
+		p.logger.Errorf("failed creation of new token for '%s': %v", aliasName, err)
 		return err
 	}
 
 	// Write resulting token
 	if err := json.NewEncoder(writeCloser).Encode(createTokenResponse); err != nil {
 		_ = writeCloser.Close()
-		p.logger.Errorf("failed to write token file: %w", err)
+		p.logger.Errorf("failed to write token file: %v", err)
 		return err
 	}
 
 	if err := writeCloser.Close(); err != nil {
-		p.logger.Errorf("failed to close %s: %w", outputTokenFilename, err)
+		p.logger.Errorf("failed to close %s: %v", outputTokenFilename, err)
 		return err
 	}
 

@@ -77,8 +77,8 @@ func TestMultipleTokensWithNoDefaults(t *testing.T) {
 
 	expectedService1Policy := "{}"
 	expectedService2Policy := "{}"
-	expectedSvc1TokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"service1"}, "allowed_policies": []string{"edgex-service-service1"}, "name": "service1", "renewable": true}
-	expectedSvc2TokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"service2"}, "allowed_policies": []string{"edgex-service-service2"}, "name": "service2", "renewable": true}
+	expectedSvc1TokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"service1"}, "allowed_policies": []string{"edgex-service-service1"}, "name": "service1", "orphan": true, "renewable": true}
+	expectedSvc2TokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"service2"}, "allowed_policies": []string{"edgex-service-service2"}, "name": "service2", "orphan": true, "renewable": true}
 
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-service1", expectedService1Policy).Return(nil)
@@ -162,7 +162,7 @@ func TestNoDefaultsCustomPolicy(t *testing.T) {
 	mockAuthTokenLoader.On("Load", privilegedTokenPath).Return("fake-priv-token", nil)
 
 	expectedService1Policy := `{"path":{"secret/non/standard/location/*":{"capabilities":["list","read"]}}}`
-	expectedSvcTokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"myservice"}, "allowed_policies": []string{"edgex-service-myservice"}, "name": "myservice", "renewable": true}
+	expectedSvcTokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"myservice"}, "allowed_policies": []string{"edgex-service-myservice"}, "name": "myservice", "orphan": true, "renewable": true}
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-myservice", expectedService1Policy).Return(nil)
 	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", "myservice", map[string]string{"name": "myservice"}, []string{"edgex-service-myservice"}).Return("myserviceid", nil)
@@ -237,7 +237,7 @@ func TestTokenFilePermissions(t *testing.T) {
 	mockFileIoPerformer := &fileMock.FileIoPerformer{}
 	expectedService1Dir := filepath.Join(outputDir, "myservice")
 	expectedService1File := filepath.Join(expectedService1Dir, outputFilename)
-	expectedSvcTokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"myservice"}, "allowed_policies": []string{"edgex-service-myservice"}, "name": "myservice", "renewable": true}
+	expectedSvcTokenRoleParam := map[string]any{"allowed_entity_aliases": []string{"myservice"}, "allowed_policies": []string{"edgex-service-myservice"}, "name": "myservice", "orphan": true, "renewable": true}
 	service1Buffer := new(bytes.Buffer)
 	mockFileIoPerformer.On("MkdirAll", expectedService1Dir, os.FileMode(0700)).Return(nil)
 	mockFileIoPerformer.On("OpenFileReader", configFile, os.O_RDONLY, os.FileMode(0400)).Return(strings.NewReader(`{"myservice":{"file_permissions":{"uid":0,"gid":0,"mode_octal":"0664"}}}`), nil)
@@ -408,7 +408,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 	}
 	expectedService1Policy, err := json.Marshal(&policy)
 	require.NoError(t, err)
-	expectedSvcTokenRoleParam1 := map[string]any{"allowed_entity_aliases": []string{serviceName}, "allowed_policies": []string{"edgex-service-" + serviceName}, "name": serviceName, "renewable": true}
+	expectedSvcTokenRoleParam1 := map[string]any{"allowed_entity_aliases": []string{serviceName}, "allowed_policies": []string{"edgex-service-" + serviceName}, "name": serviceName, "orphan": true, "renewable": true}
 	mockSecretStoreClient := &mocks.SecretStoreClient{}
 	mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+serviceName, string(expectedService1Policy)).Return(nil)
 	mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", serviceName, map[string]string{"name": serviceName}, []string{"edgex-service-" + serviceName}).Return("myserviceid", nil)
@@ -437,7 +437,7 @@ func runTokensWithDefault(serviceName string, additionalKeysEnv string, t *testi
 		}
 		expectedServicePolicy, err := json.Marshal(&policy)
 		require.NoError(t, err)
-		expectedSvcTokenRoleParam2 := map[string]any{"allowed_entity_aliases": []string{service}, "allowed_policies": []string{"edgex-service-" + service}, "name": service, "renewable": true}
+		expectedSvcTokenRoleParam2 := map[string]any{"allowed_entity_aliases": []string{service}, "allowed_policies": []string{"edgex-service-" + service}, "name": service, "orphan": true, "renewable": true}
 
 		mockSecretStoreClient.On("InstallPolicy", "fake-priv-token", "edgex-service-"+service, string(expectedServicePolicy)).Return(nil)
 		mockSecretStoreClient.On("CreateOrUpdateIdentity", "fake-priv-token", service, map[string]string{"name": service}, []string{"edgex-service-" + service}).Return("myserviceid", nil)
