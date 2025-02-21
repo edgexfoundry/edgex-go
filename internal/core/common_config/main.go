@@ -116,7 +116,7 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	}
 
 	// load the yaml file and push it using the config client
-	if !hasConfig || f.OverwriteConfig() {
+	if !hasConfig || getOverwriteConfig(f, lc) {
 		lc.Info("Pushing common configuration. It doesn't exists or overwrite flag is set")
 
 		yamlFile := config.GetConfigFileLocation(lc, f)
