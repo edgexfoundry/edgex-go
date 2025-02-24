@@ -143,6 +143,12 @@
             "update"
           ]
         },
+        "auth/token/roles/*" : {
+          "capabilities": [
+            "create",
+            "update"
+          ]
+        },
         "sys/auth": {
           "capabilities": [
             "read"
