@@ -86,7 +86,7 @@ Service:
   Port: 59843
   StartupMsg: "This is the security-secretstore-setup microservice"
   RequestTimeout: "5s"
-  EnableNameFieldEscape: true # The name field escape could allow the system to use special or Chinese characters in the different name fields, including device, profile, and so on.  If the EnableNameFieldEscape is false, some special characters might cause system error.
+  EnableNameFieldEscape: false # The name field escape could allow the system to use special or Chinese characters in the different name fields, including device, profile, and so on.  If the EnableNameFieldEscape is false, some special characters might cause system error.
   CORSConfiguration:
     EnableCORS: false
     CORSAllowCredentials: false
