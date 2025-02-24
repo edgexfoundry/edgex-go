@@ -127,7 +127,7 @@ func (m *UserManager) CreatePasswordUserWithPolicy(username string, password str
 	}
 	err = m.secretStoreClient.CreateOrUpdateTokenRole(m.privilegedToken, username, tokenRoleParams)
 	if err != nil {
-		m.logger.Errorf("failed create/update token role '%s': %w", username, err)
+		m.logger.Errorf("failed create/update token role '%s': %v", username, err)
 		return err
 	}
 
