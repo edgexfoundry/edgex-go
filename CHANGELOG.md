@@ -12,7 +12,7 @@
 - [go-mod-secrets](https://github.com/edgexfoundry/go-mod-secrets/blob/main/CHANGELOG.md)
 - [go-mod-configuration](https://github.com/edgexfoundry/go-mod-configuration/blob/main/CHANGELOG.md) (indirect dependency)
 
-## [4.0.0] Odessa - 2025-02-TBD (Only compatible with the 4.x releases)
+## [4.0.0] Odessa - 2025-03-12 (Only compatible with the 4.x releases)
 
 ### Features✨  
 
@@ -24,24 +24,19 @@
 - Event retention enhancement ([c067ea6…](https://github.com/edgexfoundry/edgex-go/commit/c067ea6d19c3779c8d0085825964471478d87c5c))
 ```text
 
-BREAKING CHANGE: Add a retention policy for auto events, enhancing time-based and count-based retention.
+BREAKING CHANGE: Add a retention policy for auto events, enhancing time-based and count-based retention
 
 ```
-- Upgrade go-mod-messaging and remove event size check ([cafc722…](https://github.com/edgexfoundry/edgex-go/commit/cafc7220272db75275058deb04c0a161acd7b921))
+- Remove event size check from the message receiver ([cafc722…](https://github.com/edgexfoundry/edgex-go/commit/cafc7220272db75275058deb04c0a161acd7b921))
 ```text
-
-BREAKING CHANGE: Upgrade go-mod-messaging and remove event size check
+	
+BREAKING CHANGE: Remove event size check from the message reciver, because we always check the event in the message publisher
 
 ```
 - Purge events on device deletion event ([464389f…](https://github.com/edgexfoundry/edgex-go/commit/464389f2b4c69318f66adc0d56ad4bda5a15fa05))
 - Query readings without pagination offset ([ccee771…](https://github.com/edgexfoundry/edgex-go/commit/ccee771edf5ea3cf821193a796fbd9303c0d3f83))
 - Add key-related APIs in security-proxy-auth ([c38af36…](https://github.com/edgexfoundry/edgex-go/commit/c38af36419feae83a0e8abbe505ba551fb0c9bf6))
 - Add MQTT and ZeroMQ channels support to support-notification ([e824200…](https://github.com/edgexfoundry/edgex-go/commit/e8242006a0ff142114b7692597459189c0b5e284))
-```text
-
-BREAKING CHANGE: Upgrade go-mod-messaging and remove event size check
-
-```
 - Add new build-noziti and docker-noziti targets into Makefile ([8a1c9a0…](https://github.com/edgexfoundry/edgex-go/commit/8a1c9a01a1f2d5a8ef23fa178018208c4e23c5cc))
 - Remove consul dependency ([cbe9dac…](https://github.com/edgexfoundry/edgex-go/commit/cbe9dacb0aa5af2c2c08753c4199293e4457ef93))
 ```text
@@ -49,9 +44,7 @@ BREAKING CHANGE: Upgrade go-mod-messaging and remove event size check
 BREAKING CHANGE: Remove consul dependency
 
 ```
-<!-- not sure -->
-<!-- - Using isNull field instead of nil reading value ([#4974](https://github.com/edgexfoundry/edgex-go/issues/4974)) ([82350b2…](https://github.com/edgexfoundry/edgex-go/commit/82350b2dc17c64c6dcaf341c305da1b72442d937)) -->
-<!-- - Enable ASLR and Full RELRO while building binaries as default ([babc124…](https://github.com/edgexfoundry/edgex-go/commit/babc124801c941d32da667ad712ca5d717a91234)) -->
+- Support null value in reading instead of nil reading value ([#4974](https://github.com/edgexfoundry/edgex-go/issues/4974)) ([82350b2…](https://github.com/edgexfoundry/edgex-go/commit/82350b2dc17c64c6dcaf341c305da1b72442d937))
 - Allow store reading as null value ([faff7e1…](https://github.com/edgexfoundry/edgex-go/commit/faff7e15d0d593107ea324478509bb94221df236))
 - Add the force query param to add device metadata API ([#4929](https://github.com/edgexfoundry/edgex-go/issues/4929)) ([1033d52…](https://github.com/edgexfoundry/edgex-go/commit/1033d5290f4fd751026052b6c6be6da923b73d23))
 - Allow rules-engine service to read its token ([#4823](https://github.com/edgexfoundry/edgex-go/issues/4823)) ([5162257…](https://github.com/edgexfoundry/edgex-go/commit/5162257f8dee1b2a6e96c0426af9cd51831dbfdc))
@@ -66,8 +59,7 @@ BREAKING CHANGE: Introduced Core Keeper as a new service for configuration and r
 - Add OpenZiti to edgex-go ([#4777](https://github.com/edgexfoundry/edgex-go/issues/4777)) ([d2d9888…](https://github.com/edgexfoundry/edgex-go/commit/d2d98883e5139249b4399f4dc0dd90a078163ffc))
 - Allow sending notifications to authenticated EdgeX endpoints ([#4763](https://github.com/edgexfoundry/edgex-go/issues/4763)) ([a48d639…](https://github.com/edgexfoundry/edgex-go/commit/a48d6392372de4eada0148d46cda0c5092cdf95e))
 - Add new StoreForwardQueueSize metric to common App services config ([#4751](https://github.com/edgexfoundry/edgex-go/issues/4751)) ([3a892ac…](https://github.com/edgexfoundry/edgex-go/commit/3a892ac0b38b8d685f9d63feb7dde70ee06d273b))
-
-- Add core-metadata device/provisionwatcher db methods for postgres ([fd73939…](https://github.com/edgexfoundry/edgex-go/commit/fd73939b4ae038ef84b6f1c31c78656397dfc769))
+- Add PostgreSQL as the new default persistence layer ([fd73939…](https://github.com/edgexfoundry/edgex-go/commit/fd73939b4ae038ef84b6f1c31c78656397dfc769))
 ```text
 
 BREAKING CHANGE: Switched default database to PostgreSQL across all services
@@ -77,12 +69,6 @@ BREAKING CHANGE: Switched default database to PostgreSQL across all services
 ### Code Refactoring ♻
 - Refactor services to build monolithic service easily ([#5010](https://github.com/edgexfoundry/edgex-go/issues/5010)) ([98bb6eb…](https://github.com/edgexfoundry/edgex-go/commit/98bb6ebf5936140bbb14ec64c05520fd1477cb0f))
 
-- Replace old Scheduler service with cron Scheduler service ([505c688…](https://github.com/edgexfoundry/edgex-go/commit/505c688739c6baeb7936588b5c612c7d4ee74cdd))
-```text
-
-BREAKING CHANGE: Refactored old Scheduler service to support advanced job schedulin
-
-```
 - Replace vault with openbao ([2fd20ad…](https://github.com/edgexfoundry/edgex-go/commit/2fd20adf2de51a59e2f08b9fbb81467a4bed6eac))
 ```text
 
@@ -95,17 +81,12 @@ BREAKING CHANGE: replace Vault with OpenBao
 BREAKING CHANGE: update go module to v4
 
 ```
-<!-- not sure -->
-<!-- - Separate count and query functions in DB interface ([803138e…](https://github.com/edgexfoundry/edgex-go/commit/803138eab89292506fff25623a654a487eec4213)) -->
+- Separate count and query functions in DB interface ([803138e…](https://github.com/edgexfoundry/edgex-go/commit/803138eab89292506fff25623a654a487eec4213))
 
 
 ### Bug Fixes 🐛
 
-- Fix multiple bugs in support-scheduler service ([9100ac2…](https://github.com/edgexfoundry/edgex-go/commit/9100ac240e6a97fe5a84fed5dc78596f5db1e64b))
-- Fix PostgreSQL-specific issues like permission errors, invalid limits, and race conditions ([3f02c68…](https://github.com/edgexfoundry/edgex-go/commit/3f02c68d3e0b5122ed047bfb78be384dc5192cd3))
 - Check offset, limit, totalCount before querying transmissions ([82df6aa…](https://github.com/edgexfoundry/edgex-go/commit/82df6aa76d7e5e8e8165c23ce0e8560af0818afb))
-- Only one ldflags flag is allowed ([fcb5d6c…](https://github.com/edgexfoundry/edgex-go/commit/fcb5d6c99dbec038e1b3b8f6405170469af5ccc2))
-- Move API document files from openapi/v3 to openapi ([c7c3680…](https://github.com/edgexfoundry/edgex-go/commit/c7c3680392ce68a6fcb1eaf602bff8de280a2107))
 - Check profile existence before adding device/provision watcher ([a09553d…](https://github.com/edgexfoundry/edgex-go/commit/a09553d9be624636f508e9dfb2ede440f6f57f87))
 - Check if event id exists before deleting it ([d5aa4e6…](https://github.com/edgexfoundry/edgex-go/commit/d5aa4e6cef3f5f939ed966b041f29eb420561edd))
 - Delete device profile in use should return 409 ([d76678a…](https://github.com/edgexfoundry/edgex-go/commit/d76678a55032731670294a652d9f06f9bdaaacb1))
@@ -117,14 +98,14 @@ BREAKING CHANGE: update go module to v4
 ### Documentation 📖
 
 - Add onChangeThreshold in Device AutoEvent ([941e1e5…](https://github.com/edgexfoundry/edgex-go/commit/941e1e5ece8eb6540d9aaaa9956a0c886ebb71db))
-- Set service version to 3.2.0 in API documents ([0736188…](https://github.com/edgexfoundry/edgex-go/commit/0736188624eae5c5702e3af09400e87f332236a8))
+- Set service version to 4.0.0 and remove the version folder in API documents ([c7c3680…](https://github.com/edgexfoundry/edgex-go/commit/c7c3680392ce68a6fcb1eaf602bff8de280a2107))
 
 
 ### Build 👷
 
 - Upgrade to go-1.23, Linter1.61.0 and Alpine 3.20 ([3f8d8a8…](https://github.com/edgexfoundry/edgex-go/commit/3f8d8a81a02c777b474a204e77eae531227cc529)) --important
 - Add ldflags to strip debug info from binaries ([#4734](https://github.com/edgexfoundry/edgex-go/issues/4734)) ([ebbd479…](https://github.com/edgexfoundry/edgex-go/commit/ebbd479b391021732e21bea19cf1ff2caaa95a06))
-
+- Enable ASLR and Full RELRO while building binaries as default ([babc124…](https://github.com/edgexfoundry/edgex-go/commit/babc124801c941d32da667ad712ca5d717a91234))
 
 ## [3.1.0] Napa - 2023-11-15 (Only compatible with the 3.x releases)
 
