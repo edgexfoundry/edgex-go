@@ -19,6 +19,7 @@ const (
 const (
 	configTableName               = coreKeeperSchema + ".config"
 	eventTableName                = coreDataSchema + ".event"
+	deviceInfoTableName           = coreDataSchema + ".device_info"
 	deviceServiceTableName        = coreMetaDataSchema + ".device_service"
 	deviceProfileTableName        = coreMetaDataSchema + ".device_profile"
 	deviceTableName               = coreMetaDataSchema + ".device"
@@ -45,19 +46,20 @@ const (
 
 // constants relate to the event/reading postgres db table column names
 const (
-	deviceNameCol   = "devicename"
-	resourceNameCol = "resourcename"
-	profileNameCol  = "profilename"
-	sourceNameCol   = "sourcename"
-	originCol       = "origin"
-	valueTypeCol    = "valuetype"
-	unitsCol        = "units"
-	tagsCol         = "tags"
-	eventIdFKCol    = "event_id"
-	valueCol        = "value"
-	binaryValueCol  = "binaryvalue"
-	mediaTypeCol    = "mediatype"
-	objectValueCol  = "objectvalue"
+	deviceNameCol     = "devicename"
+	resourceNameCol   = "resourcename"
+	profileNameCol    = "profilename"
+	sourceNameCol     = "sourcename"
+	originCol         = "origin"
+	valueTypeCol      = "valuetype"
+	unitsCol          = "units"
+	tagsCol           = "tags"
+	eventIdFKCol      = "event_id"
+	deviceInfoIdFKCol = "device_info_id"
+	valueCol          = "value"
+	binaryValueCol    = "binaryvalue"
+	mediaTypeCol      = "mediatype"
+	objectValueCol    = "objectvalue"
 )
 
 // constants relate to the keeper postgres db table column names

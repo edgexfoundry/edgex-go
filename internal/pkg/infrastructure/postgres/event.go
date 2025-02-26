@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -7,7 +7,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	stdErrs "errors"
 	"fmt"
 	"time"
@@ -27,7 +26,7 @@ func (c *Client) AllEvents(offset, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(eventTableName, originCol), offset, validLimit)
+	events, err := queryEvents(ctx, c.ConnPool, sqlQueryAllEventWithPaginationDescByCol(originCol), offset, validLimit)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all events", err)
 	}
@@ -42,6 +41,12 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 	if e.Id == "" {
 		e.Id = uuid.NewString()
 	}
+
+	deviceInfoId, err := c.deviceInfoIdByEvent(e)
+	if err != nil {
+		return model.Event{}, errors.NewCommonEdgeXWrapper(err)
+	}
+
 	event := model.Event{
 		Id:          e.Id,
 		DeviceName:  e.DeviceName,
@@ -50,37 +55,30 @@ func (c *Client) AddEvent(e model.Event) (model.Event, errors.EdgeX) {
 		Origin:      e.Origin,
 		Tags:        e.Tags,
 	}
-	tagsBytes, err := json.Marshal(event.Tags)
-	if err != nil {
-		return model.Event{}, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal event tags", err)
-	}
 
-	err = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+	pgxErr := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
 		// insert event in a transaction
-		_, err = tx.Exec(
+		_, pgxErr := tx.Exec(
 			ctx,
-			sqlInsert(eventTableName, idCol, deviceNameCol, profileNameCol, sourceNameCol, originCol, tagsCol),
+			sqlInsert(eventTableName, idCol, deviceInfoIdFKCol, originCol),
 			event.Id,
-			event.DeviceName,
-			event.ProfileName,
-			event.SourceName,
+			deviceInfoId,
 			event.Origin,
-			tagsBytes,
 		)
-		if err != nil {
-			return pgClient.WrapDBError("failed to insert event", err)
+		if pgxErr != nil {
+			return pgClient.WrapDBError("failed to insert event", pgxErr)
 		}
 
 		// insert readings in a transaction
-		err = addReadingsInTx(tx, e.Readings, e.Id)
-		if err != nil {
-			return errors.NewCommonEdgeXWrapper(err)
+		pgxErr = c.addReadingsInTx(tx, e.Readings, e.Id)
+		if pgxErr != nil {
+			return errors.NewCommonEdgeXWrapper(pgxErr)
 		}
 		return nil
 	})
 
-	if err != nil {
-		return model.Event{}, errors.NewCommonEdgeXWrapper(err)
+	if pgxErr != nil {
+		return model.Event{}, errors.NewCommonEdgeXWrapper(pgxErr)
 	}
 
 	// return the event with readings to ensure readingsPersistedCounter will be increased
@@ -93,7 +91,7 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 	ctx := context.Background()
 	var event model.Event
 
-	rows, err := c.ConnPool.Query(ctx, sqlQueryAllById(eventTableName), id)
+	rows, err := c.ConnPool.Query(ctx, sqlQueryAllEventById(), id)
 	if err != nil {
 		return event, pgClient.WrapDBError(fmt.Sprintf("failed to query event with id '%s'", id), err)
 	}
@@ -105,7 +103,7 @@ func (c *Client) EventById(id string) (model.Event, errors.EdgeX) {
 		}
 
 		// query reading by the specific even_id and origin descending
-		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllAndDescWithConds(readingTableName, originCol, eventIdFKCol), e.Id)
+		readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllReadingAndDescWithConds(originCol, eventIdFKCol), e.Id)
 		if err != nil {
 			return model.Event{}, err
 		}
@@ -130,24 +128,20 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from db
 func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
-	sqlStatement := sqlQueryCountByCol(eventTableName, deviceNameCol)
+	sqlStatement := sqlQueryCountEventByCol(deviceNameCol)
 
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName)
 }
 
 // EventCountByTimeRange returns the count of Event by time range from db
 func (c *Client) EventCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByTimeRangeCol(eventTableName, originCol, nil), start, end)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountEventByTimeRangeCol(originCol, nil), start, end)
 }
 
 // EventCountByDeviceNameAndSourceNameAndLimit returns the count of Event by deviceName, resourceName, and limit from db
 // this is used to check whether the event number is reach the event retention maxCap
 func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX) {
-	sqlStatement := fmt.Sprintf(
-		`SELECT count(*) FROM (
-		  SELECT 1 FROM %s WHERE %s = $1 AND %s = $2
-		  LIMIT $3
-        ) limited_count`, eventTableName, deviceNameCol, sourceNameCol)
+	sqlStatement := sqlCountEventByDeviceNameAndSourceNameAndLimit()
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName, sourceName, limit)
 }
 
@@ -155,7 +149,7 @@ func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceN
 func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model.Event, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	sqlStatement := sqlQueryAllAndDescWithCondsAndPag(eventTableName, originCol, deviceNameCol)
+	sqlStatement := sqlQueryAllEventAndDescWithCondsAndPage(originCol, deviceNameCol)
 
 	events, err := queryEvents(context.Background(), c.ConnPool, sqlStatement, name, offset, validLimit)
 	if err != nil {
@@ -168,7 +162,7 @@ func (c *Client) EventsByDeviceName(offset int, limit int, name string) ([]model
 func (c *Client) EventsByTimeRange(start int64, end int64, offset int, limit int) ([]model.Event, errors.EdgeX) {
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
-	sqlStatement := sqlQueryAllWithPaginationAndTimeRangeDescByCol(eventTableName, originCol, originCol, nil)
+	sqlStatement := sqlQueryAllEventWithPaginationAndTimeRangeDescByCol(originCol, originCol, nil)
 
 	events, err := queryEvents(ctx, c.ConnPool, sqlStatement, start, end, offset, validLimit)
 	if err != nil {
@@ -182,19 +176,25 @@ func (c *Client) DeleteEventById(id string) errors.EdgeX {
 	ctx := context.Background()
 	sqlStatement := sqlDeleteById(eventTableName)
 
+	event, err := c.EventById(id)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed delete event", err)
+	}
+
 	// delete event and readings in a transaction
-	err := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
-		if err := deleteReadings(ctx, tx, id); err != nil {
+	pgxErr := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+		// use event.origin to filter readings to improve delete speed
+		if err = deleteReadingsByOriginAndEventId(ctx, tx, event.Origin, id); err != nil {
 			return err
 		}
 
-		if err := deleteEvents(ctx, tx, sqlStatement, id); err != nil {
+		if err = deleteEvents(ctx, tx, sqlStatement, id); err != nil {
 			return err
 		}
 		return nil
 	})
-	if err != nil {
-		return errors.NewCommonEdgeX(errors.Kind(err), "failed delete event", err)
+	if pgxErr != nil {
+		return errors.NewCommonEdgeX(errors.Kind(pgxErr), "failed delete event", pgxErr)
 	}
 	return nil
 }
@@ -214,25 +214,45 @@ func (c *Client) DeleteEventsByDeviceNameAndSourceName(deviceName, sourceName st
 func (c *Client) deleteEventsByConditions(cols []string, values []any) errors.EdgeX {
 	ctx := context.Background()
 
-	sqlStatement := sqlDeleteByColumns(eventTableName, cols...)
+	sqlStatement := sqlDeleteEventsByColumn(cols...)
 
 	go func() {
+		// deviceInfos are used to remove data by id and remove the id value from the cache after finishing the transaction
+		deviceInfos, err := c.deviceInfosByConds(cols, values)
+		if err != nil {
+			return
+		}
 		// delete events and readings in a transaction
-		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
+		pgxErr := pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
 			// select the event-ids of the specified device name from event table as the sub-query of deleting readings
-			subSqlStatement := sqlQueryFieldsByCol(eventTableName, []string{idCol}, cols...)
-			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values...); err != nil {
+			subSqlStatement := sqlQueryEventIdFieldsByCol(cols...)
+			if err = deleteReadingsBySubQuery(ctx, tx, subSqlStatement, values...); err != nil {
 				c.loggingClient.Errorf("failed delete readings with conditions '%v' '%v': %v", cols, values, err)
 				return err
 			}
 
-			err := deleteEvents(ctx, tx, sqlStatement, values...)
+			err = deleteEvents(ctx, tx, sqlStatement, values...)
 			if err != nil {
 				c.loggingClient.Errorf("failed delete event with conditions '%v' '%v': %v", cols, values, err)
 				return err
 			}
+
+			for _, deviceInfo := range deviceInfos {
+				err = deleteDeviceInfoById(ctx, tx, deviceInfo.Id)
+				if err != nil {
+					return errors.NewCommonEdgeXWrapper(err)
+				}
+			}
 			return nil
 		})
+		if pgxErr != nil {
+			c.loggingClient.Errorf("failed delete events with conditions '%v' '%v': %v", cols, values, pgxErr)
+			return
+		}
+
+		for _, deviceInfo := range deviceInfos {
+			c.deviceInfoIdCache.Remove(deviceInfo)
+		}
 	}()
 
 	return nil
@@ -255,14 +275,14 @@ func (c *Client) DeleteEventsByAgeAndDeviceNameAndSourceName(age int64, deviceNa
 func (c *Client) deleteEventsByAgeAndConditions(age int64, cols []string, values []any) errors.EdgeX {
 	ctx := context.Background()
 	expireTimestamp := time.Now().UnixNano() - age
-	sqlStatement := sqlDeleteTimeRangeByColumn(eventTableName, originCol, cols...)
+	sqlStatement := sqlDeleteEventsByTimeRangeAndColumn(originCol, cols...)
 	args := append([]any{expireTimestamp}, values...)
 
 	go func() {
 		// delete events and readings in a transaction
 		_ = pgx.BeginFunc(ctx, c.ConnPool, func(tx pgx.Tx) error {
 			// select the event ids within the origin time range from event table as the sub-query of deleting readings
-			subSqlStatement := sqlQueryFieldsByTimeRangeAndConditions(eventTableName, []string{idCol}, originCol, cols...)
+			subSqlStatement := sqlQueryEventIdFieldByTimeRangeAndConditions(originCol, cols...)
 			if err := deleteReadingsBySubQuery(ctx, tx, subSqlStatement, args...); err != nil {
 				c.loggingClient.Errorf("failed delete readings by age '%d' nanoseconds: %v", age, err)
 				return err
@@ -295,7 +315,7 @@ func queryEvents(ctx context.Context, connPool *pgxpool.Pool, sql string, args .
 		}
 
 		// query reading by the specific even_id and origin descending
-		readings, err := queryReadings(ctx, connPool, sqlQueryAllAndDescWithConds(readingTableName, originCol, eventIdFKCol), event.Id)
+		readings, err := queryReadings(ctx, connPool, sqlQueryAllReadingAndDescWithConds(originCol, eventIdFKCol), event.Id)
 
 		if err != nil {
 			return model.Event{}, err
@@ -333,7 +353,7 @@ func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourc
 
 	events, err := queryEvents(
 		ctx, c.ConnPool,
-		sqlQueryAllAndDescWithCondsAndPag(eventTableName, originCol, deviceNameCol, sourceNameCol),
+		sqlQueryAllEventAndDescWithCondsAndPage(originCol, deviceNameCol, sourceNameCol),
 		deviceName, sourceName, offset, 1,
 	)
 	if err != nil {
@@ -351,7 +371,7 @@ func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName,
 	ctx := context.Background()
 	expireTimestamp := time.Now().UnixNano() - age
 
-	sqlStmt := sqlQueryAllAndDescWithCondsAndPagAndUpperLimitTime(eventTableName, originCol, originCol, deviceNameCol, sourceNameCol)
+	sqlStmt := sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime(originCol, originCol, deviceNameCol, sourceNameCol)
 	events, err := queryEvents(
 		ctx, c.ConnPool, sqlStmt,
 		expireTimestamp, deviceName, sourceName, offset, 1,

@@ -24,10 +24,6 @@ components:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
       properties:
-        id:
-          description: "The unique identifier for the reading"
-          type: string
-          format: uuid
         origin:
           description: "A Unix timestamp (nanoseconds) indicating when the reading was originated at the source device"
           type: integer
@@ -438,7 +434,6 @@ components:
             - deviceName: "device-001"
               resourceName: "resource-001"
               profileName: "profile-001"
-              id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
               modified: 1594975851631
               origin: 1602168089665565300
               valueType: "Float32"
@@ -447,7 +442,6 @@ components:
               deviceName: "device-001"
               resourceName: "resource-001"
               profileName: "profile-001"
-              id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
               origin: 1602168089665565300
               valueType: "Int8"
               value: "75"
@@ -477,7 +471,6 @@ components:
               - deviceName: "device-001"
                 resourceName: "resource-001"
                 profileName: "profile-001"
-                id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
                 modified: 1594975851631
                 origin: 1602168089665565300
                 valueType: "Float32"
@@ -486,7 +479,6 @@ components:
                 deviceName: "device-001"
                 resourceName: "resource-001"
                 profileName: "profile-001"
-                id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
                 origin: 1602168089665565300
                 valueType: "Int8"
                 value: "75"
@@ -500,7 +492,6 @@ components:
               - deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
-                id: "71c601d9-cb56-453a-8c75-54461e444713"
                 origin: 1602168089665565300
                 valueType: "Binary"
                 binaryValue: [12,34]
@@ -508,7 +499,6 @@ components:
               - deviceName: "device-002"
                 resourceName: "resource-003"
                 profileName: "profile-002"
-                id: "71c601d9-cb56-453a-8c75-54461e444715"
                 origin: 1602168089665565300
                 valueType: "Object"
                 objectValue:
@@ -525,7 +515,6 @@ components:
               - deviceName: "device-002"
                 resourceName: "resource-002"
                 profileName: "profile-002"
-                id: "7003cacc-0e00-4676-977c-4e58b9612abd"
                 origin: 1602168089665565300
                 valueType: "Float32"
                 value: "12.2"
@@ -538,21 +527,18 @@ components:
           - deviceName: "Random-Boolean-Device"
             resourceName: "Bool"
             profileName: "Random-Boolean-Device"
-            id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
             origin: 1602168089665565300
             valueType: "Bool"
             value: "false"
           - deviceName: "Random-Integer-Device"
             resourceName: "Int8"
             profileName: "Random-Integer-Device"
-            id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
             origin: 1602168089665565300
             valueType: "Int8"
             value: "75" 
           - deviceName: "Random-Binary-Device"
             resourceName: "resource-002"
             profileName: "Random-Binary-Device"
-            id: "71c601d9-cb56-453a-8c75-54461e444713"
             origin: 1602168089665565300
             valueType: "Binary"
             binaryValue: [12,34]
@@ -560,14 +546,12 @@ components:
           - deviceName: "Random-Float-Device"
             resourceName: "Float32"
             profileName: "Random-Float-Device"
-            id: "7003cacc-0e00-4676-977c-4e58b9612abd"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "12.2"
           - deviceName: "Random-UnsignedInteger-Device"
             resourceName: "Uint8"
             profileName: "Random-UnsignedInteger-Device"
-            id: "71c601d9-cb56-453a-8c75-54461e444715"
             origin: 1602168089665565300
             valueType: "Uint8"
             value: "77"
@@ -580,14 +564,12 @@ components:
           - deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
-            id: "31569347-9369-43ec-aa6a-59ea9c624a6f"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "39.5"
           - deviceName: "device-001"
             resourceName: "resource-001"
             profileName: "profile-001"
-            id: "2fd73a5b-969f-483c-9c52-6bb460a06eb1"
             origin: 1602168089665565300
             valueType: "Float32"
             value: "38.6"
@@ -655,7 +637,6 @@ paths:
                   - deviceName: Random-Boolean-Device
                     resourceName: Bool
                     profileName: Random-Boolean-Device
-                    id: 563513b3-f020-46fa-ae44-0fdd1d129185
                     origin: 1692721935934211905
                     valueType: Bool
                     value: 'false'
