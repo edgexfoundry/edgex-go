@@ -48,4 +48,5 @@ type DBClient interface {
 	LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (model.Event, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX)
+	RemoveDeviceInfosByDeviceName(deviceName string) errors.EdgeX
 }

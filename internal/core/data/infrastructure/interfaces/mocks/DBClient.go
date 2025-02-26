@@ -1046,6 +1046,26 @@ func (_m *DBClient) ReadingsByTimeRange(start int64, end int64, offset int, limi
 	return r0, r1
 }
 
+// RemoveDeviceInfosByDeviceName provides a mock function with given fields: deviceName
+func (_m *DBClient) RemoveDeviceInfosByDeviceName(deviceName string) errors.EdgeX {
+	ret := _m.Called(deviceName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveDeviceInfosByDeviceName")
+	}
+
+	var r0 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(string) errors.EdgeX); ok {
+		r0 = rf(deviceName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.EdgeX)
+		}
+	}
+
+	return r0
+}
+
 // NewDBClient creates a new instance of DBClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewDBClient(t interface {

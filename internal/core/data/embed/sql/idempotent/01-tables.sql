@@ -3,37 +3,38 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- core_data.event is used to store the event information
-CREATE TABLE IF NOT EXISTS core_data.event (
-    id UUID PRIMARY KEY,
+-- core_data.device_info is used to store the device related information reusing in the event and reading
+CREATE TABLE IF NOT EXISTS core_data.device_info (
+    id SERIAL PRIMARY KEY,
     devicename TEXT,
     profilename TEXT,
     sourcename TEXT,
-    origin BIGINT,
-    tags JSONB
+    tags JSONB,
+    resourcename TEXT,
+    valuetype TEXT DEFAULT '',
+    units TEXT DEFAULT '',
+    mediatype TEXT DEFAULT ''
 );
 
-CREATE INDEX IF NOT EXISTS event_origin_index ON core_data.event (origin);
+-- core_data.event is used to store the event information
+CREATE TABLE IF NOT EXISTS core_data.event (
+    id UUID,
+    origin BIGINT,
+    device_info_id SERIAL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_event_id_origin
+    ON core_data.event(id, origin);
 
 -- core_data.reading is used to store the reading information
 CREATE TABLE IF NOT EXISTS core_data.reading (
-    id UUID,
     event_id UUID,
-    devicename TEXT,
-    profilename TEXT,
-    resourcename TEXT,
+    device_info_id SERIAL,
     origin BIGINT,
-    valuetype TEXT DEFAULT '',
-    units TEXT DEFAULT '',
-    tags JSONB,
     value TEXT,
-    mediatype TEXT,
     binaryvalue BYTEA,
-    objectvalue JSONB,
-    CONSTRAINT fk_event
-        FOREIGN KEY(event_id)
-          REFERENCES core_data.event(id)
+    objectvalue JSONB
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_reading_id_origin
-    ON core_data.reading(id, origin) -- Using id and origin as index for TimescaleDB integration
+CREATE INDEX IF NOT EXISTS idx_reading_origin
+    ON core_data.reading(origin);
