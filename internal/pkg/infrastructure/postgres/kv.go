@@ -34,7 +34,10 @@ func (c *Client) KeeperKeys(key string, keyOnly bool, isRaw bool) ([]models.KVRe
 		sqlStatement = sqlQueryFieldsByColAndLikePat(configTableName, []string{keyCol, valueCol, createdCol, modifiedCol}, keyCol)
 	}
 
-	rows, err := c.ConnPool.Query(context.Background(), sqlStatement, key+"%")
+	// Query the exact match key and all child level keys
+	// e.g., key='edgex/v4/core-data' || key='edgex/v4/core-data/%'
+	sqlStatement += fmt.Sprintf(" OR %s = $2", keyCol)
+	rows, err := c.ConnPool.Query(context.Background(), sqlStatement, key+"/%", key)
 	if err != nil {
 		return nil, pgClient.WrapDBError(fmt.Sprintf("failed to query rows by key '%s'", key), err)
 	}
