@@ -1729,3 +1729,8 @@ func (c *Client) UpdateRegistration(r model.Registration) errors.EdgeX {
 
 	return nil
 }
+
+func (c *Client) RemoveDeviceInfosByDeviceName(deviceName string) errors.EdgeX {
+	c.loggingClient.Warn("RemoveDeviceInfosByDeviceName function didn't implement")
+	return nil
+}

@@ -105,6 +105,10 @@ func deviceSystemEventAction(systemEvent dtos.SystemEvent, dic *di.Container) er
 			return errors.NewCommonEdgeXWrapper(err)
 		}
 		lc.Debugf("Events and readings are removed for the Device '%s'.", device.Name)
+
+		if err = application.CoreDataAppFrom(dic.Get).RemoveDeviceInfosByDeviceName(device.Name, dic); err != nil {
+			return errors.NewCommonEdgeXWrapper(err)
+		}
 	}
 	return nil
 }
