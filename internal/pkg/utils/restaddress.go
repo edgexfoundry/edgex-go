@@ -77,7 +77,7 @@ func ValidMethod(method string) bool {
 }
 
 func getUrlStr(address models.RESTAddress) string {
-	return fmt.Sprintf("%s://%s:%d%s", address.Protocol, address.Host, address.Port, address.Path)
+	return fmt.Sprintf("%s://%s:%d%s", address.Scheme, address.Host, address.Port, address.Path)
 }
 
 func getHttpRequest(
