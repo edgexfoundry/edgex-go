@@ -43,7 +43,7 @@ var (
 	testSubscriptionLabels     = []string{"label"}
 	testSubscriptionChannels   = []dtos.Address{
 		dtos.NewEmailAddress([]string{"test@example.com"}),
-		dtos.NewRESTAddress("host", 123, http.MethodPost),
+		dtos.NewRESTAddress("host", 123, http.MethodPost, "http"),
 	}
 	testSubscriptionDescription    = "description"
 	testSubscriptionReceiver       = "receiver"
@@ -130,7 +130,7 @@ func TestAddSubscription(t *testing.T) {
 	}
 	invalidHTTPMethod := addSubscriptionRequestData()
 	invalidHTTPMethod.Subscription.Channels = []dtos.Address{
-		dtos.NewRESTAddress("host", 123, "foo"),
+		dtos.NewRESTAddress("host", 123, "foo", "http"),
 	}
 
 	noCategoriesAndLabels := addSubscriptionRequestData()
