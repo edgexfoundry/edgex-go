@@ -14,11 +14,13 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/db"
 	postgresClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/cache"
 )
 
 type Client struct {
 	*postgresClient.Client
-	loggingClient logger.LoggingClient
+	loggingClient     logger.LoggingClient
+	deviceInfoIdCache cache.DeviceInfoIdCache
 }
 
 func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingClient, schemaName, serviceKey, serviceVersion string, sqlFiles embed.FS) (*Client, errors.EdgeX) {
@@ -29,6 +31,7 @@ func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingCl
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "postgres client creation failed", err)
 	}
+	dc.deviceInfoIdCache = cache.NewDeviceInfoIdCache(lc)
 
 	return dc, nil
 }
