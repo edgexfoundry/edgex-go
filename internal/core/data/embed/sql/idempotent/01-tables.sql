@@ -1,5 +1,5 @@
 --
--- Copyright (C) 2024 IOTech Ltd
+-- Copyright (C) 2024-2025 IOTech Ltd
 --
 -- SPDX-License-Identifier: Apache-2.0
 
@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS core_data.event (
     device_info_id SERIAL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_event_id_origin
-    ON core_data.event(id, origin);
+CREATE INDEX IF NOT EXISTS idx_event_origin
+    ON core_data.event(origin);
 
 -- core_data.reading is used to store the reading information
 CREATE TABLE IF NOT EXISTS core_data.reading (
