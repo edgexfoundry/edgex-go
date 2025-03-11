@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package ziti.edge_client.pb;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/openziti/sdk-golang/pb/edge_client_pb";
+option java_package = "org.openziti.edge.proto";
+
+enum ContentType {
+  Hello                  = 0;
+  Ping                   = 1;
+  Result                 = 2;
+  Latency                = 3;
+
+  ConnectType            = 60783;
+  StateConnectedType     = 60784;
+  StateClosedType        = 60785;
+  DataType               = 60786;
+  DialType               = 60787;
+  DialSuccessType        = 60788;
+  DialFailedType         = 60789;
+  BindType               = 60790;
+  UnbindType             = 60791;
+  StateSessionEndedType  = 60792;
+  ProbeType              = 60793;
+  UpdateBindType         = 60794;
+  HealthEventType        = 60795;
+  TraceRouteType         = 60796;
+  TraceRouteResponseType = 60797;
+  ConnInspectRequest     = 60798;
+  ConnInspectResponse    = 60799;
+  BindSuccess            = 60800;
+  UpdateTokenSuccessType = 60801;
+  UpdateTokenFailureType = 60802;
+  UpdateTokenType        = 60803;
+  
+  PostureResponseType = 10800;
+  PostureResponseSuccessType = 10801;
+}
+
+enum HeaderId {
+  ZER0 = 0;
+  UUID                     = 128;
+  ConnId                   = 1000;
+  Seq                      = 1001;
+  SessionToken             = 1002;
+  PublicKey                = 1003;
+  Cost                     = 1004;
+  Precedence               = 1005;
+  TerminatorIdentity       = 1006;
+  TerminatorIdentitySecret = 1007;
+  CallerId                 = 1008;
+  CryptoMethod             = 1009;
+  Flags                    = 1010;
+  AppData                  = 1011;
+  RouterProvidedConnId     = 1012;
+  HealthStatus             = 1013;
+  ErrorCode                = 1014;
+  Timestamp                = 1015;
+  TraceHopCount            = 1016;
+  TraceHopType             = 1017;
+  TraceHopId               = 1018;
+  TraceSourceRequestId     = 1019;
+  TraceError               = 1020;
+  ListenerId               = 1021;
+  ConnType                 = 1022;
+  SupportsInspect          = 1023;
+  SupportsBindSuccess      = 1024;
+  ConnectionMarker         = 1025;
+  CircuitId                = 1026;
+  StickinessToken          = 1027;
+}
+
+enum Error {
+  OK                          = 0;
+  Internal                    = 1;
+  InvalidApiSession           = 2;
+  InvalidSession              = 3;
+  WrongSessionType            = 4;
+  InvalidEdgeRouterForSession = 5;
+  InvalidService              = 6;
+  TunnelingNotEnabled         = 7;
+  InvalidTerminator           = 8;
+  InvalidPrecedence           = 9;
+  InvalidCost                 = 10;
+  EncryptionDataMissing       = 11;
+}
+
+enum PrecedenceValue {
+  Default = 0;
+  Required = 1;
+  Failed = 2;
+}
+
+enum Flag {
+  ZERO = 0;
+
+  // FIN is an edge payload flag used to signal communication ends
+  FIN = 1;
+  // TRACE_UUID indicates that peer will send data messages with specially constructed UUID headers
+  TRACE_UUID = 2;
+  // MULTIPART indicates that peer can accept multipart data messages
+  MULTIPART = 4;
+  // STREAM indicates connection with stream semantics
+  // this allows consolidation of payloads to lower overhead
+  STREAM = 8;
+  // MULTIPART_MSG set on data message with multiple payloads
+  MULTIPART_MSG = 16;
+}
+
+message PostureResponses {
+  repeated PostureResponse responses = 1;
+}
+
+message PostureResponse {
+  oneof Type {
+    Macs macs = 1;
+    OperatingSystem os = 2;
+    ProcessList processList = 3;
+    Domain domain = 4;
+    Woken woken = 5;
+    Unlocked unlocked = 6;
+    SdkInfo sdkInfo = 7;
+  };
+
+
+  message Macs {
+    repeated string addresses = 1;
+  }
+
+  message OperatingSystem {
+    string type  = 1;
+    string version = 2;
+    string build = 3;
+  }
+
+  message Domain {
+    string name = 1;
+  }
+
+  message Process {
+    string path = 1;
+    bool isRunning = 2;
+    string hash = 3;
+    repeated string signerFingerprints = 4;
+  }
+
+  message ProcessList {
+    repeated Process processes = 1;
+  }
+
+  message Woken {
+    google.protobuf.Timestamp Time = 1;
+  }
+
+  message Unlocked {
+    google.protobuf.Timestamp Time = 1;
+  }
+
+  message SdkInfo {
+    string appId       = 1;
+    string appVersion = 2;
+    string branch     = 3;
+    string revision   = 4;
+    string type       = 5;
+    string version    = 6;
+  }
+}

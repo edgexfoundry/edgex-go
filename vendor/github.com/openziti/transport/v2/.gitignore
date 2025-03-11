@@ -1,0 +1,7 @@
+.idea
+build
+.DS_Store
+.vscode/
+github_deploy_key
+go.work
+go.work.sum
