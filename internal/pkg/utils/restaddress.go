@@ -77,6 +77,9 @@ func ValidMethod(method string) bool {
 }
 
 func getUrlStr(address models.RESTAddress) string {
+	if address.Scheme == "" {
+		address.Scheme = common.HTTP
+	}
 	return fmt.Sprintf("%s://%s:%d%s", address.Scheme, address.Host, address.Port, address.Path)
 }
 
