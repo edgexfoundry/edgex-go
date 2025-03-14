@@ -7,7 +7,7 @@ docker/docker-compose.yml
 .project
 .vscode/
 coverage.out
-debug
+/debug/
 *.dll
 VERSION
 __debug_bin
