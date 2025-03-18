@@ -7,8 +7,6 @@ package embed
 
 import "embed"
 
-const SchemaName = "support_notifications"
-
 // SQLFiles contains the SQL files as embedded resources.
 // Following code use go embed directive to embed the SQL files into the binary.
 
