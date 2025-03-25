@@ -15,7 +15,7 @@ require (
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
-	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jackc/pgx/v5 v5.7.3
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/pebbe/zmq4 v1.2.11
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
