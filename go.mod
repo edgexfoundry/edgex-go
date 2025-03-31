@@ -2,6 +2,8 @@ module github.com/edgexfoundry/edgex-go
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
@@ -10,7 +12,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.1
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.3
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.1
-	github.com/fxamacker/cbor/v2 v2.7.0
+	github.com/fxamacker/cbor/v2 v2.8.0
 	github.com/go-co-op/gocron/v2 v2.16.1
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
