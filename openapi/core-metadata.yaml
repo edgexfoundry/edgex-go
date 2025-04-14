@@ -1347,8 +1347,8 @@ components:
             protocols:
               modbus-tcp:
                 Address: "localhost"
-                Port: "502"
-                UnitID: "1"
+                Port: 502
+                UnitID: 1
             tags:
               tag1:
                 field1: "field1Value"
