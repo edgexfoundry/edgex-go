@@ -9,6 +9,7 @@ Writable:
 #    Tags: # Contains the service level tags to be attached to all the service's metrics
     ##    Gateway="my-iot-gateway" # Tag must be added here or via Consul Env Override can only change existing value, not added new ones.
   EventPurge: false # Remove the related events and readings once received the device deletion system event
+  DefaultQueryOffset: 0
 
 Service:
   Port: 59880

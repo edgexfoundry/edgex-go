@@ -218,7 +218,10 @@ func (ec *EventController) AllEvents(c echo.Context) error {
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryStringWithOptions(c, utils.QueryStringOptions{
+		DefaultOffset: config.Writable.DefaultQueryOffset, MinOffset: minOffset, MaxOffset: math.MaxInt32,
+		DefaultLimit: common.DefaultLimit, MinLimit: minLimit, MaxLimit: config.Service.MaxResultCount,
+	})
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -241,7 +244,10 @@ func (ec *EventController) EventsByDeviceName(c echo.Context) error {
 	name := c.Param(common.Name)
 
 	// parse URL query string for offset, limit
-	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryStringWithOptions(c, utils.QueryStringOptions{
+		DefaultOffset: config.Writable.DefaultQueryOffset, MinOffset: minOffset, MaxOffset: math.MaxInt32,
+		DefaultLimit: common.DefaultLimit, MinLimit: minLimit, MaxLimit: config.Service.MaxResultCount,
+	})
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -283,7 +289,10 @@ func (ec *EventController) EventsByTimeRange(c echo.Context) error {
 	config := dataContainer.ConfigurationFrom(ec.dic.Get)
 
 	// parse time range (start, end), offset, and limit from incoming request
-	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimit(c, 0, math.MaxInt32, -1, config.Service.MaxResultCount)
+	start, end, offset, limit, err := utils.ParseTimeRangeOffsetLimitWithOptions(c, utils.QueryStringOptions{
+		DefaultOffset: config.Writable.DefaultQueryOffset, MinOffset: minOffset, MaxOffset: math.MaxInt32,
+		DefaultLimit: common.DefaultLimit, MinLimit: minLimit, MaxLimit: config.Service.MaxResultCount,
+	})
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
