@@ -10,7 +10,7 @@ require (
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.1
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.3
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.1
-	github.com/fxamacker/cbor/v2 v2.7.0
+	github.com/fxamacker/cbor/v2 v2.8.0
 	github.com/go-co-op/gocron/v2 v2.16.1
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
