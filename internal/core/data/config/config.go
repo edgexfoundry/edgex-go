@@ -32,11 +32,12 @@ type ConfigurationStruct struct {
 }
 
 type WritableInfo struct {
-	PersistData     bool
-	LogLevel        string
-	InsecureSecrets bootstrapConfig.InsecureSecrets
-	Telemetry       bootstrapConfig.TelemetryInfo
-	EventPurge      bool
+	PersistData        bool
+	LogLevel           string
+	InsecureSecrets    bootstrapConfig.InsecureSecrets
+	Telemetry          bootstrapConfig.TelemetryInfo
+	EventPurge         bool
+	DefaultQueryOffset int
 }
 
 type EventRetention struct {

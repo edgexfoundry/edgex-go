@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2024 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -26,6 +26,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
+
+type QueryStringOptions struct {
+	DefaultOffset int
+	MinOffset     int
+	MaxOffset     int
+	DefaultLimit  int
+	MinLimit      int
+	MaxLimit      int
+}
 
 func WriteHttpHeader(w http.ResponseWriter, ctx context.Context, statusCode int) {
 	w.Header().Set(common.CorrelationHeader, correlation.FromContext(ctx))
@@ -56,19 +65,27 @@ func WriteErrorResponse(w *echo.Response, ctx context.Context, lc logger.Logging
 
 // ParseGetAllObjectsRequestQueryString parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid.
 func ParseGetAllObjectsRequestQueryString(c echo.Context, minOffset int, maxOffset int, minLimit int, maxLimit int) (offset int, limit int, labels []string, err errors.EdgeX) {
-	offset, err = ParseQueryStringToInt(c, common.Offset, common.DefaultOffset, minOffset, maxOffset)
+	return ParseGetAllObjectsRequestQueryStringWithOptions(c, QueryStringOptions{
+		DefaultOffset: common.DefaultOffset, MinOffset: minOffset, MaxOffset: maxOffset,
+		DefaultLimit: common.DefaultLimit, MinLimit: minLimit, MaxLimit: maxLimit,
+	})
+}
+
+// ParseGetAllObjectsRequestQueryStringWithOptions parses offset, limit and labels from the query parameters. And use maximum and minimum to check whether the offset and limit are valid with specified options.
+func ParseGetAllObjectsRequestQueryStringWithOptions(c echo.Context, options QueryStringOptions) (offset int, limit int, labels []string, err errors.EdgeX) {
+	offset, err = ParseQueryStringToInt(c, common.Offset, options.DefaultOffset, options.MinOffset, options.MaxOffset)
 	if err != nil {
 		return offset, limit, labels, err
 	}
 
-	limit, err = ParseQueryStringToInt(c, common.Limit, common.DefaultLimit, minLimit, maxLimit)
+	limit, err = ParseQueryStringToInt(c, common.Limit, options.DefaultLimit, options.MinLimit, options.MaxLimit)
 	if err != nil {
 		return offset, limit, labels, err
 	}
 
 	// Use maxLimit to specify the supported maximum size.
 	if limit == -1 {
-		limit = maxLimit
+		limit = options.MaxLimit
 	}
 
 	labels = ParseQueryStringToStrings(c, common.Labels, common.CommaSeparator)
@@ -170,6 +187,27 @@ func ParseTimeRangeOffsetLimit(c echo.Context, minOffset int, maxOffset int, min
 		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
 	}
 	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryString(c, minOffset, maxOffset, minLimit, maxLimit)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+
+	return start, end, offset, limit, nil
+}
+
+// ParseTimeRangeOffsetLimitWithOptions parses query string to time range, offset and limit with specified options
+func ParseTimeRangeOffsetLimitWithOptions(c echo.Context, options QueryStringOptions) (start int64, end int64, offset int, limit int, edgexErr errors.EdgeX) {
+	start, edgexErr = ParsePathParamToInt64(c, common.Start, 0, math.MaxInt64)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	end, edgexErr = ParsePathParamToInt64(c, common.End, 0, math.MaxInt64)
+	if edgexErr != nil {
+		return start, end, offset, limit, edgexErr
+	}
+	if end < start {
+		return start, end, offset, limit, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("end's value %v is not allowed to be greater than start's value %v", end, start), nil)
+	}
+	offset, limit, _, edgexErr = ParseGetAllObjectsRequestQueryStringWithOptions(c, options)
 	if edgexErr != nil {
 		return start, end, offset, limit, edgexErr
 	}
