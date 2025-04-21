@@ -348,18 +348,9 @@ components:
       required: false
       schema:
         type: integer
-        minimum: 0
-        default: 0
-      description: "The number of items to skip before starting to collect the result set."
-    readingOffsetParam:
-      in: query
-      name: offset
-      required: false
-      schema:
-        type: integer
         minimum: -1
         default: 0
-      description: "The number of items to skip before starting to collect the result set. Specify -1 will not count the total reading to improve the performance for the large dataset."
+      description: "The number of items to skip before starting to collect the result set. Setting this value to -1 will skip counting the total number of events or readings, which can improve performance when working with large datasets."
     limitParam:
       in: query
       name: limit
@@ -1147,7 +1138,7 @@ paths:
   /reading/all:
     parameters:
       - $ref: '#/components/parameters/correlatedRequestHeader'
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Given the entire range of readings sorted by origin descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved."
@@ -1289,7 +1280,7 @@ paths:
       schema:
         type: string
       description: "Uniquely identifies a given device"
-    - $ref: '#/components/parameters/readingOffsetParam'
+    - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Given a range of readings from the specified device sorted by origin descending, returns a portion of that range according to the device name, offset and limit parameters."
@@ -1353,7 +1344,7 @@ paths:
       schema:
         type: string
       description: The device resource name of readings.
-    - $ref: '#/components/parameters/readingOffsetParam'
+    - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
     get:
       summary: Returns a paginated list of readings whose resource name is of the specified one.
@@ -1425,7 +1416,7 @@ paths:
         schema:
           type: string
         description: The device resource name of readings.
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Returns a paginated range of readings by deviceName and resourceName"
@@ -1497,7 +1488,7 @@ paths:
         schema:
           type: integer
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Return a paginated range of readings with a create date inside the specified start/end values."
@@ -1575,7 +1566,7 @@ paths:
         schema:
           type: integer
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Return a paginated range of readings by resourceName and specified time range."
@@ -1659,7 +1650,7 @@ paths:
         schema:
           type: integer
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Return a paginated range of readings by deviceName, resourceName and specified time range."
@@ -1737,7 +1728,7 @@ paths:
         schema:
           type: integer
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
-      - $ref: '#/components/parameters/readingOffsetParam'
+      - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
       summary: "Return a paginated range of readings by deviceName and specified time range while also allowing multiple resource names specified in the request body as query criteria.  If resource names or request body is empty, return all the readings that meet deviceName and specified time range."
