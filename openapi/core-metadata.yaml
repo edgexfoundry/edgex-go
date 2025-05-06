@@ -63,6 +63,19 @@ components:
         sourceName:
           type: string
           description: SourceName indicates the name of the resource or device command in the device profile which describes the event to generate
+        retention:
+          type: object
+          description: Retention defines policies for retaining autoevents.
+          properties:
+            maxCap:
+              type: integer
+              description: The maximum number of events to retain.
+            minCap:
+              type: integer
+              description: The minimum number of events to retain before deletion.
+            duration:
+              type: string
+              description: Duration string representing how long to retain the events, valid time units are "s", "m", "h", e.g., "1.5h" or "2h45m"
       required:
         - interval
         - resource
