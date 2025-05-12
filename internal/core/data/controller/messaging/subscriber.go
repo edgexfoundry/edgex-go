@@ -7,20 +7,17 @@ package messaging
 
 import (
 	"context"
-	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
-	"github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
+	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
+	"github.com/edgexfoundry/go-mod-messaging/v4/pkg/types"
 )
 
 // SubscribeEvents subscribes to events from message bus
@@ -70,7 +67,7 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 					lc.Errorf("fail to unmarshal event, %v", err)
 					break
 				}
-				err = validateEvent(msgEnvelope.ReceivedTopic, event.Event)
+				err = utils.ValidateEvent(msgEnvelope.ReceivedTopic, event.Event)
 				if err != nil {
 					lc.Error(err.Error())
 					break
@@ -83,41 +80,5 @@ func SubscribeEvents(ctx context.Context, dic *di.Container) errors.EdgeX {
 		}
 	}()
 
-	return nil
-}
-
-func validateEvent(messageTopic string, e dtos.Event) errors.EdgeX {
-	// Parse messageTopic by the pattern `edgex/events/device/<device-service-name>/<device-profile-name>/<device-name>/<source-name>`
-	fields := strings.Split(messageTopic, "/")
-
-	// assumes a non-empty base topic with events/device/<device-service-name>/<device-profile-name>/<device-name>/<source-name>
-	if len(fields) < 6 {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid message topic %s", messageTopic), nil)
-	}
-
-	len := len(fields)
-	profileName, err := url.PathUnescape(fields[len-3])
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	deviceName, err := url.PathUnescape(fields[len-2])
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-	sourceName, err := url.PathUnescape(fields[len-1])
-	if err != nil {
-		return errors.NewCommonEdgeXWrapper(err)
-	}
-
-	// Check whether the event fields match the message topic
-	if e.ProfileName != profileName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's profileName %s mismatches with the name %s received in topic", e.ProfileName, profileName), nil)
-	}
-	if e.DeviceName != deviceName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's deviceName %s mismatches with the name %s received in topic", e.DeviceName, deviceName), nil)
-	}
-	if e.SourceName != sourceName {
-		return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("event's sourceName %s mismatches with the name %s received in topic", e.SourceName, sourceName), nil)
-	}
 	return nil
 }
