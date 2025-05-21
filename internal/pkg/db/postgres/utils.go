@@ -91,7 +91,7 @@ func getSortedSqlFileNames(embedFiles embed.FS, sqlFilesDir string) ([]string, e
 		if err != nil {
 			continue
 		}
-		sqlFiles = append(sqlFiles, sqlFileName{order, filepath.Join(sqlFilesDir, fileName)})
+		sqlFiles = append(sqlFiles, sqlFileName{order, NormalizePath(sqlFilesDir, fileName)})
 	}
 
 	return sqlFiles.getSortedNames(), nil
@@ -143,4 +143,9 @@ func WrapDBError(message string, err error) errors.EdgeX {
 		return errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, message, err)
 	}
 	return errors.NewCommonEdgeX(errors.KindDatabaseError, message, err)
+}
+
+// NormalizePath normalizes file paths to be platform-independent.
+func NormalizePath(baseDir, fileName string) string {
+    return filepath.ToSlash(filepath.Join(baseDir, fileName))
 }
