@@ -147,5 +147,5 @@ func WrapDBError(message string, err error) errors.EdgeX {
 
 // toEmbedPath converts a path to the format required for go embed by using '/' as the separator.
 func toEmbedPath(baseDir, fileName string) string {
-    return filepath.ToSlash(filepath.Join(baseDir, fileName))
+	return filepath.ToSlash(filepath.Join(baseDir, fileName))
 }
