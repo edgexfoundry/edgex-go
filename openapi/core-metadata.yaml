@@ -605,6 +605,9 @@ components:
         adminState:
           type: string
           description: Device Service Admin State
+        properties:
+          type: object
+          description: A map of properties required to address the given device service
     DeviceServiceResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
