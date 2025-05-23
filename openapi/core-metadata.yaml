@@ -605,6 +605,12 @@ components:
         adminState:
           type: string
           description: Device Service Admin State
+        Properties:
+          type: object
+          properties:
+            IOTech_TransformScript:
+              type: string
+              description: The script (e.g. Lua functions) for device service to transform the data
     DeviceServiceResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
