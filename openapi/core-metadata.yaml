@@ -1032,13 +1032,14 @@ components:
     UpdateDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
+      description: "A request to update an existing device service definition. Either 'id' or 'name' must be provided to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
         service:
           $ref: '#/components/schemas/UpdateDeviceService'
       required:
-        - service
+        - name
+        - id
     UpdateProvisionWatcherRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
@@ -3515,20 +3516,14 @@ paths:
               $ref: '#/components/schemas/UpdateDeviceServiceRequest'
             example:
               - requestId: "d3367878-c46b-4263-b0af-1ccac37aab6e"
-                apiVersion: v3
-                service:
-                  id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
-                  name: "home-thermostat-device-service"
-                  description: "Home automation system"
-                  labels:
-                    - "home"
+                id: "edaa7c0f-05c6-4368-89f1-3be5e197cf6a"
+                description: "Home automation system"
+                labels:
+                  - "home"
               - requestId: "5accf5a9-9c7e-4160-bbbb-03d1cb25b492"
-                apiVersion: v3
-                service:
-                  id: "aee709c7-1b30-4db4-9256-2e7eb2073b2f"
-                  name: "Google-Home-device-service"
-                  adminState: "UNLOCKED"
-                  baseAddress: "http://home-device-service:49980"
+                name: "Google-Home-device-service"
+                adminState: "UNLOCKED"
+                baseAddress: "http://home-device-service:49980"
       responses:
         '207':
           description: "Indicates a multi-part response supportive of accepting multiple requests at once. The 'statusCode' property of each response in the returned array will indicate success or failure."
