@@ -1032,13 +1032,14 @@ components:
     UpdateDeviceServiceRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
-      description: "A request to update an existing device service definition. 'id' and 'deviceServiceName' must be populated in order to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
+      description: "A request to update an existing device service definition. Either 'id' or 'name' must be provided to identify the service. Any other property that is populated in the request will be updated. Empty/blank properties will not be considered."
       type: object
       properties:
         service:
           $ref: '#/components/schemas/UpdateDeviceService'
       required:
-        - service
+        - name
+        - id
     UpdateProvisionWatcherRequest:
       allOf:
         - $ref: '#/components/schemas/BaseRequest'
