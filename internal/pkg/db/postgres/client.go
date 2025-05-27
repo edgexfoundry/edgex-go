@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -43,8 +44,19 @@ func NewClient(ctx context.Context, config db.Configuration, lc logger.LoggingCl
 
 	var edgeXerr errors.EdgeX
 	once.Do(func() {
+		poolMaxConns := 4
+		poolMaxConnsStr := os.Getenv("DATABASE_POOL_MAX_CONNS")
+		if len(poolMaxConnsStr) > 0 {
+			val, err := strconv.Atoi(poolMaxConnsStr)
+			if err != nil {
+				lc.Warnf("DATABASE_POOL_MAX_CONNS is Invalid, err %v", err)
+			} else {
+				poolMaxConns = val
+			}
+		}
+
 		// use url encode to prevent special characters in the connection string
-		connectionStr := "postgres://" + fmt.Sprintf("%s:%s@%s:%d/%s", url.PathEscape(config.Username), url.PathEscape(config.Password), url.PathEscape(config.Host), config.Port, url.PathEscape(databaseName))
+		connectionStr := "postgres://" + fmt.Sprintf("%s:%s@%s:%d/%s?pool_max_conns=%d", url.PathEscape(config.Username), url.PathEscape(config.Password), url.PathEscape(config.Host), config.Port, url.PathEscape(databaseName), poolMaxConns)
 		dbPool, err := pgxpool.New(ctx, connectionStr)
 		if err != nil {
 			edgeXerr = WrapDBError("fail to create pg connection pool", err)
