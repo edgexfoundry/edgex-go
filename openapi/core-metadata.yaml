@@ -669,8 +669,8 @@ components:
             - UNLOCKED
         discoveredDevice:
           type: object
-          items:
-            $ref: '#/components/schemas/DiscoveredDevice'
+          allof:
+            - $ref: '#/components/schemas/DiscoveredDevice'
     CreateProvisionWatcher:
       description: "A ProvisionWatcher defines the filtering criteria for device auto discovery."
       type: object
@@ -755,14 +755,14 @@ components:
         - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
-        provisionwatcher:
+        provisionWatcher:
           $ref: '#/components/schemas/ProvisionWatcher'
     MultiProvisionWatchersResponse:
       allOf:
         - $ref: '#/components/schemas/BaseWithTotalCountResponse'
       type: object
       properties:
-        provisionwatchers:
+        provisionWatchers:
           type: array
           items:
             $ref: '#/components/schemas/ProvisionWatcher'
@@ -1645,7 +1645,7 @@ components:
         requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
         statusCode: 200
         totalCount: 3
-        provisionwatchers:
+        provisionWatchers:
           - id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
             name: "virtual-watcher"
             created: 1600927134890
@@ -3972,7 +3972,7 @@ paths:
                 apiVersion: "v3"
                 requestId: "4e63c9b9-9cc4-45e4-9bf0-6d994a3860b4"
                 statusCode: 200
-                provisionwatcher:
+                provisionWatcher:
                   id: "1ff7762f-c432-4af0-9a5d-756bbc92744b"
                   name: "virtual-watcher"
                   created: 1600927134890
