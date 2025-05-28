@@ -669,7 +669,7 @@ components:
             - UNLOCKED
         discoveredDevice:
           type: object
-          allof:
+          allOf:
             - $ref: '#/components/schemas/DiscoveredDevice'
     CreateProvisionWatcher:
       description: "A ProvisionWatcher defines the filtering criteria for device auto discovery."
