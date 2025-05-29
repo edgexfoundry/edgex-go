@@ -91,6 +91,7 @@ func getSortedSqlFileNames(embedFiles embed.FS, sqlFilesDir string) ([]string, e
 		if err != nil {
 			continue
 		}
+
 		sqlFiles = append(sqlFiles, sqlFileName{order, toEmbedPath(sqlFilesDir, fileName)})
 	}
 
@@ -144,6 +145,7 @@ func WrapDBError(message string, err error) errors.EdgeX {
 	}
 	return errors.NewCommonEdgeX(errors.KindDatabaseError, message, err)
 }
+
 
 // toEmbedPath converts a path to the format required for go embed by using '/' as the separator.
 func toEmbedPath(baseDir, fileName string) string {
