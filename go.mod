@@ -5,10 +5,10 @@ go 1.23.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.10
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.4
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.11
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.6
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.8
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.9
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.3
 	github.com/fxamacker/cbor/v2 v2.8.0
 	github.com/go-co-op/gocron/v2 v2.16.2
@@ -20,7 +20,7 @@ require (
 	github.com/pebbe/zmq4 v1.3.1
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/spf13/cast v1.8.0
+	github.com/spf13/cast v1.9.2
 	github.com/spiffe/go-spiffe/v2 v2.5.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.38.0
@@ -85,7 +85,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
-	github.com/nats-io/nats.go v1.41.2 // indirect
+	github.com/nats-io/nats.go v1.42.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
