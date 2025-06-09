@@ -62,7 +62,7 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 			CoreCommands: commands,
 		})
 	}
-	return deviceCoreCommands, uint32(len(deviceCoreCommands)), nil
+	return deviceCoreCommands, multiDevicesResponse.TotalCount, nil
 }
 
 // CommandsByDeviceName query coreCommands with device name
