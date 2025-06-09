@@ -21,6 +21,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/interfaces/mocks"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	dtosCommon "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
 )
 
@@ -137,17 +138,23 @@ func TestAllCommands(t *testing.T) {
 	tests := []struct {
 		name                 string
 		multiDevicesResponse responses.MultiDevicesResponse
-		expectedCommandCount uint32
+		expectedTotalCount   uint32
 	}{
 		{
-			name:                 "query the commands",
-			multiDevicesResponse: responses.MultiDevicesResponse{Devices: []dtos.Device{device1, device2}},
-			expectedCommandCount: 2,
+			name: "query the commands",
+			multiDevicesResponse: responses.MultiDevicesResponse{
+				BaseWithTotalCountResponse: dtosCommon.BaseWithTotalCountResponse{TotalCount: 2},
+				Devices:                    []dtos.Device{device1, device2},
+			},
+			expectedTotalCount: 2,
 		},
 		{
-			name:                 "device has empty profile",
-			multiDevicesResponse: responses.MultiDevicesResponse{Devices: []dtos.Device{device1, device3}},
-			expectedCommandCount: 1,
+			name: "device has empty profile",
+			multiDevicesResponse: responses.MultiDevicesResponse{
+				BaseWithTotalCountResponse: dtosCommon.BaseWithTotalCountResponse{TotalCount: 2},
+				Devices:                    []dtos.Device{device1, device3},
+			},
+			expectedTotalCount: 2,
 		},
 	}
 	for _, tt := range tests {
@@ -156,7 +163,7 @@ func TestAllCommands(t *testing.T) {
 			dc.On("AllDevices", ctx, labels, 0, 0).Return(tt.multiDevicesResponse, nil).Once()
 			_, count, err := AllCommands(0, 0, dic)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expectedCommandCount, count)
+			assert.Equal(t, tt.expectedTotalCount, count)
 		})
 	}
 }
