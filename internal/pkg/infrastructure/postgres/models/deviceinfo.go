@@ -15,4 +15,5 @@ type DeviceInfo struct {
 	ValueType    string
 	Units        string
 	MediaType    string
+	MarkDeleted  bool
 }
