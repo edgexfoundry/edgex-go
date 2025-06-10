@@ -59,6 +59,7 @@ const (
 	binaryValueCol    = "binaryvalue"
 	mediaTypeCol      = "mediatype"
 	objectValueCol    = "objectvalue"
+	markDeletedCol    = "mark_deleted"
 )
 
 // constants relate to the keeper postgres db table column names
