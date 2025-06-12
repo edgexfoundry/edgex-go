@@ -31,7 +31,7 @@ COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/security-proxy-auth/security-proxy-auth
+RUN make -e ADD_BUILD_TAGS="$ADD_BUILD_TAGS" cmd/security-proxy-auth/security-proxy-auth
 
 #Next image - Copy built Go binary into new workspace
 FROM alpine:3.20
