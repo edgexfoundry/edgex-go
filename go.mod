@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.11
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.13
 	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.7
 	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.6
 	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.9
