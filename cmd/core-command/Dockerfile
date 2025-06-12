@@ -30,7 +30,7 @@ COPY go.mod vendor* ./
 RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 
 COPY . .
-RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS  cmd/core-command/core-command
+RUN make -e ADD_BUILD_TAGS="$ADD_BUILD_TAGS"  cmd/core-command/core-command
 
 FROM alpine:3.20
 
