@@ -214,7 +214,7 @@ dcore: dmetadata ddata dcommand
 dmetadata: docker_core_metadata
 docker_core_metadata: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -227,7 +227,7 @@ docker_core_metadata: docker_base
 ddata: docker_core_data
 docker_core_data: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -240,7 +240,7 @@ docker_core_data: docker_base
 dcommand: docker_core_command
 docker_core_command: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -253,7 +253,7 @@ docker_core_command: docker_base
 dcommon-config: docker_core_common_config
 docker_core_common_config: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -266,7 +266,7 @@ docker_core_common_config: docker_base
 dkeeper: docker_core_keeper
 docker_core_keeper: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -281,7 +281,7 @@ dsupport: dnotifications dscheduler dscheduler
 dnotifications: docker_support_notifications
 docker_support_notifications: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
@@ -294,7 +294,7 @@ docker_support_notifications: docker_base
 dscheduler: docker_support_scheduler
 docker_support_scheduler: docker_base
 	docker build \
-		--build-arg ADD_BUILD_TAGS=$(ADD_BUILD_TAGS) \
+		--build-arg ADD_BUILD_TAGS="$(ADD_BUILD_TAGS)" \
 		--build-arg http_proxy \
 		--build-arg https_proxy \
 		--build-arg BUILDER_BASE=$(LOCAL_CACHE_IMAGE) \
