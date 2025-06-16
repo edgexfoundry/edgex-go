@@ -550,6 +550,11 @@ paths:
             default: true
           example: false
           description: "If set to false, there will be no Event returned in the http response"
+        - in: query
+          name: jsonObject
+          schema:
+            type: string
+          description: "Base64-encoded JSON string for passing additional parameters"
       responses:
         '200':
           description: "OK"
