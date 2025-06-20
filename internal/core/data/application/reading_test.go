@@ -7,6 +7,7 @@
 package application
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -19,7 +20,12 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
+	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	clientMocks "github.com/edgexfoundry/go-mod-core-contracts/v4/clients/interfaces/mocks"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 )
@@ -253,7 +259,7 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	}
 }
 
-func TestPurgeEvent(t *testing.T) {
+func TestPurgeEventsByAutoEvent(t *testing.T) {
 	dic := mocks.NewMockDIC()
 	deviceName := "testDevice"
 	sourceName := "testSource"
@@ -340,7 +346,7 @@ func TestPurgeEvent(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := purgeEvent(deviceName, testCase.autoEvent, dic)
+			err := purgeEventsByAutoEvent(deviceName, testCase.autoEvent, dic)
 			require.NoError(t, err)
 			duration, parseErr := time.ParseDuration(testCase.autoEvent.Retention.Duration)
 			require.NoError(t, parseErr)
@@ -360,6 +366,39 @@ func TestPurgeEvent(t *testing.T) {
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			}
 
+		})
+	}
+}
+
+func TestNoneAutoEventSourcesByDevice(t *testing.T) {
+	deviceName := "test-device"
+	profileName := "test-profile"
+	dic := mocks.NewMockDIC()
+	clientMock := &clientMocks.DeviceProfileClient{}
+	clientMock.On("DeviceProfileByName", context.Background(), profileName).Return(responses.DeviceProfileResponse{Profile: dtos.DeviceProfile{
+		DeviceResources: []dtos.DeviceResource{{Name: "resource1", Properties: dtos.ResourceProperties{ReadWrite: common.ReadWrite_R}}, {Name: "resource2", Properties: dtos.ResourceProperties{ReadWrite: common.ReadWrite_W}}},
+		DeviceCommands:  []dtos.DeviceCommand{{Name: "command1", ReadWrite: common.ReadWrite_R}, {Name: "command2", ReadWrite: common.ReadWrite_W}},
+	}}, nil)
+	dic.Update(di.ServiceConstructorMap{
+		bootstrapContainer.DeviceProfileClientName: func(get di.Get) interface{} {
+			return clientMock
+		},
+	})
+
+	test := []struct {
+		name            string
+		device          models.Device
+		expectedSources []string
+	}{
+		{"no auto events in device", models.Device{Name: deviceName, ProfileName: profileName, AutoEvents: nil}, []string{"resource1", "command1"}},
+		{"one auto events in device", models.Device{Name: deviceName, ProfileName: profileName, AutoEvents: []models.AutoEvent{{SourceName: "resource1"}}}, []string{"command1"}},
+		{"two auto events in device", models.Device{Name: deviceName, ProfileName: profileName, AutoEvents: []models.AutoEvent{{SourceName: "resource1"}, {SourceName: "command1"}}}, nil},
+	}
+	for _, testCase := range test {
+		t.Run(testCase.name, func(t *testing.T) {
+			sources, err := noneAutoEventSourcesByDevice(testCase.device, dic)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expectedSources, sources)
 		})
 	}
 }
