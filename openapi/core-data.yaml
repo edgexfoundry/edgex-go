@@ -20,7 +20,7 @@ components:
           $ref: '#/components/schemas/Event'
       required:
         - event
-    BaseReading:
+    Reading:
       description: "A base reading type containing common properties from which more specific reading types inherit. This definition should not be implemented but is used elsewhere to indicate support for a mixed list of simple/binary readings in a single event."
       type: object
       properties:
@@ -66,11 +66,22 @@ components:
             - Float32Array
             - Float64Array
             - Object
+        value:
+          description: "A string representation of the reading's value"
+          type: string
+        binaryValue:
+          description: "If the value of the reading is binary, it will be found in this property as a byte array"
+          type: string
+          format: byte
+        mediaType:
+          description: "E.g. MIME Type, indicates what the content type of the binaryValue property is if it's populated."
+          type: string
+        objectValue:
+          description: "If the value type of the reading is Object, it will be found in this property as a object value"
+          type: string
+          format: byte
       required:
-        - deviceName
         - resourceName
-        - profileName
-        - origin
         - valueType
     BaseRequest:
       description: "Defines basic properties which all use-case specific request DTO instances should support."
@@ -121,45 +132,6 @@ components:
         totalCount:
           description: "The total count of all multi instances."
           type: integer
-    SimpleReading:
-      description: "An event reading for a simple data type"
-      allOf:
-        - $ref: '#/components/schemas/BaseReading'
-        - type: object
-          properties:
-            value:
-              description: "A string representation of the reading's value"
-              type: string
-      required:
-        - value    
-    BinaryReading:
-      description: "An event reading for a binary data type"
-      allOf:
-        - $ref: '#/components/schemas/BaseReading'
-        - type: object
-          properties:
-            binaryValue:
-              description: "If the value of the reading is binary, it will be found in this property as a byte array"
-              type: string
-              format: byte
-            mediaType:
-              description: "E.g. MIME Type, indicates what the content type of the binaryValue property is if it's populated."
-              type: string
-          required:
-            - binaryValue
-            - mediaType
-    ObjectReading:
-      description: "An event reading for a object data type"
-      allOf:
-        - $ref: '#/components/schemas/BaseReading'
-        - type: object
-          properties:
-            objectValue:
-              description: "If the value type of the reading is Object, it will be found in this property as a object value"
-              type: string
-              format: byte
-          required:
-            - objectValue
     CountResponse:
       allOf:
         - $ref: '#/components/schemas/BaseResponse'
@@ -194,10 +166,7 @@ components:
           description: "One or more readings captured at the time of the event"
           type: array
           items:
-            oneOf:
-              - $ref: '#/components/schemas/SimpleReading'
-              - $ref: '#/components/schemas/BinaryReading'
-              - $ref: '#/components/schemas/ObjectReading'
+            $ref: '#/components/schemas/Reading'
           example: [
             {
                 "deviceName": "Random-Boolean-Device",
@@ -281,7 +250,7 @@ components:
         readings:
           type: array
           items:
-            $ref: '#/components/schemas/BaseReading'
+            $ref: '#/components/schemas/Reading'
     PingResponse:
       type: object
       properties:
@@ -1141,7 +1110,7 @@ paths:
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
     get:
-      summary: "Given the entire range of readings sorted by origin descending, returns a portion of that range according to the offset and limit parameters. Readings returned will all inherit from BaseReading but their concrete types will be either SimpleReading or BinaryReading, potentially interleaved."
+      summary: "Given the entire range of readings sorted by origin descending, returns a portion of that range according to the offset and limit parameters. Readings are returned as a Reading type, which includes value for simple data types, binaryValue and mediaType for binary data types, or objectValue for object data types."
       responses:
         '200':
           description: "OK"
