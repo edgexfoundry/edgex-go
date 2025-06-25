@@ -80,7 +80,8 @@ func (c *Client) DevicesByServiceName(offset int, limit int, name string) ([]mod
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{serviceNameField: name}
-	return queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceTableName), queryObj, offset, validLimit)
+	return queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(deviceTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 }
 
 // DeviceIdExists checks the device existence by id
@@ -132,12 +133,14 @@ func (c *Client) AllDevices(offset int, limit int, labels []string) (devices []m
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying devices by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		devices, err = queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceTableName), queryObj, offset, validLimit)
+		devices, err = queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(deviceTableName),
+			pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return devices, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all devices by labels", err)
 		}
 	} else {
-		devices, err = queryDevices(ctx, c.ConnPool, sqlQueryContentWithPagination(deviceTableName), offset, validLimit)
+		devices, err = queryDevices(ctx, c.ConnPool, sqlQueryContentWithPaginationAsNamedArgs(deviceTableName),
+			pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return devices, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all devices", err)
 		}
@@ -151,7 +154,8 @@ func (c *Client) DevicesByProfileName(offset int, limit int, profileName string)
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{profileNameField: profileName}
-	return queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceTableName), queryObj, offset, validLimit)
+	return queryDevices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(deviceTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 }
 
 // UpdateDevice updates a device

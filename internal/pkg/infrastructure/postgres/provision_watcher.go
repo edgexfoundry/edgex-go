@@ -84,7 +84,8 @@ func (c *Client) ProvisionWatchersByServiceName(offset int, limit int, name stri
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{serviceNameField: name}
-	return queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(provisionWatcherTableName), queryObj, offset, validLimit)
+	return queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(provisionWatcherTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 }
 
 // ProvisionWatchersByProfileName query provision watchers by offset, limit and profile name
@@ -92,7 +93,8 @@ func (c *Client) ProvisionWatchersByProfileName(offset int, limit int, name stri
 	ctx := context.Background()
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{"DiscoveredDevice": map[string]any{profileNameField: name}}
-	return queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(provisionWatcherTableName), queryObj, offset, validLimit)
+	return queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(provisionWatcherTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 }
 
 // AllProvisionWatchers query provision watchers with offset, limit and labels
@@ -103,7 +105,8 @@ func (c *Client) AllProvisionWatchers(offset int, limit int, labels []string) (p
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying provision watchers by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		pws, err = queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(provisionWatcherTableName), queryObj, offset, validLimit)
+		pws, err = queryProvisionWatchers(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(provisionWatcherTableName),
+			pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return pws, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all provision watchers by labels", err)
 		}
