@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -35,7 +35,7 @@ func (c *Client) AllReadings(offset int, limit int) ([]model.Reading, errors.Edg
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
 	// query reading by origin descending with offset & limit
-	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllReadingWithPaginationDescByCol(originCol), offset, validLimit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllReadingWithPaginationDescByCol(originCol), pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all readings", err)
 	}
@@ -50,7 +50,8 @@ func (c *Client) ReadingsByResourceName(offset int, limit int, resourceName stri
 	// query reading by the resourceName and origin descending
 	sqlStatement := sqlQueryAllReadingAndDescWithCondsAndPag(originCol, resourceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, resourceName, offset, validLimit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
+		pgx.NamedArgs{resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query readings by resource '%s'", resourceName), err)
 	}
@@ -64,7 +65,8 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) ([]mod
 	// query reading by the deviceName and origin descending
 	sqlStatement := sqlQueryAllReadingAndDescWithCondsAndPag(originCol, deviceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, name, offset, validLimit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
+		pgx.NamedArgs{deviceNameCol: name, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, fmt.Sprintf("failed to query readings by device '%s'", name), err)
 	}
@@ -78,7 +80,8 @@ func (c *Client) ReadingsByDeviceNameAndResourceName(deviceName string, resource
 	// query reading by the deviceName/resourceName and origin descending
 	sqlStatement := sqlQueryAllReadingAndDescWithCondsAndPag(originCol, deviceNameCol, resourceNameCol)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, deviceName, resourceName, offset, validLimit)
+	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
+		pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device '%s' and resource '%s'", deviceName, resourceName), err)
@@ -92,7 +95,9 @@ func (c *Client) ReadingsByTimeRange(start int64, end int64, offset int, limit i
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(originCol, originCol, nil)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, offset, validLimit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement,
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end,
+			offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -105,7 +110,9 @@ func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(originCol, originCol, nil, deviceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, offset, validLimit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement,
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end,
+			deviceNameCol: deviceName, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -118,7 +125,9 @@ func (c *Client) ReadingsByResourceNameAndTimeRange(resourceName string, start i
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(originCol, originCol, nil, resourceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, resourceName, offset, validLimit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement,
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end,
+			resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -131,7 +140,9 @@ func (c *Client) ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName stri
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	sqlStatement := sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(originCol, originCol, nil, deviceNameCol, resourceNameCol)
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, start, end, deviceName, resourceName, offset, validLimit)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement,
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end,
+			deviceNameCol: deviceName, resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -147,9 +158,10 @@ func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName str
 		[]string{resourceNameCol}, deviceNameCol, resourceNameCol)
 
 	// build the query args for the where condition using in querying readings
-	queryArgs := []any{start, end, deviceName, resourceNames, offset, validLimit}
+	queryArgs := pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end,
+		deviceNameCol: deviceName, resourceNameCol: resourceNames, offsetCondition: offset, limitCondition: validLimit}
 	// query readings
-	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, queryArgs...)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, queryArgs)
 	if err != nil {
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
@@ -161,36 +173,38 @@ func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName str
 func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(deviceNameCol)
 
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName})
 }
 
 // ReadingCountByResourceName returns the count of Readings associated a specific resource from db
 func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(resourceNameCol)
 
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, resourceName)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{resourceNameCol: resourceName})
 }
 
 // ReadingCountByDeviceNameAndResourceName returns the count of readings associated a specific device and resource values from db
 func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(deviceNameCol, resourceNameCol)
 
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, deviceName, resourceName)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName})
 }
 
 // ReadingCountByTimeRange returns the count of reading by origin within the time range from db
 func (c *Client) ReadingCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil), start, end)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil), pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end})
 }
 
 // ReadingCountByDeviceNameAndTimeRange returns the count of readings by origin within the time range and the specified device from db
 func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, deviceNameCol), start, end, deviceName)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, deviceNameCol),
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, deviceNameCol: deviceName})
 }
 
 // ReadingCountByResourceNameAndTimeRange returns the count of readings by origin within the time range and the specified resource from db
 func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, start int64, end int64) (uint32, errors.EdgeX) {
-	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, resourceNameCol), start, end, resourceName)
+	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, resourceNameCol),
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, resourceNameCol: resourceName})
 }
 
 // ReadingCountByDeviceNameAndResourceNameAndTimeRange returns the count of readings by origin within the time range
@@ -199,10 +213,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 	return getTotalRowsCount(context.Background(),
 		c.ConnPool,
 		sqlQueryCountReadingByTimeRangeCol(originCol, nil, deviceNameCol, resourceNameCol),
-		start,
-		end,
-		deviceName,
-		resourceName)
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, deviceNameCol: deviceName, resourceNameCol: resourceName})
 }
 
 // ReadingCountByDeviceNameAndResourceNamesAndTimeRange returns the count of readings by origin within the time range
@@ -211,13 +222,13 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName
 	return getTotalRowsCount(context.Background(),
 		c.ConnPool,
 		sqlQueryCountReadingByTimeRangeCol(originCol, []string{resourceNameCol}, deviceNameCol, resourceNameCol),
-		start, end, deviceName, resourceNames)
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, deviceNameCol: deviceName, resourceNameCol: resourceNames})
 }
 
 func (c *Client) LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX) {
 	ctx := context.Background()
 
-	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllReadingWithPaginationDescByCol(originCol), offset, 1)
+	readings, err := queryReadings(ctx, c.ConnPool, sqlQueryAllReadingWithPaginationDescByCol(originCol), pgx.NamedArgs{offsetCondition: offset, limitCondition: 1})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all readings", err)
 	}
@@ -229,8 +240,8 @@ func (c *Client) LatestReadingByOffset(offset uint32) (model.Reading, errors.Edg
 }
 
 // queryReadings queries the data rows with given sql statement and passed args, converts the rows to map and unmarshal the data rows to the Reading model slice
-func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args ...any) ([]model.Reading, errors.EdgeX) {
-	rows, err := connPool.Query(ctx, sql, args...)
+func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args pgx.NamedArgs) ([]model.Reading, errors.EdgeX) {
+	rows, err := connPool.Query(ctx, sql, args)
 	if err != nil {
 		return nil, pgClient.WrapDBError("query failed", err)
 	}
@@ -293,7 +304,7 @@ func deleteReadingsByOriginAndEventId(ctx context.Context, tx pgx.Tx, origin int
 	commandTag, err := tx.Exec(
 		ctx,
 		sqlStatement,
-		origin, eventId,
+		pgx.NamedArgs{endTimeCondition: origin, eventIdFKCol: eventId},
 	)
 	if commandTag.RowsAffected() == 0 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no reading found", nil)
@@ -305,7 +316,7 @@ func deleteReadingsByOriginAndEventId(ctx context.Context, tx pgx.Tx, origin int
 }
 
 // deleteReadingsBySubQuery delete the readings with event_id in the range of the sub query
-func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string, args ...any) errors.EdgeX {
+func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string, args pgx.NamedArgs) errors.EdgeX {
 	sqlStatement := sqlDeleteByColumns(readingTableName, eventIdFKCol)
 	subQueryCond := "ANY ( " + subQuerySql + " )"
 	sqlStatement = strings.Replace(sqlStatement, "$1", subQueryCond, 1)
@@ -313,7 +324,7 @@ func deleteReadingsBySubQuery(ctx context.Context, tx pgx.Tx, subQuerySql string
 	commandTag, err := tx.Exec(
 		ctx,
 		sqlStatement,
-		args...,
+		args,
 	)
 	if commandTag.RowsAffected() == 0 {
 		return errors.NewCommonEdgeX(errors.KindContractInvalid, "no reading found", nil)

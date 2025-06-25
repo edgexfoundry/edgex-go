@@ -56,7 +56,7 @@ func sqlQueryFieldsByCol(table string, fields []string, columns ...string) strin
 
 // sqlQueryEventIdFieldsByCol returns the SQL statement for selecting the event.id of rows from the event table by the conditions composed of given columns
 func sqlQueryEventIdFieldsByCol(columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 
 	return fmt.Sprintf("SELECT event.id FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s", eventTableName, deviceInfoTableName, whereCondition)
 }
@@ -79,31 +79,31 @@ func sqlQueryFieldsByColAndLikePat(table string, fields []string, columns ...str
 //	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
 //}
 
-// sqlQueryAllWithConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
-func sqlQueryAllWithConds(table string, columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
+// sqlQueryAllWithNamedArgConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
+func sqlQueryAllWithNamedArgConds(table string, columns ...string) string {
+	whereCondition := constructWhereNamedArgCondition(columns...)
 
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s", table, whereCondition)
 }
 
 // sqlQueryAllWithPaginationDescByCol returns the SQL statement for selecting all rows from the table with the pagination and desc by descCol
 func sqlQueryAllWithPaginationDescByCol(table string, descCol string) string {
-	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, descCol)
+	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET @%s LIMIT @%s", table, descCol, offsetCondition, limitCondition)
 }
 
 // sqlQueryAllEventWithPaginationDescByCol returns the SQL statement for selecting all rows from the event table with the pagination and desc by descCol
 func sqlQueryAllEventWithPaginationDescByCol(descCol string) string {
-	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s = false ORDER BY %s DESC OFFSET $1 LIMIT $2", eventColumns, eventTableName, deviceInfoTableName, markDeletedCol, descCol)
+	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s = false ORDER BY %s DESC OFFSET @%s LIMIT @%s", eventColumns, eventTableName, deviceInfoTableName, markDeletedCol, descCol, offsetCondition, limitCondition)
 }
 
 // sqlQueryAllReadingWithPaginationDescByCol returns the SQL statement for selecting all rows from the reading table with the pagination and desc by descCol
 func sqlQueryAllReadingWithPaginationDescByCol(descCol string) string {
-	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on reading.device_info_id = device_info.id WHERE %s = false ORDER BY %s DESC OFFSET $1 LIMIT $2", readingColumns, readingTableName, deviceInfoTableName, markDeletedCol, descCol)
+	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on reading.device_info_id = device_info.id WHERE %s = false ORDER BY %s DESC OFFSET @%s LIMIT @%s", readingColumns, readingTableName, deviceInfoTableName, markDeletedCol, descCol, offsetCondition, limitCondition)
 }
 
 // sqlQueryAllReadingAndDescWithConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition with descending by descCol
 func sqlQueryAllReadingAndDescWithConds(descCol string, columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 
 	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on reading.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC", readingColumns, readingTableName, deviceInfoTableName, markDeletedCol, whereCondition, descCol)
 }
@@ -111,46 +111,37 @@ func sqlQueryAllReadingAndDescWithConds(descCol string, columns ...string) strin
 // sqlQueryAllEventAndDescWithCondsAndPage returns the SQL statement for selecting all rows from the event table by the given columns composed of the where condition
 // with descending by descCol and pagination
 func sqlQueryAllEventAndDescWithCondsAndPage(descCol string, columns ...string) string {
-	columnCount := len(columns)
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 
 	return fmt.Sprintf(
-		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET @%s LIMIT @%s",
 		eventColumns, eventTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
-		// note that this is a prepared statement with parameters beginning with count WHERE
-		// conditions, so adding 1 and 2 for OFFSET, LIMIT parameters, respectively
-		columnCount+1, columnCount+2)
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllReadingAndDescWithCondsAndPag returns the SQL statement for selecting all rows from the reading table by the given columns composed of the where condition
 // with descending by descCol and pagination
 func sqlQueryAllReadingAndDescWithCondsAndPag(descCol string, columns ...string) string {
-	columnCount := len(columns)
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 
 	return fmt.Sprintf(
-		"SELECT %s FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		"SELECT %s FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET @%s LIMIT @%s",
 		readingColumns, readingTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
-		// note that this is a prepared statement with parameters beginning with count WHERE
-		// conditions, so adding 1 and 2 for OFFSET, LIMIT parameters, respectively
-		columnCount+1, columnCount+2)
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime returns the SQL statement for selecting all rows from the event table by the given columns composed of the where condition
 // with descending by descCol and pagination
 func sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime(descCol string, upperLimitTimeRangeCol string, columns ...string) string {
-	columnCount := len(columns)
-	whereCondition := constructWhereCondWithTimeRange("", upperLimitTimeRangeCol, nil, columns...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange("", upperLimitTimeRangeCol, nil, columns...)
 
 	return fmt.Sprintf(
-		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET @%s LIMIT @%s",
 		eventColumns, eventTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
-		// note that this is a prepared statement with parameters beginning with UpperLimitTime
-		// and then columns conditions, so adding 2 and 3 for OFFSET, LIMIT parameters, respectively
-		columnCount+2, columnCount+3)
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
@@ -160,32 +151,26 @@ func sqlQueryAllWithPaginationAndTimeRange(table string) string {
 
 // sqlQueryAllEventWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the event table with the arrayColNames slice,
 // provided columns with pagination and a time range by timeRangeCol, desc by descCol
-func sqlQueryAllEventWithPaginationAndTimeRangeDescByCol(timeRangeCol string, descCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
-	columnCount := len(columns)
+func sqlQueryAllEventWithPaginationAndTimeRangeDescByCol(timeRangeCol string, descCol string) string {
+	whereCondition := constructWhereNamedArgCondWithTimeRange(timeRangeCol, timeRangeCol, nil)
 
 	return fmt.Sprintf(
-		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		"SELECT %s FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET @%s LIMIT @%s",
 		eventColumns, eventTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
-		// note that this is a prepared statement with parameters beginning with two timeRangeCol
-		// and then columns conditions, so OFFSET, LIMIT are the third and forth parameters
-		columnCount+3, columnCount+4)
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the reading table with the arrayColNames slice,
 // provided columns with pagination and a time range by timeRangeCol, desc by descCol
 func sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(timeRangeCol string, descCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
-	columnCount := len(columns)
+	whereCondition := constructWhereNamedArgCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 
 	return fmt.Sprintf(
-		"SELECT %s FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET $%d LIMIT $%d",
+		"SELECT %s FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s ORDER BY %s DESC OFFSET @%s LIMIT @%s",
 		readingColumns, readingTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
-		// note that this is a prepared statement with parameters beginning with two timeRangeCol
-		// and then columns conditions, so OFFSET, LIMIT are the third and forth parameters
-		columnCount+3, columnCount+4)
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllByStatusWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table by status with pagination and a time range.
@@ -219,7 +204,7 @@ func sqlQueryAllById(table string) string {
 
 // sqlQueryAllEventById returns the SQL statement for selecting all rows from the event table by id.
 func sqlQueryAllEventById() string {
-	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on event.device_info_id = device_info.id WHERE core_data.event.id=$1", eventColumns, eventTableName, deviceInfoTableName)
+	return fmt.Sprintf("SELECT %s FROM %s JOIN %s on event.device_info_id = device_info.id WHERE core_data.event.id=@%s", eventColumns, eventTableName, deviceInfoTableName, idCol)
 }
 
 // sqlQueryContentById returns the SQL statement for selecting content column by the specified id.
@@ -290,13 +275,13 @@ func sqlQueryCountReading() string {
 
 // sqlQueryCountEventByCol returns the SQL statement for counting the number of rows in the table by the given column name.
 func sqlQueryCountEventByCol(columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s", eventTableName, deviceInfoTableName, markDeletedCol, whereCondition)
 }
 
 // sqlQueryCountReadingByCol returns the SQL statement for counting the number of rows in the table by the given column name.
 func sqlQueryCountReadingByCol(columns ...string) string {
-	whereCondition := constructWhereCondition(columns...)
+	whereCondition := constructWhereNamedArgCondition(columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s", readingTableName, deviceInfoTableName, markDeletedCol, whereCondition)
 }
 
@@ -310,14 +295,14 @@ func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColName
 // sqlQueryCountEventByTimeRangeCol returns the SQL statement for counting the number of rows in the event table
 // by the given time range of the specified column
 func sqlQueryCountEventByTimeRangeCol(timeRangeCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s join %s on event.device_info_id = device_info.id WHERE %s = false AND %s", eventTableName, deviceInfoTableName, markDeletedCol, whereCondition)
 }
 
 // sqlQueryCountReadingByTimeRangeCol returns the SQL statement for counting the number of rows in the reading table
 // by the given time range of the specified column
 func sqlQueryCountReadingByTimeRangeCol(timeRangeCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s join %s on reading.device_info_id = device_info.id WHERE %s = false AND %s", readingTableName, deviceInfoTableName, markDeletedCol, whereCondition)
 }
 
@@ -344,9 +329,9 @@ func sqlQueryCountInUseResource() string {
 func sqlCountEventByDeviceNameAndSourceNameAndLimit() string {
 	return fmt.Sprintf(
 		`SELECT count(*) FROM (
-		  SELECT 1 FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s = false AND %s = $1 AND %s = $2
-		  LIMIT $3
-        ) limited_count`, eventTableName, deviceInfoTableName, markDeletedCol, deviceNameCol, sourceNameCol)
+		  SELECT 1 FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s = false AND %s = @%s AND %s = @%s
+		  LIMIT @%s
+        ) limited_count`, eventTableName, deviceInfoTableName, markDeletedCol, deviceNameCol, deviceNameCol, sourceNameCol, sourceNameCol, limitCondition)
 }
 
 // sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
@@ -357,7 +342,7 @@ func sqlCountEventByDeviceNameAndSourceNameAndLimit() string {
 
 // sqlQueryEventIdFieldByTimeRangeAndConditions returns the SQL statement for selecting fields from the table within the time range
 func sqlQueryEventIdFieldByTimeRangeAndConditions(timeRangeCol string, cols ...string) string {
-	whereCondition := constructWhereCondWithTimeRange("", timeRangeCol, nil, cols...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange("", timeRangeCol, nil, cols...)
 
 	return fmt.Sprintf("SELECT event.id FROM %s JOIN %s on event.device_info_id = device_info.id WHERE %s", eventTableName, deviceInfoTableName, whereCondition)
 }
@@ -422,14 +407,14 @@ func sqlDeleteByJSONFieldAndAge(table string) string {
 // sqlDeleteTimeRangeByColumn returns the SQL statement for deleting rows from the table by time range with the specified column
 // the time range is calculated from the caller function since the interval unit might be different
 func sqlDeleteTimeRangeByColumn(table string, upperLimitTimeRangeCol string, cols ...string) string {
-	whereCondition := constructWhereCondWithTimeRange("", upperLimitTimeRangeCol, nil, cols...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange("", upperLimitTimeRangeCol, nil, cols...)
 	return fmt.Sprintf("DELETE FROM %s WHERE %s", table, whereCondition)
 }
 
 // sqlDeleteEventsByTimeRangeAndColumn returns the SQL statement for deleting rows from the event table by time range with the specified column
 // the time range is calculated from the caller function since the interval unit might be different
 func sqlDeleteEventsByTimeRangeAndColumn(upperLimitTimeRangeCol string, cols ...string) string {
-	whereCondition := constructWhereCondWithTimeRange("", upperLimitTimeRangeCol, nil, cols...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange("", upperLimitTimeRangeCol, nil, cols...)
 	return fmt.Sprintf("DELETE FROM %s USING %s WHERE event.device_info_id = device_info.id AND %s", eventTableName, deviceInfoTableName, whereCondition)
 }
 
@@ -440,7 +425,7 @@ func sqlDeleteByColumns(table string, cols ...string) string {
 
 // sqlDeleteEventsByColumn returns the SQL statement for deleting rows from the event table by the specified column
 func sqlDeleteEventsByColumn(cols ...string) string {
-	return fmt.Sprintf("DELETE FROM %s USING %s WHERE event.device_info_id = device_info.id AND %s", eventTableName, deviceInfoTableName, constructWhereCondition(cols...))
+	return fmt.Sprintf("DELETE FROM %s USING %s WHERE event.device_info_id = device_info.id AND %s", eventTableName, deviceInfoTableName, constructWhereNamedArgCondition(cols...))
 }
 
 // sqlDeleteByColAndLikePat returns the SQL statement for deleting rows by the specified column with LIKE pattern
@@ -470,6 +455,18 @@ func constructWhereCondition(columns ...string) string {
 	return strings.Join(conditions, " AND ")
 }
 
+// constructWhereNamedArgCondition constructs the WHERE condition for the given columns.
+func constructWhereNamedArgCondition(columns ...string) string {
+	columnCount := len(columns)
+	conditions := make([]string, columnCount)
+
+	for i, column := range columns {
+		conditions[i] = fmt.Sprintf("%s = @%s", column, column)
+	}
+
+	return strings.Join(conditions, " AND ")
+}
+
 // constructWhereCondWithTimeRange constructs the WHERE condition for the given columns with time range
 // if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
 func constructWhereCondWithTimeRange(lowerLimitTimeRangeCol, upperLimitTimeRangeCol string, arrayColNames []string, columns ...string) string {
@@ -491,6 +488,43 @@ func constructWhereCondWithTimeRange(lowerLimitTimeRangeCol, upperLimitTimeRange
 			equalCondition = "%s = ANY ($%d)"
 		}
 		conditions = append(conditions, fmt.Sprintf(equalCondition, column, 1+len(conditions)))
+	}
+
+	return strings.Join(conditions, " AND ")
+}
+
+// constructWhereNamedArgCondWithTimeRange constructs the WHERE condition for the given columns with time range
+// if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
+//
+// For example, we want to query 'temperature' and 'humidity' from a 'sensor-device' within specified time range,
+// we use origin as start, end time, and put deviceNameCol and resourceNameCol in columns and indicate the resourceNameCol is array in arrayColNames
+// Here's the code snippet to query readings:
+// sqlStatement := sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol(originCol, originCol, []string{resourceNameCol}, deviceNameCol, resourceNameCol)
+// queryArgs := pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, deviceNameCol: "sensor-device", resourceNameCol: []string{"temperature", "humidity"}, offsetCondition: 0, limitCondition: 100}
+// readings, err := queryReadings(ctx, c.ConnPool, sqlStatement, queryArgs)
+// ...
+// The sqlQueryAllReadingWithPaginationAndTimeRangeDescByCol will invoke constructWhereNamedArgCondWithTimeRange to construct the where condition sql statement,
+// the sql should similar to below:
+// SELECT ... FROM ... WHERE origin >= @start AND origin <= @end AND devicename = @devicename AND resourcename = ANY (@resourcename) ORDER BY origin DESC OFFSET @offset LIMIT @limit
+func constructWhereNamedArgCondWithTimeRange(startTimeCol, endTimeCol string, arrayColNames []string, columns ...string) string {
+	var hasArrayColumn bool
+	var conditions []string
+	if startTimeCol != "" {
+		conditions = append(conditions, fmt.Sprintf("%s >= @%s", startTimeCol, startTimeCondition))
+	}
+	if endTimeCol != "" {
+		conditions = append(conditions, fmt.Sprintf("%s <= @%s", endTimeCol, endTimeCondition))
+	}
+
+	if len(arrayColNames) > 0 {
+		hasArrayColumn = true
+	}
+	for _, column := range columns {
+		equalCondition := "%s = @%s"
+		if hasArrayColumn && slices.Contains(arrayColNames, column) {
+			equalCondition = "%s = ANY (@%s)"
+		}
+		conditions = append(conditions, fmt.Sprintf(equalCondition, column, column))
 	}
 
 	return strings.Join(conditions, " AND ")

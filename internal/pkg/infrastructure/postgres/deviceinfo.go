@@ -115,9 +115,9 @@ func (c *Client) addDeviceInfo(deviceInfo models.DeviceInfo) (int, errors.EdgeX)
 }
 
 // deviceInfosByConds query deviceInfos by specified conditions
-func (c *Client) deviceInfosByConds(cols []string, values []any) ([]models.DeviceInfo, errors.EdgeX) {
-	sqlStmt := sqlQueryAllWithConds(deviceInfoTableName, cols...)
-	rows, err := c.ConnPool.Query(context.Background(), sqlStmt, values...)
+func (c *Client) deviceInfosByConds(cols []string, values pgx.NamedArgs) ([]models.DeviceInfo, errors.EdgeX) {
+	sqlStmt := sqlQueryAllWithNamedArgConds(deviceInfoTableName, cols...)
+	rows, err := c.ConnPool.Query(context.Background(), sqlStmt, values)
 	if err != nil {
 		return nil, pgClient.WrapDBError("failed to query deviceInfos", err)
 	}
@@ -138,7 +138,7 @@ func (c *Client) deviceInfosByConds(cols []string, values []any) ([]models.Devic
 // only calling this func when corresponding events/readings have been removed, otherwise may
 // potentially break referential integrity between events/readings/device_info records
 func deleteDeviceInfoById(ctx context.Context, tx pgx.Tx, id int) errors.EdgeX {
-	_, err := tx.Exec(ctx, sqlDeleteById(deviceInfoTableName), id)
+	_, err := tx.Exec(ctx, fmt.Sprintf("DELETE FROM %s WHERE %s = @%s", deviceInfoTableName, idCol, idCol), pgx.NamedArgs{idCol: id})
 	if err != nil {
 		return pgClient.WrapDBError(fmt.Sprintf("failed to delete deviceInfo by id %d", id), err)
 	}
