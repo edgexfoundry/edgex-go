@@ -12,6 +12,7 @@ import (
 	proxyauth "github.com/edgexfoundry/edgex-go/internal/security/proxyauth/embed"
 	notifications "github.com/edgexfoundry/edgex-go/internal/support/notifications/embed"
 	scheduler "github.com/edgexfoundry/edgex-go/internal/support/scheduler/embed"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 )
 
 // constants relate to the postgres db table names
@@ -41,6 +42,14 @@ const (
 	modifiedCol = "modified"
 	statusCol   = "status"
 	nameCol     = "name"
+)
+
+// constants relate to the named arguments as specified for SQL conditions
+const (
+	offsetCondition    = common.Offset
+	limitCondition     = common.Limit
+	startTimeCondition = common.Start
+	endTimeCondition   = common.End
 )
 
 // constants relate to the event/reading postgres db table column names

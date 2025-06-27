@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"time"
 
 	"github.com/google/uuid"
@@ -85,7 +86,7 @@ func (c *Client) LatestScheduleActionRecordsByJobName(ctx context.Context, jobNa
 
 // LatestScheduleActionRecordsByOffset queries the latest schedule action records by offset
 func (c *Client) LatestScheduleActionRecordsByOffset(ctx context.Context, offset uint32) (model.ScheduleActionRecord, errors.EdgeX) {
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(scheduleActionRecordTableName, createdCol), offset, 1)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationDescByCol(scheduleActionRecordTableName, createdCol), pgx.NamedArgs{offsetCondition: offset, limitCondition: 1})
 	if err != nil {
 		return model.ScheduleActionRecord{}, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to query all schedule action records", err)
 	}
