@@ -46,10 +46,11 @@ const (
 
 // constants relate to the named arguments as specified for SQL conditions
 const (
-	offsetCondition    = common.Offset
-	limitCondition     = common.Limit
-	startTimeCondition = common.Start
-	endTimeCondition   = common.End
+	offsetCondition      = common.Offset
+	limitCondition       = common.Limit
+	startTimeCondition   = common.Start
+	endTimeCondition     = common.End
+	jsonContentCondition = "jsonContent"
 )
 
 // constants relate to the event/reading postgres db table column names
