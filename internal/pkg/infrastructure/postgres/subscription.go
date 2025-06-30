@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -65,7 +65,7 @@ func (c *Client) SubscriptionById(id string) (models.Subscription, errors.EdgeX)
 func (c *Client) AllSubscriptions(offset, limit int) ([]models.Subscription, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentWithPagination(subscriptionTableName), offset, validLimit)
+	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentWithPaginationAsNamedArgs(subscriptionTableName), pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all subscriptions", err)
 	}
@@ -89,7 +89,8 @@ func (c *Client) SubscriptionsByCategory(offset, limit int, category string) ([]
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{categoriesField: []string{category}}
 
-	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
+	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(subscriptionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query subscription by category %s", category), err)
 	}
@@ -102,7 +103,8 @@ func (c *Client) SubscriptionsByLabel(offset, limit int, label string) ([]models
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{labelsField: []string{label}}
 
-	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
+	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(subscriptionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query subscription by label %s", label), err)
 	}
@@ -115,7 +117,8 @@ func (c *Client) SubscriptionsByReceiver(offset, limit int, receiver string) ([]
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{receiverField: receiver}
 
-	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), queryObj, offset, validLimit)
+	subscriptions, err := querySubscriptions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(subscriptionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query subscription by receiver %s", receiver), err)
 	}
@@ -229,24 +232,27 @@ func subscriptionsByCategoriesAndLabels(connPool *pgxpool.Pool, offset, limit in
 
 	switch {
 	case len(labels) == 0:
-		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), categoriesObj, offset, validLimit)
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(subscriptionTableName),
+			pgx.NamedArgs{jsonContentCondition: categoriesObj, offsetCondition: offset, limitCondition: validLimit})
 	case len(categories) == 0:
-		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPagination(subscriptionTableName), labelsObj, offset, validLimit)
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(subscriptionTableName),
+			pgx.NamedArgs{jsonContentCondition: labelsObj, offsetCondition: offset, limitCondition: validLimit})
 	default:
 		sql := fmt.Sprintf(`
 			SELECT content
 				FROM (
 	    			SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key
 						FROM %s 
-						WHERE content @> $1::jsonb
+						WHERE content @> @%s::jsonb
 					INTERSECT
 					SELECT content, COALESCE((content->>'%s')::bigint, 0) AS sort_key 
 						FROM %s 
-						WHERE content @> $2::jsonb
+						WHERE content @> @%s::jsonb
 				)		
-			ORDER BY sort_key OFFSET $3 LIMIT $4;
-	`, createdField, subscriptionTableName, createdField, subscriptionTableName)
-		subscriptions, err = querySubscriptions(context.Background(), connPool, sql, categoriesObj, labelsObj, offset, validLimit)
+			ORDER BY sort_key OFFSET @%s LIMIT @%s;
+	`, createdField, subscriptionTableName, categoryCondition, createdField, subscriptionTableName, labelsCondition, offsetCondition, limitCondition)
+		subscriptions, err = querySubscriptions(context.Background(), connPool, sql,
+			pgx.NamedArgs{categoryCondition: categoriesObj, labelsCondition: labelsObj, offsetCondition: offset, limitCondition: validLimit})
 	}
 	if err != nil {
 		return subscriptions, errors.NewCommonEdgeXWrapper(err)

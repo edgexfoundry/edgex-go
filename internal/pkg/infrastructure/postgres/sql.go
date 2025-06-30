@@ -227,9 +227,10 @@ func sqlQueryContentWithPaginationAsNamedArgs(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s", table, createdField, offsetCondition, limitCondition)
 }
 
-// sqlQueryContentWithTimeRangeAndPagination returns the SQL statement for selecting content column from the table by the given time range with pagination
-func sqlQueryContentWithTimeRangeAndPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 AND content @> $3::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $4 LIMIT $5", table, createdField, createdField)
+// sqlQueryContentWithTimeRangeAndPaginationAsNamedArgs returns the SQL statement for selecting content column from the table by the given time range with pagination
+func sqlQueryContentWithTimeRangeAndPaginationAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN @%s AND @%s AND content @> @%s::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s",
+		table, createdField, startTimeCondition, endTimeCondition, jsonContentCondition, createdField, offsetCondition, limitCondition)
 }
 
 // sqlQueryContentByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -83,7 +83,8 @@ func (c *Client) TransmissionsByTimeRange(start int64, end int64, offset, limit 
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	transmission, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithTimeRangeAndPagination(transmissionTableName), validStart, validEnd, map[string]any{}, offset, validLimit)
+	transmission, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithTimeRangeAndPaginationAsNamedArgs(transmissionTableName),
+		pgx.NamedArgs{startTimeCondition: validStart, endTimeCondition: validEnd, jsonContentCondition: map[string]any{}, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all transmission by time range", err)
 	}
@@ -95,7 +96,7 @@ func (c *Client) TransmissionsByTimeRange(start int64, end int64, offset, limit 
 func (c *Client) AllTransmissions(offset, limit int) ([]models.Transmission, errors.EdgeX) {
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithPagination(transmissionTableName), offset, validLimit)
+	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentWithPaginationAsNamedArgs(transmissionTableName), pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all transmissions", err)
 	}
@@ -108,7 +109,8 @@ func (c *Client) TransmissionsByStatus(offset, limit int, status string) ([]mode
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{statusField: status}
 
-	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(transmissionTableName), queryObj, offset, validLimit)
+	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(transmissionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query all transmissions by status %s", status), err)
 	}
@@ -133,7 +135,8 @@ func (c *Client) TransmissionsBySubscriptionName(offset, limit int, subscription
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{subscriptionNameField: subscriptionName}
 
-	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(transmissionTableName), queryObj, offset, validLimit)
+	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(transmissionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query all transmissions by subscription name %s", subscriptionName), err)
 	}
@@ -172,7 +175,8 @@ func (c *Client) TransmissionsByNotificationId(offset, limit int, id string) ([]
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 	queryObj := map[string]any{notificationIdField: id}
 
-	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPagination(transmissionTableName), queryObj, offset, validLimit)
+	transmissions, err := queryTransmissions(context.Background(), c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(transmissionTableName),
+		pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query all transmissions by notification id %s", id), err)
 	}
