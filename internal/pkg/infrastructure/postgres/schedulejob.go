@@ -40,12 +40,13 @@ func (c *Client) AllScheduleJobs(ctx context.Context, labels []string, offset, l
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying schedule jobs by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(scheduleJobTableName), queryObj, offset, validLimit)
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(scheduleJobTableName),
+			pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs by labels", err)
 		}
 	} else {
-		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentWithPagination(scheduleJobTableName), offset, validLimit)
+		jobs, err = queryScheduleJobs(ctx, c.ConnPool, sqlQueryContentWithPaginationAsNamedArgs(scheduleJobTableName), pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule jobs", err)
 		}

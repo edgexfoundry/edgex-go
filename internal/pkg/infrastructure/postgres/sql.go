@@ -144,9 +144,10 @@ func sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime(descCol string, upp
 		offsetCondition, limitCondition)
 }
 
-// sqlQueryAllWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table with pagination and a time range.
-func sqlQueryAllWithPaginationAndTimeRange(table string) string {
-	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
+// sqlQueryAllWithPaginationAndTimeRangeAsNamedArgs returns the SQL statement for selecting all rows from the table with pagination and a time range.
+func sqlQueryAllWithPaginationAndTimeRangeAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= @%s AND %s <= @%s ORDER BY %s OFFSET @%s LIMIT @%s",
+		table, createdCol, startTimeCondition, createdCol, endTimeCondition, createdCol, offsetCondition, limitCondition)
 }
 
 // sqlQueryAllEventWithPaginationAndTimeRangeDescByCol returns the SQL statement for selecting all rows from the event table with the arrayColNames slice,
@@ -180,16 +181,12 @@ func sqlQueryAllByStatusWithPaginationAndTimeRange(table string) string {
 
 // sqlQueryAllByColWithPaginationAndTimeRange returns the SQL statement for selecting all rows from the table by the given columns with pagination and a time range.
 func sqlQueryAllByColWithPaginationAndTimeRange(table string, columns ...string) string {
-	columnCount := len(columns)
-	whereCondition := constructWhereCondition(columns...)
-	timeRangeCondition := fmt.Sprintf("%s >= $%d AND %s <= $%d", createdCol, columnCount+1, createdCol, columnCount+2)
+	whereCondition := constructWhereNamedArgCondWithTimeRange(createdCol, createdCol, nil, columns...)
 
 	return fmt.Sprintf(
-		"SELECT * FROM %s WHERE %s AND %s ORDER BY %s OFFSET $%d LIMIT $%d",
-		table, whereCondition, timeRangeCondition, createdCol,
-		// note that this is a prepared statement with parameters beginning with two timeRangeCol
-		// and then columns conditions, so OFFSET, LIMIT are the third and forth parameters
-		columnCount+3, columnCount+4)
+		"SELECT * FROM %s WHERE %s ORDER BY %s OFFSET @%s LIMIT @%s",
+		table, whereCondition, createdCol,
+		offsetCondition, limitCondition)
 }
 
 // sqlQueryAllWithPaginationAndTimeRangeDesc returns the SQL statement for selecting all rows from the table with pagination and a time range.
@@ -227,19 +224,15 @@ func sqlQueryContentWithPaginationAsNamedArgs(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s", table, createdField, offsetCondition, limitCondition)
 }
 
-// sqlQueryContentWithTimeRangeAndPagination returns the SQL statement for selecting content column from the table by the given time range with pagination
-func sqlQueryContentWithTimeRangeAndPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 AND content @> $3::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $4 LIMIT $5", table, createdField, createdField)
+// sqlQueryContentWithTimeRangeAndPaginationAsNamedArgs returns the SQL statement for selecting content column from the table by the given time range with pagination
+func sqlQueryContentWithTimeRangeAndPaginationAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN @%s AND @%s AND content @> @%s::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s",
+		table, createdField, startTimeCondition, endTimeCondition, jsonContentCondition, createdField, offsetCondition, limitCondition)
 }
 
 // sqlQueryContentByJSONField returns the SQL statement for selecting content column in the table by the given JSON query string
 func sqlQueryContentByJSONField(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb", table)
-}
-
-// sqlQueryContentByJSONFieldWithPagination returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
-func sqlQueryContentByJSONFieldWithPagination(table string) string {
-	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $2 LIMIT $3", table, createdField)
 }
 
 // sqlQueryContentByJSONFieldWithPaginationAsNamedArgs returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
@@ -299,7 +292,7 @@ func sqlQueryCountReadingByCol(columns ...string) string {
 // sqlQueryCountByTimeRangeCol returns the SQL statement for counting the number of rows in the table
 // by the given time range of the specified column
 func sqlQueryCountByTimeRangeCol(table string, timeRangeCol string, arrayColNames []string, columns ...string) string {
-	whereCondition := constructWhereCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
+	whereCondition := constructWhereNamedArgCondWithTimeRange(timeRangeCol, timeRangeCol, arrayColNames, columns...)
 	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", table, whereCondition)
 }
 
@@ -473,32 +466,6 @@ func constructWhereNamedArgCondition(columns ...string) string {
 
 	for i, column := range columns {
 		conditions[i] = fmt.Sprintf("%s = @%s", column, column)
-	}
-
-	return strings.Join(conditions, " AND ")
-}
-
-// constructWhereCondWithTimeRange constructs the WHERE condition for the given columns with time range
-// if arrayColNames is not empty, ANY operator will be added to accept the array argument for the specified array col names
-func constructWhereCondWithTimeRange(lowerLimitTimeRangeCol, upperLimitTimeRangeCol string, arrayColNames []string, columns ...string) string {
-	var hasArrayColumn bool
-	var conditions []string
-	if lowerLimitTimeRangeCol != "" {
-		conditions = append(conditions, lowerLimitTimeRangeCol+" >= $1")
-	}
-	if upperLimitTimeRangeCol != "" {
-		conditions = append(conditions, fmt.Sprintf("%s <= $%d", upperLimitTimeRangeCol, len(conditions)+1))
-	}
-
-	if len(arrayColNames) > 0 {
-		hasArrayColumn = true
-	}
-	for _, column := range columns {
-		equalCondition := "%s = $%d"
-		if hasArrayColumn && slices.Contains(arrayColNames, column) {
-			equalCondition = "%s = ANY ($%d)"
-		}
-		conditions = append(conditions, fmt.Sprintf(equalCondition, column, 1+len(conditions)))
 	}
 
 	return strings.Join(conditions, " AND ")

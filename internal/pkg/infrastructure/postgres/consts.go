@@ -51,6 +51,8 @@ const (
 	startTimeCondition   = common.Start
 	endTimeCondition     = common.End
 	jsonContentCondition = "jsonContent"
+	categoryCondition    = "category"
+	labelsCondition      = "labels"
 )
 
 // constants relate to the event/reading postgres db table column names

@@ -51,7 +51,8 @@ func (c *Client) AllScheduleActionRecords(ctx context.Context, start, end int64,
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRange(scheduleActionRecordTableName), startTime, endTime, offset, validLimit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllWithPaginationAndTimeRangeAsNamedArgs(scheduleActionRecordTableName),
+		pgx.NamedArgs{startTimeCondition: startTime, endTimeCondition: endTime, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all schedule action records", err)
 	}
@@ -121,7 +122,8 @@ func (c *Client) ScheduleActionRecordsByJobName(ctx context.Context, jobName str
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol), jobName, startTime, endTime, offset, validLimit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol),
+		pgx.NamedArgs{jobNameCol: jobName, startTimeCondition: startTime, endTimeCondition: endTime, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s", jobName), err)
 	}
@@ -137,7 +139,8 @@ func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jo
 		return nil, errors.NewCommonEdgeXWrapper(err)
 	}
 
-	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol, statusCol), jobName, status, startTime, endTime, offset, validLimit)
+	records, err := queryScheduleActionRecords(ctx, c.ConnPool, sqlQueryAllByColWithPaginationAndTimeRange(scheduleActionRecordTableName, jobNameCol, statusCol),
+		pgx.NamedArgs{jobNameCol: jobName, statusCol: status, startTimeCondition: startTime, endTimeCondition: endTime, offsetCondition: offset, limitCondition: validLimit})
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.Kind(err), fmt.Sprintf("failed to query schedule action records by job name %s and status %s", jobName, status), err)
 	}
@@ -148,25 +151,26 @@ func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jo
 // ScheduleActionRecordTotalCount returns the total count of all the schedule action records
 func (c *Client) ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (uint32, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil), startTime, endTime)
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil), pgx.NamedArgs{startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByStatus returns the total count of the schedule action records by status
 func (c *Client) ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (uint32, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, statusCol), startTime, endTime, status)
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, statusCol), pgx.NamedArgs{statusCol: status, startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByJobName returns the total count of the schedule action records by job name
 func (c *Client) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (uint32, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol), startTime, endTime, jobName)
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol), pgx.NamedArgs{jobNameCol: jobName, startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByJobNameAndStatus returns the total count of the schedule action records by job name and status
 func (c *Client) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (uint32, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
-	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol, statusCol), startTime, endTime, jobName, status)
+	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol, statusCol),
+		pgx.NamedArgs{jobNameCol: jobName, statusCol: status, startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // DeleteScheduleActionRecordByAge deletes the schedule action records by age
