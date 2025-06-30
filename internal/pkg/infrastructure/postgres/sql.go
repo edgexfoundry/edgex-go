@@ -222,6 +222,11 @@ func sqlQueryContentWithPagination(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $1 LIMIT $2", table, createdField)
 }
 
+// sqlQueryContentWithPaginationAsNamedArgs returns the SQL statement for selecting content column from the table with pagination
+func sqlQueryContentWithPaginationAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s", table, createdField, offsetCondition, limitCondition)
+}
+
 // sqlQueryContentWithTimeRangeAndPagination returns the SQL statement for selecting content column from the table by the given time range with pagination
 func sqlQueryContentWithTimeRangeAndPagination(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s WHERE COALESCE((content->>'%s')::bigint, 0) BETWEEN $1 AND $2 AND content @> $3::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $4 LIMIT $5", table, createdField, createdField)
@@ -235,6 +240,12 @@ func sqlQueryContentByJSONField(table string) string {
 // sqlQueryContentByJSONFieldWithPagination returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
 func sqlQueryContentByJSONFieldWithPagination(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s WHERE content @> $1::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET $2 LIMIT $3", table, createdField)
+}
+
+// sqlQueryContentByJSONFieldWithPaginationAsNamedArgs returns the SQL statement for selecting content column in the table by the given JSON query string with pagination
+func sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT content FROM %s WHERE content @> @%s::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s",
+		table, jsonContentCondition, createdField, offsetCondition, limitCondition)
 }
 
 // sqlQueryContentByJSONFieldTimeRange returns the SQL statement for selecting content column by the given time range of the JSON field name

@@ -122,7 +122,8 @@ func (c *Client) AllDeviceServices(offset int, limit int, labels []string) (devi
 	if len(labels) > 0 {
 		c.loggingClient.Debugf("Querying device services by labels: %v", labels)
 		queryObj := map[string]any{labelsField: labels}
-		deviceServices, err = queryDeviceServices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPagination(deviceServiceTableName), queryObj, offset, validLimit)
+		deviceServices, err = queryDeviceServices(ctx, c.ConnPool, sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(deviceServiceTableName),
+			pgx.NamedArgs{jsonContentCondition: queryObj, offsetCondition: offset, limitCondition: validLimit})
 		if err != nil {
 			return deviceServices, errors.NewCommonEdgeX(errors.Kind(err), "failed to query all device services by labels", err)
 		}
