@@ -41,11 +41,6 @@ func sqlInsert(table string, columns ...string) string {
 // SQL statements for SELECT operations
 // ----------------------------------------------------------------------------------
 
-// sqlQueryAll returns the SQL statement for selecting all rows from the table.
-//func sqlQueryAll(table string) string {
-//	return fmt.Sprintf("SELECT * FROM %s", table)
-//}
-
 // sqlQueryFieldsByCol returns the SQL statement for selecting the given fields of rows from the table by the conditions composed of given columns
 func sqlQueryFieldsByCol(table string, fields []string, columns ...string) string {
 	whereCondition := constructWhereCondition(columns...)
@@ -68,16 +63,6 @@ func sqlQueryFieldsByColAndLikePat(table string, fields []string, columns ...str
 
 	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
 }
-
-// sqlQueryAllWithTimeRange returns the SQL statement for selecting all rows from the table with a time range.
-//func sqlQueryAllWithTimeRange(table string) string {
-//	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2", table, createdCol, createdCol)
-//}
-
-// sqlQueryAllWithPaginationDesc returns the SQL statement for selecting all rows from the table with pagination by created timestamp in descending order.
-//func sqlQueryAllWithPaginationDesc(table string) string {
-//	return fmt.Sprintf("SELECT * FROM %s ORDER BY %s DESC OFFSET $1 LIMIT $2", table, createdCol)
-//}
 
 // sqlQueryAllWithNamedArgConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
 func sqlQueryAllWithNamedArgConds(table string, columns ...string) string {
@@ -189,11 +174,6 @@ func sqlQueryAllByColWithPaginationAndTimeRange(table string, columns ...string)
 		offsetCondition, limitCondition)
 }
 
-// sqlQueryAllWithPaginationAndTimeRangeDesc returns the SQL statement for selecting all rows from the table with pagination and a time range.
-//func sqlQueryAllWithPaginationAndTimeRangeDesc(table string) string {
-//	return fmt.Sprintf("SELECT * FROM %s WHERE %s >= $1 AND %s <= $2 ORDER BY %s DESC OFFSET $3 LIMIT $4", table, createdCol, createdCol, createdCol)
-//}
-
 // sqlQueryAllById returns the SQL statement for selecting all rows from the table by id.
 func sqlQueryAllById(table string) string {
 	return fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", table, idCol)
@@ -240,11 +220,6 @@ func sqlQueryContentByJSONFieldWithPaginationAsNamedArgs(table string) string {
 	return fmt.Sprintf("SELECT content FROM %s WHERE content @> @%s::jsonb ORDER BY COALESCE((content->>'%s')::bigint, 0) OFFSET @%s LIMIT @%s",
 		table, jsonContentCondition, createdField, offsetCondition, limitCondition)
 }
-
-// sqlQueryContentByJSONFieldTimeRange returns the SQL statement for selecting content column by the given time range of the JSON field name
-//func sqlQueryContentByJSONFieldTimeRange(table string, field string) string {
-//	return fmt.Sprintf("SELECT content FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2 ORDER BY %s OFFSET $3 LIMIT $4", table, field, field, createdCol)
-//}
 
 // sqlCheckExistsById returns the SQL statement for checking if a row exists in the table by id.
 func sqlCheckExistsById(table string) string {
@@ -337,12 +312,6 @@ func sqlCountEventByDeviceNameAndSourceNameAndLimit() string {
 		  LIMIT @%s
         ) limited_count`, eventTableName, deviceInfoTableName, markDeletedCol, deviceNameCol, deviceNameCol, sourceNameCol, sourceNameCol, limitCondition)
 }
-
-// sqlQueryCountByJSONFieldTimeRange returns the SQL statement for counting the number of rows in the table
-// by the given time range of the JSON field name
-//func sqlQueryCountByJSONFieldTimeRange(table string, field string) string {
-//	return fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE (content->'%s')::bigint  >= $1 AND (content->'%s')::bigint <= $2", table, field, field)
-//}
 
 // sqlQueryEventIdFieldByTimeRangeAndConditions returns the SQL statement for selecting fields from the table within the time range
 func sqlQueryEventIdFieldByTimeRangeAndConditions(timeRangeCol string, cols ...string) string {
