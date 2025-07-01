@@ -15,6 +15,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // AddKey adds a new key to the database
@@ -49,7 +50,7 @@ func (c *Client) UpdateKey(name, content string) errors.EdgeX {
 func (c *Client) ReadKeyContent(name string) (string, errors.EdgeX) {
 	var fileContent string
 	row := c.ConnPool.QueryRow(context.Background(),
-		fmt.Sprintf("SELECT %s FROM %s WHERE %s = $1", contentCol, keyStoreTableName, nameCol), name)
+		fmt.Sprintf("SELECT %s FROM %s WHERE %s = @%s", contentCol, keyStoreTableName, nameCol, nameCol), pgx.NamedArgs{nameCol: name})
 	if err := row.Scan(&fileContent); err != nil {
 		return fileContent, pgClient.WrapDBError("failed to query key content", err)
 	}
