@@ -19,6 +19,8 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -126,6 +128,9 @@ func (rc *KVController) DeleteKeys(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
+
+	// publish the key change event
+	go application.PublishKeyChange(models.KVS{Key: key}, key, ctx, rc.dic)
 
 	response := responses.NewKeysResponse("", "", http.StatusOK, resp)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
