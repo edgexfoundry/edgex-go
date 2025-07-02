@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -350,6 +350,8 @@ func TestDeleteKeys(t *testing.T) {
 	prefixExistsKey := "prefix-key"
 	keyResp := []models.KeyOnly{models.KeyOnly(key)}
 
+	msgClientMock := &messageClientMocks.MessageClient{}
+	msgClientMock.On("Publish", mock.Anything, mock.Anything).Return(nil)
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeleteKeeperKeys", key, true).Return(keyResp, nil)
@@ -360,6 +362,9 @@ func TestDeleteKeys(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		bootstrapContainer.MessagingClientName: func(get di.Get) interface{} {
+			return msgClientMock
 		},
 	})
 
