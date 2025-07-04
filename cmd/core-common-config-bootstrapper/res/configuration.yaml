@@ -141,3 +141,6 @@ device-services:
     Discovery:
       Enabled: false
       Interval: "0s"
+    AutoEvents:
+      # If set to true, only updated readings compared to the previous event are included in the generated auto event
+      SendChangedReadingsOnly: true
