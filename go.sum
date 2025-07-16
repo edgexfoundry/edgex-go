@@ -72,8 +72,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/eclipse/paho.mqtt.golang v1.5.0 h1:EH+bUVJNgttidWFkLLVKaQPGmkTUfQQqjOsyvMGvD6o=
 github.com/eclipse/paho.mqtt.golang v1.5.0/go.mod h1:du/2qNQVqJf/Sqs4MEL77kR8QTqANF7XU7Fk0aOTAgk=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.18 h1:mtNsF3zB2CVqx+7KJ55L9MfmgLhPRuChpNbHi1xJJDY=
-github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.18/go.mod h1:rRHVWrKd6ZyNoNFDBBrf0mQbire7uoelk8rgt0p5eaU=
+github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.19 h1:thW3fJHn0zXOPycveGEMc6hIuA+Pl5oaoF7ue+Br4xc=
+github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.19/go.mod h1:26B2/w9Fali85Pbatr/ubBPBVyKmHe4WXf+Val5hYa4=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.9 h1:jDo1JSsVVngrLa2l5Fp+VpTfwOQ/CoHXM20s6XVfs+4=
 github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.9/go.mod h1:rVooo5YB0fLbviw4mneKEc2JJ+Hrcy/KiTHUsll0oFs=
 github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.6 h1:sk+8Nn2OTybVgHHw/0ImTNueDwZfdUQFmrC9GEd/IIc=
@@ -159,8 +159,8 @@ github.com/go-resty/resty/v2 v2.16.5 h1:hBKqmWrr7uRc3euHVqmh1HTHcKn99Smr7o5spptd
 github.com/go-resty/resty/v2 v2.16.5/go.mod h1:hkJtXbA2iKHzJheXYvQ8snQES5ZLGKMwQ07xAwp/fiA=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
-github.com/golang-jwt/jwt/v5 v5.2.2 h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8=
-github.com/golang-jwt/jwt/v5 v5.2.2/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
+github.com/golang-jwt/jwt/v5 v5.2.3 h1:kkGXqQOBSDDWRhWNXTFpqGSCMyh/PLnqUvMGJPDJDs0=
+github.com/golang-jwt/jwt/v5 v5.2.3/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
