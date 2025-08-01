@@ -11,14 +11,19 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto/interfaces"
-
+	bootstrapInterfaces "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 )
 
-const aesKey = "RO6gGYKocUahpdX15k9gYvbLuSxbKrPz"
+const (
+	aesKey        = "RO6gGYKocUahpdX15k9gYvbLuSxbKrPz"
+	aesSecretName = "aes"
+	aesKeyName    = "key"
+)
 
 // AESCryptor defined the AES cryptor struct
 type AESCryptor struct {
@@ -29,6 +34,50 @@ func NewAESCryptor() interfaces.Crypto {
 	return &AESCryptor{
 		key: []byte(aesKey),
 	}
+}
+
+// NewAESCryptorWithSecretProvider creates a new AES cryptor that uses a key from SecretProvider
+// If the key doesn't exist in the Secret Store, it generates a new one and stores it
+func NewAESCryptorWithSecretProvider(secretProvider bootstrapInterfaces.SecretProviderExt) (interfaces.Crypto, error) {
+	if secretProvider == nil {
+		return nil, fmt.Errorf("secret provider is nil, cannot create AESCryptor")
+	}
+
+	secrets, err := secretProvider.GetSecret(aesSecretName)
+	if err == nil {
+		if aesKeyStr, ok := secrets[aesKeyName]; ok && aesKeyStr != "" {
+			keyBytes, decodeErr := base64.StdEncoding.DecodeString(aesKeyStr)
+			if decodeErr == nil {
+				return &AESCryptor{key: keyBytes}, nil
+			}
+			return nil, fmt.Errorf("invalid AES key format in secret store: %w", decodeErr)
+		}
+	}
+
+	keyBytes, err := generateAndStoreNewAESKey(secretProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AESCryptor{key: keyBytes}, nil
+}
+
+func generateAndStoreNewAESKey(secretProvider bootstrapInterfaces.SecretProviderExt) ([]byte, error) {
+	newKey := make([]byte, 32) // 256-bit (32 bytes) AES key
+	if _, err := io.ReadFull(rand.Reader, newKey); err != nil {
+		return nil, fmt.Errorf("failed to generate AES key: %w", err)
+	}
+
+	keyBase64 := base64.StdEncoding.EncodeToString(newKey)
+	secrets := map[string]string{
+		aesKeyName: keyBase64,
+	}
+
+	if err := secretProvider.StoreSecret(aesSecretName, secrets); err != nil {
+		return nil, fmt.Errorf("failed to store AES key in secret store: %w", err)
+	}
+
+	return newKey, nil
 }
 
 // Encrypt encrypts the given plaintext with AES-CBC mode and returns a string in base64 encoding
