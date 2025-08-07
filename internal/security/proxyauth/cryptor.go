@@ -17,7 +17,7 @@ import (
 
 func createAESCryptor(dic *di.Container) (cryptoInterfaces.Crypto, error) {
 	if secret.IsSecurityEnabled() {
-		secretProvider := bootstrapContainer.SecretProviderExtFrom(dic.Get)
+		secretProvider := bootstrapContainer.SecretProviderFrom(dic.Get)
 		return crypto.NewAESCryptorWithSecretProvider(secretProvider)
 	}
 	return crypto.NewAESCryptor(), nil

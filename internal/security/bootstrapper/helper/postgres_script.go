@@ -45,6 +45,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -q <<-'EOSQL'
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{.Username}}') THEN
             CREATE USER "{{.Username}}" with PASSWORD '{{.Password}}';
             GRANT ALL ON SCHEMA "{{.Username}}" TO "{{.Username}}";
+			GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA "{{.Username}}" TO "{{.Username}}";
             ALTER GROUP edgex_user ADD USER "{{.Username}}";
         END IF;
 	{{end}}

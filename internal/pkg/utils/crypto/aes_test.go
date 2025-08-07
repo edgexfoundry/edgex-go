@@ -6,11 +6,11 @@
 package crypto
 
 import (
+	"fmt"
+	"github.com/edgexfoundry/go-mod-secrets/v4/pkg"
 	"testing"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces/mocks"
-	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -32,11 +32,12 @@ func TestNewAESCryptorWithSecretProvider_NilProvider(t *testing.T) {
 	cryptor, err := NewAESCryptorWithSecretProvider(nil)
 	require.Error(t, err)
 	assert.Nil(t, cryptor)
+	assert.Contains(t, err.Error(), "secret provider is nil")
 }
 
 func TestNewAESCryptorWithSecretProvider_WithProvider(t *testing.T) {
-	mockProvider := &mocks.SecretProviderExt{}
-	mockProvider.On("GetSecret", aesSecretName).Return(nil, errors.NewCommonEdgeX(errors.KindEntityDoesNotExist, "secret not found", nil))
+	mockProvider := &mocks.SecretProvider{}
+	mockProvider.On("GetSecret", aesSecretName).Return(nil, pkg.NewErrSecretNameNotFound(aesSecretName))
 	mockProvider.On("StoreSecret", aesSecretName, mock.AnythingOfType("map[string]string")).Return(nil)
 
 	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
@@ -58,7 +59,7 @@ func TestNewAESCryptorWithSecretProvider_WithProvider(t *testing.T) {
 }
 
 func TestNewAESCryptorWithSecretProvider_WithExistingKey(t *testing.T) {
-	mockProvider := &mocks.SecretProviderExt{}
+	mockProvider := &mocks.SecretProvider{}
 	existingKey := aesKey
 
 	mockProvider.On("GetSecret", aesSecretName).Return(map[string]string{
@@ -82,4 +83,83 @@ func TestNewAESCryptorWithSecretProvider_WithExistingKey(t *testing.T) {
 	decrypted, err := cryptor.Decrypt(encrypted)
 	require.NoError(t, err)
 	assert.Equal(t, plaintext, string(decrypted))
+}
+
+func TestNewAESCryptorWithSecretProvider_EmptyKeyInSecretStore(t *testing.T) {
+	mockProvider := &mocks.SecretProvider{}
+
+	mockProvider.On("GetSecret", aesSecretName).Return(map[string]string{
+		aesKeyName: "", // Empty key
+	}, nil)
+	mockProvider.On("StoreSecret", aesSecretName, mock.AnythingOfType("map[string]string")).Return(nil)
+
+	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
+	require.NoError(t, err)
+	assert.NotNil(t, cryptor)
+
+	// Verify that GetSecret was called and StoreSecret was called
+	mockProvider.AssertExpectations(t)
+}
+
+func TestNewAESCryptorWithSecretProvider_MissingKeyInSecretStore(t *testing.T) {
+	mockProvider := &mocks.SecretProvider{}
+
+	mockProvider.On("GetSecret", aesSecretName).Return(map[string]string{
+		"other_key": "some_value",
+	}, nil)
+	mockProvider.On("StoreSecret", aesSecretName, mock.AnythingOfType("map[string]string")).Return(nil)
+
+	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
+	require.NoError(t, err)
+	assert.NotNil(t, cryptor)
+
+	// Verify that GetSecret was called and StoreSecret was called
+	mockProvider.AssertExpectations(t)
+}
+
+func TestNewAESCryptorWithSecretProvider_InvalidBase64Key(t *testing.T) {
+	mockProvider := &mocks.SecretProvider{}
+	invalidBase64Key := "invalid-base64-key!"
+
+	mockProvider.On("GetSecret", aesSecretName).Return(map[string]string{
+		aesKeyName: invalidBase64Key,
+	}, nil)
+
+	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
+	require.Error(t, err)
+	assert.Nil(t, cryptor)
+	assert.Contains(t, err.Error(), "invalid AES key format in secret store")
+
+	// Verify that GetSecret was called but StoreSecret was not called
+	mockProvider.AssertExpectations(t)
+	mockProvider.AssertNotCalled(t, "StoreSecret")
+}
+
+func TestNewAESCryptorWithSecretProvider_GetSecretError(t *testing.T) {
+	mockProvider := &mocks.SecretProvider{}
+	expectedErrorString := "failed to get AES key from secret store"
+
+	mockProvider.On("GetSecret", aesSecretName).Return(nil, fmt.Errorf("server error"))
+
+	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
+	require.Error(t, err)
+	assert.Nil(t, cryptor)
+	assert.Contains(t, err.Error(), expectedErrorString)
+
+	// Verify that StoreSecret was not called
+	mockProvider.AssertNotCalled(t, "StoreSecret")
+}
+
+func TestNewAESCryptorWithSecretProvider_StoreSecretError(t *testing.T) {
+	mockProvider := &mocks.SecretProvider{}
+	expectedErrorString := "failed to store AES key in secret store"
+
+	mockProvider.On("GetSecret", aesSecretName).Return(nil, pkg.NewErrSecretNameNotFound(aesSecretName))
+	mockProvider.On("StoreSecret", aesSecretName, mock.AnythingOfType("map[string]string")).Return(
+		fmt.Errorf("server error"))
+
+	cryptor, err := NewAESCryptorWithSecretProvider(mockProvider)
+	require.Error(t, err)
+	assert.Nil(t, cryptor)
+	assert.Contains(t, err.Error(), expectedErrorString)
 }
