@@ -97,8 +97,9 @@ func NewProxyUserCommon(
 // LoadServiceToken loads a token from SecretStore.TokenFile (secrets-token.json)
 func (vb *ProxyUserCommon) LoadServiceToken() (string, func(), error) {
 
-	// This is not a root token; don't need to revoke when we're done with it
-	revokeFunc := func() {}
+	revokeFunc := func() {
+		// This is not a root token; don't need to revoke when we're done with it
+	}
 
 	tokenLoader := authtokenloader.NewAuthTokenLoader(vb.fileOpener)
 
