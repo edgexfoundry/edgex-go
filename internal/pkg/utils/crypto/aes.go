@@ -6,7 +6,6 @@
 package crypto
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -30,6 +29,15 @@ const (
 	keySourceSecretStore = "secret-store"
 	keySourceLengthSize  = 4
 	formatHeaderSize     = 4
+	// gcmNonceSize defines the size of the nonce (number used once) for AES-GCM mode.
+	// The nonce ensures that encrypting the same plaintext multiple times produces different ciphertexts.
+	// 12 bytes is the standard size for optimal performance and security in GCM mode.
+	gcmNonceSize = 12
+	// gcmTagSize defines the size of the authentication tag for AES-GCM mode.
+	// GCM produces a 16-byte authentication tag that provides integrity and authenticity verification.
+	// This tag is automatically verified during decryption to detect any tampering or corruption.
+	gcmTagSize            = 16
+	minimumCipherTextSize = formatHeaderSize + keySourceLengthSize + gcmNonceSize + gcmTagSize
 	// newFormat is a magic number to indicate the new format of the ciphertext.
 	// The probability of a random legacy ciphertext starting with the same 4 bytes is 1 in 2^32.
 	newFormat = 0x107ECA18
@@ -104,26 +112,38 @@ func generateAndStoreNewAESKey(secretProvider bootstrapInterfaces.SecretProvider
 	return newKey, nil
 }
 
-// Encrypt encrypts the given plaintext with AES-CBC mode and returns a string in base64 encoding
-// The ciphertext format is: [formatHeader:4bytes][keySourceLength:4bytes][keySource:string][iv:16bytes][encrypted_data]
+// Encrypt encrypts the given plaintext with AES-GCM mode
+// ciphertext format: [formatHeader:4bytes][keySourceLength:4bytes][keySource:string][nonce:12bytes][encrypted_data]
 func (c *AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 	bytePlaintext := []byte(plaintext)
+
 	block, err := aes.NewCipher(c.key)
 	if err != nil {
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "encrypt failed", err)
 	}
 
-	// AES encryption in CBC (Cipher Block Chaining) mode processes data in blocks of a fixed size (e.g., 32 bytes for AES).
-	// If the plaintext length is not a multiple of the block size, the encryption process would fail.
-	// Padding ensures that the plaintext is extended to the required length without altering its original content.
-	paddedPlaintext := pkcs7Pad(bytePlaintext, block.BlockSize())
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "encrypt failed", err)
+	}
 
 	keySourceBytes := []byte(c.keySource)
 	keySourceLength := uint32(len(keySourceBytes))
 
-	ciphertext := make([]byte, formatHeaderSize+keySourceLengthSize+len(keySourceBytes)+aes.BlockSize+len(paddedPlaintext))
+	// generate random nonce for GCM
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", errors.NewCommonEdgeX(errors.KindServerError, "encrypt failed", err)
+	}
 
-	// write format header at the beginning
+	// encrypt with GCM
+	encryptedData := gcm.Seal(nil, nonce, bytePlaintext, nil)
+
+	// calculate total size: formatHeader + keySourceLength + keySource + nonce + encryptedData
+	totalSize := formatHeaderSize + keySourceLengthSize + len(keySourceBytes) + len(nonce) + len(encryptedData)
+	ciphertext := make([]byte, totalSize)
+
+	// write format header
 	binary.BigEndian.PutUint32(ciphertext[:formatHeaderSize], newFormat)
 
 	// write keySource length
@@ -132,58 +152,87 @@ func (c *AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 	// write keySource string
 	copy(ciphertext[formatHeaderSize+keySourceLengthSize:formatHeaderSize+keySourceLengthSize+len(keySourceBytes)], keySourceBytes)
 
-	// generate random IV (Initialization Vector)
-	// the IV is a random value that ensures the same plaintext encrypted multiple times will yield different ciphertexts
-	iv := ciphertext[formatHeaderSize+keySourceLengthSize+len(keySourceBytes) : formatHeaderSize+keySourceLengthSize+len(keySourceBytes)+aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return "", errors.NewCommonEdgeX(errors.KindServerError, "encrypt failed", err)
-	}
+	// write nonce
+	nonceStart := formatHeaderSize + keySourceLengthSize + len(keySourceBytes)
+	copy(ciphertext[nonceStart:nonceStart+len(nonce)], nonce)
 
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[formatHeaderSize+keySourceLengthSize+len(keySourceBytes)+aes.BlockSize:], paddedPlaintext)
+	// write encrypted data
+	copy(ciphertext[nonceStart+len(nonce):], encryptedData)
 
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// Decrypt decrypts the given ciphertext with AES-CBC mode and returns the original value as string
-// Supports both old format: [iv:16bytes][encrypted_data] and new format: [formatHeader:4bytes][keySourceLength:4bytes][keySource:string][iv:16bytes][encrypted_data]
+// Decrypt decrypts the given ciphertext with AES-GCM mode for new format and AES-CBC mode for legacy format
+// ciphertext format for AES-GCM: [formatHeader:4bytes][keySourceLength:4bytes][keySource:string][nonce:12bytes][encrypted_data]
+// legacy format for AES-CBC: [iv:16bytes][encrypted_data]
 func (c *AESCryptor) Decrypt(ciphertext string) ([]byte, errors.EdgeX) {
 	decodedCipherText, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed", err)
 	}
 
-	if len(decodedCipherText) < aes.BlockSize {
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: ciphertext too short", nil)
+	if len(decodedCipherText) > formatHeaderSize {
+		format := binary.BigEndian.Uint32(decodedCipherText[:formatHeaderSize])
+		if format == newFormat {
+			return c.decryptGCM(decodedCipherText)
+		}
 	}
 
-	var keySource string
-	var iv []byte
-	var encryptedText []byte
-	keyToUse := c.nonSecureKey // default to non-secure key
+	return c.decryptCBC(decodedCipherText)
+}
 
-	format := binary.BigEndian.Uint32(decodedCipherText[:formatHeaderSize])
-	if format == newFormat {
-		keySourceLength := binary.BigEndian.Uint32(decodedCipherText[formatHeaderSize : formatHeaderSize+keySourceLengthSize])
-		keySourceBytes := decodedCipherText[formatHeaderSize+keySourceLengthSize : formatHeaderSize+keySourceLengthSize+keySourceLength]
-		keySource = string(keySourceBytes)
-		switch keySource {
-		case keySourceSelf:
-		case keySourceSecretStore:
-			keyToUse = c.key
-		default:
-			return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: unsupported keySource", nil)
-		}
+// decryptGCM handles decryption for the GCM format
+func (c *AESCryptor) decryptGCM(decodedCipherText []byte) ([]byte, errors.EdgeX) {
+	if len(decodedCipherText) < minimumCipherTextSize {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: ciphertext too short for GCM format", nil)
+	}
 
-		ivStart := formatHeaderSize + keySourceLengthSize + keySourceLength
-		iv = decodedCipherText[ivStart : ivStart+aes.BlockSize]
-		encryptedText = decodedCipherText[ivStart+aes.BlockSize:]
-	} else {
-		iv = decodedCipherText[:aes.BlockSize]
-		encryptedText = decodedCipherText[aes.BlockSize:]
+	keySourceLength := binary.BigEndian.Uint32(decodedCipherText[formatHeaderSize : formatHeaderSize+keySourceLengthSize])
+	keySourceBytes := decodedCipherText[formatHeaderSize+keySourceLengthSize : formatHeaderSize+keySourceLengthSize+keySourceLength]
+	keySource := string(keySourceBytes)
+
+	var keyToUse []byte
+	switch keySource {
+	case keySourceSelf:
+		keyToUse = c.nonSecureKey
+	case keySourceSecretStore:
+		keyToUse = c.key
+	default:
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: unsupported keySource", nil)
 	}
 
 	block, err := aes.NewCipher(keyToUse)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed", err)
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed", err)
+	}
+
+	nonceStart := formatHeaderSize + keySourceLengthSize + keySourceLength
+	nonce := decodedCipherText[nonceStart : nonceStart+gcmNonceSize]
+	encryptedData := decodedCipherText[nonceStart+gcmNonceSize:]
+
+	plaintext, err := gcm.Open(nil, nonce, encryptedData, nil)
+	if err != nil {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: GCM authentication failed", err)
+	}
+
+	return plaintext, nil
+}
+
+// decryptCBC handles decryption for the legacy CBC format
+func (c *AESCryptor) decryptCBC(decodedCipherText []byte) ([]byte, errors.EdgeX) {
+	if len(decodedCipherText) < aes.BlockSize {
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed: ciphertext too short for CBC format", nil)
+	}
+
+	iv := decodedCipherText[:aes.BlockSize]
+	encryptedText := decodedCipherText[aes.BlockSize:]
+
+	block, err := aes.NewCipher(c.nonSecureKey)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "decrypt failed", err)
 	}
@@ -192,22 +241,13 @@ func (c *AESCryptor) Decrypt(ciphertext string) ([]byte, errors.EdgeX) {
 	decryptedText := make([]byte, len(encryptedText))
 	mode.CryptBlocks(decryptedText, encryptedText)
 
-	// If the original plaintext lengths are not a multiple of the block
-	// size, padding would have to be added when encrypting, which would be
-	// removed at this point
+	// remove PKCS7 padding
 	plaintext, e := pkcs7Unpad(decryptedText)
 	if e != nil {
 		return nil, errors.NewCommonEdgeXWrapper(e)
 	}
 
 	return plaintext, nil
-}
-
-// pkcs7Pad implements the PKCS7 padding
-func pkcs7Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - (len(data) % blockSize)
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(data, padText...)
 }
 
 // pkcs7Unpad implements the PKCS7 unpadding
