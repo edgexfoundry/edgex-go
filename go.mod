@@ -5,11 +5,11 @@ go 1.23.7
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.24
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.11
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.9
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.11
-	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.3
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.28
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.12
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.12
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.13
+	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.9.0
 	github.com/go-co-op/gocron/v2 v2.16.3
 	github.com/gomodule/redigo v1.9.2
@@ -18,7 +18,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/pebbe/zmq4 v1.4.0
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
+	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cast v1.9.2
 	github.com/spiffe/go-spiffe/v2 v2.5.0
@@ -32,15 +32,15 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-registry/v4 v4.1.0-dev.3 // indirect
+	github.com/edgexfoundry/go-mod-registry/v4 v4.1.0-dev.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fsnotify/fsnotify v1.8.0 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
@@ -84,19 +84,19 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
-	github.com/nats-io/nats.go v1.42.0 // indirect
+	github.com/nats-io/nats.go v1.44.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/openziti/channel/v4 v4.2.18 // indirect
-	github.com/openziti/edge-api v0.26.46 // indirect
+	github.com/openziti/channel/v4 v4.2.19 // indirect
+	github.com/openziti/edge-api v0.26.47 // indirect
 	github.com/openziti/foundation/v2 v2.0.70 // indirect
 	github.com/openziti/identity v1.0.109 // indirect
 	github.com/openziti/metrics v1.4.2 // indirect
-	github.com/openziti/sdk-golang v1.2.1 // indirect
-	github.com/openziti/secretstream v0.1.37 // indirect
-	github.com/openziti/transport/v2 v2.0.182 // indirect
+	github.com/openziti/sdk-golang v1.2.2 // indirect
+	github.com/openziti/secretstream v0.1.38 // indirect
+	github.com/openziti/transport/v2 v2.0.183 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
 	github.com/parallaxsecond/parsec-client-go v0.0.0-20221025095442-f0a77d263cf9 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -115,14 +115,15 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
 	github.com/zitadel/logging v0.6.2 // indirect
-	github.com/zitadel/oidc/v3 v3.42.0 // indirect
+	github.com/zitadel/oidc/v3 v3.44.0 // indirect
 	github.com/zitadel/schema v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.17.0 // indirect
 	go.mozilla.org/pkcs7 v0.9.0 // indirect
-	go.opentelemetry.io/otel v1.32.0 // indirect
-	go.opentelemetry.io/otel/metric v1.32.0 // indirect
-	go.opentelemetry.io/otel/trace v1.32.0 // indirect
-	golang.org/x/net v0.42.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
+	go.opentelemetry.io/otel v1.37.0 // indirect
+	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/trace v1.37.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
@@ -131,6 +132,6 @@ require (
 	golang.org/x/time v0.11.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc v1.70.0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
 )
