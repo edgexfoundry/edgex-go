@@ -67,10 +67,13 @@ func (d Database) newDBClient(
 	databaseInfo := d.database.GetDatabaseInfo()
 
 	databaseConfig := db.Configuration{
-		Host:     databaseInfo.Host,
-		Port:     databaseInfo.Port,
-		Password: credentials.Password,
-		Timeout:  databaseInfo.Timeout,
+		Host:            databaseInfo.Host,
+		Port:            databaseInfo.Port,
+		Password:        credentials.Password,
+		Timeout:         databaseInfo.Timeout,
+		MaxConns:        databaseInfo.MaxConns,
+		MaxConnIdleTime: databaseInfo.MaxConnIdleTime,
+		MaxConnLifetime: databaseInfo.MaxConnLifetime,
 	}
 
 	switch databaseInfo.Type {

@@ -39,6 +39,9 @@ Database:
   Port: 5432
   Timeout: "5s"
   Type: "postgres"
+  MaxConns: 4
+  MaxConnIdleTime: "30m"
+  MaxConnLifetime: "1h"
 
 MessageBus:
   Protocol: "mqtt"

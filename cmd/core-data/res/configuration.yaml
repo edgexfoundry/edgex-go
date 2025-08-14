@@ -15,6 +15,11 @@ Service:
   Host: "localhost"
   StartupMsg: "This is the Core Data Microservice"
 
+Database:
+  MaxConns: 4
+  MaxConnIdleTime: "30m"
+  MaxConnLifetime: "1h"
+
 Clients:
   core-metadata:
     Protocol: http

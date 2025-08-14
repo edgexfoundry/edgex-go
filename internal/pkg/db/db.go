@@ -29,12 +29,15 @@ var (
 )
 
 type Configuration struct {
-	DbType       string
-	Host         string
-	Port         int
-	Timeout      string
-	DatabaseName string
-	Username     string
-	Password     string
-	BatchSize    int
+	DbType          string
+	Host            string
+	Port            int
+	Timeout         string
+	DatabaseName    string
+	Username        string
+	Password        string
+	BatchSize       int
+	MaxConns        int
+	MaxConnIdleTime string
+	MaxConnLifetime string
 }
