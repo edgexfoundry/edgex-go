@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright 2023 Intel Corporation
+ * Copyright 2025 IOTech Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,25 +18,25 @@ package common_config
 import (
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"os"
 	"os/signal"
-	"sort"
 	"sync"
 	"syscall"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/environment"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/file"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/flags"
+	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/interfaces"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/secret"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
-	"github.com/edgexfoundry/go-mod-configuration/v4/configuration"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -96,37 +97,39 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 		os.Exit(1)
 	}
 
-	hasConfig := false
-	hasConfigSuccess := false
-	for startupTimer.HasNotElapsed() {
-		// check to see if the configuration exists in the config provider
-		hasConfig, err = configClient.HasConfiguration()
-		if err == nil {
-			hasConfigSuccess = true
-			break
-		}
-
-		lc.Warnf("Unable to determine if common configuration exists in the provider, will try again: %v", err)
-		startupTimer.SleepForInterval()
-	}
-
-	if !hasConfigSuccess {
-		lc.Errorf("failed to determine if common configuration exists in the provider: %s", err.Error())
+	// push not done flag to configClient
+	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+	if err != nil {
+		lc.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
 		os.Exit(1)
 	}
 
-	// load the yaml file and push it using the config client
-	if !hasConfig || getOverwriteConfig(f, lc) {
-		lc.Info("Pushing common configuration. It doesn't exists or overwrite flag is set")
+	yamlFile := config.GetConfigFileLocation(lc, f)
+	lc.Infof("Using common configuration from %s", yamlFile)
 
-		yamlFile := config.GetConfigFileLocation(lc, f)
-		err = pushConfiguration(lc, yamlFile, configClient)
-		if err != nil {
-			lc.Error(err.Error())
-			os.Exit(1)
-		}
-	} else {
-		lc.Info("Skipped pushing common configuration. It already exists and overwrite flag not set")
+	configMap, err := loadConfigMapFromYamlFile(yamlFile, secretProvider, lc)
+	if err != nil {
+		lc.Errorf("Failed to load %s : %s", yamlFile, err.Error())
+		os.Exit(1)
+	}
+	configMap, err = applyEnvOverrides(configMap, lc)
+	if err != nil {
+		lc.Errorf("Failed to apply env overrides to common configuration: %s", err.Error())
+		os.Exit(1)
+	}
+
+	// PutConfigurationMap func will check each keys and put the config value if not exist or override is set
+	err = configClient.PutConfigurationMap(configMap, getOverwriteConfig(f, lc))
+	if err != nil {
+		lc.Errorf("Failed to put configuration: %s", err.Error())
+		os.Exit(1)
+	}
+
+	// push done flag to config client
+	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueTrue))
+	if err != nil {
+		lc.Errorf("Failed to push %s on completion: %s", commonConfigDone, err.Error())
+		os.Exit(1)
 	}
 
 	lc.Info("Core Common Config exiting")
@@ -155,87 +158,6 @@ func translateInterruptToCancel(ctx context.Context, wg *sync.WaitGroup, cancel 
 	}()
 }
 
-func pushConfiguration(lc logger.LoggingClient, yamlFile string, configClient configuration.Client) error {
-	// push not done flag to configClient
-	err := configClient.PutConfigurationValue(commonConfigDone, []byte("false"))
-	if err != nil {
-		return fmt.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
-	}
-	lc.Infof("Using common configuration from %s", yamlFile)
-	contents, err := os.ReadFile(yamlFile)
-	if err != nil {
-		return fmt.Errorf("failed to read common configuration file %s: %s", yamlFile, err.Error())
-	}
-
-	data := make(map[string]interface{})
-	kv := make(map[string]interface{})
-
-	err = yaml.Unmarshal(contents, &data)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshall common configuration file %s: %s", yamlFile, err.Error())
-	}
-
-	kv = buildKeyValues(data, kv, "")
-
-	kv, err = applyEnvOverrides(kv, lc)
-	if err != nil {
-		return fmt.Errorf("failed to apply env overrides to common configuration: %s", err.Error())
-	}
-
-	keys := make([]string, 0, len(kv))
-
-	for k := range kv {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		v := kv[k]
-		// Push key/value into Configuration Provider if it is not empty
-		if v != nil {
-			err = configClient.PutConfigurationValue(k, []byte(fmt.Sprint(v)))
-		}
-		if err != nil {
-			return fmt.Errorf("failed to push common configuration key %s with value %v: %s", k, v, err.Error())
-		}
-	}
-
-	// push done flag to config client
-	err = configClient.PutConfigurationValue(commonConfigDone, []byte("true"))
-	if err != nil {
-		return fmt.Errorf("failed to push %s on completion: %s", commonConfigDone, err.Error())
-	}
-
-	lc.Info("Common configuration has been pushed to into Configuration Provider with overrides applied")
-
-	return nil
-}
-
-// buildKeyValues is a helper function to parse the configuration yaml file contents
-func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, origKey string) map[string]interface{} {
-	key := origKey
-	for k, v := range data {
-		if len(key) == 0 {
-			key = fmt.Sprint(k)
-		} else {
-			key = fmt.Sprintf("%s/%s", key, k)
-		}
-
-		vdata, ok := v.(map[string]interface{})
-		if !ok {
-			kv[key] = v
-			key = origKey
-			continue
-		}
-
-		kv = buildKeyValues(vdata, kv, key)
-		key = origKey
-	}
-
-	return kv
-}
-
 func applyEnvOverrides(keyValues map[string]any, lc logger.LoggingClient) (map[string]any, error) {
 	env := environment.NewVariables(lc)
 
@@ -247,4 +169,19 @@ func applyEnvOverrides(keyValues map[string]any, lc logger.LoggingClient) (map[s
 	lc.Infof("Common configuration loaded from file with %d overrides applied", overrideCount)
 
 	return keyValues, nil
+}
+
+func loadConfigMapFromYamlFile(yamlFile string, secretProvider interfaces.SecretProvider, lc logger.LoggingClient) (map[string]any, error) {
+	contents, err := file.Load(yamlFile, secretProvider, lc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read configuration file %s: %s", yamlFile, err.Error())
+	}
+
+	data := make(map[string]any)
+
+	err = yaml.Unmarshal(contents, &data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshall yaml configuration: %s", err.Error())
+	}
+	return data, nil
 }
