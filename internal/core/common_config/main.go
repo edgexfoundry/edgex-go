@@ -35,7 +35,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -115,18 +114,45 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 		os.Exit(1)
 	}
 
-	// load the yaml file and push it using the config client
+	// push not done flag to configClient
+	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+	if err != nil {
+		lc.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
+		os.Exit(1)
+	}
+
+	yamlFile := config.GetConfigFileLocation(lc, f)
+	lc.Infof("Using common configuration from %s", yamlFile)
+
 	if !hasConfig || getOverwriteConfig(f, lc) {
 		lc.Info("Pushing common configuration. It doesn't exists or overwrite flag is set")
 
-		yamlFile := config.GetConfigFileLocation(lc, f)
-		err = pushConfiguration(lc, yamlFile, configClient)
+		keyValues, err := config.KeyValuesFromYamlFile(yamlFile, secretProvider, lc)
+		if err != nil {
+			lc.Error(err.Error())
+			os.Exit(1)
+		}
+		err = pushConfiguration(lc, keyValues, configClient)
 		if err != nil {
 			lc.Error(err.Error())
 			os.Exit(1)
 		}
 	} else {
-		lc.Info("Skipped pushing common configuration. It already exists and overwrite flag not set")
+		lc.Info("Pushing common configurations from the config file that doesn't exist in the core-keeper.")
+
+		// After upgrading EdgeX, new configurations may be introduced.
+		// Ensure new configurations from the YAML file are pushed to the core-keeper.
+		if err = config.PutMissingConfigToConfigProvider(yamlFile, secretProvider, configClient, lc); err != nil {
+			lc.Error(err.Error())
+			os.Exit(1)
+		}
+	}
+
+	// push done flag to config client
+	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueTrue))
+	if err != nil {
+		lc.Errorf("Failed to push %s on completion: %s", commonConfigDone, err.Error())
+		os.Exit(1)
 	}
 
 	lc.Info("Core Common Config exiting")
@@ -155,29 +181,8 @@ func translateInterruptToCancel(ctx context.Context, wg *sync.WaitGroup, cancel 
 	}()
 }
 
-func pushConfiguration(lc logger.LoggingClient, yamlFile string, configClient configuration.Client) error {
-	// push not done flag to configClient
-	err := configClient.PutConfigurationValue(commonConfigDone, []byte("false"))
-	if err != nil {
-		return fmt.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
-	}
-	lc.Infof("Using common configuration from %s", yamlFile)
-	contents, err := os.ReadFile(yamlFile)
-	if err != nil {
-		return fmt.Errorf("failed to read common configuration file %s: %s", yamlFile, err.Error())
-	}
-
-	data := make(map[string]interface{})
-	kv := make(map[string]interface{})
-
-	err = yaml.Unmarshal(contents, &data)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshall common configuration file %s: %s", yamlFile, err.Error())
-	}
-
-	kv = buildKeyValues(data, kv, "")
-
-	kv, err = applyEnvOverrides(kv, lc)
+func pushConfiguration(lc logger.LoggingClient, kv map[string]any, configClient configuration.Client) error {
+	kv, err := applyEnvOverrides(kv, lc)
 	if err != nil {
 		return fmt.Errorf("failed to apply env overrides to common configuration: %s", err.Error())
 	}
@@ -200,40 +205,9 @@ func pushConfiguration(lc logger.LoggingClient, yamlFile string, configClient co
 			return fmt.Errorf("failed to push common configuration key %s with value %v: %s", k, v, err.Error())
 		}
 	}
-
-	// push done flag to config client
-	err = configClient.PutConfigurationValue(commonConfigDone, []byte("true"))
-	if err != nil {
-		return fmt.Errorf("failed to push %s on completion: %s", commonConfigDone, err.Error())
-	}
-
 	lc.Info("Common configuration has been pushed to into Configuration Provider with overrides applied")
 
 	return nil
-}
-
-// buildKeyValues is a helper function to parse the configuration yaml file contents
-func buildKeyValues(data map[string]interface{}, kv map[string]interface{}, origKey string) map[string]interface{} {
-	key := origKey
-	for k, v := range data {
-		if len(key) == 0 {
-			key = fmt.Sprint(k)
-		} else {
-			key = fmt.Sprintf("%s/%s", key, k)
-		}
-
-		vdata, ok := v.(map[string]interface{})
-		if !ok {
-			kv[key] = v
-			key = origKey
-			continue
-		}
-
-		kv = buildKeyValues(vdata, kv, key)
-		key = origKey
-	}
-
-	return kv
 }
 
 func applyEnvOverrides(keyValues map[string]any, lc logger.LoggingClient) (map[string]any, error) {
