@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,6 +19,7 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/query"
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
@@ -442,7 +443,12 @@ func TestEventsByTimeRange(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			app := NewCoreDataApp(dic)
-			events, totalCount, err := app.EventsByTimeRange(testCase.start, testCase.end, testCase.offset, testCase.limit, dic)
+			events, totalCount, err := app.EventsByTimeRange(query.Parameters{
+				Start:  testCase.start,
+				End:    testCase.end,
+				Offset: testCase.offset,
+				Limit:  testCase.limit,
+			}, dic)
 			if testCase.errorExpected {
 				require.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")

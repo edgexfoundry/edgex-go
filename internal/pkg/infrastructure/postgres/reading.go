@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
@@ -283,31 +282,14 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 			}
 			reading = simpleReading
 		} else if readingDBModel.NumericValue != nil {
-			// reading type is numeric SimpleReading
-			var val string
-			switch baseReading.ValueType {
-			case common.ValueTypeFloat32:
-				numericVal, err := readingDBModel.NumericValue.Float64Value()
-				if err != nil {
-					return nil, pgClient.WrapDBError("failed to read the float value", err)
-				}
-				val = strconv.FormatFloat(numericVal.Float64, 'e', -1, 32)
-			case common.ValueTypeFloat64:
-				numericVal, err := readingDBModel.NumericValue.Float64Value()
-				if err != nil {
-					return nil, pgClient.WrapDBError("failed to read the float value", err)
-				}
-				val = strconv.FormatFloat(numericVal.Float64, 'e', -1, 64)
-			default:
-				numericVal, err := readingDBModel.NumericValue.Value() // NumericValue.Value() return value in string
-				if err != nil {
-					return nil, pgClient.WrapDBError("failed to read the float value", err)
-				}
-				val = fmt.Sprintf("%v", numericVal)
+			// reading type is NumericReading
+			val, err := numericReadingVal(readingDBModel.ValueType, readingDBModel.NumericValue)
+			if err != nil {
+				return nil, pgClient.WrapDBError("read numeric value", err)
 			}
-			reading = model.SimpleReading{
-				BaseReading: baseReading,
-				Value:       val,
+			reading = model.NumericReading{
+				BaseReading:  baseReading,
+				NumericValue: val,
 			}
 		} else {
 			// reading type is NullReading
@@ -326,6 +308,23 @@ func queryReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args
 	}
 
 	return readings, nil
+}
+
+func numericReadingVal(valueType string, numericValue *pgtype.Numeric) (any, errors.EdgeX) {
+	switch valueType {
+	case common.ValueTypeFloat32, common.ValueTypeFloat64:
+		val, err := numericValue.Float64Value()
+		if err != nil {
+			return nil, pgClient.WrapDBError("read the float value", err)
+		}
+		return val.Float64, nil
+	case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
+		return numericValue.Int.Uint64(), nil
+	case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
+		return numericValue.Int.Int64(), nil
+	default:
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected value type '%s", valueType), nil)
+	}
 }
 
 // deleteReadingsByOriginAndEventId delete the data rows with given sql statement and passed args
@@ -411,20 +410,20 @@ func (c *Client) addReadingsInTx(tx pgx.Tx, readings []model.Reading, eventId st
 				if err := numericVal.ScanScientific(contractReadingModel.Value); err != nil {
 					return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid numeric value '%s'", contractReadingModel.Value), err)
 				}
-				readingDBModel.SimpleReading = dbModels.SimpleReading{NumericValue: &numericVal}
+				readingDBModel.NumericReading = dbModels.NumericReading{NumericValue: &numericVal}
 			case common.ValueTypeFloat64:
 				var numericVal pgtype.Numeric
 				if err := numericVal.ScanScientific(contractReadingModel.Value); err != nil {
 					return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid numeric value '%s'", contractReadingModel.Value), err)
 				}
-				readingDBModel.SimpleReading = dbModels.SimpleReading{NumericValue: &numericVal}
+				readingDBModel.NumericReading = dbModels.NumericReading{NumericValue: &numericVal}
 			case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64,
 				common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
 				var val pgtype.Numeric
 				if err := val.Scan(contractReadingModel.Value); err != nil {
 					return errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid numeric value '%s'", contractReadingModel.Value), err)
 				}
-				readingDBModel.SimpleReading = dbModels.SimpleReading{NumericValue: &val}
+				readingDBModel.NumericReading = dbModels.NumericReading{NumericValue: &val}
 			default:
 				readingDBModel.SimpleReading = dbModels.SimpleReading{Value: &contractReadingModel.Value}
 			}

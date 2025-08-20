@@ -5,6 +5,8 @@ package http
 import (
 	"bytes"
 	"fmt"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/query"
+	"github.com/spf13/cast"
 	"io"
 	"math"
 	"net/http"
@@ -222,7 +224,9 @@ func (ec *EventController) AllEvents(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	events, totalCount, err := ec.app.AllEvents(offset, limit, ec.dic)
+	parms := query.Parameters{Offset: offset, Limit: limit, Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	events, totalCount, err := ec.app.AllEvents(parms, ec.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -245,7 +249,9 @@ func (ec *EventController) EventsByDeviceName(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	events, totalCount, err := ec.app.EventsByDeviceName(offset, limit, name, ec.dic)
+	parms := query.Parameters{Offset: offset, Limit: limit, Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	events, totalCount, err := ec.app.EventsByDeviceName(parms, name, ec.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -287,7 +293,11 @@ func (ec *EventController) EventsByTimeRange(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	events, totalCount, err := ec.app.EventsByTimeRange(start, end, offset, limit, ec.dic)
+	parms := query.Parameters{
+		Start: start, End: end, Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	events, totalCount, err := ec.app.EventsByTimeRange(parms, ec.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
