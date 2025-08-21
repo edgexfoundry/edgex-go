@@ -68,6 +68,7 @@ const (
 	eventIdFKCol      = "event_id"
 	deviceInfoIdFKCol = "device_info_id"
 	valueCol          = "value"
+	numericValueCol   = "numeric_value"
 	binaryValueCol    = "binaryvalue"
 	mediaTypeCol      = "mediatype"
 	objectValueCol    = "objectvalue"

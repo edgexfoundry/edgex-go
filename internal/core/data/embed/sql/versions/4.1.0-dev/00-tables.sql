@@ -7,3 +7,5 @@ ALTER TABLE core_data.device_info ADD COLUMN IF NOT EXISTS mark_deleted BOOLEAN 
 
 -- create index on reading(event_id) to enhance the query performance
 CREATE INDEX IF NOT EXISTS idx_reading_event_id ON core_data.reading(event_id);
+
+ALTER TABLE core_data.reading ADD COLUMN IF NOT EXISTS numeric_value NUMERIC;

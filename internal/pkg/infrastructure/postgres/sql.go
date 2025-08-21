@@ -16,7 +16,7 @@ import (
 
 const (
 	eventColumns   = "event.id, devicename, profilename, sourcename, origin, tags"
-	readingColumns = "event_id, origin, value, binaryvalue, objectvalue, devicename, profilename, resourcename, valuetype, units, mediatype, tags"
+	readingColumns = "event_id, origin, value, numeric_value, binaryvalue, objectvalue, devicename, profilename, resourcename, valuetype, units, mediatype, tags"
 )
 
 // ----------------------------------------------------------------------------------
