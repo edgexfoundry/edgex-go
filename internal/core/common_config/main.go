@@ -18,12 +18,13 @@ package common_config
 import (
 	"context"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -98,9 +99,16 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	}
 
 	// push not done flag to configClient
-	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+	for startupTimer.HasNotElapsed() { // Since common config bootstrap depends on the core-keeper, add a retry mechanism to ensure the core-keeper has started
+		err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+		if err == nil {
+			break
+		}
+		lc.Warnf("Failed to push %s on startup, will try again: %s", commonConfigDone, err.Error())
+		startupTimer.SleepForInterval()
+	}
 	if err != nil {
-		lc.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
+		lc.Errorf("Failed to push %s on startup: %s", commonConfigDone, err.Error())
 		os.Exit(1)
 	}
 
