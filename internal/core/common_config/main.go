@@ -98,9 +98,18 @@ func Main(ctx context.Context, cancel context.CancelFunc, args []string) {
 	}
 
 	// push not done flag to configClient
-	err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+	for startupTimer.HasNotElapsed() {
+		err = configClient.PutConfigurationValue(commonConfigDone, []byte(common.ValueFalse))
+		if err != nil {
+			lc.Warnf("Failed to push %s on startup, will try again: %s", commonConfigDone, err.Error())
+			startupTimer.SleepForInterval()
+			continue
+		} else {
+			break
+		}
+	}
 	if err != nil {
-		lc.Errorf("failed to push %s on startup: %s", commonConfigDone, err.Error())
+		lc.Errorf("Failed to push %s on startup: %s", commonConfigDone, err.Error())
 		os.Exit(1)
 	}
 
