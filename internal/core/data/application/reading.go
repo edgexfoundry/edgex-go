@@ -541,54 +541,78 @@ func noneAutoEventSourcesByDevice(device models.Device, dic *di.Container) ([]st
 }
 
 func processNumericReadings(isNumeric bool, readings []dtos.BaseReading) {
-	for i, reading := range readings {
-		// simple reading to numeric reading
-		if isNumeric && len(reading.Value) != 0 {
-			switch reading.ValueType {
-			case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
-				readings[i].NumericReading.NumericValue = cast.ToInt64(reading.Value)
-			case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
-				readings[i].NumericReading.NumericValue = cast.ToUint64(reading.Value)
-			case common.ValueTypeFloat32, common.ValueTypeFloat64:
-				readings[i].NumericReading.NumericValue = cast.ToFloat64(reading.Value)
-			case common.ValueTypeInt8Array, common.ValueTypeInt16Array, common.ValueTypeInt32Array, common.ValueTypeInt64Array:
-				arrayStrValue := strings.Split(reading.Value[1:len(reading.Value)-1], ",") // trim "[" and "]"
-				arrayValue := make([]int64, len(arrayStrValue))
-				for i, v := range arrayStrValue {
-					arrayValue[i] = cast.ToInt64(strings.TrimSpace(v))
-				}
-				readings[i].NumericReading.NumericValue = arrayValue
-			case common.ValueTypeUint8Array, common.ValueTypeUint16Array, common.ValueTypeUint32Array, common.ValueTypeUint64Array:
-				arrayStrValue := strings.Split(reading.Value[1:len(reading.Value)-1], ",") // trim "[" and "]"
-				arrayValue := make([]uint64, len(arrayStrValue))
-				for i, v := range arrayStrValue {
-					arrayValue[i] = cast.ToUint64(strings.TrimSpace(v))
-				}
-				readings[i].NumericReading.NumericValue = arrayValue
-			case common.ValueTypeFloat32Array, common.ValueTypeFloat64Array:
-				arrayStrValue := strings.Split(reading.Value[1:len(reading.Value)-1], ",") // trim "[" and "]"
-				arrayValue := make([]float64, len(arrayStrValue))
-				for i, v := range arrayStrValue {
-					arrayValue[i] = cast.ToFloat64(strings.TrimSpace(v))
-				}
-				readings[i].NumericReading.NumericValue = arrayValue
-			default:
-				// skip not matched data type like bool, string
-				continue
-			}
-			readings[i].Value = ""
-		}
-		// numeric reading to simple reading
-		if !isNumeric && reading.NumericReading.NumericValue != nil {
-			switch reading.ValueType {
-			case common.ValueTypeFloat32:
-				readings[i].Value = strconv.FormatFloat(cast.ToFloat64(reading.NumericValue), 'e', -1, 32)
-			case common.ValueTypeFloat64:
-				readings[i].Value = strconv.FormatFloat(cast.ToFloat64(reading.NumericValue), 'e', -1, 64)
-			default:
-				readings[i].Value = fmt.Sprintf("%v", reading.NumericReading.NumericValue)
-			}
-			readings[i].NumericReading.NumericValue = nil
+	for i := range readings {
+		if isNumeric {
+			convertToNumeric(&readings[i])
+		} else {
+			convertToString(&readings[i])
 		}
 	}
+}
+
+// convertToNumeric converts SimpleReadding value to NumericReading value
+func convertToNumeric(reading *dtos.BaseReading) {
+	if len(reading.Value) == 0 {
+		return
+	}
+	switch reading.ValueType {
+	case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
+		reading.NumericReading.NumericValue = cast.ToInt64(reading.Value)
+	case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
+		reading.NumericReading.NumericValue = cast.ToUint64(reading.Value)
+	case common.ValueTypeFloat32, common.ValueTypeFloat64:
+		reading.NumericReading.NumericValue = cast.ToFloat64(reading.Value)
+	case common.ValueTypeInt8Array, common.ValueTypeInt16Array, common.ValueTypeInt32Array, common.ValueTypeInt64Array:
+		arrayValue, err := parseArray(reading.Value, cast.ToInt64)
+		if err != nil {
+			return
+		}
+		reading.NumericReading.NumericValue = arrayValue
+	case common.ValueTypeUint8Array, common.ValueTypeUint16Array, common.ValueTypeUint32Array, common.ValueTypeUint64Array:
+		arrayValue, err := parseArray(reading.Value, cast.ToUint64)
+		if err != nil {
+			return
+		}
+		reading.NumericReading.NumericValue = arrayValue
+	case common.ValueTypeFloat32Array, common.ValueTypeFloat64Array:
+		arrayValue, err := parseArray(reading.Value, cast.ToFloat64)
+		if err != nil {
+			return
+		}
+		reading.NumericReading.NumericValue = arrayValue
+	default:
+		// skip not matched data type like bool, string
+		return
+	}
+	reading.Value = ""
+}
+
+// convertToNumeric converts NumericReading value to SimpleReadding value
+func convertToString(reading *dtos.BaseReading) {
+	if reading.NumericReading.NumericValue == nil {
+		return
+	}
+	switch reading.ValueType {
+	case common.ValueTypeFloat32:
+		reading.Value = strconv.FormatFloat(cast.ToFloat64(reading.NumericValue), 'e', -1, 32)
+	case common.ValueTypeFloat64:
+		reading.Value = strconv.FormatFloat(cast.ToFloat64(reading.NumericValue), 'e', -1, 64)
+	default:
+		reading.Value = fmt.Sprintf("%v", reading.NumericReading.NumericValue)
+	}
+	reading.NumericReading.NumericValue = nil
+}
+
+func parseArray[T any](val string, conv func(any) T) ([]T, error) {
+	if len(val) <= 2 {
+		return nil, fmt.Errorf("invalid array string: length must be greater than 2, got %d", len(val))
+	}
+
+	parts := strings.Split(val[1:len(val)-1], ",") // trim "[" and "]"
+	result := make([]T, len(parts))
+	for i, p := range parts {
+		result[i] = conv(strings.TrimSpace(p))
+	}
+
+	return result, nil
 }

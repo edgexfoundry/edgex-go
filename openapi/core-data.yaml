@@ -339,7 +339,7 @@ components:
           - true
           - false
         default: false
-      description: "If set to true, returns the reading’s numeric value in numeric rather than string format. To avoid precision loss when querying large numbers that exceed the float64 limit (−2^53 to 2^53 for integers, 0 to 2^53 for unsigned integers), use string format instead. See the JSON limitation mentioned in the spec https://www.rfc-editor.org/rfc/rfc8259.html#section-6."
+      description: "When set to true, the reading’s numeric value is returned as a number instead of a string. However, due to JSON limitations described in https://www.rfc-editor.org/rfc/rfc8259.html#section-6, precision may be lost when handling large numbers that exceed the float64 range (−2^53 to 2^53 for integers, 0 to 2^53 for unsigned integers). To prevent precision loss, it is recommended to use the string format."
     correlatedRequestHeader:
       in: header
       name: X-Correlation-ID
