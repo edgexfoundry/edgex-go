@@ -19,11 +19,11 @@ type Reading struct {
 	BinaryReading
 	SimpleReading
 	ObjectReading
+	NumericReading
 }
 
 type SimpleReading struct {
-	Value        *string
-	NumericValue *pgtype.Numeric
+	Value *string
 }
 
 type BinaryReading struct {
@@ -33,6 +33,10 @@ type BinaryReading struct {
 
 type ObjectReading struct {
 	ObjectValue any
+}
+
+type NumericReading struct {
+	NumericValue *pgtype.Numeric
 }
 
 // GetBaseReading makes the Reading struct to implement the go-mod-core-contract Reading interface in models

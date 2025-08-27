@@ -329,6 +329,17 @@ components:
         minimum: -1
         default: 20
       description: "The numbers of items to return.  Specify -1 will return all remaining items after offset.  The maximum will be the MaxResultCount as defined in the configuration of service."
+    numericParam:
+      in: query
+      name: numeric
+      required: false
+      schema:
+        type: string
+        enum:
+          - true
+          - false
+        default: false
+      description: "When set to true, the reading’s numeric value is returned as a number instead of a string. However, due to JSON limitations described in https://www.rfc-editor.org/rfc/rfc8259.html#section-6, precision may be lost when handling large numbers that exceed the float64 range (−2^53 to 2^53 for integers, 0 to 2^53 for unsigned integers). To prevent precision loss, it is recommended to use the string format."
     correlatedRequestHeader:
       in: header
       name: X-Correlation-ID
@@ -664,6 +675,7 @@ paths:
       - $ref: '#/components/parameters/correlatedRequestHeader'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Given the entire range of events sorted by origin descending, returns a portion of that range according to the offset and limit parameters."
       responses:
@@ -894,6 +906,7 @@ paths:
           description: "Uniquely identifies a given device"
         - $ref: '#/components/parameters/offsetParam'
         - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/numericParam'
       responses:
         '200':
           description: "OK"
@@ -999,6 +1012,7 @@ paths:
       description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
+    - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Return a paginated range of events sorted by origin descending with a create date inside the specified start/end values."
       responses:
@@ -1109,6 +1123,7 @@ paths:
       - $ref: '#/components/parameters/correlatedRequestHeader'
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Given the entire range of readings sorted by origin descending, returns a portion of that range according to the offset and limit parameters. Readings are returned as a Reading type, which includes value for simple data types, binaryValue and mediaType for binary data types, or objectValue for object data types."
       responses:
@@ -1251,6 +1266,7 @@ paths:
       description: "Uniquely identifies a given device"
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
+    - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Given a range of readings from the specified device sorted by origin descending, returns a portion of that range according to the device name, offset and limit parameters."
       responses:
@@ -1315,6 +1331,7 @@ paths:
       description: The device resource name of readings.
     - $ref: '#/components/parameters/offsetParam'
     - $ref: '#/components/parameters/limitParam'
+    - $ref: '#/components/parameters/numericParam'
     get:
       summary: Returns a paginated list of readings whose resource name is of the specified one.
       responses:
@@ -1387,6 +1404,7 @@ paths:
         description: The device resource name of readings.
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Returns a paginated range of readings by deviceName and resourceName"
       responses:
@@ -1459,6 +1477,7 @@ paths:
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Return a paginated range of readings with a create date inside the specified start/end values."
       responses:
@@ -1537,6 +1556,7 @@ paths:
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Return a paginated range of readings by resourceName and specified time range."
       responses:
@@ -1621,6 +1641,7 @@ paths:
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Return a paginated range of readings by deviceName, resourceName and specified time range."
       responses:
@@ -1699,6 +1720,7 @@ paths:
         description: "Unix timestamp (nanoseconds) indicating the end of a date/time range"
       - $ref: '#/components/parameters/offsetParam'
       - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/numericParam'
     get:
       summary: "Return a paginated range of readings by deviceName and specified time range while also allowing multiple resource names specified in the request body as query criteria.  If resource names or request body is empty, return all the readings that meet deviceName and specified time range."
       responses:

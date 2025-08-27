@@ -12,6 +12,7 @@ import (
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	dataContainer "github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/query"
 	"github.com/edgexfoundry/edgex-go/internal/io"
 	"github.com/edgexfoundry/edgex-go/internal/pkg"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
@@ -23,6 +24,7 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	"github.com/labstack/echo/v4"
+	"github.com/spf13/cast"
 )
 
 type ReadingController struct {
@@ -69,7 +71,11 @@ func (rc *ReadingController) AllReadings(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.AllReadings(offset, limit, rc.dic)
+	parms := query.Parameters{
+		Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.AllReadings(parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -91,7 +97,11 @@ func (rc *ReadingController) ReadingsByTimeRange(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.ReadingsByTimeRange(start, end, offset, limit, rc.dic)
+	parms := query.Parameters{
+		Start: start, End: end, Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.ReadingsByTimeRange(parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -115,7 +125,11 @@ func (rc *ReadingController) ReadingsByResourceName(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.ReadingsByResourceName(offset, limit, resourceName, rc.dic)
+	parms := query.Parameters{
+		Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.ReadingsByResourceName(parms, resourceName, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -139,7 +153,11 @@ func (rc *ReadingController) ReadingsByDeviceName(c echo.Context) error {
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.ReadingsByDeviceName(offset, limit, name, rc.dic)
+	parms := query.Parameters{
+		Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.ReadingsByDeviceName(parms, name, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -185,7 +203,11 @@ func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(c echo.Context) 
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.ReadingsByResourceNameAndTimeRange(resourceName, start, end, offset, limit, rc.dic)
+	parms := query.Parameters{
+		Start: start, End: end, Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.ReadingsByResourceNameAndTimeRange(resourceName, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -210,7 +232,11 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(c echo.Context)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
-	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, offset, limit, rc.dic)
+	parms := query.Parameters{
+		Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -235,8 +261,11 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(c e
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
+	parms := query.Parameters{
+		Start: start, End: end, Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
 
-	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, start, end, offset, limit, rc.dic)
+	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
@@ -260,6 +289,9 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(c 
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
+	parms := query.Parameters{
+		Start: start, End: end, Offset: offset, Limit: limit,
+		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
 
 	var queryPayload map[string]interface{}
 	if r.Body != http.NoBody { //only parse request body when there are contents provided
@@ -284,7 +316,7 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(c 
 		}
 	}
 
-	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, start, end, offset, limit, rc.dic)
+	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName, resourceNames, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
