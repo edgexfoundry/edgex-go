@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2024 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -157,6 +157,43 @@ func TestParsePathParamToInt64(t *testing.T) {
 				}
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expectedStart, start)
+			})
+		})
+	}
+}
+
+func TestParseAggregateFuncQueryString(t *testing.T) {
+	tests := []struct {
+		name              string
+		aggFunc           string
+		expectedResult    string
+		expectedErrorKind errors.ErrKind
+	}{
+		{"valid", "min", "MIN", ""},
+		{"invalid", "unknown", "", errors.KindContractInvalid},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Run(testCase.name, func(t *testing.T) {
+				e := echo.New()
+				req, err := http.NewRequest(http.MethodGet, common.ApiAllReadingRoute, http.NoBody)
+				require.NoError(t, err)
+
+				query := req.URL.Query()
+				query.Add(common.AggregateFunc, testCase.aggFunc)
+				req.URL.RawQuery = query.Encode()
+
+				// Act
+				recorder := httptest.NewRecorder()
+				c := e.NewContext(req, recorder)
+				aggFunc := c.QueryParam(common.AggregateFunc)
+				start, err := ParseAggregateFuncQueryString(aggFunc)
+				if testCase.expectedErrorKind != "" {
+					assert.Equal(t, testCase.expectedErrorKind, errors.Kind(err))
+					return
+				}
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.expectedResult, start)
 			})
 		})
 	}

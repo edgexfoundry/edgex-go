@@ -6,6 +6,7 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -18,7 +19,9 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
@@ -66,6 +69,15 @@ func (rc *ReadingController) AllReadings(c echo.Context) error {
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AllAggregateReadings(aggFunc, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
+
 	// parse URL query string for offset, and limit, and labels
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
@@ -101,6 +113,15 @@ func (rc *ReadingController) ReadingsByTimeRange(c echo.Context) error {
 		Start: start, End: end, Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
 
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AllAggregateReadingsByTimeRange(aggFunc, parms, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
+
 	readings, totalCount, err := application.ReadingsByTimeRange(parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
@@ -119,6 +140,15 @@ func (rc *ReadingController) ReadingsByResourceName(c echo.Context) error {
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
 	resourceName := c.Param(common.ResourceName)
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByResourceName(resourceName, aggFunc, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
@@ -147,6 +177,15 @@ func (rc *ReadingController) ReadingsByDeviceName(c echo.Context) error {
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
 	name := c.Param(common.Name)
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceName(name, aggFunc, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
@@ -207,6 +246,15 @@ func (rc *ReadingController) ReadingsByResourceNameAndTimeRange(c echo.Context) 
 		Start: start, End: end, Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
 
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByResourceNameAndTimeRange(resourceName, aggFunc, parms, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
+
 	readings, totalCount, err := application.ReadingsByResourceNameAndTimeRange(resourceName, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
@@ -226,6 +274,15 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(c echo.Context)
 
 	deviceName := c.Param(common.Name)
 	resourceName := c.Param(common.ResourceName)
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceNameAndResourceName(deviceName, resourceName, aggFunc, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
@@ -265,6 +322,15 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNameAndTimeRange(c e
 		Start: start, End: end, Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
 
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, aggFunc, parms, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
+
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, parms, rc.dic)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
@@ -292,6 +358,15 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(c 
 	parms := query.Parameters{
 		Start: start, End: end, Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceNameAndTimeRange(deviceName, aggFunc, parms, rc.dic)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	var queryPayload map[string]interface{}
 	if r.Body != http.NoBody { //only parse request body when there are contents provided
@@ -322,6 +397,30 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceNamesAndTimeRange(c 
 	}
 
 	response := responseDTO.NewMultiReadingsResponse("", "", http.StatusOK, totalCount, readings)
+	utils.WriteHttpHeader(w, ctx, http.StatusOK)
+	return pkg.EncodeAndWriteResponse(response, w, lc)
+}
+
+// handleReadingAggregation parses the aggregateFunc query parameter, calls the provided application-layer function
+// to compute the aggregated reading values, and returns a MultiReadingsAggregationResponse DTO.
+func handleReadingAggregation(
+	w *echo.Response,
+	ctx context.Context,
+	lc logger.LoggingClient,
+	aggFuncParam string,
+	aggReadingFunc func(string) ([]dtos.BaseReading, errors.EdgeX),
+) error {
+	aggFunc, err := utils.ParseAggregateFuncQueryString(aggFuncParam)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	readings, err := aggReadingFunc(aggFunc)
+	if err != nil {
+		return utils.WriteErrorResponse(w, ctx, lc, err, "")
+	}
+
+	response := responseDTO.NewMultiReadingsAggregationResponse("", "", http.StatusOK, aggFuncParam, readings)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

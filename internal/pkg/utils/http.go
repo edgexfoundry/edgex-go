@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2024 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -235,4 +236,13 @@ func ParseBodyToMap(r *http.Request) (map[string]interface{}, errors.EdgeX) {
 	}
 
 	return result, nil
+}
+
+// ParseAggregateFuncQueryString checks whether the aggregateFunc query param is valid, and returns the value in all capital letters
+func ParseAggregateFuncQueryString(aggFuncParam string) (string, errors.EdgeX) {
+	aggFunc := strings.ToUpper(aggFuncParam)
+	if slices.Contains([]string{common.MinFunc, common.MaxFunc, common.AvgFunc, common.CountFunc, common.SumFunc}, aggFunc) {
+		return aggFunc, nil
+	}
+	return "", errors.NewCommonEdgeX(errors.KindContractInvalid, "invalid aggregate function specified", nil)
 }

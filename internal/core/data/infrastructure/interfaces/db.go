@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2023 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -48,4 +48,13 @@ type DBClient interface {
 	LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (model.Event, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX)
+
+	AllReadingsAggregation(aggregateFunc string) ([]model.Reading, errors.EdgeX)
+	AllReadingsAggregationByTimeRange(aggregateFun string, start int64, end int64) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByResourceName(resourceName string, aggregateFunc string) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByResourceNameAndTimeRange(resourceName string, aggregateFun string, start int64, end int64) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByDeviceName(deviceName string, aggregateFunc string) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, aggregateFun string, start int64, end int64) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByDeviceNameAndResourceName(deviceName string, resourceName string, aggregateFunc string) ([]model.Reading, errors.EdgeX)
+	ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, aggregateFunc string, start int64, end int64) ([]model.Reading, errors.EdgeX)
 }
