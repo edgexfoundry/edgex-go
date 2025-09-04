@@ -10,12 +10,14 @@ import (
 	"testing"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
+	"github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/query"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
@@ -402,4 +404,25 @@ func TestAggregateReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) 
 			}
 		})
 	}
+}
+
+func TestGetReadingAggregation(t *testing.T) {
+	dic := mocks.NewMockDIC()
+
+	dbClientMock := &dbMock.DBClient{}
+	dbClientMock.On("ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange", device1, resource1, "MIN", validStart, validEnd).Return([]models.Reading{aggReading}, nil)
+	expectedDTO := dtos.FromReadingModelToDTO(aggReading)
+	dic.Update(di.ServiceConstructorMap{
+		container.DBClientInterfaceName: func(get di.Get) interface{} {
+			return dbClientMock
+		},
+	})
+
+	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
+		return dbClientMock.ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(device1, resource1, "MIN", validStart, validEnd)
+	}
+	result, err := getReadingAggregation(dic, aggDBFunc)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(result), "Result count not as expected")
+	assert.Equal(t, expectedDTO, result[0], "Reading aggregated readings not as expected")
 }
