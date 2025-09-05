@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	eventColumns   = "event.id, devicename, profilename, sourcename, origin, tags"
-	readingColumns = "event_id, origin, value, numeric_value, binaryvalue, objectvalue, devicename, profilename, resourcename, valuetype, units, mediatype, tags"
+	eventColumns             = "event.id, devicename, profilename, sourcename, origin, tags"
+	readingColumns           = "event_id, origin, value, numeric_value, binaryvalue, objectvalue, devicename, profilename, resourcename, valuetype, units, mediatype, tags"
+	aggReadingColumn         = "numeric_value"
+	aggReadingGroupByColumns = "devicename, profilename, resourcename, valuetype"
 )
 
 // ----------------------------------------------------------------------------------
@@ -115,6 +117,32 @@ func sqlQueryAllReadingAndDescWithCondsAndPag(descCol string, columns ...string)
 		readingColumns, readingTableName, deviceInfoTableName, markDeletedCol,
 		whereCondition, descCol,
 		offsetCondition, limitCondition)
+}
+
+// sqlQueryAggregateReadingWithConds returns the SQL statement for calculating the aggregated reading table by the given columns composed of the where condition
+// If hasTimeRange is true, the time range will be defined in the where condition as well
+// Results are grouped by deviceName, resourceName, profileName, and valueType, and ordered by deviceName in ascending order.
+func sqlQueryAggregateReadingWithConds(aggFunc string, hasTimeRange bool, columns ...string) string {
+	statement := fmt.Sprintf(
+		"SELECT %s(%s) AS value, %s FROM %s JOIN %s ON reading.device_info_id = device_info.id WHERE %s = false",
+		aggFunc, aggReadingColumn, aggReadingGroupByColumns, readingTableName, deviceInfoTableName, markDeletedCol,
+	)
+
+	// Check whether to construct the where conditions
+	if len(columns) > 0 {
+		whereCondition := constructWhereNamedArgCondition(columns...)
+		statement += fmt.Sprintf(" AND %s", whereCondition)
+	}
+
+	// Check whether to construct the time range conditions
+	if hasTimeRange {
+		statement += fmt.Sprintf(" AND %s", fmt.Sprintf("%s >= @%s", originCol, startTimeCondition))
+		statement += fmt.Sprintf(" AND %s", fmt.Sprintf("%s <= @%s", originCol, endTimeCondition))
+	}
+
+	// Add the "group by" and "order by" conditions
+	statement += fmt.Sprintf(" GROUP BY %s ORDER BY %s", aggReadingGroupByColumns, deviceNameCol)
+	return statement
 }
 
 // sqlQueryAllEventAndDescWithCondsAndPagAndUpperLimitTime returns the SQL statement for selecting all rows from the event table by the given columns composed of the where condition
