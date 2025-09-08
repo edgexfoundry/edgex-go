@@ -562,12 +562,12 @@ components:
             resourceName: "Int8"
             profileName: "Random-Integer-Device"
             valueType: "Int8"
-            value: "75"
+            value: 75
           - deviceName: "Random-Float-Device"
             resourceName: "Float32"
             profileName: "Random-Float-Device"
             valueType: "Float32"
-            value: "112.2"
+            value: 112.2
           - deviceName: "Random-String-Device"
             resourceName: "String"
             profileName: "Random-String-Device"
@@ -583,12 +583,12 @@ components:
             resourceName: "Int8"
             profileName: "Random-Integer-Device"
             valueType: "Int8"
-            value: "75"
+            value: 75
           - deviceName: "Random-Integer-Device-2"
             resourceName: "Int8"
             profileName: "Random-Integer-Device-2"
             valueType: "Int8"
-            value: "115"
+            value: 115
     AggReadingsByDeviceNameExample:
       value:
         apiVersion: "v3"
@@ -599,12 +599,12 @@ components:
             resourceName: "Int8"
             profileName: "Random-Integer-Device"
             valueType: "Int8"
-            value: "75"
+            value: 75
           - deviceName: "Random-Integer-Device"
             resourceName: "Int16"
             profileName: "Random-Integer-Device"
             valueType: "Int16"
-            value: "25375"
+            value: 25375
     AggReadingsByDeviceAndResourceExample:
       value:
         apiVersion: "v3"
@@ -615,7 +615,7 @@ components:
             resourceName: "Int8"
             profileName: "Random-Integer-Device"
             valueType: "Int8"
-            value: "75"
+            value: 75
     ReadingsByResourceNameAndTimeRangeExample:
       value:
         apiVersion: "v3"

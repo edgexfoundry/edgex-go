@@ -119,10 +119,10 @@ func sqlQueryAllReadingAndDescWithCondsAndPag(descCol string, columns ...string)
 		offsetCondition, limitCondition)
 }
 
-// sqlQueryAggregateReadingWithConds returns the SQL statement for calculating the aggregated reading table by the given columns composed of the where condition
+// sqlQueryAggregateReadingWithCondsAndPag returns the SQL statement for calculating the aggregated reading table by the given columns composed of the where condition
 // If hasTimeRange is true, the time range will be defined in the where condition as well
-// Results are grouped by deviceName, resourceName, profileName, and valueType, and ordered by deviceName in ascending order.
-func sqlQueryAggregateReadingWithConds(aggFunc string, hasTimeRange bool, columns ...string) string {
+// Results are grouped by deviceName, resourceName, profileName, and valueType, and ordered by deviceName in ascending order and pagination.
+func sqlQueryAggregateReadingWithCondsAndPag(aggFunc string, hasTimeRange bool, columns ...string) string {
 	statement := fmt.Sprintf(
 		"SELECT %s(%s) AS value, %s FROM %s JOIN %s ON reading.device_info_id = device_info.id WHERE %s = false",
 		aggFunc, aggReadingColumn, aggReadingGroupByColumns, readingTableName, deviceInfoTableName, markDeletedCol,
@@ -141,7 +141,8 @@ func sqlQueryAggregateReadingWithConds(aggFunc string, hasTimeRange bool, column
 	}
 
 	// Add the "group by" and "order by" conditions
-	statement += fmt.Sprintf(" GROUP BY %s ORDER BY %s", aggReadingGroupByColumns, deviceNameCol)
+	statement += fmt.Sprintf(" GROUP BY %s ORDER BY %s OFFSET @%s LIMIT @%s",
+		aggReadingGroupByColumns, deviceNameCol, offsetCondition, limitCondition)
 	return statement
 }
 

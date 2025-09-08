@@ -109,9 +109,9 @@ func (_m *DBClient) AllReadings(offset int, limit int) ([]models.Reading, errors
 	return r0, r1
 }
 
-// AllReadingsAggregation provides a mock function with given fields: aggregateFunc
-func (_m *DBClient) AllReadingsAggregation(aggregateFunc string) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(aggregateFunc)
+// AllReadingsAggregation provides a mock function with given fields: aggregateFunc, offset, limit
+func (_m *DBClient) AllReadingsAggregation(aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(aggregateFunc, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AllReadingsAggregation")
@@ -119,19 +119,19 @@ func (_m *DBClient) AllReadingsAggregation(aggregateFunc string) ([]models.Readi
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(aggregateFunc, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string) []models.Reading); ok {
-		r0 = rf(aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, int, int) []models.Reading); ok {
+		r0 = rf(aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) errors.EdgeX); ok {
-		r1 = rf(aggregateFunc)
+	if rf, ok := ret.Get(1).(func(string, int, int) errors.EdgeX); ok {
+		r1 = rf(aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -141,9 +141,9 @@ func (_m *DBClient) AllReadingsAggregation(aggregateFunc string) ([]models.Readi
 	return r0, r1
 }
 
-// AllReadingsAggregationByTimeRange provides a mock function with given fields: aggregateFun, start, end
-func (_m *DBClient) AllReadingsAggregationByTimeRange(aggregateFun string, start int64, end int64) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(aggregateFun, start, end)
+// AllReadingsAggregationByTimeRange provides a mock function with given fields: aggregateFun, start, end, offset, limit
+func (_m *DBClient) AllReadingsAggregationByTimeRange(aggregateFun string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(aggregateFun, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AllReadingsAggregationByTimeRange")
@@ -151,19 +151,19 @@ func (_m *DBClient) AllReadingsAggregationByTimeRange(aggregateFun string, start
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, int64, int64) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(aggregateFun, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, int64, int64) []models.Reading); ok {
-		r0 = rf(aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, int64, int64, int, int) []models.Reading); ok {
+		r0 = rf(aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, int64, int64) errors.EdgeX); ok {
-		r1 = rf(aggregateFun, start, end)
+	if rf, ok := ret.Get(1).(func(string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -854,9 +854,9 @@ func (_m *DBClient) ReadingTotalCount() (uint32, errors.EdgeX) {
 	return r0, r1
 }
 
-// ReadingsAggregationByDeviceName provides a mock function with given fields: deviceName, aggregateFunc
-func (_m *DBClient) ReadingsAggregationByDeviceName(deviceName string, aggregateFunc string) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(deviceName, aggregateFunc)
+// ReadingsAggregationByDeviceName provides a mock function with given fields: deviceName, aggregateFunc, offset, limit
+func (_m *DBClient) ReadingsAggregationByDeviceName(deviceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(deviceName, aggregateFunc, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByDeviceName")
@@ -864,19 +864,19 @@ func (_m *DBClient) ReadingsAggregationByDeviceName(deviceName string, aggregate
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(deviceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(deviceName, aggregateFunc, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) []models.Reading); ok {
-		r0 = rf(deviceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, int, int) []models.Reading); ok {
+		r0 = rf(deviceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) errors.EdgeX); ok {
-		r1 = rf(deviceName, aggregateFunc)
+	if rf, ok := ret.Get(1).(func(string, string, int, int) errors.EdgeX); ok {
+		r1 = rf(deviceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -886,9 +886,9 @@ func (_m *DBClient) ReadingsAggregationByDeviceName(deviceName string, aggregate
 	return r0, r1
 }
 
-// ReadingsAggregationByDeviceNameAndResourceName provides a mock function with given fields: deviceName, resourceName, aggregateFunc
-func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceName(deviceName string, resourceName string, aggregateFunc string) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(deviceName, resourceName, aggregateFunc)
+// ReadingsAggregationByDeviceNameAndResourceName provides a mock function with given fields: deviceName, resourceName, aggregateFunc, offset, limit
+func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceName(deviceName string, resourceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(deviceName, resourceName, aggregateFunc, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByDeviceNameAndResourceName")
@@ -896,19 +896,19 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceName(deviceName st
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string, string) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(deviceName, resourceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, string, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(deviceName, resourceName, aggregateFunc, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string) []models.Reading); ok {
-		r0 = rf(deviceName, resourceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, string, int, int) []models.Reading); ok {
+		r0 = rf(deviceName, resourceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string) errors.EdgeX); ok {
-		r1 = rf(deviceName, resourceName, aggregateFunc)
+	if rf, ok := ret.Get(1).(func(string, string, string, int, int) errors.EdgeX); ok {
+		r1 = rf(deviceName, resourceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -918,9 +918,9 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceName(deviceName st
 	return r0, r1
 }
 
-// ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange provides a mock function with given fields: deviceName, resourceName, aggregateFunc, start, end
-func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, aggregateFunc string, start int64, end int64) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(deviceName, resourceName, aggregateFunc, start, end)
+// ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange provides a mock function with given fields: deviceName, resourceName, aggregateFunc, start, end, offset, limit
+func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, aggregateFunc string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(deviceName, resourceName, aggregateFunc, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange")
@@ -928,19 +928,19 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(d
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string, string, int64, int64) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(deviceName, resourceName, aggregateFunc, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, string, int64, int64, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(deviceName, resourceName, aggregateFunc, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string, int64, int64) []models.Reading); ok {
-		r0 = rf(deviceName, resourceName, aggregateFunc, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, string, int64, int64, int, int) []models.Reading); ok {
+		r0 = rf(deviceName, resourceName, aggregateFunc, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string, int64, int64) errors.EdgeX); ok {
-		r1 = rf(deviceName, resourceName, aggregateFunc, start, end)
+	if rf, ok := ret.Get(1).(func(string, string, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(deviceName, resourceName, aggregateFunc, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -950,9 +950,9 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(d
 	return r0, r1
 }
 
-// ReadingsAggregationByDeviceNameAndTimeRange provides a mock function with given fields: deviceName, aggregateFun, start, end
-func (_m *DBClient) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, aggregateFun string, start int64, end int64) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(deviceName, aggregateFun, start, end)
+// ReadingsAggregationByDeviceNameAndTimeRange provides a mock function with given fields: deviceName, aggregateFun, start, end, offset, limit
+func (_m *DBClient) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(deviceName, aggregateFun, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByDeviceNameAndTimeRange")
@@ -960,19 +960,19 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndTimeRange(deviceName strin
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(deviceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(deviceName, aggregateFun, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64) []models.Reading); ok {
-		r0 = rf(deviceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) []models.Reading); ok {
+		r0 = rf(deviceName, aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, int64, int64) errors.EdgeX); ok {
-		r1 = rf(deviceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(1).(func(string, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(deviceName, aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -982,9 +982,9 @@ func (_m *DBClient) ReadingsAggregationByDeviceNameAndTimeRange(deviceName strin
 	return r0, r1
 }
 
-// ReadingsAggregationByResourceName provides a mock function with given fields: resourceName, aggregateFunc
-func (_m *DBClient) ReadingsAggregationByResourceName(resourceName string, aggregateFunc string) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(resourceName, aggregateFunc)
+// ReadingsAggregationByResourceName provides a mock function with given fields: resourceName, aggregateFunc, offset, limit
+func (_m *DBClient) ReadingsAggregationByResourceName(resourceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(resourceName, aggregateFunc, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByResourceName")
@@ -992,19 +992,19 @@ func (_m *DBClient) ReadingsAggregationByResourceName(resourceName string, aggre
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(resourceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(resourceName, aggregateFunc, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) []models.Reading); ok {
-		r0 = rf(resourceName, aggregateFunc)
+	if rf, ok := ret.Get(0).(func(string, string, int, int) []models.Reading); ok {
+		r0 = rf(resourceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) errors.EdgeX); ok {
-		r1 = rf(resourceName, aggregateFunc)
+	if rf, ok := ret.Get(1).(func(string, string, int, int) errors.EdgeX); ok {
+		r1 = rf(resourceName, aggregateFunc, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
@@ -1014,9 +1014,9 @@ func (_m *DBClient) ReadingsAggregationByResourceName(resourceName string, aggre
 	return r0, r1
 }
 
-// ReadingsAggregationByResourceNameAndTimeRange provides a mock function with given fields: resourceName, aggregateFun, start, end
-func (_m *DBClient) ReadingsAggregationByResourceNameAndTimeRange(resourceName string, aggregateFun string, start int64, end int64) ([]models.Reading, errors.EdgeX) {
-	ret := _m.Called(resourceName, aggregateFun, start, end)
+// ReadingsAggregationByResourceNameAndTimeRange provides a mock function with given fields: resourceName, aggregateFun, start, end, offset, limit
+func (_m *DBClient) ReadingsAggregationByResourceNameAndTimeRange(resourceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
+	ret := _m.Called(resourceName, aggregateFun, start, end, offset, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReadingsAggregationByResourceNameAndTimeRange")
@@ -1024,19 +1024,19 @@ func (_m *DBClient) ReadingsAggregationByResourceNameAndTimeRange(resourceName s
 
 	var r0 []models.Reading
 	var r1 errors.EdgeX
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64) ([]models.Reading, errors.EdgeX)); ok {
-		return rf(resourceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) ([]models.Reading, errors.EdgeX)); ok {
+		return rf(resourceName, aggregateFun, start, end, offset, limit)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64) []models.Reading); ok {
-		r0 = rf(resourceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(0).(func(string, string, int64, int64, int, int) []models.Reading); ok {
+		r0 = rf(resourceName, aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.Reading)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, int64, int64) errors.EdgeX); ok {
-		r1 = rf(resourceName, aggregateFun, start, end)
+	if rf, ok := ret.Get(1).(func(string, string, int64, int64, int, int) errors.EdgeX); ok {
+		r1 = rf(resourceName, aggregateFun, start, end, offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)

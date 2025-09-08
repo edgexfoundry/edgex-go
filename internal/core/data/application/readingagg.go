@@ -14,29 +14,31 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
+
+	"github.com/spf13/cast"
 )
 
-func AllAggregateReadings(aggFunc string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+func AllAggregateReadings(aggFunc string, dic *di.Container, params query.Parameters) (readings []dtos.BaseReading, err errors.EdgeX) {
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.AllReadingsAggregation(aggFunc)
+		return dbClient.AllReadingsAggregation(aggFunc, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
 
 func AllAggregateReadingsByTimeRange(aggFunc string, params query.Parameters, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.AllReadingsAggregationByTimeRange(aggFunc, params.Start, params.End)
+		return dbClient.AllReadingsAggregationByTimeRange(aggFunc, params.Start, params.End, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
 
-func AggregateReadingsByResourceName(resourceName string, aggFunc string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+func AggregateReadingsByResourceName(resourceName string, aggFunc string, dic *di.Container, params query.Parameters) (readings []dtos.BaseReading, err errors.EdgeX) {
 	if resourceName == "" {
 		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "resource name is empty", nil)
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByResourceName(resourceName, aggFunc)
+		return dbClient.ReadingsAggregationByResourceName(resourceName, aggFunc, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
@@ -47,18 +49,18 @@ func AggregateReadingsByResourceNameAndTimeRange(resourceName string, aggFunc st
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByResourceNameAndTimeRange(resourceName, aggFunc, params.Start, params.End)
+		return dbClient.ReadingsAggregationByResourceNameAndTimeRange(resourceName, aggFunc, params.Start, params.End, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
 
-func AggregateReadingsByDeviceName(deviceName string, aggFunc string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+func AggregateReadingsByDeviceName(deviceName string, aggFunc string, dic *di.Container, params query.Parameters) (readings []dtos.BaseReading, err errors.EdgeX) {
 	if deviceName == "" {
 		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByDeviceName(deviceName, aggFunc)
+		return dbClient.ReadingsAggregationByDeviceName(deviceName, aggFunc, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
@@ -69,12 +71,12 @@ func AggregateReadingsByDeviceNameAndTimeRange(deviceName string, aggFunc string
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByDeviceNameAndTimeRange(deviceName, aggFunc, params.Start, params.End)
+		return dbClient.ReadingsAggregationByDeviceNameAndTimeRange(deviceName, aggFunc, params.Start, params.End, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
 
-func AggregateReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, aggFunc string, dic *di.Container) (readings []dtos.BaseReading, err errors.EdgeX) {
+func AggregateReadingsByDeviceNameAndResourceName(deviceName string, resourceName string, aggFunc string, dic *di.Container, params query.Parameters) (readings []dtos.BaseReading, err errors.EdgeX) {
 	if deviceName == "" {
 		return readings, errors.NewCommonEdgeX(errors.KindContractInvalid, "device name is empty", nil)
 	}
@@ -83,7 +85,7 @@ func AggregateReadingsByDeviceNameAndResourceName(deviceName string, resourceNam
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByDeviceNameAndResourceName(deviceName, resourceName, aggFunc)
+		return dbClient.ReadingsAggregationByDeviceNameAndResourceName(deviceName, resourceName, aggFunc, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
@@ -97,7 +99,7 @@ func AggregateReadingsByDeviceNameAndResourceNameAndTimeRange(deviceName string,
 	}
 
 	aggDBFunc := func(dbClient interfaces.DBClient) ([]models.Reading, errors.EdgeX) {
-		return dbClient.ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, aggFunc, params.Start, params.End)
+		return dbClient.ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName, resourceName, aggFunc, params.Start, params.End, params.Offset, params.Limit)
 	}
 	return getReadingAggregation(dic, aggDBFunc)
 }
@@ -111,5 +113,23 @@ func getReadingAggregation(dic *di.Container, aggReadingDBFunc func(interfaces.D
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
 	readings, err = convertReadingModelsToDTOs(readingModels)
-	return readings, err
+	if err != nil {
+		return readings, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	convertAggregateReadingsToNumeric(readings)
+	return readings, nil
+}
+
+// convertAggregateReadingsToNumeric iterates the BaseReading DTOs and normalizes their Value field into a numeric representation
+func convertAggregateReadingsToNumeric(readings []dtos.BaseReading) {
+	for i := range readings {
+		// Skip the reading with Value field is empty
+		if len(readings[i].Value) == 0 {
+			continue
+		}
+
+		readingPtr := &readings[i]
+		readingPtr.NumericReading.NumericValue = cast.ToFloat64(readingPtr.Value)
+	}
 }
