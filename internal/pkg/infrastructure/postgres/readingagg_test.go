@@ -145,15 +145,15 @@ func TestParseAggNumericReading(t *testing.T) {
 			reading := contractModels.NumericReading{
 				BaseReading: contractModels.BaseReading{ValueType: tt.valueType},
 			}
-			result, err := parseAggNumericReading(&reading, tt.aggregateFunc, tt.numericValue)
+			err := parseAggNumericReading(&reading, tt.aggregateFunc, tt.numericValue)
 
 			if tt.expectError {
 				assert.Error(t, err, "Expected an error but got none")
 			} else {
 				assert.NoError(t, err, "Expected no error but got one: %v", err)
 				// Use reflect.TypeOf to compare the type of the returned value
-				assert.Equal(t, reflect.TypeOf(tt.expectedValue), reflect.TypeOf(result), "Returned value has unexpected type")
-				assert.Equal(t, tt.expectedValue, result, "Returned value is not as expected")
+				assert.Equal(t, reflect.TypeOf(tt.expectedValue), reflect.TypeOf(reading.NumericValue), "Returned value has unexpected type")
+				assert.Equal(t, tt.expectedValue, reading.NumericValue, "Returned value is not as expected")
 				assert.Equal(t, tt.expectedValueType, reading.ValueType, "Returned value type is not as expected")
 			}
 		})

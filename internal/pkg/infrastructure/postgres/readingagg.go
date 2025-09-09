@@ -191,11 +191,10 @@ func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 		}
 		if readingDBModel.NumericValue != nil {
 			// reading type is NumericReading
-			val, err := parseAggNumericReading(&reading, aggregateFunc, readingDBModel.NumericValue)
+			err = parseAggNumericReading(&reading, aggregateFunc, readingDBModel.NumericValue)
 			if err != nil {
 				return nil, pgClient.WrapDBError("read numeric value", err)
 			}
-			reading.NumericValue = val
 		}
 
 		return reading, nil
@@ -210,46 +209,46 @@ func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 
 // parseAggNumericReading converts the aggregate reading from numeric data type in PostgreSQL to the data type in Go
 // based on the reading valueType and the quried aggregate function
-func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string, numericValue *pgtype.Numeric) (any, errors.EdgeX) {
+func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string, numericValue *pgtype.Numeric) errors.EdgeX {
 	valueType := reading.ValueType
 
 	switch aggregateFunc {
 	case common.CountFunc:
 		reading.ValueType = common.ValueTypeUint64
 		// Always convert to Uint64 for COUNT function
-		return numericValue.Int.Uint64(), nil
+		reading.NumericValue = numericValue.Int.Uint64()
 	case common.AvgFunc:
 		// Always convert to Float64 for AVG function
 		val, err := numericValue.Float64Value()
 		if err != nil {
-			return nil, pgClient.WrapDBError("failed to parse numeric data type to float64", err)
+			return pgClient.WrapDBError("failed to parse numeric data type to float64", err)
 		}
 		reading.ValueType = common.ValueTypeFloat64
-		return val.Float64, nil
+		reading.NumericValue = val.Float64
 	case common.SumFunc, common.MinFunc, common.MaxFunc:
 		if valueType == common.ValueTypeFloat64 || valueType == common.ValueTypeFloat32 {
 			// Convert to Float64 for float types
 			val, err := numericValue.Float64Value()
 			if err != nil {
-				return nil, pgClient.WrapDBError("read the float value", err)
+				return pgClient.WrapDBError("read the float value", err)
 			}
 			reading.ValueType = common.ValueTypeFloat64
-			return val.Float64, nil
-		}
-		if valueType == common.ValueTypeInt8 || valueType == common.ValueTypeInt16 ||
+			reading.NumericValue = val.Float64
+		} else if valueType == common.ValueTypeInt8 || valueType == common.ValueTypeInt16 ||
 			valueType == common.ValueTypeInt32 || valueType == common.ValueTypeInt64 {
 			reading.ValueType = common.ValueTypeInt64
 			// Convert to Int64 for int types
-			return numericValue.Int.Int64(), nil
-		}
-		if valueType == common.ValueTypeUint8 || valueType == common.ValueTypeUint16 ||
+			reading.NumericValue = numericValue.Int.Int64()
+		} else if valueType == common.ValueTypeUint8 || valueType == common.ValueTypeUint16 ||
 			valueType == common.ValueTypeUint32 || valueType == common.ValueTypeUint64 {
 			reading.ValueType = common.ValueTypeUint64
 			// Convert to Uint64 for uint types
-			return numericValue.Int.Uint64(), nil
+			reading.NumericValue = numericValue.Int.Uint64()
+		} else {
+			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unsupported valueType '%s' for aggregate function '%s'", valueType, aggregateFunc), nil)
 		}
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unsupported valueType '%s' for aggregate function '%s'", valueType, aggregateFunc), nil)
 	default:
-		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected aggregateFunc type '%s", aggregateFunc), nil)
+		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected aggregateFunc type '%s", aggregateFunc), nil)
 	}
+	return nil
 }
