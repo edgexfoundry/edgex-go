@@ -9,10 +9,16 @@ import (
 	"context"
 	"fmt"
 
+	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
+
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // AllReadingsAggregation queries aggregated reading values using the specified SQL aggregation function.
@@ -20,7 +26,13 @@ func (c *Client) AllReadingsAggregation(aggregateFunc string, offset, limit int)
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(
+		context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit},
+		aggregateFunc,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError, "failed to get the aggregated readings", err)
 	}
@@ -32,8 +44,13 @@ func (c *Client) AllReadingsAggregationByTimeRange(aggregateFun string, start, e
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(
+		context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFun,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to get the aggregated readings within the time range - start: %d, end: %d", start, end), err)
@@ -46,8 +63,13 @@ func (c *Client) ReadingsAggregationByResourceName(resourceName string, aggregat
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(
+		context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFunc,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by resource name '%s'", resourceName), err)
@@ -60,8 +82,12 @@ func (c *Client) ReadingsAggregationByResourceNameAndTimeRange(resourceName stri
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{resourceNameCol: resourceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{resourceNameCol: resourceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFun,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by resource name '%s'", resourceName), err)
@@ -74,7 +100,13 @@ func (c *Client) ReadingsAggregationByDeviceName(deviceName string, aggregateFun
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, deviceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(
+		context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{deviceNameCol: deviceName, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFunc,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device name '%s'", deviceName), err)
@@ -87,8 +119,12 @@ func (c *Client) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, 
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true, deviceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{deviceNameCol: deviceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{deviceNameCol: deviceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFun,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device name '%s'", deviceName), err)
@@ -101,8 +137,12 @@ func (c *Client) ReadingsAggregationByDeviceNameAndResourceName(deviceName strin
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, deviceNameCol, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFunc,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device '%s' and resource '%s'", deviceName, resourceName), err)
@@ -115,11 +155,94 @@ func (c *Client) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(devi
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, true, deviceNameCol, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
-	readings, err := queryReadings(context.Background(), c.ConnPool, sqlStatement,
-		pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit})
+	readings, err := queryAggReadings(
+		context.Background(),
+		c.ConnPool,
+		sqlStatement,
+		pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName, startTimeCondition: start, endTimeCondition: end, offsetCondition: offset, limitCondition: validLimit},
+		aggregateFunc,
+	)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindDatabaseError,
 			fmt.Sprintf("failed to query readings by device '%s' and resource '%s'", deviceName, resourceName), err)
 	}
 	return readings, nil
+}
+
+// queryAggReadings queries the aggregate readings data rows with given sql statement and passed args,
+// converts the rows to map and unmarshal the data rows to the Reading model slice
+func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args pgx.NamedArgs, aggregateFunc string) ([]model.Reading, errors.EdgeX) {
+	rows, err := connPool.Query(ctx, sql, args)
+	if err != nil {
+		return nil, pgClient.WrapDBError("query failed", err)
+	}
+
+	readings, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (model.Reading, error) {
+		readingDBModel, err := pgx.RowToStructByNameLax[dbModels.Reading](row)
+		if err != nil {
+			return nil, pgClient.WrapDBError("failed to convert row to map", err)
+		}
+
+		// convert the BaseReading fields to BaseReading struct defined in contract
+		baseReading := readingDBModel.GetBaseReading()
+
+		reading := model.NumericReading{
+			BaseReading: baseReading,
+		}
+		if readingDBModel.NumericValue != nil {
+			// reading type is NumericReading
+			val, err := parseAggNumericReading(readingDBModel.ValueType, aggregateFunc, readingDBModel.NumericValue)
+			if err != nil {
+				return nil, pgClient.WrapDBError("read numeric value", err)
+			}
+			reading.NumericValue = val
+		}
+
+		return reading, nil
+	})
+
+	if err != nil {
+		return nil, errors.NewCommonEdgeXWrapper(err)
+	}
+
+	return readings, nil
+}
+
+// parseAggNumericReading converts the aggregate reading from numeric data type in PostgreSQL to the data type in Go
+// based on the reading valueType and the quried aggregate function
+func parseAggNumericReading(valueType string, aggregateFunc string, numericValue *pgtype.Numeric) (any, errors.EdgeX) {
+	switch aggregateFunc {
+	case common.CountFunc:
+		// Always convert to Uint64 for COUNT function
+		return numericValue.Int.Uint64(), nil
+	case common.AvgFunc:
+		// Always convert to Float64 for AVG function
+		val, err := numericValue.Float64Value()
+		if err != nil {
+			return nil, pgClient.WrapDBError("failed to parse numeric data type to float64", err)
+		}
+		return val.Float64, nil
+	case common.SumFunc, common.MinFunc, common.MaxFunc:
+		if valueType == common.ValueTypeFloat64 || valueType == common.ValueTypeFloat32 {
+			// Convert to Float64 for float types
+			val, err := numericValue.Float64Value()
+			if err != nil {
+				return nil, pgClient.WrapDBError("read the float value", err)
+			}
+			return val.Float64, nil
+		}
+		if valueType == common.ValueTypeInt8 || valueType == common.ValueTypeInt16 ||
+			valueType == common.ValueTypeInt32 || valueType == common.ValueTypeInt64 {
+			// Convert to Int64 for int types
+			return numericValue.Int.Int64(), nil
+		}
+		if valueType == common.ValueTypeUint8 || valueType == common.ValueTypeUint16 ||
+			valueType == common.ValueTypeUint32 || valueType == common.ValueTypeUint64 {
+			// Convert to Uint64 for uint types
+			return numericValue.Int.Uint64(), nil
+		}
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unsupported valueType '%s' for aggregate function '%s'", valueType, aggregateFunc), nil)
+	default:
+		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected aggregateFunc type '%s", aggregateFunc), nil)
+	}
 }

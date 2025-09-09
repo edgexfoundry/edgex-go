@@ -14,8 +14,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
-
-	"github.com/spf13/cast"
 )
 
 func AllAggregateReadings(aggFunc string, dic *di.Container, params query.Parameters) (readings []dtos.BaseReading, err errors.EdgeX) {
@@ -112,24 +110,6 @@ func getReadingAggregation(dic *di.Container, aggReadingDBFunc func(interfaces.D
 	if err != nil {
 		return readings, errors.NewCommonEdgeXWrapper(err)
 	}
-	readings, err = convertReadingModelsToDTOs(readingModels)
-	if err != nil {
-		return readings, errors.NewCommonEdgeXWrapper(err)
-	}
 
-	convertAggregateReadingsToNumeric(readings)
-	return readings, nil
-}
-
-// convertAggregateReadingsToNumeric iterates the BaseReading DTOs and normalizes their Value field into a numeric representation
-func convertAggregateReadingsToNumeric(readings []dtos.BaseReading) {
-	for i := range readings {
-		// Skip the reading with Value field is empty
-		if len(readings[i].Value) == 0 {
-			continue
-		}
-
-		readingPtr := &readings[i]
-		readingPtr.NumericReading.NumericValue = cast.ToFloat64(readingPtr.Value)
-	}
+	return convertReadingModelsToDTOs(readingModels)
 }

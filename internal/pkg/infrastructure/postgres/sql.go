@@ -124,7 +124,7 @@ func sqlQueryAllReadingAndDescWithCondsAndPag(descCol string, columns ...string)
 // Results are grouped by deviceName, resourceName, profileName, and valueType, and ordered by deviceName in ascending order and pagination.
 func sqlQueryAggregateReadingWithCondsAndPag(aggFunc string, hasTimeRange bool, columns ...string) string {
 	statement := fmt.Sprintf(
-		"SELECT %s(%s) AS value, %s FROM %s JOIN %s ON reading.device_info_id = device_info.id WHERE %s = false",
+		"SELECT %s(%s) AS numeric_value, %s FROM %s JOIN %s ON reading.device_info_id = device_info.id WHERE %s = false",
 		aggFunc, aggReadingColumn, aggReadingGroupByColumns, readingTableName, deviceInfoTableName, markDeletedCol,
 	)
 

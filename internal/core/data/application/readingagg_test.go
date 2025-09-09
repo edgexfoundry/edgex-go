@@ -21,7 +21,6 @@ import (
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
-	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,41 +32,41 @@ var (
 	invalidFunc = "invalid"
 	validStart  = int64(1755244649710610498)
 	validEnd    = int64(1765244649710610498)
-	aggReading  = models.SimpleReading{
+	aggReading  = models.NumericReading{
 		BaseReading: models.BaseReading{
 			DeviceName:   device1,
 			ResourceName: resource1,
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: "9",
+		NumericValue: 9,
 	}
-	aggReading2 = models.SimpleReading{
+	aggReading2 = models.NumericReading{
 		BaseReading: models.BaseReading{
 			DeviceName:   device2,
 			ResourceName: resource2,
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: "5",
+		NumericValue: 5,
 	}
-	aggReading3 = models.SimpleReading{
+	aggReading3 = models.NumericReading{
 		BaseReading: models.BaseReading{
 			DeviceName:   device2,
 			ResourceName: resource1,
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeInt8,
 		},
-		Value: "2",
+		NumericValue: 2,
 	}
-	aggReading4 = models.SimpleReading{
+	aggReading4 = models.NumericReading{
 		BaseReading: models.BaseReading{
 			DeviceName:   device1,
 			ResourceName: resource2,
 			ProfileName:  "TempProfile",
 			ValueType:    common.ValueTypeUint16,
 		},
-		Value: "7",
+		NumericValue: 7,
 	}
 )
 
@@ -413,7 +412,6 @@ func TestGetReadingAggregation(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange", device1, resource1, "MIN", validStart, validEnd, 0, -1).Return([]models.Reading{aggReading}, nil)
 	expectedDTO := dtos.FromReadingModelToDTO(aggReading)
-	expectedDTO.NumericValue = cast.ToFloat64(aggReading.Value)
 
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
@@ -428,11 +426,4 @@ func TestGetReadingAggregation(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(result), "Result count not as expected")
 	assert.Equal(t, expectedDTO, result[0], "Reading aggregated readings not as expected")
-}
-
-func TestProcessAggregateReadings(t *testing.T) {
-	originReadings := []dtos.BaseReading{{SimpleReading: dtos.SimpleReading{Value: "1.23456789"}}, {SimpleReading: dtos.SimpleReading{Value: "50000"}}}
-	convertAggregateReadingsToNumeric(originReadings)
-	assert.Equal(t, 1.23456789, originReadings[0].NumericValue)
-	assert.Equal(t, float64(50000), originReadings[1].NumericValue)
 }
