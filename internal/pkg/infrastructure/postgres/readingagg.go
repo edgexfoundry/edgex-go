@@ -14,7 +14,7 @@ import (
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
-	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
+	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -22,7 +22,7 @@ import (
 )
 
 // AllReadingsAggregation queries aggregated reading values using the specified SQL aggregation function.
-func (c *Client) AllReadingsAggregation(aggregateFunc string, offset, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) AllReadingsAggregation(aggregateFunc string, offset, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -40,7 +40,7 @@ func (c *Client) AllReadingsAggregation(aggregateFunc string, offset, limit int)
 }
 
 // AllReadingsAggregationByTimeRange queries aggregated reading values within the given time range using the specified SQL aggregation function.
-func (c *Client) AllReadingsAggregationByTimeRange(aggregateFun string, start, end int64, offset, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) AllReadingsAggregationByTimeRange(aggregateFun string, start, end int64, offset, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -59,7 +59,7 @@ func (c *Client) AllReadingsAggregationByTimeRange(aggregateFun string, start, e
 }
 
 // ReadingsAggregationByResourceName queries aggregated reading values by resource name using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByResourceName(resourceName string, aggregateFunc string, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByResourceName(resourceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -78,7 +78,7 @@ func (c *Client) ReadingsAggregationByResourceName(resourceName string, aggregat
 }
 
 // ReadingsAggregationByResourceNameAndTimeRange queries aggregated reading values by resource name within the given time range using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByResourceNameAndTimeRange(resourceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByResourceNameAndTimeRange(resourceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -96,7 +96,7 @@ func (c *Client) ReadingsAggregationByResourceNameAndTimeRange(resourceName stri
 }
 
 // ReadingsAggregationByDeviceName queries aggregated reading values by device name using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByDeviceName(deviceName string, aggregateFunc string, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByDeviceName(deviceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, deviceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -115,7 +115,7 @@ func (c *Client) ReadingsAggregationByDeviceName(deviceName string, aggregateFun
 }
 
 // ReadingsAggregationByDeviceNameAndTimeRange queries aggregated reading values by device name within the given time range using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, aggregateFun string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFun, true, deviceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -133,7 +133,7 @@ func (c *Client) ReadingsAggregationByDeviceNameAndTimeRange(deviceName string, 
 }
 
 // ReadingsAggregationByDeviceNameAndResourceName queries aggregated reading values by device name & resource name using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByDeviceNameAndResourceName(deviceName string, resourceName string, aggregateFunc string, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByDeviceNameAndResourceName(deviceName string, resourceName string, aggregateFunc string, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, false, deviceNameCol, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -151,7 +151,7 @@ func (c *Client) ReadingsAggregationByDeviceNameAndResourceName(deviceName strin
 }
 
 // ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange queries aggregated reading values by device name & resource name within the given time range using the specified SQL aggregation function.
-func (c *Client) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, aggregateFunc string, start int64, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX) {
+func (c *Client) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, aggregateFunc string, start int64, end int64, offset int, limit int) ([]models.Reading, errors.EdgeX) {
 	sqlStatement := sqlQueryAggregateReadingWithCondsAndPag(aggregateFunc, true, deviceNameCol, resourceNameCol)
 	offset, validLimit := getValidOffsetAndLimit(offset, limit)
 
@@ -171,13 +171,13 @@ func (c *Client) ReadingsAggregationByDeviceNameAndResourceNameAndTimeRange(devi
 
 // queryAggReadings queries the aggregate readings data rows with given sql statement and passed args,
 // converts the rows to map and unmarshal the data rows to the Reading model slice
-func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args pgx.NamedArgs, aggregateFunc string) ([]model.Reading, errors.EdgeX) {
+func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, args pgx.NamedArgs, aggregateFunc string) ([]models.Reading, errors.EdgeX) {
 	rows, err := connPool.Query(ctx, sql, args)
 	if err != nil {
 		return nil, pgClient.WrapDBError("query failed", err)
 	}
 
-	readings, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (model.Reading, error) {
+	readings, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.Reading, error) {
 		readingDBModel, err := pgx.RowToStructByNameLax[dbModels.Reading](row)
 		if err != nil {
 			return nil, pgClient.WrapDBError("failed to convert row to map", err)
@@ -186,12 +186,12 @@ func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 		// convert the BaseReading fields to BaseReading struct defined in contract
 		baseReading := readingDBModel.GetBaseReading()
 
-		reading := model.NumericReading{
+		reading := models.NumericReading{
 			BaseReading: baseReading,
 		}
 		if readingDBModel.NumericValue != nil {
 			// reading type is NumericReading
-			val, err := parseAggNumericReading(readingDBModel.ValueType, aggregateFunc, readingDBModel.NumericValue)
+			val, err := parseAggNumericReading(&reading, aggregateFunc, readingDBModel.NumericValue)
 			if err != nil {
 				return nil, pgClient.WrapDBError("read numeric value", err)
 			}
@@ -210,9 +210,12 @@ func queryAggReadings(ctx context.Context, connPool *pgxpool.Pool, sql string, a
 
 // parseAggNumericReading converts the aggregate reading from numeric data type in PostgreSQL to the data type in Go
 // based on the reading valueType and the quried aggregate function
-func parseAggNumericReading(valueType string, aggregateFunc string, numericValue *pgtype.Numeric) (any, errors.EdgeX) {
+func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string, numericValue *pgtype.Numeric) (any, errors.EdgeX) {
+	valueType := reading.ValueType
+
 	switch aggregateFunc {
 	case common.CountFunc:
+		reading.ValueType = common.ValueTypeUint64
 		// Always convert to Uint64 for COUNT function
 		return numericValue.Int.Uint64(), nil
 	case common.AvgFunc:
@@ -221,6 +224,7 @@ func parseAggNumericReading(valueType string, aggregateFunc string, numericValue
 		if err != nil {
 			return nil, pgClient.WrapDBError("failed to parse numeric data type to float64", err)
 		}
+		reading.ValueType = common.ValueTypeFloat64
 		return val.Float64, nil
 	case common.SumFunc, common.MinFunc, common.MaxFunc:
 		if valueType == common.ValueTypeFloat64 || valueType == common.ValueTypeFloat32 {
@@ -229,15 +233,18 @@ func parseAggNumericReading(valueType string, aggregateFunc string, numericValue
 			if err != nil {
 				return nil, pgClient.WrapDBError("read the float value", err)
 			}
+			reading.ValueType = common.ValueTypeFloat64
 			return val.Float64, nil
 		}
 		if valueType == common.ValueTypeInt8 || valueType == common.ValueTypeInt16 ||
 			valueType == common.ValueTypeInt32 || valueType == common.ValueTypeInt64 {
+			reading.ValueType = common.ValueTypeInt64
 			// Convert to Int64 for int types
 			return numericValue.Int.Int64(), nil
 		}
 		if valueType == common.ValueTypeUint8 || valueType == common.ValueTypeUint16 ||
 			valueType == common.ValueTypeUint32 || valueType == common.ValueTypeUint64 {
+			reading.ValueType = common.ValueTypeUint64
 			// Convert to Uint64 for uint types
 			return numericValue.Int.Uint64(), nil
 		}
