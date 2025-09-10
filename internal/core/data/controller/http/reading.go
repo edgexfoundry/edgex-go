@@ -69,15 +69,6 @@ func (rc *ReadingController) AllReadings(c echo.Context) error {
 	ctx := r.Context()
 	config := dataContainer.ConfigurationFrom(rc.dic.Get)
 
-	aggFuncParam := c.QueryParam(common.AggregateFunc)
-	if aggFuncParam != "" {
-		// Specify the app layer function to be invoked to get the aggregated reading values
-		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
-			return application.AllAggregateReadings(aggFunc, rc.dic)
-		}
-		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
-	}
-
 	// parse URL query string for offset, and limit, and labels
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
@@ -86,6 +77,15 @@ func (rc *ReadingController) AllReadings(c echo.Context) error {
 	parms := query.Parameters{
 		Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AllAggregateReadings(aggFunc, rc.dic, parms)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	readings, totalCount, err := application.AllReadings(parms, rc.dic)
 	if err != nil {
@@ -141,15 +141,6 @@ func (rc *ReadingController) ReadingsByResourceName(c echo.Context) error {
 
 	resourceName := c.Param(common.ResourceName)
 
-	aggFuncParam := c.QueryParam(common.AggregateFunc)
-	if aggFuncParam != "" {
-		// Specify the app layer function to be invoked to get the aggregated reading values
-		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
-			return application.AggregateReadingsByResourceName(resourceName, aggFunc, rc.dic)
-		}
-		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
-	}
-
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
@@ -158,6 +149,15 @@ func (rc *ReadingController) ReadingsByResourceName(c echo.Context) error {
 	parms := query.Parameters{
 		Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByResourceName(resourceName, aggFunc, rc.dic, parms)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	readings, totalCount, err := application.ReadingsByResourceName(parms, resourceName, rc.dic)
 	if err != nil {
@@ -178,15 +178,6 @@ func (rc *ReadingController) ReadingsByDeviceName(c echo.Context) error {
 
 	name := c.Param(common.Name)
 
-	aggFuncParam := c.QueryParam(common.AggregateFunc)
-	if aggFuncParam != "" {
-		// Specify the app layer function to be invoked to get the aggregated reading values
-		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
-			return application.AggregateReadingsByDeviceName(name, aggFunc, rc.dic)
-		}
-		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
-	}
-
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
@@ -195,6 +186,15 @@ func (rc *ReadingController) ReadingsByDeviceName(c echo.Context) error {
 	parms := query.Parameters{
 		Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceName(name, aggFunc, rc.dic, parms)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	readings, totalCount, err := application.ReadingsByDeviceName(parms, name, rc.dic)
 	if err != nil {
@@ -275,15 +275,6 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(c echo.Context)
 	deviceName := c.Param(common.Name)
 	resourceName := c.Param(common.ResourceName)
 
-	aggFuncParam := c.QueryParam(common.AggregateFunc)
-	if aggFuncParam != "" {
-		// Specify the app layer function to be invoked to get the aggregated reading values
-		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
-			return application.AggregateReadingsByDeviceNameAndResourceName(deviceName, resourceName, aggFunc, rc.dic)
-		}
-		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
-	}
-
 	// parse URL query string for offset, limit
 	offset, limit, _, err := utils.ParseGetAllObjectsRequestQueryString(c, minOffset, math.MaxInt32, -1, config.Service.MaxResultCount)
 	if err != nil {
@@ -292,6 +283,15 @@ func (rc *ReadingController) ReadingsByDeviceNameAndResourceName(c echo.Context)
 	parms := query.Parameters{
 		Offset: offset, Limit: limit,
 		Numeric: cast.ToBool(c.QueryParam(common.Numeric))}
+
+	aggFuncParam := c.QueryParam(common.AggregateFunc)
+	if aggFuncParam != "" {
+		// Specify the app layer function to be invoked to get the aggregated reading values
+		aggReadingsFunc := func(aggFunc string) ([]dtos.BaseReading, errors.EdgeX) {
+			return application.AggregateReadingsByDeviceNameAndResourceName(deviceName, resourceName, aggFunc, rc.dic, parms)
+		}
+		return handleReadingAggregation(w, ctx, lc, aggFuncParam, aggReadingsFunc)
+	}
 
 	readings, totalCount, err := application.ReadingsByDeviceNameAndResourceName(deviceName, resourceName, parms, rc.dic)
 	if err != nil {
