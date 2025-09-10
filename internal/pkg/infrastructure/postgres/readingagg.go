@@ -226,7 +226,8 @@ func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string
 		reading.ValueType = common.ValueTypeFloat64
 		reading.NumericValue = val.Float64
 	case common.SumFunc, common.MinFunc, common.MaxFunc:
-		if valueType == common.ValueTypeFloat64 || valueType == common.ValueTypeFloat32 {
+		switch valueType {
+		case common.ValueTypeFloat64, common.ValueTypeFloat32:
 			// Convert to Float64 for float types
 			val, err := numericValue.Float64Value()
 			if err != nil {
@@ -234,17 +235,15 @@ func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string
 			}
 			reading.ValueType = common.ValueTypeFloat64
 			reading.NumericValue = val.Float64
-		} else if valueType == common.ValueTypeInt8 || valueType == common.ValueTypeInt16 ||
-			valueType == common.ValueTypeInt32 || valueType == common.ValueTypeInt64 {
+		case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
 			reading.ValueType = common.ValueTypeInt64
 			// Convert to Int64 for int types
 			reading.NumericValue = numericValue.Int.Int64()
-		} else if valueType == common.ValueTypeUint8 || valueType == common.ValueTypeUint16 ||
-			valueType == common.ValueTypeUint32 || valueType == common.ValueTypeUint64 {
+		case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
 			reading.ValueType = common.ValueTypeUint64
 			// Convert to Uint64 for uint types
 			reading.NumericValue = numericValue.Int.Uint64()
-		} else {
+		default:
 			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unsupported valueType '%s' for aggregate function '%s'", valueType, aggregateFunc), nil)
 		}
 	default:
