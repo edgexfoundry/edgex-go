@@ -5,9 +5,9 @@ go 1.23.7
 require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.35
-	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.17
-	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.15
+	github.com/edgexfoundry/go-mod-bootstrap/v4 v4.1.0-dev.36
+	github.com/edgexfoundry/go-mod-core-contracts/v4 v4.1.0-dev.18
+	github.com/edgexfoundry/go-mod-messaging/v4 v4.1.0-dev.17
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.4
 	github.com/fxamacker/cbor/v2 v2.9.0
 	github.com/go-co-op/gocron/v2 v2.16.4
@@ -31,7 +31,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.13 // indirect
+	github.com/edgexfoundry/go-mod-configuration/v4 v4.1.0-dev.15 // indirect
 	github.com/edgexfoundry/go-mod-registry/v4 v4.1.0-dev.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -84,7 +84,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/muhlemmer/gu v0.3.1 // indirect
-	github.com/nats-io/nats.go v1.44.0 // indirect
+	github.com/nats-io/nats.go v1.45.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
