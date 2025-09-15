@@ -319,9 +319,17 @@ func numericReadingVal(valueType string, numericValue *pgtype.Numeric) (any, err
 		}
 		return val.Float64, nil
 	case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
-		return numericValue.Int.Uint64(), nil
+		parsedUint, err := numericToUint64(numericValue)
+		if err != nil {
+			return nil, pgClient.WrapDBError("failed to parse numeric reading value to uint", err)
+		}
+		return parsedUint, nil
 	case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
-		return numericValue.Int.Int64(), nil
+		pgIntNum, err := numericValue.Int64Value()
+		if err != nil || !pgIntNum.Valid {
+			return nil, pgClient.WrapDBError("failed to parse numeric value to int64", err)
+		}
+		return pgIntNum.Int64, nil
 	default:
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected value type '%s", valueType), nil)
 	}

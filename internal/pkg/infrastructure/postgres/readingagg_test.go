@@ -6,6 +6,7 @@
 package postgres
 
 import (
+	"math/big"
 	"reflect"
 	"strconv"
 	"testing"
@@ -155,6 +156,104 @@ func TestParseAggNumericReading(t *testing.T) {
 				assert.Equal(t, reflect.TypeOf(tt.expectedValue), reflect.TypeOf(reading.NumericValue), "Returned value has unexpected type")
 				assert.Equal(t, tt.expectedValue, reading.NumericValue, "Returned value is not as expected")
 				assert.Equal(t, tt.expectedValueType, reading.ValueType, "Returned value type is not as expected")
+			}
+		})
+	}
+}
+
+func TestNumericToUint64(t *testing.T) {
+	tests := []struct {
+		name           string
+		numeric        *pgtype.Numeric
+		expectedResult uint64
+		expectedErr    bool
+	}{
+		{
+			name: "Valid - simple integer",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(123),
+				Exp:   0,
+				Valid: true,
+			},
+			expectedResult: 123,
+			expectedErr:    false,
+		},
+		{
+			name: "Valid - positive exponent (scale up)",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(123),
+				Exp:   3, // 123 * 10^3 = 123000
+				Valid: true,
+			},
+			expectedResult: 123000,
+			expectedErr:    false,
+		},
+		{
+			name: "Valid - negative exponent with exact division (no fractional part)",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(1234500),
+				Exp:   -2, // 1234500 / 10^2 = 12345 (exact)
+				Valid: true,
+			},
+			expectedResult: 12345,
+			expectedErr:    false,
+		},
+		{
+			name: "Invalid - negative exponent with fractional part",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(12345),
+				Exp:   -2, // 12345 / 100 leaves remainder
+				Valid: true,
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Invalid - not a finite valid value",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(0),
+				Exp:   0,
+				Valid: false,
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Invalid - NaN",
+			numeric: &pgtype.Numeric{
+				Int:   big.NewInt(0),
+				Exp:   0,
+				Valid: true,
+				NaN:   true,
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Invalid - Infinity",
+			numeric: &pgtype.Numeric{
+				Int:              big.NewInt(0),
+				Exp:              0,
+				Valid:            true,
+				InfinityModifier: pgtype.Infinity,
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Valid - uint64 max boundary",
+			numeric: &pgtype.Numeric{
+				Int:   new(big.Int).SetUint64(^uint64(0)), // math.MaxUint64
+				Exp:   0,
+				Valid: true,
+			},
+			expectedResult: ^uint64(0),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := numericToUint64(tt.numeric)
+			if tt.expectedErr {
+				assert.Error(t, err, "Expected an error but result none")
+			} else {
+				assert.Equal(t, tt.expectedResult, result, "Returned value is not as expected")
 			}
 		})
 	}

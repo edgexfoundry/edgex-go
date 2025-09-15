@@ -8,6 +8,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
@@ -216,7 +217,11 @@ func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string
 	case common.CountFunc:
 		reading.ValueType = common.ValueTypeUint64
 		// Always convert to Uint64 for COUNT function
-		reading.NumericValue = numericValue.Int.Uint64()
+		parsedUint, err := numericToUint64(numericValue)
+		if err != nil {
+			return pgClient.WrapDBError("failed to parse aggregate reading numeric value to uint", err)
+		}
+		reading.NumericValue = parsedUint
 	case common.AvgFunc:
 		// Always convert to Float64 for AVG function
 		val, err := numericValue.Float64Value()
@@ -238,11 +243,19 @@ func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string
 		case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
 			reading.ValueType = common.ValueTypeInt64
 			// Convert to Int64 for int types
-			reading.NumericValue = numericValue.Int.Int64()
+			pgIntNum, err := numericValue.Int64Value()
+			if err != nil || !pgIntNum.Valid {
+				return pgClient.WrapDBError("failed to parse aggregate reading numeric value to int64", err)
+			}
+			reading.NumericValue = pgIntNum.Int64
 		case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
 			reading.ValueType = common.ValueTypeUint64
 			// Convert to Uint64 for uint types
-			reading.NumericValue = numericValue.Int.Uint64()
+			parsedUint, err := numericToUint64(numericValue)
+			if err != nil {
+				return pgClient.WrapDBError("failed to parse aggregate reading numeric value to uint", err)
+			}
+			reading.NumericValue = parsedUint
 		default:
 			return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unsupported valueType '%s' for aggregate function '%s'", valueType, aggregateFunc), nil)
 		}
@@ -250,4 +263,26 @@ func parseAggNumericReading(reading *models.NumericReading, aggregateFunc string
 		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("unexpected aggregateFunc type '%s", aggregateFunc), nil)
 	}
 	return nil
+}
+
+// numericToUint64 converts the Numeric postgres data type to Go uint64 type
+func numericToUint64(n *pgtype.Numeric) (uint64, errors.EdgeX) {
+	if !n.Valid || n.NaN || n.InfinityModifier != pgtype.Finite {
+		return 0, errors.NewCommonEdgeX(errors.KindServerError, "numeric value from Postgres is not a finite valid value", nil)
+	}
+
+	// Apply exponent: mantissa * 10^exp
+	val := new(big.Int).Set(n.Int)
+	if n.Exp > 0 {
+		val.Mul(val, new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(n.Exp)), nil))
+	} else if n.Exp < 0 {
+		// If fractional part exists, reject to avoid silent truncation
+		den := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(-n.Exp)), nil)
+		if new(big.Int).Rem(val, den).Sign() != 0 {
+			return 0, errors.NewCommonEdgeX(errors.KindServerError, "numeric value from Postgres has fractional part, cannot convert to uint64", nil)
+		}
+		val.Div(val, den)
+	}
+
+	return val.Uint64(), nil
 }
