@@ -32,11 +32,11 @@ const (
 )
 
 // CoreDataApp encapsulates the Core Data Application functionality
-// TODO: Extend this App usage beyond Events.
 type CoreDataApp struct {
 	lc                       logger.LoggingClient
 	eventsPersistedCounter   gometrics.Counter
 	readingsPersistedCounter gometrics.Counter
+	asyncPurgeEventOnce      sync.Once
 }
 
 // NewCoreDataApp create a new initialized Core Data application

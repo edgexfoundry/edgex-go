@@ -82,6 +82,8 @@ func TestAllReadingsAggregation(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		aggFunc            string
@@ -95,7 +97,7 @@ func TestAllReadingsAggregation(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AllAggregateReadings(testCase.aggFunc, dic, query.Parameters{})
+			result, err := app.AllAggregateReadings(testCase.aggFunc, dic, query.Parameters{})
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -121,6 +123,8 @@ func TestAllAggregateReadingsByTimeRange(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		aggFunc            string
@@ -136,7 +140,7 @@ func TestAllAggregateReadingsByTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AllAggregateReadingsByTimeRange(testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
+			result, err := app.AllAggregateReadingsByTimeRange(testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -162,6 +166,8 @@ func TestAggregateReadingsByResourceName(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		resourceName       string
@@ -177,7 +183,7 @@ func TestAggregateReadingsByResourceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByResourceName(testCase.resourceName, testCase.aggFunc, dic, query.Parameters{})
+			result, err := app.AggregateReadingsByResourceName(testCase.resourceName, testCase.aggFunc, dic, query.Parameters{})
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -203,6 +209,8 @@ func TestAggregateReadingsByResourceNameAndTimeRange(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		resourceName       string
@@ -220,7 +228,7 @@ func TestAggregateReadingsByResourceNameAndTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByResourceNameAndTimeRange(testCase.resourceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
+			result, err := app.AggregateReadingsByResourceNameAndTimeRange(testCase.resourceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -246,6 +254,8 @@ func TestAggregateReadingsByDeviceName(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		deviceName         string
@@ -261,7 +271,7 @@ func TestAggregateReadingsByDeviceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByDeviceName(testCase.deviceName, testCase.aggFunc, dic, query.Parameters{})
+			result, err := app.AggregateReadingsByDeviceName(testCase.deviceName, testCase.aggFunc, dic, query.Parameters{})
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -287,6 +297,8 @@ func TestAggregateReadingsByDeviceNameAndTimeRange(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		deviceName         string
@@ -304,7 +316,7 @@ func TestAggregateReadingsByDeviceNameAndTimeRange(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByDeviceNameAndTimeRange(testCase.deviceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
+			result, err := app.AggregateReadingsByDeviceNameAndTimeRange(testCase.deviceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -330,6 +342,8 @@ func TestAggregateReadingsByDeviceNameAndResourceName(t *testing.T) {
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		deviceName         string
@@ -347,7 +361,7 @@ func TestAggregateReadingsByDeviceNameAndResourceName(t *testing.T) {
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByDeviceNameAndResourceName(testCase.deviceName, testCase.resourceName, testCase.aggFunc, dic, query.Parameters{Offset: 0, Limit: -1})
+			result, err := app.AggregateReadingsByDeviceNameAndResourceName(testCase.deviceName, testCase.resourceName, testCase.aggFunc, dic, query.Parameters{Offset: 0, Limit: -1})
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")
@@ -373,6 +387,8 @@ func TestAggregateReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) 
 		},
 	})
 
+	app := NewCoreDataApp(dic)
+
 	tests := []struct {
 		name               string
 		deviceName         string
@@ -392,7 +408,7 @@ func TestAggregateReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) 
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := AggregateReadingsByDeviceNameAndResourceNameAndTimeRange(testCase.deviceName, testCase.resourceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
+			result, err := app.AggregateReadingsByDeviceNameAndResourceNameAndTimeRange(testCase.deviceName, testCase.resourceName, testCase.aggFunc, query.Parameters{Start: testCase.start, End: testCase.end}, dic)
 			if testCase.errorExpected {
 				assert.Error(t, err)
 				assert.NotEmpty(t, err.Error(), "Error message is empty")

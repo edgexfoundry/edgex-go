@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020-2021 IOTech Ltd
+// Copyright (C) 2020-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +12,8 @@ import (
 	"time"
 
 	pkgCommon "github.com/edgexfoundry/edgex-go/internal/pkg/common"
+	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/models"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/models"
@@ -314,4 +316,9 @@ func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string
 func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (models.Event, errors.EdgeX) {
 	c.loggingClient.Warn("LatestEventByDeviceNameAndSourceNameAndAgeAndOffset function didn't implement")
 	return models.Event{}, nil
+}
+
+func (c *Client) AllDeviceInfos(offset int, limit int) ([]dbModels.DeviceInfo, errors.EdgeX) {
+	c.loggingClient.Warn("AllDeviceInfos function didn't implement")
+	return []dbModels.DeviceInfo{}, nil
 }

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
@@ -258,8 +259,9 @@ func (c *Client) deleteEventsByConditions(cols []string, values pgx.NamedArgs) e
 			return
 		}
 
+		deviceInfoCache := container.DeviceInfoCacheFrom(c.dic.Get)
 		for _, deviceInfo := range deviceInfos {
-			c.deviceInfoIdCache.Remove(deviceInfo)
+			deviceInfoCache.Remove(deviceInfo)
 		}
 	}()
 

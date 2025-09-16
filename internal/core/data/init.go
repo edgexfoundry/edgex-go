@@ -22,9 +22,11 @@ import (
 	"sync"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
+	dataCache "github.com/edgexfoundry/edgex-go/internal/core/data/cache"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/controller/messaging"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/cache"
+
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/startup"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -53,6 +55,8 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 	LoadRestRoutes(b.router, dic, b.serviceName)
 
 	lc := bootstrapContainer.LoggingClientFrom(dic.Get)
+	app := application.CoreDataAppFrom(dic.Get)
+
 	err := messaging.SubscribeEvents(ctx, dic)
 	if err != nil {
 		lc.Errorf("Failed to subscribe events from message bus, %v", err)
@@ -70,7 +74,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, wg *sync.WaitGroup, st
 		return false
 	}
 
-	err = application.AsyncPurgeEvent(ctx, dic)
+	if err = initDeviceInfoCache(dic); err != nil {
+		lc.Errorf("Failed to init device info cache, %v", err)
+		return false
+	}
+
+	err = app.AsyncPurgeEvent(ctx, dic)
 	if err != nil {
 		lc.Errorf("Failed to run event purging process, %v", err)
 	}
@@ -97,5 +106,22 @@ func initDeviceCache(ctx context.Context, dic *di.Container) errors.EdgeX {
 	for _, d := range devices.Devices {
 		deviceStore.Add(dtos.ToDeviceModel(d))
 	}
+	return nil
+}
+
+func initDeviceInfoCache(dic *di.Container) errors.EdgeX {
+	dbClient := container.DBClientFrom(dic.Get)
+	deviceInfos, err := dbClient.AllDeviceInfos(0, -1)
+	if err != nil {
+		return errors.NewCommonEdgeX(errors.Kind(err), "failed to get device infos from db", err)
+	}
+
+	deviceInfoCache := dataCache.NewDeviceInfoCache(dic, deviceInfos)
+	dic.Update(di.ServiceConstructorMap{
+		container.DeviceInfoCacheInterfaceName: func(get di.Get) interface{} {
+			return deviceInfoCache
+		},
+	})
+
 	return nil
 }

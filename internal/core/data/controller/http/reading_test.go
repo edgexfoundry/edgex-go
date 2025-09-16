@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/application"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/core/data/infrastructure/interfaces/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/core/data/mocks"
@@ -34,9 +35,13 @@ func TestReadingTotalCount(t *testing.T) {
 	dbClientMock.On("ReadingTotalCount").Return(expectedReadingCount, nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)
@@ -63,6 +68,8 @@ func TestReadingTotalCount(t *testing.T) {
 func TestAllReadings(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingTotalCount").Return(totalCount, nil)
 	dbClientMock.On("AllReadings", 0, 20).Return([]models.Reading{}, nil)
@@ -71,6 +78,9 @@ func TestAllReadings(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	controller := NewReadingController(dic)
@@ -141,6 +151,8 @@ func TestAllReadings(t *testing.T) {
 func TestReadingsByTimeRange(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByTimeRange", int64(0), int64(100)).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByTimeRange", int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
@@ -148,6 +160,9 @@ func TestReadingsByTimeRange(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)
@@ -222,6 +237,8 @@ func TestReadingsByTimeRange(t *testing.T) {
 func TestReadingsByResourceName(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByResourceName", TestDeviceResourceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByResourceName", 0, 20, TestDeviceResourceName).Return([]models.Reading{}, nil)
@@ -230,6 +247,9 @@ func TestReadingsByResourceName(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	controller := NewReadingController(dic)
@@ -303,6 +323,8 @@ func TestReadingsByResourceName(t *testing.T) {
 func TestReadingsByDeviceName(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceName", TestDeviceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceName", 0, 20, TestDeviceName).Return([]models.Reading{}, nil)
@@ -311,6 +333,9 @@ func TestReadingsByDeviceName(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	controller := NewReadingController(dic)
@@ -388,9 +413,14 @@ func TestReadingCountByDeviceName(t *testing.T) {
 	dbClientMock.On("ReadingCountByDeviceName", deviceName).Return(expectedReadingCount, nil)
 
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)
@@ -419,6 +449,8 @@ func TestReadingCountByDeviceName(t *testing.T) {
 func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByResourceNameAndTimeRange", TestDeviceResourceName, int64(0), int64(100)).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByResourceNameAndTimeRange", TestDeviceResourceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
@@ -426,6 +458,9 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)
@@ -500,6 +535,8 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndResourceName", TestDeviceName, TestDeviceResourceName, 0, 20).Return([]models.Reading{}, nil)
@@ -508,6 +545,9 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	controller := NewReadingController(dic)
@@ -585,6 +625,8 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 	totalCount := uint32(0)
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100)).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndResourceNameAndTimeRange", TestDeviceName, TestDeviceResourceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
@@ -592,6 +634,9 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)
@@ -673,6 +718,8 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 	testResourceNamesPayload := emptyPayload
 	testResourceNamesPayload[common.ResourceNames] = testResourceNames
 	dic := mocks.NewMockDIC()
+	app := application.NewCoreDataApp(dic)
+
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100)).Return(totalCount, nil)
 	dbClientMock.On("ReadingsByDeviceNameAndTimeRange", TestDeviceName, int64(0), int64(100), 0, 10).Return([]models.Reading{}, nil)
@@ -682,6 +729,9 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
+		},
+		application.CoreDataAppName: func(get di.Get) interface{} {
+			return app
 		},
 	})
 	rc := NewReadingController(dic)

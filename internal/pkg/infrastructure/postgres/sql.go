@@ -66,6 +66,11 @@ func sqlQueryFieldsByColAndLikePat(table string, fields []string, columns ...str
 	return fmt.Sprintf("SELECT %s FROM %s WHERE %s", queryFieldStr, table, whereCondition)
 }
 
+// sqlQueryContentWithPaginationAsNamedArgs returns the SQL statement for selecting content column from the table with pagination
+func sqlQueryAllWithPaginationAsNamedArgs(table string) string {
+	return fmt.Sprintf("SELECT * FROM %s OFFSET @%s LIMIT @%s", table, offsetCondition, limitCondition)
+}
+
 // sqlQueryAllWithNamedArgConds returns the SQL statement for selecting all rows from the table by the given columns composed of the where condition
 func sqlQueryAllWithNamedArgConds(table string, columns ...string) string {
 	whereCondition := constructWhereNamedArgCondition(columns...)
