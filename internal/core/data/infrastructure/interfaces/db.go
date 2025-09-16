@@ -6,6 +6,8 @@
 package interfaces
 
 import (
+	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/models"
+
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 )
@@ -48,6 +50,8 @@ type DBClient interface {
 	LatestReadingByOffset(offset uint32) (model.Reading, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (model.Event, errors.EdgeX)
 	LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (model.Event, errors.EdgeX)
+
+	AllDeviceInfos(offset int, limit int) ([]models.DeviceInfo, errors.EdgeX)
 
 	AllReadingsAggregation(aggregateFunc string, offset int, limit int) ([]model.Reading, errors.EdgeX)
 	AllReadingsAggregationByTimeRange(aggregateFun string, start, end int64, offset int, limit int) ([]model.Reading, errors.EdgeX)

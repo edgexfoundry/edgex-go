@@ -12,14 +12,37 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/edgexfoundry/edgex-go/internal/core/data/container"
 	pgClient "github.com/edgexfoundry/edgex-go/internal/pkg/db/postgres"
+	dbModels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/models"
 	"github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/postgres/models"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 	model "github.com/edgexfoundry/go-mod-core-contracts/v4/models"
 )
 
+// AllDeviceInfos query all deviceInfos
+func (c *Client) AllDeviceInfos(offset int, limit int) ([]dbModels.DeviceInfo, errors.EdgeX) {
+	sqlStmt := sqlQueryAllWithPaginationAsNamedArgs(deviceInfoTableName)
+	offset, validLimit := getValidOffsetAndLimit(offset, limit)
+	rows, err := c.ConnPool.Query(context.Background(), sqlStmt, pgx.NamedArgs{offsetCondition: offset, limitCondition: validLimit})
+	if err != nil {
+		return nil, pgClient.WrapDBError("failed to query deviceInfos", err)
+	}
+	deviceInfos, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (dbModels.DeviceInfo, error) {
+		d, scanErr := pgx.RowToStructByNameLax[dbModels.DeviceInfo](row)
+		if err != nil {
+			return dbModels.DeviceInfo{}, err
+		}
+		return d, scanErr
+	})
+	if err != nil {
+		return nil, pgClient.WrapDBError("failed to collect rows to DeviceInfo model", err)
+	}
+	return deviceInfos, nil
+}
+
 func (c *Client) deviceInfoIdByEvent(e model.Event) (int, errors.EdgeX) {
-	deviceInfo := models.DeviceInfo{
+	deviceInfo := dbModels.DeviceInfo{
 		DeviceName:  e.DeviceName,
 		ProfileName: e.ProfileName,
 		SourceName:  e.SourceName,
@@ -29,7 +52,7 @@ func (c *Client) deviceInfoIdByEvent(e model.Event) (int, errors.EdgeX) {
 }
 
 func (c *Client) deviceInfoIdByReading(r models.Reading) (int, errors.EdgeX) {
-	deviceInfo := models.DeviceInfo{
+	deviceInfo := dbModels.DeviceInfo{
 		DeviceName:   r.DeviceName,
 		ProfileName:  r.ProfileName,
 		ResourceName: r.ResourceName,
@@ -43,11 +66,12 @@ func (c *Client) deviceInfoIdByReading(r models.Reading) (int, errors.EdgeX) {
 	return c.deviceInfoIdFromCache(deviceInfo)
 }
 
-func (c *Client) deviceInfoIdFromCache(deviceInfo models.DeviceInfo) (int, errors.EdgeX) {
+func (c *Client) deviceInfoIdFromCache(deviceInfo dbModels.DeviceInfo) (int, errors.EdgeX) {
+	deviceInfoCache := container.DeviceInfoCacheFrom(c.dic.Get)
 	var exists bool
 	var err error
 	// get deviceInfo id from the cache
-	id, exists := c.deviceInfoIdCache.Get(deviceInfo)
+	id, exists := deviceInfoCache.GetDeviceInfoId(deviceInfo)
 	if !exists {
 		// get deviceInfo id from the DB
 		id, err = c.deviceInfoId(deviceInfo)
@@ -64,12 +88,12 @@ func (c *Client) deviceInfoIdFromCache(deviceInfo models.DeviceInfo) (int, error
 		}
 		deviceInfo.Id = id
 		// keep in the cache
-		c.deviceInfoIdCache.Add(deviceInfo)
+		deviceInfoCache.Add(deviceInfo)
 	}
 	return id, nil
 }
 
-func (c *Client) deviceInfoId(deviceInfo models.DeviceInfo) (int, errors.EdgeX) {
+func (c *Client) deviceInfoId(deviceInfo dbModels.DeviceInfo) (int, errors.EdgeX) {
 	var id int
 	tagsBytes, err := json.Marshal(deviceInfo.Tags)
 	if err != nil {
@@ -93,7 +117,7 @@ func (c *Client) deviceInfoId(deviceInfo models.DeviceInfo) (int, errors.EdgeX) 
 }
 
 // addDeviceInfo adds a new deviceInfo
-func (c *Client) addDeviceInfo(deviceInfo models.DeviceInfo) (int, errors.EdgeX) {
+func (c *Client) addDeviceInfo(deviceInfo dbModels.DeviceInfo) (int, errors.EdgeX) {
 	tagsBytes, err := json.Marshal(deviceInfo.Tags)
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.KindServerError, "unable to JSON marshal deviceInfo tags", err)
@@ -115,16 +139,16 @@ func (c *Client) addDeviceInfo(deviceInfo models.DeviceInfo) (int, errors.EdgeX)
 }
 
 // deviceInfosByConds query deviceInfos by specified conditions
-func (c *Client) deviceInfosByConds(cols []string, values pgx.NamedArgs) ([]models.DeviceInfo, errors.EdgeX) {
+func (c *Client) deviceInfosByConds(cols []string, values pgx.NamedArgs) ([]dbModels.DeviceInfo, errors.EdgeX) {
 	sqlStmt := sqlQueryAllWithNamedArgConds(deviceInfoTableName, cols...)
 	rows, err := c.ConnPool.Query(context.Background(), sqlStmt, values)
 	if err != nil {
 		return nil, pgClient.WrapDBError("failed to query deviceInfos", err)
 	}
-	deviceInfos, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.DeviceInfo, error) {
-		d, scanErr := pgx.RowToStructByNameLax[models.DeviceInfo](row)
+	deviceInfos, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (dbModels.DeviceInfo, error) {
+		d, scanErr := pgx.RowToStructByNameLax[dbModels.DeviceInfo](row)
 		if err != nil {
-			return models.DeviceInfo{}, err
+			return dbModels.DeviceInfo{}, err
 		}
 		return d, scanErr
 	})

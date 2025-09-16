@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	infrastructuremodels "github.com/edgexfoundry/edgex-go/internal/pkg/infrastructure/models"
 	errors "github.com/edgexfoundry/go-mod-core-contracts/v4/errors"
 
 	mock "github.com/stretchr/testify/mock"
@@ -36,6 +37,38 @@ func (_m *DBClient) AddEvent(e models.Event) (models.Event, errors.EdgeX) {
 
 	if rf, ok := ret.Get(1).(func(models.Event) errors.EdgeX); ok {
 		r1 = rf(e)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.EdgeX)
+		}
+	}
+
+	return r0, r1
+}
+
+// AllDeviceInfos provides a mock function with given fields: offset, limit
+func (_m *DBClient) AllDeviceInfos(offset int, limit int) ([]infrastructuremodels.DeviceInfo, errors.EdgeX) {
+	ret := _m.Called(offset, limit)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AllDeviceInfos")
+	}
+
+	var r0 []infrastructuremodels.DeviceInfo
+	var r1 errors.EdgeX
+	if rf, ok := ret.Get(0).(func(int, int) ([]infrastructuremodels.DeviceInfo, errors.EdgeX)); ok {
+		return rf(offset, limit)
+	}
+	if rf, ok := ret.Get(0).(func(int, int) []infrastructuremodels.DeviceInfo); ok {
+		r0 = rf(offset, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]infrastructuremodels.DeviceInfo)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(int, int) errors.EdgeX); ok {
+		r1 = rf(offset, limit)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.EdgeX)
