@@ -356,7 +356,7 @@ components:
         Specifies the SQL aggregate function to apply when calculating reading values. 
         Accepted values are MIN, MAX, COUNT, SUM, and AVG (case insensitive). 
         Aggregation is only performed on numeric fields in the database. 
-        For non-numeric fields (e.g., String, Bool), the calculated will be null.
+        For non-numeric fields (e.g., String, Bool), the calculated result will be empty.
     correlatedRequestHeader:
       in: header
       name: X-Correlation-ID
