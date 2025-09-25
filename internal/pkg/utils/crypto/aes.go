@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	aesKey        = "RO6gGYKocUahpdX15k9gYvbLuSxbKrPz"
 	aesSecretName = "aes"
 	aesKeyName    = "key"
 
@@ -50,17 +49,17 @@ type AESCryptor struct {
 	nonSecureKey []byte
 }
 
-func NewAESCryptor() interfaces.Crypto {
+func NewAESCryptor(defaultKey []byte) interfaces.Crypto {
 	return &AESCryptor{
-		key:          []byte(aesKey),
+		key:          defaultKey,
 		keySource:    keySourceSelf,
-		nonSecureKey: []byte(aesKey),
+		nonSecureKey: defaultKey,
 	}
 }
 
 // NewAESCryptorWithSecretProvider creates a new AES cryptor that uses a key from SecretProvider
 // If the key doesn't exist in the Secret Store, it generates a new one and stores it
-func NewAESCryptorWithSecretProvider(secretProvider bootstrapInterfaces.SecretProvider) (interfaces.Crypto, error) {
+func NewAESCryptorWithSecretProvider(secretProvider bootstrapInterfaces.SecretProvider, defaultKey []byte) (interfaces.Crypto, error) {
 	if secretProvider == nil {
 		return nil, fmt.Errorf("secret provider is nil, cannot create AESCryptor")
 	}
@@ -73,7 +72,7 @@ func NewAESCryptorWithSecretProvider(secretProvider bootstrapInterfaces.SecretPr
 				return &AESCryptor{
 					key:          keyBytes,
 					keySource:    keySourceSecretStore,
-					nonSecureKey: []byte(aesKey),
+					nonSecureKey: defaultKey,
 				}, nil
 			}
 			return nil, fmt.Errorf("invalid AES key format in secret store: %w", decodeErr)
@@ -90,7 +89,7 @@ func NewAESCryptorWithSecretProvider(secretProvider bootstrapInterfaces.SecretPr
 	return &AESCryptor{
 		key:          keyBytes,
 		keySource:    keySourceSecretStore,
-		nonSecureKey: []byte(aesKey),
+		nonSecureKey: defaultKey,
 	}, nil
 }
 
