@@ -42,6 +42,9 @@ listener "tcp" {
 
 BAO_LOCAL_CONFIG=${BAO_LOCAL_CONFIG:-$DEFAULT_BAO_LOCAL_CONFIG}
 
+DEFAULT_BAO_LOG_LEVEL='info'
+BAO_LOG_LEVEL=${BAO_LOG_LEVEL:-$DEFAULT_BAO_LOG_LEVEL}
+
 export BAO_LOCAL_CONFIG
 
 echo "$(date) BAO_LOCAL_CONFIG: ${BAO_LOCAL_CONFIG}"
@@ -54,5 +57,5 @@ if [ "$1" = 'server' ]; then
     -timeout "${STAGEGATE_WAITFOR_TIMEOUT}"
 
   echo "$(date) Starting edgex-secret-store..."
-  exec /usr/local/bin/docker-entrypoint.sh server -log-level=info
+  exec /usr/local/bin/docker-entrypoint.sh server -log-level=${BAO_LOG_LEVEL}
 fi
