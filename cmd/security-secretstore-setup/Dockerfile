@@ -30,7 +30,7 @@ COPY . .
 RUN make cmd/security-file-token-provider/security-file-token-provider \
   cmd/security-secretstore-setup/security-secretstore-setup
 
-FROM alpine:3.20
+FROM alpine:3.22.1
 
 RUN apk add --update --no-cache ca-certificates dumb-init su-exec yq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
