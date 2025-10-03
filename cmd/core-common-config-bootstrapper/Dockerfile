@@ -33,7 +33,7 @@ COPY . .
 RUN make -e ADD_BUILD_TAGS=$ADD_BUILD_TAGS cmd/core-common-config-bootstrapper/core-common-config-bootstrapper
 
 #Next image - Copy built Go binary into new workspace
-FROM alpine:3.20
+FROM alpine:3.22.1
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2023: Intel Corporation'
