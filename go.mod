@@ -11,7 +11,7 @@ require (
 	github.com/edgexfoundry/go-mod-secrets/v4 v4.1.0-dev.6
 	github.com/fxamacker/cbor/v2 v2.9.0
 	github.com/go-co-op/gocron/v2 v2.16.6
-	github.com/gomodule/redigo v1.9.2
+	github.com/gomodule/redigo v1.9.3
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.5
