@@ -16,7 +16,7 @@
 #  ----------------------------------------------------------------------------------
 
 # Build utility container
-ARG BUILDER_BASE=golang:1.23-alpine3.20
+ARG BUILDER_BASE=golang:1.25-alpine3.22
 FROM ${BUILDER_BASE} AS builder
 
 WORKDIR /edgex-go
@@ -30,7 +30,7 @@ COPY . .
 RUN make cmd/security-spiffe-token-provider/security-spiffe-token-provider
 
 # Deployment image
-FROM alpine:3.20
+FROM alpine:3.22
 
 LABEL license='SPDX-License-Identifier: Apache-2.0' \
       copyright='Copyright (c) 2023 Intel Corporation'
