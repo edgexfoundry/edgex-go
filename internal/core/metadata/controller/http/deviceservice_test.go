@@ -404,7 +404,7 @@ func TestAllDeviceServices(t *testing.T) {
 			Name: "ds3",
 		},
 	}
-	expectedTotalDeviceServiceCount := uint32(len(deviceServices))
+	expectedTotalDeviceServiceCount := uint32(len(deviceServices)) //nolint:gosec
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}

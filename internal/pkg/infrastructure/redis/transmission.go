@@ -197,7 +197,7 @@ func objectsToTransmissions(objects [][]byte) (transmissions []models.Transmissi
 // This function is implemented to starts up goroutines to delete processed transmissions in the background to achieve better performance.
 func (c *Client) DeleteProcessedTransmissionsByAge(age int64) (err errors.EdgeX) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 	acknowledgedStoreKeys, err := transmissionStoreKeys(conn, CreateKey(TransmissionCollectionStatus, models.Acknowledged), age)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)

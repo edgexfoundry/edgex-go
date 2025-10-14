@@ -7,6 +7,8 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"math"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -85,6 +87,16 @@ func getTotalRowsCount(ctx context.Context, connPool *pgxpool.Pool, sql string, 
 	err := connPool.QueryRow(ctx, sql, args...).Scan(&rowCount)
 	if err != nil {
 		return 0, pgClient.WrapDBError("failed to query total rows count", err)
+	}
+
+	// Validate the range before converting to uint32. Check for negative values, which are invalid for a count.
+	if rowCount < 0 {
+		return 0, errors.NewCommonEdgeX(errors.KindContractInvalid, fmt.Sprintf("invalid negative row count: %d", rowCount), nil)
+	}
+
+	// Check if the value exceeds the maximum for uint32.
+	if rowCount > math.MaxUint32 {
+		return 0, errors.NewCommonEdgeX(errors.KindOverflowError, fmt.Sprintf("row count %d exceeds maximum for uint32", rowCount), nil)
 	}
 
 	return uint32(rowCount), nil

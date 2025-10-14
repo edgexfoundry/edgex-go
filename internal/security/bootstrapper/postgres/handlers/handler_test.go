@@ -51,7 +51,9 @@ func TestSetupDBScriptFiles(t *testing.T) {
 
 	mockDir := "testDir"
 	mockFileName := "testFilename"
-	defer os.RemoveAll(mockDir)
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(mockDir)
 
 	mockDic.Update(di.ServiceConstructorMap{
 		container.ConfigurationName: func(get di.Get) interface{} {

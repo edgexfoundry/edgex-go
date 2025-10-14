@@ -43,7 +43,9 @@ func TestGenerateRedisConfig(t *testing.T) {
 
 	inputFile, err := os.Open(testConfFile)
 	require.NoError(t, err)
-	defer inputFile.Close()
+	defer func(inputFile *os.File) {
+		_ = inputFile.Close()
+	}(inputFile)
 	inputScanner := bufio.NewScanner(inputFile)
 	inputScanner.Split(bufio.ScanLines)
 	var outputlines []string
@@ -76,7 +78,9 @@ func TestGenerateACLConfig(t *testing.T) {
 
 	inputFile, err := os.Open(testACLFile)
 	require.NoError(t, err)
-	defer inputFile.Close()
+	defer func(inputFile *os.File) {
+		_ = inputFile.Close()
+	}(inputFile)
 	inputScanner := bufio.NewScanner(inputFile)
 	inputScanner.Split(bufio.ScanLines)
 	var outputlines []string

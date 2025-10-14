@@ -175,14 +175,14 @@ func TestPurgeEventsByAutoEvent(t *testing.T) {
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			} else if duration > 0 && testCase.autoEvent.Retention.MinCap > 0 {
 				// time-based retention with miniCap
-				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, duration.Nanoseconds(), uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, duration.Nanoseconds(), uint32(testCase.autoEvent.Retention.MinCap)) //nolint:gosec
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			} else if testCase.autoEvent.Retention.MinCap <= 0 {
 				// count-based retention
 				dbClientMock.AssertCalled(t, "DeleteEventsByDeviceNameAndSourceName", deviceName, testCase.autoEvent.SourceName)
 			} else {
 				// count-based retention with miniCap
-				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, uint32(testCase.autoEvent.Retention.MinCap)) //nolint:gosec
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			}
 

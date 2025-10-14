@@ -752,7 +752,7 @@ func TestPatchDevice(t *testing.T) {
 func TestAllDevices(t *testing.T) {
 	device := dtos.ToDeviceModel(buildTestDeviceRequest().Device)
 	devices := []models.Device{device, device, device}
-	expectedDeviceTotalCount := uint32(len(devices))
+	expectedDeviceTotalCount := uint32(len(devices)) //nolint:gosec
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}

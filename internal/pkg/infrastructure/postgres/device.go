@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	stdErrs "errors"
 	"fmt"
+	"github.com/spf13/cast"
 	"math"
 
 	"github.com/google/uuid"
@@ -267,13 +268,13 @@ func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, la
 		offset = 0
 	}
 	if offset >= len(allDevices) {
-		return uint32(len(allDevices)), emptyList, nil
+		return cast.ToUint32(len(allDevices)), emptyList, nil
 	}
 	numToReturn := len(allDevices) - offset
 	if limit > 0 && limit < numToReturn {
 		numToReturn = limit
 	}
-	return uint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
+	return cast.ToUint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
 }
 
 func deviceNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {

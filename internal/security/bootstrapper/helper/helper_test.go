@@ -33,7 +33,7 @@ func TestMarkComplete(t *testing.T) {
 
 	defer (cleanupDir(testDir))()
 
-	err := os.MkdirAll(testDir, os.ModePerm)
+	err := os.MkdirAll(testDir, os.ModePerm) //#nosec G301 -- Directory intentionally world-accessible for shared access
 	require.NoError(t, err)
 
 	err = MarkComplete(testDir, doneFile)
@@ -54,7 +54,7 @@ func TestCreateDirectoryIfNotExists(t *testing.T) {
 	testPreCreatedDir := "pre-created-dir"
 	defer (cleanupDir(testPreCreatedDir))()
 
-	err = os.MkdirAll(testPreCreatedDir, os.ModePerm)
+	err = os.MkdirAll(testPreCreatedDir, os.ModePerm) //#nosec G301 -- Directory intentionally world-accessible for shared access
 	require.NoError(t, err)
 	err = CreateDirectoryIfNotExists(testPreCreatedDir)
 	require.NoError(t, err)

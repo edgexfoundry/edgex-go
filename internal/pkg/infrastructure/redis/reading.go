@@ -34,7 +34,7 @@ var emptyBinaryValue = make([]byte, 0)
 // encountering any errors during deletion, this function will simply log the error.
 func (c *Client) asyncDeleteReadingsByIds(readingIds []string) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	var readings [][]byte
 	//start a transaction to get all readings

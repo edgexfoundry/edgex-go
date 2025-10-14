@@ -352,12 +352,16 @@ func deviceTree(conn redis.Conn, parent string, levels int, offset int, limit in
 	if offset < 0 {
 		offset = 0
 	}
-	if offset >= len(allDevices) {
-		return uint32(len(allDevices)), emptyList, nil
+	allDevicesCount := len(allDevices)
+	if allDevicesCount > math.MaxUint32 {
+		return 0, emptyList, errors.NewCommonEdgeX(errors.KindOverflowError, fmt.Sprintf("device count %d exceeds maximum %d", allDevicesCount, math.MaxUint32), nil)
 	}
-	numToReturn := len(allDevices) - offset
+	if offset >= allDevicesCount {
+		return uint32(allDevicesCount), emptyList, nil
+	}
+	numToReturn := allDevicesCount - offset
 	if limit > 0 && limit < numToReturn {
 		numToReturn = limit
 	}
-	return uint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
+	return uint32(allDevicesCount), allDevices[offset : offset+numToReturn], nil
 }
