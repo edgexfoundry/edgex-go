@@ -9,6 +9,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/spf13/cast"
 	"net/url"
 	"os"
 	"sync"
@@ -93,7 +94,7 @@ func connPoolConConfig(config db.Configuration, lc logger.LoggingClient) (*pgxpo
 	if err != nil {
 		return nil, WrapDBError("fail to parse pg connection string", err)
 	}
-	connPoolConfig.MaxConns = int32(config.MaxConns)
+	connPoolConfig.MaxConns = cast.ToInt32(config.MaxConns)
 	if connPoolConfig.MaxConns <= 0 {
 		lc.Errorf("The MaxConns too small, use default '%d'", defaultMaxConns)
 		connPoolConfig.MaxConns = defaultMaxConns

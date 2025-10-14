@@ -107,7 +107,10 @@ func (c *cmd) Execute() (int, error) {
 	}()
 
 	// don't care about the response body, only the status code
-	fmt.Fprintln(os.Stdout, resp.StatusCode)
+	_, err = fmt.Fprintln(os.Stdout, resp.StatusCode)
+	if err != nil {
+		c.loggingClient.Warnf("error occurred while writing status code to stdout: %s", err.Error())
+	}
 
 	return interfaces.StatusCodeExitNormal, nil
 }

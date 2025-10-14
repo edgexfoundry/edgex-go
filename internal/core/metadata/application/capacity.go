@@ -7,6 +7,7 @@ package application
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/metadata/container"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -103,7 +104,11 @@ func checkResourceCapacityByUpdateProfile(profile models.DeviceProfile, dic *di.
 		if err != nil {
 			return errors.NewCommonEdgeX(errors.Kind(err), "query existing profile resource count failed", err)
 		}
-		newProfileResourceCount := uint32(len(profile.DeviceResources))
+		resourcesCount := len(profile.DeviceResources)
+		if resourcesCount < 0 || resourcesCount > math.MaxUint32 {
+			return errors.NewCommonEdgeX(errors.KindOverflowError, fmt.Sprintf("profile[%s] has the number of device reousrces[%d] that is out of uint32 range", profile.Name, resourcesCount), nil)
+		}
+		newProfileResourceCount := uint32(resourcesCount)
 		count := totalInUseResourceCount - existingProfileResourceCount + newProfileResourceCount
 		if count > config.Writable.MaxResources {
 			return errors.NewCommonEdgeX(
@@ -152,5 +157,9 @@ func resourceCountByProfile(profileName string, dic *di.Container) (uint32, erro
 	if err != nil {
 		return 0, errors.NewCommonEdgeX(errors.Kind(err), "count resource number failed", err)
 	}
-	return uint32(len(profile.DeviceResources)), nil
+	resourcesCount := len(profile.DeviceResources)
+	if resourcesCount < 0 || resourcesCount > math.MaxUint32 {
+		return 0, errors.NewCommonEdgeX(errors.KindOverflowError, fmt.Sprintf("profile[%s] has the number of device reousrces[%d] that is out of uint32 range", profile.Name, resourcesCount), nil)
+	}
+	return uint32(resourcesCount), nil
 }

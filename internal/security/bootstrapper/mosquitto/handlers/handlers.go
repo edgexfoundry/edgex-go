@@ -140,6 +140,7 @@ password_file {{.PwdFilePath}}`
 	lc.Infof("Creating the mosquitto config file: %s", brokerConfigFile)
 
 	// open config file with read-write and overwritten attribute (TRUNC)
+	// #nosec G304 -- brokerConfigFile is controlled and validated internally
 	confFile, err := os.OpenFile(brokerConfigFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, readWriteOnlyForOwner)
 	if err != nil {
 		lc.Errorf("failed to open mosquitto config file %s: %v", brokerConfigFile, err)

@@ -32,7 +32,7 @@ const (
 // errors during deletion, this function will simply log the error.
 func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	//start a transaction to get all events
 	events, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(eventIds))
@@ -86,7 +86,7 @@ func (c *Client) asyncDeleteEventsByIds(eventIds []string) {
 // two goroutines to delete readings and events in the background to achieve better performance.
 func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	eventIds, readingIds, err := getEventReadingIdsByKeyScoreRange(conn, CreateKey(EventsCollectionDeviceName, deviceName), GreaterThanZero, InfiniteMax)
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *Client) DeleteEventsByDeviceName(deviceName string) (edgeXerr errors.Ed
 // two goroutines to delete readings and events in the background to achieve better performance.
 func (c *Client) DeleteEventsByAge(age int64) (edgeXerr errors.EdgeX) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	expireTimestamp := time.Now().UnixNano() - age
 

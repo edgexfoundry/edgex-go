@@ -58,7 +58,12 @@ func SendRequestAndGetResponse(client *http.Client, req *http.Request) (res stri
 		return "", errors.NewCommonEdgeX(errors.KindServerError, "fail to send the HTTP request", err)
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Printf("Failed to close the response body: %v", err)
+		}
+	}(resp.Body)
 	resp.Close = true
 
 	bodyBytes, err := io.ReadAll(resp.Body)

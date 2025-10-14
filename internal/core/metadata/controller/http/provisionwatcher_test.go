@@ -8,6 +8,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cast"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -533,7 +534,7 @@ func TestProvisionWatcherController_ProvisionWatchersByProfileName(t *testing.T)
 func TestProvisionWatcherController_AllProvisionWatchers(t *testing.T) {
 	provisionWatcher := dtos.ToProvisionWatcherModel(buildTestAddProvisionWatcherRequest().ProvisionWatcher)
 	provisionWatchers := []models.ProvisionWatcher{provisionWatcher, provisionWatcher, provisionWatcher}
-	expectedTotalPWCount := uint32(len(provisionWatchers))
+	expectedTotalPWCount := cast.ToUint32(len(provisionWatchers))
 
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}

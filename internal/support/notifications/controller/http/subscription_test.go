@@ -211,7 +211,7 @@ func TestAddSubscription(t *testing.T) {
 func TestAllSubscriptions(t *testing.T) {
 	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
 	subscriptions := []models.Subscription{subscription, subscription, subscription}
-	expectedSubscriptionCount := uint32(len(subscriptions))
+	expectedSubscriptionCount := uint32(len(subscriptions)) //nolint:gosec
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}

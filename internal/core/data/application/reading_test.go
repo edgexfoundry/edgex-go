@@ -26,7 +26,7 @@ import (
 
 func TestAllReadings(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := uint32(len(readings)) //nolint:gosec
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -128,7 +128,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 
 func TestReadingsByResourceName(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := uint32(len(readings)) //nolint:gosec
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -177,7 +177,7 @@ func TestReadingsByResourceName(t *testing.T) {
 
 func TestReadingsByDeviceName(t *testing.T) {
 	readings := buildReadings()
-	totalCount := uint32(len(readings))
+	totalCount := uint32(len(readings)) //nolint:gosec
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}

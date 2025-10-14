@@ -238,7 +238,7 @@ func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return cast.ToUint32(len(notifications)), nil
 }
 
 // NotificationCountByCategoriesAndLabels returns the count of notifications by categories and labels
@@ -247,7 +247,7 @@ func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, lab
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return cast.ToUint32(len(notifications)), nil
 }
 
 // NotificationCountByQueryConditions returns the count of notifications by query conditions
@@ -256,7 +256,7 @@ func (c *Client) NotificationCountByQueryConditions(condition requests.Notificat
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
 	}
-	return uint32(len(notifications)), nil
+	return cast.ToUint32(len(notifications)), nil
 }
 
 // NotificationTotalCount returns the total count of notifications

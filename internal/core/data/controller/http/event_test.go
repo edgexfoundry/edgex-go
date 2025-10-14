@@ -611,7 +611,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 func TestAllEvents(t *testing.T) {
 	events := []models.Event{persistedEvent, persistedEvent, persistedEvent}
-	totalCount := uint32(len(events))
+	totalCount := uint32(len(events)) //nolint:gosec
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
