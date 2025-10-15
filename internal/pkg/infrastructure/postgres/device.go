@@ -255,21 +255,21 @@ func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, la
 	} else {
 		maxLevels = levels
 	}
-	all_devices, err := deviceSubTree(context.Background(), c.ConnPool, parent, maxLevels, labels)
+	allDevices, err := deviceSubTree(context.Background(), c.ConnPool, parent, maxLevels, labels)
 	if err != nil {
 		return 0, emptyList, err
 	}
 	if offset < 0 {
 		offset = 0
 	}
-	if offset >= len(all_devices) {
-		return uint32(len(all_devices)), emptyList, nil
+	if offset >= len(allDevices) {
+		return uint32(len(allDevices)), emptyList, nil
 	}
-	numToReturn := len(all_devices) - offset
+	numToReturn := len(allDevices) - offset
 	if limit > 0 && limit < numToReturn {
 		numToReturn = limit
 	}
-	return uint32(len(all_devices)), all_devices[offset : offset+numToReturn], nil
+	return uint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
 }
 
 func deviceNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {

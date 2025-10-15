@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021-2023 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -24,8 +24,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
-
-const minOffset = -1 // allow using -1 to query reading data and skip the total count for pagination
 
 type ReadingController struct {
 	reader io.DtoReader

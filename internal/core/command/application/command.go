@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 IOTech Ltd
+// Copyright (C) 2021-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -43,8 +43,11 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 	configuration := commandContainer.ConfigurationFrom(dic.Get)
 	serviceUrl := configuration.Service.Url()
 
-	deviceCoreCommands = make([]dtos.DeviceCoreCommand, len(multiDevicesResponse.Devices))
-	for i, device := range multiDevicesResponse.Devices {
+	for _, device := range multiDevicesResponse.Devices {
+		if len(device.ProfileName) == 0 {
+			// if the profile is not set, skip the profile query
+			continue
+		}
 		deviceProfileResponse, err := dpc.DeviceProfileByName(context.Background(), device.ProfileName)
 		if err != nil {
 			return deviceCoreCommands, totalCount, errors.NewCommonEdgeXWrapper(err)
@@ -53,11 +56,11 @@ func AllCommands(offset int, limit int, dic *di.Container) (deviceCoreCommands [
 		if err != nil {
 			return nil, totalCount, errors.NewCommonEdgeXWrapper(err)
 		}
-		deviceCoreCommands[i] = dtos.DeviceCoreCommand{
+		deviceCoreCommands = append(deviceCoreCommands, dtos.DeviceCoreCommand{
 			DeviceName:   device.Name,
 			ProfileName:  device.ProfileName,
 			CoreCommands: commands,
-		}
+		})
 	}
 	return deviceCoreCommands, multiDevicesResponse.TotalCount, nil
 }

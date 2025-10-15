@@ -144,3 +144,12 @@ func deleteDeviceInfoById(ctx context.Context, tx pgx.Tx, id int) errors.EdgeX {
 	}
 	return nil
 }
+
+// updateDeviceInfosDeletableByDeviceName updates deviceInfos by deviceName as deletable
+func (c *Client) updateDeviceInfosDeletableByDeviceName(deviceName string) errors.EdgeX {
+	_, err := c.ConnPool.Exec(context.Background(), fmt.Sprintf("UPDATE %s SET %s = true WHERE %s=$1", deviceInfoTableName, markDeletedCol, deviceNameCol), deviceName)
+	if err != nil {
+		return pgClient.WrapDBError(fmt.Sprintf("update %s to deletable by devicename '%s'", deviceInfoTableName, deviceName), err)
+	}
+	return nil
+}
