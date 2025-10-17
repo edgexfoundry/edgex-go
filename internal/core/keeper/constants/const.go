@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2024 IOTech Ltd
+// Copyright (C) 2024-2025 IOTech Ltd
 //
 // SPDX-License-Identifier: Apache-2.0
 
@@ -15,7 +15,7 @@ import (
 const CoreKeeperServiceKey = "core-keeper"
 
 // KeyAllowedCharsRegexString defined the characters allowed in the key name
-const KeyAllowedCharsRegexString = "^[a-zA-Z0-9-_~;=./]+$"
+const KeyAllowedCharsRegexString = "^[a-zA-Z0-9-_~;=./%]+$"
 
 var (
 	KeyAllowedCharsRegex = regexp.MustCompile(KeyAllowedCharsRegexString)
