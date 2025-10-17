@@ -7,6 +7,8 @@ package http
 
 import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
+	"github.com/spf13/cast"
+	io2 "io"
 	"net/http"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -43,7 +45,12 @@ func (rc *RegistryController) Register(c echo.Context) error {
 	w := c.Response()
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func(Body io2.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				bootstrapContainer.LoggingClientFrom(rc.dic.Get).Errorf("Failed to close the request body: %s", err.Error())
+			}
+		}(r.Body)
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(rc.dic.Get)
@@ -80,7 +87,12 @@ func (rc *RegistryController) UpdateRegister(c echo.Context) error {
 	w := c.Response()
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func(Body io2.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				bootstrapContainer.LoggingClientFrom(rc.dic.Get).Errorf("Failed to close the request body: %s", err.Error())
+			}
+		}(r.Body)
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(rc.dic.Get)
@@ -144,7 +156,7 @@ func (rc *RegistryController) Registrations(c echo.Context) error {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	response := responses.NewMultiRegistrationsResponse("", "", http.StatusOK, uint32(len(dtos)), dtos)
+	response := responses.NewMultiRegistrationsResponse("", "", http.StatusOK, cast.ToUint32(len(dtos)), dtos)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

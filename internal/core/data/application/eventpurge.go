@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"math"
 	"regexp"
 	"sync"
 	"time"
@@ -226,7 +227,7 @@ func isReachMaxCap(deviceName, sourceName string, maxCap int64, dic *di.Containe
 	if err != nil {
 		return false, errors.NewCommonEdgeXWrapper(err)
 	}
-	if count < uint32(maxCap) {
+	if int64(count) < maxCap {
 		lc.Debugf(
 			"Skip the event retention for the source name `%s` of device `%s`, the event number `%d` is less than the max capacity `%d`.",
 			sourceName, deviceName, count, maxCap,
@@ -251,6 +252,9 @@ func timeBasedEventRetention(deviceName, sourceName string, minCap int64, durati
 	} else {
 		lc.Debugf("MinCap is '%d', purge events by duration '%d' and deviceName '%s', and sourceName '%s' to meet the minCap",
 			minCap, duration, deviceName, sourceName)
+		if minCap > math.MaxUint32 { // check if minCap is out of uint32 range to avoid integer overflow when converting to uint32 below
+			return errors.NewCommonEdgeX(errors.KindOverflowError, "maxCap out of uint32 range", nil)
+		}
 		// Find the event that the age is within the duration and use offset as minCap to keep data
 		// SELECT * FROM core_data.event WHERE event.origin <= $1 and devicename=$2 and sourcename=$3 ORDER BY origin desc offset $4;
 		event, err := dbClient.LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName, sourceName, duration.Nanoseconds(), uint32(minCap))
@@ -287,6 +291,9 @@ func countBasedEventRetention(deviceName, sourceName string, minCap int64, dic *
 	} else {
 		lc.Debugf("MinCap is '%d', purge events by deviceName '%s' and sourceName '%s' to meet the minCap",
 			minCap, deviceName, sourceName)
+		if minCap > math.MaxUint32 { // check if minCap is out of uint32 range to avoid integer overflow when converting to uint32 below
+			return errors.NewCommonEdgeX(errors.KindOverflowError, "maxCap out of uint32 range", nil)
+		}
 		event, err := dbClient.LatestEventByDeviceNameAndSourceNameAndOffset(deviceName, sourceName, uint32(minCap))
 		if errors.Kind(err) == errors.KindEntityDoesNotExist {
 			lc.Debugf("Skip the event retention for the auto event source '%s' of device '%s', the event number might equal or less than the minCap", sourceName, deviceName)

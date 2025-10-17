@@ -102,7 +102,9 @@ func sendEmail(s config.SmtpInfo, auth mail.Auth, to []string, msg []byte) error
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.KindServerError, fmt.Sprintf("fail to connected the SMTP server with address %s", addr), err)
 	}
-	defer c.Close()
+	defer func(c *mail.Client) {
+		_ = c.Close()
+	}(c)
 	serverName, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)

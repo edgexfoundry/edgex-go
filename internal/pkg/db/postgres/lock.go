@@ -102,6 +102,6 @@ func generateHashLockId(serviceKey string) int64 {
 	// FNV-1a hash can only reproduce uint64 value that exceeds the bigint value range, so we use the 32-bit FNV-1a hash
 	// instead.
 	h := fnv.New32a()
-	h.Write([]byte(serviceKey))
+	_, _ = h.Write([]byte(serviceKey))
 	return int64(h.Sum32())
 }

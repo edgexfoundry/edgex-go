@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"github.com/spf13/cast"
 	"io"
 
 	"github.com/edgexfoundry/edgex-go/internal/pkg/utils/crypto/interfaces"
@@ -128,7 +129,7 @@ func (c *AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 	}
 
 	keySourceBytes := []byte(c.keySource)
-	keySourceLength := uint32(len(keySourceBytes))
+	keySourceLength := cast.ToUint32(len(keySourceBytes))
 
 	// generate random nonce for GCM
 	nonce := make([]byte, gcm.NonceSize())

@@ -15,7 +15,7 @@
 #
 #  ----------------------------------------------------------------------------------
 
-ARG BUILDER_BASE=golang:1.23-alpine3.20
+ARG BUILDER_BASE=golang:1.25-alpine3.22
 FROM ${BUILDER_BASE} AS builder
 
 ARG ADD_BUILD_TAGS=""
@@ -30,7 +30,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/support-scheduler/support-scheduler
 
-FROM alpine:3.20
+FROM alpine:3.22
 
 RUN apk add --update --no-cache ca-certificates dumb-init tzdata
 # Ensure using latest versions of all installed packages to avoid any recent CVEs

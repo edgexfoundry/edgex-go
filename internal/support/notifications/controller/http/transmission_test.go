@@ -186,7 +186,7 @@ func TestTransmissionsByTimeRange(t *testing.T) {
 func TestAllTransmissions(t *testing.T) {
 	trans := transmissionData()
 	transmissions := []models.Transmission{trans, trans, trans}
-	expectedTransmissionCount := uint32(len(transmissions))
+	expectedTransmissionCount := uint32(len(transmissions)) //nolint:gosec
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}

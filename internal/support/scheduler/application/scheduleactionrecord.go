@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -141,7 +142,11 @@ func LatestScheduleActionRecordsByJobName(ctx context.Context, jobName string, d
 	}
 
 	scheduleActionRecordDTOs = dtos.FromScheduleActionRecordModelsToDTOs(records)
-	return scheduleActionRecordDTOs, uint32(len(records)), nil
+	recordCount := len(records)
+	if recordCount > math.MaxUint32 {
+		return scheduleActionRecordDTOs, 0, errors.NewCommonEdgeX(errors.KindOverflowError, fmt.Sprintf("the schedule action record count '%d' exceeds the maximum value for uint32", recordCount), nil)
+	}
+	return scheduleActionRecordDTOs, uint32(recordCount), nil
 }
 
 // DeleteScheduleActionRecordsByAge deletes the schedule action records by age
