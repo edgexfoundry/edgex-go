@@ -48,7 +48,9 @@ func TestSaveInitResponse(t *testing.T) {
 }
 
 func TestGetKnownSecretsToAdd(t *testing.T) {
-	defer os.Setenv(addKnownSecretsEnv, "")
+	defer func() {
+		_ = os.Setenv(addKnownSecretsEnv, "")
+	}()
 
 	expectedEmpty := map[string][]string{}
 	expectedOneService := map[string][]string{

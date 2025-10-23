@@ -14,6 +14,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"hash"
+	"io"
 	"os"
 	"path"
 
@@ -76,7 +77,9 @@ func (kdf *kdfObject) initializeSalt() ([]byte, error) {
 		}
 
 		saltFileObj := fileioperformer.MakeReadCloser(saltFileReader)
-		defer saltFileObj.Close() // defer close for reading
+		defer func(saltFileObj io.ReadCloser) {
+			_ = saltFileObj.Close()
+		}(saltFileObj) // defer close for reading
 
 		nbytes, err := saltFileObj.Read(salt)
 		if err != nil {

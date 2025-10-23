@@ -6,6 +6,7 @@
 package http
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/edgexfoundry/edgex-go/internal/core/keeper/application"
@@ -68,7 +69,12 @@ func (rc *KVController) AddKeys(c echo.Context) error {
 	w := c.Response()
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				bootstrapContainer.LoggingClientFrom(rc.dic.Get).Warnf("error occured while closing the request body: %s", err.Error())
+			}
+		}(r.Body)
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(rc.dic.Get)

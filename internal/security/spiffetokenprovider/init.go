@@ -312,7 +312,12 @@ func (b *Bootstrap) BootstrapHandler(ctx context.Context, _ *sync.WaitGroup, _ s
 		lc.Errorf("Unable to create X509Source: %v", err)
 		return false
 	}
-	defer source.Close()
+	defer func(source *workloadapi.X509Source) {
+		err = source.Close()
+		if err != nil {
+			lc.Errorf("error occured while closing X509Source: %s", err.Error())
+		}
+	}(source)
 
 	lc.Info("created X509Source successfully")
 

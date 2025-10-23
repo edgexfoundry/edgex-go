@@ -406,7 +406,7 @@ func notificationAndTransmissionStoreKeys(conn redis.Conn, collectionKey string,
 // encountering any errors during deletion, this function will simply log the error.
 func (c *Client) asyncDeleteNotificationByStoreKeys(storeKeys []string) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	objects, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(storeKeys))
 	if edgeXerr != nil {
@@ -458,7 +458,7 @@ func (c *Client) asyncDeleteNotificationByStoreKeys(storeKeys []string) {
 // encountering any errors during deletion, this function will simply log the error.
 func (c *Client) asyncDeleteTransmissionByStoreKeys(storeKeys []string) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 
 	objects, edgeXerr := getObjectsByIds(conn, pkgCommon.ConvertStringsToInterfaces(storeKeys))
 	if edgeXerr != nil {
@@ -509,7 +509,7 @@ func (c *Client) asyncDeleteTransmissionByStoreKeys(storeKeys []string) {
 // This function is implemented to starts up two goroutines to delete transmissions and notifications in the background to achieve better performance.
 func (c *Client) CleanupNotificationsByAge(age int64) (err errors.EdgeX) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, NotificationCollection, age)
 	if err != nil {
 		return errors.NewCommonEdgeXWrapper(err)
@@ -523,7 +523,7 @@ func (c *Client) CleanupNotificationsByAge(age int64) (err errors.EdgeX) {
 // This function is implemented to starts up two goroutines to delete transmissions and notifications in the background to achieve better performance.
 func (c *Client) DeleteProcessedNotificationsByAge(age int64) (err errors.EdgeX) {
 	conn := c.Pool.Get()
-	defer conn.Close()
+	defer closeRedisConnection(conn, c.loggingClient)
 	collectionKey := CreateKey(NotificationCollectionStatus, models.Processed)
 	ncStoreKeys, transStoreKeys, err := notificationAndTransmissionStoreKeys(conn, collectionKey, age)
 	if err != nil {
