@@ -171,7 +171,7 @@ func TestMergeWithDuplicateKeys(t *testing.T) {
 func TestGetTokenConfigFromEnv(t *testing.T) {
 	oringEnv := os.Getenv(addSecretstoreTokensEnvKey)
 	defer func() {
-		os.Setenv(addSecretstoreTokensEnvKey, oringEnv)
+		_ = os.Setenv(addSecretstoreTokensEnvKey, oringEnv)
 	}()
 
 	tests := []struct {
@@ -221,7 +221,7 @@ func TestGetTokenConfigFromEnv(t *testing.T) {
 	for _, test := range tests {
 		currentTest := test
 		t.Run(test.name, func(t *testing.T) {
-			os.Setenv(addSecretstoreTokensEnvKey, currentTest.serviceNameList)
+			_ = os.Setenv(addSecretstoreTokensEnvKey, currentTest.serviceNameList)
 			tokenFileMap, err := GetTokenConfigFromEnv()
 
 			if currentTest.expectError {

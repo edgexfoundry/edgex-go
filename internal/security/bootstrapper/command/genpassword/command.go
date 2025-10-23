@@ -80,7 +80,10 @@ func (c *cmd) Execute() (int, error) {
 
 	randPass := base64.StdEncoding.EncodeToString(randomBytes)
 	// output the randPass to stdout
-	fmt.Fprintln(os.Stdout, randPass)
+	_, err = fmt.Fprintln(os.Stdout, randPass)
+	if err != nil {
+		c.loggingClient.Warnf("error occurred while writing randPass to stdout: %s", err.Error())
+	}
 
 	return interfaces.StatusCodeExitNormal, nil
 }
