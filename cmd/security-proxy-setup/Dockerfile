@@ -29,7 +29,7 @@ RUN [ ! -d "vendor" ] && go mod download all || echo "skipping..."
 COPY . .
 RUN make cmd/secrets-config/secrets-config
 
-FROM alpine:3.20
+FROM alpine:3.22.1
 
 RUN apk add --update --no-cache dumb-init su-exec openssl yq
 # Ensure using latest versions of all installed packages to avoid any recent CVEs
