@@ -46,6 +46,7 @@ Example config file
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -79,7 +80,9 @@ func LoadTokenConfig(fileOpener fileioperformer.FileIoPerformer, path string, to
 		return err
 	}
 	readCloser := fileioperformer.MakeReadCloser(reader)
-	defer readCloser.Close()
+	defer func(readCloser io.ReadCloser) {
+		_ = readCloser.Close()
+	}(readCloser)
 
 	err = json.NewDecoder(readCloser).Decode(tokenConf)
 	if err != nil {

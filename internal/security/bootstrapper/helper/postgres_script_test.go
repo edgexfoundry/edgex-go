@@ -36,7 +36,9 @@ func TestGeneratePostgresScript(t *testing.T) {
 
 	inputFile, err := os.Open(fileName)
 	require.NoError(t, err)
-	defer inputFile.Close()
+	defer func(inputFile *os.File) {
+		_ = inputFile.Close()
+	}(inputFile)
 
 	inputScanner := bufio.NewScanner(inputFile)
 	inputScanner.Split(bufio.ScanLines)

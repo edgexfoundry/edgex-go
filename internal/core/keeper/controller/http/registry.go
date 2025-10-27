@@ -7,6 +7,7 @@ package http
 
 import (
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
+	goio "io"
 	"net/http"
 
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
@@ -43,7 +44,12 @@ func (rc *RegistryController) Register(c echo.Context) error {
 	w := c.Response()
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func(Body goio.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				bootstrapContainer.LoggingClientFrom(rc.dic.Get).Warnf("error occured while closing the request body: %s", err.Error())
+			}
+		}(r.Body)
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(rc.dic.Get)
@@ -80,7 +86,12 @@ func (rc *RegistryController) UpdateRegister(c echo.Context) error {
 	w := c.Response()
 
 	if r.Body != nil {
-		defer r.Body.Close()
+		defer func(Body goio.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				bootstrapContainer.LoggingClientFrom(rc.dic.Get).Warnf("error occured while closing the request body: %s", err.Error())
+			}
+		}(r.Body)
 	}
 
 	lc := bootstrapContainer.LoggingClientFrom(rc.dic.Get)

@@ -224,7 +224,13 @@ func ParsePathParamToInt64(c echo.Context, pathKey string, min, max int64) (int6
 
 // ParseBodyToMap parses the body of http request to a map[string]interfaces{}.  EdgeX error will be returned if any parsing error occurs.
 func ParseBodyToMap(r *http.Request) (map[string]interface{}, errors.EdgeX) {
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			// cannot use logging client here, just print to console
+			fmt.Printf("error occured while closing the request body: %s", err.Error())
+		}
+	}(r.Body)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.NewCommonEdgeX(errors.KindServerError, "failed to read request body", err)
