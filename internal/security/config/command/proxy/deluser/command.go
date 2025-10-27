@@ -14,7 +14,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/security/config/command/proxy/shared"
 	"github.com/edgexfoundry/edgex-go/internal/security/config/interfaces"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
-	secretStoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
 
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
 )
@@ -25,7 +24,7 @@ const (
 
 type cmd struct {
 	loggingClient   logger.LoggingClient
-	configuration   *secretStoreConfig.ConfigurationStruct
+	configuration   *config.ConfigurationStruct
 	proxyUserCommon shared.ProxyUserCommon
 	useRootToken    bool
 	username        string

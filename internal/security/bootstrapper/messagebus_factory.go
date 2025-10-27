@@ -37,6 +37,6 @@ func ConfigureSecureMessageBus(brokerType string, ctx context.Context, cancel co
 		//no op as Redis message bus is handled in configureRedis
 		return nil
 	default:
-		return fmt.Errorf("Broker Type Not Supported: %s", brokerType)
+		return fmt.Errorf("unsupported broker type: %s", brokerType)
 	}
 }

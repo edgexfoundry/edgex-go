@@ -119,7 +119,7 @@ func (cs *Certs) retrieve() (*CertPair, error) {
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&cc); err != nil {
-		e := fmt.Errorf("Error decoding json response when retrieving proxy cert pair: %s", err.Error())
+		e := fmt.Errorf("error decoding json response when retrieving proxy cert pair: %s", err.Error())
 		cs.loggingClient.Error(e.Error())
 		return nil, e
 	}

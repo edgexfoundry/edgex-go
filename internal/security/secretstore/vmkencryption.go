@@ -82,7 +82,7 @@ func (v *VMKEncryption) LoadIKM(ikmBinPath string) error {
 	}
 	ikm, err := v.pipedHexReader.ReadHexBytesFromExe(ikmBinPath)
 	if err != nil {
-		return fmt.Errorf("Error reading input key material from EDGEX_IKM_HOOK - encryption not enabled: %w", err)
+		return fmt.Errorf("error reading input key material from EDGEX_IKM_HOOK - encryption not enabled: %w", err)
 	}
 	v.ikm = ikm
 	v.encrypting = true

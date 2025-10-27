@@ -47,7 +47,7 @@ func LoadInitResponse(
 
 	decoder := json.NewDecoder(tokenFileCloseable)
 	if decoder == nil {
-		err := errors.New("Failed to create JSON decoder")
+		err := errors.New("failed to create JSON decoder")
 		lc.Error(err.Error())
 		return err
 	}

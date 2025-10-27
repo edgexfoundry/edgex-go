@@ -114,7 +114,6 @@ preServiceUpLoop:
 			if h.registry.Status == models.Up {
 				break preServiceUpLoop
 			}
-			break
 		}
 	}
 

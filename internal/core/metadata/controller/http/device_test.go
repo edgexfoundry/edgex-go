@@ -231,15 +231,16 @@ func TestAddDevice(t *testing.T) {
 			var responseEnvelope types.MessageEnvelope
 			mockMessaging := &messagingMocks.MessageClient{}
 			if testCase.expectedValidation {
-				if testCase.expectedResponseCode == http.StatusInternalServerError {
+				switch testCase.expectedResponseCode {
+				case http.StatusInternalServerError:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
 						require.True(t, ok)
 						responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
 					}).Return(&responseEnvelope, nil)
-				} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
+				case http.StatusServiceUnavailable:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
-				} else {
+				default:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
 						require.True(t, ok)
@@ -665,15 +666,16 @@ func TestPatchDevice(t *testing.T) {
 			var responseEnvelope types.MessageEnvelope
 			mockMessaging := &messagingMocks.MessageClient{}
 			if testCase.expectedValidation {
-				if testCase.expectedResponseCode == http.StatusInternalServerError {
+				switch testCase.expectedResponseCode {
+				case http.StatusInternalServerError:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
 						require.True(t, ok)
 						responseEnvelope = types.NewMessageEnvelopeWithError(requestEnvelope.RequestID, "validation failed")
 					}).Return(&responseEnvelope, nil)
-				} else if testCase.expectedResponseCode == http.StatusServiceUnavailable {
+				case http.StatusServiceUnavailable:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&responseEnvelope, errors.New("timed out"))
-				} else {
+				default:
 					mockMessaging.On("Request", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 						requestEnvelope, ok := args.Get(0).(types.MessageEnvelope)
 						require.True(t, ok)

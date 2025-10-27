@@ -19,13 +19,13 @@ import (
 )
 
 var (
-	ErrNotFound            = errors.New("Item not found")
-	ErrUnsupportedDatabase = errors.New("Unsupported database type")
-	ErrInvalidObjectId     = errors.New("Invalid object ID")
-	ErrNotUnique           = errors.New("Resource already exists")
-	ErrCommandStillInUse   = errors.New("Command is still in use by device profiles")
-	ErrSlugEmpty           = errors.New("Slug is nil or empty")
-	ErrNameEmpty           = errors.New("Name is required")
+	ErrNotFound            = errors.New("item not found")
+	ErrUnsupportedDatabase = errors.New("unsupported database type")
+	ErrInvalidObjectId     = errors.New("invalid object ID")
+	ErrNotUnique           = errors.New("resource already exists")
+	ErrCommandStillInUse   = errors.New("command is still in use by device profiles")
+	ErrSlugEmpty           = errors.New("slug is nil or empty")
+	ErrNameEmpty           = errors.New("name is required")
 )
 
 type Configuration struct {

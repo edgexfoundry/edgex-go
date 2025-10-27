@@ -644,7 +644,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 		serviceNameList = strings.TrimSpace(strings.Replace(serviceNameList, serviceListEnd, "", 1))
 		if len(serviceNameList) == 0 {
 			return nil, fmt.Errorf(
-				"invalid specification for %s environment variable: Service name list for '%s' is empty.",
+				"invalid specification for %s environment variable: Service name list for '%s' is empty",
 				addKnownSecretsEnv,
 				secretName)
 		}
@@ -655,7 +655,7 @@ func (b *Bootstrap) getKnownSecretsToAdd() (map[string][]string, error) {
 
 			if !serviceNameRegx.MatchString(serviceNames[index]) {
 				return nil, fmt.Errorf(
-					"invalid specification for %s environment variable: Service name '%s' has invalid characters.",
+					"invalid specification for %s environment variable: Service name '%s' has invalid characters",
 					addKnownSecretsEnv, serviceNames[index])
 			}
 		}
@@ -739,7 +739,7 @@ func saveInitResponse(
 
 	encoder := json.NewEncoder(tokenFile)
 	if encoder == nil {
-		err := errors.New("Failed to create JSON encoder")
+		err := errors.New("failed to create JSON encoder")
 		lc.Error(err.Error())
 		_ = tokenFile.Close()
 		return err

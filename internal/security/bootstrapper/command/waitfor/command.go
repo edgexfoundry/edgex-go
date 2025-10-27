@@ -62,19 +62,19 @@ func NewCommand(
 	// input sanity checks
 	defaultTimeout, err := time.ParseDuration(configuration.StageGate.WaitFor.Timeout)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse duration for StageGate.WaitFor.Timeout: %s: %w",
+		return nil, fmt.Errorf("unable to parse duration for StageGate.WaitFor.Timeout: %s: %w",
 			configuration.StageGate.WaitFor.Timeout, err)
 	} else if defaultTimeout <= 0 {
-		return nil, fmt.Errorf("Expect positive time duration (> 0) for StageGate.WaitFor.Timeout: %s",
+		return nil, fmt.Errorf("expect positive time duration (> 0) for StageGate.WaitFor.Timeout: %s",
 			configuration.StageGate.WaitFor.Timeout)
 	}
 
 	defaultRetryInterval, err := time.ParseDuration(configuration.StageGate.WaitFor.RetryInterval)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse duration for StageGate.WaitFor.RetryInterval: %s: %w",
+		return nil, fmt.Errorf("unable to parse duration for StageGate.WaitFor.RetryInterval: %s: %w",
 			configuration.StageGate.WaitFor.RetryInterval, err)
 	} else if defaultRetryInterval <= 0 {
-		return nil, fmt.Errorf("Expect positive time duration (> 0) for StageGate.WaitFor.RetryInterval: %s",
+		return nil, fmt.Errorf("expect positive time duration (> 0) for StageGate.WaitFor.RetryInterval: %s",
 			configuration.StageGate.WaitFor.RetryInterval)
 	}
 
@@ -98,7 +98,7 @@ func NewCommand(
 
 	err = flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse command: %s: %w", strings.Join(args, " "), err)
+		return nil, fmt.Errorf("unable to parse command: %s: %w", strings.Join(args, " "), err)
 	}
 
 	if len(cmd.uris) == 0 {
@@ -169,7 +169,7 @@ func (c *cmd) waitForDependencies() error {
 	case <-dependencyChan:
 		break
 	case <-time.After(c.timeout):
-		return fmt.Errorf("Timeout after %s waiting on dependencies to become available: %v", c.timeout, c.uris)
+		return fmt.Errorf("timeout after %s waiting on dependencies to become available: %v", c.timeout, c.uris)
 	}
 
 	return nil

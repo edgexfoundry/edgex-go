@@ -20,7 +20,6 @@ import (
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/common"
 	commonDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/common"
-	"github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	requestDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/requests"
 	responseDTO "github.com/edgexfoundry/go-mod-core-contracts/v4/dtos/responses"
 
@@ -69,7 +68,7 @@ func (dc *DeviceController) AddDevice(c echo.Context) error {
 		force = true
 	}
 
-	var reqDTOs []requests.AddDeviceRequest
+	var reqDTOs []requestDTO.AddDeviceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
@@ -192,7 +191,7 @@ func (dc *DeviceController) PatchDevice(c echo.Context) error {
 		bypassValidation = true
 	}
 
-	var reqDTOs []requests.UpdateDeviceRequest
+	var reqDTOs []requestDTO.UpdateDeviceRequest
 	err := dc.reader.Read(r.Body, &reqDTOs)
 	if err != nil {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")

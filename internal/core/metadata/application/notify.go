@@ -87,7 +87,7 @@ func publishSystemEvent(eventType, action, owner string, dto any, ctx context.Co
 	systemEvent := dtos.NewSystemEvent(eventType, action, common.CoreMetaDataServiceKey, owner, nil, dto)
 	messagingClient := bootstrapContainer.MessagingClientFrom(dic.Get)
 	if messagingClient == nil {
-		lc.Errorf("unable to publish '%s' System Event: %v", eventType, noMessagingClientError)
+		lc.Errorf("unable to publish '%s' System Event: %v", eventType, errNoMessagingClient)
 		return
 	}
 

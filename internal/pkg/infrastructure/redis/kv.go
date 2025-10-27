@@ -24,12 +24,12 @@ const KVCollection = "kp|kv"
 
 // replaceKeyDelimiterForDB replace the key delimiter from slash(for EdgeX Keeper) to colon(for Redis)
 func replaceKeyDelimiterForDB(wholeKey string) string {
-	return strings.Replace(wholeKey, constants.KeyDelimiter, DBKeySeparator, -1)
+	return strings.ReplaceAll(wholeKey, constants.KeyDelimiter, DBKeySeparator)
 }
 
 // replaceKeyDelimiterForKeeper replace the key delimiter from colon(for Redis) to slash(for EdgeX Keeper)
 func replaceKeyDelimiterForKeeper(wholeKey string) string {
-	return strings.Replace(wholeKey, DBKeySeparator, constants.KeyDelimiter, -1)
+	return strings.ReplaceAll(wholeKey, DBKeySeparator, constants.KeyDelimiter)
 }
 
 // keeperKeys returns the value(s) stored in the specified key or keys with the same prefix

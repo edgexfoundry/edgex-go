@@ -277,8 +277,7 @@ func AsyncPurgeNotification(interval time.Duration, ctx context.Context, dic *di
 				case <-timer.C:
 					err := purgeNotification(dic)
 					if err != nil {
-						lc.Errorf("Failed to purge notifications and transmissions, %v", err)
-						break
+						lc.Errorf("failed to purge notifications and transmissions, %v", err)
 					}
 				}
 			}

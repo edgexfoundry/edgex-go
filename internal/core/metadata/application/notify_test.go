@@ -161,7 +161,7 @@ func TestPublishSystemEvent(t *testing.T) {
 			publishSystemEvent(test.Type, test.Action, test.Owner, expectedDetails, ctx, dic)
 
 			if test.ClientMissing {
-				mockLogger.AssertCalled(t, "Errorf", mock.Anything, mock.Anything, noMessagingClientError)
+				mockLogger.AssertCalled(t, "Errorf", mock.Anything, mock.Anything, errNoMessagingClient)
 				return
 			}
 

@@ -312,29 +312,29 @@ func convertToNumeric(reading *dtos.BaseReading) {
 	}
 	switch reading.ValueType {
 	case common.ValueTypeInt8, common.ValueTypeInt16, common.ValueTypeInt32, common.ValueTypeInt64:
-		reading.NumericReading.NumericValue = cast.ToInt64(reading.Value)
+		reading.NumericValue = cast.ToInt64(reading.Value)
 	case common.ValueTypeUint8, common.ValueTypeUint16, common.ValueTypeUint32, common.ValueTypeUint64:
-		reading.NumericReading.NumericValue = cast.ToUint64(reading.Value)
+		reading.NumericValue = cast.ToUint64(reading.Value)
 	case common.ValueTypeFloat32, common.ValueTypeFloat64:
-		reading.NumericReading.NumericValue = cast.ToFloat64(reading.Value)
+		reading.NumericValue = cast.ToFloat64(reading.Value)
 	case common.ValueTypeInt8Array, common.ValueTypeInt16Array, common.ValueTypeInt32Array, common.ValueTypeInt64Array:
 		arrayValue, err := parseArray(reading.Value, cast.ToInt64)
 		if err != nil {
 			return
 		}
-		reading.NumericReading.NumericValue = arrayValue
+		reading.NumericValue = arrayValue
 	case common.ValueTypeUint8Array, common.ValueTypeUint16Array, common.ValueTypeUint32Array, common.ValueTypeUint64Array:
 		arrayValue, err := parseArray(reading.Value, cast.ToUint64)
 		if err != nil {
 			return
 		}
-		reading.NumericReading.NumericValue = arrayValue
+		reading.NumericValue = arrayValue
 	case common.ValueTypeFloat32Array, common.ValueTypeFloat64Array:
 		arrayValue, err := parseArray(reading.Value, cast.ToFloat64)
 		if err != nil {
 			return
 		}
-		reading.NumericReading.NumericValue = arrayValue
+		reading.NumericValue = arrayValue
 	default:
 		// skip not matched data type like bool, string
 		return
@@ -344,7 +344,7 @@ func convertToNumeric(reading *dtos.BaseReading) {
 
 // convertToNumeric converts NumericReading value to SimpleReadding value
 func convertToString(reading *dtos.BaseReading) {
-	if reading.NumericReading.NumericValue == nil {
+	if reading.NumericValue == nil {
 		return
 	}
 	switch reading.ValueType {
@@ -353,9 +353,9 @@ func convertToString(reading *dtos.BaseReading) {
 	case common.ValueTypeFloat64:
 		reading.Value = strconv.FormatFloat(cast.ToFloat64(reading.NumericValue), 'e', -1, 64)
 	default:
-		reading.Value = fmt.Sprintf("%v", reading.NumericReading.NumericValue)
+		reading.Value = fmt.Sprintf("%v", reading.NumericValue)
 	}
-	reading.NumericReading.NumericValue = nil
+	reading.NumericValue = nil
 }
 
 func parseArray[T any](val string, conv func(any) T) ([]T, error) {
