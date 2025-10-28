@@ -12,7 +12,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel"
 	senderMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/application/channel/mocks"
 	"github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
-	notificationContainer "github.com/edgexfoundry/edgex-go/internal/support/notifications/container"
 	dbMock "github.com/edgexfoundry/edgex-go/internal/support/notifications/infrastructure/interfaces/mocks"
 
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -113,7 +112,7 @@ func TestFirstSend(t *testing.T) {
 
 func TestReSend(t *testing.T) {
 	dic := mockDic()
-	config := notificationContainer.ConfigurationFrom(dic.Get)
+	config := container.ConfigurationFrom(dic.Get)
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("UpdateTransmission", mock.Anything).Return(nil)
 	dic.Update(di.ServiceConstructorMap{

@@ -75,7 +75,7 @@ func (eng SecretsEngine) Enable(rootToken *string,
 			}
 			lc.Infof("KeyValue secrets engine with version %s enabled", kvVersion)
 		default:
-			return fmt.Errorf("Unsupported secrets engine type: %s", eng.engineType)
+			return fmt.Errorf("unsupported secrets engine type: %s", eng.engineType)
 		}
 	} else {
 		lc.Infof("%s secrets engine already enabled...", eng.engineType)

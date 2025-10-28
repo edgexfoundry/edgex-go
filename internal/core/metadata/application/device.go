@@ -82,7 +82,7 @@ func AddDevice(d models.Device, ctx context.Context, dic *di.Container, bypassVa
 
 	// Execute the Device Service Validation when both bypassValidation/force values are false by default
 	// Skip the Device Service Validation if either bypassValidation or force is true
-	if !(bypassValidation || force) {
+	if !bypassValidation && !force { // Per De Morgan's law, !(A || B) is equivalent to !A && !B
 		err = validateDeviceCallback(dtos.FromDeviceModelToDTO(d), dic)
 		if err != nil {
 			return "", errors.NewCommonEdgeXWrapper(err)
@@ -393,7 +393,7 @@ func DevicesByProfileName(offset int, limit int, profileName string, dic *di.Con
 	return devices, totalCount, nil
 }
 
-var noMessagingClientError = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
+var errNoMessagingClient = goErrors.New("MessageBus Client not available. Please update RequireMessageBus and MessageBus configuration to enable sending System Events via the EdgeX MessageBus")
 
 func validateParentProfileAndAutoEvent(dic *di.Container, d models.Device) errors.EdgeX {
 	if d.ProfileName == "" {

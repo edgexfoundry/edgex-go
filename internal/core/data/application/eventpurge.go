@@ -49,7 +49,6 @@ func (a *CoreDataApp) AsyncPurgeEvent(ctx context.Context, dic *di.Container) er
 					err = purgeEvents(dic)
 					if err != nil {
 						lc.Errorf("Failed to purge events and readings, %v", err)
-						break
 					}
 				}
 			}

@@ -40,7 +40,7 @@ func buildSmtpMessage(sender string, subject string, toAddresses []string, conte
 
 	// only add MIME header if notification content type was set
 	if contentType != "" {
-		buf.WriteString(fmt.Sprintf("MIME-version: 1.0;\r\nContent-Type: %s; charset=\"UTF-8\";\r\n", contentType))
+		_, _ = fmt.Fprintf(buf, "MIME-version: 1.0;\r\nContent-Type: %s; charset=\"UTF-8\";\r\n", contentType)
 	}
 
 	buf.WriteString(smtpNewline)

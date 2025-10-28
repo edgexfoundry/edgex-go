@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/common"
-	securityCommon "github.com/edgexfoundry/edgex-go/internal/security/common"
 	fileProviderConfig "github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	"github.com/edgexfoundry/go-mod-core-contracts/v4/clients/logger"
@@ -35,7 +34,7 @@ func makeToken(serviceName string,
 
 	lc.Infof("generating policy/token defaults for service %s", serviceName)
 	lc.Infof("using policy/token defaults for service %s", serviceName)
-	servicePolicy := securityCommon.MakeDefaultTokenPolicy(serviceName)
+	servicePolicy := common.MakeDefaultTokenPolicy(serviceName)
 	defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 	for pathKey, policy := range defaultPolicyPaths {
 		servicePolicy["path"].(map[string]interface{})[pathKey] = policy

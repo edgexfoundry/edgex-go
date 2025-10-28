@@ -227,7 +227,6 @@ func AsyncPurgeRecord(ctx context.Context, dic *di.Container, interval time.Dura
 					err := purgeRecord(ctx, dic)
 					if err != nil {
 						lc.Errorf("Failed to purge schedule action records, %v", err)
-						break
 					}
 				}
 			}

@@ -17,7 +17,6 @@ import (
 	"github.com/edgexfoundry/edgex-go/internal/core/command/config"
 	commandContainer "github.com/edgexfoundry/edgex-go/internal/core/command/container"
 
-	"github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	bootstrapContainer "github.com/edgexfoundry/go-mod-bootstrap/v4/bootstrap/container"
 	bootstrapConfig "github.com/edgexfoundry/go-mod-bootstrap/v4/config"
 	"github.com/edgexfoundry/go-mod-bootstrap/v4/di"
@@ -61,7 +60,7 @@ func NewMockDIC() *di.Container {
 				},
 			}
 		},
-		container.LoggingClientInterfaceName: func(get di.Get) interface{} {
+		bootstrapContainer.LoggingClientInterfaceName: func(get di.Get) interface{} {
 			return logger.NewMockClient()
 		},
 	})

@@ -67,7 +67,7 @@ func NewCommand(
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse command: %s: %w", strings.Join(args, " "), err)
+		return nil, fmt.Errorf("unable to parse command: %s: %w", strings.Join(args, " "), err)
 	}
 
 	if len(cmd.httpURL) == 0 {
@@ -95,11 +95,11 @@ func (c *cmd) Execute() (int, error) {
 	c.loggingClient.Infof("http calls on the endpoint of %s", c.httpURL)
 	req, err := http.NewRequest(http.MethodGet, c.httpURL, http.NoBody)
 	if err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to prepare request for http URL: %w", err)
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to prepare request for http URL: %w", err)
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return interfaces.StatusCodeExitWithError, fmt.Errorf("Failed to send request for http URL: %w", err)
+		return interfaces.StatusCodeExitWithError, fmt.Errorf("failed to send request for http URL: %w", err)
 	}
 
 	defer func() {

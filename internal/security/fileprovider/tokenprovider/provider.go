@@ -26,7 +26,6 @@ import (
 	"strconv"
 
 	"github.com/edgexfoundry/edgex-go/internal/security/common"
-	securityCommon "github.com/edgexfoundry/edgex-go/internal/security/common"
 	"github.com/edgexfoundry/edgex-go/internal/security/fileprovider/config"
 	"github.com/edgexfoundry/edgex-go/internal/security/secretstore"
 	secretstoreConfig "github.com/edgexfoundry/edgex-go/internal/security/secretstore/config"
@@ -113,7 +112,7 @@ func (p *fileTokenProvider) Run() error {
 
 		if serviceConfig.UseDefaults {
 			p.logger.Infof("using policy/token defaults for service %s", serviceName)
-			servicePolicy = securityCommon.MakeDefaultTokenPolicy(serviceName)
+			servicePolicy = common.MakeDefaultTokenPolicy(serviceName)
 			defaultPolicyPaths := servicePolicy["path"].(map[string]interface{})
 			for pathKey, policy := range defaultPolicyPaths {
 				servicePolicy["path"].(map[string]interface{})[pathKey] = policy

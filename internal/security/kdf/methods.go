@@ -86,7 +86,7 @@ func (kdf *kdfObject) initializeSalt() ([]byte, error) {
 			return nil, err
 		}
 		if nbytes != saltLength {
-			return nil, errors.New("Salt file does not contain expected length of salt")
+			return nil, errors.New("salt file does not contain expected length of salt")
 		}
 
 		return salt, nil
@@ -117,7 +117,7 @@ func (kdf *kdfObject) initializeSalt() ([]byte, error) {
 			return nil, err
 		}
 		if nwritten != len(salt) {
-			err := errors.New("Failed to write entire contents of salt file; encryption key will likely be unrecoverable")
+			err := errors.New("failed to write entire contents of salt file; encryption key will likely be unrecoverable")
 			return nil, err
 		}
 		if closeErr != nil {

@@ -63,7 +63,7 @@ func NewCommand(
 
 	err := flagSet.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse command: %s: %w", strings.Join(args, " "), err)
+		return nil, fmt.Errorf("unable to parse command: %s: %w", strings.Join(args, " "), err)
 	}
 
 	return &cmd, nil
