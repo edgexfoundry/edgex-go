@@ -30,7 +30,7 @@ var (
 )
 
 func TestReadingTotalCount(t *testing.T) {
-	expectedReadingCount := uint32(656672)
+	expectedReadingCount := int64(656672)
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingTotalCount").Return(expectedReadingCount, nil)
 
@@ -66,7 +66,7 @@ func TestReadingTotalCount(t *testing.T) {
 }
 
 func TestAllReadings(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -92,7 +92,7 @@ func TestAllReadings(t *testing.T) {
 		limit              string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get readings without offset, and limit", "", "", "", false, totalCount, http.StatusOK},
@@ -149,7 +149,7 @@ func TestAllReadings(t *testing.T) {
 }
 
 func TestReadingsByTimeRange(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -177,7 +177,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 		aggFunc            string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", "", false, 0, totalCount, http.StatusOK},
@@ -235,7 +235,7 @@ func TestReadingsByTimeRange(t *testing.T) {
 }
 
 func TestReadingsByResourceName(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -262,7 +262,7 @@ func TestReadingsByResourceName(t *testing.T) {
 		resourceName       string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get readings without offset, and limit", "", "", TestDeviceResourceName, "", false, totalCount, http.StatusOK},
@@ -321,7 +321,7 @@ func TestReadingsByResourceName(t *testing.T) {
 }
 
 func TestReadingsByDeviceName(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -348,7 +348,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 		deviceName         string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get readings without offset, and limit", "", "", TestDeviceName, "", false, totalCount, http.StatusOK},
@@ -407,7 +407,7 @@ func TestReadingsByDeviceName(t *testing.T) {
 }
 
 func TestReadingCountByDeviceName(t *testing.T) {
-	expectedReadingCount := uint32(656672)
+	expectedReadingCount := int64(656672)
 	deviceName := "deviceA"
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("ReadingCountByDeviceName", deviceName).Return(expectedReadingCount, nil)
@@ -447,7 +447,7 @@ func TestReadingCountByDeviceName(t *testing.T) {
 }
 
 func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -475,7 +475,7 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 		limit              string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid ", TestDeviceResourceName, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
@@ -533,7 +533,7 @@ func TestReadingsByResourceNameAndTimeRange(t *testing.T) {
 }
 
 func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -561,7 +561,7 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 		limit              string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"valid - get readings without offset, and limit", TestDeviceName, TestDeviceResourceName, "", "", "", false, totalCount, http.StatusOK},
@@ -623,7 +623,7 @@ func TestReadingsByDeviceNameAndResourceName(t *testing.T) {
 }
 
 func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	app := application.NewCoreDataApp(dic)
 
@@ -652,7 +652,7 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 		limit              string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid ", TestDeviceName, TestDeviceResourceName, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},
@@ -712,7 +712,7 @@ func TestReadingsByDeviceNameAndResourceNameAndTimeRange(t *testing.T) {
 }
 
 func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	testResourceNames := []string{"resource01", "resource02"}
 	emptyPayload := make(map[string]interface{})
 	testResourceNamesPayload := emptyPayload
@@ -747,7 +747,7 @@ func TestReadingsByDeviceNameAndResourceNamesAndTimeRange(t *testing.T) {
 		limit              string
 		aggFunc            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - provide deviceName and nil resourceNames", TestDeviceName, nil, "0", "100", "0", "10", "", false, totalCount, http.StatusOK},

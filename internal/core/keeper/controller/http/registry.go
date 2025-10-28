@@ -155,7 +155,7 @@ func (rc *RegistryController) Registrations(c echo.Context) error {
 		return utils.WriteErrorResponse(w, ctx, lc, err, "")
 	}
 
-	response := responses.NewMultiRegistrationsResponse("", "", http.StatusOK, uint32(len(dtos)), dtos)
+	response := responses.NewMultiRegistrationsResponse("", "", http.StatusOK, int64(len(dtos)), dtos)
 	utils.WriteHttpHeader(w, ctx, http.StatusOK)
 	return pkg.EncodeAndWriteResponse(response, w, lc)
 }

@@ -43,7 +43,7 @@ func AddSubscription(d models.Subscription, ctx context.Context, dic *di.Contain
 }
 
 // AllSubscriptions queries subscriptions by offset and limit
-func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dtos.Subscription, totalCount uint32, err errors.EdgeX) {
+func AllSubscriptions(offset, limit int, dic *di.Container) (subscriptions []dtos.Subscription, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.SubscriptionTotalCount()
@@ -81,7 +81,7 @@ func SubscriptionByName(name string, dic *di.Container) (subscription dtos.Subsc
 }
 
 // SubscriptionsByCategory queries subscriptions with offset, limit, and category
-func SubscriptionsByCategory(offset, limit int, category string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount uint32, err errors.EdgeX) {
+func SubscriptionsByCategory(offset, limit int, category string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount int64, err errors.EdgeX) {
 	if category == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
@@ -108,7 +108,7 @@ func SubscriptionsByCategory(offset, limit int, category string, dic *di.Contain
 }
 
 // SubscriptionsByLabel queries subscriptions with offset, limit, and label
-func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount uint32, err errors.EdgeX) {
+func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount int64, err errors.EdgeX) {
 	if label == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
@@ -135,7 +135,7 @@ func SubscriptionsByLabel(offset, limit int, label string, dic *di.Container) (s
 }
 
 // SubscriptionsByReceiver queries subscriptions with offset, limit, and receiver
-func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount uint32, err errors.EdgeX) {
+func SubscriptionsByReceiver(offset, limit int, receiver string, dic *di.Container) (subscriptions []dtos.Subscription, totalCount int64, err errors.EdgeX) {
 	if receiver == "" {
 		return subscriptions, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "receiver is empty", nil)
 	}

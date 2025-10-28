@@ -165,24 +165,24 @@ func (c *Client) SubscriptionsByCategoriesAndLabels(offset, limit int, categorie
 }
 
 // SubscriptionTotalCount returns the total count of subscriptions
-func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionTotalCount() (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(subscriptionTableName))
 }
 
 // SubscriptionCountByCategory returns the count of subscriptions by category
-func (c *Client) SubscriptionCountByCategory(category string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByCategory(category string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{categoriesField: []string{category}}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(subscriptionTableName), queryObj)
 }
 
 // SubscriptionCountByLabel returns the count of subscriptions by label
-func (c *Client) SubscriptionCountByLabel(label string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByLabel(label string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{labelsField: []string{label}}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(subscriptionTableName), queryObj)
 }
 
 // SubscriptionCountByReceiver returns the count of subscriptions by receiver
-func (c *Client) SubscriptionCountByReceiver(receiver string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByReceiver(receiver string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{receiverField: receiver}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(subscriptionTableName), queryObj)
 }

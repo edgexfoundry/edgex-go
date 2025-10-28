@@ -28,7 +28,7 @@ var (
 	insertReadingCols = []string{eventIdFKCol, deviceInfoIdFKCol, originCol, valueCol, numericValueCol, binaryValueCol, objectValueCol}
 )
 
-func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) ReadingTotalCount() (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReading())
 }
 
@@ -172,46 +172,46 @@ func (c *Client) ReadingsByDeviceNameAndResourceNamesAndTimeRange(deviceName str
 }
 
 // ReadingCountByDeviceName returns the count of Readings associated a specific Device from db
-func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceName(deviceName string) (int64, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(deviceNameCol)
 
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName})
 }
 
 // ReadingCountByResourceName returns the count of Readings associated a specific resource from db
-func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByResourceName(resourceName string) (int64, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(resourceNameCol)
 
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{resourceNameCol: resourceName})
 }
 
 // ReadingCountByDeviceNameAndResourceName returns the count of readings associated a specific device and resource values from db
-func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (int64, errors.EdgeX) {
 	sqlStatement := sqlQueryCountReadingByCol(deviceNameCol, resourceNameCol)
 
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlStatement, pgx.NamedArgs{deviceNameCol: deviceName, resourceNameCol: resourceName})
 }
 
 // ReadingCountByTimeRange returns the count of reading by origin within the time range from db
-func (c *Client) ReadingCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByTimeRange(start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil), pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end})
 }
 
 // ReadingCountByDeviceNameAndTimeRange returns the count of readings by origin within the time range and the specified device from db
-func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, deviceNameCol),
 		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, deviceNameCol: deviceName})
 }
 
 // ReadingCountByResourceNameAndTimeRange returns the count of readings by origin within the time range and the specified resource from db
-func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountReadingByTimeRangeCol(originCol, nil, resourceNameCol),
 		pgx.NamedArgs{startTimeCondition: start, endTimeCondition: end, resourceNameCol: resourceName})
 }
 
 // ReadingCountByDeviceNameAndResourceNameAndTimeRange returns the count of readings by origin within the time range
 // associated with the specified device and resource from db
-func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(),
 		c.ConnPool,
 		sqlQueryCountReadingByTimeRangeCol(originCol, nil, deviceNameCol, resourceNameCol),
@@ -220,7 +220,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 
 // ReadingCountByDeviceNameAndResourceNamesAndTimeRange returns the count of readings by origin within the time range
 // associated with the specified device and resourceName slice from db
-func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(),
 		c.ConnPool,
 		sqlQueryCountReadingByTimeRangeCol(originCol, []string{resourceNameCol}, deviceNameCol, resourceNameCol),

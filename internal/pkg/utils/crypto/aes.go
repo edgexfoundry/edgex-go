@@ -128,8 +128,8 @@ func (c *AESCryptor) Encrypt(plaintext string) (string, errors.EdgeX) {
 	}
 
 	keySourceBytes := []byte(c.keySource)
+	// #nosec G115 -- The keySource is either 'self' or 'secret-store', so an overflow is impossible in this context.
 	keySourceLength := uint32(len(keySourceBytes))
-
 	// generate random nonce for GCM
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {

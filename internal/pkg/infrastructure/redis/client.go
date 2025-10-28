@@ -294,7 +294,7 @@ func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, man
 }
 
 // EventTotalCount returns the total count of Event from the database
-func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) EventTotalCount() (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -307,7 +307,7 @@ func (c *Client) EventTotalCount() (uint32, errors.EdgeX) {
 }
 
 // EventCountByDeviceName returns the count of Event associated a specific Device from the database
-func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceName(deviceName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -320,7 +320,7 @@ func (c *Client) EventCountByDeviceName(deviceName string) (uint32, errors.EdgeX
 }
 
 // EventCountByTimeRange returns the count of Event by time range
-func (c *Client) EventCountByTimeRange(startTime int64, endTime int64) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByTimeRange(startTime int64, endTime int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -492,7 +492,7 @@ func (c *Client) AllDevices(offset int, limit int, labels []string) ([]model.Dev
 	return devices, nil
 }
 
-func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX) {
+func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (int64, []model.Device, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -530,7 +530,7 @@ func (c *Client) EventsByTimeRange(startTime int64, endTime int64, offset int, l
 }
 
 // ReadingTotalCount returns the total count of Event from the database
-func (c *Client) ReadingTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) ReadingTotalCount() (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -595,7 +595,7 @@ func (c *Client) ReadingsByDeviceName(offset int, limit int, name string) (readi
 }
 
 // ReadingCountByDeviceName returns the count of Readings associated a specific Device from the database
-func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceName(deviceName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -608,7 +608,7 @@ func (c *Client) ReadingCountByDeviceName(deviceName string) (uint32, errors.Edg
 }
 
 // ReadingCountByResourceName returns the count of Readings associated a specific Resource from the database
-func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByResourceName(resourceName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -621,7 +621,7 @@ func (c *Client) ReadingCountByResourceName(resourceName string) (uint32, errors
 }
 
 // ReadingCountByResourceNameAndTimeRange returns the count of Readings associated a specific Resource from the database within specified time range
-func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, startTime int64, endTime int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, startTime int64, endTime int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -634,7 +634,7 @@ func (c *Client) ReadingCountByResourceNameAndTimeRange(resourceName string, sta
 }
 
 // ReadingCountByDeviceNameAndResourceName returns the count of Readings associated with specified Resource and Device from the database
-func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, resourceName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -647,7 +647,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceName(deviceName string, reso
 }
 
 // ReadingCountByDeviceNameAndResourceNameAndTimeRange returns the count of Readings associated with specified Resource and Device from the database within specified time range
-func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName string, resourceName string, start int64, end int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -661,7 +661,7 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNameAndTimeRange(deviceName 
 
 // ReadingCountByDeviceNameAndResourceNamesAndTimeRange returns the count of readings by origin within the time range
 // associated with the specified device and resourceName slice from db
-func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName string, resourceNames []string, start int64, end int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -671,11 +671,11 @@ func (c *Client) ReadingCountByDeviceNameAndResourceNamesAndTimeRange(deviceName
 			fmt.Sprintf("fail to query readings by deviceName %s, resourceNames %v and time range %v ~ %v", deviceName, resourceNames, start, end), err)
 	}
 
-	return uint32(len(readings)), nil
+	return int64(len(readings)), nil
 }
 
 // ReadingCountByTimeRange returns the count of Readings from the database within specified time range
-func (c *Client) ReadingCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByTimeRange(start int64, end int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -752,7 +752,7 @@ func (c *Client) ReadingsByDeviceNameAndTimeRange(deviceName string, start int64
 	return readings, nil
 }
 
-func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ReadingCountByDeviceNameAndTimeRange(deviceName string, start int64, end int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -865,7 +865,7 @@ func (c *Client) UpdateProvisionWatcher(pw model.ProvisionWatcher) errors.EdgeX 
 }
 
 // DeviceProfileCountByLabels returns the total count of Device Profiles with labels specified.  If no label is specified, the total count of all device profiles will be returned.
-func (c *Client) DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByLabels(labels []string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -878,7 +878,7 @@ func (c *Client) DeviceProfileCountByLabels(labels []string) (uint32, errors.Edg
 }
 
 // DeviceProfileCountByManufacturer returns the count of Device Profiles associated with specified manufacturer
-func (c *Client) DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByManufacturer(manufacturer string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -891,7 +891,7 @@ func (c *Client) DeviceProfileCountByManufacturer(manufacturer string) (uint32, 
 }
 
 // DeviceProfileCountByModel returns the count of Device Profiles associated with specified model
-func (c *Client) DeviceProfileCountByModel(model string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByModel(model string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -904,7 +904,7 @@ func (c *Client) DeviceProfileCountByModel(model string) (uint32, errors.EdgeX) 
 }
 
 // DeviceProfileCountByManufacturerAndModel returns the count of Device Profiles associated with specified manufacturer and model
-func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -913,16 +913,16 @@ func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model st
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	return uint32(len(profiles)), nil
+	return int64(len(profiles)), nil
 }
 
-func (c *Client) InUseResourceCount() (uint32, errors.EdgeX) {
+func (c *Client) InUseResourceCount() (int64, errors.EdgeX) {
 	c.loggingClient.Warn("InUseResourceCount function didn't implement")
 	return 0, nil
 }
 
 // DeviceServiceCountByLabels returns the total count of Device Services with labels specified.  If no label is specified, the total count of all device services will be returned.
-func (c *Client) DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceServiceCountByLabels(labels []string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -935,7 +935,7 @@ func (c *Client) DeviceServiceCountByLabels(labels []string) (uint32, errors.Edg
 }
 
 // DeviceCountByLabels returns the total count of Devices with labels specified.  If no label is specified, the total count of all devices will be returned.
-func (c *Client) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByLabels(labels []string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -948,7 +948,7 @@ func (c *Client) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
 }
 
 // DeviceCountByProfileName returns the count of Devices associated with specified profile
-func (c *Client) DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByProfileName(profileName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -961,7 +961,7 @@ func (c *Client) DeviceCountByProfileName(profileName string) (uint32, errors.Ed
 }
 
 // DeviceCountByServiceName returns the count of Devices associated with specified service
-func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByServiceName(serviceName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -974,7 +974,7 @@ func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.Ed
 }
 
 // ProvisionWatcherCountByLabels returns the total count of Provision Watchers with labels specified.  If no label is specified, the total count of all provision watchers will be returned.
-func (c *Client) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByLabels(labels []string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -987,7 +987,7 @@ func (c *Client) ProvisionWatcherCountByLabels(labels []string) (uint32, errors.
 }
 
 // ProvisionWatcherCountByServiceName returns the count of Provision Watcher associated with specified service
-func (c *Client) ProvisionWatcherCountByServiceName(name string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByServiceName(name string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1000,7 +1000,7 @@ func (c *Client) ProvisionWatcherCountByServiceName(name string) (uint32, errors
 }
 
 // ProvisionWatcherCountByProfileName returns the count of Provision Watcher associated with specified profile
-func (c *Client) ProvisionWatcherCountByProfileName(name string) (uint32, errors.EdgeX) {
+func (c *Client) ProvisionWatcherCountByProfileName(name string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1226,7 +1226,7 @@ func (c *Client) NotificationsByCategoriesAndLabels(offset int, limit int, categ
 }
 
 // NotificationCountByCategory returns the count of Notification associated with specified category from the database
-func (c *Client) NotificationCountByCategory(category, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategory(category, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1234,11 +1234,11 @@ func (c *Client) NotificationCountByCategory(category, ack string) (uint32, erro
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByLabel returns the count of Notification associated with specified label from the database
-func (c *Client) NotificationCountByLabel(label, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByLabel(label, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1246,11 +1246,11 @@ func (c *Client) NotificationCountByLabel(label, ack string) (uint32, errors.Edg
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByStatus returns the count of Notification associated with specified status from the database
-func (c *Client) NotificationCountByStatus(status, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByStatus(status, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1258,11 +1258,11 @@ func (c *Client) NotificationCountByStatus(status, ack string) (uint32, errors.E
 	if edgeXerr != nil {
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByTimeRange returns the count of Notification from the database within specified time range
-func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1271,31 +1271,31 @@ func (c *Client) NotificationCountByTimeRange(start int64, end int64, ack string
 		return 0, errors.NewCommonEdgeXWrapper(edgeXerr)
 	}
 
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByCategoriesAndLabels returns the count of Notification associated with specified categories and labels from the database
-func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByCategoriesAndLabels(categories []string, labels []string, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
 	notifications, edgeXerr := notificationsByCategoriesAndLabels(conn, 0, -1, categories, labels, ack)
 	if edgeXerr != nil {
-		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by categories %v, labels %v, and ack %s", categories, labels, ack), edgeXerr)
+		return int64(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by categories %v, labels %v, and ack %s", categories, labels, ack), edgeXerr)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationCountByQueryConditions returns the count of Notification associated with specified condition from the database
-func (c *Client) NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (uint32, errors.EdgeX) {
+func (c *Client) NotificationCountByQueryConditions(condition requests.NotificationQueryCondition, ack string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
 	notifications, edgeXerr := notificationByQueryConditions(conn, 0, -1, condition, ack)
 	if edgeXerr != nil {
-		return uint32(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by condition %v and ack %s", condition, ack), edgeXerr)
+		return int64(0), errors.NewCommonEdgeX(errors.Kind(edgeXerr), fmt.Sprintf("fail to query notifications by condition %v and ack %s", condition, ack), edgeXerr)
 	}
-	return uint32(len(notifications)), nil
+	return int64(len(notifications)), nil
 }
 
 // NotificationsByQueryConditions queries notifications by offset, limit, categories and time range
@@ -1312,7 +1312,7 @@ func (c *Client) NotificationsByQueryConditions(offset int, limit int, condition
 }
 
 // NotificationTotalCount returns the total count of Notification from the database
-func (c *Client) NotificationTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) NotificationTotalCount() (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1337,7 +1337,7 @@ func (c *Client) LatestNotificationByOffset(offset uint32) (model.Notification, 
 }
 
 // SubscriptionTotalCount returns the total count of Subscription from the database
-func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionTotalCount() (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1350,7 +1350,7 @@ func (c *Client) SubscriptionTotalCount() (uint32, errors.EdgeX) {
 }
 
 // SubscriptionCountByCategory returns the count of Subscription associated with specified category from the database
-func (c *Client) SubscriptionCountByCategory(category string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByCategory(category string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1363,7 +1363,7 @@ func (c *Client) SubscriptionCountByCategory(category string) (uint32, errors.Ed
 }
 
 // SubscriptionCountByLabel returns the count of Subscription associated with specified label from the database
-func (c *Client) SubscriptionCountByLabel(label string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByLabel(label string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1376,7 +1376,7 @@ func (c *Client) SubscriptionCountByLabel(label string) (uint32, errors.EdgeX) {
 }
 
 // SubscriptionCountByReceiver returns the count of Subscription associated with specified receiver from the database
-func (c *Client) SubscriptionCountByReceiver(receiver string) (uint32, errors.EdgeX) {
+func (c *Client) SubscriptionCountByReceiver(receiver string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1389,7 +1389,7 @@ func (c *Client) SubscriptionCountByReceiver(receiver string) (uint32, errors.Ed
 }
 
 // TransmissionTotalCount returns the total count of Transmission from the database
-func (c *Client) TransmissionTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) TransmissionTotalCount() (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1402,7 +1402,7 @@ func (c *Client) TransmissionTotalCount() (uint32, errors.EdgeX) {
 }
 
 // TransmissionCountBySubscriptionName returns the count of Transmission associated with specified subscription name from the database
-func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1415,7 +1415,7 @@ func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (u
 }
 
 // TransmissionCountByStatus returns the count of Transmission associated with specified status name from the database
-func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByStatus(status string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1428,7 +1428,7 @@ func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX)
 }
 
 // TransmissionCountByTimeRange returns the count of Transmission from the database within specified time range
-func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 
@@ -1581,7 +1581,7 @@ func (c *Client) TransmissionsByNotificationId(offset int, limit int, id string)
 }
 
 // TransmissionCountByNotificationId returns the count of Transmission associated with specified notification id from the database
-func (c *Client) TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByNotificationId(id string) (int64, errors.EdgeX) {
 	conn := c.Pool.Get()
 	defer closeRedisConnection(conn, c.loggingClient)
 

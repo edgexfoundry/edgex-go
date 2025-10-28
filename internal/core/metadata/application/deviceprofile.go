@@ -157,7 +157,7 @@ func DeleteDeviceProfileByName(name string, ctx context.Context, dic *di.Contain
 }
 
 // AllDeviceProfiles query the device profiles with offset, and limit
-func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount uint32, err errors.EdgeX) {
+func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.DeviceProfileCountByLabels(labels)
@@ -181,7 +181,7 @@ func AllDeviceProfiles(offset int, limit int, labels []string, dic *di.Container
 }
 
 // DeviceProfilesByModel query the device profiles with offset, limit and model
-func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount uint32, err errors.EdgeX) {
+func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount int64, err errors.EdgeX) {
 	if model == "" {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "model is empty", nil)
 	}
@@ -208,7 +208,7 @@ func DeviceProfilesByModel(offset int, limit int, model string, dic *di.Containe
 }
 
 // DeviceProfilesByManufacturer query the device profiles with offset, limit and manufacturer
-func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount uint32, err errors.EdgeX) {
+func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount int64, err errors.EdgeX) {
 	if manufacturer == "" {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "manufacturer is empty", nil)
 	}
@@ -235,7 +235,7 @@ func DeviceProfilesByManufacturer(offset int, limit int, manufacturer string, di
 }
 
 // DeviceProfilesByManufacturerAndModel query the device profiles with offset, limit, manufacturer and model
-func DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount uint32, err errors.EdgeX) {
+func DeviceProfilesByManufacturerAndModel(offset int, limit int, manufacturer string, model string, dic *di.Container) (deviceProfiles []dtos.DeviceProfile, totalCount int64, err errors.EdgeX) {
 	if manufacturer == "" {
 		return deviceProfiles, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "manufacturer is empty", nil)
 	}
@@ -290,7 +290,7 @@ func PatchDeviceProfileBasicInfo(ctx context.Context, dto dtos.UpdateDeviceProfi
 }
 
 // AllDeviceProfileBasicInfos query the device profile basic infos with offset, and limit
-func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.Container) (deviceProfileBasicInfos []dtos.DeviceProfileBasicInfo, totalCount uint32, err errors.EdgeX) {
+func AllDeviceProfileBasicInfos(offset int, limit int, labels []string, dic *di.Container) (deviceProfileBasicInfos []dtos.DeviceProfileBasicInfo, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.DeviceProfileCountByLabels(labels)

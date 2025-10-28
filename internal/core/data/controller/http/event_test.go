@@ -498,7 +498,7 @@ func TestDeleteEventById(t *testing.T) {
 }
 
 func TestEventTotalCount(t *testing.T) {
-	expectedEventCount := uint32(656672)
+	expectedEventCount := int64(656672)
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventTotalCount").Return(expectedEventCount, nil)
 
@@ -534,7 +534,7 @@ func TestEventTotalCount(t *testing.T) {
 }
 
 func TestEventCountByDeviceName(t *testing.T) {
-	expectedEventCount := uint32(656672)
+	expectedEventCount := int64(656672)
 	deviceName := "deviceA"
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventCountByDeviceName", deviceName).Return(expectedEventCount, nil)
@@ -611,7 +611,7 @@ func TestDeleteEventsByDeviceName(t *testing.T) {
 
 func TestAllEvents(t *testing.T) {
 	events := []models.Event{persistedEvent, persistedEvent, persistedEvent}
-	totalCount := uint32(len(events))
+	totalCount := int64(len(events))
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -639,7 +639,7 @@ func TestAllEvents(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get events without offset and limit", "", "", false, 3, totalCount, http.StatusOK},
@@ -702,8 +702,8 @@ func TestAllEventsByDeviceName(t *testing.T) {
 	event3WithDeviceB.DeviceName = testDeviceB
 
 	events := []models.Event{event1WithDeviceA, event2WithDeviceA, event3WithDeviceB}
-	totalCountDeviceA := uint32(2)
-	totalCountDeviceB := uint32(1)
+	totalCountDeviceA := int64(2)
+	totalCountDeviceB := int64(1)
 
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
@@ -733,7 +733,7 @@ func TestAllEventsByDeviceName(t *testing.T) {
 		deviceName         string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get events with deviceName - deviceA", "0", "5", testDeviceA, false, 2, totalCountDeviceA, http.StatusOK},
@@ -786,7 +786,7 @@ func TestAllEventsByDeviceName(t *testing.T) {
 }
 
 func TestAllEventsByTimeRange(t *testing.T) {
-	totalCount := uint32(0)
+	totalCount := int64(0)
 	dic := mocks.NewMockDIC()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("EventCountByTimeRange", int64(0), int64(100)).Return(totalCount, nil)
@@ -812,7 +812,7 @@ func TestAllEventsByTimeRange(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - with proper start/end/offset/limit", "0", "100", "0", "10", false, 0, totalCount, http.StatusOK},

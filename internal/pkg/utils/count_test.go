@@ -11,16 +11,16 @@ import (
 )
 
 func TestCheckCountRange(t *testing.T) {
-	count := uint32(1)
+	count := int64(1)
 	tests := []struct {
 		name         string
-		totalCount   uint32
+		totalCount   int64
 		offset       int
 		limit        int
 		continueExec bool
 		expectErr    bool
 	}{
-		{"valid - total count is zero ", uint32(0), 0, 0, false, false},
+		{"valid - total count is zero ", int64(0), 0, 0, false, false},
 		{"valid - limit is zero ", count, 0, 0, false, false},
 		{"valid - valid range", count, 0, 1, true, false},
 		{"invalid - offset out of range", count, 2, 1, false, true},

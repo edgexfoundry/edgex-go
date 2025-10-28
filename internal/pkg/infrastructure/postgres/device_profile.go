@@ -192,7 +192,7 @@ func (c *Client) DeviceProfilesByManufacturerAndModel(offset int, limit int, man
 }
 
 // DeviceProfileCountByLabels returns the total count of Device Profiles with labels specified.  If no label is specified, the total count of all device profiles will be returned.
-func (c *Client) DeviceProfileCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByLabels(labels []string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 
 	if len(labels) > 0 {
@@ -203,28 +203,28 @@ func (c *Client) DeviceProfileCountByLabels(labels []string) (uint32, errors.Edg
 }
 
 // DeviceProfileCountByManufacturer returns the count of Device Profiles associated with specified manufacturer
-func (c *Client) DeviceProfileCountByManufacturer(manufacturer string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByManufacturer(manufacturer string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{manufacturerField: manufacturer}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceProfileTableName), queryObj)
 }
 
 // DeviceProfileCountByModel returns the count of Device Profiles associated with specified model
-func (c *Client) DeviceProfileCountByModel(model string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByModel(model string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{modelField: model}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceProfileTableName), queryObj)
 }
 
 // DeviceProfileCountByManufacturerAndModel returns the count of Device Profiles associated with specified manufacturer and model
-func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceProfileCountByManufacturerAndModel(manufacturer, model string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{manufacturerField: manufacturer, modelField: model}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceProfileTableName), queryObj)
 }
 
 // ResourceCount returns the total count of Resources
-func (c *Client) InUseResourceCount() (uint32, errors.EdgeX) {
+func (c *Client) InUseResourceCount() (int64, errors.EdgeX) {
 	ctx := context.Background()
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountInUseResource())
 }

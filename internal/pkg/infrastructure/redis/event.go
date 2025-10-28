@@ -293,7 +293,7 @@ func convertObjectsToEvents(conn redis.Conn, objects [][]byte) (events []models.
 	return events, nil
 }
 
-func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (uint32, errors.EdgeX) {
+func (c *Client) EventCountByDeviceNameAndSourceNameAndLimit(deviceName, sourceName string, limit int) (int64, errors.EdgeX) {
 	c.loggingClient.Warn("EventCountByDeviceNameAndSourceNameAndLimit function didn't implement")
 	return 0, nil
 }
@@ -308,12 +308,12 @@ func (c *Client) DeleteEventsByAgeAndDeviceNameAndSourceName(age int64, deviceNa
 	return nil
 }
 
-func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset uint32) (models.Event, errors.EdgeX) {
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndOffset(deviceName string, sourceName string, offset int64) (models.Event, errors.EdgeX) {
 	c.loggingClient.Warn("LatestEventByDeviceNameAndSourceNameAndOffset function didn't implement")
 	return models.Event{}, nil
 }
 
-func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age int64, offset uint32) (models.Event, errors.EdgeX) {
+func (c *Client) LatestEventByDeviceNameAndSourceNameAndAgeAndOffset(deviceName string, sourceName string, age, offset int64) (models.Event, errors.EdgeX) {
 	c.loggingClient.Warn("LatestEventByDeviceNameAndSourceNameAndAgeAndOffset function didn't implement")
 	return models.Event{}, nil
 }

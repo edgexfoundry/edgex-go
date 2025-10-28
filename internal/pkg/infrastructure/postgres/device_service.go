@@ -167,7 +167,7 @@ func (c *Client) UpdateDeviceService(ds model.DeviceService) errors.EdgeX {
 }
 
 // DeviceServiceCountByLabels returns the total count of Device Services with labels specified.  If no label is specified, the total count of all device services will be returned.
-func (c *Client) DeviceServiceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceServiceCountByLabels(labels []string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 
 	if len(labels) > 0 {

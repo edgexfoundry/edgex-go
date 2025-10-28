@@ -160,7 +160,7 @@ func TestAddDeviceProfileResource(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", notFoundProfileName.ProfileName).Return(deviceProfile, notFoundDBError)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, TestDeviceProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -272,7 +272,7 @@ func TestAddDeviceProfileResource_UnitsOfMeasure_Validation(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", validReq.ProfileName).Return(deviceProfile, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, validReq.ProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", validReq.ProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", validReq.ProfileName).Return(int64(1), nil)
 	uomMock := &mocks.UnitsOfMeasure{}
 	uomMock.On("Validate", TestUnits).Return(true)
 	uomMock.On("Validate", "").Return(true)
@@ -356,12 +356,12 @@ func TestPatchDeviceProfileResource(t *testing.T) {
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DeviceProfileByName", valid.ProfileName).Return(deviceProfile, nil)
 	dbClientMock.On("DevicesByProfileName", 0, mock.Anything, valid.ProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 
 	dbClientMock.On("DeviceProfileByName", deviceExistsProfileName).Return(deviceExistsProfile, nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, deviceExistsProfileName).Return([]models.Device{{}}, nil)
-	dbClientMock.On("DeviceCountByProfileName", deviceExistsProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", deviceExistsProfileName).Return(int64(1), nil)
 
 	dbClientMock.On("DeviceProfileByName", notFound).Return(deviceProfile, notFoundDBError)
 	dic.Update(di.ServiceConstructorMap{
@@ -442,7 +442,7 @@ func TestDeleteDeviceResourceByName(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &mocks.DBClient{}
 	dbClientMock.On("DevicesByProfileName", 0, mock.Anything, TestDeviceProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dbClientMock.On("DeviceProfileByName", TestDeviceProfileName).Return(dpModel, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 

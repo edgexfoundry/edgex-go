@@ -52,7 +52,7 @@ func scheduleActionRecordsData() []dtos.ScheduleActionRecord {
 }
 
 func TestAllScheduleActionRecords(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(2)
+	expectedTotalScheduleActionRecordCount := int64(2)
 	dic := mockDic()
 	dbClientMock := &csMock.DBClient{}
 	dbClientMock.On("ScheduleActionRecordTotalCount", context.Background(), int64(0), mock.AnythingOfType("int64")).Return(expectedTotalScheduleActionRecordCount, nil)
@@ -76,7 +76,7 @@ func TestAllScheduleActionRecords(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get schedule action records without start, end, offset, and limit", "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
@@ -138,7 +138,7 @@ func TestAllScheduleActionRecords(t *testing.T) {
 }
 
 func TestLatestScheduleActionRecordsByJobName(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(0)
+	expectedTotalScheduleActionRecordCount := int64(0)
 	emptyJobName := ""
 	notFoundJobName := "notFoundJobName"
 	dic := mockDic()
@@ -161,7 +161,7 @@ func TestLatestScheduleActionRecordsByJobName(t *testing.T) {
 		name               string
 		jobName            string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get schedule action records with offset and limit", testScheduleJobName, false, expectedTotalScheduleActionRecordCount, http.StatusOK},
@@ -207,7 +207,7 @@ func TestLatestScheduleActionRecordsByJobName(t *testing.T) {
 }
 
 func TestScheduleActionRecordsByStatus(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(2)
+	expectedTotalScheduleActionRecordCount := int64(2)
 
 	var records []models.ScheduleActionRecord
 	for _, dto := range scheduleActionRecordsData() {
@@ -240,7 +240,7 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - find schedule action records by status", testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
@@ -301,7 +301,7 @@ func TestScheduleActionRecordsByStatus(t *testing.T) {
 }
 
 func TestScheduleActionRecordsByJobName(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(2)
+	expectedTotalScheduleActionRecordCount := int64(2)
 
 	var records []models.ScheduleActionRecord
 	for _, dto := range scheduleActionRecordsData() {
@@ -334,7 +334,7 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - find schedule action records by job name", testScheduleJobName, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},
@@ -395,7 +395,7 @@ func TestScheduleActionRecordsByJobName(t *testing.T) {
 }
 
 func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
-	expectedTotalScheduleActionRecordCount := uint32(2)
+	expectedTotalScheduleActionRecordCount := int64(2)
 
 	var records []models.ScheduleActionRecord
 	for _, dto := range scheduleActionRecordsData() {
@@ -431,7 +431,7 @@ func TestScheduleActionRecordsByJobNameAndStatus(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - find schedule action records by job name", testScheduleJobName, testStatus, "", "", "", "", false, expectedTotalScheduleActionRecordCount, http.StatusOK},

@@ -251,7 +251,7 @@ func TestScheduleJobByName(t *testing.T) {
 }
 
 func TestAllScheduleJobs(t *testing.T) {
-	expectedTotalScheduleJobsCount := uint32(0)
+	expectedTotalScheduleJobsCount := int64(0)
 	dic := mockDic()
 	var emptyLabels []string
 	dbClientMock := &csMock.DBClient{}
@@ -274,7 +274,7 @@ func TestAllScheduleJobs(t *testing.T) {
 		offset             string
 		limit              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get scheduled jobs without offset and limit", "", "", "", false, expectedTotalScheduleJobsCount, http.StatusOK},

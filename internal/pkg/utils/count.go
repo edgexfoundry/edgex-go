@@ -12,11 +12,11 @@ import (
 )
 
 // CheckCountRange evaluates if the offset and limit parameters are within the valid range.
-func CheckCountRange(totalCount uint32, offset, limit int) (continueExec bool, err errors.EdgeX) {
+func CheckCountRange(totalCount int64, offset, limit int) (continueExec bool, err errors.EdgeX) {
 	if limit == 0 || totalCount == 0 {
 		return false, nil
 	}
-	if offset > int(totalCount) {
+	if int64(offset) > totalCount {
 		return false, errors.NewCommonEdgeX(errors.KindRangeNotSatisfiable, fmt.Sprintf("query objects bounds out of range. length:%v offset:%v", totalCount, offset), nil)
 	}
 

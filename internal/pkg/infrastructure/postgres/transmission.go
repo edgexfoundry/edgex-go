@@ -145,24 +145,24 @@ func (c *Client) TransmissionsBySubscriptionName(offset, limit int, subscription
 }
 
 // TransmissionTotalCount returns the total count of transmissions
-func (c *Client) TransmissionTotalCount() (uint32, errors.EdgeX) {
+func (c *Client) TransmissionTotalCount() (int64, errors.EdgeX) {
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCount(transmissionTableName))
 }
 
 // TransmissionCountBySubscriptionName returns the count of transmissions by subscription name
-func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountBySubscriptionName(subscriptionName string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{subscriptionNameField: subscriptionName}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(transmissionTableName), queryObj)
 }
 
 // TransmissionCountByStatus returns the count of transmissions by status
-func (c *Client) TransmissionCountByStatus(status string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByStatus(status string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{statusField: status}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(transmissionTableName), queryObj)
 }
 
 // TransmissionCountByTimeRange returns the count of transmissions by time range
-func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByTimeRange(start int64, end int64) (int64, errors.EdgeX) {
 	validStart, validEnd, err := getValidStartAndEnd(start, end)
 	if err != nil {
 		return 0, errors.NewCommonEdgeXWrapper(err)
@@ -185,7 +185,7 @@ func (c *Client) TransmissionsByNotificationId(offset, limit int, id string) ([]
 }
 
 // TransmissionCountByNotificationId returns the count of transmissions by notification id
-func (c *Client) TransmissionCountByNotificationId(id string) (uint32, errors.EdgeX) {
+func (c *Client) TransmissionCountByNotificationId(id string) (int64, errors.EdgeX) {
 	queryObj := map[string]any{notificationIdField: id}
 	return getTotalRowsCount(context.Background(), c.ConnPool, sqlQueryCountByJSONField(transmissionTableName), queryObj)
 }

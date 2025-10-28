@@ -175,14 +175,14 @@ func TestPurgeEventsByAutoEvent(t *testing.T) {
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			} else if duration > 0 && testCase.autoEvent.Retention.MinCap > 0 {
 				// time-based retention with miniCap
-				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, duration.Nanoseconds(), uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndAgeAndOffset", deviceName, sourceName, duration.Nanoseconds(), testCase.autoEvent.Retention.MinCap)
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			} else if testCase.autoEvent.Retention.MinCap <= 0 {
 				// count-based retention
 				dbClientMock.AssertCalled(t, "DeleteEventsByDeviceNameAndSourceName", deviceName, testCase.autoEvent.SourceName)
 			} else {
 				// count-based retention with miniCap
-				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, uint32(testCase.autoEvent.Retention.MinCap))
+				dbClientMock.AssertCalled(t, "LatestEventByDeviceNameAndSourceNameAndOffset", deviceName, sourceName, testCase.autoEvent.Retention.MinCap)
 				dbClientMock.AssertCalled(t, "DeleteEventsByAgeAndDeviceNameAndSourceName", mock.Anything, deviceName, testCase.autoEvent.SourceName)
 			}
 
@@ -213,8 +213,8 @@ func TestPurgeEventsByDeviceInfo(t *testing.T) {
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteEventsByAgeAndDeviceNameAndSourceName", duration.Nanoseconds(), testDeviceName, testSourceName).Return(nil)
 	dbClientMock.On("DeleteEventsByAgeAndDeviceNameAndSourceName", duration.Nanoseconds(), failedDeviceName, testSourceName).Return(errors.NewCommonEdgeX(errors.KindServerError, "failed to delete event with device name", nil))
-	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", testDeviceName, testSourceName, 1000).Return(uint32(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
-	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", failedDeviceName, testSourceName, 1000).Return(uint32(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
+	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", testDeviceName, testSourceName, 1000).Return(int64(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
+	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", failedDeviceName, testSourceName, 1000).Return(int64(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
 
 	mockLogger := &lcMocks.LoggingClient{}
 	mockLogger.On("Errorf", "failed to execute event retention for device info with device name: '%s', source name: '%s', error: %v", failedDeviceName, testSourceName, mock.Anything)
@@ -316,7 +316,7 @@ func TestHandlePurgeEvents(t *testing.T) {
 
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DeleteEventsByAgeAndDeviceNameAndSourceName", duration.Nanoseconds(), testDeviceName, testSourceName).Return(nil)
-	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", testDeviceName, testSourceName, 1000).Return(uint32(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
+	dbClientMock.On("EventCountByDeviceNameAndSourceNameAndLimit", testDeviceName, testSourceName, 1000).Return(int64(0), errors.NewCommonEdgeX(errors.KindServerError, "failed to get event count", nil))
 
 	mockLogger := &lcMocks.LoggingClient{}
 	mockLogger.On("Debugf", "Starting execute event retention for device name: '%s', source name: '%s', maxCap: %d, minCap: %d, duration: %s", testDeviceName, testSourceName, int64(0), int64(0), testDuration).Return(nil)

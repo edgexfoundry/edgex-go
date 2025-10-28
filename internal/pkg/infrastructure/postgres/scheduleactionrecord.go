@@ -149,25 +149,25 @@ func (c *Client) ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jo
 }
 
 // ScheduleActionRecordTotalCount returns the total count of all the schedule action records
-func (c *Client) ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (int64, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil), pgx.NamedArgs{startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByStatus returns the total count of the schedule action records by status
-func (c *Client) ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (int64, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, statusCol), pgx.NamedArgs{statusCol: status, startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByJobName returns the total count of the schedule action records by job name
-func (c *Client) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (int64, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol), pgx.NamedArgs{jobNameCol: jobName, startTimeCondition: startTime, endTimeCondition: endTime})
 }
 
 // ScheduleActionRecordCountByJobNameAndStatus returns the total count of the schedule action records by job name and status
-func (c *Client) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (uint32, errors.EdgeX) {
+func (c *Client) ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (int64, errors.EdgeX) {
 	startTime, endTime := getUTCStartAndEndTime(start, end)
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByTimeRangeCol(scheduleActionRecordTableName, createdCol, nil, jobNameCol, statusCol),
 		pgx.NamedArgs{jobNameCol: jobName, statusCol: status, startTimeCondition: startTime, endTimeCondition: endTime})

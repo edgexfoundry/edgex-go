@@ -21,7 +21,7 @@ type DBClient interface {
 	DeleteScheduleJobByName(ctx context.Context, name string) errors.EdgeX
 	ScheduleJobById(ctx context.Context, id string) (model.ScheduleJob, errors.EdgeX)
 	ScheduleJobByName(ctx context.Context, name string) (model.ScheduleJob, errors.EdgeX)
-	ScheduleJobTotalCount(ctx context.Context, labels []string) (uint32, errors.EdgeX)
+	ScheduleJobTotalCount(ctx context.Context, labels []string) (int64, errors.EdgeX)
 
 	AddScheduleActionRecord(ctx context.Context, scheduleActionRecord model.ScheduleActionRecord) (model.ScheduleActionRecord, errors.EdgeX)
 	AddScheduleActionRecords(ctx context.Context, scheduleActionRecord []model.ScheduleActionRecord) ([]model.ScheduleActionRecord, errors.EdgeX)
@@ -31,9 +31,9 @@ type DBClient interface {
 	ScheduleActionRecordsByStatus(ctx context.Context, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
 	ScheduleActionRecordsByJobName(ctx context.Context, jobName string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
 	ScheduleActionRecordsByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64, offset, limit int) ([]model.ScheduleActionRecord, errors.EdgeX)
-	ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (uint32, errors.EdgeX)
-	ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (uint32, errors.EdgeX)
+	ScheduleActionRecordTotalCount(ctx context.Context, start, end int64) (int64, errors.EdgeX)
+	ScheduleActionRecordCountByStatus(ctx context.Context, status string, start, end int64) (int64, errors.EdgeX)
+	ScheduleActionRecordCountByJobName(ctx context.Context, jobName string, start, end int64) (int64, errors.EdgeX)
+	ScheduleActionRecordCountByJobNameAndStatus(ctx context.Context, jobName, status string, start, end int64) (int64, errors.EdgeX)
 	DeleteScheduleActionRecordByAge(ctx context.Context, age int64) errors.EdgeX
 }

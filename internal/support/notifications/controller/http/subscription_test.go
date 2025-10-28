@@ -211,7 +211,7 @@ func TestAddSubscription(t *testing.T) {
 func TestAllSubscriptions(t *testing.T) {
 	subscription := dtos.ToSubscriptionModel(addSubscriptionRequestData().Subscription)
 	subscriptions := []models.Subscription{subscription, subscription, subscription}
-	expectedSubscriptionCount := uint32(len(subscriptions))
+	expectedSubscriptionCount := int64(len(subscriptions))
 
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
@@ -233,7 +233,7 @@ func TestAllSubscriptions(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get subscriptions without offset and limit", "", "", false, 3, expectedSubscriptionCount, http.StatusOK},
@@ -352,7 +352,7 @@ func TestSubscriptionByName(t *testing.T) {
 
 func TestSubscriptionsByCategory(t *testing.T) {
 	testCategory := "category"
-	expectedSubscriptionCount := uint32(0)
+	expectedSubscriptionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("SubscriptionCountByCategory", testCategory).Return(expectedSubscriptionCount, nil)
@@ -372,7 +372,7 @@ func TestSubscriptionsByCategory(t *testing.T) {
 		limit              string
 		category           string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get subscriptions without offset, and limit", "", "", testCategory, false, expectedSubscriptionCount, http.StatusOK},
@@ -427,7 +427,7 @@ func TestSubscriptionsByCategory(t *testing.T) {
 
 func TestSubscriptionsByLabel(t *testing.T) {
 	testLabel := "label"
-	expectedSubscriptionCount := uint32(0)
+	expectedSubscriptionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("SubscriptionCountByLabel", testLabel).Return(expectedSubscriptionCount, nil)
@@ -447,7 +447,7 @@ func TestSubscriptionsByLabel(t *testing.T) {
 		limit              string
 		label              string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get subscriptions without offset, and limit", "", "", testLabel, false, expectedSubscriptionCount, http.StatusOK},
@@ -502,7 +502,7 @@ func TestSubscriptionsByLabel(t *testing.T) {
 
 func TestSubscriptionsByReceiver(t *testing.T) {
 	testReceiver := "receiver"
-	expectedSubscriptionCount := uint32(0)
+	expectedSubscriptionCount := int64(0)
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("SubscriptionCountByReceiver", testReceiver).Return(expectedSubscriptionCount, nil)
@@ -522,7 +522,7 @@ func TestSubscriptionsByReceiver(t *testing.T) {
 		limit              string
 		receiver           string
 		errorExpected      bool
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get subscriptions without offset, and limit", "", "", testReceiver, false, expectedSubscriptionCount, http.StatusOK},

@@ -139,7 +139,7 @@ func DeleteDeviceServiceByName(name string, ctx context.Context, dic *di.Contain
 }
 
 // AllDeviceServices query the device services with labels, offset, and limit
-func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, totalCount uint32, err errors.EdgeX) {
+func AllDeviceServices(offset int, limit int, labels []string, ctx context.Context, dic *di.Container) (deviceServices []dtos.DeviceService, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.DeviceServiceCountByLabels(labels)

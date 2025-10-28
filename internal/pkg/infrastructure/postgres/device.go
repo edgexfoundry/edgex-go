@@ -188,7 +188,7 @@ func (c *Client) UpdateDevice(d model.Device) errors.EdgeX {
 }
 
 // DeviceCountByLabels returns the total count of Devices with labels specified.  If no label is specified, the total count of all devices will be returned.
-func (c *Client) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByLabels(labels []string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 
 	if len(labels) > 0 {
@@ -199,14 +199,14 @@ func (c *Client) DeviceCountByLabels(labels []string) (uint32, errors.EdgeX) {
 }
 
 // DeviceCountByProfileName returns the count of Devices associated with specified profile
-func (c *Client) DeviceCountByProfileName(profileName string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByProfileName(profileName string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{profileNameField: profileName}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceTableName), queryObj)
 }
 
 // DeviceCountByServiceName returns the count of Devices associated with specified service
-func (c *Client) DeviceCountByServiceName(serviceName string) (uint32, errors.EdgeX) {
+func (c *Client) DeviceCountByServiceName(serviceName string) (int64, errors.EdgeX) {
 	ctx := context.Background()
 	queryObj := map[string]any{serviceNameField: serviceName}
 	return getTotalRowsCount(ctx, c.ConnPool, sqlQueryCountByJSONField(deviceTableName), queryObj)
@@ -251,7 +251,7 @@ func deviceSubTree(ctx context.Context, connPool *pgxpool.Pool, parent string, l
 
 // Get the full result-set since that's the only way to correctly get totalCount.
 // Then return the subset of the result-set that corresponds to the requested offset and limit.
-func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (uint32, []model.Device, errors.EdgeX) {
+func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, labels []string) (int64, []model.Device, errors.EdgeX) {
 	var maxLevels int
 	var emptyList = []model.Device{}
 	if levels <= 0 {
@@ -267,13 +267,13 @@ func (c *Client) DeviceTree(parent string, levels int, offset int, limit int, la
 		offset = 0
 	}
 	if offset >= len(allDevices) {
-		return uint32(len(allDevices)), emptyList, nil
+		return int64(len(allDevices)), emptyList, nil
 	}
 	numToReturn := len(allDevices) - offset
 	if limit > 0 && limit < numToReturn {
 		numToReturn = limit
 	}
-	return uint32(len(allDevices)), allDevices[offset : offset+numToReturn], nil
+	return int64(len(allDevices)), allDevices[offset : offset+numToReturn], nil
 }
 
 func deviceNameExists(ctx context.Context, connPool *pgxpool.Pool, name string) (bool, errors.EdgeX) {

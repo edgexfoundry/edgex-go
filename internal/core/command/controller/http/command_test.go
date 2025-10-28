@@ -116,7 +116,7 @@ func buildMultiDevicesResponse() responseDTO.MultiDevicesResponse {
 		{Name: testDeviceName + "2", ProfileName: testProfileName, ServiceName: testDeviceServiceName},
 	}
 	return responseDTO.MultiDevicesResponse{
-		BaseWithTotalCountResponse: commonDTO.NewBaseWithTotalCountResponse("", "", http.StatusOK, uint32(2)),
+		BaseWithTotalCountResponse: commonDTO.NewBaseWithTotalCountResponse("", "", http.StatusOK, int64(2)),
 		Devices:                    devices,
 	}
 }
@@ -205,7 +205,7 @@ func TestAllCommands(t *testing.T) {
 		limit              string
 		errorExpected      bool
 		expectedCount      int
-		expectedTotalCount uint32
+		expectedTotalCount int64
 		expectedStatusCode int
 	}{
 		{"Valid - get commands without offset and limit", "", "", false, len(expectedMultiDeviceCoreCommandsResponse.DeviceCoreCommands), expectedMultiDevicesResponse.TotalCount, http.StatusOK},

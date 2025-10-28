@@ -83,7 +83,7 @@ func TestAddDeviceProfileDeviceCommand(t *testing.T) {
 	dbClientMock.On("DeviceProfileByName", valid.ProfileName).Return(deviceProfile, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 	dbClientMock.On("DevicesByProfileName", 0, -1, TestDeviceProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -206,7 +206,7 @@ func TestPatchDeviceProfileDeviceCommand(t *testing.T) {
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 	dbClientMock.On("DeviceProfileByName", notFound).Return(deviceProfile, notFoundDBError)
 	dbClientMock.On("DevicesByProfileName", 0, -1, TestDeviceProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dic.Update(di.ServiceConstructorMap{
 		container.DBClientInterfaceName: func(get di.Get) interface{} {
 			return dbClientMock
@@ -284,7 +284,7 @@ func TestDeleteDeviceCommandByName(t *testing.T) {
 	dic := mockDic()
 	dbClientMock := &dbMock.DBClient{}
 	dbClientMock.On("DevicesByProfileName", 0, mock.Anything, TestDeviceProfileName).Return([]models.Device{}, nil)
-	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(uint32(1), nil)
+	dbClientMock.On("DeviceCountByProfileName", TestDeviceProfileName).Return(int64(1), nil)
 	dbClientMock.On("DeviceProfileByName", TestDeviceProfileName).Return(dpModel, nil)
 	dbClientMock.On("UpdateDeviceProfile", mock.Anything).Return(nil)
 

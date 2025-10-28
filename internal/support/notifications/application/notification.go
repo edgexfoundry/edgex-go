@@ -48,7 +48,7 @@ func AddNotification(n models.Notification, ctx context.Context, dic *di.Contain
 }
 
 // NotificationsByCategory queries notifications with offset, limit, ack, and category
-func NotificationsByCategory(offset, limit int, ack string, category string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsByCategory(offset, limit int, ack string, category string, dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	if category == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "category is empty", nil)
 	}
@@ -71,7 +71,7 @@ func NotificationsByCategory(offset, limit int, ack string, category string, dic
 }
 
 // NotificationsByLabel queries notifications with offset, limit, ack and label
-func NotificationsByLabel(offset, limit int, ack string, label string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsByLabel(offset, limit int, ack string, label string, dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	if label == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "label is empty", nil)
 	}
@@ -112,7 +112,7 @@ func NotificationById(id string, dic *di.Container) (notification dtos.Notificat
 }
 
 // NotificationsByStatus queries notifications with offset, limit, ack and status
-func NotificationsByStatus(offset, limit int, status, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsByStatus(offset, limit int, status, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	if status == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "status is empty", nil)
 	}
@@ -135,7 +135,7 @@ func NotificationsByStatus(offset, limit int, status, ack string, dic *di.Contai
 }
 
 // NotificationsByTimeRange query notifications with offset, limit and time range
-func NotificationsByTimeRange(start int64, end int64, offset int, limit int, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsByTimeRange(start int64, end int64, offset int, limit int, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.NotificationCountByTimeRange(start, end, ack)
@@ -182,7 +182,7 @@ func DeleteNotificationByIds(ids []string, dic *di.Container) errors.EdgeX {
 }
 
 // NotificationsBySubscriptionName queries notifications by offset, limit and subscriptionName
-func NotificationsBySubscriptionName(offset, limit int, subscriptionName, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+func NotificationsBySubscriptionName(offset, limit int, subscriptionName, ack string, dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	if subscriptionName == "" {
 		return notifications, totalCount, errors.NewCommonEdgeX(errors.KindContractInvalid, "subscriptionName is empty", nil)
 	}
@@ -234,7 +234,7 @@ func DeleteProcessedNotificationsByAge(age int64, dic *di.Container) errors.Edge
 
 // NotificationByQueryConditions queries notifications with offset, limit, ack, categories, and time range
 func NotificationByQueryConditions(offset, limit int, ack string, conditions requests.NotificationQueryCondition,
-	dic *di.Container) (notifications []dtos.Notification, totalCount uint32, err errors.EdgeX) {
+	dic *di.Container) (notifications []dtos.Notification, totalCount int64, err errors.EdgeX) {
 	dbClient := container.DBClientFrom(dic.Get)
 
 	totalCount, err = dbClient.NotificationCountByQueryConditions(conditions, ack)
@@ -293,7 +293,7 @@ func purgeNotification(dic *di.Container) errors.EdgeX {
 	if err != nil {
 		return errors.NewCommonEdgeX(errors.Kind(err), "failed to query notification total count, %v", err)
 	}
-	if total >= config.Retention.MaxCap {
+	if total >= int64(config.Retention.MaxCap) {
 		lc.Debugf("Purging the notification amount %d to the minimum capacity %d", total, config.Retention.MinCap)
 		// Query the latest notification and clean notifications by modified date.
 		notification, err := dbClient.LatestNotificationByOffset(config.Retention.MinCap)

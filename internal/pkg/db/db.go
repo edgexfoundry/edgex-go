@@ -37,7 +37,7 @@ type Configuration struct {
 	Username        string
 	Password        string
 	BatchSize       int
-	MaxConns        int
+	MaxConns        int32
 	MaxConnIdleTime string
 	MaxConnLifetime string
 }
